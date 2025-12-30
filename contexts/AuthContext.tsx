@@ -60,45 +60,49 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     useEffect(() => {
         let mounted = true;
 
-        const initSession = async () => {
-            try {
-                const { data: { session } } = await supabase.auth.getSession();
-                if (session?.user && mounted) {
-                    const profile = await fetchProfile(session.user.id);
-                    if (profile && mounted) setCurrentUser(profile);
+        // Function to handle profile fetching and state update
+        const handleUserSession = async (session: any) => {
+            if (session?.user) {
+                // If we already have the user loaded and ID matches, skip fetch (optional optimization)
+                // However, since we can't access latest 'currentUser' state comfortably in this closure without deps,
+                // we'll fetch to ensure freshness, but handle errors gracefully.
+                const profile = await fetchProfile(session.user.id);
+                if (mounted) {
+                    if (profile) {
+                        setCurrentUser(profile);
+                    } else {
+                        // If profile fetch fails but session exists, we should decide.
+                        // For now, keep null to prevent partial state, OR keep previous user if exists?
+                        // Let's stick to safe behavior: if fetch succeeds, update.
+                    }
                 }
-            } catch (error) {
-                console.error('Session init error:', error);
-            } finally {
-                if (mounted) setLoading(false);
+            } else if (mounted) {
+                setCurrentUser(null);
             }
+            if (mounted) setLoading(false);
         };
 
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-            if (!mounted) return;
-
-            if (session?.user) {
-                if (!currentUser || currentUser.id !== session.user.id) {
-                    const profile = await fetchProfile(session.user.id);
-                    if (mounted) setCurrentUser(profile || null);
-                }
-            } else {
-                if (mounted) setCurrentUser(null);
-            }
-            if (mounted) setLoading(false);
+        // 1. Initial Session Load
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            handleUserSession(session);
         });
 
-        // Safety timeout to prevent infinite loading
-        const timer = setTimeout(() => {
-            if (mounted) setLoading(false);
-        }, 4000);
-
-        initSession();
+        // 2. Realtime Auth Changes
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            // Only react to meaningful changes
+            if (_event === 'SIGNED_OUT') {
+                if (mounted) {
+                    setCurrentUser(null);
+                    setLoading(false);
+                }
+            } else if (_event === 'SIGNED_IN' || _event === 'TOKEN_REFRESHED' || _event === 'INITIAL_SESSION') {
+                handleUserSession(session);
+            }
+        });
 
         return () => {
             mounted = false;
             subscription.unsubscribe();
-            clearTimeout(timer);
         };
     }, []);
 

@@ -3,7 +3,7 @@
 
 DO $$
 DECLARE
-    target_email TEXT := 'admin@reservasct.com'; -- <--- COLOQUE O EMAIL DO ADMIN AQUI
+    target_email TEXT := 'italomcangussu@icloud.com'; -- <--- COLOQUE O EMAIL DO ADMIN AQUI
     target_user_id UUID;
 BEGIN
     -- 1. Buscar ID do usuário na tabela de autenticação
