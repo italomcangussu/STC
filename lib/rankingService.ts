@@ -1,0 +1,547 @@
+import { supabase } from './supabase';
+
+// --- Class Hierarchy ---
+// Classes ordenadas do mais alto (melhor) para o mais baixo
+export const CLASS_ORDER = ['4ª Classe', '5ª Classe', '6ª Classe'];
+
+// Quantos jogadores da classe acima o 1º lugar pode desafiar
+export const CROSS_CLASS_CHALLENGE_LIMIT = 2;
+
+// --- Types ---
+export interface PlayerStats {
+    id: string;
+    name: string;
+    category: string | null;
+    avatarUrl: string | null;
+
+    // Legacy stats (from old championships)
+    legacyWins: number;
+    legacyLosses: number;
+    legacySetsWon: number;
+    legacySetsLost: number;
+    legacyGamesWon: number;
+    legacyGamesLost: number;
+    legacyTiebreaksWon: number;
+    legacyTiebreaksLost: number;
+    legacyMatchesPlayed: number;
+    legacyMatchesWithTiebreak: number;
+    legacyPoints: number;
+
+    // Challenge stats (calculated from matches)
+    challengeWins: number;
+    challengeLosses: number;
+    challengeSetsWon: number;
+    challengeSetsLost: number;
+    challengeGamesWon: number;
+    challengeGamesLost: number;
+    challengeTiebreaksWon: number;
+    challengeTiebreaksLost: number;
+    challengeMatchesPlayed: number;
+    challengeMatchesWithTiebreak: number;
+    challengePoints: number;
+
+    // Combined totals
+    totalWins: number;
+    totalLosses: number;
+    totalSetsWon: number;
+    totalSetsLost: number;
+    totalGamesWon: number;
+    totalGamesLost: number;
+    totalPoints: number;
+
+    // Positions
+    categoryPosition: number;  // Position within category (1st in 6ª Classe, etc.)
+    globalPosition: number;    // Position in global hierarchy (class-sorted then points)
+}
+
+// Points formula
+const PTS_WIN = 100;
+const PTS_SET = 10;
+const PTS_GAME = 1;
+
+/**
+ * Fetch complete ranking from Supabase, combining legacy stats + challenge match stats
+ */
+export async function fetchRanking(categoryFilter?: string): Promise<PlayerStats[]> {
+    // 1. Fetch all profiles with legacy stats
+    let query = supabase
+        .from('profiles')
+        .select(`
+            id, name, category, avatar_url,
+            legacy_wins, legacy_losses, legacy_sets_won, legacy_sets_lost,
+            legacy_games_won, legacy_games_lost, legacy_tiebreaks_won, legacy_tiebreaks_lost,
+            legacy_matches_played, legacy_matches_with_tiebreak, legacy_points
+        `)
+        .in('role', ['socio', 'admin'])
+        .eq('is_active', true);
+
+    if (categoryFilter) {
+        query = query.eq('category', categoryFilter);
+    }
+
+    const { data: profiles, error: profilesError } = await query;
+    if (profilesError) {
+        console.error('Error fetching profiles:', profilesError);
+        return [];
+    }
+
+    // 2. Fetch all challenge matches
+    const { data: matches, error: matchesError } = await supabase
+        .from('matches')
+        .select('player_a_id, player_b_id, score_a, score_b, winner_id, type')
+        .in('type', ['Desafio Ranking', 'SuperSet'])
+        .eq('status', 'finished');
+
+    if (matchesError) {
+        console.error('Error fetching matches:', matchesError);
+        return [];
+    }
+
+    // 3. Calculate challenge stats for each player
+    const challengeStats: Record<string, {
+        wins: number; losses: number;
+        setsWon: number; setsLost: number;
+        gamesWon: number; gamesLost: number;
+        tiebreaksWon: number; tiebreaksLost: number;
+        matchesPlayed: number; matchesWithTiebreak: number;
+        points: number; // Accumulated points
+    }> = {};
+
+    // Initialize all players
+    profiles?.forEach(p => {
+        challengeStats[p.id] = {
+            wins: 0, losses: 0,
+            setsWon: 0, setsLost: 0,
+            gamesWon: 0, gamesLost: 0,
+            tiebreaksWon: 0, tiebreaksLost: 0,
+            matchesPlayed: 0, matchesWithTiebreak: 0,
+            points: 0
+        };
+    });
+
+    // Process matches
+    matches?.forEach(match => {
+        const playerA = match.player_a_id;
+        const playerB = match.player_b_id;
+        const scoreA: number[] = match.score_a || [];
+        const scoreB: number[] = match.score_b || [];
+        const type = match.type;
+
+        if (!challengeStats[playerA] || !challengeStats[playerB]) return;
+
+        // Match played
+        challengeStats[playerA].matchesPlayed++;
+        challengeStats[playerB].matchesPlayed++;
+
+        // Check for tiebreak (3rd set or 7-6 sets)
+        // SuperSet (1 set) usually doesn't count as "matchesWithTiebreak" unless it goes to 10-something or 7-6?
+        // User said "Apenas 1 set".
+        const hasTiebreak = scoreA.length === 3 ||
+            scoreA.some((s, i) => (s === 7 && scoreB[i] === 6) || (s === 6 && scoreB[i] === 7));
+        if (hasTiebreak) {
+            challengeStats[playerA].matchesWithTiebreak++;
+            challengeStats[playerB].matchesWithTiebreak++;
+        }
+
+        let matchGamesA = 0;
+        let matchGamesB = 0;
+        let matchSetsA = 0;
+        let matchSetsB = 0;
+
+        // Count sets and games
+        scoreA.forEach((gamesA, i) => {
+            const gamesB = scoreB[i] || 0;
+
+            // Games
+            challengeStats[playerA].gamesWon += gamesA;
+            challengeStats[playerA].gamesLost += gamesB;
+            challengeStats[playerB].gamesWon += gamesB;
+            challengeStats[playerB].gamesLost += gamesA;
+
+            matchGamesA += gamesA;
+            matchGamesB += gamesB;
+
+            // Sets (who won this set)
+            // For tiebreak set (index 2), it's first to 10
+            if (i === 2) {
+                // Super tiebreak
+                if (gamesA > gamesB) {
+                    challengeStats[playerA].setsWon++;
+                    challengeStats[playerB].setsLost++;
+                    challengeStats[playerA].tiebreaksWon++;
+                    challengeStats[playerB].tiebreaksLost++;
+                    matchSetsA++;
+                } else {
+                    challengeStats[playerB].setsWon++;
+                    challengeStats[playerA].setsLost++;
+                    challengeStats[playerB].tiebreaksWon++;
+                    challengeStats[playerA].tiebreaksLost++;
+                    matchSetsB++;
+                }
+            } else {
+                // Regular set OR SuperSet (index 0)
+                if (gamesA > gamesB) {
+                    challengeStats[playerA].setsWon++;
+                    challengeStats[playerB].setsLost++;
+                    matchSetsA++;
+                } else if (gamesB > gamesA) {
+                    challengeStats[playerB].setsWon++;
+                    challengeStats[playerA].setsLost++;
+                    matchSetsB++;
+                }
+                // 7-6 tiebreak
+                if ((gamesA === 7 && gamesB === 6)) {
+                    challengeStats[playerA].tiebreaksWon++;
+                    challengeStats[playerB].tiebreaksLost++;
+                } else if ((gamesB === 7 && gamesA === 6)) {
+                    challengeStats[playerB].tiebreaksWon++;
+                    challengeStats[playerA].tiebreaksLost++;
+                }
+            }
+        });
+
+        // Wins/Losses & Points
+        if (match.winner_id === playerA) {
+            challengeStats[playerA].wins++;
+            challengeStats[playerB].losses++;
+
+            if (type === 'SuperSet') {
+                challengeStats[playerA].points += 10;
+            } else {
+                // Standard Formula: Win(100) + Sets(10 each) + Games(1 each)
+                const pts = PTS_WIN + (matchSetsA * PTS_SET) + (matchGamesA * PTS_GAME);
+                challengeStats[playerA].points += pts;
+                // Loser also gets points for sets/games won?
+                // Standard ranking logic usually gives points for everything stats-based?
+                // "vencedor desse Set ganha 10 pontos" implies ONLY winner gets points for SuperSet?
+                // For regular matches, the formula puts points on the PlayerStats.
+                // The original code was: `challenge.wins * PTS_WIN + challenge.setsWon * PTS_SET...`
+                // This means YES, even the loser got points for sets/games won.
+            }
+
+        } else if (match.winner_id === playerB) {
+            challengeStats[playerB].wins++;
+            challengeStats[playerA].losses++;
+
+            if (type === 'SuperSet') {
+                challengeStats[playerB].points += 10;
+            } else {
+                const pts = PTS_WIN + (matchSetsB * PTS_SET) + (matchGamesB * PTS_GAME);
+                challengeStats[playerB].points += pts;
+            }
+        }
+
+        // Apply Loser Points for Standard Matches (Games/Sets won count)
+        // If type is SuperSet, does loser get points for games?
+        // Proposal: SuperSet = Fixed 10 pts for Winner. 0 for Loser (implied by "winner receives 10").
+        // Standard Match: Loser gets points for sets/games won.
+        if (type !== 'SuperSet') {
+            if (match.winner_id === playerA) {
+                // Player B (Loser) points
+                challengeStats[playerB].points += (matchSetsB * PTS_SET) + (matchGamesB * PTS_GAME);
+            } else {
+                // Player A (Loser) points
+                challengeStats[playerA].points += (matchSetsA * PTS_SET) + (matchGamesA * PTS_GAME);
+            }
+        }
+    });
+
+    // 4. Combine legacy + challenge stats
+    const ranking: PlayerStats[] = (profiles || []).map(p => {
+        const legacy = {
+            wins: p.legacy_wins || 0,
+            losses: p.legacy_losses || 0,
+            setsWon: p.legacy_sets_won || 0,
+            setsLost: p.legacy_sets_lost || 0,
+            gamesWon: p.legacy_games_won || 0,
+            gamesLost: p.legacy_games_lost || 0,
+            tiebreaksWon: p.legacy_tiebreaks_won || 0,
+            tiebreaksLost: p.legacy_tiebreaks_lost || 0,
+            matchesPlayed: p.legacy_matches_played || 0,
+            matchesWithTiebreak: p.legacy_matches_with_tiebreak || 0,
+            points: p.legacy_points || 0
+        };
+
+        const challenge = challengeStats[p.id] || {
+            wins: 0, losses: 0,
+            setsWon: 0, setsLost: 0,
+            gamesWon: 0, gamesLost: 0,
+            tiebreaksWon: 0, tiebreaksLost: 0,
+            matchesPlayed: 0, matchesWithTiebreak: 0,
+            points: 0
+        };
+
+        // Calculate challenge points - ALREADY CALCULATED IN LOOP
+        const challengePoints = challenge.points;
+
+        // Combined totals
+        const totalWins = legacy.wins + challenge.wins;
+        const totalLosses = legacy.losses + challenge.losses;
+        const totalSetsWon = legacy.setsWon + challenge.setsWon;
+        const totalSetsLost = legacy.setsLost + challenge.setsLost;
+        const totalGamesWon = legacy.gamesWon + challenge.gamesWon;
+        const totalGamesLost = legacy.gamesLost + challenge.gamesLost;
+        const totalPoints = legacy.points + challengePoints;
+
+        return {
+            id: p.id,
+            name: p.name,
+            category: p.category,
+            avatarUrl: p.avatar_url,
+
+            legacyWins: legacy.wins,
+            legacyLosses: legacy.losses,
+            legacySetsWon: legacy.setsWon,
+            legacySetsLost: legacy.setsLost,
+            legacyGamesWon: legacy.gamesWon,
+            legacyGamesLost: legacy.gamesLost,
+            legacyTiebreaksWon: legacy.tiebreaksWon,
+            legacyTiebreaksLost: legacy.tiebreaksLost,
+            legacyMatchesPlayed: legacy.matchesPlayed,
+            legacyMatchesWithTiebreak: legacy.matchesWithTiebreak,
+            legacyPoints: legacy.points,
+
+            challengeWins: challenge.wins,
+            challengeLosses: challenge.losses,
+            challengeSetsWon: challenge.setsWon,
+            challengeSetsLost: challenge.setsLost,
+            challengeGamesWon: challenge.gamesWon,
+            challengeGamesLost: challenge.gamesLost,
+            challengeTiebreaksWon: challenge.tiebreaksWon,
+            challengeTiebreaksLost: challenge.tiebreaksLost,
+            challengeMatchesPlayed: challenge.matchesPlayed,
+            challengeMatchesWithTiebreak: challenge.matchesWithTiebreak,
+            challengePoints: challengePoints,
+
+            totalWins,
+            totalLosses,
+            totalSetsWon,
+            totalSetsLost,
+            totalGamesWon,
+            totalGamesLost,
+            totalPoints,
+            categoryPosition: 0, // Will be set after sorting
+            globalPosition: 0    // Will be set after sorting
+        };
+    });
+
+    // 5. Sort within each category by points
+    ranking.sort((a, b) => {
+        if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
+        if (b.totalWins !== a.totalWins) return b.totalWins - a.totalWins;
+        return b.totalSetsWon - a.totalSetsWon;
+    });
+
+    // 6. Assign category positions
+    const categoryCounters: Record<string, number> = {};
+    ranking.forEach(player => {
+        const cat = player.category || 'Sem Classe';
+        categoryCounters[cat] = (categoryCounters[cat] || 0) + 1;
+        player.categoryPosition = categoryCounters[cat];
+    });
+
+    // 7. Sort by class hierarchy then by points for global ranking
+    ranking.sort((a, b) => {
+        const classA = CLASS_ORDER.indexOf(a.category || '');
+        const classB = CLASS_ORDER.indexOf(b.category || '');
+
+        // Unknown classes go last
+        const orderA = classA === -1 ? 999 : classA;
+        const orderB = classB === -1 ? 999 : classB;
+
+        if (orderA !== orderB) return orderA - orderB;
+
+        // Within same class, sort by points
+        if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
+        if (b.totalWins !== a.totalWins) return b.totalWins - a.totalWins;
+        return b.totalSetsWon - a.totalSetsWon;
+    });
+
+    // 8. Assign global positions
+    ranking.forEach((player, index) => {
+        player.globalPosition = index + 1;
+    });
+
+    return ranking;
+}
+
+/**
+ * Get ranking grouped by category
+ */
+export async function fetchRankingByCategory(): Promise<Record<string, PlayerStats[]>> {
+    const allPlayers = await fetchRanking();
+
+    const byCategory: Record<string, PlayerStats[]> = {};
+
+    CLASS_ORDER.forEach(cat => {
+        byCategory[cat] = allPlayers
+            .filter(p => p.category === cat)
+            .sort((a, b) => a.categoryPosition - b.categoryPosition);
+    });
+
+    // Add "Sem Classe" if any
+    const noClass = allPlayers.filter(p => !p.category || !CLASS_ORDER.includes(p.category));
+    if (noClass.length > 0) {
+        byCategory['Sem Classe'] = noClass;
+    }
+
+    return byCategory;
+}
+
+/**
+ * Check if a player can challenge another based on ranking rules
+ * RULES:
+ * - Can challenge anyone within 2 TIERS above OR 2 TIERS below
+ * - TIER = group of players with same points (ties count as one position)
+ * - Monthly limit: 1 challenge as challenger per month
+ * - Monthly limit: 1 challenge as target (being challenged) per month
+ * 
+ * Example: If ranking is:
+ *   #1 Player A - 100pts (tier 1)
+ *   #2 Player B - 50pts  (tier 2)
+ *   #3 Player C - 50pts  (tier 2 - same as B)
+ *   #4 Player D - 30pts  (tier 3)
+ *   #5 Player E - 0pts   (tier 4)
+ * 
+ * Player D (tier 3) can challenge:
+ *   - Tier 1 (A) - 2 tiers above ✓
+ *   - Tier 2 (B, C) - 1 tier above ✓
+ *   - Tier 4 (E) - 1 tier below ✓
+ */
+export function canChallenge(
+    challenger: PlayerStats,
+    target: PlayerStats,
+    allPlayers: PlayerStats[]
+): { allowed: boolean; reason?: string } {
+    // Cannot challenge self
+    if (challenger.id === target.id) {
+        return { allowed: false, reason: 'Não pode desafiar a si mesmo' };
+    }
+
+    // Sort all players by globalPosition to ensure correct order
+    const sortedPlayers = [...allPlayers].sort((a, b) => a.globalPosition - b.globalPosition);
+
+    // Build list of unique point tiers in order
+    const pointTiers: number[] = [];
+    sortedPlayers.forEach(p => {
+        if (!pointTiers.includes(p.totalPoints)) {
+            pointTiers.push(p.totalPoints);
+        }
+    });
+
+    // Find tier index for challenger and target
+    const challengerTier = pointTiers.indexOf(challenger.totalPoints);
+    const targetTier = pointTiers.indexOf(target.totalPoints);
+
+    if (challengerTier === -1 || targetTier === -1) {
+        return { allowed: false, reason: 'Erro ao calcular tier' };
+    }
+
+    // Calculate tier difference
+    const tierDiff = Math.abs(challengerTier - targetTier);
+
+    // Can challenge within 2 tiers (above or below)
+    if (tierDiff <= 2) {
+        return { allowed: true };
+    }
+
+    return {
+        allowed: false,
+        reason: `Só pode desafiar jogadores até 2 posições acima/abaixo (diferença: ${tierDiff} tiers)`
+    };
+}
+
+/**
+ * Check monthly challenge limits for a player
+ * Returns whether they can challenge (as challenger) and be challenged (as target) this month
+ */
+export async function checkMonthlyChallengeLimit(
+    playerId: string
+): Promise<{ canChallengeOthers: boolean; canBeChallenged: boolean; challengesMade: number; challengesReceived: number }> {
+    const now = new Date();
+    const monthRef = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+    // Get challenges where this player is the challenger (sent challenges)
+    const { data: sentChallenges, error: sentError } = await supabase
+        .from('challenges')
+        .select('id')
+        .eq('challenger_id', playerId)
+        .eq('month_ref', monthRef)
+        .not('status', 'in', '("cancelled","expired","declined")');
+
+    // Get challenges where this player is the target (received challenges)
+    const { data: receivedChallenges, error: receivedError } = await supabase
+        .from('challenges')
+        .select('id')
+        .eq('challenged_id', playerId)
+        .eq('month_ref', monthRef)
+        .not('status', 'in', '("cancelled","expired","declined")');
+
+    if (sentError || receivedError) {
+        console.error('Error checking challenge limits:', sentError || receivedError);
+        return { canChallengeOthers: false, canBeChallenged: false, challengesMade: 0, challengesReceived: 0 };
+    }
+
+    const challengesMade = sentChallenges?.length || 0;
+    const challengesReceived = receivedChallenges?.length || 0;
+
+    return {
+        canChallengeOthers: challengesMade < 1,  // Can challenge if made 0 challenges this month
+        canBeChallenged: challengesReceived < 1, // Can be challenged if received 0 challenges this month
+        challengesMade,
+        challengesReceived
+    };
+}
+
+/**
+ * Full validation including position rules AND monthly limits
+ */
+export async function canChallengeWithLimits(
+    challenger: PlayerStats,
+    target: PlayerStats,
+    allPlayers: PlayerStats[]
+): Promise<{ allowed: boolean; reason?: string }> {
+    // First check position rules
+    const positionCheck = canChallenge(challenger, target, allPlayers);
+    if (!positionCheck.allowed) {
+        return positionCheck;
+    }
+
+    // Check challenger's monthly limit
+    const challengerLimits = await checkMonthlyChallengeLimit(challenger.id);
+    if (!challengerLimits.canChallengeOthers) {
+        return {
+            allowed: false,
+            reason: 'Você já fez 1 desafio este mês (limite: 1x/mês)'
+        };
+    }
+
+    // Check target's monthly limit
+    const targetLimits = await checkMonthlyChallengeLimit(target.id);
+    if (!targetLimits.canBeChallenged) {
+        return {
+            allowed: false,
+            reason: 'Este jogador já foi desafiado este mês (limite: 1x/mês)'
+        };
+    }
+
+    return { allowed: true };
+}
+
+/**
+ * Get list of players that a given player can challenge (by position rules only)
+ * Note: For full validation including monthly limits, use canChallengeWithLimits
+ */
+export function getEligibleOpponents(
+    challengerId: string,
+    allPlayers: PlayerStats[]
+): PlayerStats[] {
+    const challenger = allPlayers.find(p => p.id === challengerId);
+    if (!challenger) return [];
+
+    return allPlayers.filter(target => {
+        const result = canChallenge(challenger, target, allPlayers);
+        return result.allowed;
+    });
+}
+
