@@ -40,7 +40,7 @@ export const Dashboard: React.FC<DashboardProps> = () => {
       if (courtsData) setCourts(courtsData);
 
       // 2. Fetch Profiles (for Top Athletes & Member Stats)
-      const { data: profilesData } = await supabase.from('profiles').select('id, name, avatar_url, role');
+      const { data: profilesData } = await supabase.from('profiles').select('id, name, avatar_url, role').eq('is_active', true);
       if (profilesData) {
         const profMap: Record<string, { name: string; avatar?: string; role: string }> = {};
         let socioCount = 0;

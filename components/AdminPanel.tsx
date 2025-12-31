@@ -742,6 +742,7 @@ const DesafiosTab: React.FC = () => {
 const FinanceiroTab: React.FC = () => {
     const [reservations, setReservations] = useState<Reservation[]>([]);
     const [monthlyStudents, setMonthlyStudents] = useState<NonSocioStudent[]>([]);
+    const [studentPayments, setStudentPayments] = useState<{ amount: number, paymentDate: string }[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
     const [processingPayment, setProcessingPayment] = useState<string | null>(null);
@@ -751,11 +752,10 @@ const FinanceiroTab: React.FC = () => {
 
     const fetchData = async () => {
         setLoading(true);
-        // 1. Fetch Day Uses
+        // 1. Fetch Reservations (Play & Aula) to calculate Day Uses
         const { data: resData } = await supabase
             .from('reservations')
             .select('*')
-            .eq('type', 'Day Use')
             .neq('status', 'cancelled')
             .order('date', { ascending: false });
 
@@ -769,6 +769,9 @@ const FinanceiroTab: React.FC = () => {
                 courtId: r.court_id,
                 creatorId: r.creator_id,
                 participantIds: r.participant_ids || [],
+                guestName: r.guest_name,
+                studentType: r.student_type,
+                nonSocioStudentId: r.non_socio_student_id,
                 status: r.status
             } as Reservation)));
         }
@@ -788,6 +791,18 @@ const FinanceiroTab: React.FC = () => {
                 planStatus: s.plan_status,
                 masterExpirationDate: s.master_expiration_date,
                 professorId: s.professor_id
+            })));
+        }
+
+        // 3. Fetch Historical Student Payments (for Card Mensal Revenue)
+        const { data: paymentsData } = await supabase
+            .from('student_payments')
+            .select('amount, payment_date');
+
+        if (paymentsData) {
+            setStudentPayments(paymentsData.map(p => ({
+                amount: p.amount,
+                paymentDate: p.payment_date
             })));
         }
 
@@ -839,21 +854,56 @@ const FinanceiroTab: React.FC = () => {
         }
     };
 
-    // Group by month for monthly totals
-    const monthlyData = useMemo(() => {
-        const grouped: Record<string, number> = {};
+    // Calculate Financial Data grouped by month
+    const financialData = useMemo(() => {
+        const grouped: Record<string, {
+            friendlyDayCount: number,
+            studentDayCount: number,
+            cardMensalTotal: number
+        }> = {};
+
+        // 1. Process Reservations (Day Use)
         reservations.forEach(r => {
             const month = r.date.slice(0, 7); // YYYY-MM
-            grouped[month] = (grouped[month] || 0) + 1;
+            if (!grouped[month]) grouped[month] = { friendlyDayCount: 0, studentDayCount: 0, cardMensalTotal: 0 };
+
+            // Friendly Day Use: Type Play + Has Guest
+            if (r.type === 'Play' && r.guestName) {
+                grouped[month].friendlyDayCount++;
+            }
+
+            // Student Day Use: Type Aula + NonSocio
+            // Note: Ideally we should check if the student is 'Day Card' type, but for now we assume non-socio in Aula is Day Use unless logic changes.
+            // If strict 'Day Card' check is needed, we'd need to fetch all students map.
+            // Assuming simplified logic: If it's a non-socio student reservation, it counts as Day Use.
+            if (r.type === 'Aula' && r.studentType === 'non-socio') {
+                grouped[month].studentDayCount++;
+            }
         });
+
+        // 2. Process Student Payments (Card Mensal)
+        studentPayments.forEach(p => {
+            const month = p.paymentDate.slice(0, 7); // YYYY-MM
+            if (!grouped[month]) grouped[month] = { friendlyDayCount: 0, studentDayCount: 0, cardMensalTotal: 0 };
+            grouped[month].cardMensalTotal += p.amount;
+        });
+
         return Object.entries(grouped)
-            .map(([month, count]) => ({ month, count, total: count * DAY_USE_PRICE }))
+            .map(([month, data]) => ({
+                month,
+                friendlyCount: data.friendlyDayCount,
+                friendlyTotal: data.friendlyDayCount * DAY_USE_PRICE,
+                studentCount: data.studentDayCount,
+                studentTotal: data.studentDayCount * DAY_USE_PRICE,
+                cardMensalTotal: data.cardMensalTotal,
+                grandTotal: (data.friendlyDayCount * DAY_USE_PRICE) + (data.studentDayCount * DAY_USE_PRICE) + data.cardMensalTotal
+            }))
             .sort((a, b) => b.month.localeCompare(a.month));
-    }, [reservations]);
+
+    }, [reservations, studentPayments]);
 
     // Current month stats
-    const currentMonthData = monthlyData.find(m => m.month === selectedMonth);
-    const totalAllTime = reservations.length * DAY_USE_PRICE;
+    const currentMonthData = financialData.find(m => m.month === selectedMonth);
 
     if (loading) {
         return <div className="flex justify-center py-8"><Loader2 className="animate-spin text-saibro-500" size={32} /></div>;
@@ -954,28 +1004,13 @@ const FinanceiroTab: React.FC = () => {
                     </div>
                 </div>
 
-
                 <hr className="border-stone-200" />
 
-                {/* --- SECTION 2: DAY USE METRICS --- */}
+                {/* --- SECTION 2: RELATÓRIO FINANCEIRO DETALHADO --- */}
                 <div className="space-y-6">
                     <h3 className="text-lg font-bold text-stone-700 mb-4 flex items-center gap-2">
-                        <DollarSign className="text-green-600" size={20} /> Controle de Day Use
+                        <DollarSign className="text-green-600" size={20} /> Relatório Financeiro
                     </h3>
-
-                    {/* Summary Cards */}
-                    <div className="grid grid-cols-2 gap-3">
-                        <div className="bg-white rounded-xl p-4 shadow-sm border border-stone-100">
-                            <p className="text-xs text-stone-500 uppercase font-semibold">Day Uses {selectedMonth.slice(0, 4)}/{selectedMonth.slice(5, 7)}</p>
-                            <p className="text-2xl font-bold text-saibro-600">{currentMonthData?.count || 0}</p>
-                            <p className="text-sm text-green-600 font-semibold">R$ {(currentMonthData?.total || 0).toFixed(2)}</p>
-                        </div>
-                        <div className="bg-white rounded-xl p-4 shadow-sm border border-stone-100">
-                            <p className="text-xs text-stone-500 uppercase font-semibold">Total Geral</p>
-                            <p className="text-2xl font-bold text-stone-800">{reservations.length}</p>
-                            <p className="text-sm text-green-600 font-semibold">R$ {totalAllTime.toFixed(2)}</p>
-                        </div>
-                    </div>
 
                     {/* Month Selector */}
                     <div className="bg-white rounded-xl p-4 shadow-sm border border-stone-100">
@@ -985,31 +1020,76 @@ const FinanceiroTab: React.FC = () => {
                             onChange={e => setSelectedMonth(e.target.value)}
                             className="w-full px-4 py-3 border border-stone-200 rounded-xl bg-white"
                         >
-                            {monthlyData.map(m => (
+                            {financialData.map(m => (
                                 <option key={m.month} value={m.month}>
-                                    {new Date(m.month + '-01').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })} - {m.count} day uses
+                                    {new Date(m.month + '-01').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
                                 </option>
                             ))}
                         </select>
                     </div>
 
-                    {/* Monthly Summary */}
-                    <div className="bg-white rounded-xl p-4 shadow-sm border border-stone-100">
-                        <h3 className="font-bold text-stone-700 mb-3 flex items-center gap-2">
-                            <DollarSign size={18} /> Resumo Mensal
-                        </h3>
-                        <div className="space-y-2">
-                            {monthlyData.slice(0, 12).map(m => (
-                                <div key={m.month} className="flex justify-between items-center p-3 bg-stone-50 rounded-lg">
-                                    <span className="font-medium text-stone-700">
-                                        {new Date(m.month + '-01').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
-                                    </span>
-                                    <div className="flex items-center gap-4">
-                                        <span className="text-stone-500 text-sm">{m.count} day uses</span>
-                                        <span className="font-bold text-green-600">R$ {m.total.toFixed(2)}</span>
-                                    </div>
-                                </div>
-                            ))}
+                    {/* Summary Cards for Selected Month */}
+                    {currentMonthData && (
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <div className="bg-white rounded-xl p-4 shadow-sm border border-stone-100">
+                                <p className="text-[10px] text-stone-500 uppercase font-semibold">Day Use (Amistoso)</p>
+                                <p className="text-xl font-bold text-saibro-600">{currentMonthData.friendlyCount}</p>
+                                <p className="text-xs text-green-600 font-semibold">R$ {currentMonthData.friendlyTotal.toFixed(2)}</p>
+                            </div>
+                            <div className="bg-white rounded-xl p-4 shadow-sm border border-stone-100">
+                                <p className="text-[10px] text-stone-500 uppercase font-semibold">Day Use (Aluno)</p>
+                                <p className="text-xl font-bold text-saibro-600">{currentMonthData.studentCount}</p>
+                                <p className="text-xs text-green-600 font-semibold">R$ {currentMonthData.studentTotal.toFixed(2)}</p>
+                            </div>
+                            <div className="bg-white rounded-xl p-4 shadow-sm border border-stone-100">
+                                <p className="text-[10px] text-stone-500 uppercase font-semibold">Card Mensal</p>
+                                <p className="text-xl font-bold text-saibro-600">-</p>
+                                <p className="text-xs text-green-600 font-semibold">R$ {currentMonthData.cardMensalTotal.toFixed(2)}</p>
+                            </div>
+                            <div className="bg-saibro-600 rounded-xl p-4 shadow-sm border border-saibro-700 text-white">
+                                <p className="text-[10px] text-saibro-100 uppercase font-semibold">Total Geral</p>
+                                <p className="text-xl font-bold">R$ {currentMonthData.grandTotal.toFixed(2)}</p>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Detailed Table */}
+                    <div className="bg-white rounded-xl shadow-sm border border-stone-100 overflow-hidden">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm text-left">
+                                <thead className="bg-stone-50 text-stone-500 font-semibold uppercase text-xs">
+                                    <tr>
+                                        <th className="px-4 py-3">Mês</th>
+                                        <th className="px-4 py-3 text-right">Day Use (Amistoso)</th>
+                                        <th className="px-4 py-3 text-right">Day Use (Aluno)</th>
+                                        <th className="px-4 py-3 text-right">Card Mensal</th>
+                                        <th className="px-4 py-3 text-right text-green-700">Total Arrecadado</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-stone-100">
+                                    {financialData.map(m => (
+                                        <tr key={m.month} className="hover:bg-stone-50 transition-colors">
+                                            <td className="px-4 py-3 font-medium text-stone-700">
+                                                {new Date(m.month + '-01').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+                                            </td>
+                                            <td className="px-4 py-3 text-right">
+                                                <div className="text-stone-800">{m.friendlyCount} <span className="text-xs text-stone-400">un</span></div>
+                                                <div className="text-xs text-green-600">R$ {m.friendlyTotal.toFixed(2)}</div>
+                                            </td>
+                                            <td className="px-4 py-3 text-right">
+                                                <div className="text-stone-800">{m.studentCount} <span className="text-xs text-stone-400">un</span></div>
+                                                <div className="text-xs text-green-600">R$ {m.studentTotal.toFixed(2)}</div>
+                                            </td>
+                                            <td className="px-4 py-3 text-right text-green-600 font-medium">
+                                                R$ {m.cardMensalTotal.toFixed(2)}
+                                            </td>
+                                            <td className="px-4 py-3 text-right font-bold text-saibro-700 bg-saibro-50/50">
+                                                R$ {m.grandTotal.toFixed(2)}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>

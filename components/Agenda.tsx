@@ -753,7 +753,8 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                 // Fetch profiles
                 const { data: profilesData, error: profilesError } = await supabase
                     .from('profiles')
-                    .select('*');
+                    .select('*')
+                    .eq('is_active', true);
 
                 if (profilesError) throw profilesError;
 

@@ -482,7 +482,8 @@ export const Athletes: React.FC<AthletesProps> = ({ initialUserId, currentUser, 
         try {
             const { data, error } = await supabase
                 .from('profiles')
-                .select('*');
+                .select('*')
+                .eq('is_active', true);
 
             if (error) throw error;
 

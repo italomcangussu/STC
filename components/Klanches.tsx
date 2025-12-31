@@ -122,7 +122,8 @@ export const Klanches: React.FC<KlanchesProps> = ({ currentUser }) => {
             const { data: profilesData } = await supabase
                 .from('profiles')
                 .select('id, name, avatar_url, role')
-                .in('role', ['socio', 'admin']);
+                .in('role', ['socio', 'admin'])
+                .eq('is_active', true);
 
             setProfiles((profilesData || []).map(p => ({
                 id: p.id,

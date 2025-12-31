@@ -41,7 +41,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
     // Dynamic Navigation Items
     const navItems: NavItem[] = [
         { id: 'agenda', label: 'Agenda', icon: <Calendar size={20} />, roles: ['admin', 'socio'] },
-        { id: 'atletas', label: 'Atletas', icon: <Users size={20} />, roles: ['admin', 'socio'] },
+        //{ id: 'atletas', label: 'Atletas', icon: <Users size={20} />, roles: ['admin', 'socio'] },
         { id: 'ranking', label: 'Ranking', icon: <Trophy size={20} />, roles: ['admin', 'socio'] },
         { id: 'desafios', label: 'Desafios', icon: <Swords size={20} />, roles: ['admin', 'socio'] },
         { id: 'superset', label: 'SuperSet', icon: <Trophy size={20} />, roles: ['admin', 'socio'] },
