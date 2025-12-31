@@ -38,7 +38,7 @@ export interface Professor {
   bio?: string;
 }
 
-export type PlanType = 'Day Card' | 'Master Card';
+export type PlanType = 'Day Card' | 'Card Mensal';
 
 export interface NonSocioStudent {
   id: string;

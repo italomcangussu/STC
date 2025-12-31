@@ -6,7 +6,7 @@ import {
     LayoutDashboard, Megaphone, Save
 } from 'lucide-react';
 import { Dashboard } from './Dashboard';
-import { Reservation, User, Championship, Challenge, AccessRequest, Match, Consumption, Product } from '../types';
+import { Reservation, User, Championship, Challenge, AccessRequest, Match, Consumption, Product, NonSocioStudent } from '../types';
 import { formatDateBr, getDayName } from '../utils';
 import { NewChampionship } from './NewChampionship';
 import { supabase } from '../lib/supabase';
@@ -741,23 +741,26 @@ const DesafiosTab: React.FC = () => {
 // --- Sub-component: Financeiro Tab ---
 const FinanceiroTab: React.FC = () => {
     const [reservations, setReservations] = useState<Reservation[]>([]);
+    const [monthlyStudents, setMonthlyStudents] = useState<NonSocioStudent[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
+    const [processingPayment, setProcessingPayment] = useState<string | null>(null);
 
-    // Day Use price - could be configurable in the future
+    // Day Use price
     const DAY_USE_PRICE = 50;
 
-    useEffect(() => {
-        const fetchData = async () => {
-            setLoading(true);
-            const { data } = await supabase
-                .from('reservations')
-                .select('*')
-                .eq('type', 'Day Use')
-                .neq('status', 'cancelled')
-                .order('date', { ascending: false });
+    const fetchData = async () => {
+        setLoading(true);
+        // 1. Fetch Day Uses
+        const { data: resData } = await supabase
+            .from('reservations')
+            .select('*')
+            .eq('type', 'Day Use')
+            .neq('status', 'cancelled')
+            .order('date', { ascending: false });
 
-            setReservations((data || []).map(r => ({
+        if (resData) {
+            setReservations(resData.map(r => ({
                 id: r.id,
                 type: r.type,
                 date: r.date,
@@ -767,11 +770,74 @@ const FinanceiroTab: React.FC = () => {
                 creatorId: r.creator_id,
                 participantIds: r.participant_ids || [],
                 status: r.status
+            } as Reservation)));
+        }
+
+        // 2. Fetch Card Mensal Students
+        const { data: studentsData } = await supabase
+            .from('non_socio_students')
+            .select('*')
+            .eq('plan_type', 'Card Mensal')
+            .order('name');
+
+        if (studentsData) {
+            setMonthlyStudents(studentsData.map(s => ({
+                id: s.id,
+                name: s.name,
+                planType: s.plan_type,
+                planStatus: s.plan_status,
+                masterExpirationDate: s.master_expiration_date,
+                professorId: s.professor_id
             })));
-            setLoading(false);
-        };
+        }
+
+        setLoading(false);
+    };
+
+    useEffect(() => {
         fetchData();
     }, []);
+
+    const handleRegisterPayment = async (student: NonSocioStudent) => {
+        if (!confirm(`Confirmar pagamento de R$ 200,00 para ${student.name}? Isso ativará o plano por 30 dias.`)) return;
+
+        setProcessingPayment(student.id);
+        try {
+            const now = new Date();
+            const validUntil = new Date(now);
+            validUntil.setDate(validUntil.getDate() + 30);
+
+            // 1. Audit Log
+            const { error: auditError } = await supabase.from('student_payments').insert({
+                student_id: student.id,
+                amount: 200.00,
+                valid_until: validUntil.toISOString(),
+                payment_date: now.toISOString()
+            });
+
+            if (auditError) throw auditError;
+
+            // 2. Update Student
+            const { error: updateError } = await supabase
+                .from('non_socio_students')
+                .update({
+                    plan_status: 'active',
+                    master_expiration_date: validUntil.toISOString().split('T')[0] // DATE type
+                })
+                .eq('id', student.id);
+
+            if (updateError) throw updateError;
+
+            alert('Pagamento registrado e plano ativado com sucesso!');
+            fetchData(); // Refresh list
+
+        } catch (error: any) {
+            console.error('Payment Error:', error);
+            alert(`Erro ao registrar pagamento: ${error.message}`);
+        } finally {
+            setProcessingPayment(null);
+        }
+    };
 
     // Group by month for monthly totals
     const monthlyData = useMemo(() => {
@@ -785,18 +851,6 @@ const FinanceiroTab: React.FC = () => {
             .sort((a, b) => b.month.localeCompare(a.month));
     }, [reservations]);
 
-    // Daily data for selected month
-    const dailyData = useMemo(() => {
-        const filtered = reservations.filter(r => r.date.startsWith(selectedMonth));
-        const grouped: Record<string, number> = {};
-        filtered.forEach(r => {
-            grouped[r.date] = (grouped[r.date] || 0) + 1;
-        });
-        return Object.entries(grouped)
-            .map(([date, count]) => ({ date, count, total: count * DAY_USE_PRICE }))
-            .sort((a, b) => b.date.localeCompare(a.date));
-    }, [reservations, selectedMonth]);
-
     // Current month stats
     const currentMonthData = monthlyData.find(m => m.month === selectedMonth);
     const totalAllTime = reservations.length * DAY_USE_PRICE;
@@ -806,80 +860,160 @@ const FinanceiroTab: React.FC = () => {
     }
 
     return (
-        <div className="space-y-6">
-            {/* Summary Cards */}
-            <div className="grid grid-cols-2 gap-3">
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-stone-100">
-                    <p className="text-xs text-stone-500 uppercase font-semibold">Day Uses {selectedMonth.slice(0, 4)}/{selectedMonth.slice(5, 7)}</p>
-                    <p className="text-2xl font-bold text-saibro-600">{currentMonthData?.count || 0}</p>
-                    <p className="text-sm text-green-600 font-semibold">R$ {(currentMonthData?.total || 0).toFixed(2)}</p>
-                </div>
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-stone-100">
-                    <p className="text-xs text-stone-500 uppercase font-semibold">Total Geral</p>
-                    <p className="text-2xl font-bold text-stone-800">{reservations.length}</p>
-                    <p className="text-sm text-green-600 font-semibold">R$ {totalAllTime.toFixed(2)}</p>
-                </div>
-            </div>
-
-            {/* Month Selector */}
-            <div className="bg-white rounded-xl p-4 shadow-sm border border-stone-100">
-                <label className="text-xs text-stone-500 uppercase font-semibold block mb-2">Selecionar Mês</label>
-                <select
-                    value={selectedMonth}
-                    onChange={e => setSelectedMonth(e.target.value)}
-                    className="w-full px-4 py-3 border border-stone-200 rounded-xl bg-white"
-                >
-                    {monthlyData.map(m => (
-                        <option key={m.month} value={m.month}>
-                            {new Date(m.month + '-01').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })} - {m.count} day uses
-                        </option>
-                    ))}
-                </select>
-            </div>
-
-            {/* Daily Breakdown */}
-            <div className="bg-white rounded-xl p-4 shadow-sm border border-stone-100">
-                <h3 className="font-bold text-stone-700 mb-3 flex items-center gap-2">
-                    <Calendar size={18} /> Day Uses por Dia
+        <div className="space-y-8">
+            {/* --- SECTION 1: CARD MENSAL MANAGEMENT --- */}
+            <div>
+                <h3 className="text-lg font-bold text-saibro-800 mb-4 flex items-center gap-2">
+                    <CheckCircle className="text-saibro-500" size={20} /> Gestão de Mensalidades (Card Mensal)
                 </h3>
-                {dailyData.length === 0 ? (
-                    <p className="text-center text-stone-400 py-4">Nenhum Day Use neste mês</p>
-                ) : (
-                    <div className="space-y-2">
-                        {dailyData.map(d => (
-                            <div key={d.date} className="flex justify-between items-center p-3 bg-stone-50 rounded-lg">
-                                <span className="font-medium text-stone-700">
-                                    {new Date(d.date + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric', month: 'short' })}
-                                </span>
-                                <div className="flex items-center gap-4">
-                                    <span className="text-stone-500 text-sm">{d.count}x</span>
-                                    <span className="font-bold text-green-600">R$ {d.total.toFixed(2)}</span>
+
+                {/* PENDING / EXPIRED LIST */}
+                <div className="mb-8">
+                    <h4 className="text-sm font-bold text-orange-600 uppercase mb-3 flex items-center gap-2">
+                        <AlertCircle size={16} /> Pendências (Aprovação Necessária / Vencidos)
+                    </h4>
+                    <div className="grid gap-3 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                        {monthlyStudents.filter(s => {
+                            const isExpired = !s.masterExpirationDate || new Date(s.masterExpirationDate) < new Date();
+                            const isInactive = s.planStatus !== 'active';
+                            return isExpired || isInactive;
+                        }).length === 0 && <p className="text-stone-400 text-sm italic">Nenhuma pendência.</p>}
+
+                        {monthlyStudents.filter(s => {
+                            const isExpired = !s.masterExpirationDate || new Date(s.masterExpirationDate) < new Date();
+                            const isInactive = s.planStatus !== 'active';
+                            return isExpired || isInactive;
+                        }).map(student => {
+                            const isExpired = !student.masterExpirationDate || new Date(student.masterExpirationDate) < new Date();
+                            return (
+                                <div key={student.id} className="p-4 rounded-xl border-2 flex flex-col justify-between gap-3 bg-red-50 text-red-600 border-red-100">
+                                    <div>
+                                        <h4 className="font-bold text-lg text-stone-800">{student.name}</h4>
+                                        <div className="flex items-center gap-2 mt-1">
+                                            <span className="text-[10px] font-bold uppercase tracking-wider bg-white/50 px-2 py-0.5 rounded border border-current">
+                                                {student.planStatus === 'active' ? 'VENCIDO' : 'AGUARDANDO PAGAMENTO'}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <p className="text-xs font-medium mb-3">
+                                            {isExpired
+                                                ? `Venceu em: ${new Date(student.masterExpirationDate!).toLocaleDateString()}`
+                                                : 'Novo Aluno (Sem validade)'}
+                                        </p>
+                                        <button
+                                            onClick={() => handleRegisterPayment(student)}
+                                            disabled={!!processingPayment}
+                                            className="w-full py-2 bg-saibro-600 hover:bg-saibro-700 text-white rounded-lg font-bold text-sm shadow-sm flex items-center justify-center gap-2 transition-all active:scale-95"
+                                        >
+                                            {processingPayment === student.id ? <Loader2 className="animate-spin" size={16} /> : <DollarSign size={16} />}
+                                            Aprovar Pagamento (R$ 200)
+                                        </button>
+                                    </div>
+                                </div>
+                            )
+                        })}
+                    </div>
+                </div>
+
+                {/* ACTIVE LIST */}
+                <div>
+                    <h4 className="text-sm font-bold text-stone-500 uppercase mb-3 flex items-center gap-2">
+                        <CheckCircle size={16} /> Mensalistas Ativos
+                    </h4>
+                    <div className="grid gap-3 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                        {monthlyStudents.filter(s => {
+                            const isExpired = !s.masterExpirationDate || new Date(s.masterExpirationDate) < new Date();
+                            const isInactive = s.planStatus !== 'active';
+                            return !isExpired && !isInactive;
+                        }).length === 0 && <p className="text-stone-400 text-sm italic">Nenhum mensalista ativo.</p>}
+
+                        {monthlyStudents.filter(s => {
+                            const isExpired = !s.masterExpirationDate || new Date(s.masterExpirationDate) < new Date();
+                            const isInactive = s.planStatus !== 'active';
+                            return !isExpired && !isInactive;
+                        }).map(student => (
+                            <div key={student.id} className="p-4 rounded-xl border border-green-200 bg-green-50 flex flex-col justify-between gap-3">
+                                <div>
+                                    <h4 className="font-bold text-lg text-green-900">{student.name}</h4>
+                                    <p className="text-xs text-green-700 font-bold uppercase tracking-wider">Ativo</p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-[10px] text-green-600 uppercase font-bold">Vence em</p>
+                                    <p className="font-mono font-bold text-green-800">{new Date(student.masterExpirationDate!).toLocaleDateString()}</p>
+                                    <button
+                                        onClick={() => handleRegisterPayment(student)} // Allow re-payment even if active (early renewal)
+                                        className="mt-2 text-xs text-saibro-600 hover:text-saibro-800 underline font-bold"
+                                    >
+                                        Renovar Antecipado
+                                    </button>
                                 </div>
                             </div>
                         ))}
                     </div>
-                )}
-            </div>
-
-            {/* Monthly Summary */}
-            <div className="bg-white rounded-xl p-4 shadow-sm border border-stone-100">
-                <h3 className="font-bold text-stone-700 mb-3 flex items-center gap-2">
-                    <DollarSign size={18} /> Resumo Mensal
-                </h3>
-                <div className="space-y-2">
-                    {monthlyData.slice(0, 12).map(m => (
-                        <div key={m.month} className="flex justify-between items-center p-3 bg-stone-50 rounded-lg">
-                            <span className="font-medium text-stone-700">
-                                {new Date(m.month + '-01').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
-                            </span>
-                            <div className="flex items-center gap-4">
-                                <span className="text-stone-500 text-sm">{m.count} day uses</span>
-                                <span className="font-bold text-green-600">R$ {m.total.toFixed(2)}</span>
-                            </div>
-                        </div>
-                    ))}
                 </div>
-            </div>
+
+
+                <hr className="border-stone-200" />
+
+                {/* --- SECTION 2: DAY USE METRICS --- */}
+                <div className="space-y-6">
+                    <h3 className="text-lg font-bold text-stone-700 mb-4 flex items-center gap-2">
+                        <DollarSign className="text-green-600" size={20} /> Controle de Day Use
+                    </h3>
+
+                    {/* Summary Cards */}
+                    <div className="grid grid-cols-2 gap-3">
+                        <div className="bg-white rounded-xl p-4 shadow-sm border border-stone-100">
+                            <p className="text-xs text-stone-500 uppercase font-semibold">Day Uses {selectedMonth.slice(0, 4)}/{selectedMonth.slice(5, 7)}</p>
+                            <p className="text-2xl font-bold text-saibro-600">{currentMonthData?.count || 0}</p>
+                            <p className="text-sm text-green-600 font-semibold">R$ {(currentMonthData?.total || 0).toFixed(2)}</p>
+                        </div>
+                        <div className="bg-white rounded-xl p-4 shadow-sm border border-stone-100">
+                            <p className="text-xs text-stone-500 uppercase font-semibold">Total Geral</p>
+                            <p className="text-2xl font-bold text-stone-800">{reservations.length}</p>
+                            <p className="text-sm text-green-600 font-semibold">R$ {totalAllTime.toFixed(2)}</p>
+                        </div>
+                    </div>
+
+                    {/* Month Selector */}
+                    <div className="bg-white rounded-xl p-4 shadow-sm border border-stone-100">
+                        <label className="text-xs text-stone-500 uppercase font-semibold block mb-2">Selecionar Mês</label>
+                        <select
+                            value={selectedMonth}
+                            onChange={e => setSelectedMonth(e.target.value)}
+                            className="w-full px-4 py-3 border border-stone-200 rounded-xl bg-white"
+                        >
+                            {monthlyData.map(m => (
+                                <option key={m.month} value={m.month}>
+                                    {new Date(m.month + '-01').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })} - {m.count} day uses
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* Monthly Summary */}
+                    <div className="bg-white rounded-xl p-4 shadow-sm border border-stone-100">
+                        <h3 className="font-bold text-stone-700 mb-3 flex items-center gap-2">
+                            <DollarSign size={18} /> Resumo Mensal
+                        </h3>
+                        <div className="space-y-2">
+                            {monthlyData.slice(0, 12).map(m => (
+                                <div key={m.month} className="flex justify-between items-center p-3 bg-stone-50 rounded-lg">
+                                    <span className="font-medium text-stone-700">
+                                        {new Date(m.month + '-01').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+                                    </span>
+                                    <div className="flex items-center gap-4">
+                                        <span className="text-stone-500 text-sm">{m.count} day uses</span>
+                                        <span className="font-bold text-green-600">R$ {m.total.toFixed(2)}</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </div >
         </div>
     );
 };

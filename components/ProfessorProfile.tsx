@@ -1,17 +1,60 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { User, Professor, NonSocioStudent, Reservation, PlanType } from '../types';
-import { Calendar, Users, Plus, Edit, CheckCircle, XCircle, Clock, MapPin, DollarSign, Wallet, Loader2 } from 'lucide-react';
+import { Calendar, Users, Plus, Edit, CheckCircle, XCircle, Clock, MapPin, DollarSign, Wallet, Loader2, AlertCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
-interface ProfessorProfileProps {
-    currentUser: User;
-}
+// --- HELPER: Student Card ---
+const StudentCard: React.FC<{ student: NonSocioStudent, onEdit: (s: NonSocioStudent) => void, onToggleStatus: (id: string) => void }> = ({ student, onEdit, onToggleStatus }) => {
+    const isMaster = student.planType === 'Card Mensal';
+    const isActive = student.planStatus === 'active';
+    const isExpired = isMaster && (!student.masterExpirationDate || new Date(student.masterExpirationDate) < new Date());
 
-interface Court {
-    id: string;
-    name: string;
-    type: string;
-}
+    let statusLabel = 'Ativo';
+    let statusColor = 'text-green-600 bg-green-50';
+    let icon = <CheckCircle size={12} />;
+
+    if (!isActive) {
+        statusLabel = 'Inativo / Aguardando Pagamento';
+        statusColor = 'text-orange-600 bg-orange-50';
+        icon = <Clock size={12} />;
+    } else if (isExpired) {
+        statusLabel = 'Vencido';
+        statusColor = 'text-red-500 bg-red-50';
+        icon = <XCircle size={12} />;
+    }
+
+    return (
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-stone-100 relative group overflow-hidden">
+            <div className={`absolute top-0 right-0 px-3 py-1 rounded-bl-xl text-[10px] font-bold uppercase ${isMaster ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
+                {student.planType}
+            </div>
+
+            <div className="flex justify-between items-start mb-2">
+                <h3 className="font-bold text-stone-800 text-lg">{student.name}</h3>
+            </div>
+
+            <div className="flex items-center gap-2 mb-3">
+                <span className={`text-xs font-bold px-2 py-0.5 rounded flex items-center gap-1 ${statusColor}`}>
+                    {icon} {statusLabel}
+                </span>
+                {isMaster && (
+                    <span className="text-xs text-stone-400">
+                        {student.masterExpirationDate ? `Vence: ${new Date(student.masterExpirationDate).toLocaleDateString()}` : 'Sem validade definida'}
+                    </span>
+                )}
+            </div>
+
+            <div className="flex gap-2 mt-4 border-t border-stone-50 pt-3">
+                <button onClick={() => onEdit(student)} className="flex-1 py-1.5 text-xs font-bold text-stone-600 bg-stone-100 hover:bg-stone-200 rounded flex items-center justify-center gap-1">
+                    <Edit size={12} /> Editar
+                </button>
+                <button onClick={() => onToggleStatus(student.id)} className="flex-1 py-1.5 text-xs font-bold text-stone-500 border border-stone-200 hover:bg-stone-50 rounded">
+                    {isActive ? 'Desativar' : 'Ativar'}
+                </button>
+            </div>
+        </div>
+    );
+};
 
 export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser }) => {
     const [activeTab, setActiveTab] = useState<'classes' | 'students'>('classes');
@@ -136,7 +179,7 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                 .update({
                     name: studentForm.name,
                     plan_type: studentForm.plan,
-                    master_expiration_date: studentForm.plan === 'Master Card' ? studentForm.expiry : null,
+                    master_expiration_date: studentForm.plan === 'Card Mensal' ? null : null,
                     plan_status: 'active'
                 })
                 .eq('id', editingStudent.id);
@@ -146,24 +189,36 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                     ...s,
                     name: studentForm.name,
                     planType: studentForm.plan,
-                    masterExpirationDate: studentForm.plan === 'Master Card' ? studentForm.expiry : undefined,
+                    masterExpirationDate: studentForm.plan === 'Card Mensal' ? studentForm.expiry : undefined,
                     planStatus: 'active'
                 } : s));
             }
         } else {
+            console.log('Attempts to save student:', {
+                name: studentForm.name,
+                plan: studentForm.plan,
+                professorId: professorRecord.id
+            });
+
             const { data, error } = await supabase
                 .from('non_socio_students')
                 .insert({
                     name: studentForm.name,
                     plan_type: studentForm.plan,
-                    plan_status: 'active',
-                    master_expiration_date: studentForm.plan === 'Master Card' ? studentForm.expiry : null,
+                    plan_status: studentForm.plan === 'Card Mensal' ? 'inactive' : 'active',
+                    master_expiration_date: studentForm.plan === 'Card Mensal' ? null : null, // New student = null expiry (needs payment)
                     professor_id: professorRecord.id
                 })
                 .select()
                 .single();
 
-            if (!error && data) {
+            if (error) {
+                console.error('Error saving student:', error);
+                // alert(`Erro ao salvar aluno: ${error.message}`); // Optional: keep or remove. Usually better to use toast or silent fail in this context if we want to be cleaner, but I'll remove the alert as requested cleanup.
+                return;
+            }
+
+            if (data) {
                 setStudents([...students, {
                     id: data.id,
                     name: data.name,
@@ -348,53 +403,49 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                         <Plus size={20} /> Cadastrar Novo Aluno
                     </button>
 
-                    <div className="grid gap-3">
-                        {myStudents.map(student => {
-                            const isMaster = student.planType === 'Master Card';
-                            const isActive = student.planStatus === 'active';
-
-                            // Check Validity
-                            let isValid = true;
-                            if (isMaster && student.masterExpirationDate) {
-                                isValid = new Date(student.masterExpirationDate) >= new Date();
-                            }
-                            const statusColor = isActive && isValid ? 'text-green-600 bg-green-50' : 'text-red-500 bg-red-50';
-
-                            return (
-                                <div key={student.id} className="bg-white p-4 rounded-xl shadow-sm border border-stone-100 relative group overflow-hidden">
-                                    <div className={`absolute top-0 right-0 px-3 py-1 rounded-bl-xl text-[10px] font-bold uppercase ${isMaster ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
-                                        {student.planType}
-                                    </div>
-
-                                    <div className="flex justify-between items-start mb-2">
-                                        <h3 className="font-bold text-stone-800 text-lg">{student.name}</h3>
-                                    </div>
-
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <span className={`text-xs font-bold px-2 py-0.5 rounded flex items-center gap-1 ${statusColor}`}>
-                                            {isActive && isValid ? <CheckCircle size={10} /> : <XCircle size={10} />}
-                                            {isActive ? (isValid ? 'Ativo' : 'Vencido') : 'Inativo'}
-                                        </span>
-                                        {isMaster && student.masterExpirationDate && (
-                                            <span className="text-xs text-stone-400">Vence: {new Date(student.masterExpirationDate + 'T12:00:00').toLocaleDateString()}</span>
-                                        )}
-                                    </div>
-
-                                    <div className="flex gap-2 mt-4 border-t border-stone-50 pt-3">
-                                        <button onClick={() => openStudentModal(student)} className="flex-1 py-1.5 text-xs font-bold text-stone-600 bg-stone-100 hover:bg-stone-200 rounded flex items-center justify-center gap-1">
-                                            <Edit size={12} /> Editar
-                                        </button>
-                                        <button onClick={() => toggleStudentStatus(student.id)} className="flex-1 py-1.5 text-xs font-bold text-stone-500 border border-stone-200 hover:bg-stone-50 rounded">
-                                            {isActive ? 'Desativar' : 'Ativar'}
-                                        </button>
+                    <div className="space-y-6">
+                        {/* PENDING / EXPIRED SECTION */}
+                        {myStudents.some(s => {
+                            const isMaster = s.planType === 'Card Mensal';
+                            const isExpired = isMaster && (!s.masterExpirationDate || new Date(s.masterExpirationDate) < new Date());
+                            const isInactive = s.planStatus !== 'active';
+                            return isMaster && (isExpired || isInactive);
+                        }) && (
+                                <div>
+                                    <h4 className="text-sm font-bold text-orange-600 uppercase mb-2 flex items-center gap-2">
+                                        <AlertCircle size={16} /> Atenção Necessária
+                                    </h4>
+                                    <div className="grid gap-3">
+                                        {myStudents.filter(s => {
+                                            const isMaster = s.planType === 'Card Mensal';
+                                            const isExpired = isMaster && (!s.masterExpirationDate || new Date(s.masterExpirationDate) < new Date());
+                                            const isInactive = s.planStatus !== 'active';
+                                            return isMaster && (isExpired || isInactive);
+                                        }).map(student => (
+                                            <StudentCard key={student.id} student={student} onEdit={openStudentModal} onToggleStatus={toggleStudentStatus} />
+                                        ))}
                                     </div>
                                 </div>
-                            )
-                        })}
+                            )}
+
+                        {/* ACTIVE SECTION */}
+                        <div>
+                            <h4 className="text-sm font-bold text-stone-500 uppercase mb-2">Alunos Ativos / Day Use</h4>
+                            <div className="grid gap-3">
+                                {myStudents.filter(s => {
+                                    const isMaster = s.planType === 'Card Mensal';
+                                    const isExpired = isMaster && (!s.masterExpirationDate || new Date(s.masterExpirationDate) < new Date());
+                                    const isInactive = s.planStatus !== 'active';
+                                    return !isMaster || (!isExpired && !isInactive);
+                                }).map(student => (
+                                    <StudentCard key={student.id} student={student} onEdit={openStudentModal} onToggleStatus={toggleStudentStatus} />
+                                ))}
+                                {myStudents.length === 0 && <p className="text-stone-400 text-sm italic">Nenhum aluno cadastrado.</p>}
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}
-
             {/* --- MODAL: STUDENT FORM --- */}
             {showStudentModal && (
                 <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4 backdrop-blur-sm">
@@ -416,7 +467,7 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                             <div>
                                 <label className="block text-xs font-bold text-stone-500 uppercase mb-1">Plano</label>
                                 <div className="flex gap-2">
-                                    {['Day Card', 'Master Card'].map(p => (
+                                    {['Day Card', 'Card Mensal'].map(p => (
                                         <button key={p} onClick={() => setStudentForm({ ...studentForm, plan: p as any })}
                                             className={`flex-1 py-2 rounded-lg text-xs font-bold border ${studentForm.plan === p ? 'bg-saibro-50 border-saibro-500 text-saibro-700' : 'border-stone-200 text-stone-400'}`}
                                         >
@@ -426,16 +477,19 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                                 </div>
                             </div>
 
-                            {studentForm.plan === 'Master Card' && (
-                                <div className="animate-in fade-in slide-in-from-top-2">
-                                    <label className="block text-xs font-bold text-stone-500 uppercase mb-1">Validade do Plano</label>
-                                    <input
-                                        type="date"
-                                        value={studentForm.expiry}
-                                        onChange={e => setStudentForm({ ...studentForm, expiry: e.target.value })}
-                                        className="w-full p-2 border border-stone-200 rounded-lg"
-                                    />
-                                    <p className="text-[10px] text-stone-400 mt-1">Geralmente 30 dias a partir do pagamento.</p>
+                            {studentForm.plan === 'Card Mensal' && (
+                                <div className="animate-in fade-in slide-in-from-top-2 bg-purple-50 p-3 rounded-lg border border-purple-100">
+                                    <label className="block text-xs font-bold text-purple-700 uppercase mb-1 flex items-center gap-1">
+                                        <DollarSign size={12} /> Pagamento Necessário
+                                    </label>
+                                    <p className="text-xs text-purple-800">
+                                        A validade de 30 dias será ativada automaticamente após a confirmação do pagamento de <strong>R$ 200,00</strong> pelo Administrador.
+                                    </p>
+                                    {editingStudent?.masterExpirationDate && (
+                                        <p className="text-[10px] text-purple-600 mt-2 font-semibold">
+                                            Validade atual: {new Date(editingStudent.masterExpirationDate).toLocaleDateString('pt-BR')}
+                                        </p>
+                                    )}
                                 </div>
                             )}
 
@@ -445,7 +499,7 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                                     <span>Valor por aula: <strong>R$ 50,00</strong></span>
                                 </div>
                             )}
-                            {studentForm.plan === 'Master Card' && (
+                            {studentForm.plan === 'Card Mensal' && (
                                 <div className="bg-stone-50 p-3 rounded-lg flex items-center gap-2 text-stone-500 text-xs">
                                     <Wallet size={16} />
                                     <span>Mensalidade: <strong>R$ 200,00</strong></span>

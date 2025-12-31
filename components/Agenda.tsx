@@ -272,9 +272,15 @@ const ReservationDetails: React.FC<{
     const creator = profiles.find(u => u.id === res.creatorId);
 
     // Non-Socio Logic
-    let nonSocioStudent: NonSocioStudent | undefined;
-    if (res.type === 'Aula' && res.studentType === 'non-socio' && res.nonSocioStudentId) {
-        nonSocioStudent = nonSocioStudents.find(s => s.id === res.nonSocioStudentId);
+    // Non-Socio Logic
+    let nonSocioStudentsList: NonSocioStudent[] = [];
+    if (res.type === 'Aula' && res.studentType === 'non-socio') {
+        if (res.participantIds && res.participantIds.length > 0) {
+            nonSocioStudentsList = res.participantIds.map(id => nonSocioStudents.find(s => s.id === id)).filter(Boolean) as NonSocioStudent[];
+        } else if (res.nonSocioStudentId) {
+            const s = nonSocioStudents.find(s => s.id === res.nonSocioStudentId);
+            if (s) nonSocioStudentsList.push(s);
+        }
     }
 
     const style = TYPE_STYLES[res.type] || TYPE_STYLES['Play'];
@@ -311,7 +317,7 @@ const ReservationDetails: React.FC<{
 
         if (res.type === 'Aula') {
             text += `🎓 *PROFESSOR:* ${professor?.name || 'N/A'}\n`;
-            text += `👤 *ALUNO:* ${res.studentType === 'socio' ? (participants[0]?.name || 'TBD') : (nonSocioStudent?.name || 'TBD')}\n`;
+            text += `👥 *ALUNOS:* ${res.studentType === 'socio' ? (participants[0]?.name || 'TBD') : (nonSocioStudentsList.map(s => s.name).join(', ') || 'TBD')}\n`;
         } else {
             text += `👥 *ATLETAS:* \n`;
             participants.forEach(p => {
@@ -466,7 +472,7 @@ const ReservationDetails: React.FC<{
                         </div>
 
                         <div className="bg-white rounded-2xl shadow-sm border border-stone-100 p-5">
-                            <h3 className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-4">Aluno</h3>
+                            <h3 className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-4">Alunos</h3>
                             {res.studentType === 'socio' ? (
                                 <div className="flex items-center gap-4">
                                     <img src={participants[0]?.avatar} className="w-12 h-12 rounded-full border-2 border-saibro-100 p-0.5 object-cover" alt="" />
@@ -476,22 +482,26 @@ const ReservationDetails: React.FC<{
                                     </div>
                                 </div>
                             ) : (
-                                <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-white shadow-blue-200 shadow-lg">
-                                        <Wallet size={24} />
-                                    </div>
-                                    <div>
-                                        <p className="font-black text-stone-800 text-lg uppercase leading-tight">{nonSocioStudent?.name}</p>
-                                        <div className="flex items-center gap-2 mt-1">
-                                            <span className="text-xs text-stone-500 font-bold uppercase">{nonSocioStudent?.planType}</span>
-                                            {nonSocioStudent?.planType === 'Master Card' && (
-                                                <span className={`text-[9px] px-2 py-0.5 rounded font-black border ${new Date(nonSocioStudent.masterExpirationDate || '') < new Date() ? 'bg-red-50 text-red-600 border-red-100' : 'bg-green-50 text-green-600 border-green-100'
-                                                    }`}>
-                                                    {new Date(nonSocioStudent.masterExpirationDate || '') < new Date() ? 'VENCIDO' : 'ATIVO'}
-                                                </span>
-                                            )}
+                                <div className="space-y-3">
+                                    {nonSocioStudentsList.length > 0 ? nonSocioStudentsList.map(s => (
+                                        <div key={s.id} className="flex items-center gap-4 border-b border-stone-50 pb-2 last:border-0 last:pb-0">
+                                            <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-white shadow-blue-200 shadow-lg shrink-0">
+                                                <Wallet size={24} />
+                                            </div>
+                                            <div>
+                                                <p className="font-black text-stone-800 text-lg uppercase leading-tight">{s.name}</p>
+                                                <div className="flex items-center gap-2 mt-1">
+                                                    <span className="text-xs text-stone-500 font-bold uppercase">{s.planType}</span>
+                                                    {s.planType === 'Card Mensal' && (
+                                                        <span className={`text-[9px] px-2 py-0.5 rounded font-black border ${new Date(s.masterExpirationDate || '') < new Date() ? 'bg-red-50 text-red-600 border-red-100' : 'bg-green-50 text-green-600 border-green-100'
+                                                            }`}>
+                                                            {new Date(s.masterExpirationDate || '') < new Date() ? 'VENCIDO' : 'ATIVO'}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
+                                    )) : <p className="text-stone-400 italic">Nenhum aluno vinculado.</p>}
                                 </div>
                             )}
                         </div>
@@ -611,12 +621,15 @@ const ReservationCard: React.FC<{
     const participants = res.participantIds.map(id => profiles.find(u => u.id === id)).filter(Boolean);
     const professor = professors.find(p => p.id === res.professorId);
 
-    // Non-Socio Logic
-    let nonSocioName = '';
-    let nonSocioStudent: NonSocioStudent | undefined;
-    if (res.type === 'Aula' && res.studentType === 'non-socio' && res.nonSocioStudentId) {
-        nonSocioStudent = nonSocioStudents.find(s => s.id === res.nonSocioStudentId);
-        nonSocioName = nonSocioStudent?.name || 'Aluno Externo';
+    // Non-Socio Logic (Multi)
+    let nonSocioStudentsList: NonSocioStudent[] = [];
+    if (res.type === 'Aula' && res.studentType === 'non-socio') {
+        if (res.participantIds && res.participantIds.length > 0) {
+            nonSocioStudentsList = res.participantIds.map(id => nonSocioStudents.find(s => s.id === id)).filter(Boolean) as NonSocioStudent[];
+        } else if (res.nonSocioStudentId) {
+            const s = nonSocioStudents.find(s => s.id === res.nonSocioStudentId);
+            if (s) nonSocioStudentsList.push(s);
+        }
     }
 
     return (
@@ -646,15 +659,19 @@ const ReservationCard: React.FC<{
                 {res.type === 'Aula' ? (
                     <div className="text-sm text-stone-600">
                         <p><span className="font-semibold">Prof:</span> {professor?.name}</p>
-                        <div className="flex items-center gap-2">
-                            <span className="font-semibold">Aluno:</span>
+                        <div className="flex items-start gap-2">
+                            <span className="font-semibold whitespace-nowrap">Alunos:</span>
                             {res.studentType === 'non-socio' ? (
-                                <span className="text-blue-600 font-medium flex items-center gap-1">
-                                    {nonSocioName}
-                                    {nonSocioStudent?.planType === 'Master Card' && (
-                                        <span className="text-[9px] bg-purple-100 text-purple-700 px-1 rounded border border-purple-200">MASTER</span>
-                                    )}
-                                </span>
+                                <div className="flex flex-wrap gap-1">
+                                    {nonSocioStudentsList.length > 0 ? nonSocioStudentsList.map(s => (
+                                        <span key={s.id} className="text-blue-600 font-medium flex items-center gap-1 text-[10px] bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">
+                                            {s.name}
+                                            {s.planType === 'Card Mensal' && (
+                                                <span className="text-[9px] bg-purple-100 text-purple-700 px-1 rounded border border-purple-200">M</span>
+                                            )}
+                                        </span>
+                                    )) : <span className="text-stone-400 text-xs italic">Nenhum</span>}
+                                </div>
                             ) : (
                                 participants[0]?.name || 'TBD'
                             )}
@@ -720,6 +737,7 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
     const [nonSocioStudents, setNonSocioStudents] = useState<NonSocioStudent[]>([]);
     const [challenges, setChallenges] = useState<Challenge[]>([]);
     const [loading, setLoading] = useState(true);
+    const [showCancelled, setShowCancelled] = useState(false);
 
     // Modal States
     const [showAddModal, setShowAddModal] = useState(false);
@@ -1076,7 +1094,7 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
         const sorted = [...reservations].sort((a, b) => {
             if (a.date !== b.date) return a.date.localeCompare(b.date);
             return a.startTime.localeCompare(b.startTime);
-        });
+        }).filter(r => showCancelled ? true : r.status !== 'cancelled');
 
         if (view === 'day') {
             return sorted.filter(r => r.date === formatDate(currentDate));
@@ -1282,6 +1300,22 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                                 <button onClick={() => navigate('next')} className="p-2 hover:bg-stone-50 rounded-lg text-stone-500"><ChevronRight size={20} /></button>
                             </div>
                         </div>
+
+                        {/* Filters */}
+                        <div className="flex justify-end px-2">
+                            <label className="flex items-center gap-2 cursor-pointer select-none group">
+                                <div className={`w-5 h-5 rounded flex items-center justify-center border transition-all ${showCancelled ? 'bg-red-500 border-red-500 text-white' : 'bg-white border-stone-300 text-transparent hover:border-red-300'}`}>
+                                    <Check size={14} strokeWidth={3} />
+                                </div>
+                                <input
+                                    type="checkbox"
+                                    className="hidden"
+                                    checked={showCancelled}
+                                    onChange={(e) => setShowCancelled(e.target.checked)}
+                                />
+                                <span className={`text-sm font-bold transition-colors ${showCancelled ? 'text-red-600' : 'text-stone-400 group-hover:text-red-400'}`}>Ver Canceladas</span>
+                            </label>
+                        </div>
                     </div>
 
                     {/* Main Content */}
@@ -1456,31 +1490,7 @@ const AddReservationModal: React.FC<{
         setParticipantIds(prev => prev.includes(uid) ? prev.filter(id => id !== uid) : [...prev, uid]);
     };
 
-    const handleCreateStudent = () => {
-        if (!newStudentForm.name) {
-            setError("Nome do aluno é obrigatório.");
-            return;
-        }
-        if (!currentProfessorId) {
-            setError("Professor não identificado.");
-            return;
-        }
 
-        const newId = `ns_new_${Date.now()}`;
-        const newStudent: NonSocioStudent = {
-            id: newId,
-            name: newStudentForm.name,
-            planType: newStudentForm.plan,
-            planStatus: 'active',
-            masterExpirationDate: newStudentForm.plan === 'Master Card' ? (newStudentForm.expiry || addDays(new Date(), 30).toISOString().split('T')[0]) : undefined,
-            professorId: currentProfessorId
-        };
-
-        setLocalNonSocioStudents([...localNonSocioStudents, newStudent]);
-        setNonSocioStudentId(newId);
-        setIsCreatingStudent(false);
-        setError(null);
-    };
 
     const validate = () => {
         if (!startTime) return "Horário inválido ou indisponível.";
@@ -1493,18 +1503,25 @@ const AddReservationModal: React.FC<{
         }
 
         if (type === 'Aula') {
+            // Validate Court Type for Aula
+            const selectedCourt = courts.find(c => c.id === courtId);
+            if (selectedCourt?.type !== 'Rápida') return "Aulas são permitidas apenas na Quadra Rápida.";
+
             if (currentUser.role === 'admin' && !selectedProfessorId) return "Selecione o professor.";
 
             if (studentType === 'socio' && participantIds.length === 0) return "Selecione um aluno sócio.";
-            if (studentType === 'non-socio' && !nonSocioStudentId) return "Selecione um aluno não sócio.";
-
-            // Validate Master Card
+            // Validate Card Mensal (Iteration check)
             if (studentType === 'non-socio') {
-                const student = localNonSocioStudents.find(s => s.id === nonSocioStudentId);
-                if (student?.planType === 'Master Card') {
-                    if (student.planStatus !== 'active') return "O plano deste aluno está inativo.";
-                    if (student.masterExpirationDate && new Date(student.masterExpirationDate) < new Date(date)) {
-                        return "Master Card vencido/inativo para a data selecionada.";
+                if (participantIds.length === 0) return "Adicione ao menos um aluno.";
+
+                // Check ALL selected students
+                for (const pid of participantIds) {
+                    const student = localNonSocioStudents.find(s => s.id === pid);
+                    if (student?.planType === 'Card Mensal') {
+                        if (student.planStatus !== 'active') return `Bloqueado: ${student.name} aguardando Pagamento (Inativo).`;
+                        if (!student.masterExpirationDate || new Date(student.masterExpirationDate) < new Date(date)) {
+                            return `Bloqueado: Card Mensal de ${student.name} Vencido.`;
+                        }
                     }
                 }
             }
@@ -1542,14 +1559,13 @@ const AddReservationModal: React.FC<{
             endTime,
             courtId,
             creatorId: initialData?.creatorId || currentUser.id, // Preserve creator
-            participantIds: type === 'Aula' && studentType === 'non-socio' ? [] : participantIds,
+            participantIds: participantIds,
             guestName: hasGuest ? guestName : undefined,
             guestResponsibleId: hasGuest ? guestResponsibleId : undefined,
 
             // Class specific fields
             professorId: type === 'Aula' ? currentProfessorId : undefined,
             studentType: type === 'Aula' ? studentType : undefined,
-            nonSocioStudentId: type === 'Aula' && studentType === 'non-socio' ? nonSocioStudentId : undefined,
 
             observation: observation || undefined,
             status: initialData?.status || 'active'
@@ -1583,7 +1599,12 @@ const AddReservationModal: React.FC<{
                                 Play Amistoso
                             </button>
                             {canCreateAula && (
-                                <button onClick={() => setType('Aula')}
+                                <button onClick={() => {
+                                    setType('Aula');
+                                    // Auto-select Rápida court
+                                    const rapida = courts.find(c => c.type === 'Rápida' && c.isActive);
+                                    if (rapida) setCourtId(rapida.id);
+                                }}
                                     disabled={isEdit}
                                     className={`flex-1 py-2 rounded-md text-sm font-medium transition-all ${type === 'Aula' ? 'bg-white text-saibro-700 shadow-sm ring-1 ring-stone-200' : 'text-stone-500'} ${isEdit ? 'opacity-50 cursor-not-allowed' : 'hover:text-stone-700'}`}
                                 >
@@ -1605,7 +1626,10 @@ const AddReservationModal: React.FC<{
                                 value={courtId}
                                 onChange={e => { setCourtId(e.target.value); setError(null); }}
                             >
-                                {courts.filter(c => c.isActive).map(c => <option key={c.id} value={c.id}>{c.name} ({c.type})</option>)}
+                                {courts
+                                    .filter(c => c.isActive)
+                                    .filter(c => type === 'Aula' ? c.type === 'Rápida' : true)
+                                    .map(c => <option key={c.id} value={c.id}>{c.name} ({c.type})</option>)}
                             </select>
                         </div>
                     </div>
@@ -1721,10 +1745,10 @@ const AddReservationModal: React.FC<{
                             {/* Student Type Selector */}
                             <label className="block text-xs font-bold text-stone-500 uppercase">Aluno</label>
                             <div className="flex gap-2 mb-3">
-                                <button onClick={() => setStudentType('socio')} className={`flex-1 py-1.5 text-xs font-bold rounded flex items-center justify-center gap-1 ${studentType === 'socio' ? 'bg-saibro-100 text-saibro-800' : 'bg-stone-100 text-stone-500'}`}>
+                                <button onClick={() => { setStudentType('socio'); setParticipantIds([]); }} className={`flex-1 py-1.5 text-xs font-bold rounded flex items-center justify-center gap-1 ${studentType === 'socio' ? 'bg-saibro-100 text-saibro-800' : 'bg-stone-100 text-stone-500'}`}>
                                     <UserCog size={14} /> Sócio
                                 </button>
-                                <button onClick={() => setStudentType('non-socio')} className={`flex-1 py-1.5 text-xs font-bold rounded flex items-center justify-center gap-1 ${studentType === 'non-socio' ? 'bg-saibro-100 text-saibro-800' : 'bg-stone-100 text-stone-500'}`}>
+                                <button onClick={() => { setStudentType('non-socio'); setParticipantIds([]); }} className={`flex-1 py-1.5 text-xs font-bold rounded flex items-center justify-center gap-1 ${studentType === 'non-socio' ? 'bg-saibro-100 text-saibro-800' : 'bg-stone-100 text-stone-500'}`}>
                                     <Users size={14} /> Não Sócio
                                 </button>
                             </div>
@@ -1742,78 +1766,74 @@ const AddReservationModal: React.FC<{
                             ) : (
                                 // NON-SOCIO LOGIC
                                 <div className="space-y-3">
-                                    {!isCreatingStudent ? (
-                                        <div className="flex gap-2">
-                                            <select
-                                                className="flex-1 p-2.5 border border-stone-200 rounded-xl bg-white text-sm"
-                                                onChange={(e) => setNonSocioStudentId(e.target.value)}
-                                                value={nonSocioStudentId}
-                                            >
-                                                <option value="">Selecione o aluno externo...</option>
-                                                {myNonSocioStudents.length === 0 && <option disabled>Sem alunos cadastrados.</option>}
-                                                {myNonSocioStudents.map(s => (
-                                                    <option key={s.id} value={s.id}>{s.name} ({s.planType})</option>
-                                                ))}
-                                            </select>
-                                            <button
-                                                onClick={() => setIsCreatingStudent(true)}
-                                                className="px-3 bg-saibro-100 text-saibro-700 rounded-xl border border-saibro-200 hover:bg-saibro-200"
-                                            >
-                                                <Plus size={20} />
-                                            </button>
-                                        </div>
-                                    ) : (
-                                        // QUICK ADD FORM
-                                        <div className="bg-stone-50 p-3 rounded-xl border border-stone-200 animate-in fade-in slide-in-from-right-4">
-                                            <h4 className="text-xs font-bold text-stone-700 uppercase mb-2">Novo Aluno</h4>
-                                            <div className="space-y-2">
-                                                <input
-                                                    type="text"
-                                                    placeholder="Nome completo"
-                                                    className="w-full p-2 border border-stone-200 rounded-lg text-sm"
-                                                    value={newStudentForm.name}
-                                                    onChange={(e) => setNewStudentForm({ ...newStudentForm, name: e.target.value })}
-                                                />
-                                                <div className="flex gap-2">
-                                                    {['Day Card', 'Master Card'].map(p => (
-                                                        <button key={p} onClick={() => setNewStudentForm({ ...newStudentForm, plan: p as any })}
-                                                            className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold uppercase border ${newStudentForm.plan === p ? 'bg-white border-saibro-500 text-saibro-700' : 'border-stone-200 text-stone-400'}`}
-                                                        >
-                                                            {p}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                                {newStudentForm.plan === 'Master Card' && (
-                                                    <input
-                                                        type="date"
-                                                        className="w-full p-2 border border-stone-200 rounded-lg text-sm"
-                                                        placeholder="Validade"
-                                                        value={newStudentForm.expiry}
-                                                        onChange={(e) => setNewStudentForm({ ...newStudentForm, expiry: e.target.value })}
-                                                    />
-                                                )}
-                                                <div className="flex gap-2 mt-2">
-                                                    <button onClick={() => setIsCreatingStudent(false)} className="flex-1 py-1 text-xs font-bold text-stone-500 hover:bg-stone-100 rounded-lg">Cancelar</button>
-                                                    <button onClick={handleCreateStudent} className="flex-1 py-1 text-xs font-bold bg-saibro-600 text-white rounded-lg hover:bg-saibro-700">Salvar Aluno</button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Info Display for Selected Non-Socio */}
-                                    {nonSocioStudentId && !isCreatingStudent && (
-                                        <div className="bg-blue-50 p-2 rounded-lg border border-blue-100 flex items-center justify-between text-xs text-blue-800">
-                                            {(() => {
-                                                const s = localNonSocioStudents.find(st => st.id === nonSocioStudentId);
+                                    <div className="space-y-2">
+                                        <div className="flex flex-wrap gap-2">
+                                            {/* List Selected Non-Socios */}
+                                            {participantIds.map(pid => {
+                                                const s = localNonSocioStudents.find(st => st.id === pid);
+                                                if (!s) return null;
                                                 return (
-                                                    <>
-                                                        <span className="font-bold flex items-center gap-1">
-                                                            <Wallet size={12} /> {s?.planType}
-                                                        </span>
-                                                        <span>{s?.planType === 'Day Card' ? 'R$ 50,00' : `Val: ${new Date(s?.masterExpirationDate || '').toLocaleDateString()}`}</span>
-                                                    </>
+                                                    <button
+                                                        key={s.id}
+                                                        onClick={() => toggleParticipant(s.id)}
+                                                        className={`px-3 py-1.5 rounded-full text-xs font-bold border flex items-center gap-1 bg-saibro-100 border-saibro-300 text-saibro-800`}
+                                                    >
+                                                        <Check size={12} /> {s.name} ({s.planType === 'Card Mensal' ? 'M' : 'D'})
+                                                    </button>
                                                 )
-                                            })()}
+                                            })}
+                                        </div>
+
+                                        <select
+                                            className="w-full p-2.5 border border-stone-200 rounded-xl bg-white text-sm"
+                                            onChange={(e) => {
+                                                if (e.target.value) toggleParticipant(e.target.value);
+                                            }}
+                                            value=""
+                                        >
+                                            <option value="">Adicionar aluno...</option>
+                                            {myNonSocioStudents
+                                                .filter(s => !participantIds.includes(s.id))
+                                                .map(s => (
+                                                    <option key={s.id} value={s.id}>
+                                                        {s.name} ({s.planType})
+                                                        {s.planType === 'Card Mensal' && s.planStatus !== 'active' ? ' [INATIVO]' : ''}
+                                                    </option>
+                                                ))}
+                                            {myNonSocioStudents.length === 0 && <option disabled>Sem alunos cadastrados.</option>}
+                                        </select>
+                                        <p className="text-[10px] text-stone-400 pl-1">
+                                            * Novos alunos devem ser cadastrados na Área do Professor.
+                                        </p>
+                                    </div>
+
+                                    {/* Info Display for Selected Non-Socio(s) */}
+                                    {participantIds.length > 0 && (
+                                        <div className="bg-blue-50 p-2 rounded-lg border border-blue-100 space-y-1">
+                                            {participantIds.map(pid => {
+                                                const s = localNonSocioStudents.find(st => st.id === pid);
+                                                if (!s) return null;
+                                                const isExpirado = s.planType === 'Card Mensal' && (!s.masterExpirationDate || new Date(s.masterExpirationDate) < new Date(date));
+                                                const isInativo = s.planStatus !== 'active';
+                                                const hasIssue = (s.planType === 'Card Mensal' && (isExpirado || isInativo));
+
+                                                return (
+                                                    <div key={s.id} className={`flex items-center justify-between text-xs ${hasIssue ? 'text-red-600 font-bold' : 'text-blue-800'}`}>
+                                                        <span className="flex items-center gap-1">
+                                                            {s.name}
+                                                        </span>
+                                                        <span>
+                                                            {s.planType === 'Day Card'
+                                                                ? 'Day Use'
+                                                                : isInativo
+                                                                    ? '[AGUARDANDO PAGAMENTO]'
+                                                                    : isExpirado
+                                                                        ? '[VENCIDO]'
+                                                                        : `Ativo até ${new Date(s.masterExpirationDate!).toLocaleDateString()}`}
+                                                        </span>
+                                                    </div>
+                                                )
+                                            })}
                                         </div>
                                     )}
                                 </div>
