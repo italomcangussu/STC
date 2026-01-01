@@ -1,53 +1,59 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>STC Play</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            fontFamily: {
-              sans: ['Inter', 'sans-serif'],
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>STC Play</title>
+  <link rel="icon" type="image/png"
+    href="https://smztsayzldjmkzmufqcz.supabase.co/storage/v1/object/public/logoapp/SOBRAL.zip%20-%201.png" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            saibro: {
+              50: '#fff7ed',
+              100: '#ffedd5',
+              200: '#fed7aa',
+              300: '#fdba74',
+              400: '#fb923c',
+              500: '#f97316', // Clay/Terracotta base
+              600: '#ea580c',
+              700: '#c2410c',
+              800: '#9a3412',
+              900: '#7c2d12',
             },
-            colors: {
-              saibro: {
-                50: '#fff7ed',
-                100: '#ffedd5',
-                200: '#fed7aa',
-                300: '#fdba74',
-                400: '#fb923c',
-                500: '#f97316', // Clay/Terracotta base
-                600: '#ea580c',
-                700: '#c2410c',
-                800: '#9a3412',
-                900: '#7c2d12',
-              },
-              court: {
-                green: '#15803d', // Tennis court green
-                dark: '#14532d',
-              }
+            court: {
+              green: '#15803d', // Tennis court green
+              dark: '#14532d',
             }
           }
         }
       }
-    </script>
-    <style>
-      body {
-        background-color: #fff7ed; /* saibro-50 */
-        color: #431407; /* saibro-950 equivalent approx */
-      }
-      /* Subtle pattern for that clay texture feel */
-      .bg-clay-pattern {
-        background-color: #fff7ed;
-        /* Using rgba for the pattern dots allows the container to remain fully opaque */
-        background-image: radial-gradient(rgba(234, 88, 12, 0.2) 1.5px, transparent 1.5px);
-        background-size: 20px 20px;
-      }
-    </style>
+    }
+  </script>
+  <style>
+    body {
+      background-color: #fff7ed;
+      /* saibro-50 */
+      color: #431407;
+      /* saibro-950 equivalent approx */
+    }
+
+    /* Subtle pattern for that clay texture feel */
+    .bg-clay-pattern {
+      background-color: #fff7ed;
+      /* Using rgba for the pattern dots allows the container to remain fully opaque */
+      background-image: radial-gradient(rgba(234, 88, 12, 0.2) 1.5px, transparent 1.5px);
+      background-size: 20px 20px;
+    }
+  </style>
   <script type="importmap">
 {
   "imports": {
@@ -59,10 +65,12 @@
   }
 }
 </script>
-<link rel="stylesheet" href="/index.css">
+  <link rel="stylesheet" href="/index.css">
 </head>
-  <body>
-    <div id="root"></div>
+
+<body>
+  <div id="root"></div>
   <script type="module" src="/index.tsx"></script>
 </body>
+
 </html>
