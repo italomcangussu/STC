@@ -54,10 +54,10 @@ export const AdminChampionshipDetail: React.FC<AdminChampionshipDetailProps> = (
                 status: m.status || 'pending'
             })));
 
-            // Fetch profiles
             const { data: profilesData } = await supabase
                 .from('profiles')
-                .select('id, name, avatar_url');
+                .select('id, name, avatar_url')
+                .eq('is_active', true);
 
             setProfiles((profilesData || []).map(p => ({
                 id: p.id,

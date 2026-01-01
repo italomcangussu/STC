@@ -42,7 +42,8 @@ export const NewChampionship: React.FC<NewChampionshipProps> = ({ onClose, onSav
             const { data } = await supabase
                 .from('profiles')
                 .select('id, name, avatar_url, category, role')
-                .in('role', ['socio', 'admin']);
+                .in('role', ['socio', 'admin'])
+                .eq('is_active', true);
 
             setProfiles((data || []).map(p => ({
                 id: p.id,

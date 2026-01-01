@@ -107,7 +107,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
                 <div className="px-6 mb-6">
                     <button
                         onClick={() => { setView('perfil'); setSidebarOpen(false); }}
-                        className="flex items-center gap-3 bg-saibro-50 p-3 rounded-xl border border-saibro-100 w-full hover:bg-saibro-100 transition-colors text-left group"
+                        className="flex items-center gap-3 bg-saibro-50 p-3 rounded-2xl card-court w-full hover:bg-saibro-100 transition-smooth text-left group"
                     >
                         <img src={currentUser.avatar} alt="User" className="w-10 h-10 rounded-full bg-stone-300 object-cover group-hover:scale-105 transition-transform" />
                         <div className="overflow-hidden">
@@ -126,9 +126,9 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
                         <button
                             key={item.id}
                             onClick={() => { setView(item.id); setSidebarOpen(false); }}
-                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${view === item.id
-                                ? 'bg-saibro-500 text-white shadow-md shadow-orange-200'
-                                : 'text-stone-600 hover:bg-saibro-50 hover:text-saibro-700'
+                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-smooth ${view === item.id
+                                ? 'bg-sunset-gradient text-white shadow-lg shadow-orange-200/50'
+                                : 'text-stone-600 hover:bg-saibro-100 hover:text-saibro-700'
                                 }`}
                         >
                             {item.icon}
@@ -136,7 +136,9 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
                         </button>
                     ))}
 
-                    <button onClick={onLogout} className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-red-500 hover:bg-red-50 mt-8">
+                    <div className="divider-net mx-4 my-4"></div>
+
+                    <button onClick={onLogout} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 transition-smooth mx-4">
                         <LogOut size={20} /> Sair
                     </button>
                 </nav>

@@ -351,7 +351,7 @@ const ReservationDetails: React.FC<{
 
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
                 {/* 2. Main Info Card */}
-                <div className={`bg-white rounded-2xl shadow-sm border border-stone-100 p-5 relative overflow-hidden`}>
+                <div className={`bg-white rounded-2xl card-court p-5 relative overflow-hidden`}>
                     <div className={`absolute top-0 left-0 w-2 h-full ${style.bg.replace('bg-', 'bg-').replace('50', '500')}`} />
 
                     <div className="flex justify-between items-start mb-4">
@@ -389,7 +389,7 @@ const ReservationDetails: React.FC<{
 
                 {/* PLAY PARTICIPANTS */}
                 {res.type === 'Play' && (
-                    <div className="bg-white rounded-2xl shadow-sm border border-stone-100 p-5">
+                    <div className="bg-white rounded-2xl card-court p-5">
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="font-bold text-stone-700 flex items-center gap-2">
                                 <Users size={18} className="text-saibro-500" /> Participantes
@@ -458,7 +458,7 @@ const ReservationDetails: React.FC<{
                 {/* AULA INFO */}
                 {res.type === 'Aula' && (
                     <div className="space-y-4">
-                        <div className="bg-white rounded-2xl shadow-sm border border-stone-100 p-5">
+                        <div className="bg-white rounded-2xl card-court p-5">
                             <h3 className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-4">Professor</h3>
                             <div className="flex items-center gap-4">
                                 <div className="w-12 h-12 rounded-full bg-saibro-600 flex items-center justify-center text-white font-black text-lg shadow-saibro-200 shadow-lg">
@@ -471,7 +471,7 @@ const ReservationDetails: React.FC<{
                             </div>
                         </div>
 
-                        <div className="bg-white rounded-2xl shadow-sm border border-stone-100 p-5">
+                        <div className="bg-white rounded-2xl card-court p-5">
                             <h3 className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-4">Alunos</h3>
                             {res.studentType === 'socio' ? (
                                 <div className="flex items-center gap-4">
@@ -510,7 +510,7 @@ const ReservationDetails: React.FC<{
 
                 {/* Observations */}
                 {res.observation && (
-                    <div className="bg-white rounded-2xl shadow-sm border border-stone-100 p-5">
+                    <div className="bg-white rounded-2xl card-court p-5">
                         <h3 className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-2 flex items-center gap-2">
                             <Info size={14} className="text-stone-300" /> Observações
                         </h3>
@@ -1575,8 +1575,8 @@ const AddReservationModal: React.FC<{
     };
 
     return (
-        <div className="fixed inset-0 bg-black/60 z-[80] flex items-center justify-center p-4 backdrop-blur-sm overflow-y-auto">
-            <div className="bg-white rounded-2xl p-6 w-full max-w-lg space-y-5 animate-in zoom-in duration-200 shadow-2xl">
+        <div className="fixed top-0 left-0 right-0 bottom-0 w-full h-full bg-black/70 z-[80] flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-md">
+            <div className="bg-white rounded-t-3xl sm:rounded-2xl p-6 w-full max-w-lg space-y-5 animate-in slide-in-from-bottom-10 duration-300 shadow-2xl max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center border-b border-stone-100 pb-3">
                     <h3 className="text-xl font-bold text-saibro-800">{isEdit ? 'Editar Reserva' : 'Nova Reserva'}</h3>
                     <button onClick={onClose} className="text-stone-400 hover:text-stone-600 p-1 rounded-full hover:bg-stone-100"><X size={20} /></button>

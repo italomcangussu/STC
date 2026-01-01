@@ -133,19 +133,21 @@ const AppContent: React.FC = () => {
   return (
     <>
       <Layout view={view} setView={setView} currentUser={currentUser} onLogout={signOut}>
-        {view === 'agenda' && <Agenda currentUser={currentUser} />}
-        {view === 'dashboard' && <Dashboard />}
-        {view === 'klanches' && <Klanches currentUser={currentUser} />}
-        {view === 'desafios' && <ChallengesView currentUser={currentUser} />}
-        {view === 'superset' && <SuperSet />}
-        {view === 'competicao' && <Championships currentUser={currentUser} />}
-        {view === 'atletas' && <Athletes initialUserId={targetAthleteId} currentUser={currentUser} onClearRequest={() => setTargetAthleteId(null)} />}
-        {view === 'perfil' && <Athletes initialUserId={currentUser.id} currentUser={currentUser} onClearRequest={() => setView('dashboard')} />}
-        {view === 'ranking' && <Ranking onSelectProfile={handleOpenProfile} />}
-        {view === 'professor' && <ProfessorProfile currentUser={currentUser} />}
-        {view === 'admin-professors' && <AdminProfessors />}
-        {view === 'admin-panel' && <AdminPanel />}
-        {view === 'financeiro-admin' && <FinanceiroAdmin />}
+        <div key={view} className="animate-page-enter">
+          {view === 'agenda' && <Agenda currentUser={currentUser} />}
+          {view === 'dashboard' && <Dashboard />}
+          {view === 'klanches' && <Klanches currentUser={currentUser} />}
+          {view === 'desafios' && <ChallengesView currentUser={currentUser} />}
+          {view === 'superset' && <SuperSet />}
+          {view === 'competicao' && <Championships currentUser={currentUser} />}
+          {view === 'atletas' && <Athletes initialUserId={targetAthleteId} currentUser={currentUser} onClearRequest={() => setTargetAthleteId(null)} />}
+          {view === 'perfil' && <Athletes initialUserId={currentUser.id} currentUser={currentUser} onClearRequest={() => setView('dashboard')} />}
+          {view === 'ranking' && <Ranking onSelectProfile={handleOpenProfile} />}
+          {view === 'professor' && <ProfessorProfile currentUser={currentUser} />}
+          {view === 'admin-professors' && <AdminProfessors />}
+          {view === 'admin-panel' && <AdminPanel />}
+          {view === 'financeiro-admin' && <FinanceiroAdmin />}
+        </div>
       </Layout>
       {showAnnouncement && !needsOnboarding && (
         <AnnouncementPopup user={currentUser} onClose={() => setShowAnnouncement(false)} />

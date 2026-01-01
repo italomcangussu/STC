@@ -241,7 +241,7 @@ const ReservasTab: React.FC = () => {
             const [resData, courtsData, profilesData] = await Promise.all([
                 supabase.from('reservations').select('*').order('date', { ascending: false }),
                 supabase.from('courts').select('id, name, type'),
-                supabase.from('profiles').select('id, name, avatar_url')
+                supabase.from('profiles').select('id, name, avatar_url').eq('is_active', true)
             ]);
 
             setReservations((resData.data || []).map(r => ({
@@ -478,7 +478,7 @@ const DesafiosTab: React.FC = () => {
             setLoading(true);
             const [challengesData, profilesData, courtsData] = await Promise.all([
                 supabase.from('challenges').select('*').order('created_at', { ascending: false }),
-                supabase.from('profiles').select('id, name, avatar_url'),
+                supabase.from('profiles').select('id, name, avatar_url').eq('is_active', true),
                 supabase.from('courts').select('id, name, type')
             ]);
 
@@ -1373,6 +1373,7 @@ const SociosTab: React.FC = () => {
             .from('profiles')
             .select('*')
             .eq('role', 'socio')
+            .eq('is_active', true)
             .order('name');
 
         if (usrs) {

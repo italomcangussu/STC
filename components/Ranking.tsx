@@ -71,7 +71,7 @@ const PlayerCard: React.FC<{
   return (
     <div
       onClick={onClick}
-      className={`relative bg-white rounded-xl shadow-sm border p-4 flex items-center gap-4 transition-transform active:scale-[0.99] cursor-pointer group hover:border-saibro-400 ${isTop3 ? 'border-saibro-300 shadow-md' : 'border-stone-100'}`}
+      className={`relative bg-white rounded-2xl card-court p-4 flex items-center gap-4 transition-smooth active:scale-[0.99] cursor-pointer group hover:shadow-lg ${isTop3 ? 'ring-2 ring-saibro-300' : ''}`}
     >
       {/* Rank Badge */}
       <div className={`flex flex-col items-center justify-center w-10 shrink-0 ${isTop3 ? 'text-saibro-600' : 'text-stone-400'}`}>
@@ -168,8 +168,8 @@ export const Ranking: React.FC<RankingProps> = ({ onSelectProfile }) => {
             key={tab}
             onClick={() => setActiveTab(tab)}
             className={`flex-1 min-w-[80px] py-2 px-3 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${activeTab === tab
-                ? 'bg-white text-saibro-700 shadow-sm'
-                : 'text-stone-500 hover:text-stone-700'
+              ? 'bg-white text-saibro-700 shadow-sm'
+              : 'text-stone-500 hover:text-stone-700'
               }`}
           >
             {tab === 'Geral' ? '🏆 Geral' : tab.replace(' Classe', 'ª')}

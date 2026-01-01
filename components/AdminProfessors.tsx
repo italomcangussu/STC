@@ -47,7 +47,8 @@ export const AdminProfessors: React.FC = () => {
             const { data: profilesData } = await supabase
                 .from('profiles')
                 .select('id, name, role, is_professor')
-                .in('role', ['socio', 'admin']);
+                .in('role', ['socio', 'admin'])
+                .eq('is_active', true);
 
             setUsers((profilesData || []).map(u => ({
                 id: u.id,

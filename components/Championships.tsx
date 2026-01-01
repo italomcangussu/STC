@@ -74,7 +74,8 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
             const { data: profilesData } = await supabase
                 .from('profiles')
                 .select('id, name, avatar_url, category, role')
-                .in('role', ['socio', 'admin']);
+                .in('role', ['socio', 'admin'])
+                .eq('is_active', true);
 
             setProfiles((profilesData || []).map(p => ({
                 id: p.id,

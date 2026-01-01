@@ -22,20 +22,28 @@
           },
           colors: {
             saibro: {
-              50: '#fff7ed',
+              50: '#fff7ed',   // Cream background
               100: '#ffedd5',
               200: '#fed7aa',
               300: '#fdba74',
               400: '#fb923c',
-              500: '#f97316', // Clay/Terracotta base
-              600: '#ea580c',
-              700: '#c2410c',
+              500: '#f97316',  // Primary terracotta
+              600: '#ea580c',  // Darker terracotta
+              700: '#c2410c',  // Deep clay
               800: '#9a3412',
               900: '#7c2d12',
+              950: '#431407',  // Almost black for text
             },
             court: {
-              green: '#15803d', // Tennis court green
+              green: '#166534',     // Forest green accent
+              greenLight: '#22c55e', // Success green
               dark: '#14532d',
+              line: '#fafaf9',      // White court lines
+            },
+            sunset: {
+              start: '#F97316',
+              mid: '#EA580C',
+              end: '#C2410C',
             }
           }
         }
@@ -45,17 +53,148 @@
   <style>
     body {
       background-color: #fff7ed;
-      /* saibro-50 */
       color: #431407;
-      /* saibro-950 equivalent approx */
     }
 
-    /* Subtle pattern for that clay texture feel */
+    /* Minimalist Clay Court Gradient */
     .bg-clay-pattern {
-      background-color: #fff7ed;
-      /* Using rgba for the pattern dots allows the container to remain fully opaque */
-      background-image: radial-gradient(rgba(234, 88, 12, 0.2) 1.5px, transparent 1.5px);
-      background-size: 20px 20px;
+      background: linear-gradient(165deg, #fff5eb 0%, #ffe8d6 40%, #ffdcc8 100%);
+      position: relative;
+    }
+
+    /* Subtle Court Line Accent */
+    .bg-clay-pattern::before {
+      content: '';
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #ea580c 0%, #f97316 50%, #ea580c 100%);
+    }
+
+    /* Clean Elevated Card */
+    .card-court {
+      background: rgba(255, 255, 255, 0.95);
+      border: 1px solid rgba(234, 88, 12, 0.1);
+      border-radius: 16px;
+      box-shadow:
+        0 4px 20px rgba(234, 88, 12, 0.08),
+        0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Tennis Net Divider */
+    .divider-net {
+      height: 2px;
+      background: repeating-linear-gradient(90deg,
+          #c2410c 0px,
+          #c2410c 4px,
+          transparent 4px,
+          transparent 8px);
+      opacity: 0.3;
+    }
+
+    /* Sunset Gradient */
+    .bg-sunset-gradient {
+      background: linear-gradient(135deg, #F97316 0%, #EA580C 50%, #C2410C 100%);
+    }
+
+    /* Button Hover Bounce */
+    .btn-bounce {
+      transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
+    }
+
+    .btn-bounce:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(234, 88, 12, 0.3);
+    }
+
+    .btn-bounce:active {
+      transform: translateY(0px);
+    }
+
+    /* Card Slide In Animation */
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .animate-slide-in {
+      animation: slideIn 0.3s ease-out forwards;
+    }
+
+    /* Page/View Transition Animation */
+    @keyframes pageEnter {
+      from {
+        opacity: 0;
+        transform: translateX(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .animate-page-enter {
+      animation: pageEnter 0.25s ease-out forwards;
+    }
+
+    /* Fade In Animation */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    .animate-fade-in {
+      animation: fadeIn 0.2s ease-out forwards;
+    }
+
+    /* Staggered Animation Delays */
+    .delay-100 {
+      animation-delay: 100ms;
+    }
+
+    .delay-200 {
+      animation-delay: 200ms;
+    }
+
+    .delay-300 {
+      animation-delay: 300ms;
+    }
+
+    /* Tennis Ball Pulse */
+    @keyframes ballPulse {
+
+      0%,
+      100% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.1);
+      }
+    }
+
+    .animate-ball-pulse {
+      animation: ballPulse 2s ease-in-out infinite;
+    }
+
+    /* Smooth transitions for interactive elements */
+    .transition-smooth {
+      transition: all 0.2s ease-out;
     }
   </style>
   <script type="importmap">

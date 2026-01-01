@@ -32,6 +32,7 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
                 .from('profiles')
                 .select('id, name, avatar_url, role')
                 .in('role', ['socio', 'admin'])
+                .eq('is_active', true)
                 .order('name');
 
             if (profilesData) {

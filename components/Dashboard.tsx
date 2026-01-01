@@ -223,7 +223,7 @@ export const Dashboard: React.FC<DashboardProps> = () => {
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       {/* Header / Filters */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-4 rounded-xl border border-stone-100 shadow-sm">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-5 rounded-2xl card-court">
         <div>
           <h2 className="text-xl font-bold text-stone-800 flex items-center gap-2">
             <TrendingUp className="text-saibro-500" /> Dashboard Analytics
@@ -274,19 +274,19 @@ export const Dashboard: React.FC<DashboardProps> = () => {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-xl border border-stone-100 shadow-sm">
+        <div className="bg-white p-4 rounded-2xl card-court animate-slide-in">
           <p className="text-xs text-stone-500 uppercase font-bold">Total Reservas</p>
           <p className="text-3xl font-bold text-saibro-600">{filteredReservations.length}</p>
           <p className="text-xs text-stone-400 mt-1">
             {selectedYear === 'all' ? 'Todo o período' : selectedMonth === 'all' ? `Em ${selectedYear}` : `Em ${months.find(m => m.val === selectedMonth)?.label}/${selectedYear}`}
           </p>
         </div>
-        <div className="bg-white p-4 rounded-xl border border-stone-100 shadow-sm">
+        <div className="bg-white p-4 rounded-2xl card-court animate-slide-in delay-100">
           <p className="text-xs text-stone-500 uppercase font-bold">Quadra Favorita</p>
           <p className="text-lg font-bold text-stone-800 truncate" title={mostUsedCourt}>{mostUsedCourt}</p>
           <p className="text-xs text-stone-400 mt-1">Mais utilizada</p>
         </div>
-        <div className="bg-white p-4 rounded-xl border border-stone-100 shadow-sm">
+        <div className="bg-white p-4 rounded-2xl card-court animate-slide-in delay-200">
           <p className="text-xs text-stone-500 uppercase font-bold">Dia de Pico</p>
           <div className="flex items-center gap-2">
             <Calendar className="text-green-500" size={20} />
@@ -296,7 +296,7 @@ export const Dashboard: React.FC<DashboardProps> = () => {
             </div>
           </div>
         </div>
-        <div className="bg-white p-4 rounded-xl border border-stone-100 shadow-sm">
+        <div className="bg-white p-4 rounded-2xl card-court animate-slide-in delay-300">
           <p className="text-xs text-stone-500 uppercase font-bold">Hora de Pico</p>
           <div className="flex items-center gap-2">
             <Clock className="text-orange-500" size={20} />
@@ -311,7 +311,7 @@ export const Dashboard: React.FC<DashboardProps> = () => {
       {/* Member Stats Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Active Members Metric */}
-        <div className="bg-white p-6 rounded-xl border border-stone-100 shadow-sm flex items-center justify-between">
+        <div className="bg-white p-6 rounded-2xl card-court flex items-center justify-between">
           <div>
             <p className="text-stone-500 text-sm font-semibold mb-1">Sócios Ativos</p>
             <h3 className="text-3xl font-bold text-stone-800">{memberStats.activeCount} <span className="text-sm text-stone-400 font-normal">/ {totalSocios}</span></h3>
@@ -325,7 +325,7 @@ export const Dashboard: React.FC<DashboardProps> = () => {
         </div>
 
         {/* Top Athletes List */}
-        <div className="md:col-span-2 bg-white p-6 rounded-xl border border-stone-100 shadow-sm">
+        <div className="md:col-span-2 bg-white p-6 rounded-2xl card-court">
           <h3 className="font-bold text-stone-700 mb-4 flex items-center gap-2">
             <Trophy className="text-yellow-500" size={18} /> Top 5 Atletas com mais reservas!
           </h3>

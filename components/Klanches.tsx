@@ -151,8 +151,8 @@ export const Klanches: React.FC<KlanchesProps> = ({ currentUser }) => {
         );
     }
 
-    // ========== SOCIO VIEW ==========
-    if (currentUser.role === 'socio') {
+    // ========== SOCIO/ADMIN VIEW (Consumer View) ==========
+    if (currentUser.role === 'socio' || currentUser.role === 'admin') {
         const myConsumptions = consumptions.filter(c => c.userId === currentUser.id && c.status === 'open');
         const totalDue = myConsumptions.reduce((acc, curr) => acc + curr.totalPrice, 0);
 
@@ -428,7 +428,7 @@ export const Klanches: React.FC<KlanchesProps> = ({ currentUser }) => {
                         {products.map(p => {
                             const inCart = cart.find(c => c.productId === p.id);
                             return (
-                                <div key={p.id} className="bg-white rounded-xl shadow-sm border border-stone-100 overflow-hidden group relative">
+                                <div key={p.id} className="bg-white rounded-2xl card-court overflow-hidden group relative">
                                     {/* Edit/Delete buttons */}
                                     <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                                         <button onClick={() => openEditProduct(p)} className="p-1.5 bg-white/90 rounded-lg text-stone-500 hover:text-saibro-600">
@@ -479,7 +479,7 @@ export const Klanches: React.FC<KlanchesProps> = ({ currentUser }) => {
 
                     {/* Cart Summary */}
                     {cart.length > 0 && (
-                        <div className="bg-white rounded-xl shadow-lg border-2 border-saibro-200 p-4 space-y-3">
+                        <div className="bg-white rounded-2xl card-court ring-2 ring-saibro-300 p-4 space-y-3">
                             <div className="flex items-center justify-between">
                                 <span className="font-bold text-stone-800">Carrinho</span>
                                 <span className="text-lg font-bold text-saibro-600">R$ {cartTotal.toFixed(2)}</span>
@@ -532,7 +532,7 @@ export const Klanches: React.FC<KlanchesProps> = ({ currentUser }) => {
                             </div>
                         ) : (
                             debtors.map(debtor => (
-                                <div key={debtor.id} className="bg-white rounded-xl shadow-sm border border-stone-100 overflow-hidden">
+                                <div key={debtor.id} className="bg-white rounded-2xl card-court overflow-hidden">
                                     <button
                                         onClick={() => setExpandedDebtor(expandedDebtor === debtor.id ? null : debtor.id)}
                                         className="w-full p-4 flex items-center justify-between"
