@@ -169,11 +169,17 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
             sets: number;
             games: number;
             avatar?: string;
+            groupName?: string;
         }> = {};
 
         selectedChamp.participantIds.forEach(pId => {
             const u = profiles.find(user => user.id === pId);
-            stats[pId] = { id: pId, name: u?.name || 'TBD', pts: 0, v: 0, sets: 0, games: 0, avatar: u?.avatar };
+            let gName = 'Geral';
+            if (selectedChamp.groups) {
+                const g = selectedChamp.groups.find(grp => grp.participantIds.includes(pId));
+                if (g) gName = g.name;
+            }
+            stats[pId] = { id: pId, name: u?.name || 'TBD', pts: 0, v: 0, sets: 0, games: 0, avatar: u?.avatar, groupName: gName };
         });
 
         matches.filter(m => m.status === 'finished').forEach(m => {
@@ -205,7 +211,9 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
 
         return Object.values(stats).sort((a, b) => {
             if (b.pts !== a.pts) return b.pts - a.pts;
-            if (b.v !== a.v) return b.v - a.v;
+            // Simplified Tiebreaker: Head-to-head would go here
+            if (b.v !== a.v) return b.v - a.v; // Number of wins (often proxy for H2H in round robin if unique winners)
+            if (b.sets !== a.sets) return b.sets - a.sets;
             return b.games - a.games;
         });
     };
@@ -445,28 +453,65 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                 )}
 
                 {activeTab === 'classificacao' && (
-                    <div className="bg-white rounded-3xl shadow-sm border border-stone-100 overflow-hidden">
-                        <div className="bg-stone-50 px-4 py-3 grid grid-cols-[30px_1fr_40px_40px_40px] gap-2 text-[10px] font-black text-stone-400 uppercase tracking-widest border-b border-stone-100">
-                            <span>#</span>
-                            <span>Atleta</span>
-                            <span className="text-center">Pts</span>
-                            <span className="text-center">V</span>
-                            <span className="text-center">G</span>
-                        </div>
-                        <div className="divide-y divide-stone-50">
-                            {standings.map((stat, idx) => (
-                                <div key={stat.id} className={`grid grid-cols-[30px_1fr_40px_40px_40px] gap-2 items-center px-4 py-4 text-sm ${idx < 4 ? 'bg-saibro-50/30' : ''}`}>
-                                    <span className={`font-black ${idx === 0 ? 'text-saibro-600' : 'text-stone-400'}`}>{idx + 1}</span>
-                                    <div className="flex items-center gap-2">
-                                        <img src={stat.avatar} className="w-6 h-6 rounded-full bg-stone-100" />
-                                        <span className="font-bold text-stone-700 truncate">{stat.name}</span>
+                    <div className="space-y-6">
+                        {selectedChamp.format === 'grupo-mata-mata' && selectedChamp.groups ? (
+                            selectedChamp.groups.map(group => {
+                                const groupStats = standings.filter(s => s.groupName === group.name);
+                                return (
+                                    <div key={group.name} className="bg-white rounded-3xl shadow-sm border border-stone-100 overflow-hidden">
+                                        <div className="bg-saibro-50 px-4 py-2 border-b border-saibro-100">
+                                            <h4 className="text-saibro-800 font-bold text-sm uppercase">{group.name}</h4>
+                                        </div>
+                                        <div className="bg-stone-50 px-4 py-2 grid grid-cols-[30px_1fr_40px_40px_40px] gap-2 text-[10px] font-black text-stone-400 uppercase tracking-widest border-b border-stone-100">
+                                            <span>#</span>
+                                            <span>Atleta</span>
+                                            <span className="text-center">Pts</span>
+                                            <span className="text-center">V</span>
+                                            <span className="text-center">G</span>
+                                        </div>
+                                        <div className="divide-y divide-stone-50">
+                                            {groupStats.map((stat, idx) => (
+                                                <div key={stat.id} className={`grid grid-cols-[30px_1fr_40px_40px_40px] gap-2 items-center px-4 py-3 text-sm ${idx < 2 ? 'bg-green-50/50' : ''}`}>
+                                                    <span className={`font-black ${idx < 2 ? 'text-green-600' : 'text-stone-400'}`}>{idx + 1}</span>
+                                                    <div className="flex items-center gap-2">
+                                                        <img src={stat.avatar} className="w-6 h-6 rounded-full bg-stone-100" />
+                                                        <span className="font-bold text-stone-700 truncate">{stat.name}</span>
+                                                    </div>
+                                                    <span className="font-black text-saibro-700 text-center">{stat.pts}</span>
+                                                    <span className="font-bold text-stone-500 text-center">{stat.v}</span>
+                                                    <span className="text-stone-400 text-center text-xs">{stat.games}</span>
+                                                </div>
+                                            ))}
+                                            {groupStats.length === 0 && <p className="p-4 text-center text-xs text-stone-400">Nenhum jogador</p>}
+                                        </div>
                                     </div>
-                                    <span className="font-black text-saibro-700 text-center">{stat.pts}</span>
-                                    <span className="font-bold text-stone-500 text-center">{stat.v}</span>
-                                    <span className="text-stone-400 text-center text-xs">{stat.games}</span>
+                                );
+                            })
+                        ) : (
+                            <div className="bg-white rounded-3xl shadow-sm border border-stone-100 overflow-hidden">
+                                <div className="bg-stone-50 px-4 py-3 grid grid-cols-[30px_1fr_40px_40px_40px] gap-2 text-[10px] font-black text-stone-400 uppercase tracking-widest border-b border-stone-100">
+                                    <span>#</span>
+                                    <span>Atleta</span>
+                                    <span className="text-center">Pts</span>
+                                    <span className="text-center">V</span>
+                                    <span className="text-center">G</span>
                                 </div>
-                            ))}
-                        </div>
+                                <div className="divide-y divide-stone-50">
+                                    {standings.map((stat, idx) => (
+                                        <div key={stat.id} className={`grid grid-cols-[30px_1fr_40px_40px_40px] gap-2 items-center px-4 py-4 text-sm ${idx < 4 ? 'bg-saibro-50/30' : ''}`}>
+                                            <span className={`font-black ${idx === 0 ? 'text-saibro-600' : 'text-stone-400'}`}>{idx + 1}</span>
+                                            <div className="flex items-center gap-2">
+                                                <img src={stat.avatar} className="w-6 h-6 rounded-full bg-stone-100" />
+                                                <span className="font-bold text-stone-700 truncate">{stat.name}</span>
+                                            </div>
+                                            <span className="font-black text-saibro-700 text-center">{stat.pts}</span>
+                                            <span className="font-bold text-stone-500 text-center">{stat.v}</span>
+                                            <span className="text-stone-400 text-center text-xs">{stat.games}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
 

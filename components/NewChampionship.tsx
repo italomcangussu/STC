@@ -3,7 +3,7 @@ import {
     ChevronRight, ChevronLeft, Trophy, Users, Shield,
     Settings, Play, Save, CheckCircle2, AlertCircle, Info, Plus, Trash2, Search, X, Loader2
 } from 'lucide-react';
-import { User, Championship, Match } from '../types';
+import { User, Championship, Match, ChampionshipGroup } from '../types';
 import { supabase } from '../lib/supabase';
 
 interface NewChampionshipProps {
@@ -17,20 +17,22 @@ export const NewChampionship: React.FC<NewChampionshipProps> = ({ onClose, onSav
         name: '',
         season: '',
         description: '',
-        status: 'draft',
         format: 'mata-mata',
-        ptsVictory: 100,
-        ptsSet: 10,
-        ptsGame: 1,
-        countInGeneralRanking: true,
-        bestOfSets: 3,
-        tiebreakEnabled: true,
-        autoSummary: true,
         participantIds: [],
-        rules: ''
+        startDate: new Date().toISOString().split('T')[0],
+        ptsVictory: 3,
+        ptsDefeat: 0,
+        ptsWoVictory: 3,
+        ptsSet: 0,
+        ptsGame: 0,
+        finalRankingPts: 200,
+        countInGeneralRanking: true,
+        tiebreakEnabled: true,
+        groups: []
     });
 
     const [searchTerm, setSearchTerm] = useState('');
+    const [groups, setGroups] = useState<ChampionshipGroup[]>([]);
     const [generatedMatches, setGeneratedMatches] = useState<Match[]>([]);
     const [profiles, setProfiles] = useState<User[]>([]);
     const [loadingProfiles, setLoadingProfiles] = useState(true);
@@ -137,6 +139,25 @@ export const NewChampionship: React.FC<NewChampionshipProps> = ({ onClose, onSav
                     });
                 }
             }
+        } else if (formData.format === 'grupo-mata-mata') {
+            // Group Stage: Round Robin per group
+            groups.forEach(group => {
+                const gIds = group.participantIds;
+                for (let i = 0; i < gIds.length; i++) {
+                    for (let j = i + 1; j < gIds.length; j++) {
+                        newMatches.push({
+                            id: `m_${Date.now()}_${group.name.replace(/\s+/g, '')}_${i}_${j}`,
+                            championshipId: champId,
+                            type: 'Campeonato',
+                            phase: group.name, // Use group name as phase (e.g. "6ª CLASSE")
+                            playerAId: gIds[i],
+                            playerBId: gIds[j],
+                            scoreA: [], scoreB: [],
+                            status: 'pending'
+                        });
+                    }
+                }
+            });
         } else {
             // Pontos Corridos: Round Robin
             for (let i = 0; i < ids.length; i++) {
@@ -159,22 +180,128 @@ export const NewChampionship: React.FC<NewChampionshipProps> = ({ onClose, onSav
     };
 
     const nextStep = () => {
+        if (step === 3 && formData.format === 'grupo-mata-mata') {
+            // Initialize groups if empty
+            if (groups.length === 0) {
+                setGroups([
+                    { name: '6ª CLASSE', participantIds: [] },
+                    { name: '5ª CLASSE', participantIds: [] },
+                    { name: '4ª CLASSE', participantIds: [] }
+                ]);
+            }
+            setStep(4); // Go to group config
+            return;
+        }
+
+        // If coming from group config (4) or normal flow (3->4 if not groups), proceed to generation preview
+        const next = step + 1;
+
         if (step === 4) {
-            generateMatches();
+            if (formData.format === 'grupo-mata-mata') {
+                // Validate groups
+                setFormData({ ...formData, groups });
+            }
+            generateMatches(); // This was the original logic for step 4
         } else {
             setStep(s => Math.min(s + 1, 5));
         }
     };
+
     const prevStep = () => setStep(s => Math.max(s - 1, 1));
 
     const handleToggleParticipant = (userId: string) => {
-        const ids = [...(formData.participantIds || [])];
-        if (ids.includes(userId)) {
-            setFormData({ ...formData, participantIds: ids.filter(id => id !== userId) });
+        const current = formData.participantIds || [];
+        if (current.includes(userId)) {
+            setFormData({ ...formData, participantIds: current.filter(id => id !== userId) });
         } else {
-            setFormData({ ...formData, participantIds: [...ids, userId] });
+            setFormData({ ...formData, participantIds: [...current, userId] });
         }
     };
+
+    // Helpler to render Preview (Ready to generate)
+    const renderPreviewStep = () => (
+        <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300 text-center py-8">
+            <div className="inline-block p-6 bg-saibro-100 rounded-full text-saibro-600 mb-4 animate-bounce">
+                <Play size={48} />
+            </div>
+            <h3 className="text-xl font-bold text-stone-800">Pronto para gerar a tabela?</h3>
+            <p className="text-sm text-stone-500 max-w-xs mx-auto">
+                Com base nos {formData.participantIds?.length} participantes e no formato {formData.format}, criaremos todos os confrontos iniciais.
+            </p>
+
+            <div className="mt-8 p-4 bg-stone-50 rounded-2xl border border-stone-200 text-left">
+                <p className="text-[10px] font-bold text-stone-400 mb-2 uppercase">Prévia do Chaveamento</p>
+                <div className="space-y-2">
+                    <div className="flex justify-between items-center text-sm">
+                        <span className="text-stone-600">Total de Jogos</span>
+                        <span className="font-bold">
+                            {formData.format === 'mata-mata'
+                                ? (formData.participantIds!.length > 0 ? Math.pow(2, Math.ceil(Math.log2(formData.participantIds!.length))) - 1 : 0)
+                                : (formData.format === 'grupo-mata-mata'
+                                    ? groups.reduce((acc, g) => acc + (g.participantIds.length * (g.participantIds.length - 1) / 2), 0)
+                                    : (formData.participantIds!.length * (formData.participantIds!.length - 1) / 2))
+                            }
+                        </span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                        <span className="text-stone-600">Fase Inicial</span>
+                        <span className="font-bold">{formData.format === 'grupo-mata-mata' ? 'Fase de Grupos' : (formData.participantIds!.length <= 4 ? 'Semifinal' : 'Oitavas')}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+
+    // Helper to render Review (Generated matches)
+    const renderReviewStep = () => (
+        <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+            <div className="p-6 bg-green-50 rounded-2xl border border-green-100 text-center">
+                <div className="inline-block p-3 bg-green-600 text-white rounded-full mb-4">
+                    <CheckCircle2 size={32} />
+                </div>
+                <h3 className="text-xl font-bold text-green-900">Confrontos Gerados</h3>
+                <p className="text-sm text-green-700">{generatedMatches.length} partidas criadas com sucesso.</p>
+            </div>
+            {/* List ... */}
+            <div className="space-y-3 max-h-64 overflow-y-auto pr-2 scrollbar-thin">
+                {generatedMatches.map((m, idx) => {
+                    const pA = profiles.find(u => u.id === m.playerAId);
+                    const pB = profiles.find(u => u.id === m.playerBId);
+                    return (
+                        <div key={idx} className="p-3 bg-stone-50 rounded-xl border border-stone-200 flex justify-between items-center">
+                            <div className="flex-1 text-sm font-bold text-right pr-3">{pA?.name || m.playerAId}</div>
+                            <div className="text-[10px] font-black text-stone-300">VS</div>
+                            <div className="flex-1 text-sm font-bold text-left pl-3">{pB?.name || m.playerBId}</div>
+                            <span className="text-[10px] text-stone-400 ml-2 bg-stone-100 px-1 rounded">{m.phase}</span>
+                        </div>
+                    );
+                })}
+            </div>
+            {/* Buttons */}
+            <div className="grid grid-cols-2 gap-3 mt-4">
+                <button
+                    onClick={() => {
+                        const champId = generatedMatches[0]?.championshipId || 'champ_' + Date.now();
+                        const finalChamp = { ...formData, id: champId, status: 'draft' } as Championship;
+                        onSave(finalChamp, generatedMatches);
+                    }}
+                    className="py-4 bg-white border-2 border-stone-200 text-stone-600 font-bold rounded-2xl hover:bg-stone-50 transition-all flex items-center justify-center gap-2"
+                >
+                    <Save size={20} /> Rascunho
+                </button>
+                <button
+                    onClick={() => {
+                        const champId = generatedMatches[0]?.championshipId || 'champ_' + Date.now();
+                        const finalChamp = { ...formData, id: champId, status: 'ongoing' } as Championship;
+                        onSave(finalChamp, generatedMatches);
+                    }}
+                    className="py-4 bg-saibro-600 text-white font-bold rounded-2xl shadow-lg shadow-orange-200 hover:bg-saibro-700 transition-all flex items-center justify-center gap-2"
+                >
+                    <Play size={20} /> Iniciar
+                </button>
+            </div>
+        </div>
+    );
 
     const renderStepContent = () => {
         switch (step) {
@@ -228,7 +355,7 @@ export const NewChampionship: React.FC<NewChampionshipProps> = ({ onClose, onSav
                     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
                         <div className="space-y-3">
                             <label className="text-xs font-bold text-stone-500 uppercase">Formato do Campeonato</label>
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-3 gap-3">
                                 <button
                                     onClick={() => setFormData({ ...formData, format: 'mata-mata' })}
                                     className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${formData.format === 'mata-mata' ? 'border-saibro-500 bg-saibro-50' : 'border-stone-100'}`}
@@ -241,7 +368,14 @@ export const NewChampionship: React.FC<NewChampionshipProps> = ({ onClose, onSav
                                     className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${formData.format === 'pontos-corridos' ? 'border-saibro-500 bg-saibro-50' : 'border-stone-100'}`}
                                 >
                                     <Trophy size={24} className={formData.format === 'pontos-corridos' ? 'text-saibro-600' : 'text-stone-300'} />
-                                    <span className="font-bold text-sm">Pontos Corridos</span>
+                                    <span className="font-bold text-sm text-center leading-tight">Pontos Corridos</span>
+                                </button>
+                                <button
+                                    onClick={() => setFormData({ ...formData, format: 'grupo-mata-mata' })}
+                                    className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${formData.format === 'grupo-mata-mata' ? 'border-saibro-500 bg-saibro-50' : 'border-stone-100'}`}
+                                >
+                                    <Users size={24} className={formData.format === 'grupo-mata-mata' ? 'text-saibro-600' : 'text-stone-300'} />
+                                    <span className="font-bold text-sm text-center leading-tight">Grupos + Mata-Mata</span>
                                 </button>
                             </div>
                         </div>
@@ -324,89 +458,111 @@ export const NewChampionship: React.FC<NewChampionshipProps> = ({ onClose, onSav
                     </div>
                 );
             case 4:
-                return (
-                    <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300 text-center py-8">
-                        <div className="inline-block p-6 bg-saibro-100 rounded-full text-saibro-600 mb-4 animate-bounce">
-                            <Play size={48} />
-                        </div>
-                        <h3 className="text-xl font-bold text-stone-800">Pronto para gerar a tabela?</h3>
-                        <p className="text-sm text-stone-500 max-w-xs mx-auto">
-                            Com base nos {formData.participantIds?.length} participantes e no formato {formData.format === 'mata-mata' ? 'Mata-Mata' : 'Pontos Corridos'}, criaremos todos os confrontos iniciais.
-                        </p>
+                // If Group Format -> Show Group Config
+                if (formData.format === 'grupo-mata-mata') {
+                    const unassignedUsers = profiles.filter(u =>
+                        formData.participantIds?.includes(u.id) &&
+                        !groups.some(g => g.participantIds.includes(u.id))
+                    );
 
-                        <div className="mt-8 p-4 bg-stone-50 rounded-2xl border border-stone-200 text-left">
-                            <p className="text-[10px] font-bold text-stone-400 mb-2 uppercase">Prévia do Chaveamento</p>
-                            <div className="space-y-2">
-                                <div className="flex justify-between items-center text-sm">
-                                    <span className="text-stone-600">Total de Jogos</span>
-                                    <span className="font-bold">
-                                        {formData.format === 'mata-mata'
-                                            ? (formData.participantIds!.length > 0 ? Math.pow(2, Math.ceil(Math.log2(formData.participantIds!.length))) - 1 : 0)
-                                            : (formData.participantIds!.length * (formData.participantIds!.length - 1) / 2)
-                                        }
-                                    </span>
-                                </div>
-                                <div className="flex justify-between items-center text-sm">
-                                    <span className="text-stone-600">Fase Inicial</span>
-                                    <span className="font-bold">{formData.participantIds!.length <= 4 ? 'Semifinal' : formData.participantIds!.length <= 8 ? 'Quartas' : 'Oitavas'}</span>
+                    const handleAddToGroup = (userId: string, groupIndex: number) => {
+                        const newGroups = [...groups];
+                        newGroups[groupIndex].participantIds.push(userId);
+                        setGroups(newGroups);
+                    };
+
+                    const handleRemoveFromGroup = (userId: string, groupIndex: number) => {
+                        const newGroups = [...groups];
+                        newGroups[groupIndex].participantIds = newGroups[groupIndex].participantIds.filter(id => id !== userId);
+                        setGroups(newGroups);
+                    };
+
+                    return (
+                        <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+                            <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 flex gap-3 text-blue-800">
+                                <Info size={24} className="shrink-0" />
+                                <div className="text-sm">
+                                    <p className="font-bold">Distribuição de Grupos</p>
+                                    <p>Organize os {formData.participantIds?.length} participantes nos grupos abaixo.</p>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                );
-            case 5:
-                return (
-                    <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-                        <div className="p-6 bg-green-50 rounded-2xl border border-green-100 text-center">
-                            <div className="inline-block p-3 bg-green-600 text-white rounded-full mb-4">
-                                <CheckCircle2 size={32} />
-                            </div>
-                            <h3 className="text-xl font-bold text-green-900">Confrontos Gerados</h3>
-                            <p className="text-sm text-green-700">{generatedMatches.length} partidas criadas com sucesso.</p>
-                        </div>
 
-                        <div className="space-y-3 max-h-64 overflow-y-auto pr-2 scrollbar-thin">
-                            {generatedMatches.map((m, idx) => {
-                                const pA = profiles.find(u => u.id === m.playerAId);
-                                const pB = profiles.find(u => u.id === m.playerBId);
-                                return (
-                                    <div key={idx} className="p-3 bg-stone-50 rounded-xl border border-stone-200 flex justify-between items-center">
-                                        <div className="flex-1 text-sm font-bold text-right pr-3">{pA?.name || m.playerAId}</div>
-                                        <div className="text-[10px] font-black text-stone-300">VS</div>
-                                        <div className="flex-1 text-sm font-bold text-left pl-3">{pB?.name || m.playerBId}</div>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                {groups.map((group, gIdx) => (
+                                    <div key={gIdx} className="bg-stone-50 rounded-xl border border-stone-200 overflow-hidden">
+                                        <div className="bg-stone-100 p-3 border-b border-stone-200 flex justify-between items-center">
+                                            <h4 className="font-bold text-stone-700 text-sm">{group.name}</h4>
+                                            <span className="text-xs bg-stone-200 px-2 py-0.5 rounded-full text-stone-600">{group.participantIds.length}</span>
+                                        </div>
+                                        <div className="p-2 space-y-2 min-h-[150px]">
+                                            {group.participantIds.map(pid => {
+                                                const p = profiles.find(u => u.id === pid);
+                                                return (
+                                                    <div key={pid} className="flex justify-between items-center bg-white p-2 rounded-lg border border-stone-100 shadow-sm text-xs">
+                                                        <span className="font-bold text-stone-700 truncate max-w-[100px]">{p?.name}</span>
+                                                        <button onClick={() => handleRemoveFromGroup(pid, gIdx)} className="text-red-400 hover:text-red-600"><Trash2 size={14} /></button>
+                                                    </div>
+                                                )
+                                            })}
+                                            {group.participantIds.length === 0 && (
+                                                <p className="text-xs text-stone-400 text-center py-4 italic">Arraste ou adicione</p>
+                                            )}
+                                        </div>
                                     </div>
-                                );
-                            })}
-                        </div>
+                                ))}
+                            </div>
 
-                        <div className="grid grid-cols-2 gap-3 mt-4">
-                            <button
-                                onClick={() => {
-                                    const champId = generatedMatches[0]?.championshipId || 'champ_' + Date.now();
-                                    const finalChamp = { ...formData, id: champId, status: 'draft' } as Championship;
-                                    onSave(finalChamp, generatedMatches);
-                                }}
-                                className="py-4 bg-white border-2 border-stone-200 text-stone-600 font-bold rounded-2xl hover:bg-stone-50 transition-all flex items-center justify-center gap-2"
-                            >
-                                <Save size={20} /> Rascunho
-                            </button>
-                            <button
-                                onClick={() => {
-                                    const champId = generatedMatches[0]?.championshipId || 'champ_' + Date.now();
-                                    const finalChamp = { ...formData, id: champId, status: 'ongoing' } as Championship;
-                                    onSave(finalChamp, generatedMatches);
-                                }}
-                                className="py-4 bg-saibro-600 text-white font-bold rounded-2xl shadow-lg shadow-orange-200 hover:bg-saibro-700 transition-all flex items-center justify-center gap-2"
-                            >
-                                <Play size={20} /> Iniciar
-                            </button>
+                            {unassignedUsers.length > 0 && (
+                                <div className="space-y-2">
+                                    <p className="text-xs font-bold text-stone-500 uppercase">Não Atribuídos ({unassignedUsers.length})</p>
+                                    <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto">
+                                        {unassignedUsers.map(u => (
+                                            <div key={u.id} className="flex items-center justify-between p-2 bg-white rounded-lg border border-stone-200">
+                                                <div className="flex items-center gap-2 overflow-hidden">
+                                                    <img src={u.avatar} className="w-6 h-6 rounded-full" />
+                                                    <span className="text-xs font-bold text-stone-700 truncate">{u.name}</span>
+                                                    <span className="text-[10px] text-stone-400 uppercase">{u.category}</span>
+                                                </div>
+                                                <div className="flex gap-1">
+                                                    {groups.map((g, gIdx2) => (
+                                                        <button
+                                                            key={gIdx2}
+                                                            onClick={() => handleAddToGroup(u.id, gIdx2)}
+                                                            className="w-6 h-6 flex items-center justify-center bg-saibro-100 text-saibro-700 rounded hover:bg-saibro-200 text-[10px] font-bold"
+                                                            title={`Adicionar a ${g.name}`}
+                                                        >
+                                                            {g.name.split(' ')[0]}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                         </div>
-                    </div>
-                );
+                    );
+                }
+                // Fallthrough to Preview logic if NOT group format (or handle sharing)
+                // Since I cannot fallthrough in replace, I will copy the preview logic here for the 'else' case (or Step 5 for group)
+                // Actually, Step 5 for group is the PREVIEW.
+                return renderPreviewStep();
+
+            case 5:
+                if (formData.format === 'grupo-mata-mata') return renderPreviewStep();
+                return renderReviewStep();
+
+            case 6:
+                if (formData.format === 'grupo-mata-mata') return renderReviewStep();
+                return null;
+
             default:
                 return null;
         }
     };
+
+    // Helpler to render Preview (Ready to generate)
+
 
     return (
         <div className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">

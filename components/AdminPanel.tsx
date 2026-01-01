@@ -379,8 +379,12 @@ const CampeonatosTab: React.FC<{ onOpenWizard: () => void, onSelectChampionship:
                 rules: c.rules,
                 logoUrl: c.logo_url,
                 ptsVictory: c.pts_victory,
+                ptsDefeat: c.pts_defeat, // Mapping new field (assuming snake_case in DB)
+                ptsWoVictory: c.pts_wo_victory,
+                finalRankingPts: c.final_ranking_pts,
                 ptsSet: c.pts_set,
-                ptsGame: c.pts_game
+                ptsGame: c.pts_game,
+                groups: c.groups // Mapping JSONB groups column
             })));
 
             // Get match counts per championship

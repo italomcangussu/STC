@@ -96,7 +96,7 @@ export interface Championship {
   season?: string;
   description?: string;
   status: 'draft' | 'ongoing' | 'finished';
-  format: 'mata-mata' | 'pontos-corridos';
+  format: 'mata-mata' | 'pontos-corridos' | 'grupo-mata-mata';
   startDate?: string;
   endDate?: string;
   rules?: string;
@@ -104,9 +104,15 @@ export interface Championship {
 
   // Scoring Rules
   ptsVictory?: number;
+  ptsDefeat?: number;
+  ptsWoVictory?: number;
   ptsSet?: number;
   ptsGame?: number;
   countInGeneralRanking?: boolean;
+  finalRankingPts?: number; // Bonus for ranking winner
+
+  // Tiebreak Config
+  tiebreakRules?: ('h2h' | 'sets' | 'games')[];
 
   // Match Config
   bestOfSets?: number;
@@ -114,6 +120,27 @@ export interface Championship {
   autoSummary?: boolean;
 
   participantIds: string[];
+
+  // Group Stage Config
+  groups?: ChampionshipGroup[];
+}
+
+export interface ChampionshipGroup {
+  name: string; // e.g. "6ª CLASSE"
+  participantIds: string[];
+}
+
+export interface InternalStanding {
+  userId: string;
+  points: number;
+  matchesPlayed: number;
+  wins: number;
+  losses: number;
+  setsWon: number;
+  setsLost: number;
+  gamesWon: number;
+  gamesLost: number;
+  groupName: string;
 }
 
 export interface BracketSlot {
