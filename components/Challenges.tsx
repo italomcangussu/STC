@@ -755,11 +755,11 @@ export const ChallengesView: React.FC<{ currentUser: User }> = ({ currentUser })
 
             {/* --- SENT CHALLENGES --- */}
             <div className="space-y-3">
-                <h3 className="font-bold text-stone-700 flex items-center gap-2">
+                <h3 className="font-bold text-stone-700 flex items-center gap-2 section-header">
                     <PlayCircle size={18} className="text-saibro-500" /> Meus Desafios (Enviados)
                 </h3>
                 {pendingSent.length === 0 ? (
-                    <p className="text-sm text-stone-400 italic">Nenhum desafio ativo no momento.</p>
+                    <p className="text-sm text-stone-400 italic section-header">Nenhum desafio ativo no momento.</p>
                 ) : (
                     pendingSent.map(c => {
                         const challenged = profiles[c.challengedId];
@@ -801,7 +801,7 @@ export const ChallengesView: React.FC<{ currentUser: User }> = ({ currentUser })
             {/* --- HISTORY --- */}
             {history.length > 0 && (
                 <div className="space-y-3 pt-6 border-t border-stone-200">
-                    <h3 className="font-bold text-stone-500 text-sm">Histórico Recente</h3>
+                    <h3 className="font-bold text-stone-500 text-sm section-header">Histórico Recente</h3>
                     {history.slice(0, 5).map(c => {
                         const isChallenger = c.challengerId === currentUser.id;
                         const other = profiles[isChallenger ? c.challengedId : c.challengerId];

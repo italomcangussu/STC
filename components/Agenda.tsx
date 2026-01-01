@@ -1114,13 +1114,13 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
     // --- Renders ---
     const renderDayView = () => (
         <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
-            <h3 className="text-lg font-bold text-saibro-800 capitalize flex items-center gap-2">
+            <h3 className="text-lg font-bold text-saibro-800 capitalize flex items-center gap-2 section-header">
                 <CalendarIcon date={currentDate} />
                 {getDayName(formatDate(currentDate))}, {currentDate.getDate()}
             </h3>
             <div className="space-y-3">
                 {filteredReservations.length === 0 ? (
-                    <div className="text-center py-10 text-stone-400">Nenhuma reserva para este dia.</div>
+                    <div className="text-center py-10 text-stone-600 section-header">Nenhuma reserva para este dia.</div>
                 ) : (
                     filteredReservations.map(res => (
                         <ReservationCard
@@ -1314,7 +1314,7 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                                     checked={showCancelled}
                                     onChange={(e) => setShowCancelled(e.target.checked)}
                                 />
-                                <span className={`text-sm font-bold transition-colors ${showCancelled ? 'text-red-600' : 'text-stone-400 group-hover:text-red-400'}`}>Ver Canceladas</span>
+                                <span className={`text-sm font-bold transition-colors section-header ${showCancelled ? 'text-red-600' : 'text-stone-500'}`}>Ver Canceladas</span>
                             </label>
                         </div>
                     </div>

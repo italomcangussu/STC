@@ -360,7 +360,7 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
 
             {/* History List */}
             <div className="space-y-4">
-                <h3 className="font-bold text-stone-600 text-lg">Últimos Jogos</h3>
+                <h3 className="font-bold text-stone-600 text-lg section-header">Últimos Jogos</h3>
                 {history.map((match) => {
                     const playerA = players.find(p => p.id === match.player_a_id);
                     const playerB = players.find(p => p.id === match.player_b_id);
