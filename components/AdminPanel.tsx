@@ -217,7 +217,6 @@ const TABS = [
     { id: 'reservas', label: 'Reservas', icon: <Calendar size={18} /> },
     { id: 'campeonatos', label: 'Campeonatos', icon: <Trophy size={18} /> },
     { id: 'desafios', label: 'Desafios', icon: <Swords size={18} /> },
-    { id: 'financeiro', label: 'Financeiro', icon: <DollarSign size={18} /> },
     { id: 'avisos', label: 'Avisos', icon: <Megaphone size={18} /> },
     { id: 'socios', label: 'Sócios', icon: <Users size={18} /> },
 ];

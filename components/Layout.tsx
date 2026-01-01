@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
     Calendar, Users, Trophy, LayoutDashboard,
-    Sandwich, Menu, X, LogOut, GraduationCap, Briefcase, Swords, Settings
+    Sandwich, Menu, X, LogOut, GraduationCap, Briefcase, Swords, Settings, DollarSign
 } from 'lucide-react';
 import { User } from '../types';
 import { supabase } from '../lib/supabase';
@@ -62,6 +62,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
 
     // Add Admin-Specific Links
     if (currentUser.role === 'admin') {
+        navItems.push({ id: 'financeiro-admin', label: 'Financeiro', icon: <DollarSign size={20} />, roles: ['admin'] });
         navItems.push({ id: 'admin-professors', label: 'Gerenciar Pro.', icon: <Briefcase size={20} />, roles: ['admin'] });
         navItems.push({ id: 'admin-panel', label: 'Painel Admin', icon: <Settings size={20} />, roles: ['admin'] });
     }

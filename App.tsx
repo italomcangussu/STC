@@ -10,6 +10,7 @@ import { Agenda } from './components/Agenda';
 import { ProfessorProfile } from './components/ProfessorProfile';
 import { AdminProfessors } from './components/AdminProfessors';
 import { AdminPanel } from './components/AdminPanel';
+import { FinanceiroAdmin } from './components/FinanceiroAdmin';
 import { ChallengesView } from './components/Challenges';
 import { SuperSet } from './components/SuperSet';
 import { Auth } from './components/Auth';
@@ -144,6 +145,7 @@ const AppContent: React.FC = () => {
         {view === 'professor' && <ProfessorProfile currentUser={currentUser} />}
         {view === 'admin-professors' && <AdminProfessors />}
         {view === 'admin-panel' && <AdminPanel />}
+        {view === 'financeiro-admin' && <FinanceiroAdmin />}
       </Layout>
       {showAnnouncement && !needsOnboarding && (
         <AnnouncementPopup user={currentUser} onClose={() => setShowAnnouncement(false)} />
