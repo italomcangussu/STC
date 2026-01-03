@@ -1,3 +1,4 @@
+```typescript
 import React, { useState, useEffect } from 'react';
 import {
     Calendar, Users, Trophy, LayoutDashboard,
@@ -6,6 +7,7 @@ import {
 import { User } from '../types';
 import { supabase } from '../lib/supabase';
 import { isPushSupported, isInstalledPWA, isIOS, getPermissionStatus, subscribeToPush, isSubscribed } from '../lib/pushNotifications';
+import { PushPermissionPrompt } from './PushPermissionPrompt';
 
 interface NavItem {
     id: string;
@@ -64,6 +66,11 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
             // so the user knows it exists
             const shouldShow = !subscribed && permission !== 'denied';
             setShowPushBanner(shouldShow);
+
+            // Clear app badge if supported (Apple guideline constraint)
+            if ('setAppBadge' in navigator && isInstalledPWA()) {
+                navigator.clearAppBadge().catch(err => console.debug('[Badge] Error clearing:', err));
+            }
         };
         checkPush();
     }, []);
@@ -134,10 +141,10 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
 
             {/* Sidebar (Desktop & Mobile Drawer) */}
             <aside className={`
-        fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-saibro-200 transform transition-transform duration-300 ease-in-out
-        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-        md:relative md:translate-x-0
-      `}>
+        fixed inset - y - 0 left - 0 z - 50 w - 64 bg - white border - r border - saibro - 200 transform transition - transform duration - 300 ease -in -out
+        ${ isSidebarOpen ? 'translate-x-0' : '-translate-x-full' }
+md:relative md: translate - x - 0
+    `}>
                 <div className="p-6 flex justify-between items-center">
                     <div className="flex items-center gap-2 hidden md:flex">
                         <img src="https://smztsayzldjmkzmufqcz.supabase.co/storage/v1/object/public/logoapp/SOBRAL.zip%20-%201.png" className="w-10 h-10 object-contain" alt="Logo" />
@@ -191,10 +198,11 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
                         <button
                             key={item.id}
                             onClick={() => { setView(item.id); setSidebarOpen(false); }}
-                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-smooth ${view === item.id
-                                ? 'bg-sunset-gradient text-white shadow-lg shadow-orange-200/50'
-                                : 'text-stone-600 hover:bg-saibro-100 hover:text-saibro-700'
-                                }`}
+                            className={`w - full flex items - center gap - 3 px - 4 py - 3 rounded - xl text - sm font - medium transition - smooth ${
+    view === item.id
+        ? 'bg-sunset-gradient text-white shadow-lg shadow-orange-200/50'
+        : 'text-stone-600 hover:bg-saibro-100 hover:text-saibro-700'
+} `}
                         >
                             {item.icon}
                             {item.label}
@@ -211,25 +219,19 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
 
             {/* Main Content Area */}
             <main className="flex-1 overflow-y-auto h-[calc(100vh-64px)] md:h-screen">
-                <div className="max-w-4xl mx-auto">
+                <div className="max-w-4xl mx-auto pb-24">
                     {children}
                 </div>
             </main>
 
             {/* Bottom Nav (Mobile Only) */}
-            <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-saibro-200 flex justify-around p-2 z-40 pb-safe">
-                {filteredNav.slice(0, 5).map(item => (
-                    <button
-                        key={item.id}
-                        onClick={() => setView(item.id)}
-                        className={`flex flex-col items-center justify-center p-2 rounded-lg w-16 ${view === item.id ? 'text-saibro-600' : 'text-stone-400'
-                            }`}
                     >
-                        {React.cloneElement(item.icon as React.ReactElement<any>, { size: 24 })}
-                        <span className="text-[10px] mt-1 font-medium truncate w-full text-center">{item.label}</span>
-                    </button>
-                ))}
-            </div>
-        </div>
+            {React.cloneElement(item.icon as React.ReactElement<any>, { size: 24 })}
+            <span className="text-[10px] mt-1 font-medium truncate w-full text-center">{item.label}</span>
+        </button>
+    ))
+}
+            </div >
+        </div >
     );
 };
