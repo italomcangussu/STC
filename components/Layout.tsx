@@ -7,6 +7,7 @@ import { User } from '../types';
 import { supabase } from '../lib/supabase';
 import { isPushSupported, isInstalledPWA, isIOS, getPermissionStatus, subscribeToPush, isSubscribed } from '../lib/pushNotifications';
 import { PushPermissionPrompt } from './PushPermissionPrompt';
+import { InstallPrompt } from './InstallPrompt';
 
 interface NavItem {
     id: string;
@@ -182,10 +183,10 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
                             </div>
                             <div className="flex-1 min-w-0">
                                 <p className="text-xs font-bold text-saibro-800">
-                                    {isInstalledPWA() ? 'Ativar Notificações' : 'Instalar App para Notificar'}
+                                    {(isInstalledPWA() || !isIOS()) ? 'Ativar Notificações' : 'Instalar App para Notificar'}
                                 </p>
                                 <p className="text-[10px] text-saibro-600 truncate">
-                                    {isInstalledPWA() ? 'Receba alertas de desafios' : 'Adicione à Tela de Início primeiro'}
+                                    {(isInstalledPWA() || !isIOS()) ? 'Receba alertas de desafios' : 'Adicione à Tela de Início primeiro'}
                                 </p>
                             </div>
                         </button>
@@ -198,8 +199,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
                             key={item.id}
                             onClick={() => { setView(item.id); setSidebarOpen(false); }}
                             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-smooth ${view === item.id
-                                    ? 'bg-sunset-gradient text-white shadow-lg shadow-orange-200/50'
-                                    : 'text-stone-600 hover:bg-saibro-100 hover:text-saibro-700'
+                                ? 'bg-sunset-gradient text-white shadow-lg shadow-orange-200/50'
+                                : 'text-stone-600 hover:bg-saibro-100 hover:text-saibro-700'
                                 }`}
                         >
                             {item.icon}

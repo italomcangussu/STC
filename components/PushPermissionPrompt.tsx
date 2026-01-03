@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Bell, X } from 'lucide-react';
-import { isPushSupported, isInstalledPWA, isSubscribed, subscribeToPush } from '../lib/pushNotifications';
+import { isPushSupported, isInstalledPWA, isSubscribed, subscribeToPush, isIOS } from '../lib/pushNotifications';
 
 export const PushPermissionPrompt: React.FC = () => {
     const [isVisible, setIsVisible] = useState(false);
@@ -11,10 +11,8 @@ export const PushPermissionPrompt: React.FC = () => {
             // 1. Must be supported (Service Worker + Push API)
             if (!isPushSupported()) return;
 
-            // 2. Must be installed PWA (especially for iOS)
-            // Note: On Android Chrome proper, it might work without installation, 
-            // but for consistency we can enforce installation or relax this check if desired.
-            if (!isInstalledPWA()) return;
+            // 2. Must be installed PWA (Only strictly required for iOS)
+            if (isIOS() && !isInstalledPWA()) return;
 
             // 3. Check if already subscribed
             const alreadySubscribed = await isSubscribed();
