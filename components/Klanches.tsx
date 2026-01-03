@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { User, Product, Consumption } from '../types';
+import { User, Product, Consumption, Reservation, Court } from '../types';
 import {
     ShoppingCart, CheckCircle, Plus, Loader2, Package, Droplets,
     Beer, CupSoda, Candy, X, Save, Users, Edit, Trash2, Image,
-    ChevronDown, ChevronUp, DollarSign, AlertCircle
+    ChevronDown, ChevronUp, DollarSign, AlertCircle, Calendar, Clock, MapPin
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
@@ -38,7 +38,9 @@ export const Klanches: React.FC<KlanchesProps> = ({ currentUser }) => {
     const [profiles, setProfiles] = useState<User[]>([]);
     const [selectedUser, setSelectedUser] = useState<string>('');
     const [cart, setCart] = useState<CartItem[]>([]);
-    const [activeTab, setActiveTab] = useState<'produtos' | 'devedores'>('produtos');
+    const [reservations, setReservations] = useState<Reservation[]>([]);
+    const [courts, setCourts] = useState<Court[]>([]);
+    const [activeTab, setActiveTab] = useState<'produtos' | 'devedores' | 'no_clube'>('produtos');
     const [expandedDebtor, setExpandedDebtor] = useState<string | null>(null);
     const [showAddProduct, setShowAddProduct] = useState(false);
     const [editingProduct, setEditingProduct] = useState<ExtendedProduct | null>(null);
@@ -135,6 +137,41 @@ export const Klanches: React.FC<KlanchesProps> = ({ currentUser }) => {
                 phone: '',
                 balance: 0
             } as User)));
+
+            // Fetch today's reservations
+            const today = new Date().toISOString().split('T')[0];
+            const { data: reservationsData } = await supabase
+                .from('reservations')
+                .select('*')
+                .eq('date', today)
+                .eq('status', 'active');
+
+            setReservations((reservationsData || []).map(r => ({
+                id: r.id,
+                type: r.type,
+                date: r.date,
+                startTime: r.start_time,
+                endTime: r.end_time,
+                courtId: r.court_id,
+                creatorId: r.creator_id,
+                participantIds: r.participant_ids || [],
+                guestName: r.guest_name,
+                guestResponsibleId: r.guest_responsible_id,
+                status: r.status
+            } as Reservation)));
+
+            // Fetch courts
+            const { data: courtsData } = await supabase
+                .from('courts')
+                .select('*')
+                .eq('is_active', true);
+
+            setCourts((courtsData || []).map(c => ({
+                id: c.id,
+                name: c.name,
+                type: c.type,
+                isActive: c.is_active
+            } as Court)));
 
             setLoading(false);
         };
@@ -403,6 +440,12 @@ export const Klanches: React.FC<KlanchesProps> = ({ currentUser }) => {
                         <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">{debtors.length}</span>
                     )}
                 </button>
+                <button
+                    onClick={() => setActiveTab('no_clube')}
+                    className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 ${activeTab === 'no_clube' ? 'bg-white text-saibro-700 shadow-sm' : 'text-stone-500'}`}
+                >
+                    <Calendar size={16} /> No Clube
+                </button>
             </div>
 
             {/* ====== PRODUTOS TAB ====== */}
@@ -579,6 +622,81 @@ export const Klanches: React.FC<KlanchesProps> = ({ currentUser }) => {
                                     )}
                                 </div>
                             ))
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* ====== NO CLUBE TAB ====== */}
+            {activeTab === 'no_clube' && (
+                <div className="space-y-4">
+                    <div className="bg-white rounded-xl p-4 shadow-sm border border-stone-100 flex justify-between items-center">
+                        <div>
+                            <p className="text-xs text-stone-500 uppercase font-semibold">Agendamentos Hoje</p>
+                            <p className="text-2xl font-bold text-saibro-600">{reservations.length}</p>
+                        </div>
+                        <div className="text-stone-300">
+                            <Calendar size={32} />
+                        </div>
+                    </div>
+
+                    <div className="space-y-3">
+                        {reservations.length === 0 ? (
+                            <div className="text-center py-12 text-stone-400 bg-white rounded-2xl border-2 border-dashed border-stone-100">
+                                <AlertCircle size={40} className="mx-auto mb-2 text-stone-200" />
+                                <p>Nenhum agendamento para hoje.</p>
+                            </div>
+                        ) : (
+                            reservations
+                                .sort((a, b) => a.startTime.localeCompare(b.startTime))
+                                .map(res => {
+                                    const court = courts.find(c => c.id === res.courtId);
+                                    const resParticipants = res.participantIds.map(id => profiles.find(p => p.id === id)).filter(Boolean);
+
+                                    return (
+                                        <div key={res.id} className="bg-white rounded-2xl border border-stone-100 shadow-sm overflow-hidden">
+                                            <div className="p-4 bg-stone-50/50 border-b border-stone-100 flex justify-between items-center">
+                                                <div className="flex items-center gap-2">
+                                                    <Clock size={16} className="text-saibro-500" />
+                                                    <span className="font-bold text-stone-700">{res.startTime} - {res.endTime}</span>
+                                                </div>
+                                                <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-white border border-stone-200 text-stone-500">
+                                                    {res.type}
+                                                </span>
+                                            </div>
+
+                                            <div className="p-4 space-y-3">
+                                                <div className="flex items-center gap-2 text-sm text-stone-600">
+                                                    <MapPin size={14} className="text-stone-400" />
+                                                    <span className="font-medium">{court?.name || 'Quadra'}</span>
+                                                    <span className="text-xs text-stone-400">({court?.type})</span>
+                                                </div>
+
+                                                <div className="flex flex-wrap gap-2">
+                                                    {resParticipants.map(p => (
+                                                        <div key={p?.id} className="flex items-center gap-2 bg-white border border-stone-200 pl-1 pr-3 py-1 rounded-full shadow-sm">
+                                                            <img src={p?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${p?.id}`} className="w-6 h-6 rounded-full" alt="" />
+                                                            <span className="text-xs font-medium text-stone-700">{p?.name}</span>
+                                                        </div>
+                                                    ))}
+                                                    {res.guestName && (
+                                                        <div className="flex items-center gap-2 bg-saibro-50 border border-saibro-100 pl-2 pr-3 py-1 rounded-full shadow-sm">
+                                                            <div className="w-5 h-5 rounded-full bg-saibro-200 flex items-center justify-center text-[8px] font-bold text-saibro-700">G</div>
+                                                            <span className="text-xs font-bold text-saibro-700">{res.guestName}</span>
+                                                            <span className="text-[9px] text-saibro-400">(Convidado)</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                {res.guestName && res.guestResponsibleId && (
+                                                    <p className="text-[10px] text-stone-400 italic">
+                                                        Responsável: {profiles.find(p => p.id === res.guestResponsibleId)?.name || 'N/A'}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })
                         )}
                     </div>
                 </div>

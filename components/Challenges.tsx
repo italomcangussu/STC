@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { User, Challenge, Match, Court, Reservation } from '../types';
 import { Trophy, Plus, CheckCircle, XCircle, Clock, Calendar, AlertTriangle, ArrowRight, ShieldAlert, PlayCircle, Loader2, Target, Info, MapPin, ChevronRight, ChevronLeft } from 'lucide-react';
 import { fetchRanking, getEligibleOpponents, canChallenge, canChallengeWithLimits, checkMonthlyChallengeLimit, PlayerStats, CLASS_ORDER } from '../lib/rankingService';
+import { sendPushNotification } from '../lib/notificationService';
 import { supabase } from '../lib/supabase';
 import { LiveScoreboard } from './LiveScoreboard';
 
@@ -551,6 +552,17 @@ export const ChallengesView: React.FC<{ currentUser: User }> = ({ currentUser })
                 reservationId: chalData.reservation_id
             }, ...prev]);
             setShowCreateModal(false);
+
+            // Send push notification to opponent
+            // Use non-blocking call so it doesn't delay UI feedback
+            sendPushNotification({
+                userId: data.opponentId,
+                title: 'Novo Desafio! ⚔️',
+                body: `${currentUser.name} desafiou você para um jogo em ${new Date(data.date + 'T00:00:00').toLocaleDateString('pt-BR')}!`,
+                url: '/desafios',
+                data: { challengeId: chalData.id }
+            });
+
         } catch (err) {
             console.error('Error creating challenge:', err);
             alert('Erro ao criar desafio');

@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import {
     Calendar, Users, Trophy, LayoutDashboard,
-    Sandwich, Menu, X, LogOut, GraduationCap, Briefcase, Swords, Settings, DollarSign
+    Sandwich, Menu, X, LogOut, GraduationCap, Briefcase, Swords, Settings, DollarSign, Bell, BellOff
 } from 'lucide-react';
 import { User } from '../types';
 import { supabase } from '../lib/supabase';
+import { isPushSupported, isInstalledPWA, isIOS, getPermissionStatus, subscribeToPush, isSubscribed } from '../lib/pushNotifications';
 
 interface NavItem {
     id: string;
@@ -24,6 +25,8 @@ interface LayoutProps {
 export const Layout: React.FC<LayoutProps> = ({ children, view, setView, currentUser, onLogout }) => {
     const [isSidebarOpen, setSidebarOpen] = useState(false);
     const [hasActiveChamps, setHasActiveChamps] = useState(false);
+    const [pushEnabled, setPushEnabled] = useState<boolean | null>(null);
+    const [showPushBanner, setShowPushBanner] = useState(false);
 
     // Check for active championships
     useEffect(() => {
@@ -37,6 +40,39 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
         };
         checkChamps();
     }, []);
+
+    // Check push notification status
+    useEffect(() => {
+        const checkPush = async () => {
+            if (!isPushSupported()) {
+                setShowPushBanner(false);
+                return;
+            }
+
+            const subscribed = await isSubscribed();
+            setPushEnabled(subscribed);
+
+            // Show banner if: iOS + PWA + not subscribed + permission not denied
+            const shouldShow = isInstalledPWA() && !subscribed && getPermissionStatus() !== 'denied';
+            setShowPushBanner(shouldShow);
+        };
+        checkPush();
+    }, []);
+
+    const handleEnablePush = async () => {
+        const subscription = await subscribeToPush();
+        if (subscription) {
+            // Save subscription to database
+            await supabase.from('push_subscriptions').upsert({
+                user_id: currentUser.id,
+                endpoint: subscription.endpoint,
+                keys: subscription.keys
+            }, { onConflict: 'user_id' });
+
+            setPushEnabled(true);
+            setShowPushBanner(false);
+        }
+    };
 
     // Dynamic Navigation Items
     const navItems: NavItem[] = [
@@ -119,6 +155,22 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
                         </div>
                     </button>
                     <p className="text-[10px] text-stone-400 text-center mt-1">Toque para ver/editar perfil</p>
+
+                    {/* Push Notification Banner */}
+                    {showPushBanner && (
+                        <button
+                            onClick={handleEnablePush}
+                            className="mt-3 w-full flex items-center gap-2 bg-saibro-100 border border-saibro-200 p-3 rounded-xl text-left hover:bg-saibro-200 transition-colors"
+                        >
+                            <div className="w-8 h-8 bg-saibro-500 rounded-full flex items-center justify-center text-white shrink-0">
+                                <Bell size={16} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-xs font-bold text-saibro-800">Ativar Notificações</p>
+                                <p className="text-[10px] text-saibro-600 truncate">Receba alertas de desafios e reservas</p>
+                            </div>
+                        </button>
+                    )}
                 </div>
 
                 <nav className="px-4 space-y-1 overflow-y-auto max-h-[calc(100vh-200px)]">
