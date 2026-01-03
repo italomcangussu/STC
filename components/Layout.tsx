@@ -44,16 +44,25 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
     // Check push notification status
     useEffect(() => {
         const checkPush = async () => {
-            if (!isPushSupported()) {
+            const supported = isPushSupported();
+            const pwa = isInstalledPWA();
+            const permission = getPermissionStatus();
+            const subscribed = await isSubscribed();
+
+            console.log('[Push Debug]', { supported, pwa, permission, subscribed });
+
+            // Temporary: Show banner even if not installed (for testing)
+            // But warn that it might not work
+            if (!supported) {
                 setShowPushBanner(false);
                 return;
             }
 
-            const subscribed = await isSubscribed();
             setPushEnabled(subscribed);
 
-            // Show banner if: iOS + PWA + not subscribed + permission not denied
-            const shouldShow = isInstalledPWA() && !subscribed && getPermissionStatus() !== 'denied';
+            // LOGIC FIX: Always show if supported and not subscribed, let the button handler deal with logic
+            // so the user knows it exists
+            const shouldShow = !subscribed && permission !== 'denied';
             setShowPushBanner(shouldShow);
         };
         checkPush();
@@ -166,8 +175,12 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
                                 <Bell size={16} />
                             </div>
                             <div className="flex-1 min-w-0">
-                                <p className="text-xs font-bold text-saibro-800">Ativar Notificações</p>
-                                <p className="text-[10px] text-saibro-600 truncate">Receba alertas de desafios e reservas</p>
+                                <p className="text-xs font-bold text-saibro-800">
+                                    {isInstalledPWA() ? 'Ativar Notificações' : 'Instalar App para Notificar'}
+                                </p>
+                                <p className="text-[10px] text-saibro-600 truncate">
+                                    {isInstalledPWA() ? 'Receba alertas de desafios' : 'Adicione à Tela de Início primeiro'}
+                                </p>
                             </div>
                         </button>
                     )}
