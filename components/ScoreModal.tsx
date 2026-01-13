@@ -40,8 +40,8 @@ export const ScoreModal: React.FC<ScoreModalProps> = ({ challenge, challengerNam
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
+        <div className="fixed inset-0 bg-stone-900/70 flex items-center justify-center z-[100] p-4 backdrop-blur-md animate-in fade-in duration-300">
+            <div className="bg-white rounded-3xl w-full max-w-md overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-4 duration-300 shadow-2xl">
                 <div className="bg-saibro-500 p-4 text-white flex justify-between items-center">
                     <h3 className="font-bold flex items-center gap-2"><Trophy size={18} /> Lançar Resultado</h3>
                     <button onClick={onClose} className="hover:bg-white/20 p-1 rounded-lg"><XCircle size={20} /></button>

@@ -81,8 +81,8 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ currentUser,
     };
 
     return (
-        <div className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-            <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-[200] bg-stone-900/60 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
+            <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-4 duration-300">
                 <div className="bg-saibro-50 px-6 py-4 border-b border-saibro-100 flex justify-between items-center">
                     <h2 className="text-xl font-bold text-saibro-900">Editar Perfil</h2>
                     <button onClick={onClose} className="p-2 hover:bg-white rounded-full text-stone-400 hover:text-stone-600 transition-colors">

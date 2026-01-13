@@ -361,7 +361,7 @@ const AthleteProfile: React.FC<AthleteProfileProps> = ({ userId, currentUser, us
                                 <p>Nenhum jogo registrado.</p>
                             </div>
                         ) : (
-                            matches.map((m: any) => {
+                            matches.map((m: any, mIndex: number) => {
                                 const isPlayerA = m.player_a_id === userId;
                                 const opponentId = isPlayerA ? m.player_b_id : m.player_a_id;
                                 const opponent = ranking.find(r => r.id === opponentId);
@@ -370,7 +370,7 @@ const AthleteProfile: React.FC<AthleteProfileProps> = ({ userId, currentUser, us
                                 const oppScore = isPlayerA ? (m.score_b || []) : (m.score_a || []);
 
                                 return (
-                                    <div key={m.id} className="bg-white p-4 rounded-xl border border-stone-100 shadow-sm flex flex-col gap-2 hover:shadow-md transition-shadow">
+                                    <div key={m.id} className="bg-white p-4 rounded-xl border border-stone-100 shadow-sm flex flex-col gap-2 hover:shadow-md transition-shadow animate-slide-in" style={{ animationDelay: `${mIndex * 50}ms` }}>
                                         <div className="flex justify-between items-start">
                                             <span className="text-[10px] font-bold uppercase bg-stone-100 text-stone-500 px-2 py-0.5 rounded">
                                                 {m.type || 'Desafio'}
@@ -381,9 +381,9 @@ const AthleteProfile: React.FC<AthleteProfileProps> = ({ userId, currentUser, us
                                         </div>
 
                                         <div className="flex justify-between items-center">
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-xs text-stone-400">vs</span>
-                                                <span className="font-semibold text-stone-800">{opponent?.name || 'Desconhecido'}</span>
+                                            <div className="flex items-center gap-2 min-w-0 flex-1">
+                                                <span className="text-xs text-stone-400 shrink-0">vs</span>
+                                                <span className="font-semibold text-stone-800 truncate">{opponent?.name || 'Desconhecido'}</span>
                                             </div>
                                             <div className="flex gap-1">
                                                 {myScore.map((s: number, i: number) => (

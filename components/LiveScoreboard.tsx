@@ -174,160 +174,125 @@ export const LiveScoreboard: React.FC<LiveScoreboardProps> = ({
     };
 
     return (
-        <div className="bg-white rounded-2xl shadow-lg border border-stone-200 overflow-hidden">
-            {/* Header */}
-            <div className="bg-gradient-to-r from-saibro-600 to-saibro-500 p-4 text-white">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <Trophy size={20} />
-                        <span className="font-bold text-sm uppercase tracking-wide">
-                            {match.type === 'Desafio Ranking' ? 'Desafio' : 'Campeonato'}
-                        </span>
-                    </div>
-                    {formatScheduledTime() && (
-                        <div className="flex items-center gap-1 text-xs bg-white/20 px-2 py-1 rounded-full">
-                            <Clock size={12} />
-                            <span>{formatScheduledTime()}</span>
-                        </div>
-                    )}
-                </div>
-            </div>
+        <div className="relative overflow-hidden rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl ring-1 ring-white/10 group">
+            {/* TV Gloss/Reflection Effect */}
+            <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none z-0" />
 
-            {/* Not editable message */}
-            {!canEdit && (
-                <div className="bg-amber-50 border-b border-amber-100 p-3 flex items-center gap-2 text-amber-700 text-sm">
-                    <AlertCircle size={16} />
-                    <span>
-                        {match.scheduledTime
-                            ? `Edição disponível após ${match.scheduledTime}`
-                            : 'Edição não disponível ainda'}
+            {/* Header - Broadcast Bar */}
+            <div className="relative z-10 bg-black/20 backdrop-blur-md p-4 flex items-center justify-between border-b border-white/5">
+                <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1.5 px-2 py-0.5 bg-red-500/10 border border-red-500/20 rounded text-[10px] font-bold text-red-500 uppercase tracking-widest animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.2)]">
+                        <div className="w-1.5 h-1.5 rounded-full bg-red-500 shadow-[0_0_5px_currentColor]" />
+                        Ao Vivo
+                    </div>
+                    <span className="text-white/40 text-xs font-bold tracking-wider uppercase hidden sm:block">
+                        {match.type === 'Desafio Ranking' ? 'Desafio STC' : 'Torneio STC'}
                     </span>
                 </div>
-            )}
+                {formatScheduledTime() && (
+                    <div className="flex items-center gap-1.5 text-xs text-white/50 bg-white/5 px-3 py-1 rounded-full border border-white/5">
+                        <Clock size={12} className="text-saibro-500" />
+                        <span className="font-mono tracking-wide">{formatScheduledTime()}</span>
+                    </div>
+                )}
+            </div>
 
-            {/* Players and Score */}
-            <div className="p-4 space-y-4">
-                {/* Set column headers */}
-                <div className="flex justify-end gap-2 px-3">
-                    <span className="w-10 text-center text-[10px] font-bold text-stone-400 uppercase">1º Set</span>
-                    <span className="w-10 text-center text-[10px] font-bold text-stone-400 uppercase">2º Set</span>
-                    {showThirdSet && (
-                        <span className="w-10 text-center text-[10px] font-bold text-saibro-500 uppercase">Tie</span>
-                    )}
-                </div>
-
+            {/* Main Scoreboard Area */}
+            <div className="relative z-10 p-6 sm:p-8 grid grid-cols-[1fr_auto_1fr] gap-4 items-center justify-items-center">
                 {/* Player A */}
-                <div className={`flex items-center gap-4 p-3 rounded-xl transition-colors ${matchWinner === 'A' ? 'bg-green-50 border border-green-200' : 'bg-stone-50'}`}>
-                    <img
-                        src={playerA?.avatar || 'https://via.placeholder.com/48'}
-                        alt={playerA?.name}
-                        className={`w-12 h-12 rounded-full border-2 ${matchWinner === 'A' ? 'border-green-500' : 'border-stone-200'}`}
-                    />
-                    <div className="flex-1">
-                        <p className={`font-bold ${matchWinner === 'A' ? 'text-green-700' : 'text-stone-800'}`}>
-                            {playerA?.name || 'Jogador A'}
-                        </p>
+                <div className={`flex flex-col items-center gap-3 transition-all duration-500 ${matchWinner && matchWinner !== 'A' ? 'opacity-30 grayscale scale-95' : 'opacity-100'}`}>
+                    <div className="relative group/avatar">
+                        <div className={`absolute inset-0 rounded-full bg-saibro-500 blur-md opacity-0 transition-opacity duration-500 ${matchWinner === 'A' ? 'opacity-40' : 'group-hover/avatar:opacity-20'}`} />
+                        <img
+                            src={playerA?.avatar || 'https://via.placeholder.com/48'}
+                            alt={playerA?.name}
+                            className={`relative w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 shadow-2xl object-cover transition-colors duration-300 ${matchWinner === 'A' ? 'border-saibro-500' : 'border-slate-700'}`}
+                        />
                         {matchWinner === 'A' && (
-                            <span className="text-xs text-green-600 font-medium flex items-center gap-1">
-                                <Trophy size={12} /> Vencedor
-                            </span>
+                            <div className="absolute -top-3 -right-2 bg-gradient-to-br from-yellow-300 to-amber-500 text-yellow-900 p-1.5 rounded-full shadow-[0_0_15px_rgba(245,158,11,0.5)] z-20 animate-in zoom-in spin-in-12 duration-500">
+                                <Trophy size={14} fill="currentColor" strokeWidth={3} />
+                            </div>
                         )}
                     </div>
-                    <div className="flex gap-2">
-                        {[0, 1, 2].map(setIdx => {
-                            if (setIdx === 2 && !showThirdSet) return null;
-                            const setWin = setIdx === 0 ? set1Winner : setIdx === 1 ? set2Winner : set3Winner;
-                            return (
-                                <div key={setIdx} className="flex flex-col items-center gap-1">
-                                    <button
-                                        onClick={() => updateScore('A', setIdx, 1)}
-                                        disabled={!canEdit}
-                                        className="w-6 h-6 rounded bg-saibro-100 text-saibro-600 flex items-center justify-center disabled:opacity-30 hover:bg-saibro-200 transition-colors"
-                                    >
-                                        <Plus size={14} />
-                                    </button>
-                                    <span className={`w-10 h-10 flex items-center justify-center text-lg font-black rounded-lg ${setWin === 'A' ? 'bg-saibro-600 text-white' : 'bg-white border border-stone-200 text-stone-700'
-                                        }`}>
-                                        {scoreA[setIdx]}
-                                    </span>
-                                    <button
-                                        onClick={() => updateScore('A', setIdx, -1)}
-                                        disabled={!canEdit}
-                                        className="w-6 h-6 rounded bg-stone-100 text-stone-500 flex items-center justify-center disabled:opacity-30 hover:bg-stone-200 transition-colors"
-                                    >
-                                        <Minus size={14} />
-                                    </button>
-                                </div>
-                            );
-                        })}
-                    </div>
+                    <h3 className="text-white font-bold text-sm sm:text-lg leading-tight text-center max-w-[100px] sm:max-w-[140px] truncate drop-shadow-md">
+                        {playerA?.name || 'Jogador A'}
+                    </h3>
                 </div>
 
-                {/* VS Divider */}
-                <div className="flex items-center justify-center">
-                    <div className="bg-stone-100 px-3 py-1 rounded-full text-xs font-black text-stone-400 uppercase">
-                        vs
+                {/* Scores Center */}
+                <div className="flex flex-col items-center gap-4">
+                    <div className="flex items-center gap-2 sm:gap-4 bg-black/40 p-2 sm:p-3 rounded-2xl border border-white/5 shadow-inner">
+                        {/* Loop through sets */}
+                        {[0, 1, 2].map(idx => {
+                            if (idx === 2 && !showThirdSet) return null;
+                            const isCurrentSet = (idx === 0 && !set1Winner) || (idx === 1 && set1Winner && !set2Winner) || (idx === 2);
+
+                            return (
+                                <div key={idx} className={`relative flex flex-col items-center p-2 sm:p-3 rounded-xl transition-all duration-300 ${isCurrentSet ? 'bg-white/10 ring-1 ring-white/20 shadow-lg' : 'opacity-60'}`}>
+                                    <span className="text-[9px] text-white/30 font-black uppercase mb-2 tracking-widest">{idx === 2 ? 'TIE' : `${idx + 1}º SET`}</span>
+
+                                    <div className="flex items-center gap-2 sm:gap-4 font-mono text-2xl sm:text-4xl font-black text-white leading-none tracking-wider">
+                                        {/* P1 Score */}
+                                        <div className="flex flex-col items-center gap-1">
+                                            {canEdit && (
+                                                <button onClick={() => updateScore('A', idx, 1)} className="text-white/10 hover:text-saibro-400 hover:bg-white/5 rounded-full p-1 transition-all active:scale-90"><Plus size={12} strokeWidth={4} /></button>
+                                            )}
+                                            <span className={`transition-colors duration-300 ${scoreA[idx] > scoreB[idx] ? 'text-white' : 'text-white/40'}`}>{scoreA[idx]}</span>
+                                            {canEdit && (
+                                                <button onClick={() => updateScore('A', idx, -1)} className="text-white/10 hover:text-red-400 hover:bg-white/5 rounded-full p-1 transition-all active:scale-90"><Minus size={12} strokeWidth={4} /></button>
+                                            )}
+                                        </div>
+
+                                        <span className="text-white/10 text-xl font-light mb-1">:</span>
+
+                                        {/* P2 Score */}
+                                        <div className="flex flex-col items-center gap-1">
+                                            {canEdit && (
+                                                <button onClick={() => updateScore('B', idx, 1)} className="text-white/10 hover:text-saibro-400 hover:bg-white/5 rounded-full p-1 transition-all active:scale-90"><Plus size={12} strokeWidth={4} /></button>
+                                            )}
+                                            <span className={`transition-colors duration-300 ${scoreB[idx] > scoreA[idx] ? 'text-white' : 'text-white/40'}`}>{scoreB[idx]}</span>
+                                            {canEdit && (
+                                                <button onClick={() => updateScore('B', idx, -1)} className="text-white/10 hover:text-red-400 hover:bg-white/5 rounded-full p-1 transition-all active:scale-90"><Minus size={12} strokeWidth={4} /></button>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            )
+                        })}
                     </div>
                 </div>
 
                 {/* Player B */}
-                <div className={`flex items-center gap-4 p-3 rounded-xl transition-colors ${matchWinner === 'B' ? 'bg-green-50 border border-green-200' : 'bg-stone-50'}`}>
-                    <img
-                        src={playerB?.avatar || 'https://via.placeholder.com/48'}
-                        alt={playerB?.name}
-                        className={`w-12 h-12 rounded-full border-2 ${matchWinner === 'B' ? 'border-green-500' : 'border-stone-200'}`}
-                    />
-                    <div className="flex-1">
-                        <p className={`font-bold ${matchWinner === 'B' ? 'text-green-700' : 'text-stone-800'}`}>
-                            {playerB?.name || 'Jogador B'}
-                        </p>
+                <div className={`flex flex-col items-center gap-3 transition-opacity duration-500 ${matchWinner && matchWinner !== 'B' ? 'opacity-30 grayscale scale-95' : 'opacity-100'}`}>
+                    <div className="relative group/avatar">
+                        <div className={`absolute inset-0 rounded-full bg-saibro-500 blur-md opacity-0 transition-opacity duration-500 ${matchWinner === 'B' ? 'opacity-40' : 'group-hover/avatar:opacity-20'}`} />
+                        <img
+                            src={playerB?.avatar || 'https://via.placeholder.com/48'}
+                            alt={playerB?.name}
+                            className={`relative w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 shadow-2xl object-cover transition-colors duration-300 ${matchWinner === 'B' ? 'border-saibro-500' : 'border-slate-700'}`}
+                        />
                         {matchWinner === 'B' && (
-                            <span className="text-xs text-green-600 font-medium flex items-center gap-1">
-                                <Trophy size={12} /> Vencedor
-                            </span>
+                            <div className="absolute -top-3 -right-2 bg-gradient-to-br from-yellow-300 to-amber-500 text-yellow-900 p-1.5 rounded-full shadow-[0_0_15px_rgba(245,158,11,0.5)] z-20 animate-in zoom-in spin-in-12 duration-500">
+                                <Trophy size={14} fill="currentColor" strokeWidth={3} />
+                            </div>
                         )}
                     </div>
-                    <div className="flex gap-2">
-                        {[0, 1, 2].map(setIdx => {
-                            if (setIdx === 2 && !showThirdSet) return null;
-                            const setWin = setIdx === 0 ? set1Winner : setIdx === 1 ? set2Winner : set3Winner;
-                            return (
-                                <div key={setIdx} className="flex flex-col items-center gap-1">
-                                    <button
-                                        onClick={() => updateScore('B', setIdx, 1)}
-                                        disabled={!canEdit}
-                                        className="w-6 h-6 rounded bg-saibro-100 text-saibro-600 flex items-center justify-center disabled:opacity-30 hover:bg-saibro-200 transition-colors"
-                                    >
-                                        <Plus size={14} />
-                                    </button>
-                                    <span className={`w-10 h-10 flex items-center justify-center text-lg font-black rounded-lg ${setWin === 'B' ? 'bg-saibro-600 text-white' : 'bg-white border border-stone-200 text-stone-700'
-                                        }`}>
-                                        {scoreB[setIdx]}
-                                    </span>
-                                    <button
-                                        onClick={() => updateScore('B', setIdx, -1)}
-                                        disabled={!canEdit}
-                                        className="w-6 h-6 rounded bg-stone-100 text-stone-500 flex items-center justify-center disabled:opacity-30 hover:bg-stone-200 transition-colors"
-                                    >
-                                        <Minus size={14} />
-                                    </button>
-                                </div>
-                            );
-                        })}
-                    </div>
+                    <h3 className="text-white font-bold text-sm sm:text-lg leading-tight text-center max-w-[100px] sm:max-w-[140px] truncate drop-shadow-md">
+                        {playerB?.name || 'Jogador B'}
+                    </h3>
                 </div>
             </div>
 
             {/* Footer / Save Button */}
-            <div className="p-4 border-t border-stone-100 bg-stone-50">
+            <div className="relative z-10 p-4 border-t border-white/5 bg-black/20 backdrop-blur-sm">
                 {error && (
-                    <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm flex items-center gap-2">
+                    <div className="mb-3 p-2 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm flex items-center gap-2">
                         <AlertCircle size={16} />
                         {error}
                     </div>
                 )}
                 {success && (
-                    <div className="mb-3 p-2 bg-green-50 border border-green-200 rounded-lg text-green-600 text-sm flex items-center gap-2">
+                    <div className="mb-3 p-2 bg-green-500/10 border border-green-500/20 rounded-lg text-green-400 text-sm flex items-center gap-2">
                         <CheckCircle size={16} />
                         Placar salvo com sucesso!
                     </div>
@@ -335,9 +300,9 @@ export const LiveScoreboard: React.FC<LiveScoreboardProps> = ({
                 <button
                     onClick={handleSave}
                     disabled={!canSave || saving}
-                    className={`w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${canSave && !saving
-                        ? 'bg-saibro-600 text-white hover:bg-saibro-700 shadow-lg shadow-orange-100'
-                        : 'bg-stone-200 text-stone-400 cursor-not-allowed'
+                    className={`w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all duration-300 uppercase tracking-wider text-sm ${canSave && !saving
+                        ? 'bg-gradient-to-r from-saibro-600 to-saibro-500 text-white hover:shadow-[0_0_20px_rgba(234,88,12,0.4)] hover:scale-[1.02]'
+                        : 'bg-white/5 text-white/20 cursor-not-allowed border border-white/5'
                         }`}
                 >
                     {saving ? (
@@ -348,13 +313,13 @@ export const LiveScoreboard: React.FC<LiveScoreboardProps> = ({
                     ) : (
                         <>
                             <Save size={18} />
-                            Salvar Placar
+                            SALVAR PLACAR
                         </>
                     )}
                 </button>
                 {!matchWinner && canEdit && (scoreA[0] > 0 || scoreB[0] > 0) && (
-                    <p className="text-xs text-stone-400 text-center mt-2">
-                        Complete um placar válido para salvar
+                    <p className="text-[10px] uppercase tracking-widest text-white/30 text-center mt-3 font-bold">
+                        Defina um vencedor para salvar
                     </p>
                 )}
             </div>

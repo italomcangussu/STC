@@ -273,36 +273,36 @@ export const Dashboard: React.FC<DashboardProps> = () => {
 
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-2xl card-court animate-slide-in">
-          <p className="text-xs text-stone-500 uppercase font-bold">Total Reservas</p>
-          <p className="text-3xl font-bold text-saibro-600">{filteredReservations.length}</p>
-          <p className="text-xs text-stone-400 mt-1">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-gradient-to-br from-white to-stone-50/50 border-l-[6px] border-saibro-500 p-4 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 animate-scale-in">
+          <p className="text-xs text-stone-500 uppercase font-bold tracking-wider">Total Reservas</p>
+          <p className="text-3xl font-black text-stone-800 mt-1">{filteredReservations.length}</p>
+          <p className="text-[10px] text-stone-400 font-bold uppercase mt-1">
             {selectedYear === 'all' ? 'Todo o período' : selectedMonth === 'all' ? `Em ${selectedYear}` : `Em ${months.find(m => m.val === selectedMonth)?.label}/${selectedYear}`}
           </p>
         </div>
-        <div className="bg-white p-4 rounded-2xl card-court animate-slide-in delay-100">
-          <p className="text-xs text-stone-500 uppercase font-bold">Quadra Favorita</p>
-          <p className="text-lg font-bold text-stone-800 truncate" title={mostUsedCourt}>{mostUsedCourt}</p>
-          <p className="text-xs text-stone-400 mt-1">Mais utilizada</p>
+        <div className="bg-gradient-to-br from-white to-stone-50/50 border-l-[6px] border-blue-500 p-4 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 animate-scale-in delay-75">
+          <p className="text-xs text-stone-500 uppercase font-bold tracking-wider">Quadra Favorita</p>
+          <p className="text-lg font-black text-stone-800 truncate mt-2 leading-tight" title={mostUsedCourt}>{mostUsedCourt}</p>
+          <p className="text-[10px] text-stone-400 font-bold uppercase mt-1">Mais utilizada</p>
         </div>
-        <div className="bg-white p-4 rounded-2xl card-court animate-slide-in delay-200">
-          <p className="text-xs text-stone-500 uppercase font-bold">Dia de Pico</p>
-          <div className="flex items-center gap-2">
-            <Calendar className="text-green-500" size={20} />
+        <div className="bg-gradient-to-br from-white to-stone-50/50 border-l-[6px] border-green-500 p-4 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 animate-scale-in delay-150">
+          <p className="text-xs text-stone-500 uppercase font-bold tracking-wider">Dia de Pico</p>
+          <div className="flex items-center gap-2 mt-2">
+            <Calendar className="text-green-600 animate-float" size={24} />
             <div>
-              <p className="text-lg font-bold text-stone-800">{busyDay?.day || '-'}</p>
-              <span className="text-xs text-stone-400">{busyDay?.count || 0} reservas</span>
+              <p className="text-lg font-black text-stone-800 leading-none">{busyDay?.day || '-'}</p>
+              <span className="text-[10px] text-stone-400 font-bold uppercase">{busyDay?.count || 0} reservas</span>
             </div>
           </div>
         </div>
-        <div className="bg-white p-4 rounded-2xl card-court animate-slide-in delay-300">
-          <p className="text-xs text-stone-500 uppercase font-bold">Hora de Pico</p>
-          <div className="flex items-center gap-2">
-            <Clock className="text-orange-500" size={20} />
+        <div className="bg-gradient-to-br from-white to-stone-50/50 border-l-[6px] border-orange-500 p-4 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 animate-scale-in delay-200">
+          <p className="text-xs text-stone-500 uppercase font-bold tracking-wider">Hora de Pico</p>
+          <div className="flex items-center gap-2 mt-2">
+            <Clock className="text-orange-600 animate-float" size={24} />
             <div>
-              <p className="text-lg font-bold text-stone-800">{busyHour?.hour || '-'}</p>
-              <span className="text-xs text-stone-400">{busyHour?.count || 0} reservas</span>
+              <p className="text-lg font-black text-stone-800 leading-none">{busyHour?.hour || '-'}</p>
+              <span className="text-[10px] text-stone-400 font-bold uppercase">{busyHour?.count || 0} reservas</span>
             </div>
           </div>
         </div>
@@ -361,7 +361,7 @@ export const Dashboard: React.FC<DashboardProps> = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
         {/* Court Usage Chart */}
-        <div className="bg-white p-4 rounded-xl border border-stone-100 shadow-sm">
+        <div className="bg-white p-4 rounded-xl border border-stone-100 shadow-sm min-w-0">
           <h3 className="font-bold text-stone-700 mb-4">Utilização por Quadra</h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
@@ -377,7 +377,7 @@ export const Dashboard: React.FC<DashboardProps> = () => {
         </div>
 
         {/* Weekday Activity */}
-        <div className="bg-white p-4 rounded-xl border border-stone-100 shadow-sm">
+        <div className="bg-white p-4 rounded-xl border border-stone-100 shadow-sm min-w-0">
           <h3 className="font-bold text-stone-700 mb-4">Movimento Semanal</h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
@@ -394,7 +394,7 @@ export const Dashboard: React.FC<DashboardProps> = () => {
       </div>
 
       {/* Charts Row 2: Hourly Heatmap/Area */}
-      <div className="bg-white p-4 rounded-xl border border-stone-100 shadow-sm">
+      <div className="bg-white p-4 rounded-xl border border-stone-100 shadow-sm min-w-0">
         <h3 className="font-bold text-stone-700 mb-4">Horários Mais Movimentados</h3>
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">

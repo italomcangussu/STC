@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { User, Reservation, ReservationType, NonSocioStudent, PlanType, Professor } from '../types';
-import { Calendar as CalIcon, ChevronLeft, ChevronRight, Plus, MapPin, Clock, Users, UserPlus, LogOut, Trash2, Check, X, AlertCircle, UserCog, Wallet, Save, Pencil, UserMinus, Share2, Info, ArrowLeft, Search, Loader2, Trophy } from 'lucide-react';
+import { Calendar as CalIcon, ChevronLeft, ChevronRight, Plus, MapPin, Clock, Users, UserPlus, LogOut, Trash2, Check, X, AlertCircle, UserCog, Wallet, Save, Pencil, UserMinus, Share2, Info, ArrowLeft, Search, Loader2, Trophy, ArrowRight } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { ScoreModal } from './ScoreModal';
 import { Challenge } from '../types';
@@ -80,7 +80,7 @@ const ManageParticipantsModal: React.FC<{
     };
 
     return (
-        <div className="fixed inset-0 bg-stone-900/40 z-[80] flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="fixed inset-0 bg-stone-900/60 z-[80] flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-md animate-in fade-in duration-300">
             <div className="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col max-h-[90vh] animate-in slide-in-from-bottom duration-300">
                 <div className="p-4 border-b border-stone-100 flex items-center justify-between">
                     <h3 className="text-lg font-bold text-stone-800">Gerenciar Atletas</h3>
@@ -341,7 +341,7 @@ const ReservationDetails: React.FC<{
     };
 
     return (
-        <div className="fixed inset-0 bg-stone-50 z-[70] flex flex-col animate-in slide-in-from-right duration-300">
+        <div className="fixed inset-0 bg-white/90 backdrop-blur-3xl z-[70] flex flex-col animate-in slide-in-from-right duration-300">
             {/* 1. Header */}
             <div className="bg-white px-4 py-4 shadow-sm border-b border-stone-200 flex items-center justify-between sticky top-0 z-10">
                 <button onClick={onClose} className="p-2 -ml-2 text-stone-600 hover:bg-stone-100 rounded-full transition-colors">
@@ -605,6 +605,7 @@ const ReservationDetails: React.FC<{
 
 
 // --- COMPONENT: Reservation Card ---
+// --- COMPONENT: Reservation Card ---
 const ReservationCard: React.FC<{
     res: Reservation;
     currentUser: User;
@@ -637,92 +638,205 @@ const ReservationCard: React.FC<{
     return (
         <div
             onClick={() => onSelect(res)}
-            className={`relative rounded-xl border-l-4 shadow-sm p-4 transition-all hover:shadow-md cursor-pointer active:scale-[0.99] ${style.bg} ${style.border} group`}
+            className={`relative rounded-2xl border-l-[6px] bg-gradient-to-br from-white to-stone-50/50 p-5 shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer active:scale-[0.99] ${style.border} group border-t border-r border-b border-stone-100/50`}
         >
             {/* Header */}
-            <div className="flex justify-between items-start mb-2">
-                <div>
-                    <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${style.text} bg-white/50 border-current`}>
-                        {style.label}
-                    </span>
-                    <h4 className="font-bold text-stone-800 mt-1">{court?.name} <span className="text-stone-400 font-normal text-xs">({court?.type})</span></h4>
+            <div className="flex justify-between items-start mb-3">
+                <div className="flex flex-col">
+                    <div className="flex items-center gap-2 mb-1">
+                        <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border ${style.text} bg-white border-current shadow-sm`}>
+                            {style.label}
+                        </span>
+                        {res.status === 'cancelled' && <span className="text-[10px] font-bold text-red-500 uppercase bg-red-100 px-1.5 py-0.5 rounded-md">Cancelada</span>}
+                    </div>
+                    <h4 className="font-bold text-stone-800 text-base leading-tight">
+                        {court?.name} <span className="text-stone-400 font-normal text-xs block sm:inline">({court?.type})</span>
+                    </h4>
                 </div>
                 <div className="text-right">
-                    <div className="flex items-center gap-1 font-mono font-bold text-stone-700">
-                        <Clock size={14} />
-                        {res.startTime} - {res.endTime}
+                    <div className="flex items-center gap-3 bg-stone-50/80 rounded-xl p-1.5 pl-3 border border-stone-100 shadow-sm backdrop-blur-sm">
+                        <div className="flex flex-col items-center">
+                            <span className="text-[9px] text-stone-400 font-bold uppercase tracking-wider mb-0.5">Início</span>
+                            <span className="text-sm font-black text-stone-800 tabular-nums leading-none tracking-tight">{res.startTime.slice(0, 5)}</span>
+                        </div>
+
+                        <div className="relative h-6 w-px bg-stone-200">
+                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-white border border-stone-200 flex items-center justify-center shadow-sm z-10">
+                                <ArrowRight size={10} className="text-stone-400" />
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col items-center">
+                            <span className="text-[9px] text-stone-400 font-bold uppercase tracking-wider mb-0.5">Fim</span>
+                            <span className="text-sm font-bold text-stone-500 tabular-nums leading-none tracking-tight">{res.endTime.slice(0, 5)}</span>
+                        </div>
                     </div>
-                    {res.status === 'cancelled' && <span className="text-[10px] font-bold text-red-500 uppercase bg-red-100 px-1 rounded">Cancelada</span>}
                 </div>
             </div>
 
             {/* Content */}
-            <div className="space-y-2">
+            <div className="space-y-2 min-h-[40px]">
                 {res.type === 'Aula' ? (
-                    <div className="text-sm text-stone-600">
-                        <p><span className="font-semibold">Prof:</span> {professor?.name}</p>
-                        <div className="flex items-start gap-2">
-                            <span className="font-semibold whitespace-nowrap">Alunos:</span>
-                            {res.studentType === 'non-socio' ? (
-                                <div className="flex flex-wrap gap-1">
-                                    {nonSocioStudentsList.length > 0 ? nonSocioStudentsList.map(s => (
-                                        <span key={s.id} className="text-blue-600 font-medium flex items-center gap-1 text-[10px] bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">
-                                            {s.name}
-                                            {s.planType === 'Card Mensal' && (
-                                                <span className="text-[9px] bg-purple-100 text-purple-700 px-1 rounded border border-purple-200">M</span>
-                                            )}
-                                        </span>
-                                    )) : <span className="text-stone-400 text-xs italic">Nenhum</span>}
-                                </div>
-                            ) : (
-                                participants[0]?.name || 'TBD'
-                            )}
+                    <div className="text-sm text-stone-600 space-y-1">
+                        <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-full bg-stone-100 flex items-center justify-center text-stone-500">
+                                <UserCog size={14} />
+                            </div>
+                            <span className="font-medium">{professor?.name}</span>
+                        </div>
+
+                        <div className="flex items-start gap-2 pt-1">
+                            <div className="w-6 h-6 rounded-full bg-blue-50 flex items-center justify-center text-blue-500 mt-0.5">
+                                <Users size={14} />
+                            </div>
+                            <div className="flex-1">
+                                {res.studentType === 'non-socio' ? (
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {nonSocioStudentsList.length > 0 ? nonSocioStudentsList.map(s => (
+                                            <span key={s.id} className="text-blue-700 font-bold bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-md text-[11px] flex items-center gap-1 shadow-sm">
+                                                {s.name}
+                                                {s.planType === 'Card Mensal' && (
+                                                    <span className="text-[9px] bg-purple-100 text-purple-700 w-4 h-4 flex items-center justify-center rounded-full ml-1">M</span>
+                                                )}
+                                            </span>
+                                        )) : <span className="text-stone-400 text-xs italic">Nenhum aluno</span>}
+                                    </div>
+                                ) : (
+                                    <span className="font-medium text-stone-700">{participants[0]?.name || 'TBD'}</span>
+                                )}
+                            </div>
                         </div>
                     </div>
                 ) : (
-                    <div className="flex flex-wrap gap-2">
-                        {participants.map(p => (
-                            <span key={p?.id} className="flex items-center gap-1 text-xs bg-white border border-stone-200 px-2 py-1 rounded-full text-stone-700 shadow-sm">
-                                <Users size={10} /> {p?.name}
-                            </span>
-                        ))}
-                        {res.guestName && (
-                            <span className="flex items-center gap-1 text-xs bg-yellow-100 border border-yellow-200 px-2 py-1 rounded-full text-yellow-800 shadow-sm">
-                                <Users size={10} /> {res.guestName}
-                            </span>
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="flex items-center -space-x-3 pl-1">
+                                {participants.map((p, i) => (
+                                    <div
+                                        key={p?.id || i}
+                                        title={p?.name}
+                                        className="w-8 h-8 rounded-full bg-gradient-to-br from-stone-100 to-stone-200 border-2 border-white flex items-center justify-center text-stone-600 text-[10px] font-black shadow-sm relative z-0 hover:z-10 transition-all hover:scale-110 hover:shadow-md cursor-help"
+                                    >
+                                        {p?.avatar ? <img src={p.avatar} className="w-full h-full rounded-full object-cover" alt={p.name} /> : p?.name.charAt(0)}
+                                    </div>
+                                ))}
+                                {res.guestName && (
+                                    <div title={res.guestName} className="w-8 h-8 rounded-full bg-gradient-to-br from-yellow-100 to-amber-200 border-2 border-white flex items-center justify-center text-yellow-700 text-[10px] font-bold shadow-sm relative z-0 hover:z-10 transition-all hover:scale-110 cursor-help">
+                                        <Users size={12} />
+                                    </div>
+                                )}
+                            </div>
+
+                            {(participants.length > 0 || res.guestName) && (
+                                <span className="text-xs font-medium text-stone-600 truncate max-w-[120px] sm:max-w-[180px]">
+                                    {participants.map(p => p?.name.split(' ')[0]).concat(res.guestName ? [res.guestName.split(' ')[0]] : []).join(', ')}
+                                </span>
+                            )}
+                        </div>
+
+                        {participants.length === 0 && !res.guestName && (
+                            <span className="text-stone-400 text-xs italic pl-1">Sem participantes</span>
                         )}
                     </div>
                 )}
             </div>
 
             {/* Footer Hint or Action */}
-            <div className="mt-3 pt-2 border-t border-stone-200/50 flex justify-between items-center">
-                {res.type === 'Desafio' && res.status !== 'finished' && res.status !== 'cancelled' && (
-                    (() => {
-                        const challenge = challenges.find(c => c.reservationId === res.id);
-                        if (!challenge) return null;
-
+            <div className="mt-4 pt-3 border-t border-stone-100 flex justify-between items-center">
+                <div className="flex gap-2 items-center">
+                    {/* Time-based Status Tag */}
+                    {(() => {
                         const now = getNowInFortaleza();
-                        const startDate = new Date(`${res.date}T${res.startTime}`);
-                        const canLaunch = now >= startDate;
+                        const start = new Date(`${res.date}T${res.startTime}`);
+                        const end = new Date(`${res.date}T${res.endTime}`);
+                        const todayStr = formatDate(now);
+                        const isToday = res.date === todayStr;
 
-                        if (canLaunch && challenge.status !== 'finished') {
-                            return (
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        onLaunchScore(challenge);
-                                    }}
-                                    className="px-3 py-1 bg-saibro-500 text-white text-xs font-bold rounded-lg shadow-md hover:bg-saibro-600 flex items-center gap-1"
-                                >
-                                    <Trophy size={12} /> Lançar Placar
-                                </button>
-                            );
+                        let statusText = '';
+                        let statusColor = 'text-stone-400';
+                        let dotColor = 'bg-stone-300';
+                        let pulse = false;
+
+                        if (now > end) {
+                            statusText = 'Finalizada';
+                            statusColor = 'text-stone-400';
+                            dotColor = 'bg-stone-300';
+                        } else if (now >= start && now <= end) {
+                            statusText = 'Em andamento';
+                            statusColor = 'text-green-600';
+                            dotColor = 'bg-green-500';
+                            pulse = true;
+                        } else {
+                            // Future
+                            const diffMinutes = (start.getTime() - now.getTime()) / 60000;
+                            const diffHours = diffMinutes / 60;
+
+                            const tomorrow = addDays(now, 1);
+                            const isTomorrow = res.date === formatDate(tomorrow);
+
+                            if (isToday) {
+                                if (diffMinutes < 30) {
+                                    statusText = 'Inicia em instantes';
+                                    statusColor = 'text-green-600';
+                                    dotColor = 'bg-green-500';
+                                    pulse = true;
+                                } else {
+                                    statusText = 'Inicia hoje';
+                                    statusColor = 'text-saibro-600';
+                                    dotColor = 'bg-saibro-500';
+                                }
+                            } else if (isTomorrow) {
+                                statusText = 'Começa amanhã';
+                                statusColor = 'text-blue-600';
+                                dotColor = 'bg-blue-500';
+                            } else {
+                                const dayName = getDayName(res.date);
+                                statusText = `Em breve (${dayName})`;
+                                statusColor = 'text-stone-500';
+                                dotColor = 'bg-stone-400';
+                            }
                         }
-                        return null;
-                    })()
-                )}
-                <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wide ml-auto">Ver Detalhes</span>
+
+                        if (!statusText) return null;
+
+                        return (
+                            <div className={`flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-wider ${statusColor} bg-white/50 px-2.5 py-1 rounded-full border border-stone-100 shadow-sm mr-2`}>
+                                <div className={`w-2 h-2 rounded-full ${dotColor} ${pulse ? 'animate-pulse shadow-[0_0_8px_currentColor]' : ''}`} />
+                                {statusText}
+                            </div>
+                        );
+                    })()}
+
+                    {res.type === 'Desafio' && res.status !== 'finished' && res.status !== 'cancelled' && (
+                        (() => {
+                            const challenge = challenges.find(c => c.reservationId === res.id);
+                            if (!challenge) return null;
+
+                            const now = getNowInFortaleza();
+                            const startDate = new Date(`${res.date}T${res.startTime}`);
+                            const canLaunch = now >= startDate;
+
+                            if (canLaunch && challenge.status !== 'finished') {
+                                return (
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onLaunchScore(challenge);
+                                        }}
+                                        className="px-3 py-1.5 bg-saibro-500 text-white text-xs font-bold rounded-lg shadow-md shadow-orange-200 hover:bg-saibro-600 flex items-center gap-1.5 transition-all active:scale-95"
+                                    >
+                                        <Trophy size={14} /> Lançar Placar
+                                    </button>
+                                );
+                            }
+                            return null;
+                        })()
+                    )}
+                </div>
+
+                <div className="flex items-center gap-1 text-[10px] font-bold text-stone-500 uppercase tracking-widest group-hover:text-saibro-600 transition-colors ml-auto">
+                    VER DETALHES <ArrowRight size={12} className="opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all duration-300" />
+                </div>
             </div>
         </div>
     );
@@ -1326,36 +1440,61 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                         </div>
 
                         {/* Date Navigator */}
-                        <div className="flex items-center justify-between bg-white p-2 rounded-xl border border-stone-200 shadow-sm">
-                            <button onClick={() => navigate('prev')} className="p-2 hover:bg-stone-50 rounded-lg text-stone-500"><ChevronLeft size={20} /></button>
-                            <div className="text-center">
-                                <span className="block text-sm font-bold text-stone-800">
-                                    {view === 'month'
-                                        ? currentDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
-                                        : currentDate.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
-                                    }
-                                </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <button onClick={goToToday} className="text-xs font-bold text-saibro-600 hover:bg-saibro-50 px-2 py-1 rounded">Hoje</button>
-                                <button onClick={() => navigate('next')} className="p-2 hover:bg-stone-50 rounded-lg text-stone-500"><ChevronRight size={20} /></button>
-                            </div>
-                        </div>
+                        {/* Date Navigator & Filters Container */}
+                        <div className="flex flex-col gap-4 mb-2">
+                            <div className="flex items-center justify-between gap-4">
+                                <button
+                                    onClick={() => navigate('prev')}
+                                    className="w-10 h-10 flex items-center justify-center rounded-full bg-stone-50 text-stone-400 hover:bg-stone-100 hover:text-saibro-600 transition-all active:scale-95"
+                                >
+                                    <ChevronLeft size={20} strokeWidth={2.5} />
+                                </button>
 
-                        {/* Filters */}
-                        <div className="flex justify-end px-2">
-                            <label className="flex items-center gap-2 cursor-pointer select-none group">
-                                <div className={`w-5 h-5 rounded flex items-center justify-center border transition-all ${showCancelled ? 'bg-red-500 border-red-500 text-white' : 'bg-white border-stone-300 text-transparent hover:border-red-300'}`}>
-                                    <Check size={14} strokeWidth={3} />
+                                <div className="flex flex-col items-center cursor-pointer group" onClick={goToToday}>
+                                    <div className="flex items-baseline gap-1.5 transition-transform group-active:scale-95">
+                                        <span className="text-2xl font-black text-stone-800 capitalize tracking-tight leading-none">
+                                            {currentDate.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '')},
+                                        </span>
+                                        <span className="text-2xl font-black text-saibro-600 leading-none">
+                                            {currentDate.getDate()}
+                                        </span>
+                                    </div>
+                                    <span className="text-xs font-black text-stone-500 uppercase tracking-widest group-hover:text-saibro-600 transition-colors mt-0.5">
+                                        {currentDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+                                    </span>
                                 </div>
-                                <input
-                                    type="checkbox"
-                                    className="hidden"
-                                    checked={showCancelled}
-                                    onChange={(e) => setShowCancelled(e.target.checked)}
-                                />
-                                <span className={`text-sm font-bold transition-colors section-header ${showCancelled ? 'text-red-600' : 'text-stone-500'}`}>Ver Canceladas</span>
-                            </label>
+
+                                <button
+                                    onClick={() => navigate('next')}
+                                    className="w-10 h-10 flex items-center justify-center rounded-full bg-stone-50 text-stone-400 hover:bg-stone-100 hover:text-saibro-600 transition-all active:scale-95"
+                                >
+                                    <ChevronRight size={20} strokeWidth={2.5} />
+                                </button>
+                            </div>
+
+                            {/* Filters Toggle */}
+                            <div className="flex justify-end">
+                                <div
+                                    onClick={() => setShowCancelled(!showCancelled)}
+                                    className={`
+                                        flex items-center gap-2 pl-1 pr-3 py-1 rounded-full border cursor-pointer transition-all select-none
+                                        ${showCancelled ? 'bg-red-50 border-red-200 shadow-sm' : 'bg-white border-stone-200 hover:border-stone-300'}
+                                    `}
+                                >
+                                    <div className={`
+                                        w-8 h-5 rounded-full relative transition-colors duration-300 ease-in-out
+                                        ${showCancelled ? 'bg-red-500' : 'bg-stone-200'}
+                                    `}>
+                                        <div className={`
+                                            absolute top-1 left-1 bg-white w-3 h-3 rounded-full shadow-sm transition-transform duration-300
+                                            ${showCancelled ? 'translate-x-3' : 'translate-x-0'}
+                                        `} />
+                                    </div>
+                                    <span className={`text-[10px] uppercase font-bold tracking-wider ${showCancelled ? 'text-red-600' : 'text-stone-400'}`}>
+                                        Ver Canceladas
+                                    </span>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -1940,9 +2079,9 @@ const AddReservationModal: React.FC<{
                 </div>
 
                 <div className="flex gap-3 pt-4 border-t border-stone-100">
-                    <button onClick={onClose} className="flex-1 py-3 text-stone-500 font-bold hover:bg-stone-50 rounded-xl transition-colors">Cancelar</button>
-                    <button onClick={handleConfirm} className="flex-1 py-3 bg-saibro-600 text-white rounded-xl font-bold shadow-lg shadow-orange-200 hover:bg-saibro-700 transition-colors active:scale-95 flex items-center justify-center gap-2">
-                        <Save size={18} /> {isEdit ? 'Salvar Alterações' : 'Confirmar Reserva'}
+                    <button onClick={onClose} className="flex-1 py-3 text-stone-500 font-bold hover:bg-stone-50 rounded-xl transition-colors text-sm">Cancelar</button>
+                    <button onClick={handleConfirm} className="flex-1 py-3 bg-saibro-600 text-white rounded-xl font-bold shadow-lg shadow-orange-200 hover:bg-saibro-700 transition-colors active:scale-95 flex items-center justify-center gap-2 text-sm whitespace-nowrap">
+                        <Save size={18} /> {isEdit ? 'Salvar' : 'Confirmar'}
                     </button>
                 </div>
             </div>

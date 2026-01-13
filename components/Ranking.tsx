@@ -6,58 +6,7 @@ interface RankingProps {
   onSelectProfile: (userId: string) => void;
 }
 
-// Reusable Stats Display Component
-const StatsGrid: React.FC<{ player: PlayerStats; compact?: boolean }> = ({ player, compact = false }) => {
-  const totalMatches = player.legacyMatchesPlayed + player.challengeMatchesPlayed;
-  const winRate = totalMatches > 0 ? Math.round((player.totalWins / totalMatches) * 100) : 0;
 
-  if (compact) {
-    return (
-      <div className="flex items-center gap-3 text-xs text-stone-500">
-        <div className="flex flex-col items-center">
-          <span className="font-bold text-stone-700">{player.totalWins}</span>
-          <span className="text-[9px] uppercase">Vit</span>
-        </div>
-        <div className="w-px h-6 bg-stone-100" />
-        <div className="flex flex-col items-center">
-          <span className="font-bold text-stone-700">{player.totalSetsWon}</span>
-          <span className="text-[9px] uppercase">Sets</span>
-        </div>
-        <div className="w-px h-6 bg-stone-100" />
-        <div className="flex flex-col items-center">
-          <span className="font-bold text-stone-700">{player.totalGamesWon}</span>
-          <span className="text-[9px] uppercase">Games</span>
-        </div>
-        <div className="w-px h-6 bg-stone-100" />
-        <div className="flex flex-col items-center">
-          <span className={`font-bold ${winRate >= 50 ? 'text-green-600' : 'text-stone-500'}`}>{winRate}%</span>
-          <span className="text-[9px] uppercase">Aprv</span>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="grid grid-cols-4 gap-2 text-xs">
-      <div className="bg-stone-50 rounded-lg p-2 text-center">
-        <div className="font-bold text-stone-800">{player.totalWins}/{player.totalLosses}</div>
-        <div className="text-[9px] text-stone-400 uppercase">V/D</div>
-      </div>
-      <div className="bg-stone-50 rounded-lg p-2 text-center">
-        <div className="font-bold text-stone-800">{player.totalSetsWon}/{player.totalSetsLost}</div>
-        <div className="text-[9px] text-stone-400 uppercase">Sets</div>
-      </div>
-      <div className="bg-stone-50 rounded-lg p-2 text-center">
-        <div className="font-bold text-stone-800">{player.totalGamesWon}</div>
-        <div className="text-[9px] text-stone-400 uppercase">Games</div>
-      </div>
-      <div className="bg-stone-50 rounded-lg p-2 text-center">
-        <div className={`font-bold ${winRate >= 50 ? 'text-green-600' : 'text-stone-600'}`}>{winRate}%</div>
-        <div className="text-[9px] text-stone-400 uppercase">Taxa</div>
-      </div>
-    </div>
-  );
-};
 
 // Player Card Component
 const PlayerCard: React.FC<{
@@ -68,46 +17,89 @@ const PlayerCard: React.FC<{
 }> = ({ player, rank, showCategory = false, onClick }) => {
   const isTop3 = rank <= 3;
 
+  // Dynamic Styles based on Rank
+  let cardStyle = "bg-gradient-to-r from-white to-stone-50/50 border-stone-300 hover:border-saibro-300";
+  let rankColor = "text-stone-400";
+  let pointColor = "text-saibro-600";
+  let avatarBorder = "border-transparent";
+
+  if (rank === 1) {
+    cardStyle = "bg-gradient-to-r from-yellow-50/80 to-amber-50/50 border-yellow-400 hover:border-yellow-500 shadow-yellow-100 animate-shimmer";
+    rankColor = "text-yellow-600";
+    pointColor = "text-yellow-700";
+    avatarBorder = "border-yellow-200";
+  } else if (rank === 2) {
+    cardStyle = "bg-gradient-to-r from-stone-100/80 to-stone-50/50 border-stone-400 hover:border-stone-500 shadow-stone-200";
+    rankColor = "text-stone-500";
+    pointColor = "text-stone-600";
+    avatarBorder = "border-stone-300";
+  } else if (rank === 3) {
+    cardStyle = "bg-gradient-to-r from-orange-50/80 to-orange-50/30 border-orange-400 hover:border-orange-500 shadow-orange-100";
+    rankColor = "text-orange-600";
+    pointColor = "text-orange-700";
+    avatarBorder = "border-orange-200";
+  }
+
   return (
     <div
       onClick={onClick}
-      className={`relative bg-white rounded-2xl card-court p-4 flex items-center gap-4 transition-smooth active:scale-[0.99] cursor-pointer group hover:shadow-lg ${isTop3 ? 'ring-2 ring-saibro-300' : ''}`}
+      className={`relative rounded-2xl border-l-[6px] shadow-sm p-3 sm:p-4 flex items-center gap-3 sm:gap-4 transition-all duration-300 active:scale-[0.99] cursor-pointer group hover:shadow-xl ${cardStyle}`}
     >
-      {/* Rank Badge */}
-      <div className={`flex flex-col items-center justify-center w-10 shrink-0 ${isTop3 ? 'text-saibro-600' : 'text-stone-400'}`}>
-        {rank === 1 && <Crown size={20} className="fill-yellow-400 text-yellow-600 mb-0.5" />}
-        {rank === 2 && <Award size={18} className="text-stone-400 mb-0.5" />}
-        {rank === 3 && <Award size={16} className="text-amber-600 mb-0.5" />}
-        <span className={`text-lg font-bold ${rank === 1 ? 'text-2xl' : ''}`}>#{rank}</span>
-      </div>
+      {/* Rank & Avatar */}
+      <div className="flex items-center gap-3 shrink-0 relative">
+        <div className={`flex flex-col items-center justify-center w-8 sm:w-10 ${rankColor}`}>
+          {rank <= 3 ? <Crown size={rank === 1 ? 24 : 20} className="fill-current mb-[-4px]" /> : <span className="font-bold text-stone-300 font-mono text-xs">#</span>}
+          <span className={`font-black ${rank === 1 ? 'text-2xl sm:text-3xl' : 'text-xl sm:text-2xl'} leading-none tracking-tighter`}>{rank}</span>
+        </div>
 
-      {/* User Info */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-1">
+        <div className="relative">
           {player.avatarUrl ? (
-            <img src={player.avatarUrl} className="w-8 h-8 rounded-full bg-stone-200 object-cover border-2 border-transparent group-hover:border-saibro-200 transition-colors" alt="" />
+            <img src={player.avatarUrl} className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-stone-100 object-cover border-2 shadow-sm ${avatarBorder}`} alt="" />
           ) : (
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-saibro-200 to-saibro-400 flex items-center justify-center text-white font-bold text-sm">
+            <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-stone-100 flex items-center justify-center text-stone-500 font-bold border-2 ${avatarBorder}`}>
               {player.name.charAt(0)}
             </div>
           )}
-          <div>
-            <h3 className="font-bold text-stone-800 leading-tight truncate group-hover:text-saibro-700 transition-colors">{player.name}</h3>
-            {showCategory && player.category && (
-              <span className="text-[10px] uppercase font-bold text-stone-400 bg-stone-100 px-1.5 py-0.5 rounded">{player.category}</span>
-            )}
+          {showCategory && player.category && (
+            <div className="absolute -bottom-1 -right-1 bg-stone-800 text-white text-[9px] font-bold px-1.5 py-0.5 rounded border border-white shadow-sm">
+              {player.category}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Info */}
+      <div className="flex-1 min-w-0 flex flex-col justify-center">
+        <h3 className={`font-black text-stone-800 leading-tight truncate text-sm sm:text-base mb-1 group-hover:text-saibro-700 transition-colors`}>{player.name}</h3>
+
+        {/* Compact Stats Grid inline */}
+        <div className="flex items-center gap-2 sm:gap-3 opacity-90">
+          <div className="flex flex-col leading-none">
+            <span className="text-[10px] text-stone-400 font-bold uppercase tracking-wider scale-90 origin-left">Vit</span>
+            <span className="font-bold text-stone-600 text-xs sm:text-sm">{player.totalWins}</span>
+          </div>
+          <div className="w-px h-5 bg-black/5" />
+          <div className="flex flex-col leading-none">
+            <span className="text-[10px] text-stone-400 font-bold uppercase tracking-wider scale-90 origin-left">Jgs</span>
+            <span className="font-bold text-stone-600 text-xs sm:text-sm">{player.legacyMatchesPlayed + player.challengeMatchesPlayed}</span>
+          </div>
+          <div className="w-px h-5 bg-black/5" />
+          <div className="flex flex-col leading-none">
+            <span className="text-[10px] text-stone-400 font-bold uppercase tracking-wider scale-90 origin-left">Aprv</span>
+            <span className={`font-bold text-xs sm:text-sm ${(player.totalWins / (player.legacyMatchesPlayed + player.challengeMatchesPlayed || 1)) >= 0.5 ? 'text-green-600' : 'text-stone-500'}`}>
+              {Math.round((player.totalWins / (player.legacyMatchesPlayed + player.challengeMatchesPlayed || 1)) * 100)}%
+            </span>
           </div>
         </div>
-        <StatsGrid player={player} compact />
       </div>
 
-      {/* Total Points */}
-      <div className="flex flex-col items-end shrink-0">
-        <span className="text-2xl font-black text-saibro-600 tracking-tight">{player.totalPoints}</span>
-        <span className="text-[10px] uppercase font-bold text-saibro-400">Pontos</span>
+      {/* Points */}
+      <div className="flex flex-col items-end justify-center pl-2 border-l border-black/5">
+        <span className={`text-2xl sm:text-4xl font-black ${pointColor} leading-none tracking-tighter`}>{player.totalPoints}</span>
+        <span className={`text-[8px] sm:text-[10px] font-bold uppercase tracking-widest ${rankColor}`}>Pontos</span>
       </div>
 
-      <ChevronRight size={16} className="text-stone-300 group-hover:text-saibro-500 transition-colors" />
+      <ChevronRight size={16} className="text-black/10 group-hover:text-saibro-400 transition-colors active:translate-x-1" />
     </div>
   );
 };

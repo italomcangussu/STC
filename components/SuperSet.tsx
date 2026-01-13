@@ -367,26 +367,26 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
                     const isWinnerA = match.winner_id === match.player_a_id;
 
                     return (
-                        <div key={match.id} className="bg-white p-4 rounded-xl border border-stone-100 flex items-center justify-between">
-                            <div className="flex items-center gap-4 flex-1">
+                        <div key={match.id} className="bg-white p-3 sm:p-4 rounded-xl border border-stone-100 flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
                                 {/* Player A */}
-                                <div className={`flex items-center gap-2 flex-1 justify-end ${isWinnerA ? 'font-bold text-saibro-700' : 'text-stone-600'}`}>
-                                    <span>{playerA?.name || '...'}</span>
-                                    <img src={playerA?.avatar} className="w-8 h-8 rounded-full bg-stone-200" />
+                                <div className={`flex items-center gap-2 flex-1 justify-end min-w-0 ${isWinnerA ? 'font-bold text-saibro-700' : 'text-stone-600'}`}>
+                                    <span className="truncate text-xs sm:text-base">{playerA?.name || '...'}</span>
+                                    <img src={playerA?.avatar} className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-stone-200 shrink-0 object-cover" />
                                 </div>
 
                                 {/* Score */}
-                                <div className="bg-stone-100 px-3 py-1 rounded-lg font-mono font-bold text-stone-800 text-sm">
+                                <div className="bg-stone-100 px-2 sm:px-3 py-1 rounded-lg font-mono font-bold text-stone-800 text-xs sm:text-sm whitespace-nowrap">
                                     {match.score_a[0]} - {match.score_b[0]}
                                 </div>
 
                                 {/* Player B */}
-                                <div className={`flex items-center gap-2 flex-1 ${!isWinnerA ? 'font-bold text-saibro-700' : 'text-stone-600'}`}>
-                                    <img src={playerB?.avatar} className="w-8 h-8 rounded-full bg-stone-200" />
-                                    <span>{playerB?.name || '...'}</span>
+                                <div className={`flex items-center gap-2 flex-1 min-w-0 ${!isWinnerA ? 'font-bold text-saibro-700' : 'text-stone-600'}`}>
+                                    <img src={playerB?.avatar} className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-stone-200 shrink-0 object-cover" />
+                                    <span className="truncate text-xs sm:text-base">{playerB?.name || '...'}</span>
                                 </div>
                             </div>
-                            <div className="text-xs text-stone-400 ml-4 font-mono">
+                            <div className="text-[10px] sm:text-xs text-stone-400 font-mono whitespace-nowrap shrink-0">
                                 {new Date(match.date).toLocaleDateString()}
                             </div>
                         </div>

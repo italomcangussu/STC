@@ -3,12 +3,14 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>STC Play</title>
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
   <link rel="manifest" href="/manifest.json" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="theme-color" content="#f97316" />
   <script src="https://cdn.tailwindcss.com"></script>
@@ -184,9 +186,75 @@
       animation: fadeIn 0.2s ease-out forwards;
     }
 
+    /* Scale In Animation (Pop) */
+    @keyframes scaleIn {
+      from {
+        opacity: 0;
+        transform: scale(0.9);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .animate-scale-in {
+      animation: scaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    /* Float Animation */
+    @keyframes float {
+
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-5px);
+      }
+    }
+
+    .animate-float {
+      animation: float 3s ease-in-out infinite;
+    }
+
+    /* Shimmer Effect */
+    @keyframes shimmer {
+      0% {
+        background-position: -200% 0;
+      }
+
+      100% {
+        background-position: 200% 0;
+      }
+    }
+
+    .animate-shimmer {
+      background: linear-gradient(90deg,
+          rgba(255, 255, 255, 0) 0%,
+          rgba(255, 255, 255, 0.4) 50%,
+          rgba(255, 255, 255, 0) 100%);
+      background-size: 200% 100%;
+      animation: shimmer 2.5s infinite linear;
+    }
+
     /* Staggered Animation Delays */
+    .delay-50 {
+      animation-delay: 50ms;
+    }
+
+    .delay-75 {
+      animation-delay: 75ms;
+    }
+
     .delay-100 {
       animation-delay: 100ms;
+    }
+
+    .delay-150 {
+      animation-delay: 150ms;
     }
 
     .delay-200 {
@@ -217,6 +285,34 @@
     /* Smooth transitions for interactive elements */
     .transition-smooth {
       transition: all 0.2s ease-out;
+    }
+
+    /* Mobile Utilities & Safe Areas */
+    .pb-safe {
+      padding-bottom: env(safe-area-inset-bottom, 20px);
+    }
+
+    .pt-safe {
+      padding-top: env(safe-area-inset-top, 0px);
+    }
+
+    .min-h-safe {
+      min-height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    }
+
+    /* Disable Tap Highlight on Mobile */
+    * {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Prevent Input Zoom on iOS */
+    @media screen and (max-width: 768px) {
+
+      input,
+      select,
+      textarea {
+        font-size: 16px !important;
+      }
     }
   </style>
   <script type="importmap">

@@ -218,7 +218,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
 
             {/* Main Content Area */}
             <main className="flex-1 overflow-y-auto h-[calc(100vh-64px)] md:h-screen">
-                <div className="max-w-4xl mx-auto pb-24">
+                <div className="max-w-4xl mx-auto pb-24 pb-safe">
                     {children}
                 </div>
             </main>
@@ -229,7 +229,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
                     <button
                         key={item.id}
                         onClick={() => setView(item.id)}
-                        className={`flex flex-col items-center justify-center p-2 rounded-lg w-16 ${view === item.id ? 'text-saibro-600' : 'text-stone-400'}`}
+                        className={`flex flex-col items-center justify-center py-2 px-1 rounded-lg flex-1 ${view === item.id ? 'text-saibro-600' : 'text-stone-400'}`}
                     >
                         {React.cloneElement(item.icon as React.ReactElement<any>, { size: 24 })}
                         <span className="text-[10px] mt-1 font-medium truncate w-full text-center">{item.label}</span>
