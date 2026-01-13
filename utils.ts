@@ -14,12 +14,44 @@ export interface RankedPlayer {
   position: number;
 }
 
-// --- Date Helpers ---
+// --- Date Helpers (Timezone: America/Fortaleza) ---
+
+/**
+ * Returns the current date/time adjusted to America/Fortaleza timezone (UTC-3).
+ * Since we can't easily change the system timezone of the browser, 
+ * we return a Date object that "looks" like the Fortaleza time in the local getters.
+ * CAUTION: usage of .toISOString() on this object will be "wrong" by the timezone offset difference.
+ * Use valid formatters below.
+ */
+export function getNowInFortaleza(): Date {
+  // Create date with current instant
+  const now = new Date();
+
+  // Get the string representation in Fortaleza time
+  const fortalezaString = now.toLocaleString('en-US', { timeZone: 'America/Fortaleza' });
+
+  // Create a new Date from that string
+  // This new date object, when accessed with .getHours() etc., will return Fortaleza components
+  // but internally it might represent a different UTC instant depending on local browser TZ.
+  // This is a "shifted" date approach to ease component rendering.
+  return new Date(fortalezaString);
+}
+
+
 export function formatDate(date: Date): string {
-  return date.toISOString().split('T')[0];
+  // Ensure we are formatting the date part correctly relative to Fortaleza
+  // If 'date' is already a "shifted" date (from getNowInFortaleza), native methods work naturally for YYYY-MM-DD
+  // If 'date' is a true UTC timestamp, we should probably shift it first if we want "local" date.
+
+  // Simple YYYY-MM-DD
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 export function formatDateBr(dateStr: string): string {
+  if (!dateStr) return '';
   const [y, m, d] = dateStr.split('-');
   return `${d}/${m}/${y}`;
 }

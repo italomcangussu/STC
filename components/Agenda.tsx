@@ -4,6 +4,7 @@ import { Calendar as CalIcon, ChevronLeft, ChevronRight, Plus, MapPin, Clock, Us
 import { supabase } from '../lib/supabase';
 import { ScoreModal } from './ScoreModal';
 import { Challenge } from '../types';
+import { getNowInFortaleza, formatDate, formatDateBr } from '../utils';
 
 // Court type
 interface Court {
@@ -16,21 +17,14 @@ interface Court {
 // --- HELPERS ---
 const getDayName = (dateStr: string) => {
     const days = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+    // Interpret dateStr as YYYY-MM-DD in local time (which matches our shifted strategy)
     const d = new Date(dateStr + 'T12:00:00');
     return days[d.getDay()];
 };
 
-const formatDate = (date: Date) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-};
-
-const formatDateBr = (dateStr: string) => {
-    const [y, m, d] = dateStr.split('-');
-    return `${d}/${m}`;
-};
+// Use shared helper or local override if needed
+// const formatDate = ... (imported from utils)
+// const formatDateBr = ... (imported from utils)
 
 const addDays = (date: Date, days: number) => {
     const result = new Date(date);
@@ -40,6 +34,7 @@ const addDays = (date: Date, days: number) => {
 
 const addMinutes = (time: string, minutes: number) => {
     const [h, m] = time.split(':').map(Number);
+    // Create a dummy date for calculation
     const date = new Date();
     date.setHours(h, m, 0, 0);
     date.setMinutes(date.getMinutes() + minutes);
@@ -291,13 +286,20 @@ const ReservationDetails: React.FC<{
     const isProfessorOwner = currentUser.isProfessor && res.professorId && professors.find(p => p.id === res.professorId)?.userId === currentUser.id;
     const isParticipant = res.participantIds.includes(currentUser.id);
     const isActive = res.status === 'active';
-    const isFuture = new Date(res.date + 'T' + res.startTime) > new Date();
+    // Compare reservation time with Fortaleza time
+    // We treat res.date + res.startTime as "local" (Fortaleza) time
+    // and compare with getNowInFortaleza() which returns "local" (Fortaleza) time
+    const isFuture = new Date(res.date + 'T' + res.startTime) > getNowInFortaleza();
+
+    const isNotFinished = new Date(res.date + 'T' + res.endTime) > getNowInFortaleza();
 
     const canManageParticipants = isActive && (isAdmin || currentUser.role === 'socio') && isFuture && res.type === 'Play';
     const canEdit = isActive && (isAdmin || (isFuture && isCreator));
     const canCancel = isActive && isFuture && (isAdmin || isCreator);
-    const canJoin = res.type === 'Play' && isActive && isFuture && !isParticipant && (currentUser.role === 'socio' || isAdmin) && res.participantIds.length < 4;
-    const canLeave = res.type === 'Play' && isActive && isFuture && isParticipant;
+    // Allow joining as long as the match hasn't finished (end time > now)
+    const canJoin = res.type === 'Play' && isActive && isNotFinished && !isParticipant && (currentUser.role === 'socio' || isAdmin) && res.participantIds.length < 4;
+    // Allow leaving as long as the match hasn't finished
+    const canLeave = res.type === 'Play' && isActive && isNotFinished && isParticipant;
 
     // Whatsapp Share: Allow for participants, creator, admin, professor
     const canShare = isActive;
@@ -700,7 +702,7 @@ const ReservationCard: React.FC<{
                         const challenge = challenges.find(c => c.reservationId === res.id);
                         if (!challenge) return null;
 
-                        const now = new Date();
+                        const now = getNowInFortaleza();
                         const startDate = new Date(`${res.date}T${res.startTime}`);
                         const canLaunch = now >= startDate;
 
@@ -728,7 +730,7 @@ const ReservationCard: React.FC<{
 
 // --- COMPONENT: Agenda ---
 export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
-    const [currentDate, setCurrentDate] = useState(new Date());
+    const [currentDate, setCurrentDate] = useState(getNowInFortaleza());
     const [view, setView] = useState<'day' | 'week' | 'month'>('day');
     const [reservations, setReservations] = useState<Reservation[]>([]);
     const [profiles, setProfiles] = useState<User[]>([]);
@@ -874,25 +876,63 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
 
 
     // --- Actions ---
-    const handleJoin = (id: string) => {
-        setReservations(prev => {
-            const res = prev.find(r => r.id === id);
-            if (res && res.participantIds.length >= 4) {
+    const handleJoin = async (id: string) => {
+        try {
+            const res = reservations.find(r => r.id === id);
+            if (!res) return;
+
+            if (res.participantIds.length >= 4) {
                 alert('Limite de 4 participantes atingido.');
-                return prev;
+                return;
             }
-            const newRes = prev.map(r => r.id === id ? { ...r, participantIds: [...r.participantIds, currentUser.id] } : r);
-            if (selectedReservation?.id === id) setSelectedReservation(newRes.find(r => r.id === id));
-            return newRes;
-        });
+
+            const newParticipants = [...res.participantIds, currentUser.id];
+
+            // 1. Update in Supabase
+            const { error } = await supabase
+                .from('reservations')
+                .update({ participant_ids: newParticipants })
+                .eq('id', id);
+
+            if (error) throw error;
+
+            // 2. Update local state
+            setReservations(prev => {
+                const newRes = prev.map(r => r.id === id ? { ...r, participantIds: newParticipants } : r);
+                if (selectedReservation?.id === id) setSelectedReservation(newRes.find(r => r.id === id));
+                return newRes;
+            });
+        } catch (error) {
+            console.error('Error joining reservation:', error);
+            alert('Erro ao entrar na reserva. Tente novamente.');
+        }
     };
 
-    const handleLeave = (id: string) => {
-        setReservations(prev => {
-            const newRes = prev.map(r => r.id === id ? { ...r, participantIds: r.participantIds.filter(pid => pid !== currentUser.id) } : r);
-            if (selectedReservation?.id === id) setSelectedReservation(newRes.find(r => r.id === id));
-            return newRes;
-        });
+    const handleLeave = async (id: string) => {
+        try {
+            const res = reservations.find(r => r.id === id);
+            if (!res) return;
+
+            const newParticipants = res.participantIds.filter(pid => pid !== currentUser.id);
+
+            // 1. Update in Supabase
+            const { error } = await supabase
+                .from('reservations')
+                .update({ participant_ids: newParticipants })
+                .eq('id', id);
+
+            if (error) throw error;
+
+            // 2. Update local state
+            setReservations(prev => {
+                const newRes = prev.map(r => r.id === id ? { ...r, participantIds: newParticipants } : r);
+                if (selectedReservation?.id === id) setSelectedReservation(newRes.find(r => r.id === id));
+                return newRes;
+            });
+        } catch (error) {
+            console.error('Error leaving reservation:', error);
+            alert('Erro ao sair da reserva.');
+        }
     };
 
     const handleCancel = async (id: string) => {
@@ -1531,16 +1571,6 @@ const AddReservationModal: React.FC<{
         // 2. Time Limits (Already handled by select, but double check)
         if (endTime > "23:00" && endTime !== "00:00") return "Horário excede o fechamento (23:00).";
 
-        // 3. Conflict Rules (Anti-choque)
-        // EXCLUDE SELF if editing
-        const hasConflict = existingReservations.some(r => {
-            if (isEdit && r.id === initialData?.id) return false; // Ignore self
-            if (r.courtId !== courtId || r.date !== date || r.status === 'cancelled') return false;
-            return checkOverlap(startTime, endTime, r.startTime, r.endTime);
-        });
-
-        if (hasConflict) return "Horário indisponível nesta quadra (Conflito de agendamento).";
-
         return null;
     };
 
@@ -1552,6 +1582,60 @@ const AddReservationModal: React.FC<{
         }
 
         const endTime = addMinutes(startTime, duration);
+
+        // --- Conflict Check with Confirmation ---
+        const conflictingReservations = existingReservations.filter(r => {
+            if (isEdit && r.id === initialData?.id) return false; // Ignore self
+            if (r.courtId !== courtId || r.date !== date || r.status === 'cancelled') return false;
+            return checkOverlap(startTime, endTime, r.startTime, r.endTime);
+        });
+
+        if (conflictingReservations.length > 0) {
+            // Collect all names
+            const allNames: string[] = [];
+
+            conflictingReservations.forEach(r => {
+                // Socio Participants
+                r.participantIds.forEach(pid => {
+                    const pName = profiles.find(u => u.id === pid)?.name;
+                    if (pName) allNames.push(pName);
+                });
+                // Guest
+                if (r.guestName) {
+                    allNames.push(`${r.guestName} (Convidado)`);
+                }
+                // Non-Socio Students
+                if (r.type === 'Aula' && r.studentType === 'non-socio') {
+                    // Note: We don't easily have non-socio names here without fetching or passing them deeper, 
+                    // but we can try looking up in 'nonSocioStudents' prop if available.
+                    // The prop is 'nonSocioStudents'.
+                    if (r.participantIds && r.participantIds.length > 0) {
+                        r.participantIds.forEach(nsId => {
+                            const nsName = nonSocioStudents.find(ns => ns.id === nsId)?.name;
+                            if (nsName) allNames.push(`${nsName} (Aluno)`);
+                        });
+                    } else if (r.nonSocioStudentId) {
+                        const nsName = nonSocioStudents.find(ns => ns.id === r.nonSocioStudentId)?.name;
+                        if (nsName) allNames.push(`${nsName} (Aluno)`);
+                    }
+                }
+                if (r.type === 'Aula' && r.professorId) {
+                    const profName = professors.find(p => p.id === r.professorId)?.name;
+                    if (profName) allNames.push(`${profName} (Prof)`);
+                }
+            });
+
+            // Remove duplicates
+            const uniqueNames = Array.from(new Set(allNames));
+            const namesString = uniqueNames.join(', ');
+
+            const confirmMsg = `Os sócios ${namesString} já estão jogando nesse momento, deseja marcar mesmo assim e jogar com eles?`;
+
+            if (!window.confirm(confirmMsg)) {
+                return; // User cancelled
+            }
+        }
+
         const newRes: Reservation = {
             id: initialData?.id || `r_${Date.now()}`, // Keep ID if editing
             type,

@@ -2,7 +2,8 @@ import React, { useState, useMemo } from 'react';
 import { Match, User } from '../types';
 import { Trophy, Clock, Save, Loader2, Plus, Minus, AlertCircle, CheckCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { getMatchWinner } from '../utils';
+
+import { getMatchWinner, getNowInFortaleza, formatDate } from '../utils';
 
 interface LiveScoreboardProps {
     match: Match;
@@ -83,15 +84,18 @@ export const LiveScoreboard: React.FC<LiveScoreboardProps> = ({
 
         if (!match.date || !match.scheduledTime) return true; // No time restriction
 
-        const now = new Date();
-        const today = now.toISOString().split('T')[0];
+        // Use Fortaleza time for checks
+        const now = getNowInFortaleza();
+        const today = formatDate(now);
 
         // Must be match day
         if (match.date !== today) return false;
 
         // Check scheduled time
         const [hours, minutes] = match.scheduledTime.split(':').map(Number);
-        const scheduledDateTime = new Date();
+
+        // Create scheduled datetime based on the "shifted" now object
+        const scheduledDateTime = new Date(now);
         scheduledDateTime.setHours(hours, minutes, 0, 0);
 
         return now >= scheduledDateTime;
@@ -147,7 +151,7 @@ export const LiveScoreboard: React.FC<LiveScoreboardProps> = ({
                 score_b: finalScoreB,
                 winner_id: winnerId,
                 status: 'finished',
-                date: new Date().toISOString().split('T')[0]
+                date: formatDate(getNowInFortaleza())
             })
             .eq('id', match.id);
 

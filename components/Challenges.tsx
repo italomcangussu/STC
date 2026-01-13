@@ -5,6 +5,7 @@ import { fetchRanking, getEligibleOpponents, canChallenge, canChallengeWithLimit
 import { sendPushNotification } from '../lib/notificationService';
 import { supabase } from '../lib/supabase';
 import { LiveScoreboard } from './LiveScoreboard';
+import { getNowInFortaleza, formatDate } from '../utils';
 
 // Time slots available for challenges (7am to 9pm)
 const TIME_SLOTS = [
@@ -40,8 +41,8 @@ const CreateChallengeModal: React.FC<{
     const [existingReservations, setExistingReservations] = useState<Reservation[]>([]);
     const [monthlyLimits, setMonthlyLimits] = useState<{ canChallengeOthers: boolean; challengesMade: number } | null>(null);
 
-    // Min date is today
-    const today = new Date().toISOString().split('T')[0];
+    // Min date is today (in Fortaleza)
+    const today = formatDate(getNowInFortaleza());
 
     // Load initial data
     useEffect(() => {
@@ -135,9 +136,9 @@ const CreateChallengeModal: React.FC<{
         return TIME_SLOTS.filter(time => {
             // Filter out past times if today
             if (selectedDate === today) {
-                const now = new Date();
+                const now = getNowInFortaleza();
                 const [h, m] = time.split(':').map(Number);
-                const slotTime = new Date();
+                const slotTime = new Date(now); // Clone for date part
                 slotTime.setHours(h, m, 0, 0);
                 if (slotTime <= now) return false;
             }
@@ -441,7 +442,7 @@ export const ChallengesView: React.FC<{ currentUser: User }> = ({ currentUser })
                 setChallenges(mappedChallenges);
 
                 // Fetch today's matches for scheduled/accepted challenges
-                const today = new Date().toISOString().split('T')[0];
+                const today = formatDate(getNowInFortaleza());
                 const matchIds = mappedChallenges.filter(c => c.matchId).map(c => c.matchId);
 
                 if (matchIds.length > 0) {
@@ -649,7 +650,7 @@ export const ChallengesView: React.FC<{ currentUser: User }> = ({ currentUser })
                 // Filter challenges that are ready for scoring:
                 // - Status is 'accepted' (not yet scored)
                 // - Scheduled date is today or in the past
-                const today = new Date().toISOString().split('T')[0];
+                const today = formatDate(getNowInFortaleza());
                 const readyForScoring = challenges.filter(c =>
                     c.status === 'accepted' &&
                     c.scheduledDate &&
