@@ -97,15 +97,10 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
         { id: 'ranking', label: 'Ranking', icon: <Trophy size={20} />, roles: ['admin', 'socio'] },
         { id: 'desafios', label: 'Desafios', icon: <Swords size={20} />, roles: ['admin', 'socio'] },
         { id: 'superset', label: 'SuperSet', icon: <Trophy size={20} />, roles: ['admin', 'socio'] },
-        //{ id: 'competicao', label: 'Competição', icon: <Trophy size={20} />, roles: ['admin', 'socio'] },
+        { id: 'campeonatos', label: 'Campeonatos', icon: <Trophy size={20} />, roles: ['admin', 'socio'] },
         { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} />, roles: ['admin', 'socio'] },
         { id: 'klanches', label: 'Klanches', icon: <Sandwich size={20} />, roles: ['admin', 'socio', 'lanchonete'] },
     ];
-
-    // Add Competição if there are ongoing championships
-    if (hasActiveChamps) {
-        navItems.splice(4, 0, { id: 'competicao', label: 'Competição', icon: <Trophy size={20} />, roles: ['admin', 'socio'] });
-    }
 
     // Add Professor Link if applicable
     if (currentUser.isProfessor) {
@@ -114,6 +109,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
 
     // Add Admin-Specific Links
     if (currentUser.role === 'admin') {
+        navItems.push({ id: 'championship-admin', label: 'Campeonato Admin', icon: <Trophy size={20} />, roles: ['admin'] });
         navItems.push({ id: 'financeiro-admin', label: 'Financeiro', icon: <DollarSign size={20} />, roles: ['admin'] });
         navItems.push({ id: 'admin-professors', label: 'Gerenciar Pro.', icon: <Briefcase size={20} />, roles: ['admin'] });
         navItems.push({ id: 'admin-panel', label: 'Painel Admin', icon: <Settings size={20} />, roles: ['admin'] });

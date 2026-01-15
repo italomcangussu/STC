@@ -1,14 +1,32 @@
-import React, { useState, useEffect } from 'react';
-import { Trophy, Calendar, History, ListOrdered, GitMerge, ChevronDown, Loader2 } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Trophy, Calendar, History, ListOrdered, GitMerge, ChevronDown, Loader2, Download, Share2, Users, Shirt } from 'lucide-react';
 import { Championship, Match, User } from '../types';
 import { getMatchWinner } from '../utils';
 import { supabase } from '../lib/supabase';
 import { LiveScoreboard } from './LiveScoreboard';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 // Interface for championship with participants
 interface ChampionshipWithParticipants extends Omit<Championship, 'participantIds'> {
     participantIds: string[];
+    registration_open?: boolean;
 }
+
+// Registration interface
+interface Registration {
+    id: string;
+    championship_id: string;
+    participant_type: 'socio' | 'guest';
+    user_id: string | null;
+    guest_name: string | null;
+    class: string;
+    shirt_size: string;
+    created_at: string;
+    user?: { name: string; avatar_url: string };
+}
+
+const CLASSES = ['1ª Classe', '2ª Classe', '3ª Classe', '4ª Classe', '5ª Classe', '6ª Classe'];
 
 export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) => {
     // Supabase States
@@ -17,8 +35,13 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
     const [profiles, setProfiles] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
 
+    // Registration state
+    const [registrationChamp, setRegistrationChamp] = useState<ChampionshipWithParticipants | null>(null);
+    const [registrations, setRegistrations] = useState<Registration[]>([]);
+    const tableRef = useRef<HTMLDivElement>(null);
+
     const [selectedChampId, setSelectedChampId] = useState<string>('');
-    const [activeTab, setActiveTab] = useState<'jogos' | 'classificacao' | 'chaveamento' | 'proximos'>('proximos');
+    const [activeTab, setActiveTab] = useState<'jogos' | 'classificacao' | 'chaveamento' | 'proximos' | 'inscritos'>('proximos');
     const [editingMatch, setEditingMatch] = useState<Match | null>(null);
 
     // Fetch data from Supabase
@@ -56,18 +79,36 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                     ptsVictory: champ.pts_victory,
                     ptsSet: champ.pts_set,
                     ptsGame: champ.pts_game,
-                    participantIds: (participants || []).map(p => p.user_id)
+                    participantIds: (participants || []).map(p => p.user_id),
+                    registration_open: champ.registration_open
                 });
             }
 
             setChampionships(champsWithParticipants);
 
-            // Select first ongoing championship, or first available
-            const ongoing = champsWithParticipants.filter(c => c.status === 'ongoing');
-            if (ongoing.length > 0) {
-                setSelectedChampId(ongoing[0].id);
-            } else if (champsWithParticipants.length > 0) {
-                setSelectedChampId(champsWithParticipants[0].id);
+            // Check for championship with registration open first
+            const regOpen = champsWithParticipants.find(c => c.registration_open === true);
+            if (regOpen) {
+                setRegistrationChamp(regOpen);
+                setSelectedChampId(regOpen.id);
+                setActiveTab('inscritos');
+
+                // Fetch registrations
+                const { data: regsData } = await supabase
+                    .from('championship_registrations')
+                    .select('*, user:profiles!user_id(name, avatar_url)')
+                    .eq('championship_id', regOpen.id)
+                    .order('class', { ascending: true });
+
+                setRegistrations(regsData || []);
+            } else {
+                // Select first ongoing championship, or first available
+                const ongoing = champsWithParticipants.filter(c => c.status === 'ongoing');
+                if (ongoing.length > 0) {
+                    setSelectedChampId(ongoing[0].id);
+                } else if (champsWithParticipants.length > 0) {
+                    setSelectedChampId(champsWithParticipants[0].id);
+                }
             }
 
             // 3. Fetch all profiles for player lookup
@@ -129,6 +170,16 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
     const ongoingChamps = championships.filter(c => c.status === 'ongoing');
     const selectedChamp = championships.find(c => c.id === selectedChampId);
 
+    // Automatic tab selection based on format if current tab isn't applicable
+    // This must be before early returns to maintain consistent hook order
+    useEffect(() => {
+        if (selectedChamp?.format === 'pontos-corridos' && activeTab === 'chaveamento') {
+            setActiveTab('classificacao');
+        } else if (selectedChamp?.format === 'mata-mata' && activeTab === 'classificacao') {
+            setActiveTab('chaveamento');
+        }
+    }, [selectedChamp?.format, activeTab]);
+
     // Loading state
     if (loading) {
         return (
@@ -148,16 +199,6 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
             </div>
         );
     }
-
-    // Automatic tab selection based on format if current tab isn't applicable
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    React.useEffect(() => {
-        if (selectedChamp.format === 'pontos-corridos' && activeTab === 'chaveamento') {
-            setActiveTab('classificacao');
-        } else if (selectedChamp.format === 'mata-mata' && activeTab === 'classificacao') {
-            setActiveTab('chaveamento');
-        }
-    }, [selectedChamp.format]);
 
     // RANKING CALCULATION (For Pontos Corridos)
     const calculateStandings = () => {
@@ -279,6 +320,149 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
     };
 
     const standings = calculateStandings();
+
+    // Helper functions for registrations
+    const getRegistrationsByClass = (className: string) => {
+        return registrations.filter(r => r.class === className);
+    };
+
+    const getParticipantName = (reg: Registration) => {
+        if (reg.participant_type === 'guest') return reg.guest_name || 'Convidado';
+        return reg.user?.name || 'Sócio';
+    };
+
+    // PDF Export
+    const handleExportPDF = async () => {
+        if (!tableRef.current || !registrationChamp) return;
+
+        const canvas = await html2canvas(tableRef.current, { scale: 2 });
+        const imgData = canvas.toDataURL('image/png');
+
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const imgWidth = 190;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+        pdf.setFontSize(18);
+        pdf.text(registrationChamp.name, 105, 15, { align: 'center' });
+        pdf.setFontSize(12);
+        pdf.text('Lista de Inscritos', 105, 22, { align: 'center' });
+
+        pdf.addImage(imgData, 'PNG', 10, 30, imgWidth, imgHeight);
+        pdf.save(`${registrationChamp.name}-inscritos.pdf`);
+    };
+
+    // WhatsApp Share
+    const handleShareWhatsApp = () => {
+        if (!registrationChamp) return;
+
+        let message = `🏆 *${registrationChamp.name}*\n📝 Lista de Inscritos\n\n`;
+
+        CLASSES.forEach(cls => {
+            const classRegs = getRegistrationsByClass(cls);
+            if (classRegs.length > 0) {
+                message += `*${cls}* (${classRegs.length})\n`;
+                classRegs.forEach((reg, i) => {
+                    const name = getParticipantName(reg);
+                    const type = reg.participant_type === 'guest' ? '🎫' : '✅';
+                    message += `${i + 1}. ${type} ${name} - ${reg.shirt_size}\n`;
+                });
+                message += '\n';
+            }
+        });
+
+        message += `📊 Total: ${registrations.length} inscritos`;
+
+        const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
+        window.open(url, '_blank');
+    };
+
+    // If there's a championship in registration period, show that view
+    if (registrationChamp) {
+        return (
+            <div className="p-4 space-y-6 pb-24">
+                {/* Header */}
+                <div className="bg-gradient-to-br from-saibro-600 to-saibro-500 p-6 rounded-3xl shadow-xl text-white relative overflow-hidden">
+                    <div className="absolute right-[-10px] top-[-10px] opacity-10 rotate-12">
+                        <Trophy size={160} />
+                    </div>
+                    <div className="relative z-10">
+                        <span className="text-[10px] font-black uppercase tracking-widest bg-white/20 px-2 py-0.5 rounded-full animate-pulse">
+                            📝 Inscrições Abertas
+                        </span>
+                        <h1 className="text-2xl font-black mt-2">{registrationChamp.name}</h1>
+                        <p className="text-saibro-100 text-sm mt-1">
+                            <Users size={14} className="inline mr-1" />
+                            {registrations.length} inscritos
+                        </p>
+                    </div>
+                </div>
+
+                {/* Export Buttons */}
+                <div className="flex gap-3">
+                    <button
+                        onClick={handleExportPDF}
+                        className="flex-1 py-3 bg-white border border-stone-200 rounded-xl font-bold text-sm text-stone-700 hover:bg-stone-50 flex items-center justify-center gap-2 shadow-sm"
+                    >
+                        <Download size={18} />
+                        Exportar PDF
+                    </button>
+                    <button
+                        onClick={handleShareWhatsApp}
+                        className="flex-1 py-3 bg-green-500 text-white rounded-xl font-bold text-sm hover:bg-green-600 flex items-center justify-center gap-2 shadow-sm"
+                    >
+                        <Share2 size={18} />
+                        WhatsApp
+                    </button>
+                </div>
+
+                {/* Registrations Table */}
+                <div ref={tableRef} className="space-y-4">
+                    {CLASSES.map(cls => {
+                        const classRegs = getRegistrationsByClass(cls);
+                        if (classRegs.length === 0) return null;
+
+                        return (
+                            <div key={cls} className="bg-white rounded-2xl shadow-sm border border-stone-100 overflow-hidden">
+                                <div className="bg-saibro-50 px-4 py-3 flex justify-between items-center border-b border-saibro-100">
+                                    <h3 className="font-bold text-saibro-800">{cls}</h3>
+                                    <span className="text-xs font-bold text-saibro-600 bg-saibro-100 px-2 py-1 rounded-full">
+                                        {classRegs.length} inscritos
+                                    </span>
+                                </div>
+                                <div className="divide-y divide-stone-50">
+                                    {classRegs.map((reg, idx) => (
+                                        <div key={reg.id} className="flex items-center justify-between px-4 py-3">
+                                            <div className="flex items-center gap-3">
+                                                <span className="text-xs font-bold text-stone-400 w-6">{idx + 1}</span>
+                                                <div>
+                                                    <p className="font-semibold text-stone-800 text-sm">
+                                                        {getParticipantName(reg)}
+                                                    </p>
+                                                    <p className="text-[10px] text-stone-400 uppercase">
+                                                        {reg.participant_type === 'guest' ? '🎫 Convidado' : '✅ Sócio'}
+                                                        {' • '} <Shirt size={10} className="inline" /> {reg.shirt_size}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+
+                {/* Empty State */}
+                {registrations.length === 0 && (
+                    <div className="text-center py-12">
+                        <Users size={48} className="mx-auto text-stone-200 mb-4" />
+                        <p className="text-stone-400">Nenhuma inscrição ainda</p>
+                        <p className="text-stone-300 text-sm mt-1">As inscrições começarão em breve!</p>
+                    </div>
+                )}
+            </div>
+        );
+    }
 
     return (
         <div className="p-4 space-y-6 pb-24">

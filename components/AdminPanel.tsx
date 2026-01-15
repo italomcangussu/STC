@@ -215,7 +215,6 @@ const TABS = [
     { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={18} /> },
     { id: 'superset', label: 'SuperSet', icon: <Trophy size={18} /> },
     { id: 'reservas', label: 'Reservas', icon: <Calendar size={18} /> },
-    { id: 'campeonatos', label: 'Campeonatos', icon: <Trophy size={18} /> },
     { id: 'desafios', label: 'Desafios', icon: <Swords size={18} /> },
     { id: 'avisos', label: 'Avisos', icon: <Megaphone size={18} /> },
     { id: 'socios', label: 'Sócios', icon: <Users size={18} /> },
@@ -1645,80 +1644,17 @@ const SociosTab: React.FC = () => {
 };
 
 // --- Main Admin Panel Component ---
-import { AdminChampionshipDetail } from './AdminChampionshipDetail';
 
 export const AdminPanel: React.FC = () => {
     const [activeTab, setActiveTab] = useState('dashboard');
-    const [showWizard, setShowWizard] = useState(false);
-    const [selectedChamp, setSelectedChamp] = useState<Championship | null>(null);
 
-    const handleSaveChampionship = async (newChamp: Championship, newMatches: Match[]) => {
-        // Insert championship
-        await supabase.from('championships').insert({
-            id: newChamp.id,
-            name: newChamp.name,
-            status: newChamp.status,
-            format: newChamp.format,
-            participant_ids: newChamp.participantIds,
-            start_date: newChamp.startDate,
-            end_date: newChamp.endDate,
-            pts_victory: newChamp.ptsVictory,
-            pts_set: newChamp.ptsSet,
-            pts_game: newChamp.ptsGame
-        });
 
-        // Insert matches
-        if (newMatches.length > 0) {
-            await supabase.from('matches').insert(newMatches.map(m => ({
-                id: m.id,
-                championship_id: m.championshipId,
-                type: m.type,
-                phase: m.phase,
-                player_a_id: m.playerAId,
-                player_b_id: m.playerBId,
-                status: 'pending'
-            })));
-        }
-
-        setShowWizard(false);
-        setActiveTab('campeonatos');
-    };
-
-    const handleUpdateChampionship = async (updated: Championship) => {
-        await supabase
-            .from('championships')
-            .update({
-                name: updated.name,
-                status: updated.status,
-                rules: updated.rules,
-                logo_url: updated.logoUrl
-            })
-            .eq('id', updated.id);
-
-        setSelectedChamp(updated);
-    };
 
     const renderTabContent = () => {
-        if (selectedChamp && activeTab === 'campeonatos') {
-            return (
-                <AdminChampionshipDetail
-                    championship={selectedChamp}
-                    onBack={() => setSelectedChamp(null)}
-                    onUpdate={handleUpdateChampionship}
-                />
-            );
-        }
-
         switch (activeTab) {
             case 'dashboard': return <Dashboard />;
             case 'superset': return <SuperSet />;
             case 'reservas': return <ReservasTab />;
-            case 'campeonatos': return (
-                <CampeonatosTab
-                    onOpenWizard={() => setShowWizard(true)}
-                    onSelectChampionship={setSelectedChamp}
-                />
-            );
             case 'desafios': return <DesafiosTab />;
             case 'financeiro': return <FinanceiroTab />;
             case 'avisos': return <AnunciosTab />;
@@ -1729,41 +1665,30 @@ export const AdminPanel: React.FC = () => {
 
     return (
         <div className="p-4 pb-24 space-y-6">
-            {!selectedChamp && (
-                <div className="bg-gradient-to-r from-saibro-600 to-saibro-500 p-6 rounded-2xl shadow-lg text-white">
-                    <h1 className="text-2xl font-bold">Painel Administrativo</h1>
-                    <p className="text-saibro-100 text-sm mt-1">Gerencie reservas, campeonatos, desafios, financeiro e sócios</p>
-                </div>
-            )}
+            <div className="bg-gradient-to-r from-saibro-600 to-saibro-500 p-6 rounded-2xl shadow-lg text-white">
+                <h1 className="text-2xl font-bold">Painel Administrativo</h1>
+                <p className="text-saibro-100 text-sm mt-1">Gerencie reservas, desafios, financeiro e sócios</p>
+            </div>
 
-            {!selectedChamp && (
-                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                    {TABS.map(tab => (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id)}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium whitespace-nowrap transition-all ${activeTab === tab.id
-                                ? 'bg-saibro-500 text-white shadow-md'
-                                : 'bg-white text-stone-600 hover:bg-saibro-50 border border-stone-200'
-                                }`}
-                        >
-                            {tab.icon}
-                            {tab.label}
-                        </button>
-                    ))}
-                </div>
-            )}
+            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                {TABS.map(tab => (
+                    <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium whitespace-nowrap transition-all ${activeTab === tab.id
+                            ? 'bg-saibro-500 text-white shadow-md'
+                            : 'bg-white text-stone-600 hover:bg-saibro-50 border border-stone-200'
+                            }`}
+                    >
+                        {tab.icon}
+                        {tab.label}
+                    </button>
+                ))}
+            </div>
 
             <div>
                 {renderTabContent()}
             </div>
-
-            {showWizard && (
-                <NewChampionship
-                    onClose={() => setShowWizard(false)}
-                    onSave={handleSaveChampionship}
-                />
-            )}
         </div>
     );
 };
