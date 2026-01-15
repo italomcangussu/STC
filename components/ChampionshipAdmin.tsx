@@ -50,6 +50,8 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
 
     // Load data
     useEffect(() => {
+        let subscription: any;
+
         const fetchData = async () => {
             setLoading(true);
 
@@ -64,14 +66,35 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
             if (champData) {
                 setChampionship(champData);
 
-                // Get registrations
-                const { data: regsData } = await supabase
-                    .from('championship_registrations')
-                    .select('*, user:profiles!user_id(name, avatar_url)')
-                    .eq('championship_id', champData.id)
-                    .order('class', { ascending: true });
+                // Function to fetch registrations
+                const fetchRegistrations = async () => {
+                    const { data: regsData } = await supabase
+                        .from('championship_registrations')
+                        .select('*, user:profiles!user_id(name, avatar_url)')
+                        .eq('championship_id', champData.id)
+                        .order('class', { ascending: true });
 
-                setRegistrations(regsData || []);
+                    setRegistrations(regsData || []);
+                };
+
+                await fetchRegistrations();
+
+                // Subscribe to changes
+                subscription = supabase
+                    .channel('admin-registrations')
+                    .on(
+                        'postgres_changes',
+                        {
+                            event: '*',
+                            schema: 'public',
+                            table: 'championship_registrations',
+                            filter: `championship_id=eq.${champData.id}`
+                        },
+                        () => {
+                            fetchRegistrations();
+                        }
+                    )
+                    .subscribe();
             }
 
             // Get all active profiles for selection
@@ -98,6 +121,12 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
         };
 
         fetchData();
+
+        return () => {
+            if (subscription) {
+                supabase.removeChannel(subscription);
+            }
+        };
     }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -165,7 +194,7 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
         return reg.user?.name || 'Sócio';
     };
 
-    // PDF Export
+    // PDF Export with multi-page support
     const handleExportPDF = async () => {
         if (!tableRef.current) return;
 
@@ -173,15 +202,62 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
         const imgData = canvas.toDataURL('image/png');
 
         const pdf = new jsPDF('p', 'mm', 'a4');
-        const imgWidth = 190;
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const imgWidth = pageWidth - 20; // 10mm margin each side
         const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
+        // Header
         pdf.setFontSize(18);
-        pdf.text(championship?.name || 'Campeonato', 105, 15, { align: 'center' });
+        pdf.text(championship?.name || 'Campeonato', pageWidth / 2, 15, { align: 'center' });
         pdf.setFontSize(12);
-        pdf.text('Lista de Inscritos', 105, 22, { align: 'center' });
+        pdf.text('Lista de Inscritos', pageWidth / 2, 22, { align: 'center' });
 
-        pdf.addImage(imgData, 'PNG', 10, 30, imgWidth, imgHeight);
+        const headerHeight = 30;
+        const usableHeight = pageHeight - headerHeight - 10; // 10mm bottom margin
+
+        // If content fits in one page
+        if (imgHeight <= usableHeight) {
+            pdf.addImage(imgData, 'PNG', 10, headerHeight, imgWidth, imgHeight);
+        } else {
+            // Multi-page export
+            let remainingHeight = imgHeight;
+            let position = 0;
+            let page = 1;
+
+            while (remainingHeight > 0) {
+                const srcY = position * (canvas.height / imgHeight);
+                const srcHeight = Math.min(usableHeight, remainingHeight) * (canvas.height / imgHeight);
+
+                // Create a temporary canvas for the slice
+                const sliceCanvas = document.createElement('canvas');
+                sliceCanvas.width = canvas.width;
+                sliceCanvas.height = srcHeight;
+                const ctx = sliceCanvas.getContext('2d');
+
+                if (ctx) {
+                    ctx.drawImage(
+                        canvas,
+                        0, srcY, canvas.width, srcHeight,
+                        0, 0, canvas.width, srcHeight
+                    );
+
+                    const sliceData = sliceCanvas.toDataURL('image/png');
+                    const sliceImgHeight = (srcHeight * imgWidth) / canvas.width;
+
+                    if (page > 1) {
+                        pdf.addPage();
+                    }
+
+                    pdf.addImage(sliceData, 'PNG', 10, headerHeight, imgWidth, sliceImgHeight);
+                }
+
+                remainingHeight -= usableHeight;
+                position += usableHeight;
+                page++;
+            }
+        }
+
         pdf.save(`${championship?.name || 'inscritos'}.pdf`);
     };
 

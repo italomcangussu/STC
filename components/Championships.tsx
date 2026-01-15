@@ -133,6 +133,41 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
         fetchData();
     }, []);
 
+    // Realtime subscription for registrations
+    useEffect(() => {
+        if (!registrationChamp) return;
+
+        const fetchRegistrations = async () => {
+            const { data: regsData } = await supabase
+                .from('championship_registrations')
+                .select('*, user:profiles!user_id(name, avatar_url)')
+                .eq('championship_id', registrationChamp.id)
+                .order('class', { ascending: true });
+
+            setRegistrations(regsData || []);
+        };
+
+        const subscription = supabase
+            .channel('public-registrations')
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'championship_registrations',
+                    filter: `championship_id=eq.${registrationChamp.id}`
+                },
+                () => {
+                    fetchRegistrations();
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(subscription);
+        };
+    }, [registrationChamp?.id]);
+
     // Fetch matches when championship changes
     useEffect(() => {
         if (!selectedChampId) return;
@@ -331,7 +366,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
         return reg.user?.name || 'Sócio';
     };
 
-    // PDF Export
+    // PDF Export with multi-page support
     const handleExportPDF = async () => {
         if (!tableRef.current || !registrationChamp) return;
 
@@ -339,15 +374,51 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
         const imgData = canvas.toDataURL('image/png');
 
         const pdf = new jsPDF('p', 'mm', 'a4');
-        const imgWidth = 190;
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const imgWidth = pageWidth - 20;
         const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
+        // Header
         pdf.setFontSize(18);
-        pdf.text(registrationChamp.name, 105, 15, { align: 'center' });
+        pdf.text(registrationChamp.name, pageWidth / 2, 15, { align: 'center' });
         pdf.setFontSize(12);
-        pdf.text('Lista de Inscritos', 105, 22, { align: 'center' });
+        pdf.text('Lista de Inscritos', pageWidth / 2, 22, { align: 'center' });
 
-        pdf.addImage(imgData, 'PNG', 10, 30, imgWidth, imgHeight);
+        const headerHeight = 30;
+        const usableHeight = pageHeight - headerHeight - 10;
+
+        if (imgHeight <= usableHeight) {
+            pdf.addImage(imgData, 'PNG', 10, headerHeight, imgWidth, imgHeight);
+        } else {
+            let remainingHeight = imgHeight;
+            let position = 0;
+            let page = 1;
+
+            while (remainingHeight > 0) {
+                const srcY = position * (canvas.height / imgHeight);
+                const srcHeight = Math.min(usableHeight, remainingHeight) * (canvas.height / imgHeight);
+
+                const sliceCanvas = document.createElement('canvas');
+                sliceCanvas.width = canvas.width;
+                sliceCanvas.height = srcHeight;
+                const ctx = sliceCanvas.getContext('2d');
+
+                if (ctx) {
+                    ctx.drawImage(canvas, 0, srcY, canvas.width, srcHeight, 0, 0, canvas.width, srcHeight);
+                    const sliceData = sliceCanvas.toDataURL('image/png');
+                    const sliceImgHeight = (srcHeight * imgWidth) / canvas.width;
+
+                    if (page > 1) pdf.addPage();
+                    pdf.addImage(sliceData, 'PNG', 10, headerHeight, imgWidth, sliceImgHeight);
+                }
+
+                remainingHeight -= usableHeight;
+                position += usableHeight;
+                page++;
+            }
+        }
+
         pdf.save(`${registrationChamp.name}-inscritos.pdf`);
     };
 
