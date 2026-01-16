@@ -390,23 +390,10 @@ export async function fetchRankingByCategory(): Promise<Record<string, PlayerSta
 
 /**
  * Check if a player can challenge another based on ranking rules
- * RULES:
- * - Can challenge anyone within 2 TIERS above OR 2 TIERS below
- * - TIER = group of players with same points (ties count as one position)
- * - Monthly limit: 1 challenge as challenger per month
- * - Monthly limit: 1 challenge as target (being challenged) per month
- * 
- * Example: If ranking is:
- *   #1 Player A - 100pts (tier 1)
- *   #2 Player B - 50pts  (tier 2)
- *   #3 Player C - 50pts  (tier 2 - same as B)
- *   #4 Player D - 30pts  (tier 3)
- *   #5 Player E - 0pts   (tier 4)
- * 
- * Player D (tier 3) can challenge:
- *   - Tier 1 (A) - 2 tiers above ✓
- *   - Tier 2 (B, C) - 1 tier above ✓
- *   - Tier 4 (E) - 1 tier below ✓
+ * NEW RULES (Jan 2026):
+ * - Can challenge anyone within 3 POSITIONS above OR 3 POSITIONS below in General Ranking
+ * - Independent of class or points, only Global Position matters.
+ * - Monthly limit rules still apply (checked in canChallengeWithLimits)
  */
 export function canChallenge(
     challenger: PlayerStats,
@@ -418,36 +405,22 @@ export function canChallenge(
         return { allowed: false, reason: 'Não pode desafiar a si mesmo' };
     }
 
-    // Sort all players by globalPosition to ensure correct order
-    const sortedPlayers = [...allPlayers].sort((a, b) => a.globalPosition - b.globalPosition);
-
-    // Build list of unique point tiers in order
-    const pointTiers: number[] = [];
-    sortedPlayers.forEach(p => {
-        if (!pointTiers.includes(p.totalPoints)) {
-            pointTiers.push(p.totalPoints);
-        }
-    });
-
-    // Find tier index for challenger and target
-    const challengerTier = pointTiers.indexOf(challenger.totalPoints);
-    const targetTier = pointTiers.indexOf(target.totalPoints);
-
-    if (challengerTier === -1 || targetTier === -1) {
-        return { allowed: false, reason: 'Erro ao calcular tier' };
+    // Ensure we have valid global positions
+    if (!challenger.globalPosition || !target.globalPosition) {
+        return { allowed: false, reason: 'Erro: Posição no ranking não calculada' };
     }
 
-    // Calculate tier difference
-    const tierDiff = Math.abs(challengerTier - targetTier);
+    // Calculate position difference
+    const posDiff = Math.abs(challenger.globalPosition - target.globalPosition);
 
-    // Can challenge within 2 tiers (above or below)
-    if (tierDiff <= 2) {
+    // Can challenge within 3 positions (above or below)
+    if (posDiff <= 3) {
         return { allowed: true };
     }
 
     return {
         allowed: false,
-        reason: `Só pode desafiar jogadores até 2 posições acima/abaixo (diferença: ${tierDiff} tiers)`
+        reason: `Só pode desafiar jogadores até 3 posições de distância no Ranking Geral (diferença atual: ${posDiff} posições)`
     };
 }
 

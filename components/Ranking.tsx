@@ -13,8 +13,9 @@ const PlayerCard: React.FC<{
   player: PlayerStats;
   rank: number;
   showCategory?: boolean;
+  showPoints?: boolean;
   onClick: () => void;
-}> = ({ player, rank, showCategory = false, onClick }) => {
+}> = ({ player, rank, showCategory = false, showPoints = true, onClick }) => {
   const isTop3 = rank <= 3;
 
   // Dynamic Styles based on Rank
@@ -93,11 +94,13 @@ const PlayerCard: React.FC<{
         </div>
       </div>
 
-      {/* Points */}
-      <div className="flex flex-col items-end justify-center pl-2 border-l border-black/5">
-        <span className={`text-2xl sm:text-4xl font-black ${pointColor} leading-none tracking-tighter`}>{player.totalPoints}</span>
-        <span className={`text-[8px] sm:text-[10px] font-bold uppercase tracking-widest ${rankColor}`}>Pontos</span>
-      </div>
+      {/* Points - conditionally shown */}
+      {showPoints && (
+        <div className="flex flex-col items-end justify-center pl-2 border-l border-black/5">
+          <span className={`text-2xl sm:text-4xl font-black ${pointColor} leading-none tracking-tighter`}>{player.totalPoints}</span>
+          <span className={`text-[8px] sm:text-[10px] font-bold uppercase tracking-widest ${rankColor}`}>Pontos</span>
+        </div>
+      )}
 
       <ChevronRight size={16} className="text-black/10 group-hover:text-saibro-400 transition-colors active:translate-x-1" />
     </div>
@@ -187,34 +190,42 @@ export const Ranking: React.FC<RankingProps> = ({ onSelectProfile }) => {
       {/* Ranking List */}
       <div className="space-y-3">
         {activeTab === 'Geral' ? (
-          // Geral view: show players grouped by class with visual separators
+          // Geral view: show players with unified sequential ranking
           <>
-            {CLASS_ORDER.map(category => {
-              const categoryPlayers = allPlayers.filter(p => p.category === category);
-              if (categoryPlayers.length === 0) return null;
+            {(() => {
+              let globalPosition = 0;
+              return CLASS_ORDER.map(category => {
+                const categoryPlayers = allPlayers.filter(p => p.category === category);
+                if (categoryPlayers.length === 0) return null;
 
-              return (
-                <div key={category}>
-                  <div className="flex items-center gap-2 mb-2 mt-4">
-                    <div className="flex items-center gap-1 bg-saibro-100 text-saibro-700 px-3 py-1 rounded-full">
-                      <Target size={14} />
-                      <span className="text-xs font-bold">{category}</span>
+                return (
+                  <div key={category}>
+                    <div className="flex items-center gap-2 mb-2 mt-4">
+                      <div className="flex items-center gap-1 bg-saibro-100 text-saibro-700 px-3 py-1 rounded-full">
+                        <Target size={14} />
+                        <span className="text-xs font-bold">{category}</span>
+                      </div>
+                      <div className="flex-1 h-px bg-stone-200" />
                     </div>
-                    <div className="flex-1 h-px bg-stone-200" />
+                    <div className="space-y-2">
+                      {categoryPlayers.map(player => {
+                        globalPosition++;
+                        return (
+                          <PlayerCard
+                            key={player.id}
+                            player={player}
+                            rank={globalPosition}
+                            showPoints={false}
+                            showCategory={false}
+                            onClick={() => onSelectProfile(player.id)}
+                          />
+                        );
+                      })}
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    {categoryPlayers.map(player => (
-                      <PlayerCard
-                        key={player.id}
-                        player={player}
-                        rank={player.categoryPosition}
-                        onClick={() => onSelectProfile(player.id)}
-                      />
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
+                );
+              });
+            })()}
           </>
         ) : (
           // Category view: simple list

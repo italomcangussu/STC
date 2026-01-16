@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { User, Challenge, Match, Court, Reservation } from '../types';
 import { Trophy, Plus, CheckCircle, XCircle, Clock, Calendar, AlertTriangle, ArrowRight, ShieldAlert, PlayCircle, Loader2, Target, Info, MapPin, ChevronRight, ChevronLeft } from 'lucide-react';
 import { fetchRanking, getEligibleOpponents, canChallenge, canChallengeWithLimits, checkMonthlyChallengeLimit, PlayerStats, CLASS_ORDER } from '../lib/rankingService';
@@ -158,7 +159,7 @@ const CreateChallengeModal: React.FC<{
 
     // If user already challenged this month, show message
     if (monthlyLimits && !monthlyLimits.canChallengeOthers) {
-        return (
+        return createPortal(
             <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4 backdrop-blur-sm">
                 <div className="bg-white rounded-2xl p-6 w-full max-w-md space-y-4 animate-in zoom-in duration-200">
                     <div className="flex justify-between items-center">
@@ -184,7 +185,8 @@ const CreateChallengeModal: React.FC<{
                         Fechar
                     </button>
                 </div>
-            </div>
+            </div>,
+            document.body
         );
     }
 
@@ -200,7 +202,7 @@ const CreateChallengeModal: React.FC<{
         setSubmitting(false);
     };
 
-    return (
+    return createPortal(
         <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4 backdrop-blur-sm">
             <div className="bg-white rounded-2xl w-full max-w-md max-h-[90vh] overflow-hidden animate-in zoom-in duration-200 flex flex-col">
                 {/* Header */}
@@ -245,7 +247,7 @@ const CreateChallengeModal: React.FC<{
                                     <div className="text-xs">
                                         <p className="font-bold mb-1">Regras de Desafio:</p>
                                         <ul className="list-disc pl-4 space-y-0.5">
-                                            <li>Pode desafiar 2 posições acima ou abaixo</li>
+                                            <li>Pode desafiar 3 posições acima ou abaixo</li>
                                             <li>Empates contam como uma posição</li>
                                             <li>Limite: 1 desafio por mês</li>
                                         </ul>
@@ -391,7 +393,89 @@ const CreateChallengeModal: React.FC<{
                     )}
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
+    );
+};
+
+
+// --- COMPONENT: Challenge Results Modal ---
+const ChallengeResultsModal: React.FC<{
+    matchId: string;
+    currentUser: User;
+    onClose: () => void;
+}> = ({ matchId, currentUser, onClose }) => {
+    const [match, setMatch] = useState<Match | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [playerA, setPlayerA] = useState<{ name: string; avatar: string | null } | null>(null);
+    const [playerB, setPlayerB] = useState<{ name: string; avatar: string | null } | null>(null);
+
+    useEffect(() => {
+        const loadMatch = async () => {
+            setLoading(true);
+            const { data, error } = await supabase
+                .from('matches')
+                .select(`
+                    *,
+                    player_a:profiles!player_a_id(name, avatar_url),
+                    player_b:profiles!player_b_id(name, avatar_url)
+                `)
+                .eq('id', matchId)
+                .single();
+
+            if (data && !error) {
+                setMatch({
+                    id: data.id,
+                    playerAId: data.player_a_id,
+                    playerBId: data.player_b_id,
+                    scoreA: data.score_a || [],
+                    scoreB: data.score_b || [],
+                    status: data.status,
+                    winnerId: data.winner_id,
+                    date: data.date,
+                    type: data.type,
+                    scheduledTime: data.time || '00:00' // Ensure this maps correctly if possible
+                });
+                setPlayerA({ name: data.player_a.name, avatar: data.player_a.avatar_url });
+                setPlayerB({ name: data.player_b.name, avatar: data.player_b.avatar_url });
+            }
+            setLoading(false);
+        };
+        loadMatch();
+    }, [matchId]);
+
+    if (!match && !loading) return null;
+
+    const profilesForBoard = match && playerA && playerB ? [
+        { id: match.playerAId, name: playerA.name, avatar: playerA.avatar } as User,
+        { id: match.playerBId, name: playerB.name, avatar: playerB.avatar } as User
+    ] : [];
+
+    return createPortal(
+        <div className="fixed inset-0 bg-black/80 z-[70] flex items-center justify-center p-4 backdrop-blur-sm" onClick={onClose}>
+            <div className="relative w-full max-w-md animate-in zoom-in duration-200" onClick={e => e.stopPropagation()}>
+                <button
+                    onClick={onClose}
+                    className="absolute -top-3 -right-3 z-50 bg-white rounded-full p-2 shadow-lg text-stone-500 hover:text-red-500 transition-colors border border-stone-100"
+                >
+                    <XCircle size={24} />
+                </button>
+
+                {loading ? (
+                    <div className="bg-white rounded-3xl p-8 flex justify-center shadow-2xl">
+                        <Loader2 className="animate-spin text-saibro-600" size={32} />
+                    </div>
+                ) : (
+                    <LiveScoreboard
+                        match={match!}
+                        profiles={profilesForBoard}
+                        currentUser={currentUser}
+                        readOnly={true}
+                    />
+                )}
+            </div>
+        </div>,
+        document.body
     );
 };
 
@@ -405,6 +489,8 @@ export const ChallengesView: React.FC<{ currentUser: User }> = ({ currentUser })
     const [ranking, setRanking] = useState<PlayerStats[]>([]);
     const [profiles, setProfiles] = useState<Record<string, { name: string; avatar_url: string | null }>>({});
     const [showCreateModal, setShowCreateModal] = useState(false);
+    const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
+    const [historyScope, setHistoryScope] = useState<'mine' | 'all'>('all');
     const [loading, setLoading] = useState(true);
     const [todayMatches, setTodayMatches] = useState<Match[]>([]);
 
@@ -421,7 +507,6 @@ export const ChallengesView: React.FC<{ currentUser: User }> = ({ currentUser })
                 const { data: challengesData } = await supabase
                     .from('challenges')
                     .select('*')
-                    .or(`challenger_id.eq.${currentUser.id},challenged_id.eq.${currentUser.id}`)
                     .order('created_at', { ascending: false });
 
                 const mappedChallenges = challengesData?.map(c => ({
@@ -592,7 +677,19 @@ export const ChallengesView: React.FC<{ currentUser: User }> = ({ currentUser })
     // --- Filter Lists ---
     const pendingSent = challenges.filter(c => c.challengerId === currentUser.id && ['proposed', 'accepted', 'scheduled'].includes(c.status));
     const pendingReceived = challenges.filter(c => c.challengedId === currentUser.id && ['proposed', 'accepted', 'scheduled'].includes(c.status));
-    const history = challenges.filter(c => (c.challengerId === currentUser.id || c.challengedId === currentUser.id) && ['finished', 'declined', 'cancelled', 'expired'].includes(c.status));
+    const history = challenges.filter(c => {
+        const isMine = c.challengerId === currentUser.id || c.challengedId === currentUser.id;
+        // For global history, prioritize finished matches
+        const statusList = historyScope === 'mine'
+            ? ['finished', 'declined', 'cancelled', 'expired']
+            : ['finished']; // For global view, maybe only show finished/valid games? User said "history". I'll keep it simple and show finished primarily.
+
+        // If 'all', we show finished challenges from everyone.
+        // But if historyScope is 'all', we might want to see everything finished.
+        // Let's stick to the list:
+        const validStatuses = ['finished', 'declined', 'cancelled', 'expired'];
+        return (historyScope === 'all' || isMine) && validStatuses.includes(c.status);
+    });
 
     if (loading) {
         return (
@@ -698,15 +795,15 @@ export const ChallengesView: React.FC<{ currentUser: User }> = ({ currentUser })
                                     profiles={profilesAsUsers}
                                     currentUser={currentUser}
                                     onScoreSaved={async () => {
-                                        // When score is saved, update challenge status
+                                        // When score is saved, update challenge status AND ensure match_id is linked
                                         await supabase
                                             .from('challenges')
-                                            .update({ status: 'finished' })
+                                            .update({ status: 'finished', match_id: chal.id })
                                             .eq('id', chal.id);
 
-                                        // Update local state
+                                        // Update local state and remove from todayMatches if needed, or just update status
                                         setChallenges(prev => prev.map(c =>
-                                            c.id === chal.id ? { ...c, status: 'finished' } : c
+                                            c.id === chal.id ? { ...c, status: 'finished', matchId: chal.id } : c
                                         ));
                                     }}
                                 />
@@ -814,18 +911,62 @@ export const ChallengesView: React.FC<{ currentUser: User }> = ({ currentUser })
             {/* --- HISTORY --- */}
             {history.length > 0 && (
                 <div className="space-y-3 pt-6 border-t border-stone-200">
-                    <h3 className="font-bold text-stone-500 text-sm section-header">Histórico Recente</h3>
-                    {history.slice(0, 5).map(c => {
+                    <div className="flex items-center justify-between">
+                        <h3 className="font-bold text-stone-500 text-sm section-header">Histórico Recente</h3>
+                        <div className="flex bg-stone-100 rounded-lg p-0.5">
+                            <button
+                                onClick={() => setHistoryScope('mine')}
+                                className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${historyScope === 'mine' ? 'bg-white shadow text-saibro-600' : 'text-stone-400 hover:text-stone-600'}`}
+                            >
+                                Meus
+                            </button>
+                            <button
+                                onClick={() => setHistoryScope('all')}
+                                className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${historyScope === 'all' ? 'bg-white shadow text-saibro-600' : 'text-stone-400 hover:text-stone-600'}`}
+                            >
+                                Geral
+                            </button>
+                        </div>
+                    </div>
+                    {history.slice(0, 20).map(c => {
                         const isChallenger = c.challengerId === currentUser.id;
-                        const other = profiles[isChallenger ? c.challengedId : c.challengerId];
+                        const isChallenged = c.challengedId === currentUser.id;
+                        const amInvolved = isChallenger || isChallenged;
+
+                        const other = amInvolved
+                            ? profiles[isChallenger ? c.challengedId : c.challengerId]
+                            : null;
+
+                        const challengerProfile = profiles[c.challengerId];
+                        const challengedProfile = profiles[c.challengedId];
+
+                        const isFinished = c.status === 'finished' && c.matchId;
 
                         return (
-                            <div key={c.id} className="flex justify-between items-center p-3 bg-stone-50 rounded-lg opacity-75">
-                                <div className="flex items-center gap-2">
-                                    <span className="text-xs font-bold text-stone-400">{isChallenger ? 'Desafiou' : 'Desafiado por'}</span>
-                                    <span className="font-semibold text-stone-700 text-sm">{other?.name}</span>
+                            <div
+                                key={c.id}
+                                onClick={() => isFinished && setSelectedMatchId(c.matchId!)}
+                                className={`flex justify-between items-center p-3 rounded-lg border border-transparent transition-all ${isFinished
+                                    ? 'bg-white shadow-sm cursor-pointer hover:border-saibro-300 hover:shadow-md active:scale-[0.99]'
+                                    : 'bg-stone-50 opacity-75'
+                                    }`}
+                            >
+                                <div className="flex items-center gap-2 overflow-hidden">
+                                    {amInvolved ? (
+                                        <>
+                                            <span className="text-xs font-bold text-stone-400 shrink-0">{isChallenger ? 'Desafiou' : 'Desafiado por'}</span>
+                                            <span className="font-semibold text-stone-700 text-sm truncate">{other?.name}</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <span className="font-semibold text-stone-700 text-sm truncate max-w-[80px] sm:max-w-[120px]">{challengerProfile?.name}</span>
+                                            <span className="text-xs font-bold text-stone-400 shrink-0">vs</span>
+                                            <span className="font-semibold text-stone-700 text-sm truncate max-w-[80px] sm:max-w-[120px]">{challengedProfile?.name}</span>
+                                        </>
+                                    )}
+                                    {isFinished && <ChevronRight size={14} className="text-stone-300 shrink-0" />}
                                 </div>
-                                <span className={`text-[10px] font-bold uppercase ${c.status === 'finished' ? 'text-green-600' : 'text-red-500'}`}>
+                                <span className={`text-[10px] font-bold uppercase shrink-0 ${c.status === 'finished' ? 'text-green-600' : 'text-red-500'}`}>
                                     {c.status}
                                 </span>
                             </div>
@@ -840,6 +981,14 @@ export const ChallengesView: React.FC<{ currentUser: User }> = ({ currentUser })
                     ranking={ranking}
                     onClose={() => setShowCreateModal(false)}
                     onConfirm={handleCreate}
+                />
+            )}
+
+            {selectedMatchId && (
+                <ChallengeResultsModal
+                    matchId={selectedMatchId}
+                    currentUser={currentUser}
+                    onClose={() => setSelectedMatchId(null)}
                 />
             )}
         </div>
