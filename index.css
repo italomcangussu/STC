@@ -1,0 +1,362 @@
+@import "tailwindcss";
+
+@theme {
+    --font-sans: 'Inter', sans-serif;
+
+    /* Saibro Colors */
+    --color-saibro-50: #fff7ed;
+    --color-saibro-100: #ffedd5;
+    --color-saibro-200: #fed7aa;
+    --color-saibro-300: #fdba74;
+    --color-saibro-400: #fb923c;
+    --color-saibro-500: #f97316;
+    --color-saibro-600: #ea580c;
+    --color-saibro-700: #c2410c;
+    --color-saibro-800: #9a3412;
+    --color-saibro-900: #7c2d12;
+    --color-saibro-950: #431407;
+
+    /* Court Colors */
+    --color-court-green: #166534;
+    --color-court-greenLight: #22c55e;
+    --color-court-dark: #14532d;
+    --color-court-line: #fafaf9;
+
+    /* Sunset Colors */
+    --color-sunset-start: #F97316;
+    --color-sunset-mid: #EA580C;
+    --color-sunset-end: #C2410C;
+
+    /* 
+       FIX: Override Tailwind v4 default colors (which use oklch) 
+       with HEX values for html2canvas compatibility 
+    */
+
+    /* Stone (Grays) */
+    --color-stone-50: #fafaf9;
+    --color-stone-100: #f5f5f4;
+    --color-stone-200: #e7e5e4;
+    --color-stone-300: #d6d3d1;
+    --color-stone-400: #a8a29e;
+    --color-stone-500: #78716c;
+    --color-stone-600: #57534e;
+    --color-stone-700: #44403c;
+    --color-stone-800: #292524;
+    --color-stone-900: #1c1917;
+    --color-stone-950: #0c0a09;
+
+    /* Green */
+    --color-green-50: #f0fdf4;
+    --color-green-100: #dcfce7;
+    --color-green-200: #bbf7d0;
+    --color-green-300: #86efac;
+    --color-green-400: #4ade80;
+    --color-green-500: #22c55e;
+    --color-green-600: #16a34a;
+    --color-green-700: #15803d;
+    --color-green-800: #166534;
+    --color-green-900: #14532d;
+    --color-green-950: #052e16;
+
+    /* Red */
+    --color-red-50: #fef2f2;
+    --color-red-100: #fee2e2;
+    --color-red-200: #fecaca;
+    --color-red-300: #fca5a5;
+    --color-red-400: #f87171;
+    --color-red-500: #ef4444;
+    --color-red-600: #dc2626;
+    --color-red-700: #b91c1c;
+    --color-red-800: #991b1b;
+    --color-red-900: #7f1d1d;
+    --color-red-950: #450a0a;
+
+    /* Orange */
+    --color-orange-50: #fff7ed;
+    --color-orange-100: #ffedd5;
+    --color-orange-200: #fed7aa;
+    --color-orange-300: #fdba74;
+    --color-orange-400: #fb923c;
+    --color-orange-500: #f97316;
+    --color-orange-600: #ea580c;
+    --color-orange-700: #c2410c;
+    --color-orange-800: #9a3412;
+    --color-orange-900: #7c2d12;
+    --color-orange-950: #431407;
+}
+
+@layer base {
+    body {
+        background-color: #fff7ed;
+        color: #431407;
+    }
+}
+
+/* Custom Utilities and Components */
+@layer utilities {
+
+    /* Tennis Court Background */
+    .bg-clay-pattern {
+        background-color: #c45c2c;
+        background-image:
+            linear-gradient(rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.2)),
+            url('/tennis-bg.jpg');
+        background-size: cover;
+        background-position: center bottom;
+        background-attachment: fixed;
+    }
+
+    /* iOS 26 Liquid Glass - Frosted Glass Effect */
+    .card-court {
+        background: rgba(255, 255, 255, 0.65);
+        backdrop-filter: blur(20px) saturate(180%);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        border-radius: 20px;
+        box-shadow:
+            0 8px 32px rgba(0, 0, 0, 0.12),
+            inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    }
+
+    /* Text Readable - For texts outside cards */
+    .text-readable {
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 0 10px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Text Badge - Small labels with backdrop */
+    .text-badge {
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Section Header - For standalone titles */
+    .section-header {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        padding: 0.5rem 1rem;
+        border-radius: 12px;
+        display: inline-block;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Tennis Net Divider */
+    .divider-net {
+        height: 2px;
+        background: repeating-linear-gradient(90deg,
+                #c2410c 0px,
+                #c2410c 4px,
+                transparent 4px,
+                transparent 8px);
+        opacity: 0.3;
+    }
+
+    /* Sunset Gradient */
+    .bg-sunset-gradient {
+        background: linear-gradient(135deg, #F97316 0%, #EA580C 50%, #C2410C 100%);
+    }
+
+    /* Button Hover Bounce */
+    .btn-bounce {
+        transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
+    }
+
+    .btn-bounce:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(234, 88, 12, 0.3);
+    }
+
+    .btn-bounce:active {
+        transform: translateY(0px);
+    }
+
+    /* Mobile Utilities & Safe Areas */
+    .pb-safe {
+        padding-bottom: env(safe-area-inset-bottom, 20px);
+    }
+
+    .pt-safe {
+        padding-top: env(safe-area-inset-top, 0px);
+    }
+
+    .min-h-safe {
+        min-height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    }
+}
+
+/* Animations */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-slide-in {
+    animation: slideIn 0.3s ease-out forwards;
+}
+
+@keyframes pageEnter {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.animate-page-enter {
+    animation: pageEnter 0.25s ease-out forwards;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.2s ease-out forwards;
+}
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.animate-scale-in {
+    animation: scaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-5px);
+    }
+}
+
+.animate-float {
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+.animate-shimmer {
+    background: linear-gradient(90deg,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(255, 255, 255, 0.4) 50%,
+            rgba(255, 255, 255, 0) 100%);
+    background-size: 200% 100%;
+    animation: shimmer 2.5s infinite linear;
+}
+
+@keyframes ballPulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+.animate-ball-pulse {
+    animation: ballPulse 2s ease-in-out infinite;
+}
+
+@keyframes spinSlow {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.animate-spin-slow {
+    animation: spinSlow 3s linear infinite;
+}
+
+/* Staggered Animation Delays */
+.delay-50 {
+    animation-delay: 50ms;
+}
+
+.delay-75 {
+    animation-delay: 75ms;
+}
+
+.delay-100 {
+    animation-delay: 100ms;
+}
+
+.delay-150 {
+    animation-delay: 150ms;
+}
+
+.delay-200 {
+    animation-delay: 200ms;
+}
+
+.delay-300 {
+    animation-delay: 300ms;
+}
+
+/* Smooth transitions for interactive elements */
+.transition-smooth {
+    transition: all 0.2s ease-out;
+}
+
+/* Disable Tap Highlight on Mobile */
+* {
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Prevent Input Zoom on iOS */
+@media screen and (max-width: 768px) {
+
+    input,
+    select,
+    textarea {
+        font-size: 16px !important;
+    }
+}

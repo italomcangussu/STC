@@ -1,17 +1,21 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-    Trophy, UserPlus, Users, Shirt, Check, Loader2, Trash2, Download, Share2, X
+    Trophy, UserPlus, Users, Shirt, Check, Loader2, Trash2, Download, Share2, X,
+    Lock, Shuffle, AlertTriangle
 } from 'lucide-react';
 import { User } from '../types';
 import { supabase } from '../lib/supabase';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import { generatePremiumPDF } from '../lib/pdfExportPremium';
+import { GroupDrawPage } from './GroupDrawPage';
 
 // Types
 interface Championship {
     id: string;
     name: string;
     registration_open: boolean;
+    registration_closed: boolean;
 }
 
 interface Registration {
@@ -41,6 +45,11 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
     const [saving, setSaving] = useState(false);
     const tableRef = useRef<HTMLDivElement>(null);
 
+    // New states for group draw
+    const [showDrawPage, setShowDrawPage] = useState(false);
+    const [closingRegistration, setClosingRegistration] = useState(false);
+    const [showCloseConfirm, setShowCloseConfirm] = useState(false);
+
     // Form state
     const [participantType, setParticipantType] = useState<'socio' | 'guest'>('socio');
     const [selectedUserId, setSelectedUserId] = useState('');
@@ -56,22 +65,49 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
             setLoading(true);
 
             // Get championship with registration open
-            const { data: champData } = await supabase
+            // Also try to get championships where registration was recently closed (for draw)
+            const { data: champData, error: champError } = await supabase
                 .from('championships')
                 .select('id, name, registration_open')
                 .eq('registration_open', true)
                 .limit(1)
                 .single();
 
-            if (champData) {
-                setChampionship(champData);
+            // If no open championship, check if we have a closed one ready for draw
+            let championshipToUse = champData;
+            let registrationClosed = false;
+
+            if (!champData || champError) {
+                // Try to get a championship that was recently closed 
+                // Could be 'ongoing' or 'draft' status with registration_open = false
+                const { data: closedChampData } = await supabase
+                    .from('championships')
+                    .select('id, name, registration_open, status')
+                    .eq('registration_open', false)
+                    .in('status', ['ongoing', 'draft'])
+                    .limit(1)
+                    .single();
+
+                if (closedChampData) {
+                    championshipToUse = closedChampData;
+                    registrationClosed = true;
+                }
+            }
+
+            if (championshipToUse) {
+                setChampionship({
+                    id: championshipToUse.id,
+                    name: championshipToUse.name,
+                    registration_open: championshipToUse.registration_open,
+                    registration_closed: registrationClosed
+                });
 
                 // Function to fetch registrations
                 const fetchRegistrations = async () => {
                     const { data: regsData } = await supabase
                         .from('championship_registrations')
                         .select('*, user:profiles!user_id(name, avatar_url)')
-                        .eq('championship_id', champData.id)
+                        .eq('championship_id', championshipToUse.id)
                         .order('class', { ascending: true });
 
                     setRegistrations(regsData || []);
@@ -88,7 +124,7 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
                             event: '*',
                             schema: 'public',
                             table: 'championship_registrations',
-                            filter: `championship_id=eq.${champData.id}`
+                            filter: `championship_id=eq.${championshipToUse.id}`
                         },
                         () => {
                             fetchRegistrations();
@@ -185,6 +221,39 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
         }
     };
 
+    // Close registrations and prepare for group draw
+    const handleCloseRegistrations = async () => {
+        if (!championship) return;
+
+        setClosingRegistration(true);
+
+        try {
+            // Only update registration_open - the status remains as 'ongoing'
+            // This allows us to identify closed championships ready for draw
+            const { error } = await supabase
+                .from('championships')
+                .update({
+                    registration_open: false
+                })
+                .eq('id', championship.id);
+
+            if (error) throw error;
+
+            setChampionship({
+                ...championship,
+                registration_open: false,
+                registration_closed: true // Local state only
+            });
+
+            setShowCloseConfirm(false);
+        } catch (error) {
+            console.error('Error closing registrations:', error);
+            alert('Erro ao encerrar inscrições. Tente novamente.');
+        }
+
+        setClosingRegistration(false);
+    };
+
     const getRegistrationsByClass = (className: string) => {
         return registrations.filter(r => r.class === className);
     };
@@ -195,70 +264,111 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
     };
 
     // PDF Export with multi-page support
+    // PDF Export with DOM Clone Strategy (Fixes scroll/gap issues)
     const handleExportPDF = async () => {
         if (!tableRef.current) return;
 
-        const canvas = await html2canvas(tableRef.current, { scale: 2 });
-        const imgData = canvas.toDataURL('image/png');
+        // 1. Create a clone of the table to render off-screen (but visible)
+        // This avoids scroll position issues and viewport constraints
+        const originalElement = tableRef.current;
+        const clone = originalElement.cloneNode(true) as HTMLElement;
 
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const pageWidth = pdf.internal.pageSize.getWidth();
-        const pageHeight = pdf.internal.pageSize.getHeight();
-        const imgWidth = pageWidth - 20; // 10mm margin each side
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        // 2. Setup a container for the clone
+        const container = document.createElement('div');
+        container.style.position = 'absolute';
+        container.style.top = '0';
+        container.style.left = '0';
+        container.style.width = `${originalElement.offsetWidth}px`;
+        container.style.zIndex = '-9999'; // Behind everything
+        container.style.background = '#fff7ed'; // Match app background
 
-        // Header
-        pdf.setFontSize(18);
-        pdf.text(championship?.name || 'Campeonato', pageWidth / 2, 15, { align: 'center' });
-        pdf.setFontSize(12);
-        pdf.text('Lista de Inscritos', pageWidth / 2, 22, { align: 'center' });
+        container.appendChild(clone);
+        document.body.appendChild(container);
 
-        const headerHeight = 30;
-        const usableHeight = pageHeight - headerHeight - 10; // 10mm bottom margin
+        // 3. Wait for images/fonts in clone (small delay usually enough for clone)
+        await new Promise(resolve => setTimeout(resolve, 100));
 
-        // If content fits in one page
-        if (imgHeight <= usableHeight) {
-            pdf.addImage(imgData, 'PNG', 10, headerHeight, imgWidth, imgHeight);
-        } else {
-            // Multi-page export
+        try {
+            // 4. Capture the container
+            const canvas = await html2canvas(container, {
+                scale: 2,
+                useCORS: true,
+                allowTaint: true,
+                backgroundColor: '#fff7ed'
+            });
+
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const pageWidth = pdf.internal.pageSize.getWidth();
+            const pageHeight = pdf.internal.pageSize.getHeight();
+            const imgWidth = pageWidth - 20; // 10mm margin each side
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+            // Header
+            pdf.setFontSize(18);
+            pdf.text(championship?.name || 'Campeonato', pageWidth / 2, 15, { align: 'center' });
+            pdf.setFontSize(12);
+            pdf.text('Lista de Inscritos', pageWidth / 2, 22, { align: 'center' });
+
+            const headerHeight = 30;
+            const usableHeight = pageHeight - headerHeight - 10; // 10mm bottom margin (first page)
+
+            // Multi-page export logic
             let remainingHeight = imgHeight;
             let position = 0;
             let page = 1;
 
             while (remainingHeight > 0) {
+                // Determine slice height for this page
+                // For page 1 we use 'usableHeight' (less header). For page 2+ we have more space!
+                const currentUsableHeight = page === 1 ? usableHeight : (pageHeight - 20); // 10mm top/bottom margin for sub-pages
+
+                const sliceHeightMM = Math.min(remainingHeight, currentUsableHeight);
+
+                // Convert back to pixels for canvas slicing
                 const srcY = position * (canvas.height / imgHeight);
-                const srcHeight = Math.min(usableHeight, remainingHeight) * (canvas.height / imgHeight);
+                const srcHeightPX = sliceHeightMM * (canvas.height / imgHeight);
 
                 // Create a temporary canvas for the slice
                 const sliceCanvas = document.createElement('canvas');
                 sliceCanvas.width = canvas.width;
-                sliceCanvas.height = srcHeight;
+                sliceCanvas.height = srcHeightPX;
+
                 const ctx = sliceCanvas.getContext('2d');
 
                 if (ctx) {
                     ctx.drawImage(
                         canvas,
-                        0, srcY, canvas.width, srcHeight,
-                        0, 0, canvas.width, srcHeight
+                        0, srcY, canvas.width, srcHeightPX,
+                        0, 0, canvas.width, srcHeightPX
                     );
 
                     const sliceData = sliceCanvas.toDataURL('image/png');
-                    const sliceImgHeight = (srcHeight * imgWidth) / canvas.width;
 
                     if (page > 1) {
                         pdf.addPage();
+                        pdf.addImage(sliceData, 'PNG', 10, 10, imgWidth, sliceHeightMM); // 10mm top margin
+                    } else {
+                        pdf.addImage(sliceData, 'PNG', 10, headerHeight, imgWidth, sliceHeightMM);
                     }
-
-                    pdf.addImage(sliceData, 'PNG', 10, headerHeight, imgWidth, sliceImgHeight);
                 }
 
-                remainingHeight -= usableHeight;
-                position += usableHeight;
+                remainingHeight -= sliceHeightMM;
+                position += sliceHeightMM;
                 page++;
             }
-        }
 
-        pdf.save(`${championship?.name || 'inscritos'}.pdf`);
+            pdf.save(`${championship?.name || 'inscritos'}.pdf`);
+
+        } catch (error) {
+            console.error('PDF Export Error:', error);
+            alert('Erro ao gerar PDF');
+        } finally {
+            // 5. Cleanup
+            if (document.body.contains(container)) {
+                document.body.removeChild(container);
+            }
+        }
     };
 
     // WhatsApp Share
@@ -302,16 +412,32 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
         );
     }
 
+    // Show Group Draw Page if flag is set
+    if (showDrawPage) {
+        return (
+            <GroupDrawPage
+                currentUser={currentUser}
+                onBack={() => setShowDrawPage(false)}
+            />
+        );
+    }
+
     return (
         <div className="p-4 pb-24 space-y-6">
             {/* Header */}
-            <div className="bg-gradient-to-br from-saibro-600 to-saibro-500 p-6 rounded-3xl shadow-xl text-white relative overflow-hidden">
+            <div className={`p-6 rounded-3xl shadow-xl text-white relative overflow-hidden ${championship.registration_closed
+                ? 'bg-gradient-to-br from-stone-700 to-stone-600'
+                : 'bg-gradient-to-br from-saibro-600 to-saibro-500'
+                }`}>
                 <div className="absolute right-[-10px] top-[-10px] opacity-10 rotate-12">
                     <Trophy size={160} />
                 </div>
                 <div className="relative z-10">
-                    <span className="text-[10px] font-black uppercase tracking-widest bg-white/20 px-2 py-0.5 rounded-full">
-                        Inscrições Abertas
+                    <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${championship.registration_closed
+                        ? 'bg-red-500/30 text-red-100'
+                        : 'bg-white/20'
+                        }`}>
+                        {championship.registration_closed ? '🔒 Inscrições Encerradas' : '📝 Inscrições Abertas'}
                     </span>
                     <h1 className="text-2xl font-black mt-2">{championship.name}</h1>
                     <p className="text-saibro-100 text-sm mt-1">
@@ -320,110 +446,112 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
                 </div>
             </div>
 
-            {/* Registration Form */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-stone-100">
-                <h2 className="text-lg font-bold text-stone-800 flex items-center gap-2 mb-4">
-                    <UserPlus size={20} className="text-saibro-500" />
-                    Nova Inscrição
-                </h2>
+            {/* Registration Form - Only show if registrations are open */}
+            {championship.registration_open && !championship.registration_closed && (
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-stone-100">
+                    <h2 className="text-lg font-bold text-stone-800 flex items-center gap-2 mb-4">
+                        <UserPlus size={20} className="text-saibro-500" />
+                        Nova Inscrição
+                    </h2>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    {/* Participant Type */}
-                    <div className="flex gap-3">
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        {/* Participant Type */}
+                        <div className="flex gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setParticipantType('socio')}
+                                className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${participantType === 'socio'
+                                    ? 'bg-saibro-500 text-white shadow-lg'
+                                    : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                                    }`}
+                            >
+                                <Users size={16} className="inline mr-2" />
+                                Sócio
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setParticipantType('guest')}
+                                className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${participantType === 'guest'
+                                    ? 'bg-saibro-500 text-white shadow-lg'
+                                    : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                                    }`}
+                            >
+                                <UserPlus size={16} className="inline mr-2" />
+                                Convidado
+                            </button>
+                        </div>
+
+                        {/* Participant Selection */}
+                        {participantType === 'socio' ? (
+                            <div>
+                                <label className="block text-xs font-bold text-stone-500 uppercase mb-2">Selecionar Sócio</label>
+                                <select
+                                    value={selectedUserId}
+                                    onChange={(e) => setSelectedUserId(e.target.value)}
+                                    className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl text-sm"
+                                >
+                                    <option value="">Escolha um sócio...</option>
+                                    {profiles.map(p => (
+                                        <option key={p.id} value={p.id}>{p.name} {p.category ? `(${p.category})` : ''}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        ) : (
+                            <div>
+                                <label className="block text-xs font-bold text-stone-500 uppercase mb-2">Nome do Convidado</label>
+                                <input
+                                    type="text"
+                                    value={guestName}
+                                    onChange={(e) => setGuestName(e.target.value)}
+                                    placeholder="Digite o nome completo"
+                                    className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl text-sm"
+                                />
+                            </div>
+                        )}
+
+                        {/* Class & Shirt Size */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-xs font-bold text-stone-500 uppercase mb-2">Classe</label>
+                                <select
+                                    value={selectedClass}
+                                    onChange={(e) => setSelectedClass(e.target.value)}
+                                    className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl text-sm"
+                                >
+                                    {CLASSES.map(c => (
+                                        <option key={c} value={c}>{c}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-stone-500 uppercase mb-2">
+                                    <Shirt size={14} className="inline mr-1" />
+                                    Camisa
+                                </label>
+                                <select
+                                    value={shirtSize}
+                                    onChange={(e) => setShirtSize(e.target.value)}
+                                    className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl text-sm"
+                                >
+                                    {SHIRT_SIZES.map(s => (
+                                        <option key={s} value={s}>{s}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+
+                        {/* Submit */}
                         <button
-                            type="button"
-                            onClick={() => setParticipantType('socio')}
-                            className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${participantType === 'socio'
-                                ? 'bg-saibro-500 text-white shadow-lg'
-                                : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
-                                }`}
+                            type="submit"
+                            disabled={saving}
+                            className="w-full py-4 bg-saibro-600 text-white font-bold rounded-xl shadow-lg shadow-orange-100 hover:bg-saibro-700 disabled:opacity-50 flex items-center justify-center gap-2"
                         >
-                            <Users size={16} className="inline mr-2" />
-                            Sócio
+                            {saving ? <Loader2 className="animate-spin" size={20} /> : <Check size={20} />}
+                            Inscrever
                         </button>
-                        <button
-                            type="button"
-                            onClick={() => setParticipantType('guest')}
-                            className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${participantType === 'guest'
-                                ? 'bg-saibro-500 text-white shadow-lg'
-                                : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
-                                }`}
-                        >
-                            <UserPlus size={16} className="inline mr-2" />
-                            Convidado
-                        </button>
-                    </div>
-
-                    {/* Participant Selection */}
-                    {participantType === 'socio' ? (
-                        <div>
-                            <label className="block text-xs font-bold text-stone-500 uppercase mb-2">Selecionar Sócio</label>
-                            <select
-                                value={selectedUserId}
-                                onChange={(e) => setSelectedUserId(e.target.value)}
-                                className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl text-sm"
-                            >
-                                <option value="">Escolha um sócio...</option>
-                                {profiles.map(p => (
-                                    <option key={p.id} value={p.id}>{p.name} {p.category ? `(${p.category})` : ''}</option>
-                                ))}
-                            </select>
-                        </div>
-                    ) : (
-                        <div>
-                            <label className="block text-xs font-bold text-stone-500 uppercase mb-2">Nome do Convidado</label>
-                            <input
-                                type="text"
-                                value={guestName}
-                                onChange={(e) => setGuestName(e.target.value)}
-                                placeholder="Digite o nome completo"
-                                className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl text-sm"
-                            />
-                        </div>
-                    )}
-
-                    {/* Class & Shirt Size */}
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-xs font-bold text-stone-500 uppercase mb-2">Classe</label>
-                            <select
-                                value={selectedClass}
-                                onChange={(e) => setSelectedClass(e.target.value)}
-                                className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl text-sm"
-                            >
-                                {CLASSES.map(c => (
-                                    <option key={c} value={c}>{c}</option>
-                                ))}
-                            </select>
-                        </div>
-                        <div>
-                            <label className="block text-xs font-bold text-stone-500 uppercase mb-2">
-                                <Shirt size={14} className="inline mr-1" />
-                                Camisa
-                            </label>
-                            <select
-                                value={shirtSize}
-                                onChange={(e) => setShirtSize(e.target.value)}
-                                className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl text-sm"
-                            >
-                                {SHIRT_SIZES.map(s => (
-                                    <option key={s} value={s}>{s}</option>
-                                ))}
-                            </select>
-                        </div>
-                    </div>
-
-                    {/* Submit */}
-                    <button
-                        type="submit"
-                        disabled={saving}
-                        className="w-full py-4 bg-saibro-600 text-white font-bold rounded-xl shadow-lg shadow-orange-100 hover:bg-saibro-700 disabled:opacity-50 flex items-center justify-center gap-2"
-                    >
-                        {saving ? <Loader2 className="animate-spin" size={20} /> : <Check size={20} />}
-                        Inscrever
-                    </button>
-                </form>
-            </div>
+                    </form>
+                </div>
+            )}
 
             {/* Export Buttons */}
             <div className="flex gap-3">
@@ -442,6 +570,70 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
                     WhatsApp
                 </button>
             </div>
+
+            {/* Admin Action Buttons */}
+            <div className="space-y-3">
+                {/* Close Registrations Button - Only show if registrations are open */}
+                {championship.registration_open && !championship.registration_closed && (
+                    <button
+                        onClick={() => setShowCloseConfirm(true)}
+                        className="w-full py-4 bg-gradient-to-r from-red-500 to-red-600 text-white font-bold rounded-xl shadow-lg shadow-red-100 hover:shadow-red-200 flex items-center justify-center gap-3 transition-all hover:scale-[1.01]"
+                    >
+                        <Lock size={20} />
+                        Encerrar Inscrições
+                    </button>
+                )}
+
+                {/* Draw Groups Button - Only show if registrations are closed */}
+                {championship.registration_closed && (
+                    <button
+                        onClick={() => setShowDrawPage(true)}
+                        className="w-full py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold rounded-xl shadow-lg shadow-orange-100 hover:shadow-orange-200 flex items-center justify-center gap-3 transition-all hover:scale-[1.01]"
+                    >
+                        <Shuffle size={20} />
+                        Sorteador de Grupos
+                    </button>
+                )}
+            </div>
+
+            {/* Confirmation Modal for Closing Registrations */}
+            {showCloseConfirm && (
+                <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-6">
+                    <div className="bg-white rounded-3xl max-w-sm w-full overflow-hidden shadow-2xl animate-in slide-in-from-bottom-10 fade-in duration-300">
+                        <div className="p-6 text-center">
+                            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-red-100 flex items-center justify-center">
+                                <AlertTriangle className="text-red-500" size={32} />
+                            </div>
+                            <h3 className="text-xl font-black text-stone-800 mb-2">
+                                Encerrar Inscrições?
+                            </h3>
+                            <p className="text-stone-500 text-sm mb-6">
+                                Esta ação não pode ser desfeita. Após encerrar, você poderá sortear os grupos do campeonato.
+                            </p>
+                            <div className="space-y-3">
+                                <button
+                                    onClick={handleCloseRegistrations}
+                                    disabled={closingRegistration}
+                                    className="w-full py-3 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 disabled:opacity-50 flex items-center justify-center gap-2"
+                                >
+                                    {closingRegistration ? (
+                                        <Loader2 className="animate-spin" size={20} />
+                                    ) : (
+                                        <Lock size={20} />
+                                    )}
+                                    Sim, Encerrar Inscrições
+                                </button>
+                                <button
+                                    onClick={() => setShowCloseConfirm(false)}
+                                    className="w-full py-3 bg-stone-100 text-stone-600 font-bold rounded-xl hover:bg-stone-200"
+                                >
+                                    Cancelar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Registrations Table */}
             <div ref={tableRef} className="space-y-4">
