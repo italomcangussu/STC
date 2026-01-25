@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { User, Professor, NonSocioStudent, Reservation, PlanType } from '../types';
+import { User, Professor, NonSocioStudent, Reservation, PlanType, Court } from '../types';
 import { Calendar, Users, Plus, Edit, CheckCircle, XCircle, Clock, MapPin, DollarSign, Wallet, Loader2, AlertCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
@@ -55,6 +55,10 @@ const StudentCard: React.FC<{ student: NonSocioStudent, onEdit: (s: NonSocioStud
         </div>
     );
 };
+
+interface ProfessorProfileProps {
+    currentUser: User;
+}
 
 export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser }) => {
     const [activeTab, setActiveTab] = useState<'classes' | 'students'>('classes');
@@ -286,7 +290,7 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
     return (
         <div className="p-4 pb-24 space-y-6">
             {/* --- HEADER --- */}
-            <div className="bg-gradient-to-br from-saibro-600 to-saibro-800 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
+            <div className="bg-linear-to-br from-saibro-600 to-saibro-800 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10" />
                 <div className="flex items-center gap-4 relative z-10">
                     <img src={currentUser.avatar} className="w-16 h-16 rounded-full border-2 border-white/50 bg-stone-200 object-cover" alt="" />
@@ -448,7 +452,7 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
             )}
             {/* --- MODAL: STUDENT FORM --- */}
             {showStudentModal && (
-                <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4 backdrop-blur-sm">
+                <div className="fixed inset-0 bg-black/60 z-60 flex items-center justify-center p-4 backdrop-blur-sm">
                     <div className="bg-white rounded-2xl p-6 w-full max-w-sm space-y-4 animate-in zoom-in duration-200">
                         <h3 className="text-xl font-bold text-saibro-800">{editingStudent ? 'Editar Aluno' : 'Novo Aluno'}</h3>
 
@@ -479,7 +483,7 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
 
                             {studentForm.plan === 'Card Mensal' && (
                                 <div className="animate-in fade-in slide-in-from-top-2 bg-purple-50 p-3 rounded-lg border border-purple-100">
-                                    <label className="block text-xs font-bold text-purple-700 uppercase mb-1 flex items-center gap-1">
+                                    <label className="text-xs font-bold text-purple-700 uppercase mb-1 flex items-center gap-1">
                                         <DollarSign size={12} /> Pagamento Necessário
                                     </label>
                                     <p className="text-xs text-purple-800">

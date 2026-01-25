@@ -142,7 +142,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
                 md:relative md:translate-x-0
             `}>
                 <div className="p-6 flex justify-between items-center">
-                    <div className="flex items-center gap-2 hidden md:flex">
+                    <div className="hidden md:flex items-center gap-2">
                         <img src="https://smztsayzldjmkzmufqcz.supabase.co/storage/v1/object/public/logoapp/SOBRAL.zip%20-%201.png" className="w-10 h-10 object-contain" alt="Logo" />
                         <h1 className="text-2xl font-bold text-saibro-700">STC Play</h1>
                     </div>

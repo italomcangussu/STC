@@ -21,6 +21,7 @@ import { supabase } from './lib/supabase';
 
 import { OnboardingModal } from './components/OnboardingModal';
 import { ChallengeNotificationPopup } from './components/ChallengeNotificationPopup';
+import { PublicChampionshipPage } from './components/PublicChampionshipPage';
 
 interface Announcement {
   id: string;
@@ -79,7 +80,7 @@ const AnnouncementPopup: React.FC<{ user: User, onClose: () => void }> = ({ user
   if (loading || !announcement) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm flex items-center justify-center p-6">
+    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-6">
       <div className="bg-white rounded-3xl max-w-sm w-full overflow-hidden shadow-2xl animate-in slide-in-from-bottom-10 fade-in duration-300">
         {announcement.imageUrl ? (
           <img src={announcement.imageUrl} alt="" className="w-full h-40 object-cover" />
@@ -115,6 +116,23 @@ const AppContent: React.FC = () => {
     setView('atletas');
   };
 
+  /* Routing for Public Championship Pages */
+  // Simple router based on pathname for Public Slug
+  const [publicSlug, setPublicSlug] = useState<string | null>(null);
+
+  useEffect(() => {
+    const path = window.location.pathname;
+    if (path !== '/' && path !== '' && !path.includes('.')) {
+      // Assume it is a slug
+      const slug = path.substring(1);
+      setPublicSlug(slug);
+    }
+  }, []);
+
+  if (publicSlug) {
+    return <PublicChampionshipPage slug={publicSlug} />;
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-saibro-50">
@@ -128,7 +146,6 @@ const AppContent: React.FC = () => {
   }
 
   // Check if onboarding is needed (name is missing or category is default/missing)
-  // Assuming 'name' must be filled. Phone is filled by auth usually.
   const needsOnboarding = !currentUser.name || currentUser.name.trim() === '';
 
   return (

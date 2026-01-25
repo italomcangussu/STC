@@ -138,7 +138,7 @@ const AthleteProfile: React.FC<AthleteProfileProps> = ({ userId, currentUser, us
     return (
         <div className="bg-white min-h-[calc(100vh-100px)] animate-in slide-in-from-right duration-300">
             {/* --- HEADER --- */}
-            <div className="relative bg-saibro-600 text-white p-6 pb-12 rounded-b-[2rem] shadow-xl">
+            <div className="relative bg-saibro-600 text-white p-6 pb-12 rounded-b-4xl shadow-xl">
                 <button onClick={onBack} className="absolute top-4 left-4 p-2 bg-white/20 rounded-full hover:bg-white/30 transition-colors">
                     <ArrowLeft size={20} />
                 </button>

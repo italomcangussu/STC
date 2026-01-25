@@ -56,10 +56,10 @@ export const PushPermissionPrompt: React.FC = () => {
     if (!isVisible) return null;
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-100 flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
             <div className="bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-10 zoom-in-95 duration-300">
                 {/* Visual Header */}
-                <div className="bg-gradient-to-br from-saibro-500 to-saibro-600 p-6 text-center">
+                <div className="bg-linear-to-br from-saibro-500 to-saibro-600 p-6 text-center">
                     <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-md border border-white/30 shadow-inner">
                         <Bell className="text-white" size={32} />
                     </div>

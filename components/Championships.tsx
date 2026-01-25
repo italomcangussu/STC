@@ -1,11 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Trophy, Calendar, History, ListOrdered, GitMerge, ChevronDown, Loader2, Download, Share2, Users, Shirt } from 'lucide-react';
-import { Championship, Match, User } from '../types';
-import { getMatchWinner } from '../utils';
+import { Trophy, Calendar, History, ListOrdered, GitMerge, ChevronDown, Loader2, Download, Share2, Users, Shirt, ChevronLeft, ChevronRight, Clock, MapPin, Info, Save } from 'lucide-react';
+import { Championship, Match, User, ChampionshipRound } from '../types';
+import { getMatchWinner, formatDateBr } from '../utils';
 import { supabase } from '../lib/supabase';
 import { LiveScoreboard } from './LiveScoreboard';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import { GroupStandingsCard } from './GroupStandingsCard';
+
+import { calculateGroupStandings } from '../lib/championshipUtils';
+import { MatchScheduleModal } from './MatchScheduleModal';
 
 // Interface for championship with participants
 interface ChampionshipWithParticipants extends Omit<Championship, 'participantIds'> {
@@ -41,19 +45,45 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
     const tableRef = useRef<HTMLDivElement>(null);
 
     const [selectedChampId, setSelectedChampId] = useState<string>('');
-    const [activeTab, setActiveTab] = useState<'jogos' | 'classificacao' | 'chaveamento' | 'proximos' | 'inscritos'>('proximos');
+    const [selectedCategory, setSelectedCategory] = useState<string>('Todas');
+    const [activeTab, setActiveTab] = useState<'partidas' | 'classificacao' | 'chaveamento' | 'inscritos'>('partidas');
     const [editingMatch, setEditingMatch] = useState<Match | null>(null);
+    const [schedulingMatch, setSchedulingMatch] = useState<Match | null>(null);
+    const [showChampSelector, setShowChampSelector] = useState(false); // Mobile friendly selector
+    const selectorRef = useRef<HTMLDivElement>(null);
+    const [courts, setCourts] = useState<any[]>([]);
+
+    // Close selector when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (selectorRef.current && !selectorRef.current.contains(event.target as Node)) {
+                setShowChampSelector(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    // Round navigation
+    const [rounds, setRounds] = useState<ChampionshipRound[]>([]);
+    const [selectedRoundIndex, setSelectedRoundIndex] = useState(0);
+
+    // Group matches by Round
+    const matchesByRound = rounds.reduce((acc, round) => {
+        acc[round.id] = matches.filter(m => m.round_id === round.id);
+        return acc;
+    }, {} as Record<string, Match[]>);
 
     // Fetch data from Supabase
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
 
-            // 1. Fetch championships (ongoing first, then others)
+            // 1. Fetch championships
             const { data: champsData, error: champsError } = await supabase
                 .from('championships')
                 .select('*')
-                .order('status', { ascending: true }); // ongoing comes before finished alphabetically
+                .order('status', { ascending: true });
 
             if (champsError) {
                 console.error('Error fetching championships:', champsError);
@@ -61,62 +91,39 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                 return;
             }
 
-            // 2. Fetch participants for each championship
-            const champsWithParticipants: ChampionshipWithParticipants[] = [];
-            for (const champ of champsData || []) {
-                const { data: participants } = await supabase
-                    .from('championship_participants')
-                    .select('user_id')
-                    .eq('championship_id', champ.id);
+            const initialChamps = champsData?.map(c => ({
+                ...c,
+                startDate: c.start_date,
+                endDate: c.end_date,
+                ptsVictory: c.pts_victory,
+                ptsSet: c.pts_set,
+                ptsGame: c.pts_game,
+                participantIds: [],
+                registration_open: c.registration_open
+            })) || [];
 
-                champsWithParticipants.push({
-                    id: champ.id,
-                    name: champ.name,
-                    status: champ.status || 'draft',
-                    format: champ.format,
-                    startDate: champ.start_date,
-                    endDate: champ.end_date,
-                    ptsVictory: champ.pts_victory,
-                    ptsSet: champ.pts_set,
-                    ptsGame: champ.pts_game,
-                    participantIds: (participants || []).map(p => p.user_id),
-                    registration_open: champ.registration_open
-                });
-            }
+            setChampionships(initialChamps);
 
-            setChampionships(champsWithParticipants);
-
-            // Check for championship with registration open first
-            const regOpen = champsWithParticipants.find(c => c.registration_open === true);
+            // Auto-select active or registration open
+            const regOpen = initialChamps.find(c => c.registration_open === true);
             if (regOpen) {
                 setRegistrationChamp(regOpen);
-                setSelectedChampId(regOpen.id);
-                setActiveTab('inscritos');
-
-                // Fetch registrations
-                const { data: regsData } = await supabase
-                    .from('championship_registrations')
-                    .select('*, user:profiles!user_id(name, avatar_url)')
-                    .eq('championship_id', regOpen.id)
-                    .order('class', { ascending: true });
-
-                setRegistrations(regsData || []);
+                if (!selectedChampId) setSelectedChampId(regOpen.id);
             } else {
-                // Select first ongoing championship, or first available
-                const ongoing = champsWithParticipants.filter(c => c.status === 'ongoing');
-                if (ongoing.length > 0) {
-                    setSelectedChampId(ongoing[0].id);
-                } else if (champsWithParticipants.length > 0) {
-                    setSelectedChampId(champsWithParticipants[0].id);
-                }
+                const ongoing = initialChamps.find(c => c.status === 'ongoing');
+                if (ongoing && !selectedChampId) setSelectedChampId(ongoing.id);
+                else if (initialChamps.length > 0 && !selectedChampId) setSelectedChampId(initialChamps[0].id);
             }
 
-            // 3. Fetch all profiles for player lookup
+            // 2. Fetch profiles
             const { data: profilesData } = await supabase
                 .from('profiles')
                 .select('id, name, avatar_url, category, role')
                 .in('role', ['socio', 'admin'])
                 .eq('is_active', true);
+
+            const { data: courtsData } = await supabase.from('courts').select('*');
+            setCourts(courtsData || []);
 
             setProfiles((profilesData || []).map(p => ({
                 id: p.id,
@@ -168,11 +175,26 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
         };
     }, [registrationChamp?.id]);
 
-    // Fetch matches when championship changes
+    // Fetch matches and rounds when championship changes
     useEffect(() => {
         if (!selectedChampId) return;
 
-        const fetchMatches = async () => {
+        const fetchData = async () => {
+            // 1. Fetch Rounds
+            const { data: roundsData } = await supabase
+                .from('championship_rounds')
+                .select('*')
+                .eq('championship_id', selectedChampId)
+                .order('round_number', { ascending: true });
+
+            const mappedRounds = roundsData || [];
+            setRounds(mappedRounds);
+
+            // Set current round (active or first)
+            const activeIdx = mappedRounds.findIndex(r => r.status === 'active');
+            setSelectedRoundIndex(activeIdx !== -1 ? activeIdx : 0);
+
+            // 2. Fetch Matches
             const { data: matchesData, error: matchesError } = await supabase
                 .from('matches')
                 .select('*')
@@ -190,16 +212,44 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                 phase: m.phase,
                 playerAId: m.player_a_id,
                 playerBId: m.player_b_id,
+                registration_a_id: m.registration_a_id,
+                registration_b_id: m.registration_b_id,
                 scoreA: m.score_a || [],
                 scoreB: m.score_b || [],
                 winnerId: m.winner_id,
                 date: m.date,
                 scheduledTime: m.scheduled_time,
-                status: m.status || 'pending'
+                scheduledDate: m.scheduled_date,
+                status: m.status || 'pending',
+                championship_group_id: m.championship_group_id,
+                round_id: m.round_id
             })));
+
+            // 3. Fetch registrations for this champ (for names)
+            const { data: regsData } = await supabase
+                .from('championship_registrations')
+                .select('*, user:profiles!user_id(name, avatar_url)')
+                .eq('championship_id', selectedChampId);
+            setRegistrations(regsData || []);
         };
 
-        fetchMatches();
+        fetchData();
+    }, [selectedChampId]);
+
+    // Fetch Groups if needed (for Group Stage)
+    const [groupsDetail, setGroupsDetail] = useState<any[]>([]);
+
+    useEffect(() => {
+        if (!selectedChampId) return;
+
+        const fetchGroups = async () => {
+            const { data: grps } = await supabase
+                .from('championship_groups')
+                .select(`*, members:championship_group_members(*)`)
+                .eq('championship_id', selectedChampId);
+            setGroupsDetail(grps || []);
+        };
+        fetchGroups();
     }, [selectedChampId]);
 
     const ongoingChamps = championships.filter(c => c.status === 'ongoing');
@@ -292,6 +342,34 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
             if (b.sets !== a.sets) return b.sets - a.sets;
             return b.games - a.games;
         });
+    };
+
+    const handleSchedule = async (date: string, time: string, courtId: string) => {
+        if (!schedulingMatch) return;
+
+        const { error } = await supabase
+            .from('matches')
+            .update({
+                scheduled_date: date,
+                scheduled_time: time,
+                court_id: courtId,
+                status: 'pending' // Ensure status is pending
+            })
+            .eq('id', schedulingMatch.id);
+
+        if (error) {
+            alert('Erro ao agendar: ' + error.message);
+            throw error;
+        }
+
+        // Update local state
+        setMatches(prev => prev.map(m =>
+            m.id === schedulingMatch.id
+                ? { ...m, scheduledDate: date, scheduledTime: time, status: 'pending' } // Optimistic update
+                : m
+        ));
+
+        setSchedulingMatch(null);
     };
 
     const handleSaveResult = async (matchId: string, scoreA: number[], scoreB: number[]) => {
@@ -452,7 +530,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
         return (
             <div className="p-4 space-y-6 pb-24">
                 {/* Header */}
-                <div className="bg-gradient-to-br from-saibro-600 to-saibro-500 p-6 rounded-3xl shadow-xl text-white relative overflow-hidden">
+                <div className="bg-linear-to-br from-saibro-600 to-saibro-500 p-6 rounded-3xl shadow-xl text-white relative overflow-hidden">
                     <div className="absolute right-[-10px] top-[-10px] opacity-10 rotate-12">
                         <Trophy size={160} />
                     </div>
@@ -538,7 +616,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
     return (
         <div className="p-4 space-y-6 pb-24">
             {/* 1. HEADER PREMIUM */}
-            <div className="bg-gradient-to-br from-saibro-600 to-saibro-500 p-6 rounded-3xl shadow-xl text-white relative overflow-hidden">
+            <div className="bg-linear-to-br from-saibro-600 to-saibro-500 p-6 rounded-3xl shadow-xl text-white relative overflow-hidden">
                 {/* Decorative Trophy Icon */}
                 <div className="absolute right-[-10px] top-[-10px] opacity-10 rotate-12">
                     <Trophy size={160} />
@@ -550,21 +628,33 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                             Em andamento
                         </span>
                         {ongoingChamps.length > 1 && (
-                            <div className="relative group">
-                                <button className="flex items-center gap-1 text-[10px] font-bold bg-stone-900/20 px-2 py-0.5 rounded-full hover:bg-stone-900/40 transition-all">
-                                    Trocar <ChevronDown size={12} />
+                            <div className="relative" ref={selectorRef}>
+                                <button
+                                    onClick={() => setShowChampSelector(!showChampSelector)}
+                                    className="flex items-center gap-1 text-[10px] font-bold bg-stone-900/20 px-2 py-0.5 rounded-full hover:bg-stone-900/40 transition-all"
+                                >
+                                    Trocar <ChevronDown size={12} className={`transition-transform duration-300 ${showChampSelector ? 'rotate-180' : ''}`} />
                                 </button>
-                                <div className="absolute top-full left-0 mt-1 w-48 bg-white rounded-xl shadow-xl border border-stone-100 hidden group-hover:block transition-all z-50">
-                                    {ongoingChamps.map(c => (
-                                        <button
-                                            key={c.id}
-                                            onClick={() => setSelectedChampId(c.id)}
-                                            className="w-full text-left px-4 py-3 text-xs font-bold text-stone-700 hover:bg-saibro-50 first:rounded-t-xl last:rounded-b-xl transition-colors"
-                                        >
-                                            {c.name}
-                                        </button>
-                                    ))}
-                                </div>
+
+                                {showChampSelector && (
+                                    <div className="absolute top-full left-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-stone-100 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                                        <div className="py-1">
+                                            {ongoingChamps.map(c => (
+                                                <button
+                                                    key={c.id}
+                                                    onClick={() => {
+                                                        setSelectedChampId(c.id);
+                                                        setShowChampSelector(false);
+                                                    }}
+                                                    className={`w-full text-left px-4 py-3 text-xs font-bold transition-colors flex items-center justify-between ${selectedChampId === c.id ? 'bg-saibro-50 text-saibro-700' : 'text-stone-700 hover:bg-stone-50'}`}
+                                                >
+                                                    {c.name}
+                                                    {selectedChampId === c.id && <div className="w-1.5 h-1.5 rounded-full bg-saibro-500" />}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>
@@ -572,37 +662,55 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                     <h2 className="text-2xl font-black italic uppercase tracking-tight ">{selectedChamp.name}</h2>
                     <p className="text-saibro-50 text-xs font-medium flex items-center gap-1.5 mt-2 opacity-90">
                         <Calendar size={14} />
-                        {selectedChamp.endDate ? `Finais em ${new Date(selectedChamp.endDate).toLocaleDateString('pt-BR')}` : 'Finais em breve'}
+                        {selectedChamp.endDate ? `Finais em ${formatDateBr(selectedChamp.endDate)}` : 'Finais em breve'}
                     </p>
                 </div>
             </div>
 
+            {/* 1.5 SCHEDULING DASHBOARD (Static Top) */}
+            <div className="bg-white rounded-3xl p-5 shadow-sm border border-stone-100 flex items-start gap-4 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-saibro-500/5 rounded-full -mr-16 -mt-16" />
+                <div className="bg-saibro-100 p-3 rounded-2xl text-saibro-600">
+                    <Clock size={24} />
+                </div>
+                <div className="flex-1">
+                    <h3 className="text-sm font-black text-stone-800 uppercase tracking-tighter">Painel de Agendamento</h3>
+                    <p className="text-xs text-stone-500 mt-1 leading-relaxed">
+                        Os jogos devem ser agendados via WhatsApp do clube.
+                        Procure o seu adversário e reserve uma quadra disponível no período da rodada.
+                    </p>
+                    <div className="flex flex-wrap gap-2 mt-3">
+                        <span className="text-[10px] font-bold bg-stone-100 text-stone-600 px-2 py-1 rounded-lg flex items-center gap-1">
+                            <MapPin size={10} /> 1-3 Classe: Livre
+                        </span>
+                        <span className="text-[10px] font-bold bg-saibro-50 text-saibro-600 px-2 py-1 rounded-lg flex items-center gap-1">
+                            <Info size={10} /> 4-5 Classe: Saibro
+                        </span>
+                        <span className="text-[10px] font-bold bg-stone-900 text-white px-2 py-1 rounded-lg flex items-center gap-1">
+                            <Info size={10} /> 6 Classe: Rápida
+                        </span>
+                    </div>
+                </div>
+            </div>
+
             {/* 2. TABS */}
-            <div className="flex bg-white p-1 rounded-2xl shadow-sm border border-stone-100 overflow-x-auto scrollbar-hide">
+            <div className="flex bg-stone-100 p-1.5 rounded-2xl shadow-inner overflow-x-auto scrollbar-hide">
                 <button
-                    onClick={() => setActiveTab('proximos')}
-                    className={`flex-1 min-w-[100px] flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-bold transition-all ${activeTab === 'proximos' ? 'bg-saibro-500 text-white shadow-md' : 'text-stone-400 hover:text-stone-600'}`}
+                    onClick={() => setActiveTab('partidas')}
+                    className={`flex-1 min-w-[100px] flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-all ${activeTab === 'partidas' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}
                 >
-                    <Calendar size={16} /> Próximos
+                    <Trophy size={16} /> Partidas
                 </button>
                 <button
-                    onClick={() => setActiveTab('jogos')}
-                    className={`flex-1 min-w-[100px] flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-bold transition-all ${activeTab === 'jogos' ? 'bg-saibro-500 text-white shadow-md' : 'text-stone-400 hover:text-stone-600'}`}
+                    onClick={() => setActiveTab('classificacao')}
+                    className={`flex-1 min-w-[100px] flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-all ${activeTab === 'classificacao' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}
                 >
-                    <History size={16} /> Últimos Jogos
+                    <ListOrdered size={16} /> Classificação
                 </button>
-                {selectedChamp.format === 'pontos-corridos' && (
-                    <button
-                        onClick={() => setActiveTab('classificacao')}
-                        className={`flex-1 min-w-[100px] flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-bold transition-all ${activeTab === 'classificacao' ? 'bg-saibro-500 text-white shadow-md' : 'text-stone-400 hover:text-stone-600'}`}
-                    >
-                        <ListOrdered size={16} /> Classificação
-                    </button>
-                )}
                 {selectedChamp.format === 'mata-mata' && (
                     <button
                         onClick={() => setActiveTab('chaveamento')}
-                        className={`flex-1 min-w-[100px] flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-bold transition-all ${activeTab === 'chaveamento' ? 'bg-saibro-500 text-white shadow-md' : 'text-stone-400 hover:text-stone-600'}`}
+                        className={`flex-1 min-w-[100px] flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-all ${activeTab === 'chaveamento' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}
                     >
                         <GitMerge size={16} /> Chaveamento
                     </button>
@@ -611,159 +719,126 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
 
             {/* 3. TAB CONTENT */}
             <div className="space-y-4 animate-in fade-in duration-500">
-                {activeTab === 'proximos' && (() => {
-                    const today = new Date().toISOString().split('T')[0];
-                    const pendingMatches = matches.filter(m => m.status === 'pending' || m.status === 'waiting_opponents');
-                    const todayMatches = pendingMatches.filter(m => m.date === today);
-                    const futureMatches = pendingMatches.filter(m => m.date !== today);
+                {activeTab === 'partidas' && (() => {
+                    const currentRound = rounds[selectedRoundIndex];
+                    if (rounds.length === 0) return (
+                        <div className="text-center py-10 bg-white rounded-3xl border border-dashed border-stone-200">
+                            <p className="text-stone-400">Nenhuma rodada gerada ainda.</p>
+                        </div>
+                    );
 
-                    const handleScoreSaved = async () => {
-                        // Refresh matches from Supabase
-                        const { data: matchesData } = await supabase
-                            .from('matches')
-                            .select('*')
-                            .eq('championship_id', selectedChampId);
+                    if (!currentRound) return null;
 
-                        if (matchesData) {
-                            setMatches(matchesData.map(m => ({
-                                id: m.id,
-                                championshipId: m.championship_id,
-                                type: m.type || 'Campeonato',
-                                phase: m.phase,
-                                playerAId: m.player_a_id,
-                                playerBId: m.player_b_id,
-                                scoreA: m.score_a || [],
-                                scoreB: m.score_b || [],
-                                winnerId: m.winner_id,
-                                date: m.date,
-                                scheduledTime: m.scheduled_time,
-                                status: m.status || 'pending'
-                            })));
-                        }
-                    };
+                    // Get matches for this round from the grouped object or filter directly
+                    const roundMatches = matchesByRound[currentRound.id] || [];
 
                     return (
-                        <div className="space-y-4">
-                            {/* Today's Matches with Live Scoreboard */}
-                            {todayMatches.length > 0 && (
-                                <div className="space-y-3">
-                                    <h3 className="text-xs font-black text-saibro-600 uppercase tracking-widest flex items-center gap-2">
-                                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                                        Jogos de Hoje
-                                    </h3>
-                                    {todayMatches.map(match => (
-                                        <LiveScoreboard
-                                            key={match.id}
-                                            match={match}
-                                            profiles={profiles}
-                                            currentUser={currentUser}
-                                            onScoreSaved={handleScoreSaved}
-                                        />
-                                    ))}
+                        <div className="space-y-6">
+                            {/* Round Navigator */}
+                            <div className="flex items-center justify-between bg-white p-4 rounded-[2.5rem] border border-stone-100 shadow-sm sticky top-2 z-20">
+                                <button
+                                    onClick={() => setSelectedRoundIndex(prev => Math.max(0, prev - 1))}
+                                    className={`p-2 rounded-xl transition-colors ${selectedRoundIndex > 0 ? 'text-saibro-600 bg-saibro-50' : 'text-stone-200 cursor-not-allowed'}`}
+                                    disabled={selectedRoundIndex === 0}
+                                >
+                                    <ChevronLeft size={24} />
+                                </button>
+                                <div className="text-center">
+                                    <h3 className="font-black text-stone-800 text-sm">{currentRound.name}</h3>
+                                    <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mt-0.5">
+                                        {formatDateBr(currentRound.start_date)} - {formatDateBr(currentRound.end_date)}
+                                    </p>
                                 </div>
-                            )}
+                                <button
+                                    onClick={() => setSelectedRoundIndex(prev => Math.min(rounds.length - 1, prev + 1))}
+                                    className={`p-2 rounded-xl transition-colors ${selectedRoundIndex < rounds.length - 1 ? 'text-saibro-600 bg-saibro-50' : 'text-stone-200 cursor-not-allowed'}`}
+                                    disabled={selectedRoundIndex === rounds.length - 1}
+                                >
+                                    <ChevronRight size={24} />
+                                </button>
+                            </div>
 
-                            {/* Future Matches */}
-                            {futureMatches.length > 0 && (
-                                <div className="space-y-3">
-                                    {todayMatches.length > 0 && (
-                                        <h3 className="text-xs font-black text-stone-400 uppercase tracking-widest mt-6">
-                                            Próximos Jogos
-                                        </h3>
-                                    )}
-                                    {futureMatches.map(match => (
-                                        <MatchCard key={match.id} match={match} profiles={profiles} onEdit={() => currentUser.role === 'admin' && setEditingMatch(match)} isAdmin={currentUser.role === 'admin'} />
-                                    ))}
+                            {/* Category Filter */}
+                            <div className="flex bg-white rounded-2xl p-1.5 shadow-sm border border-stone-100 overflow-x-auto scrollbar-hide">
+                                <button
+                                    onClick={() => setSelectedCategory('Todas')}
+                                    className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${selectedCategory === 'Todas' ? 'bg-stone-900 text-white shadow-md' : 'text-stone-500 hover:bg-stone-50'}`}
+                                >
+                                    Todas
+                                </button>
+                                {CLASSES.filter(cls => registrations.some(r => r.class === cls)).map(cls => (
+                                    <button
+                                        key={cls}
+                                        onClick={() => setSelectedCategory(cls)}
+                                        className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${selectedCategory === cls ? 'bg-saibro-600 text-white shadow-md' : 'text-stone-500 hover:bg-stone-50'}`}
+                                    >
+                                        {cls}
+                                    </button>
+                                ))}
+                            </div>
+
+                            {/* Match Lists grouped by category */}
+                            {roundMatches.length > 0 ? (
+                                <div className="space-y-4">
+                                    {roundMatches
+                                        .filter(match => {
+                                            if (selectedCategory === 'Todas') return true;
+                                            // Find registration to check class
+                                            const regA = registrations.find(r => r.id === match.registration_a_id);
+                                            return regA?.class === selectedCategory;
+                                        })
+                                        .map(match => (
+                                            <MatchCard
+                                                key={match.id}
+                                                match={match}
+                                                profiles={profiles}
+                                                registrations={registrations}
+                                                onEdit={() => currentUser.role === 'admin' && setEditingMatch(match)}
+                                                onSchedule={() => setSchedulingMatch(match)}
+                                                isAdmin={currentUser.role === 'admin'}
+                                            />
+                                        ))}
                                 </div>
-                            )}
-
-                            {/* Empty state */}
-                            {pendingMatches.length === 0 && (
-                                <div className="py-20 text-center space-y-4">
-                                    <div className="inline-block p-4 bg-stone-50 rounded-full text-stone-300">
-                                        <Calendar size={48} />
-                                    </div>
-                                    <p className="text-stone-400 font-medium italic">Não há jogos agendados no momento.</p>
+                            ) : (
+                                <div className="text-center py-10">
+                                    <Trophy className="mx-auto text-stone-200 mb-2" size={48} />
+                                    <p className="text-stone-400 text-sm font-medium italic">
+                                        Partidas ainda não geradas para esta rodada.
+                                    </p>
                                 </div>
                             )}
                         </div>
                     );
                 })()}
 
-                {activeTab === 'jogos' && (
-                    <div className="space-y-3">
-                        {matches.filter(m => m.status === 'finished').length === 0 ? (
-                            <div className="py-20 text-center space-y-4">
-                                <div className="inline-block p-4 bg-stone-50 rounded-full text-stone-300">
-                                    <History size={48} />
-                                </div>
-                                <p className="text-stone-400 font-medium italic">Ainda não há jogos finalizados neste campeonato.</p>
-                            </div>
-                        ) : (
-                            matches.filter(m => m.status === 'finished').sort((a, b) => (b.date || '').localeCompare(a.date || '')).map(match => (
-                                <MatchCard key={match.id} match={match} profiles={profiles} onEdit={() => currentUser.role === 'admin' && setEditingMatch(match)} isAdmin={currentUser.role === 'admin'} />
-                            ))
-                        )}
-                    </div>
-                )}
-
                 {activeTab === 'classificacao' && (
                     <div className="space-y-6">
-                        {selectedChamp.format === 'grupo-mata-mata' && selectedChamp.groups ? (
-                            selectedChamp.groups.map(group => {
-                                const groupStats = standings.filter(s => s.groupName === group.name);
-                                return (
-                                    <div key={group.name} className="bg-white rounded-3xl shadow-sm border border-stone-100 overflow-hidden">
-                                        <div className="bg-saibro-50 px-4 py-2 border-b border-saibro-100">
-                                            <h4 className="text-saibro-800 font-bold text-sm uppercase">{group.name}</h4>
-                                        </div>
-                                        <div className="bg-stone-50 px-4 py-2 grid grid-cols-[30px_1fr_40px_40px_40px] gap-2 text-[10px] font-black text-stone-400 uppercase tracking-widest border-b border-stone-100">
-                                            <span>#</span>
-                                            <span>Atleta</span>
-                                            <span className="text-center">Pts</span>
-                                            <span className="text-center">V</span>
-                                            <span className="text-center">G</span>
-                                        </div>
-                                        <div className="divide-y divide-stone-50">
-                                            {groupStats.map((stat, idx) => (
-                                                <div key={stat.id} className={`grid grid-cols-[30px_1fr_40px_40px_40px] gap-2 items-center px-4 py-3 text-sm ${idx < 2 ? 'bg-green-50/50' : ''}`}>
-                                                    <span className={`font-black ${idx < 2 ? 'text-green-600' : 'text-stone-400'}`}>{idx + 1}</span>
-                                                    <div className="flex items-center gap-2">
-                                                        <img src={stat.avatar} className="w-6 h-6 rounded-full bg-stone-100" />
-                                                        <span className="font-bold text-stone-700 truncate">{stat.name}</span>
-                                                    </div>
-                                                    <span className="font-black text-saibro-700 text-center">{stat.pts}</span>
-                                                    <span className="font-bold text-stone-500 text-center">{stat.v}</span>
-                                                    <span className="text-stone-400 text-center text-xs">{stat.games}</span>
-                                                </div>
-                                            ))}
-                                            {groupStats.length === 0 && <p className="p-4 text-center text-xs text-stone-400">Nenhum jogador</p>}
-                                        </div>
-                                    </div>
-                                );
-                            })
+                        {groupsDetail.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {groupsDetail.map(group => {
+                                    // Filter matches for this group
+                                    const groupMatches = matches.filter(m => m.championship_group_id === group.id);
+
+                                    // Get registrations for this group
+                                    const memberRegIds = group.members.map((m: any) => m.registration_id);
+                                    const groupRegs = registrations.filter(r => memberRegIds.includes(r.id));
+
+                                    const standings = calculateGroupStandings(groupRegs, groupMatches); // Uses registrations
+
+                                    return (
+                                        <GroupStandingsCard
+                                            key={group.id}
+                                            groupName={`${group.category} - Grupo ${group.group_name}`}
+                                            standings={standings}
+                                            registrations={registrations}
+                                        />
+                                    );
+                                })}
+                            </div>
                         ) : (
                             <div className="bg-white rounded-3xl shadow-sm border border-stone-100 overflow-hidden">
-                                <div className="bg-stone-50 px-4 py-3 grid grid-cols-[30px_1fr_40px_40px_40px] gap-2 text-[10px] font-black text-stone-400 uppercase tracking-widest border-b border-stone-100">
-                                    <span>#</span>
-                                    <span>Atleta</span>
-                                    <span className="text-center">Pts</span>
-                                    <span className="text-center">V</span>
-                                    <span className="text-center">G</span>
-                                </div>
-                                <div className="divide-y divide-stone-50">
-                                    {standings.map((stat, idx) => (
-                                        <div key={stat.id} className={`grid grid-cols-[30px_1fr_40px_40px_40px] gap-2 items-center px-4 py-4 text-sm ${idx < 4 ? 'bg-saibro-50/30' : ''}`}>
-                                            <span className={`font-black ${idx === 0 ? 'text-saibro-600' : 'text-stone-400'}`}>{idx + 1}</span>
-                                            <div className="flex items-center gap-2">
-                                                <img src={stat.avatar} className="w-6 h-6 rounded-full bg-stone-100" />
-                                                <span className="font-bold text-stone-700 truncate">{stat.name}</span>
-                                            </div>
-                                            <span className="font-black text-saibro-700 text-center">{stat.pts}</span>
-                                            <span className="font-bold text-stone-500 text-center">{stat.v}</span>
-                                            <span className="text-stone-400 text-center text-xs">{stat.games}</span>
-                                        </div>
-                                    ))}
+                                <div className="p-8 text-center text-stone-400">
+                                    <p>Classificação não disponível ou formato não suportado.</p>
                                 </div>
                             </div>
                         )}
@@ -802,6 +877,19 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                     onSave={(sA, sB) => handleSaveResult(editingMatch.id, sA, sB)}
                 />
             )}
+
+            {schedulingMatch && (
+                <MatchScheduleModal
+                    match={schedulingMatch}
+                    roundName={rounds.find(r => r.id === schedulingMatch.round_id)?.name || 'Rodada'}
+                    roundStartDate={rounds.find(r => r.id === schedulingMatch.round_id)?.start_date || ''}
+                    roundEndDate={rounds.find(r => r.id === schedulingMatch.round_id)?.end_date || ''}
+                    className={registrations.find(r => r.id === schedulingMatch.registration_a_id)?.class || ''}
+                    courts={courts}
+                    onSchedule={handleSchedule}
+                    onClose={() => setSchedulingMatch(null)}
+                />
+            )}
         </div>
     );
 };
@@ -819,7 +907,7 @@ export const ResultModal: React.FC<{ match: Match; profiles: User[]; onClose: ()
     );
 
     const updateScore = (player: 'A' | 'B', index: number, val: string) => {
-        const n = Math.max(0, Math.min(7, parseInt(val) || 0)); // Clamp 0-7
+        const n = Math.max(0, Math.min(20, parseInt(val) || 0)); // Allow up to 20 for tiebreaks
         if (player === 'A') {
             const newScore = [...scoreA];
             newScore[index] = n;
@@ -831,18 +919,18 @@ export const ResultModal: React.FC<{ match: Match; profiles: User[]; onClose: ()
         }
     };
 
-    // Import validation functions
-    const isValidSetLocal = (gA: number, gB: number) => {
-        const winner = Math.max(gA, gB);
-        const loser = Math.min(gA, gB);
-        if (winner === 6 && loser <= 4) return true;
-        if (winner === 7 && loser === 5) return true;
-        if (winner === 7 && loser === 6) return true;
+    // Import validation functions helpers
+    const isValidSetLocal = (gA: number, gB: number, isSuperTiebreak = false) => {
+        if (isSuperTiebreak) {
+            return (gA >= 10 || gB >= 10) && Math.abs(gA - gB) >= 2;
+        }
+        if (gA === 7 || gB === 7) return true;
+        if ((gA === 6 && gB <= 4) || (gB === 6 && gA <= 4)) return true;
         return false;
     };
 
-    const getSetWinnerLocal = (gA: number, gB: number): 'A' | 'B' | null => {
-        if (!isValidSetLocal(gA, gB)) return null;
+    const getSetWinnerLocal = (gA: number, gB: number, isSuperTiebreak = false): 'A' | 'B' | null => {
+        if (!isValidSetLocal(gA, gB, isSuperTiebreak)) return null;
         if (gA > gB) return 'A';
         if (gB > gA) return 'B';
         return null;
@@ -859,8 +947,8 @@ export const ResultModal: React.FC<{ match: Match; profiles: User[]; onClose: ()
     const setsWonB = (set1Winner === 'B' ? 1 : 0) + (set2Winner === 'B' ? 1 : 0);
     const showThirdSet = setsWonA === 1 && setsWonB === 1;
 
-    const set3Valid = showThirdSet ? isValidSetLocal(scoreA[2], scoreB[2]) : true;
-    const set3Winner = showThirdSet ? getSetWinnerLocal(scoreA[2], scoreB[2]) : null;
+    const set3Valid = showThirdSet ? isValidSetLocal(scoreA[2], scoreB[2], true) : true;
+    const set3Winner = showThirdSet ? getSetWinnerLocal(scoreA[2], scoreB[2], true) : null;
 
     // Calculate match winner
     let matchWinner: 'A' | 'B' | null = null;
@@ -889,135 +977,254 @@ export const ResultModal: React.FC<{ match: Match; profiles: User[]; onClose: ()
     };
 
     return (
-        <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-            <div className="bg-white rounded-3xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200">
-                <div className="p-6 bg-saibro-600 text-white flex justify-between items-center">
-                    <h3 className="text-xl font-bold">Lançar Resultado</h3>
-                    <button onClick={onClose}><ChevronDown size={24} className="rotate-180" /></button>
+        <div className="fixed inset-0 z-50 bg-stone-900/60 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
+            <div className="bg-white rounded-[2.5rem] w-full max-w-sm overflow-visible shadow-2xl animate-in zoom-in-95 duration-300 relative">
+                <button
+                    onClick={onClose}
+                    className="absolute -top-12 right-0 bg-white/10 p-2 rounded-full hover:bg-white/20 transition-colors text-white"
+                >
+                    <ChevronDown size={24} />
+                </button>
+
+                <div className="px-6 py-5 bg-stone-900 text-white flex justify-between items-center rounded-t-[2.5rem]">
+                    <div>
+                        <h3 className="text-lg font-black tracking-tight">Resultado</h3>
+                        <p className="text-[10px] text-stone-400 uppercase tracking-widest font-bold">Lançamento Oficial</p>
+                    </div>
                 </div>
 
-                <div className="p-6 space-y-5">
-                    <div className="grid grid-cols-[1fr_auto_1fr] gap-4 items-center">
-                        <div className="text-center space-y-2">
-                            <div className={`relative ${matchWinner === 'A' ? 'ring-2 ring-green-400 ring-offset-2' : ''} rounded-full inline-block`}>
-                                <img src={pA?.avatar} className="w-16 h-16 rounded-full border-2 border-saibro-100" />
+                <div className="p-6 space-y-6">
+                    <div className="flex items-center justify-between gap-2">
+                        <div className="flex flex-col items-center w-24">
+                            <div className={`relative mb-2 ${matchWinner === 'A' ? 'scale-110' : 'opacity-80'} transition-all duration-300`}>
+                                <img src={pA?.avatar} className={`w-16 h-16 rounded-full object-cover border-4 ${matchWinner === 'A' ? 'border-saibro-500 shadow-xl shadow-saibro-200' : 'border-stone-100'}`} />
+                                {matchWinner === 'A' && <div className="absolute -bottom-2 right-0 bg-saibro-500 text-white p-1 rounded-full border-2 border-white"><Trophy size={12} /></div>}
                             </div>
-                            <p className="text-sm font-bold text-stone-800">{pA?.name}</p>
-                            {matchWinner === 'A' && <span className="text-xs font-bold text-green-600">🏆 Vencedor</span>}
+                            <p className="text-sm font-black text-center leading-tight text-stone-800">{pA?.name}</p>
                         </div>
-                        <div className="text-stone-300 font-black italic">VS</div>
-                        <div className="text-center space-y-2">
-                            <div className={`relative ${matchWinner === 'B' ? 'ring-2 ring-green-400 ring-offset-2' : ''} rounded-full inline-block`}>
-                                <img src={pB?.avatar} className="w-16 h-16 rounded-full border-2 border-stone-100" />
+
+                        <div className="flex flex-col items-center gap-1">
+                            <span className="text-xs font-black text-stone-300">VS</span>
+                        </div>
+
+                        <div className="flex flex-col items-center w-24">
+                            <div className={`relative mb-2 ${matchWinner === 'B' ? 'scale-110' : 'opacity-80'} transition-all duration-300`}>
+                                <img src={pB?.avatar} className={`w-16 h-16 rounded-full object-cover border-4 ${matchWinner === 'B' ? 'border-saibro-500 shadow-xl shadow-saibro-200' : 'border-stone-100'}`} />
+                                {matchWinner === 'B' && <div className="absolute -bottom-2 right-0 bg-saibro-500 text-white p-1 rounded-full border-2 border-white"><Trophy size={12} /></div>}
                             </div>
-                            <p className="text-sm font-bold text-stone-800">{pB?.name}</p>
-                            {matchWinner === 'B' && <span className="text-xs font-bold text-green-600">🏆 Vencedor</span>}
+                            <p className="text-sm font-black text-center leading-tight text-stone-800">{pB?.name}</p>
                         </div>
                     </div>
 
-                    <div className="space-y-3">
-                        {[0, 1, 2].map(setIdx => {
-                            // Hide 3rd set if not needed
-                            if (setIdx === 2 && !showThirdSet) return null;
+                    {/* Score Inputs */}
+                    <div className="space-y-3 bg-stone-50 p-4 rounded-3xl border border-stone-100">
+                        {/* Set 1 */}
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-stone-400 uppercase w-12 text-center">Set 1</span>
+                            <div className="flex gap-4">
+                                <input
+                                    type="number"
+                                    value={scoreA[0]}
+                                    onChange={(e) => updateScore('A', 0, e.target.value)}
+                                    className={`w-14 h-14 rounded-2xl text-center text-2xl font-black outline-none transition-all border-2 ${getInputBorderClass(set1Valid, set1Winner === 'A')}`}
+                                />
+                                <input
+                                    type="number"
+                                    value={scoreB[0]}
+                                    onChange={(e) => updateScore('B', 0, e.target.value)}
+                                    className={`w-14 h-14 rounded-2xl text-center text-2xl font-black outline-none transition-all border-2 ${getInputBorderClass(set1Valid, set1Winner === 'B')}`}
+                                />
+                            </div>
+                        </div>
 
-                            const setValid = setIdx === 0 ? set1Valid : setIdx === 1 ? set2Valid : set3Valid;
-                            const setWinner = setIdx === 0 ? set1Winner : setIdx === 1 ? set2Winner : set3Winner;
+                        {/* Set 2 */}
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-stone-400 uppercase w-12 text-center">Set 2</span>
+                            <div className="flex gap-4">
+                                <input
+                                    type="number"
+                                    value={scoreA[1]}
+                                    onChange={(e) => updateScore('A', 1, e.target.value)}
+                                    className={`w-14 h-14 rounded-2xl text-center text-2xl font-black outline-none transition-all border-2 ${getInputBorderClass(set2Valid, set2Winner === 'A')}`}
+                                />
+                                <input
+                                    type="number"
+                                    value={scoreB[1]}
+                                    onChange={(e) => updateScore('B', 1, e.target.value)}
+                                    className={`w-14 h-14 rounded-2xl text-center text-2xl font-black outline-none transition-all border-2 ${getInputBorderClass(set2Valid, set2Winner === 'B')}`}
+                                />
+                            </div>
+                        </div>
 
-                            return (
-                                <div key={setIdx} className={`flex items-center justify-between p-4 rounded-2xl border transition-colors ${setValid ? 'bg-stone-50 border-stone-100' : 'bg-red-50 border-red-200'}`}>
-                                    <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest">{setIdx + 1}º Set</span>
-                                    <div className="flex items-center gap-3">
-                                        <input
-                                            type="number"
-                                            value={scoreA[setIdx]}
-                                            onChange={(e) => updateScore('A', setIdx, e.target.value)}
-                                            className={`w-12 h-12 text-center text-xl font-black bg-white rounded-xl border-2 focus:border-saibro-500 outline-none transition-colors ${getInputBorderClass(setValid, setWinner === 'A')}`}
-                                            min={0}
-                                            max={7}
-                                        />
-                                        <span className="text-stone-300 font-black">x</span>
-                                        <input
-                                            type="number"
-                                            value={scoreB[setIdx]}
-                                            onChange={(e) => updateScore('B', setIdx, e.target.value)}
-                                            className={`w-12 h-12 text-center text-xl font-black bg-white rounded-xl border-2 focus:border-saibro-500 outline-none transition-colors ${getInputBorderClass(setValid, setWinner === 'B')}`}
-                                            min={0}
-                                            max={7}
-                                        />
-                                    </div>
+                        {/* Set 3 (Tiebreak) */}
+                        {showThirdSet && (
+                            <div className="flex items-center justify-between animate-in slide-in-from-top-2">
+                                <span className="text-[10px] font-black text-saibro-600 uppercase w-12 text-center leading-tight">Super Tie</span>
+                                <div className="flex gap-4">
+                                    <input
+                                        type="number"
+                                        value={scoreA[2]}
+                                        onChange={(e) => updateScore('A', 2, e.target.value)}
+                                        className={`w-14 h-14 rounded-2xl text-center text-2xl font-black outline-none transition-all border-2 ${getInputBorderClass(set3Valid, set3Winner === 'A')}`}
+                                    />
+                                    <input
+                                        type="number"
+                                        value={scoreB[2]}
+                                        onChange={(e) => updateScore('B', 2, e.target.value)}
+                                        className={`w-14 h-14 rounded-2xl text-center text-2xl font-black outline-none transition-all border-2 ${getInputBorderClass(set3Valid, set3Winner === 'B')}`}
+                                    />
                                 </div>
-                            );
-                        })}
+                            </div>
+                        )}
                     </div>
-
-                    {!canSave && (scoreA[0] > 0 || scoreB[0] > 0) && (
-                        <p className="text-xs text-red-500 text-center font-medium">
-                            {!set1Valid || !set2Valid ? 'Placar de set inválido (ex: 6-4, 7-5, 7-6)' : 'Complete o 3º set para definir o vencedor'}
-                        </p>
-                    )}
 
                     <button
                         onClick={handleSave}
                         disabled={!canSave}
-                        className={`w-full py-4 font-bold rounded-2xl shadow-lg transition-all ${canSave ? 'bg-saibro-600 text-white hover:bg-saibro-700 shadow-orange-100' : 'bg-stone-200 text-stone-400 cursor-not-allowed'}`}
+                        className={`w-full py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all duration-300 uppercase tracking-wider text-sm shadow-lg ${canSave
+                            ? 'bg-saibro-600 text-white hover:bg-saibro-500 hover:scale-[1.02]'
+                            : 'bg-stone-200 text-stone-400 cursor-not-allowed'
+                            }`}
                     >
+                        <Save size={18} />
                         Confirmar Resultado
                     </button>
+                    {!canSave && (scoreA[0] > 0 || scoreB[0] > 0) && (
+                        <p className="text-[10px] uppercase tracking-widest text-stone-400 text-center font-bold">
+                            Placar incompleto ou inválido
+                        </p>
+                    )}
                 </div>
             </div>
         </div>
     );
-}
+};
 
-const MatchCard: React.FC<{ match: Match; profiles: User[]; isAdmin?: boolean; onEdit?: () => void }> = ({ match, profiles, isAdmin, onEdit }) => {
-    const pA = profiles.find(u => u.id === match.playerAId);
-    const pB = profiles.find(u => u.id === match.playerBId);
-    const totalGA = match.scoreA.reduce((a, b) => a + b, 0);
-    const totalGB = match.scoreB.reduce((a, b) => a + b, 0);
+const MatchCard: React.FC<{ match: Match; profiles: User[]; registrations: Registration[]; isAdmin?: boolean; onEdit?: () => void; onSchedule?: () => void }> = ({ match, profiles, registrations, isAdmin, onEdit, onSchedule }) => {
+    const regA = registrations.find(r => r.id === match.registration_a_id);
+    const regB = registrations.find(r => r.id === match.registration_b_id);
+
+    const nameA = regA?.user?.name || regA?.guest_name || '...';
+    const nameB = regB?.user?.name || regB?.guest_name || '...';
+    const avatarA = regA?.user?.avatar_url || `https://ui-avatars.com/api/?name=${nameA}&background=random`;
+    const avatarB = regB?.user?.avatar_url || `https://ui-avatars.com/api/?name=${nameB}&background=random`;
+
+    const setsPlayed = Math.max(match.scoreA.length, match.scoreB.length);
+    const isFinished = match.status === 'finished';
 
     return (
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-stone-100 relative group transition-all hover:border-saibro-200">
-            <div className="absolute top-[-8px] right-4 bg-stone-100 px-2 py-0.5 rounded-full text-[9px] font-black text-stone-400 uppercase tracking-tighter">
-                {match.phase || 'Pontos Corridos'}
+        <div className="bg-white rounded-4xl p-5 shadow-sm border border-stone-100 relative overflow-hidden group transition-all hover:border-saibro-200">
+            {/* Class Tag */}
+            <div className="absolute top-0 left-0 bg-stone-100 px-3 py-1 rounded-br-2xl text-[10px] font-black text-stone-500 uppercase tracking-tighter">
+                {regA?.class || 'S/C'}
             </div>
 
-            <div className="flex items-center justify-between gap-4">
-                {/* Player A */}
-                <div className="flex-1 flex flex-col items-center gap-2">
-                    <img src={pA?.avatar} className={`w-12 h-12 rounded-full border-2 ${match.winnerId === match.playerAId ? 'border-saibro-500 shadow-lg shadow-orange-100' : 'border-stone-100'}`} />
-                    <span className="text-xs font-bold text-stone-800 text-center truncate w-full">{pA?.name || 'TBD'}</span>
+            <div className="flex items-center gap-6 mt-2">
+                {/* Players Column */}
+                <div className="flex-1 space-y-4">
+                    {/* Player A */}
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="relative">
+                                <img src={avatarA} className={`w-10 h-10 rounded-full border-2 ${match.winnerId === match.playerAId ? 'border-saibro-500 shadow-sm' : 'border-stone-100'}`} />
+                                {match.winnerId === match.playerAId && (
+                                    <div className="absolute -top-1 -right-1 bg-saibro-500 text-white rounded-full p-0.5 border-2 border-white">
+                                        <Trophy size={8} />
+                                    </div>
+                                )}
+                            </div>
+                            <div>
+                                <p className={`text-sm font-bold ${match.winnerId === match.playerAId ? 'text-stone-900' : 'text-stone-600'}`}>
+                                    {nameA}
+                                </p>
+                                <p className="text-[10px] text-stone-400 font-medium">{regA?.participant_type === 'guest' ? '🎫 Convidado' : '✅ Sócio'}</p>
+                            </div>
+                        </div>
+                        {isFinished && (
+                            <div className="flex gap-1.5">
+                                {match.scoreA.map((s, i) => (
+                                    <span key={i} className={`w-7 h-7 flex items-center justify-center rounded-lg text-xs font-black ${match.scoreA[i] > match.scoreB[i] ? 'bg-saibro-600 text-white' : 'bg-stone-50 text-stone-400'}`}>
+                                        {s}
+                                    </span>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Player B */}
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="relative">
+                                <img src={avatarB} className={`w-10 h-10 rounded-full border-2 ${match.winnerId === match.playerBId ? 'border-saibro-500 shadow-sm' : 'border-stone-100'}`} />
+                                {match.winnerId === match.playerBId && (
+                                    <div className="absolute -top-1 -right-1 bg-saibro-500 text-white rounded-full p-0.5 border-2 border-white">
+                                        <Trophy size={8} />
+                                    </div>
+                                )}
+                            </div>
+                            <div>
+                                <p className={`text-sm font-bold ${match.winnerId === match.playerBId ? 'text-stone-900' : 'text-stone-600'}`}>
+                                    {nameB}
+                                </p>
+                                <p className="text-[10px] text-stone-400 font-medium">{regB?.participant_type === 'guest' ? '🎫 Convidado' : '✅ Sócio'}</p>
+                            </div>
+                        </div>
+                        {isFinished && (
+                            <div className="flex gap-1.5">
+                                {match.scoreB.map((s, i) => (
+                                    <span key={i} className={`w-7 h-7 flex items-center justify-center rounded-lg text-xs font-black ${match.scoreB[i] > match.scoreA[i] ? 'bg-saibro-600 text-white' : 'bg-stone-50 text-stone-400'}`}>
+                                        {s}
+                                    </span>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 </div>
 
-                {/* Score */}
-                <div className="flex flex-col items-center">
+                {/* Status/Scheduling Column */}
+                <div className="flex flex-col items-end gap-2 shrink-0">
                     {match.status === 'finished' ? (
-                        <>
-                            <div className="flex gap-1.5 items-center mb-1">
-                                <span className={`text-2xl font-black italic ${match.winnerId === match.playerAId ? 'text-saibro-600' : 'text-stone-300'}`}>{match.winnerId === match.playerAId ? 2 : match.winnerId === match.playerBId ? 1 : 0}</span>
-                                <span className="text-stone-300 font-black self-center mt-1">/</span>
-                                <span className={`text-2xl font-black italic ${match.winnerId === match.playerBId ? 'text-saibro-600' : 'text-stone-300'}`}>{match.winnerId === match.playerBId ? 2 : match.winnerId === match.playerAId ? 1 : 0}</span>
+                        <div className="bg-stone-50 px-3 py-1.5 rounded-xl text-center">
+                            <p className="text-[9px] font-black text-stone-400 uppercase tracking-tighter mb-0.5">Finalizado</p>
+                            <span className="text-xs font-black text-stone-800 italic">{match.scoreA.some(s => s > 0) ? 'FIM' : 'W.O.'}</span>
+                        </div>
+                    ) : match.scheduledDate ? (
+                        <div className="bg-saibro-50 px-3 py-1.5 rounded-xl border border-saibro-100">
+                            <p className="text-[9px] font-black text-saibro-600 uppercase tracking-tighter mb-0.5">Agendado</p>
+                            <div className="flex items-center gap-1 text-[11px] font-bold text-saibro-700">
+                                <Calendar size={10} /> {formatDateBr(match.scheduledDate)}
                             </div>
-                            <div className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">{totalGA} - {totalGB} Games</div>
-                        </>
+                            <div className="flex items-center gap-1 text-[11px] font-bold text-saibro-700">
+                                <Clock size={10} /> {match.scheduledTime?.substring(0, 5)}
+                            </div>
+                        </div>
                     ) : (
                         <div className="text-center">
-                            <div className="text-stone-200 font-black italic text-xl mb-1">VS</div>
-                            {isAdmin && (
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); onEdit?.(); }}
-                                    className="text-[9px] font-black text-saibro-600 uppercase border border-saibro-200 px-2 py-0.5 rounded-lg hover:bg-saibro-50"
-                                >
-                                    Lançar
-                                </button>
-                            )}
+                            <div className="w-10 h-10 bg-stone-50 rounded-full flex items-center justify-center text-stone-200 mb-1 mx-auto">
+                                <Calendar size={18} />
+                            </div>
+                            <p className="text-[9px] font-bold text-stone-400 uppercase">Pendente</p>
                         </div>
                     )}
-                </div>
 
-                {/* Player B */}
-                <div className="flex-1 flex flex-col items-center gap-2">
-                    <img src={pB?.avatar} className={`w-12 h-12 rounded-full border-2 ${match.winnerId === match.playerBId ? 'border-saibro-500 shadow-lg shadow-orange-100' : 'border-stone-100'}`} />
-                    <span className="text-xs font-bold text-stone-800 text-center truncate w-full">{pB?.name || 'TBD'}</span>
+                    {isAdmin && !isFinished && (
+                        <button
+                            onClick={onEdit}
+                            className="bg-saibro-600 text-white text-[10px] font-black uppercase px-4 py-2 rounded-xl shadow-sm hover:bg-saibro-700"
+                        >
+                            Lançar
+                        </button>
+                    )}
+
+                    {!isFinished && !match.scheduledDate && (
+                        <button
+                            onClick={onSchedule}
+                            className="bg-stone-900 text-white text-[10px] font-black uppercase px-4 py-2 rounded-xl shadow-lg shadow-stone-200 hover:bg-black hover:scale-105 transition-all flex items-center gap-1"
+                        >
+                            <Calendar size={12} />
+                            Agendar
+                        </button>
+                    )}
                 </div>
             </div>
         </div>
@@ -1029,46 +1236,46 @@ const BracketMatchCard: React.FC<{ match: Match; profiles: User[]; isAdmin?: boo
     const pB = profiles.find(u => u.id === match.playerBId);
 
     return (
-        <div className="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden transition-all hover:border-saibro-300 relative">
+        <div className="bg-white rounded-4xl shadow-sm border border-stone-100 overflow-hidden transition-all hover:border-saibro-200 relative group">
             {match.status === 'pending' && isAdmin && (
                 <button
                     onClick={onEdit}
-                    className="absolute z-10 top-1 right-1 p-1 bg-saibro-100 text-saibro-600 rounded-lg hover:bg-saibro-200"
+                    className="absolute z-10 top-2 right-2 p-2 bg-stone-50 hover:bg-saibro-50 text-stone-400 hover:text-saibro-600 rounded-xl transition-colors"
                 >
                     <Trophy size={14} />
                 </button>
             )}
 
             {/* Player A */}
-            <div className={`flex justify-between items-center p-3 border-b border-stone-100 ${match.winnerId === match.playerAId ? 'bg-saibro-50/50' : ''}`}>
-                <div className="flex items-center gap-2 flex-1">
-                    <img src={pA?.avatar || 'https://via.placeholder.com/40'} className={`w-7 h-7 rounded-full bg-stone-100 border-2 ${match.winnerId === match.playerAId ? 'border-saibro-500' : 'border-transparent'}`} />
-                    <span className={`text-sm font-bold truncate ${match.winnerId === match.playerAId ? 'text-saibro-700' : 'text-stone-600'}`}>
-                        {pA?.name || 'Vencedor Mxx'}
+            <div className={`flex justify-between items-center px-4 py-3 border-b border-stone-50 ${match.winnerId === match.playerAId ? 'bg-saibro-50/30' : ''}`}>
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <img src={pA?.avatar || 'https://ui-avatars.com/api/?background=random'} className={`w-8 h-8 rounded-full object-cover border-2 shrink-0 ${match.winnerId === match.playerAId ? 'border-saibro-500 shadow-sm' : 'border-stone-100'}`} />
+                    <span className={`text-xs font-bold truncate ${match.winnerId === match.playerAId ? 'text-stone-900' : 'text-stone-500'}`}>
+                        {pA?.name || 'Aguardando...'}
                     </span>
                 </div>
-                <div className="flex gap-1 ml-4">
-                    {match.scoreA.length > 0 ? match.scoreA.map((s, i) => (
-                        <span key={i} className={`w-7 h-7 flex items-center justify-center rounded-lg text-xs font-black ${match.scoreA[i] > match.scoreB[i] ? 'bg-saibro-600 text-white' : 'bg-stone-50 text-stone-400'}`}>
+                <div className="flex gap-1 ml-2 shrink-0">
+                    {match.scoreA && match.scoreA.length > 0 ? match.scoreA.map((s, i) => (
+                        <span key={i} className={`w-6 h-6 flex items-center justify-center rounded-lg text-[10px] font-black ${match.scoreA[i] > match.scoreB[i] ? 'bg-saibro-600 text-white' : 'bg-stone-50 text-stone-300'}`}>
                             {s}
                         </span>
-                    )) : [1, 2].map(i => <span key={i} className="w-7 h-7 flex items-center justify-center bg-stone-50 rounded-lg text-xs text-stone-300">-</span>)}
+                    )) : [1, 2].map(i => <span key={i} className="w-6 h-6 flex items-center justify-center bg-stone-50 rounded-lg text-[10px] text-stone-200 font-black">-</span>)}
                 </div>
             </div>
             {/* Player B */}
-            <div className={`flex justify-between items-center p-3 ${match.winnerId === match.playerBId ? 'bg-saibro-50/50' : ''}`}>
-                <div className="flex items-center gap-2 flex-1">
-                    <img src={pB?.avatar || 'https://via.placeholder.com/40'} className={`w-7 h-7 rounded-full bg-stone-100 border-2 ${match.winnerId === match.playerBId ? 'border-saibro-500' : 'border-transparent'}`} />
-                    <span className={`text-sm font-bold truncate ${match.winnerId === match.playerBId ? 'text-saibro-700' : 'text-stone-600'}`}>
-                        {pB?.name || 'Vencedor Myy'}
+            <div className={`flex justify-between items-center px-4 py-3 ${match.winnerId === match.playerBId ? 'bg-saibro-50/30' : ''}`}>
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <img src={pB?.avatar || 'https://ui-avatars.com/api/?background=random'} className={`w-8 h-8 rounded-full object-cover border-2 shrink-0 ${match.winnerId === match.playerBId ? 'border-saibro-500 shadow-sm' : 'border-stone-100'}`} />
+                    <span className={`text-xs font-bold truncate ${match.winnerId === match.playerBId ? 'text-stone-900' : 'text-stone-500'}`}>
+                        {pB?.name || 'Aguardando...'}
                     </span>
                 </div>
-                <div className="flex gap-1 ml-4">
-                    {match.scoreB.length > 0 ? match.scoreB.map((s, i) => (
-                        <span key={i} className={`w-7 h-7 flex items-center justify-center rounded-lg text-xs font-black ${match.scoreB[i] > match.scoreA[i] ? 'bg-saibro-600 text-white' : 'bg-stone-50 text-stone-400'}`}>
+                <div className="flex gap-1 ml-2 shrink-0">
+                    {match.scoreB && match.scoreB.length > 0 ? match.scoreB.map((s, i) => (
+                        <span key={i} className={`w-6 h-6 flex items-center justify-center rounded-lg text-[10px] font-black ${match.scoreB[i] > match.scoreA[i] ? 'bg-saibro-600 text-white' : 'bg-stone-50 text-stone-300'}`}>
                             {s}
                         </span>
-                    )) : [1, 2].map(i => <span key={i} className="w-7 h-7 flex items-center justify-center bg-stone-50 rounded-lg text-xs text-stone-300">-</span>)}
+                    )) : [1, 2].map(i => <span key={i} className="w-6 h-6 flex items-center justify-center bg-stone-50 rounded-lg text-[10px] text-stone-200 font-black">-</span>)}
                 </div>
             </div>
         </div>

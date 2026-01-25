@@ -110,6 +110,7 @@ export interface Championship {
   ptsGame?: number;
   countInGeneralRanking?: boolean;
   finalRankingPts?: number; // Bonus for ranking winner
+  slug?: string;
 
   // Tiebreak Config
   tiebreakRules?: ('h2h' | 'sets' | 'games')[];
@@ -156,8 +157,8 @@ export interface Match {
   id: string;
   championshipId?: string;
   type?: 'Desafio Ranking' | 'Campeonato';
-  playerAId: string;
-  playerBId: string;
+  playerAId: string | null; // Nullable for guest players
+  playerBId: string | null; // Nullable for guest players
   scoreA: number[];
   scoreB: number[];
   phase?: string;
@@ -166,6 +167,43 @@ export interface Match {
   date?: string;
   scheduledTime?: string; // HH:mm format for match start time
   status: 'pending' | 'finished' | 'waiting_opponents';
+
+  // Championship context
+  championship_group_id?: string;
+  round_id?: string;
+  scheduled_date?: string;
+  scheduled_time?: string;
+  court_id?: string;
+
+  // Guest player support
+  registration_a_id?: string;
+  registration_b_id?: string;
+
+  // Walkover
+  is_walkover?: boolean;
+  walkover_winner_id?: string;
+}
+
+export interface ChampionshipRound {
+  id: string;
+  championship_id: string;
+  round_number: number;
+  name: string;
+  phase: string;
+  start_date: string;
+  end_date: string;
+  status: 'pending' | 'active' | 'finished';
+}
+
+export interface ChampionshipRegistration {
+  id: string;
+  championship_id: string;
+  participant_type: 'socio' | 'guest';
+  user_id: string | null;
+  guest_name: string | null;
+  class: string;
+  shirt_size: string;
+  user?: User;
 }
 
 export type ChallengeStatus = 'proposed' | 'accepted' | 'declined' | 'scheduled' | 'finished' | 'cancelled' | 'expired';

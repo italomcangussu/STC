@@ -202,7 +202,7 @@ export const FinanceiroAdmin: React.FC = () => {
         <div className="p-4 md:p-6 space-y-8">
             {/* Header */}
             <div className="flex items-center gap-3">
-                <div className="p-3 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl shadow-lg shadow-green-200">
+                <div className="p-3 bg-linear-to-br from-green-500 to-emerald-600 rounded-2xl shadow-lg shadow-green-200">
                     <DollarSign size={28} className="text-white" />
                 </div>
                 <div>
@@ -213,7 +213,7 @@ export const FinanceiroAdmin: React.FC = () => {
 
             {/* --- DASHBOARD CARDS --- */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl p-4 text-white shadow-lg shadow-green-100">
+                <div className="bg-linear-to-br from-green-500 to-emerald-600 rounded-2xl p-4 text-white shadow-lg shadow-green-100">
                     <div className="flex items-center justify-between mb-2">
                         <TrendingUp size={20} className="opacity-80" />
                         <span className="text-[10px] font-bold uppercase bg-white/20 px-2 py-0.5 rounded">Total</span>

@@ -160,7 +160,7 @@ const CreateChallengeModal: React.FC<{
     // If user already challenged this month, show message
     if (monthlyLimits && !monthlyLimits.canChallengeOthers) {
         return createPortal(
-            <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4 backdrop-blur-sm">
+            <div className="fixed inset-0 bg-black/60 z-60 flex items-center justify-center p-4 backdrop-blur-sm">
                 <div className="bg-white rounded-2xl p-6 w-full max-w-md space-y-4 animate-in zoom-in duration-200">
                     <div className="flex justify-between items-center">
                         <h3 className="text-xl font-bold text-saibro-800">Novo Desafio</h3>
@@ -203,7 +203,7 @@ const CreateChallengeModal: React.FC<{
     };
 
     return createPortal(
-        <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 bg-black/60 z-60 flex items-center justify-center p-4 backdrop-blur-sm">
             <div className="bg-white rounded-2xl w-full max-w-md max-h-[90vh] overflow-hidden animate-in zoom-in duration-200 flex flex-col">
                 {/* Header */}
                 <div className="p-4 border-b border-stone-100 flex justify-between items-center">
@@ -452,7 +452,7 @@ const ChallengeResultsModal: React.FC<{
     ] : [];
 
     return createPortal(
-        <div className="fixed inset-0 bg-black/80 z-[70] flex items-center justify-center p-4 backdrop-blur-sm" onClick={onClose}>
+        <div className="fixed inset-0 bg-black/80 z-70 flex items-center justify-center p-4 backdrop-blur-sm" onClick={onClose}>
             <div className="relative w-full max-w-md animate-in zoom-in duration-200" onClick={e => e.stopPropagation()}>
                 <button
                     onClick={onClose}
@@ -827,7 +827,7 @@ export const ChallengesView: React.FC<{ currentUser: User }> = ({ currentUser })
                             <div key={c.id} className="bg-white p-4 rounded-xl shadow-md border border-orange-100">
                                 <div className="flex justify-between items-start mb-3">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-saibro-200 to-saibro-400 flex items-center justify-center text-white font-bold overflow-hidden">
+                                        <div className="w-10 h-10 rounded-full bg-linear-to-br from-saibro-200 to-saibro-400 flex items-center justify-center text-white font-bold overflow-hidden">
                                             {challenger?.avatar_url ? (
                                                 <img src={challenger.avatar_url} className="w-full h-full object-cover" />
                                             ) : (

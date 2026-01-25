@@ -81,7 +81,7 @@ const ManageParticipantsModal: React.FC<{
     };
 
     return (
-        <div className="fixed inset-0 bg-stone-900/60 z-[80] flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-md animate-in fade-in duration-300">
+        <div className="fixed inset-0 bg-stone-900/60 z-80 flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-md animate-in fade-in duration-300">
             <div className="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col max-h-[90vh] animate-in slide-in-from-bottom duration-300">
                 <div className="p-4 border-b border-stone-100 flex items-center justify-between">
                     <h3 className="text-lg font-bold text-stone-800">Gerenciar Atletas</h3>
@@ -187,7 +187,7 @@ const ManageGuestModal: React.FC<{
     };
 
     return (
-        <div className="fixed inset-0 bg-stone-900/40 z-[80] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="fixed inset-0 bg-stone-900/40 z-80 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
             <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl p-6 space-y-4 animate-in zoom-in duration-300">
                 <div className="flex justify-between items-center border-b border-stone-100 pb-3">
                     <h3 className="text-lg font-bold text-stone-800">{res.guestName ? 'Editar Convidado' : 'Adicionar Convidado'}</h3>
@@ -342,7 +342,7 @@ const ReservationDetails: React.FC<{
     };
 
     return (
-        <div className="fixed inset-0 bg-white/90 backdrop-blur-3xl z-[70] flex flex-col animate-in slide-in-from-right duration-300">
+        <div className="fixed inset-0 bg-white/90 backdrop-blur-3xl z-70 flex flex-col animate-in slide-in-from-right duration-300">
             {/* 1. Header */}
             <div className="bg-white px-4 py-4 shadow-sm border-b border-stone-200 flex items-center justify-between sticky top-0 z-10">
                 <button onClick={onClose} className="p-2 -ml-2 text-stone-600 hover:bg-stone-100 rounded-full transition-colors">
@@ -639,7 +639,7 @@ const ReservationCard: React.FC<{
     return (
         <div
             onClick={() => onSelect(res)}
-            className={`relative rounded-2xl border-l-[6px] bg-gradient-to-br from-white to-stone-50/50 p-5 shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer active:scale-[0.99] ${style.border} group border-t border-r border-b border-stone-100/50`}
+            className={`relative rounded-2xl border-l-[6px] bg-linear-to-br from-white to-stone-50/50 p-5 shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer active:scale-[0.99] ${style.border} group border-t border-r border-b border-stone-100/50`}
         >
             {/* Header */}
             <div className="flex justify-between items-start mb-3">
@@ -716,13 +716,13 @@ const ReservationCard: React.FC<{
                                     <div
                                         key={p?.id || i}
                                         title={p?.name}
-                                        className="w-8 h-8 rounded-full bg-gradient-to-br from-stone-100 to-stone-200 border-2 border-white flex items-center justify-center text-stone-600 text-[10px] font-black shadow-sm relative z-0 hover:z-10 transition-all hover:scale-110 hover:shadow-md cursor-help"
+                                        className="w-8 h-8 rounded-full bg-linear-to-br from-stone-100 to-stone-200 border-2 border-white flex items-center justify-center text-stone-600 text-[10px] font-black shadow-sm relative z-0 hover:z-10 transition-all hover:scale-110 hover:shadow-md cursor-help"
                                     >
                                         {p?.avatar ? <img src={p.avatar} className="w-full h-full rounded-full object-cover" alt={p.name} /> : p?.name.charAt(0)}
                                     </div>
                                 ))}
                                 {res.guestName && (
-                                    <div title={res.guestName} className="w-8 h-8 rounded-full bg-gradient-to-br from-yellow-100 to-amber-200 border-2 border-white flex items-center justify-center text-yellow-700 text-[10px] font-bold shadow-sm relative z-0 hover:z-10 transition-all hover:scale-110 cursor-help">
+                                    <div title={res.guestName} className="w-8 h-8 rounded-full bg-linear-to-br from-yellow-100 to-amber-200 border-2 border-white flex items-center justify-center text-yellow-700 text-[10px] font-bold shadow-sm relative z-0 hover:z-10 transition-all hover:scale-110 cursor-help">
                                         <Users size={12} />
                                     </div>
                                 )}
@@ -1784,7 +1784,7 @@ const AddReservationModal: React.FC<{
     };
 
     return createPortal(
-        <div className="fixed inset-0 bg-stone-900/60 z-[999] flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-md">
+        <div className="fixed inset-0 bg-stone-900/60 z-999 flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-md">
             <div className={`bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col max-h-[90vh] w-full max-w-lg transition-all duration-300 animate-slide-in`}>
 
                 {/* Header with Steps */}

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
     ArrowLeft, Trophy, Shuffle, Crown, Users, Save, Check,
-    Loader2, Sparkles, Star, Dices, PartyPopper, Download, FileImage
+    Loader2, Sparkles, Star, Dices, PartyPopper, Download, FileImage, ListChecks, X
 } from 'lucide-react';
 import { User } from '../types';
 import { supabase } from '../lib/supabase';
@@ -67,6 +67,11 @@ export const GroupDrawPage: React.FC<Props> = ({ currentUser, onBack }) => {
     const [animatingCategory, setAnimatingCategory] = useState<string | null>(null);
     const [animationNames, setAnimationNames] = useState<string[]>([]);
 
+    // State for manual group definition
+    const [manualDefineCategory, setManualDefineCategory] = useState<string | null>(null);
+    const [manualGroupA, setManualGroupA] = useState<Registration[]>([]);
+    const [manualGroupB, setManualGroupB] = useState<Registration[]>([]);
+
     // Load championship and registrations
     useEffect(() => {
         const fetchData = async () => {
@@ -80,7 +85,7 @@ export const GroupDrawPage: React.FC<Props> = ({ currentUser, onBack }) => {
                 .eq('registration_open', false)
                 .in('status', ['ongoing', 'draft'])
                 .limit(1)
-                .single();
+                .maybeSingle();
 
             if (champData) {
                 setChampionship({
@@ -284,6 +289,87 @@ export const GroupDrawPage: React.FC<Props> = ({ currentUser, onBack }) => {
                 isSaved: false
             }
         }));
+    };
+
+    // Start manual group definition for a category
+    const handleStartManualDefine = (cls: string) => {
+        const categoryDraw = categoryDraws[cls];
+
+        // Initialize with seeds if they exist
+        if (categoryDraw?.groupA.seed) {
+            setManualGroupA([categoryDraw.groupA.seed]);
+        } else {
+            setManualGroupA([]);
+        }
+
+        if (categoryDraw?.groupB.seed) {
+            setManualGroupB([categoryDraw.groupB.seed]);
+        } else {
+            setManualGroupB([]);
+        }
+
+        setManualDefineCategory(cls);
+    };
+
+    // Toggle player assignment in manual mode
+    const handleTogglePlayer = (reg: Registration, targetGroup: 'A' | 'B') => {
+        const categoryDraw = categoryDraws[manualDefineCategory || ''];
+        const isSeedA = reg.id === categoryDraw?.groupA.seed?.id;
+        const isSeedB = reg.id === categoryDraw?.groupB.seed?.id;
+
+        // Seeds cannot be moved
+        if (isSeedA || isSeedB) return;
+
+        if (targetGroup === 'A') {
+            if (manualGroupA.some(r => r.id === reg.id)) {
+                setManualGroupA(prev => prev.filter(r => r.id !== reg.id));
+            } else {
+                setManualGroupB(prev => prev.filter(r => r.id !== reg.id));
+                setManualGroupA(prev => [...prev, reg]);
+            }
+        } else {
+            if (manualGroupB.some(r => r.id === reg.id)) {
+                setManualGroupB(prev => prev.filter(r => r.id !== reg.id));
+            } else {
+                setManualGroupA(prev => prev.filter(r => r.id !== reg.id));
+                setManualGroupB(prev => [...prev, reg]);
+            }
+        }
+    };
+
+    // Confirm manual group definition
+    const handleConfirmManualDefine = () => {
+        if (!manualDefineCategory) return;
+
+        const categoryDraw = categoryDraws[manualDefineCategory];
+        if (!categoryDraw?.groupA.seed || !categoryDraw?.groupB.seed) {
+            alert('Selecione os cabeças de chave para ambos os grupos antes de definir.');
+            return;
+        }
+
+        const classRegs = getRegistrationsByClass(manualDefineCategory);
+        const allAssigned = classRegs.every(r =>
+            manualGroupA.some(m => m.id === r.id) || manualGroupB.some(m => m.id === r.id)
+        );
+
+        if (!allAssigned) {
+            alert('Todos os jogadores devem ser atribuídos a um grupo.');
+            return;
+        }
+
+        setCategoryDraws(prev => ({
+            ...prev,
+            [manualDefineCategory]: {
+                groupA: { seed: categoryDraw.groupA.seed, members: manualGroupA },
+                groupB: { seed: categoryDraw.groupB.seed, members: manualGroupB },
+                isDrawn: true,
+                isSaved: false
+            }
+        }));
+
+        setManualDefineCategory(null);
+        setManualGroupA([]);
+        setManualGroupB([]);
     };
 
     // Save groups to database
@@ -605,10 +691,10 @@ export const GroupDrawPage: React.FC<Props> = ({ currentUser, onBack }) => {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-stone-900 via-stone-800 to-stone-900 pb-24">
+        <div className="min-h-screen bg-linear-to-br from-stone-900 via-stone-800 to-stone-900 pb-24">
             {/* Premium Header */}
             <div className="relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-amber-500/20 via-orange-500/10 to-red-500/20" />
+                <div className="absolute inset-0 bg-linear-to-r from-amber-500/20 via-orange-500/10 to-red-500/20" />
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(251,191,36,0.1),transparent_50%)]" />
 
                 {/* Floating particles */}
@@ -637,7 +723,7 @@ export const GroupDrawPage: React.FC<Props> = ({ currentUser, onBack }) => {
                     </button>
 
                     <div className="flex items-center gap-4">
-                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/30">
+                        <div className="w-16 h-16 rounded-2xl bg-linear-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/30">
                             <Dices className="text-white" size={32} />
                         </div>
                         <div>
@@ -655,7 +741,7 @@ export const GroupDrawPage: React.FC<Props> = ({ currentUser, onBack }) => {
                     <div className="mt-6 flex items-center gap-3">
                         <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
                             <div
-                                className="h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full transition-all duration-500"
+                                className="h-full bg-linear-to-r from-amber-400 to-orange-500 rounded-full transition-all duration-500"
                                 style={{
                                     width: `${(CLASSES.filter(cls => {
                                         const classRegs = getRegistrationsByClass(cls);
@@ -683,7 +769,7 @@ export const GroupDrawPage: React.FC<Props> = ({ currentUser, onBack }) => {
                             {[...Array(12)].map((_, i) => (
                                 <div
                                     key={i}
-                                    className="absolute w-2 h-20 bg-gradient-to-t from-amber-400/50 to-transparent rounded-full"
+                                    className="absolute w-2 h-20 bg-linear-to-t from-amber-400/50 to-transparent rounded-full"
                                     style={{
                                         left: '50%',
                                         top: '50%',
@@ -694,9 +780,9 @@ export const GroupDrawPage: React.FC<Props> = ({ currentUser, onBack }) => {
                             ))}
                         </div>
 
-                        <div className="relative bg-gradient-to-br from-stone-800 to-stone-900 rounded-3xl p-8 border border-amber-500/30 shadow-2xl shadow-amber-500/20">
+                        <div className="relative bg-linear-to-br from-stone-800 to-stone-900 rounded-3xl p-8 border border-amber-500/30 shadow-2xl shadow-amber-500/20">
                             <div className="text-center">
-                                <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 mb-6 animate-bounce">
+                                <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-linear-to-br from-amber-400 to-orange-500 mb-6 animate-bounce">
                                     <Shuffle className="text-white" size={40} />
                                 </div>
 
@@ -731,6 +817,178 @@ export const GroupDrawPage: React.FC<Props> = ({ currentUser, onBack }) => {
                 </div>
             )}
 
+            {/* Manual Define Modal */}
+            {manualDefineCategory && (
+                <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-xl flex items-center justify-center p-4">
+                    <div className="relative max-w-2xl w-full max-h-[90vh] overflow-auto">
+                        <div className="bg-linear-to-br from-stone-800 to-stone-900 rounded-3xl border border-violet-500/30 shadow-2xl shadow-violet-500/20">
+                            {/* Header */}
+                            <div className="p-6 border-b border-white/10">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-14 h-14 rounded-2xl bg-linear-to-br from-violet-400 to-purple-500 flex items-center justify-center shadow-lg shadow-violet-500/30">
+                                            <ListChecks className="text-white" size={28} />
+                                        </div>
+                                        <div>
+                                            <h2 className="text-xl font-black text-white">Definir Grupos</h2>
+                                            <p className="text-violet-200/60 text-sm">{manualDefineCategory}</p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => {
+                                            setManualDefineCategory(null);
+                                            setManualGroupA([]);
+                                            setManualGroupB([]);
+                                        }}
+                                        className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/60 hover:text-white transition-all"
+                                    >
+                                        <X size={20} />
+                                    </button>
+                                </div>
+                                <p className="text-white/50 text-xs mt-3">
+                                    Clique nos jogadores para atribuí-los ao Grupo A ou B. Cabeças de chave não podem ser movidos.
+                                </p>
+                            </div>
+
+                            {/* Content */}
+                            <div className="p-6">
+                                <div className="grid grid-cols-2 gap-4 mb-6">
+                                    {/* Group A */}
+                                    <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl overflow-hidden">
+                                        <div className="bg-amber-500/20 px-4 py-3 border-b border-amber-500/20">
+                                            <h4 className="font-black text-amber-400 flex items-center gap-2">
+                                                <Crown size={16} />
+                                                Grupo A ({manualGroupA.length})
+                                            </h4>
+                                        </div>
+                                        <div className="p-3 space-y-2 min-h-[200px]">
+                                            {manualGroupA.map((member, idx) => {
+                                                const categoryDraw = categoryDraws[manualDefineCategory];
+                                                const isSeed = member.id === categoryDraw?.groupA.seed?.id;
+                                                return (
+                                                    <div
+                                                        key={member.id}
+                                                        onClick={() => !isSeed && handleTogglePlayer(member, 'B')}
+                                                        className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-all ${isSeed
+                                                            ? 'bg-amber-500/30 border border-amber-500/40 cursor-not-allowed'
+                                                            : 'bg-white/5 hover:bg-amber-500/20 hover:border-amber-500/30 border border-transparent'
+                                                            }`}
+                                                    >
+                                                        <span className="w-5 h-5 flex items-center justify-center text-xs font-bold text-amber-400">
+                                                            {isSeed ? <Crown size={14} /> : idx}
+                                                        </span>
+                                                        <span className="text-white text-sm font-medium truncate flex-1">
+                                                            {getParticipantName(member)}
+                                                        </span>
+                                                        {!isSeed && (
+                                                            <span className="text-white/30 text-xs">→ B</span>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+
+                                    {/* Group B */}
+                                    <div className="bg-orange-500/10 border border-orange-500/20 rounded-2xl overflow-hidden">
+                                        <div className="bg-orange-500/20 px-4 py-3 border-b border-orange-500/20">
+                                            <h4 className="font-black text-orange-400 flex items-center gap-2">
+                                                <Crown size={16} />
+                                                Grupo B ({manualGroupB.length})
+                                            </h4>
+                                        </div>
+                                        <div className="p-3 space-y-2 min-h-[200px]">
+                                            {manualGroupB.map((member, idx) => {
+                                                const categoryDraw = categoryDraws[manualDefineCategory];
+                                                const isSeed = member.id === categoryDraw?.groupB.seed?.id;
+                                                return (
+                                                    <div
+                                                        key={member.id}
+                                                        onClick={() => !isSeed && handleTogglePlayer(member, 'A')}
+                                                        className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-all ${isSeed
+                                                            ? 'bg-orange-500/30 border border-orange-500/40 cursor-not-allowed'
+                                                            : 'bg-white/5 hover:bg-orange-500/20 hover:border-orange-500/30 border border-transparent'
+                                                            }`}
+                                                    >
+                                                        <span className="w-5 h-5 flex items-center justify-center text-xs font-bold text-orange-400">
+                                                            {isSeed ? <Crown size={14} /> : idx}
+                                                        </span>
+                                                        <span className="text-white text-sm font-medium truncate flex-1">
+                                                            {getParticipantName(member)}
+                                                        </span>
+                                                        {!isSeed && (
+                                                            <span className="text-white/30 text-xs">→ A</span>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Unassigned Players */}
+                                {(() => {
+                                    const classRegs = getRegistrationsByClass(manualDefineCategory);
+                                    const unassigned = classRegs.filter(r =>
+                                        !manualGroupA.some(m => m.id === r.id) &&
+                                        !manualGroupB.some(m => m.id === r.id)
+                                    );
+
+                                    if (unassigned.length === 0) return null;
+
+                                    return (
+                                        <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden mb-6">
+                                            <div className="bg-white/5 px-4 py-3 border-b border-white/10">
+                                                <h4 className="font-bold text-white/70 flex items-center gap-2">
+                                                    <Users size={16} />
+                                                    Sem Grupo ({unassigned.length})
+                                                </h4>
+                                            </div>
+                                            <div className="p-3 grid grid-cols-2 gap-2">
+                                                {unassigned.map((member) => (
+                                                    <div key={member.id} className="flex gap-2">
+                                                        <button
+                                                            onClick={() => handleTogglePlayer(member, 'A')}
+                                                            className="flex-1 flex items-center gap-2 p-2 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 hover:border-amber-500/40 transition-all"
+                                                        >
+                                                            <span className="text-amber-400 text-xs font-bold">A</span>
+                                                            <span className="text-white text-sm font-medium truncate">
+                                                                {getParticipantName(member)}
+                                                            </span>
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleTogglePlayer(member, 'B')}
+                                                            className="px-3 rounded-lg bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/20 hover:border-orange-500/40 text-orange-400 text-xs font-bold transition-all"
+                                                        >
+                                                            B
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
+
+                                {/* Confirm Button */}
+                                <button
+                                    onClick={handleConfirmManualDefine}
+                                    disabled={(() => {
+                                        const classRegs = getRegistrationsByClass(manualDefineCategory);
+                                        return !classRegs.every(r =>
+                                            manualGroupA.some(m => m.id === r.id) || manualGroupB.some(m => m.id === r.id)
+                                        );
+                                    })()}
+                                    className="w-full py-4 bg-linear-to-r from-violet-500 to-purple-500 text-white font-black rounded-xl shadow-lg shadow-violet-500/30 hover:shadow-violet-500/50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                >
+                                    <Check size={20} />
+                                    Confirmar Grupos
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Categories */}
             <div className="p-4 space-y-6">
                 {CLASSES.map(cls => {
@@ -743,7 +1001,7 @@ export const GroupDrawPage: React.FC<Props> = ({ currentUser, onBack }) => {
                     return (
                         <div
                             key={cls}
-                            className={`bg-gradient-to-br from-stone-800/80 to-stone-900/80 rounded-3xl border overflow-hidden backdrop-blur-sm transition-all ${categoryDraw?.isSaved
+                            className={`bg-linear-to-br from-stone-800/80 to-stone-900/80 rounded-3xl border overflow-hidden backdrop-blur-sm transition-all ${categoryDraw?.isSaved
                                 ? 'border-green-500/30 shadow-lg shadow-green-500/10'
                                 : categoryDraw?.isDrawn
                                     ? 'border-amber-500/30 shadow-lg shadow-amber-500/10'
@@ -758,7 +1016,7 @@ export const GroupDrawPage: React.FC<Props> = ({ currentUser, onBack }) => {
                                 <div className="flex items-center gap-3">
                                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${categoryDraw?.isSaved
                                         ? 'bg-green-500'
-                                        : 'bg-gradient-to-br from-amber-400 to-orange-500'
+                                        : 'bg-linear-to-br from-amber-400 to-orange-500'
                                         }`}>
                                         {categoryDraw?.isSaved ? (
                                             <Check className="text-white" size={20} />
@@ -846,11 +1104,21 @@ export const GroupDrawPage: React.FC<Props> = ({ currentUser, onBack }) => {
                                         <button
                                             onClick={() => handleDraw(cls)}
                                             disabled={!categoryDraw?.groupA.seed || !categoryDraw?.groupB.seed}
-                                            className="w-full py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black rounded-xl shadow-lg shadow-amber-500/30 hover:shadow-amber-500/50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                            className="w-full py-4 bg-linear-to-r from-amber-500 to-orange-500 text-white font-black rounded-xl shadow-lg shadow-amber-500/30 hover:shadow-amber-500/50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 transition-all hover:scale-[1.02] active:scale-[0.98]"
                                         >
                                             <Shuffle size={20} />
                                             Sortear Grupos
                                             <Sparkles size={16} />
+                                        </button>
+
+                                        {/* Manual Define Button */}
+                                        <button
+                                            onClick={() => handleStartManualDefine(cls)}
+                                            disabled={!categoryDraw?.groupA.seed || !categoryDraw?.groupB.seed}
+                                            className="w-full py-4 bg-linear-to-r from-violet-500 to-purple-500 text-white font-black rounded-xl shadow-lg shadow-violet-500/30 hover:shadow-violet-500/50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                        >
+                                            <ListChecks size={20} />
+                                            Definir Grupo
                                         </button>
                                     </>
                                 ) : (
@@ -924,7 +1192,7 @@ export const GroupDrawPage: React.FC<Props> = ({ currentUser, onBack }) => {
                                             <button
                                                 onClick={() => handleSaveGroups(cls)}
                                                 disabled={saving === cls}
-                                                className="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-black rounded-xl shadow-lg shadow-green-500/30 hover:shadow-green-500/50 disabled:opacity-50 flex items-center justify-center gap-3 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                                className="w-full py-4 bg-linear-to-r from-green-500 to-emerald-500 text-white font-black rounded-xl shadow-lg shadow-green-500/30 hover:shadow-green-500/50 disabled:opacity-50 flex items-center justify-center gap-3 transition-all hover:scale-[1.02] active:scale-[0.98]"
                                             >
                                                 {saving === cls ? (
                                                     <Loader2 className="animate-spin" size={20} />
@@ -943,7 +1211,7 @@ export const GroupDrawPage: React.FC<Props> = ({ currentUser, onBack }) => {
                                                     <button
                                                         onClick={() => handleExportPDF(cls)}
                                                         disabled={exporting === `${cls}-pdf`}
-                                                        className="flex-1 py-3 bg-gradient-to-r from-red-500 to-rose-500 text-white font-bold rounded-xl shadow-lg shadow-red-500/20 hover:shadow-red-500/40 disabled:opacity-50 flex items-center justify-center gap-2 transition-all hover:scale-[1.01] active:scale-[0.99]"
+                                                        className="flex-1 py-3 bg-linear-to-r from-red-500 to-rose-500 text-white font-bold rounded-xl shadow-lg shadow-red-500/20 hover:shadow-red-500/40 disabled:opacity-50 flex items-center justify-center gap-2 transition-all hover:scale-[1.01] active:scale-[0.99]"
                                                     >
                                                         {exporting === `${cls}-pdf` ? (
                                                             <Loader2 className="animate-spin" size={16} />
@@ -955,7 +1223,7 @@ export const GroupDrawPage: React.FC<Props> = ({ currentUser, onBack }) => {
                                                     <button
                                                         onClick={() => handleExportPNG(cls)}
                                                         disabled={exporting === `${cls}-png`}
-                                                        className="flex-1 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold rounded-xl shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 disabled:opacity-50 flex items-center justify-center gap-2 transition-all hover:scale-[1.01] active:scale-[0.99]"
+                                                        className="flex-1 py-3 bg-linear-to-r from-blue-500 to-cyan-500 text-white font-bold rounded-xl shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 disabled:opacity-50 flex items-center justify-center gap-2 transition-all hover:scale-[1.01] active:scale-[0.99]"
                                                     >
                                                         {exporting === `${cls}-png` ? (
                                                             <Loader2 className="animate-spin" size={16} />
@@ -985,6 +1253,20 @@ export const GroupDrawPage: React.FC<Props> = ({ currentUser, onBack }) => {
                                                     <Shuffle size={16} />
                                                     Ressortear Categoria
                                                 </button>
+
+                                                {/* Manual Redefine button */}
+                                                <button
+                                                    onClick={() => {
+                                                        // Pre-populate with existing group members
+                                                        setManualGroupA([...categoryDraw.groupA.members]);
+                                                        setManualGroupB([...categoryDraw.groupB.members]);
+                                                        setManualDefineCategory(cls);
+                                                    }}
+                                                    className="w-full py-3 bg-violet-500/10 border border-violet-500/30 text-violet-300 font-bold rounded-xl hover:bg-violet-500/20 hover:text-violet-200 flex items-center justify-center gap-2 transition-all"
+                                                >
+                                                    <ListChecks size={16} />
+                                                    Redefinir Grupos
+                                                </button>
                                             </div>
                                         )}
                                     </>
@@ -997,8 +1279,8 @@ export const GroupDrawPage: React.FC<Props> = ({ currentUser, onBack }) => {
 
             {/* All Done Celebration */}
             {allCategoriesSaved && (
-                <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/90 via-black/70 to-transparent">
-                    <div className="flex items-center justify-center gap-4 p-4 bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30 rounded-2xl backdrop-blur-sm">
+                <div className="fixed bottom-0 left-0 right-0 p-4 bg-linear-to-t from-black/90 via-black/70 to-transparent">
+                    <div className="flex items-center justify-center gap-4 p-4 bg-linear-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30 rounded-2xl backdrop-blur-sm">
                         <PartyPopper className="text-green-400" size={32} />
                         <div>
                             <h3 className="text-white font-black">Todos os grupos sorteados!</h3>

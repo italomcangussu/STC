@@ -274,19 +274,19 @@ export const Dashboard: React.FC<DashboardProps> = () => {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-gradient-to-br from-white to-stone-50/50 border-l-[6px] border-saibro-500 p-4 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 animate-scale-in">
+        <div className="bg-linear-to-br from-white to-stone-50/50 border-l-[6px] border-saibro-500 p-4 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 animate-scale-in">
           <p className="text-xs text-stone-500 uppercase font-bold tracking-wider">Total Reservas</p>
           <p className="text-3xl font-black text-stone-800 mt-1">{filteredReservations.length}</p>
           <p className="text-[10px] text-stone-400 font-bold uppercase mt-1">
             {selectedYear === 'all' ? 'Todo o período' : selectedMonth === 'all' ? `Em ${selectedYear}` : `Em ${months.find(m => m.val === selectedMonth)?.label}/${selectedYear}`}
           </p>
         </div>
-        <div className="bg-gradient-to-br from-white to-stone-50/50 border-l-[6px] border-blue-500 p-4 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 animate-scale-in delay-75">
+        <div className="bg-linear-to-br from-white to-stone-50/50 border-l-[6px] border-blue-500 p-4 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 animate-scale-in delay-75">
           <p className="text-xs text-stone-500 uppercase font-bold tracking-wider">Quadra Favorita</p>
           <p className="text-lg font-black text-stone-800 truncate mt-2 leading-tight" title={mostUsedCourt}>{mostUsedCourt}</p>
           <p className="text-[10px] text-stone-400 font-bold uppercase mt-1">Mais utilizada</p>
         </div>
-        <div className="bg-gradient-to-br from-white to-stone-50/50 border-l-[6px] border-green-500 p-4 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 animate-scale-in delay-150">
+        <div className="bg-linear-to-br from-white to-stone-50/50 border-l-[6px] border-green-500 p-4 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 animate-scale-in delay-150">
           <p className="text-xs text-stone-500 uppercase font-bold tracking-wider">Dia de Pico</p>
           <div className="flex items-center gap-2 mt-2">
             <Calendar className="text-green-600 animate-float" size={24} />
@@ -296,7 +296,7 @@ export const Dashboard: React.FC<DashboardProps> = () => {
             </div>
           </div>
         </div>
-        <div className="bg-gradient-to-br from-white to-stone-50/50 border-l-[6px] border-orange-500 p-4 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 animate-scale-in delay-200">
+        <div className="bg-linear-to-br from-white to-stone-50/50 border-l-[6px] border-orange-500 p-4 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 animate-scale-in delay-200">
           <p className="text-xs text-stone-500 uppercase font-bold tracking-wider">Hora de Pico</p>
           <div className="flex items-center gap-2 mt-2">
             <Clock className="text-orange-600 animate-float" size={24} />

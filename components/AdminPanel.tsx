@@ -104,7 +104,7 @@ const NewChallengeModal: React.FC<NewChallengeModalProps> = ({ onClose, onSave, 
     };
 
     return (
-        <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 bg-black/60 z-60 flex items-center justify-center p-4 backdrop-blur-sm">
             <div className="bg-white rounded-2xl p-6 w-full max-w-md space-y-5 shadow-2xl animate-in zoom-in duration-200">
                 <div className="flex justify-between items-center border-b border-stone-100 pb-3">
                     <h3 className="text-xl font-bold text-saibro-800 flex items-center gap-2">
@@ -1665,7 +1665,7 @@ export const AdminPanel: React.FC = () => {
 
     return (
         <div className="p-4 pb-24 space-y-6">
-            <div className="bg-gradient-to-r from-saibro-600 to-saibro-500 p-6 rounded-2xl shadow-lg text-white">
+            <div className="bg-linear-to-r from-saibro-600 to-saibro-500 p-6 rounded-2xl shadow-lg text-white">
                 <h1 className="text-2xl font-bold">Painel Administrativo</h1>
                 <p className="text-saibro-100 text-sm mt-1">Gerencie reservas, desafios, financeiro e sócios</p>
             </div>

@@ -188,7 +188,7 @@ export const AdminChampionshipDetail: React.FC<AdminChampionshipDetailProps> = (
 
                     {/* Logo / Avatar */}
                     <div className="relative group">
-                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-saibro-100 to-saibro-50 border-2 border-stone-100 flex items-center justify-center overflow-hidden">
+                        <div className="w-16 h-16 rounded-2xl bg-linear-to-br from-saibro-100 to-saibro-50 border-2 border-stone-100 flex items-center justify-center overflow-hidden">
                             {uploading ? (
                                 <div className="animate-spin w-6 h-6 border-2 border-saibro-500 border-t-transparent rounded-full" />
                             ) : data.logoUrl ? (

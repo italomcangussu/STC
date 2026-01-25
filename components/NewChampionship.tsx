@@ -565,10 +565,10 @@ export const NewChampionship: React.FC<NewChampionshipProps> = ({ onClose, onSav
 
 
     return (
-        <div className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-60 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
             <div className="bg-white w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
                 {/* Header */}
-                <div className="p-6 bg-gradient-to-r from-stone-900 to-stone-800 text-white flex justify-between items-center">
+                <div className="p-6 bg-linear-to-r from-stone-900 to-stone-800 text-white flex justify-between items-center">
                     <div>
                         <h2 className="text-xl font-bold">Novo Campeonato</h2>
                         <p className="text-stone-400 text-xs">Configure os detalhes da competição</p>

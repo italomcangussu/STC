@@ -9,6 +9,7 @@ import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { generatePremiumPDF } from '../lib/pdfExportPremium';
 import { GroupDrawPage } from './GroupDrawPage';
+import { ChampionshipInProgress } from './ChampionshipInProgress';
 
 // Types
 interface Championship {
@@ -50,6 +51,9 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
     const [closingRegistration, setClosingRegistration] = useState(false);
     const [showCloseConfirm, setShowCloseConfirm] = useState(false);
 
+    // Flag to switch to In Progress View
+    const [hasGroups, setHasGroups] = useState(false);
+
     // Form state
     const [participantType, setParticipantType] = useState<'socio' | 'guest'>('socio');
     const [selectedUserId, setSelectedUserId] = useState('');
@@ -71,7 +75,7 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
                 .select('id, name, registration_open')
                 .eq('registration_open', true)
                 .limit(1)
-                .single();
+                .maybeSingle();
 
             // If no open championship, check if we have a closed one ready for draw
             let championshipToUse = champData;
@@ -86,12 +90,22 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
                     .eq('registration_open', false)
                     .in('status', ['ongoing', 'draft'])
                     .limit(1)
-                    .single();
+                    .maybeSingle();
 
                 if (closedChampData) {
                     championshipToUse = closedChampData;
                     registrationClosed = true;
                 }
+            }
+
+            // Check if groups exist (means DRAW IS DONE)
+            let groupsExist = false;
+            if (championshipToUse) {
+                const { count } = await supabase
+                    .from('championship_groups')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('championship_id', championshipToUse.id);
+                groupsExist = (count || 0) > 0;
             }
 
             if (championshipToUse) {
@@ -101,6 +115,13 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
                     registration_open: championshipToUse.registration_open,
                     registration_closed: registrationClosed
                 });
+
+                // If groups exist, we show the In Progress Dashboard
+                if (groupsExist) {
+                    setHasGroups(true);
+                    setLoading(false);
+                    return; // Stop here, we switch view
+                }
 
                 // Function to fetch registrations
                 const fetchRegistrations = async () => {
@@ -412,12 +433,30 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
         );
     }
 
+
+    // Show In Progress Dashboard if groups created
+    if (hasGroups && championship) {
+        return (
+            <ChampionshipInProgress
+                championship={championship}
+                currentUser={currentUser}
+                onUpdate={() => { }} // Optional refresh logic
+            />
+        );
+    }
+
     // Show Group Draw Page if flag is set
     if (showDrawPage) {
         return (
             <GroupDrawPage
                 currentUser={currentUser}
-                onBack={() => setShowDrawPage(false)}
+                onBack={() => {
+                    setShowDrawPage(false);
+                    // Check if groups were created when coming back
+                    // Reload data basically
+                    // Simple refresh:
+                    window.location.reload();
+                }}
             />
         );
     }
@@ -426,8 +465,8 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
         <div className="p-4 pb-24 space-y-6">
             {/* Header */}
             <div className={`p-6 rounded-3xl shadow-xl text-white relative overflow-hidden ${championship.registration_closed
-                ? 'bg-gradient-to-br from-stone-700 to-stone-600'
-                : 'bg-gradient-to-br from-saibro-600 to-saibro-500'
+                ? 'bg-linear-to-br from-stone-700 to-stone-600'
+                : 'bg-linear-to-br from-saibro-600 to-saibro-500'
                 }`}>
                 <div className="absolute right-[-10px] top-[-10px] opacity-10 rotate-12">
                     <Trophy size={160} />
@@ -577,7 +616,7 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
                 {championship.registration_open && !championship.registration_closed && (
                     <button
                         onClick={() => setShowCloseConfirm(true)}
-                        className="w-full py-4 bg-gradient-to-r from-red-500 to-red-600 text-white font-bold rounded-xl shadow-lg shadow-red-100 hover:shadow-red-200 flex items-center justify-center gap-3 transition-all hover:scale-[1.01]"
+                        className="w-full py-4 bg-linear-to-r from-red-500 to-red-600 text-white font-bold rounded-xl shadow-lg shadow-red-100 hover:shadow-red-200 flex items-center justify-center gap-3 transition-all hover:scale-[1.01]"
                     >
                         <Lock size={20} />
                         Encerrar Inscrições
@@ -588,7 +627,7 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
                 {championship.registration_closed && (
                     <button
                         onClick={() => setShowDrawPage(true)}
-                        className="w-full py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold rounded-xl shadow-lg shadow-orange-100 hover:shadow-orange-200 flex items-center justify-center gap-3 transition-all hover:scale-[1.01]"
+                        className="w-full py-4 bg-linear-to-r from-amber-500 to-orange-500 text-white font-bold rounded-xl shadow-lg shadow-orange-100 hover:shadow-orange-200 flex items-center justify-center gap-3 transition-all hover:scale-[1.01]"
                     >
                         <Shuffle size={20} />
                         Sorteador de Grupos

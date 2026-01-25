@@ -483,7 +483,7 @@ export const Klanches: React.FC<KlanchesProps> = ({ currentUser }) => {
                                     </div>
 
                                     {/* Product Image/Icon */}
-                                    <div className="h-20 bg-gradient-to-br from-saibro-50 to-orange-50 flex items-center justify-center">
+                                    <div className="h-20 bg-linear-to-br from-saibro-50 to-orange-50 flex items-center justify-center">
                                         {p.imageUrl ? (
                                             <img src={p.imageUrl} alt={p.name} className="h-16 w-16 object-contain" />
                                         ) : (
@@ -704,7 +704,7 @@ export const Klanches: React.FC<KlanchesProps> = ({ currentUser }) => {
 
             {/* ====== ADD/EDIT PRODUCT MODAL ====== */}
             {showAddProduct && (
-                <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4 backdrop-blur-sm">
+                <div className="fixed inset-0 bg-black/60 z-60 flex items-center justify-center p-4 backdrop-blur-sm">
                     <div className="bg-white rounded-2xl p-6 w-full max-w-sm space-y-4 animate-in zoom-in duration-200">
                         <div className="flex items-center justify-between">
                             <h3 className="text-xl font-bold text-saibro-800">

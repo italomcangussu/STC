@@ -62,10 +62,10 @@ export const InstallPrompt: React.FC = () => {
     return (
         <>
             {/* Floating Action Button */}
-            <div className="fixed bottom-20 right-4 z-[90] animate-in slide-in-from-bottom-4 duration-500">
+            <div className="fixed bottom-20 right-4 z-90 animate-in slide-in-from-bottom-4 duration-500">
                 <button
                     onClick={handleInstallClick}
-                    className="flex items-center gap-2 bg-gradient-to-r from-saibro-600 to-saibro-500 text-white pl-4 pr-5 py-3 rounded-full shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all"
+                    className="flex items-center gap-2 bg-linear-to-r from-saibro-600 to-saibro-500 text-white pl-4 pr-5 py-3 rounded-full shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all"
                 >
                     <div className="bg-white/20 p-1.5 rounded-full">
                         <Download size={18} className="text-white" />
@@ -85,7 +85,7 @@ export const InstallPrompt: React.FC = () => {
 
             {/* iOS Instructions Modal */}
             {showIOSInstructions && (
-                <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 animate-in fade-in duration-200">
+                <div className="fixed inset-0 z-100 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 animate-in fade-in duration-200">
                     <div className="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl relative animate-in slide-in-from-bottom-10 duration-300">
                         <button
                             onClick={() => setShowIOSInstructions(false)}
