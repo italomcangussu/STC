@@ -1050,7 +1050,30 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
 
             const newParticipants = res.participantIds.filter(pid => pid !== currentUser.id);
 
-            // 1. Update in Supabase
+            // If it was the last Sócio and no guest, the reservation should be cancelled
+            if (newParticipants.length === 0 && !res.guestName) {
+                if (confirm('Você é o último atleta da partida. Ao sair, o agendamento será cancelado. Confirmar?')) {
+                    // 1. Update status to cancelled in Supabase
+                    const { error } = await supabase
+                        .from('reservations')
+                        .update({ status: 'cancelled' })
+                        .eq('id', id);
+
+                    if (error) throw error;
+
+                    // 2. Update local state
+                    setReservations(prev => {
+                        const newResList = prev.map(r => r.id === id ? { ...r, status: 'cancelled' as const } : r);
+                        if (selectedReservation?.id === id) setSelectedReservation(newResList.find(r => r.id === id));
+                        return newResList;
+                    });
+                    return;
+                } else {
+                    return; // User cancelled the confirmation
+                }
+            }
+
+            // Normal flow: just remove the participant
             const { error } = await supabase
                 .from('reservations')
                 .update({ participant_ids: newParticipants })
@@ -1058,7 +1081,6 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
 
             if (error) throw error;
 
-            // 2. Update local state
             setReservations(prev => {
                 const newRes = prev.map(r => r.id === id ? { ...r, participantIds: newParticipants } : r);
                 if (selectedReservation?.id === id) setSelectedReservation(newRes.find(r => r.id === id));
