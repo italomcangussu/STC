@@ -268,7 +268,6 @@ const ReservationDetails: React.FC<{
     const creator = profiles.find(u => u.id === res.creatorId);
 
     // Non-Socio Logic
-    // Non-Socio Logic
     let nonSocioStudentsList: NonSocioStudent[] = [];
     if (res.type === 'Aula' && res.studentType === 'non-socio') {
         if (res.participantIds && res.participantIds.length > 0) {
@@ -284,25 +283,16 @@ const ReservationDetails: React.FC<{
     // Permissions
     const isCreator = res.creatorId === currentUser.id;
     const isAdmin = currentUser.role === 'admin';
-    const isProfessorOwner = currentUser.isProfessor && res.professorId && professors.find(p => p.id === res.professorId)?.userId === currentUser.id;
     const isParticipant = res.participantIds.includes(currentUser.id);
     const isActive = res.status === 'active';
-    // Compare reservation time with Fortaleza time
-    // We treat res.date + res.startTime as "local" (Fortaleza) time
-    // and compare with getNowInFortaleza() which returns "local" (Fortaleza) time
     const isFuture = new Date(res.date + 'T' + res.startTime) > getNowInFortaleza();
-
     const isNotFinished = new Date(res.date + 'T' + res.endTime) > getNowInFortaleza();
 
-    const canManageParticipants = isActive && (isAdmin || currentUser.role === 'socio') && isFuture && res.type === 'Play';
+    const canManageParticipants = isActive && (isAdmin || currentUser.role === 'socio' || currentUser.role === 'admin') && isFuture && res.type === 'Play';
     const canEdit = isActive && (isAdmin || (isFuture && isCreator));
     const canCancel = isActive && isFuture && (isAdmin || isCreator);
-    // Allow joining as long as the match hasn't finished (end time > now)
     const canJoin = res.type === 'Play' && isActive && isNotFinished && !isParticipant && (currentUser.role === 'socio' || isAdmin) && res.participantIds.length < 4;
-    // Allow leaving as long as the match hasn't finished
     const canLeave = res.type === 'Play' && isActive && isNotFinished && isParticipant;
-
-    // Whatsapp Share: Allow for participants, creator, admin, professor
     const canShare = isActive;
 
     const handleShareWhatsapp = () => {
@@ -342,238 +332,268 @@ const ReservationDetails: React.FC<{
     };
 
     return (
-        <div className="fixed inset-0 bg-white/90 backdrop-blur-3xl z-70 flex flex-col animate-in slide-in-from-right duration-300">
-            {/* 1. Header */}
-            <div className="bg-white px-4 py-4 shadow-sm border-b border-stone-200 flex items-center justify-between sticky top-0 z-10">
-                <button onClick={onClose} className="p-2 -ml-2 text-stone-600 hover:bg-stone-100 rounded-full transition-colors">
-                    <ArrowLeft size={24} />
-                </button>
-                <h2 className="text-lg font-bold text-stone-800">Detalhes</h2>
-                <div className="w-10" /> {/* Spacer */}
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                {/* 2. Main Info Card */}
-                <div className={`bg-white rounded-2xl card-court p-5 relative overflow-hidden`}>
-                    <div className={`absolute top-0 left-0 w-2 h-full ${style.bg.replace('bg-', 'bg-').replace('50', '500')}`} />
-
-                    <div className="flex justify-between items-start mb-4">
-                        <div className="flex gap-2">
-                            <span className={`px-2 py-1 rounded-lg text-xs font-bold uppercase tracking-wide border ${style.bg} ${style.text} ${style.border}`}>
-                                {style.label}
-                            </span>
-                            {res.status === 'cancelled' ? (
-                                <span className="px-2 py-1 rounded-lg text-xs font-bold uppercase tracking-wide bg-red-100 text-red-600">Cancelada</span>
-                            ) : !isFuture ? (
-                                <span className="px-2 py-1 rounded-lg text-xs font-bold uppercase tracking-wide bg-stone-100 text-stone-600">Finalizada</span>
-                            ) : (
-                                <span className="px-2 py-1 rounded-lg text-xs font-bold uppercase tracking-wide bg-green-100 text-green-600">Ativa</span>
-                            )}
-                        </div>
-                    </div>
-
-                    <h1 className="text-3xl font-black text-stone-800 mb-1">{res.startTime}</h1>
-                    <p className="text-stone-500 font-medium text-sm mb-6 flex items-center gap-2">
-                        <Clock size={16} /> Até {res.endTime} • {getDayName(res.date)}, {formatDateBr(res.date)}
-                    </p>
-
-                    <div className="flex items-center gap-3 p-3 bg-stone-50 rounded-xl border border-stone-100">
-                        <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center border border-stone-200 shadow-sm text-saibro-600">
-                            <MapPin size={20} />
-                        </div>
-                        <div>
-                            <p className="font-bold text-stone-800">{court?.name}</p>
-                            <p className="text-xs text-stone-500 uppercase font-bold">{court?.type}</p>
-                        </div>
-                    </div>
+        <div className="fixed inset-0 bg-stone-900/40 backdrop-blur-md z-70 flex flex-col justify-end sm:justify-center items-center p-0 sm:p-4 animate-in fade-in duration-300">
+            <div className="bg-stone-50 w-full max-w-lg rounded-t-[40px] sm:rounded-[40px] flex flex-col max-h-[92vh] overflow-hidden shadow-2xl animate-in slide-in-from-bottom duration-500">
+                {/* 1. Header with Glass effect */}
+                <div className="bg-white/80 backdrop-blur-xl px-6 py-5 border-b border-stone-200/60 flex items-center justify-between sticky top-0 z-10">
+                    <button onClick={onClose} className="p-2.5 -ml-2 text-stone-600 hover:bg-stone-100 rounded-full transition-all active:scale-90">
+                        <ArrowLeft size={22} strokeWidth={2.5} />
+                    </button>
+                    <h2 className="text-xl font-black text-stone-800 tracking-tight">Detalhes do {res.type}</h2>
+                    {canShare ? (
+                        <button onClick={handleShareWhatsapp} className="p-2.5 -mr-2 text-green-600 hover:bg-green-50 rounded-full transition-all active:scale-90">
+                            <Share2 size={22} strokeWidth={2.5} />
+                        </button>
+                    ) : <div className="w-10" />}
                 </div>
 
-                {/* 3. Central Blocks */}
+                <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
+                    {/* 2. Main Info Card - High Visual Impact */}
+                    <div className="relative group">
+                        <div className={`absolute -inset-1 bg-linear-to-r ${res.type === 'Play' ? 'from-court-green/30 to-saibro-500/30' : 'from-saibro-500/30 to-orange-400/30'} rounded-[32px] blur-xl opacity-50 group-hover:opacity-75 transition duration-1000 group-hover:duration-200`}></div>
+                        <div className={`relative bg-white rounded-[28px] p-6 shadow-xl border border-stone-100/50 overflow-hidden`}>
+                            {/* Visual Stripe */}
+                            <div className={`absolute top-0 right-0 w-32 h-32 -mr-16 -mt-16 rounded-full ${style.bg} opacity-20 blur-3xl`} />
 
-                {/* PLAY PARTICIPANTS */}
-                {res.type === 'Play' && (
-                    <div className="bg-white rounded-2xl card-court p-5">
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="font-bold text-stone-700 flex items-center gap-2">
-                                <Users size={18} className="text-saibro-500" /> Participantes
-                            </h3>
-                            <span className="text-xs font-bold bg-stone-50 text-stone-500 px-2 py-1 rounded-full">
-                                {participants.length + (res.guestName ? 1 : 0)} / 4
-                            </span>
-                        </div>
-
-                        <div className="grid grid-cols-1 gap-2">
-                            {participants.map(p => (
-                                <div key={p?.id} className="flex items-center justify-between p-2 bg-stone-50 rounded-xl">
-                                    <div className="flex items-center gap-3">
-                                        <img src={p?.avatar} className="w-10 h-10 rounded-full border border-stone-200 object-cover" alt={p?.name} />
-                                        <div>
-                                            <p className="font-bold text-stone-800 text-sm">{p?.name}</p>
-                                            <p className="text-[10px] uppercase font-bold text-stone-400">Sócio</p>
-                                        </div>
+                            <div className="flex justify-between items-start mb-6">
+                                <div className="space-y-1">
+                                    <div className="flex items-center gap-2">
+                                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border-2 ${style.border} ${style.bg} ${style.text} shadow-sm`}>
+                                            {style.label}
+                                        </span>
+                                        {res.status === 'cancelled' ? (
+                                            <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-red-100 text-red-600 border-2 border-red-200 shadow-sm">Cancelada</span>
+                                        ) : !isFuture ? (
+                                            <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-stone-100 text-stone-500 border-2 border-stone-200 shadow-sm">Finalizada</span>
+                                        ) : (
+                                            <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-green-50 text-green-600 border-2 border-green-100 shadow-sm">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" /> Ativa
+                                            </span>
+                                        )}
                                     </div>
-                                    {isAdmin && p?.id !== res.creatorId && (
-                                        <button
-                                            onClick={() => onUpdate({ ...res, participantIds: res.participantIds.filter(id => id !== p?.id) })}
-                                            className="p-2 text-stone-300 hover:text-red-500 transition-colors"
-                                        >
-                                            <UserMinus size={16} />
-                                        </button>
-                                    )}
+                                    <h1 className="text-4xl font-black text-stone-800 tracking-tighter pt-2 tabular-nums">
+                                        {res.startTime} <span className="text-stone-300 font-light mx-1">/</span> <span className="text-2xl text-stone-400">{res.endTime}</span>
+                                    </h1>
+                                    <p className="text-stone-500 font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 opacity-80">
+                                        <Calendar size={14} className="text-saibro-500" /> {getDayName(res.date)}, {formatDateBr(res.date)}
+                                    </p>
                                 </div>
-                            ))}
-                            {res.guestName && (
-                                <div className="flex items-center justify-between bg-saibro-50 p-3 rounded-xl border border-saibro-100">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-saibro-200 flex items-center justify-center text-saibro-700 font-bold text-xs shadow-inner">
-                                            DAY
-                                        </div>
-                                        <div>
-                                            <p className="font-bold text-stone-800 text-sm">{res.guestName}</p>
-                                            <p className="text-[10px] uppercase font-bold text-saibro-600">
-                                                Convidado de: {profiles.find(u => u.id === res.guestResponsibleId)?.name.split(' ')[0]}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    {canManageParticipants && (
-                                        <button
-                                            onClick={() => setShowGuestModal(true)}
-                                            className="p-2 text-stone-300 hover:text-saibro-600 transition-colors"
-                                        >
-                                            <Pencil size={16} />
-                                        </button>
-                                    )}
-                                </div>
-                            )}
-
-                            {canManageParticipants && participants.length + (res.guestName ? 1 : 0) < 4 && !res.guestName && (
-                                <button
-                                    onClick={() => setShowGuestModal(true)}
-                                    className="w-full flex items-center justify-center gap-2 p-3 rounded-xl border-2 border-dashed border-stone-200 text-stone-400 hover:border-saibro-300 hover:text-saibro-600 hover:bg-saibro-50 transition-all text-xs font-bold"
-                                >
-                                    <UserPlus size={16} /> Adicionar Convidado (Day Use)
-                                </button>
-                            )}
-                        </div>
-                    </div>
-                )}
-
-                {/* AULA INFO */}
-                {res.type === 'Aula' && (
-                    <div className="space-y-4">
-                        <div className="bg-white rounded-2xl card-court p-5">
-                            <h3 className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-4">Professor</h3>
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-full bg-saibro-600 flex items-center justify-center text-white font-black text-lg shadow-saibro-200 shadow-lg">
-                                    {professor?.name[0]}
-                                </div>
-                                <div>
-                                    <p className="font-black text-stone-800 text-lg uppercase leading-tight">{professor?.name}</p>
-                                    <p className="text-xs text-saibro-600 font-bold">Professor Titular</p>
+                                <div className="w-16 h-16 rounded-2xl bg-stone-50 border border-stone-100 flex flex-col items-center justify-center shadow-inner mt-2">
+                                    <span className="text-[10px] font-black text-stone-400 uppercase leading-none mb-1">Quadra</span>
+                                    <span className="text-xl font-black text-stone-800 leading-none">{court?.name.split(' ')[1] || '0'}</span>
                                 </div>
                             </div>
-                        </div>
 
-                        <div className="bg-white rounded-2xl card-court p-5">
-                            <h3 className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-4">Alunos</h3>
-                            {res.studentType === 'socio' ? (
-                                <div className="flex items-center gap-4">
-                                    <img src={participants[0]?.avatar} className="w-12 h-12 rounded-full border-2 border-saibro-100 p-0.5 object-cover" alt="" />
-                                    <div>
-                                        <p className="font-black text-stone-800 text-lg uppercase leading-tight">{participants[0]?.name}</p>
-                                        <span className="text-[10px] font-bold text-saibro-700 bg-saibro-50 px-2 py-0.5 rounded-md border border-saibro-100">SÓCIO ATIVO</span>
-                                    </div>
+                            <div className="flex items-center gap-3 p-4 bg-stone-50/80 rounded-2xl border border-stone-100 mb-6 group/court hover:bg-saibro-50 hover:border-saibro-100 transition-all duration-300">
+                                <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center border border-stone-200 shadow-sm text-saibro-600 group-hover/court:scale-110 group-hover/court:text-saibro-700 transition-transform">
+                                    <MapPin size={24} strokeWidth={2.5} />
                                 </div>
-                            ) : (
-                                <div className="space-y-3">
-                                    {nonSocioStudentsList.length > 0 ? nonSocioStudentsList.map(s => (
-                                        <div key={s.id} className="flex items-center gap-4 border-b border-stone-50 pb-2 last:border-0 last:pb-0">
-                                            <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-white shadow-blue-200 shadow-lg shrink-0">
-                                                <Wallet size={24} />
-                                            </div>
-                                            <div>
-                                                <p className="font-black text-stone-800 text-lg uppercase leading-tight">{s.name}</p>
-                                                <div className="flex items-center gap-2 mt-1">
-                                                    <span className="text-xs text-stone-500 font-bold uppercase">{s.planType}</span>
-                                                    {s.planType === 'Card Mensal' && (
-                                                        <span className={`text-[9px] px-2 py-0.5 rounded font-black border ${new Date(s.masterExpirationDate || '') < new Date() ? 'bg-red-50 text-red-600 border-red-100' : 'bg-green-50 text-green-600 border-green-100'
-                                                            }`}>
-                                                            {new Date(s.masterExpirationDate || '') < new Date() ? 'VENCIDO' : 'ATIVO'}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )) : <p className="text-stone-400 italic">Nenhum aluno vinculado.</p>}
+                                <div>
+                                    <p className="font-black text-stone-800 text-lg tracking-tight leading-tight">{court?.name}</p>
+                                    <p className="text-[10px] text-stone-400 uppercase font-black tracking-widest">{court?.type}</p>
+                                </div>
+                            </div>
+
+                            {/* PRIMARY ACTION BUTTONS INSIDE CARD */}
+                            {(canJoin || canLeave) && (
+                                <div className="mt-4 pt-4 border-t border-stone-100/80">
+                                    {canJoin && (
+                                        <button
+                                            onClick={() => onJoin(res.id)}
+                                            className="w-full py-4.5 bg-linear-to-r from-saibro-600 to-saibro-500 text-white font-black rounded-[20px] shadow-lg shadow-saibro-200 flex items-center justify-center gap-3 transition-all active:scale-[0.97] hover:brightness-110 uppercase tracking-widest text-sm"
+                                        >
+                                            <UserPlus size={20} strokeWidth={3} /> Entrar no Jogo
+                                        </button>
+                                    )}
+                                    {canLeave && (
+                                        <button
+                                            onClick={() => onLeave(res.id)}
+                                            className="w-full py-4 bg-stone-100 text-stone-700 font-black rounded-[20px] hover:bg-red-50 hover:text-red-600 transition-all flex items-center justify-center gap-3 active:scale-[0.97] uppercase tracking-widest text-sm"
+                                        >
+                                            <LogOut size={20} strokeWidth={3} /> Sair do Jogo
+                                        </button>
+                                    )}
                                 </div>
                             )}
                         </div>
                     </div>
-                )}
 
-                {/* Observations */}
-                {res.observation && (
-                    <div className="bg-white rounded-2xl card-court p-5">
-                        <h3 className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-2 flex items-center gap-2">
-                            <Info size={14} className="text-stone-300" /> Observações
-                        </h3>
-                        <p className="text-stone-600 text-sm italic font-medium leading-relaxed">"{res.observation}"</p>
+                    {/* 3. Participants / Students Section */}
+                    <div className="space-y-4">
+                        <div className="flex justify-between items-center px-1">
+                            <h3 className="text-sm font-black text-stone-800 uppercase tracking-widest flex items-center gap-2.5">
+                                <Users size={18} className="text-saibro-500" />
+                                {res.type === 'Aula' ? 'Alunos da Aula' : 'Lista de Atletas'}
+                            </h3>
+                            {res.type === 'Play' && (
+                                <span className={`text-[10px] font-black px-3 py-1 rounded-full ${participants.length + (res.guestName ? 1 : 0) === 4 ? 'bg-orange-100 text-orange-600' : 'bg-stone-100 text-stone-500'}`}>
+                                    {participants.length + (res.guestName ? 1 : 0)} / 4 VAGAS
+                                </span>
+                            )}
+                        </div>
+
+                        {res.type === 'Play' ? (
+                            <div className="grid grid-cols-1 gap-3">
+                                {participants.map(p => (
+                                    <div key={p?.id} className="flex items-center justify-between p-3.5 bg-white rounded-2xl border border-stone-200/60 shadow-sm hover:shadow-md transition-shadow group/item">
+                                        <div className="flex items-center gap-4">
+                                            <div className="relative">
+                                                <img src={p?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${p?.id}`} className="w-12 h-12 rounded-full border-2 border-stone-100 object-cover shadow-sm group-hover/item:border-saibro-200 transition-colors" alt={p?.name} />
+                                                {p?.id === res.creatorId && (
+                                                    <div className="absolute -top-1 -left-1 w-5 h-5 bg-saibro-500 rounded-full border-2 border-white flex items-center justify-center text-white" title="Criador">
+                                                        <Trophy size={10} strokeWidth={3} />
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div>
+                                                <p className="font-black text-stone-800 text-sm leading-tight group-hover/item:text-saibro-700 transition-colors uppercase tracking-tight">{p?.name}</p>
+                                                <p className="text-[10px] uppercase font-black text-stone-400 tracking-wider">Atleta Sócio</p>
+                                            </div>
+                                        </div>
+                                        {isAdmin && p?.id !== res.creatorId && (
+                                            <button
+                                                onClick={() => onUpdate({ ...res, participantIds: res.participantIds.filter(id => id !== p?.id) })}
+                                                className="p-2.5 text-stone-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                                            >
+                                                <UserMinus size={18} />
+                                            </button>
+                                        )}
+                                    </div>
+                                ))}
+
+                                {res.guestName && (
+                                    <div className="flex items-center justify-between bg-white border-2 border-saibro-100 p-3.5 rounded-2xl shadow-saibro-50/50 shadow-lg">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-12 h-12 rounded-full bg-linear-to-br from-saibro-200 to-saibro-300 flex items-center justify-center text-saibro-700 font-extrabold text-xs shadow-inner uppercase">
+                                                GUEST
+                                            </div>
+                                            <div>
+                                                <p className="font-black text-stone-800 text-sm leading-tight uppercase tracking-tight">{res.guestName}</p>
+                                                <p className="text-[10px] uppercase font-black text-saibro-600 tracking-wider">
+                                                    Convidado: {profiles.find(u => u.id === res.guestResponsibleId)?.name.split(' ')[0]}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        {canManageParticipants && (
+                                            <button
+                                                onClick={() => setShowGuestModal(true)}
+                                                className="p-2.5 text-saibro-300 hover:text-saibro-600 hover:bg-saibro-50 rounded-xl transition-all"
+                                            >
+                                                <Pencil size={18} />
+                                            </button>
+                                        )}
+                                    </div>
+                                )}
+
+                                {canManageParticipants && participants.length + (res.guestName ? 1 : 0) < 4 && !res.guestName && (
+                                    <button
+                                        onClick={() => setShowGuestModal(true)}
+                                        className="w-full h-16 flex items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-stone-300 text-stone-500 hover:border-saibro-400 hover:text-saibro-600 hover:bg-saibro-50/50 transition-all text-xs font-black uppercase tracking-widest"
+                                    >
+                                        <div className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center text-stone-400 group-hover:bg-saibro-100 transition-colors">
+                                            <UserPlus size={18} strokeWidth={2.5} />
+                                        </div>
+                                        Convidado (Day Use)
+                                    </button>
+                                )}
+                            </div>
+                        ) : (
+                            /* AULA INFO Stylization */
+                            <div className="space-y-3">
+                                <div className="bg-white rounded-2xl p-4 border border-stone-200/60 shadow-sm flex items-center gap-4">
+                                    <div className="w-14 h-14 rounded-2xl bg-saibro-600 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-saibro-100">
+                                        {professor?.name[0]}
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] font-black text-saibro-600 uppercase tracking-widest mb-0.5">Professor Titular</p>
+                                        <p className="font-black text-stone-800 text-lg uppercase leading-tight tracking-tight">{professor?.name}</p>
+                                    </div>
+                                </div>
+
+                                {res.studentType === 'socio' ? (
+                                    <div className="bg-white rounded-2xl p-4 border border-stone-200/60 shadow-sm flex items-center gap-4">
+                                        <img src={participants[0]?.avatar} className="w-14 h-14 rounded-full border-4 border-saibro-50 p-0.5 object-cover" alt="" />
+                                        <div>
+                                            <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest mb-0.5">Aluno Sócio</p>
+                                            <p className="font-black text-stone-800 text-lg uppercase leading-tight tracking-tight">{participants[0]?.name}</p>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-2">
+                                        {nonSocioStudentsList.length > 0 ? nonSocioStudentsList.map(s => (
+                                            <div key={s.id} className="bg-white rounded-2xl p-4 border border-stone-200/60 shadow-sm flex items-center gap-4">
+                                                <div className="w-14 h-14 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-50">
+                                                    <Wallet size={28} />
+                                                </div>
+                                                <div>
+                                                    <div className="flex items-center gap-2 mb-0.5">
+                                                        <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">{s.planType}</span>
+                                                        <span className={`text-[9px] px-1.5 py-0.5 rounded-md font-black border ${new Date(s.masterExpirationDate || '') < new Date() ? 'bg-red-50 text-red-600 border-red-100' : 'bg-green-50 text-green-600 border-green-100'}`}>
+                                                            {new Date(s.masterExpirationDate || '') < new Date() ? 'VENCIDO' : 'ATIVO'}
+                                                        </span>
+                                                    </div>
+                                                    <p className="font-black text-stone-800 text-lg uppercase leading-tight tracking-tight">{s.name}</p>
+                                                </div>
+                                            </div>
+                                        )) : <p className="text-stone-400 italic text-center text-sm py-4">Nenhum aluno vinculado.</p>}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* 4. Observations */}
+                    {res.observation && (
+                        <div className="bg-saibro-50/50 rounded-2xl p-5 border border-saibro-100/50">
+                            <h3 className="text-[10px] font-black text-saibro-600 uppercase tracking-widest mb-2 flex items-center gap-2">
+                                <Info size={14} strokeWidth={2.5} /> Informações Adicionais
+                            </h3>
+                            <p className="text-stone-700 text-sm font-medium leading-relaxed italic caret-saibro-500">
+                                "{res.observation}"
+                            </p>
+                        </div>
+                    )}
+
+                    {/* 5. Meta Info */}
+                    <div className="text-center pt-2 pb-8 border-t border-stone-100">
+                        <p className="text-[10px] text-stone-400 font-bold uppercase tracking-tighter">
+                            Protocolo: {res.id.slice(0, 8).toUpperCase()}
+                        </p>
+                        <p className="text-[10px] text-stone-300 mt-0.5 font-medium">
+                            Criado por {creator?.name} • SCT Play Cloud
+                        </p>
+                    </div>
+                </div>
+
+                {/* 6. Secondary Actions Bar (Compact Bottom) */}
+                {(canManageParticipants || canEdit || canCancel) && (
+                    <div className="bg-white border-t border-stone-100 p-5 pb-safe-offset-4 flex gap-3 shadow-[0_-10px_20px_-15px_rgba(0,0,0,0.1)]">
+                        {canManageParticipants && (
+                            <button
+                                onClick={() => setShowManageParticipants(true)}
+                                className="flex-1 h-14 bg-stone-50 text-stone-800 font-black rounded-2xl hover:bg-stone-100 flex items-center justify-center gap-2.5 transition-all active:scale-95 border border-stone-200/50 text-xs uppercase tracking-widest"
+                            >
+                                <UserCog size={20} /> <span className="hidden xs:inline">Atletas</span>
+                            </button>
+                        )}
+                        {canEdit && (
+                            <button
+                                onClick={() => onEdit(res)}
+                                className="flex-1 h-14 bg-stone-50 text-stone-800 font-black rounded-2xl hover:bg-saibro-50 hover:text-saibro-700 hover:border-saibro-100 flex items-center justify-center gap-2.5 transition-all active:scale-95 border border-stone-200/50 text-xs uppercase tracking-widest"
+                            >
+                                <Pencil size={20} /> <span className="hidden xs:inline">Editar</span>
+                            </button>
+                        )}
+                        {canCancel && (
+                            <button
+                                onClick={() => onCancel(res.id)}
+                                className="flex-1 h-14 bg-stone-50 text-red-500 font-black rounded-2xl hover:bg-red-50 hover:border-red-100 flex items-center justify-center gap-2.5 transition-all active:scale-95 border border-stone-200/50 text-xs uppercase tracking-widest"
+                            >
+                                <Trash2 size={20} /> <span className="hidden xs:inline">Cancelar</span>
+                            </button>
+                        )}
                     </div>
                 )}
-
-                {/* Meta Info */}
-                <div className="text-center pt-4 pb-20">
-                    <p className="text-[10px] text-stone-400">
-                        Reserva criada por {creator?.name} em {formatDateBr(res.date)}
-                    </p>
-                    <p className="text-[10px] text-stone-300 mt-1">ID: {res.id}</p>
-                </div>
-            </div>
-
-            {/* 4. Actions Bar (Sticky Bottom) */}
-            <div className="bg-white border-t border-stone-200 p-4 pb-safe flex flex-col gap-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-                <div className="flex gap-2">
-                    {/* Share is generally always available if active */}
-                    {canShare && (
-                        <button onClick={handleShareWhatsapp} className="p-3 rounded-xl bg-green-50 text-green-600 hover:bg-green-100 transition-colors">
-                            <Share2 size={20} />
-                        </button>
-                    )}
-
-                    {canManageParticipants && (
-                        <button
-                            onClick={() => setShowManageParticipants(true)}
-                            className="flex-1 py-3 bg-saibro-100 text-saibro-700 font-bold rounded-xl hover:bg-saibro-200 flex items-center justify-center gap-2 transition-all active:scale-95"
-                        >
-                            <Users size={18} /> Gerenciar Atletas
-                        </button>
-                    )}
-
-                    {/* Join / Leave Logic */}
-                    {canJoin && (
-                        <button onClick={() => onJoin(res.id)} className="flex-1 py-3 bg-saibro-600 text-white font-bold rounded-xl shadow-md hover:bg-saibro-700 flex items-center justify-center gap-2 transition-all active:scale-95">
-                            <UserPlus size={18} /> Entrar no Jogo
-                        </button>
-                    )}
-                    {canLeave && (
-                        <button onClick={() => onLeave(res.id)} className="flex-1 py-3 bg-stone-100 text-stone-700 font-bold rounded-xl hover:bg-stone-200 flex items-center justify-center gap-2 transition-all active:scale-95">
-                            <LogOut size={18} /> Sair do Jogo
-                        </button>
-                    )}
-                </div>
-
-                <div className="flex gap-2">
-                    {canEdit && (
-                        <button onClick={() => onEdit(res)} className="flex-1 py-3 bg-stone-50 text-stone-600 font-bold rounded-xl hover:bg-stone-100 flex items-center justify-center gap-2 transition-colors">
-                            <Pencil size={18} /> Editar
-                        </button>
-                    )}
-                    {canCancel && (
-                        <button onClick={() => onCancel(res.id)} className="flex-1 py-3 bg-red-50 text-red-500 font-bold rounded-xl hover:bg-red-100 flex items-center justify-center gap-2 transition-colors">
-                            <Trash2 size={18} /> Cancelar Reserva
-                        </button>
-                    )}
-                </div>
             </div>
 
             {showManageParticipants && (
