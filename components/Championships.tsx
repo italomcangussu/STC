@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Trophy, Calendar, History, ListOrdered, GitMerge, ChevronDown, Loader2, Download, Share2, Users, Shirt, ChevronLeft, ChevronRight, Clock, MapPin, Info, Save } from 'lucide-react';
+import { Trophy, Calendar, History, ListOrdered, GitMerge, ChevronDown, Loader2, Download, Share2, Users, Shirt, ChevronLeft, ChevronRight, Clock, MapPin, Info, Save, Plus, Minus } from 'lucide-react';
 import { Championship, Match, User, ChampionshipRound } from '../types';
 import { getMatchWinner, formatDateBr } from '../utils';
 import { supabase } from '../lib/supabase';
@@ -1051,66 +1051,67 @@ export const ResultModal: React.FC<{ match: Match; profiles: User[]; onClose: ()
                         </div>
                     </div>
 
-                    {/* Score Inputs */}
-                    <div className="space-y-3 bg-stone-50 p-4 rounded-3xl border border-stone-100">
-                        {/* Set 1 */}
-                        <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold text-stone-400 uppercase w-12 text-center">Set 1</span>
-                            <div className="flex gap-4">
-                                <input
-                                    type="number"
-                                    value={scoreA[0]}
-                                    onChange={(e) => updateScore('A', 0, e.target.value)}
-                                    className={`w-14 h-14 rounded-2xl text-center text-2xl font-black outline-none transition-all border-2 ${getInputBorderClass(set1Valid, set1Winner === 'A')}`}
-                                />
-                                <input
-                                    type="number"
-                                    value={scoreB[0]}
-                                    onChange={(e) => updateScore('B', 0, e.target.value)}
-                                    className={`w-14 h-14 rounded-2xl text-center text-2xl font-black outline-none transition-all border-2 ${getInputBorderClass(set1Valid, set1Winner === 'B')}`}
-                                />
-                            </div>
-                        </div>
+                    {/* Score Inputs with Increment Buttons */}
+                    <div className="space-y-4 bg-stone-50 p-4 rounded-3xl border border-stone-100">
+                        {[0, 1, 2].map((idx) => {
+                            if (idx === 2 && !showThirdSet) return null;
+                            const isSuperTie = idx === 2;
+                            const isValid = idx === 0 ? set1Valid : idx === 1 ? set2Valid : set3Valid;
+                            const winner = idx === 0 ? set1Winner : idx === 1 ? set2Winner : set3Winner;
 
-                        {/* Set 2 */}
-                        <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold text-stone-400 uppercase w-12 text-center">Set 2</span>
-                            <div className="flex gap-4">
-                                <input
-                                    type="number"
-                                    value={scoreA[1]}
-                                    onChange={(e) => updateScore('A', 1, e.target.value)}
-                                    className={`w-14 h-14 rounded-2xl text-center text-2xl font-black outline-none transition-all border-2 ${getInputBorderClass(set2Valid, set2Winner === 'A')}`}
-                                />
-                                <input
-                                    type="number"
-                                    value={scoreB[1]}
-                                    onChange={(e) => updateScore('B', 1, e.target.value)}
-                                    className={`w-14 h-14 rounded-2xl text-center text-2xl font-black outline-none transition-all border-2 ${getInputBorderClass(set2Valid, set2Winner === 'B')}`}
-                                />
-                            </div>
-                        </div>
+                            return (
+                                <div key={idx} className={`flex items-center justify-between ${idx > 0 ? 'pt-4 border-t border-stone-100' : ''}`}>
+                                    <div className="w-12 text-center">
+                                        <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest leading-none">
+                                            {isSuperTie ? 'Super' : 'Set'}
+                                        </p>
+                                        <p className="text-xs font-black text-saibro-600 mt-1">
+                                            {isSuperTie ? 'Tie' : idx + 1}
+                                        </p>
+                                    </div>
 
-                        {/* Set 3 (Tiebreak) */}
-                        {showThirdSet && (
-                            <div className="flex items-center justify-between animate-in slide-in-from-top-2">
-                                <span className="text-[10px] font-black text-saibro-600 uppercase w-12 text-center leading-tight">Super Tie</span>
-                                <div className="flex gap-4">
-                                    <input
-                                        type="number"
-                                        value={scoreA[2]}
-                                        onChange={(e) => updateScore('A', 2, e.target.value)}
-                                        className={`w-14 h-14 rounded-2xl text-center text-2xl font-black outline-none transition-all border-2 ${getInputBorderClass(set3Valid, set3Winner === 'A')}`}
-                                    />
-                                    <input
-                                        type="number"
-                                        value={scoreB[2]}
-                                        onChange={(e) => updateScore('B', 2, e.target.value)}
-                                        className={`w-14 h-14 rounded-2xl text-center text-2xl font-black outline-none transition-all border-2 ${getInputBorderClass(set3Valid, set3Winner === 'B')}`}
-                                    />
+                                    <div className="flex gap-6">
+                                        {/* Player A Score Control */}
+                                        <div className="flex flex-col items-center gap-1.5">
+                                            <button
+                                                onClick={() => updateScore('A', idx, String(scoreA[idx] + 1))}
+                                                className="w-10 h-7 bg-white border border-stone-200 rounded-lg flex items-center justify-center text-stone-400 hover:text-saibro-600 hover:border-saibro-200 transition-all active:scale-95"
+                                            >
+                                                <Plus size={12} strokeWidth={3} />
+                                            </button>
+                                            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl font-black border-2 transition-all ${getInputBorderClass(isValid, winner === 'A')}`}>
+                                                {scoreA[idx]}
+                                            </div>
+                                            <button
+                                                onClick={() => updateScore('A', idx, String(Math.max(0, scoreA[idx] - 1)))}
+                                                className="w-10 h-7 bg-white border border-stone-200 rounded-lg flex items-center justify-center text-stone-400 hover:text-stone-600 transition-all active:scale-95"
+                                            >
+                                                <Minus size={12} strokeWidth={3} />
+                                            </button>
+                                        </div>
+
+                                        {/* Player B Score Control */}
+                                        <div className="flex flex-col items-center gap-1.5">
+                                            <button
+                                                onClick={() => updateScore('B', idx, String(scoreB[idx] + 1))}
+                                                className="w-10 h-7 bg-white border border-stone-200 rounded-lg flex items-center justify-center text-stone-400 hover:text-saibro-600 hover:border-saibro-200 transition-all active:scale-95"
+                                            >
+                                                <Plus size={12} strokeWidth={3} />
+                                            </button>
+                                            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl font-black border-2 transition-all ${getInputBorderClass(isValid, winner === 'B')}`}>
+                                                {scoreB[idx]}
+                                            </div>
+                                            <button
+                                                onClick={() => updateScore('B', idx, String(Math.max(0, scoreB[idx] - 1)))}
+                                                className="w-10 h-7 bg-white border border-stone-200 rounded-lg flex items-center justify-center text-stone-400 hover:text-stone-600 transition-all active:scale-95"
+                                            >
+                                                <Minus size={12} strokeWidth={3} />
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                        )}
+                            );
+                        })}
                     </div>
 
                     <button
