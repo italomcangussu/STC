@@ -75,7 +75,7 @@ const ManageParticipantsModal: React.FC<{
     const toggleId = (id: string) => {
         setSelectedIds(prev => {
             if (prev.includes(id)) return prev.filter(i => i !== id);
-            if (prev.length >= 4) return prev; // Limit to 4 for example
+            if (prev.length >= 8) return prev; // Limit to 8 for example
             return [...prev, id];
         });
     };
@@ -291,7 +291,7 @@ const ReservationDetails: React.FC<{
     const canManageParticipants = isActive && (isAdmin || currentUser.role === 'socio' || currentUser.role === 'admin') && isFuture && res.type === 'Play';
     const canEdit = isActive && (isAdmin || (isFuture && isCreator));
     const canCancel = isActive && isFuture && (isAdmin || isCreator);
-    const canJoin = res.type === 'Play' && isActive && isNotFinished && !isParticipant && (currentUser.role === 'socio' || isAdmin) && res.participantIds.length < 4;
+    const canJoin = res.type === 'Play' && isActive && isNotFinished && !isParticipant && (currentUser.role === 'socio' || isAdmin) && res.participantIds.length < 8;
     const canLeave = res.type === 'Play' && isActive && isNotFinished && isParticipant;
     const canShare = isActive;
 
@@ -426,8 +426,8 @@ const ReservationDetails: React.FC<{
                                 {res.type === 'Aula' ? 'Alunos da Aula' : 'Lista de Atletas'}
                             </h3>
                             {res.type === 'Play' && (
-                                <span className={`text-[10px] font-black px-3 py-1 rounded-full ${participants.length + (res.guestName ? 1 : 0) === 4 ? 'bg-orange-100 text-orange-600' : 'bg-stone-100 text-stone-500'}`}>
-                                    {participants.length + (res.guestName ? 1 : 0)} / 4 VAGAS
+                                <span className={`text-[10px] font-black px-3 py-1 rounded-full ${participants.length + (res.guestName ? 1 : 0) === 8 ? 'bg-orange-100 text-orange-600' : 'bg-stone-100 text-stone-500'}`}>
+                                    {participants.length + (res.guestName ? 1 : 0)} / 8 VAGAS
                                 </span>
                             )}
                         </div>
@@ -485,7 +485,7 @@ const ReservationDetails: React.FC<{
                                     </div>
                                 )}
 
-                                {canManageParticipants && participants.length + (res.guestName ? 1 : 0) < 4 && !res.guestName && (
+                                {canManageParticipants && participants.length + (res.guestName ? 1 : 0) < 8 && !res.guestName && (
                                     <button
                                         onClick={() => setShowGuestModal(true)}
                                         className="w-full h-16 flex items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-stone-300 text-stone-500 hover:border-saibro-400 hover:text-saibro-600 hover:bg-saibro-50/50 transition-all text-xs font-black uppercase tracking-widest"
@@ -1016,8 +1016,8 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
             const res = reservations.find(r => r.id === id);
             if (!res) return;
 
-            if (res.participantIds.length >= 4) {
-                alert('Limite de 4 participantes atingido.');
+            if (res.participantIds.length >= 8) {
+                alert('Limite de 8 participantes atingido.');
                 return;
             }
 
