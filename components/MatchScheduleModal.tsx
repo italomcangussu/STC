@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, MapPin, X, Check, AlertCircle, Loader2 } from 'lucide-react';
 import { Match, Court } from '../types';
 import { formatDateBr } from '../utils';
@@ -33,13 +33,37 @@ export const MatchScheduleModal: React.FC<Props> = ({
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    // Filter courts based on class
+    // Lock body scroll
+    useEffect(() => {
+        document.body.style.overflow = 'hidden';
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, []);
+
+    // Filter courts based on class (robust check)
     const availableCourts = courts.filter(court => {
-        if (!court.isActive) return false;
-        if (['6ª Classe'].includes(className)) return court.type === 'Rápida';
-        if (['4ª Classe', '5ª Classe'].includes(className)) return court.type === 'Saibro';
-        return true; // 1, 2, 3 classes - any court
+        // Handle both camelCase and snake_case from DB
+        const isActive = (court as any).is_active !== undefined ? (court as any).is_active : court.isActive;
+        if (isActive === false) return false;
+
+        const normalizedClassName = (className || '').trim();
+
+        // 6th class -> Hard Court (Rápida)
+        if (normalizedClassName.includes('6ª')) return court.type === 'Rápida';
+
+        // 4th/5th class -> Clay Court (Saibro)
+        if (normalizedClassName.includes('4ª') || normalizedClassName.includes('5ª')) return court.type === 'Saibro';
+
+        return true; // Other classes (1, 2, 3, etc.) - any court
     });
+
+    // Auto-select court if only one is available
+    useEffect(() => {
+        if (availableCourts.length === 1 && !selectedCourtId) {
+            setSelectedCourtId(availableCourts[0].id);
+        }
+    }, [availableCourts, selectedCourtId]);
 
     const isFriday = (dateString: string) => {
         if (!dateString) return false;
@@ -62,12 +86,6 @@ export const MatchScheduleModal: React.FC<Props> = ({
             return;
         }
 
-        // Validate time slot (unless Friday)
-        if (!isFriday(date) && !ALL_TIME_SLOTS.includes(time)) {
-            // If manual input allowed outside slots, skip this. But req says "Manhã 5h-8h..."
-            // Assuming strict slots for now unless logic allows custom
-        }
-
         setIsSubmitting(true);
         try {
             await onSchedule(date, time, selectedCourtId);
@@ -79,131 +97,161 @@ export const MatchScheduleModal: React.FC<Props> = ({
     };
 
     return (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-            <div className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
-                <div className="bg-saibro-50 p-6 border-b border-saibro-100 flex justify-between items-center">
+        <div className="fixed inset-0 z-[110] flex items-start justify-center p-0 sm:p-4">
+            {/* Backdrop */}
+            <div
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300"
+                onClick={onClose}
+            />
+
+            <div className="relative bg-white sm:rounded-[2.5rem] w-full max-w-md overflow-hidden shadow-2xl animate-in slide-in-from-top duration-300 max-h-screen flex flex-col pt-safe pb-safe outline-none">
+                {/* Header */}
+                <div className="bg-saibro-50 p-6 border-b border-saibro-100 flex justify-between items-center flex-none">
                     <div>
-                        <h3 className="text-lg font-bold text-saibro-900">Agendar Partida</h3>
-                        <p className="text-xs text-saibro-700">{roundName} • {formatDateBr(roundStartDate)} a {formatDateBr(roundEndDate)}</p>
+                        <h3 className="text-lg font-black text-stone-900 leading-tight">Agendar Partida</h3>
+                        <p className="text-[10px] font-bold text-saibro-600 uppercase tracking-widest mt-1">
+                            {roundName} • {formatDateBr(roundStartDate)} a {formatDateBr(roundEndDate)}
+                        </p>
                     </div>
-                    <button onClick={onClose} className="text-saibro-400 hover:text-saibro-600 transition-colors">
-                        <X size={24} />
+                    <button
+                        onClick={onClose}
+                        className="w-10 h-10 rounded-full bg-white shadow-sm border border-stone-100 flex items-center justify-center text-stone-400 hover:text-saibro-600 transition-all hover:rotate-90"
+                    >
+                        <X size={20} />
                     </button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="p-6 space-y-5">
-                    {/* Date Selection */}
-                    <div>
-                        <label className="text-sm font-bold text-stone-700 mb-2 flex items-center gap-2">
-                            <Calendar size={16} className="text-saibro-500" /> Data
-                        </label>
-                        <input
-                            type="date"
-                            value={date}
-                            min={roundStartDate}
-                            max={roundEndDate}
-                            onChange={(e) => setDate(e.target.value)}
-                            className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-saibro-500 outline-none transition-all"
-                        />
-                        <p className="text-[10px] text-stone-400 mt-1 pl-1">
-                            Período permitido: {formatDateBr(roundStartDate)} a {formatDateBr(roundEndDate)}
-                        </p>
-                    </div>
-
-                    {/* Time Selection */}
-                    <div>
-                        <label className="text-sm font-bold text-stone-700 mb-2 flex items-center gap-2">
-                            <Clock size={16} className="text-saibro-500" /> Horário
-                        </label>
-
-                        {isFriday(date) ? (
-                            <div>
-                                <input
-                                    type="time"
-                                    value={time}
-                                    onChange={(e) => setTime(e.target.value)}
-                                    className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-saibro-500 outline-none transition-all"
-                                />
-                                <p className="text-[10px] text-green-600 font-bold mt-1 pl-1 flex items-center gap-1">
-                                    <Check size={10} /> Sexta-feira: Horário livre!
-                                </p>
-                            </div>
-                        ) : (
-                            <div className="grid grid-cols-3 gap-2">
-                                {ALL_TIME_SLOTS.map(slot => (
-                                    <button
-                                        key={slot}
-                                        type="button"
-                                        onClick={() => setTime(slot)}
-                                        className={`py-2 px-1 rounded-lg text-xs font-bold border transition-all ${time === slot
-                                            ? 'bg-saibro-600 text-white border-saibro-600 shadow-md'
-                                            : 'bg-white text-stone-600 border-stone-200 hover:bg-stone-50'
-                                            }`}
-                                    >
-                                        {slot}
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-                        {!isFriday(date) && (
-                            <p className="text-[10px] text-stone-400 mt-2 pl-1">
-                                Slots: Manhã (6h-8h), Tarde (16h-17h), Noite (20h-22h)
+                {/* Content - Scrollable area */}
+                <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        {/* Date Selection */}
+                        <div>
+                            <label className="text-xs font-black text-stone-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                <Calendar size={14} className="text-saibro-500" /> Data do Confronto
+                            </label>
+                            <input
+                                type="date"
+                                value={date}
+                                min={roundStartDate}
+                                max={roundEndDate}
+                                onChange={(e) => setDate(e.target.value)}
+                                className="w-full p-4 bg-stone-50 border border-stone-100 rounded-2xl focus:ring-2 focus:ring-saibro-500 outline-none transition-all font-bold text-stone-800"
+                            />
+                            <p className="text-[10px] text-stone-400 mt-2 pl-1 font-medium italic">
+                                Período da rodada: {formatDateBr(roundStartDate)} até {formatDateBr(roundEndDate)}
                             </p>
-                        )}
-                    </div>
+                        </div>
 
-                    {/* Court Selection */}
-                    <div>
-                        <label className="text-sm font-bold text-stone-700 mb-2 flex items-center gap-2">
-                            <MapPin size={16} className="text-saibro-500" /> Quadra
-                        </label>
-                        {availableCourts.length === 0 ? (
-                            <p className="text-red-500 text-sm p-3 bg-red-50 rounded-xl">Não há quadras disponíveis para esta classe ({className}).</p>
-                        ) : (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                {availableCourts.map(court => (
-                                    <button
-                                        key={court.id}
-                                        type="button"
-                                        onClick={() => setSelectedCourtId(court.id)}
-                                        className={`p-3 rounded-xl border text-left transition-all ${selectedCourtId === court.id
-                                            ? 'bg-saibro-50 border-saibro-500 ring-1 ring-saibro-500'
-                                            : 'bg-white border-stone-200 hover:bg-stone-50'
-                                            }`}
-                                    >
-                                        <div className="font-bold text-stone-800 text-sm">{court.name}</div>
-                                        <div className="text-xs text-stone-500">{court.type}</div>
-                                    </button>
-                                ))}
+                        {/* Time Selection */}
+                        <div>
+                            <label className="text-xs font-black text-stone-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                <Clock size={14} className="text-saibro-500" /> Horários Sugeridos
+                            </label>
+
+                            {isFriday(date) ? (
+                                <div className="space-y-2">
+                                    <input
+                                        type="time"
+                                        value={time}
+                                        onChange={(e) => setTime(e.target.value)}
+                                        className="w-full p-4 bg-stone-50 border border-stone-100 rounded-2xl focus:ring-2 focus:ring-saibro-500 outline-none transition-all font-bold text-stone-800"
+                                    />
+                                    <p className="text-[10px] text-green-600 font-black mt-1 pl-1 flex items-center gap-1 uppercase tracking-tighter">
+                                        <Check size={10} /> Sexta-feira: Horário livre disponível!
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-3 gap-2">
+                                    {ALL_TIME_SLOTS.map(slot => (
+                                        <button
+                                            key={slot}
+                                            type="button"
+                                            onClick={() => setTime(slot)}
+                                            className={`py-3 rounded-xl text-xs font-black transition-all border ${time === slot
+                                                ? 'bg-saibro-600 text-white border-saibro-600 shadow-md'
+                                                : 'bg-white text-stone-600 border-stone-100 hover:border-saibro-200'
+                                                }`}
+                                        >
+                                            {slot}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                            {!isFriday(date) && (
+                                <div className="mt-3 p-3 bg-stone-50 rounded-xl border border-stone-100">
+                                    <p className="text-[9px] text-stone-400 font-black uppercase tracking-widest flex items-center gap-2">
+                                        <span className="w-1.5 h-1.5 bg-saibro-500 rounded-full" />
+                                        Manhã (6h-7h) • Tarde (16h-17h) • Noite (20h-22h)
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Court Selection */}
+                        <div>
+                            <label className="text-xs font-black text-stone-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                <MapPin size={14} className="text-saibro-500" /> Quadras Disponíveis ({className})
+                            </label>
+                            {availableCourts.length === 0 ? (
+                                <div className="p-4 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-3">
+                                    <AlertCircle className="text-red-500 shrink-0" size={18} />
+                                    <p className="text-red-600 text-xs font-bold">Não há quadras configuradas para esta categoria.</p>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 gap-2">
+                                    {availableCourts.map(court => (
+                                        <button
+                                            key={court.id}
+                                            type="button"
+                                            onClick={() => setSelectedCourtId(court.id)}
+                                            className={`p-4 rounded-2xl border text-left transition-all flex items-center justify-between ${selectedCourtId === court.id
+                                                ? 'bg-saibro-50 border-saibro-500 ring-1 ring-saibro-500 shadow-inner'
+                                                : 'bg-white border-stone-100 hover:border-saibro-200'
+                                                }`}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className={`w-2 h-2 rounded-full ${selectedCourtId === court.id ? 'bg-saibro-600' : 'bg-stone-200'}`} />
+                                                <div>
+                                                    <div className="font-black text-stone-800 text-sm tracking-tight">{court.name}</div>
+                                                    <div className="text-[10px] font-bold text-stone-400 uppercase tracking-tighter">{court.type}</div>
+                                                </div>
+                                            </div>
+                                            {selectedCourtId === court.id && <Check size={16} className="text-saibro-600" />}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        {error && (
+                            <div className="p-4 bg-red-50 border border-red-100 rounded-2xl text-red-600 text-xs font-black flex items-center gap-3 animate-in fade-in zoom-in-95">
+                                <AlertCircle size={18} className="shrink-0" />
+                                {error}
                             </div>
                         )}
-                    </div>
+                    </form>
+                </div>
 
-                    {error && (
-                        <div className="p-3 bg-red-50 border border-red-100 rounded-xl text-red-600 text-sm flex items-center gap-2 animate-pulse">
-                            <AlertCircle size={16} />
-                            {error}
-                        </div>
-                    )}
-
+                {/* Footer Actions */}
+                <div className="p-6 border-t border-stone-100 bg-stone-50/50 flex-none pb-safe-extra">
                     <button
-                        type="submit"
+                        onClick={handleSubmit}
                         disabled={isSubmitting}
-                        className="w-full py-3.5 bg-saibro-600 text-white font-bold rounded-xl shadow-lg shadow-orange-100 hover:bg-saibro-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+                        className="w-full py-4 bg-saibro-600 text-white text-sm font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-saibro-100 hover:bg-saibro-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-3"
                     >
                         {isSubmitting ? (
                             <>
-                                <Loader2 className="animate-spin" size={20} />
+                                <Loader2 className="animate-spin" size={18} />
                                 Salvando...
                             </>
                         ) : (
                             <>
-                                <Check size={20} />
-                                Confirmar Agendamento
+                                <Check size={18} />
+                                Confirmar e Agendar
                             </>
                         )}
                     </button>
-                </form>
+                </div>
             </div>
         </div>
     );

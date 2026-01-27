@@ -86,9 +86,20 @@
 }
 
 @layer base {
+    html,
+    body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden; /* Lock root scroll */
+        -webkit-overflow-scrolling: touch;
+    }
+
     body {
         background-color: #fff7ed;
         color: #431407;
+        position: fixed; /* Extra stability for iOS */
+        width: 100%;
     }
 }
 
@@ -185,6 +196,25 @@
 
     .min-h-safe {
         min-height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    }
+
+    /* Custom Scrollbar */
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 4px;
+        height: 4px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.1);
+        border-radius: 10px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: rgba(0, 0, 0, 0.2);
     }
 }
 

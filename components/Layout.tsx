@@ -118,9 +118,9 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
     const filteredNav = navItems.filter(item => (!item.roles || item.roles.includes(currentUser.role)));
 
     return (
-        <div className="min-h-screen bg-clay-pattern flex flex-col md:flex-row">
+        <div className="h-screen flex flex-col md:flex-row overflow-hidden bg-clay-pattern">
             {/* Mobile Header */}
-            <header className="md:hidden bg-white border-b border-saibro-200 p-4 flex justify-between items-center sticky top-0 z-50">
+            <header className="flex-none md:hidden bg-white border-b border-saibro-200 p-4 flex justify-between items-center z-50 pt-safe">
                 <div className="flex items-center gap-3">
                     <img src="https://smztsayzldjmkzmufqcz.supabase.co/storage/v1/object/public/logoapp/SOBRAL.zip%20-%201.png" className="w-8 h-8 object-contain" alt="Logo" />
                     <h1 className="text-xl font-bold text-saibro-700">STC Play</h1>
@@ -139,9 +139,9 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
             <aside className={`
                 fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-saibro-200 transform transition-transform duration-300 ease-in-out
                 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-                md:relative md:translate-x-0
+                md:relative md:translate-x-0 md:flex md:flex-col
             `}>
-                <div className="p-6 flex justify-between items-center">
+                <div className="p-6 flex-none flex justify-between items-center">
                     <div className="hidden md:flex items-center gap-2">
                         <img src="https://smztsayzldjmkzmufqcz.supabase.co/storage/v1/object/public/logoapp/SOBRAL.zip%20-%201.png" className="w-10 h-10 object-contain" alt="Logo" />
                         <h1 className="text-2xl font-bold text-saibro-700">STC Play</h1>
@@ -152,7 +152,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
                 </div>
 
                 {/* User Profile Snippet */}
-                <div className="px-6 mb-6">
+                <div className="px-6 mb-6 flex-none">
                     <button
                         onClick={() => { setView('perfil'); setSidebarOpen(false); }}
                         className="flex items-center gap-3 bg-saibro-50 p-3 rounded-2xl card-court w-full hover:bg-saibro-100 transition-smooth text-left group"
@@ -189,7 +189,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
                     )}
                 </div>
 
-                <nav className="px-4 space-y-1 overflow-y-auto max-h-[calc(100vh-200px)]">
+                <nav className="px-4 pb-6 space-y-1 overflow-y-auto flex-1 custom-scrollbar">
                     {filteredNav.map(item => (
                         <button
                             key={item.id}
@@ -206,26 +206,26 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
 
                     <div className="divider-net mx-4 my-4"></div>
 
-                    <button onClick={onLogout} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 transition-smooth mx-4">
+                    <button onClick={onLogout} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 transition-smooth">
                         <LogOut size={20} /> Sair
                     </button>
                 </nav>
             </aside>
 
             {/* Main Content Area */}
-            <main className="flex-1 overflow-y-auto h-[calc(100vh-64px)] md:h-screen">
-                <div className="max-w-4xl mx-auto pb-24 pb-safe">
+            <main className="flex-1 overflow-y-auto overscroll-contain relative custom-scrollbar">
+                <div className="max-w-4xl mx-auto p-4 md:p-6 pb-32 md:pb-12">
                     {children}
                 </div>
             </main>
 
             {/* Bottom Nav (Mobile Only) */}
-            <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-saibro-200 flex justify-around p-2 z-40 pb-safe">
+            <div className="flex-none md:hidden bg-white border-t border-saibro-200 flex justify-around p-2 z-40 pb-safe">
                 {filteredNav.slice(0, 5).map(item => (
                     <button
                         key={item.id}
                         onClick={() => setView(item.id)}
-                        className={`flex flex-col items-center justify-center py-2 px-1 rounded-lg flex-1 ${view === item.id ? 'text-saibro-600' : 'text-stone-400'}`}
+                        className={`flex flex-col items-center justify-center py-2 px-1 rounded-lg flex-1 transition-all active:scale-90 ${view === item.id ? 'text-saibro-600' : 'text-stone-400'}`}
                     >
                         {React.cloneElement(item.icon as React.ReactElement<any>, { size: 24 })}
                         <span className="text-[10px] mt-1 font-medium truncate w-full text-center">{item.label}</span>

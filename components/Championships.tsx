@@ -50,6 +50,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
     const [editingMatch, setEditingMatch] = useState<Match | null>(null);
     const [schedulingMatch, setSchedulingMatch] = useState<Match | null>(null);
     const [showChampSelector, setShowChampSelector] = useState(false); // Mobile friendly selector
+    const [showAllRounds, setShowAllRounds] = useState(false);
     const selectorRef = useRef<HTMLDivElement>(null);
     const [courts, setCourts] = useState<any[]>([]);
 
@@ -104,15 +105,17 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
 
             setChampionships(initialChamps);
 
-            // Auto-select active or registration open
+            // Auto-select: 1. Ongoing, 2. Registration Open, 3. First Available
+            const ongoing = initialChamps.find(c => c.status === 'ongoing');
             const regOpen = initialChamps.find(c => c.registration_open === true);
-            if (regOpen) {
+
+            if (ongoing) {
+                if (!selectedChampId) setSelectedChampId(ongoing.id);
+            } else if (regOpen) {
                 setRegistrationChamp(regOpen);
                 if (!selectedChampId) setSelectedChampId(regOpen.id);
-            } else {
-                const ongoing = initialChamps.find(c => c.status === 'ongoing');
-                if (ongoing && !selectedChampId) setSelectedChampId(ongoing.id);
-                else if (initialChamps.length > 0 && !selectedChampId) setSelectedChampId(initialChamps[0].id);
+            } else if (initialChamps.length > 0 && !selectedChampId) {
+                setSelectedChampId(initialChamps[0].id);
             }
 
             // 2. Fetch profiles
@@ -187,7 +190,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                 .eq('championship_id', selectedChampId)
                 .order('round_number', { ascending: true });
 
-            const mappedRounds = roundsData || [];
+            const mappedRounds = (roundsData || []).filter(r => currentUser.role === 'admin' || r.status === 'active');
             setRounds(mappedRounds);
 
             // Set current round (active or first)
@@ -734,58 +737,84 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
 
                     return (
                         <div className="space-y-6">
-                            {/* Round Navigator */}
-                            <div className="flex items-center justify-between bg-white p-4 rounded-[2.5rem] border border-stone-100 shadow-sm sticky top-2 z-20">
+                            {/* Rounds Header & Toggle */}
+                            <div className="flex items-center justify-between px-2">
+                                <h3 className="text-[10px] font-black text-stone-400 uppercase tracking-widest leading-none">
+                                    {showAllRounds ? 'Todos os Confrontos' : 'Confrontos por Rodada'}
+                                </h3>
                                 <button
-                                    onClick={() => setSelectedRoundIndex(prev => Math.max(0, prev - 1))}
-                                    className={`p-2 rounded-xl transition-colors ${selectedRoundIndex > 0 ? 'text-saibro-600 bg-saibro-50' : 'text-stone-200 cursor-not-allowed'}`}
-                                    disabled={selectedRoundIndex === 0}
+                                    onClick={() => setShowAllRounds(!showAllRounds)}
+                                    className={`text-[10px] font-black uppercase px-3 py-1.5 rounded-full border transition-all ${showAllRounds ? 'bg-stone-900 text-white border-stone-900' : 'bg-white text-stone-500 border-stone-200'}`}
                                 >
-                                    <ChevronLeft size={24} />
-                                </button>
-                                <div className="text-center">
-                                    <h3 className="font-black text-stone-800 text-sm">{currentRound.name}</h3>
-                                    <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mt-0.5">
-                                        {formatDateBr(currentRound.start_date)} - {formatDateBr(currentRound.end_date)}
-                                    </p>
-                                </div>
-                                <button
-                                    onClick={() => setSelectedRoundIndex(prev => Math.min(rounds.length - 1, prev + 1))}
-                                    className={`p-2 rounded-xl transition-colors ${selectedRoundIndex < rounds.length - 1 ? 'text-saibro-600 bg-saibro-50' : 'text-stone-200 cursor-not-allowed'}`}
-                                    disabled={selectedRoundIndex === rounds.length - 1}
-                                >
-                                    <ChevronRight size={24} />
+                                    {showAllRounds ? 'Ver por Rodada' : 'Ver Todos'}
                                 </button>
                             </div>
+
+                            {/* Round Navigator (Only if not showing all) */}
+                            {!showAllRounds && (
+                                <div className="flex items-center justify-between bg-white p-4 rounded-[2.5rem] border border-stone-100 shadow-sm sticky top-2 z-20">
+                                    <button
+                                        onClick={() => setSelectedRoundIndex(prev => Math.max(0, prev - 1))}
+                                        className={`p-2 rounded-xl transition-colors ${selectedRoundIndex > 0 ? 'text-saibro-600 bg-saibro-50' : 'text-stone-200 cursor-not-allowed'}`}
+                                        disabled={selectedRoundIndex === 0}
+                                    >
+                                        <ChevronLeft size={24} />
+                                    </button>
+                                    <div className="text-center">
+                                        <h3 className="font-black text-stone-800 text-sm">{currentRound.name}</h3>
+                                        <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mt-0.5">
+                                            {formatDateBr(currentRound.start_date)} - {formatDateBr(currentRound.end_date)}
+                                        </p>
+                                    </div>
+                                    <button
+                                        onClick={() => setSelectedRoundIndex(prev => Math.min(rounds.length - 1, prev + 1))}
+                                        className={`p-2 rounded-xl transition-colors ${selectedRoundIndex < rounds.length - 1 ? 'text-saibro-600 bg-saibro-50' : 'text-stone-200 cursor-not-allowed'}`}
+                                        disabled={selectedRoundIndex === rounds.length - 1}
+                                    >
+                                        <ChevronRight size={24} />
+                                    </button>
+                                </div>
+                            )}
 
                             {/* Category Filter */}
-                            <div className="flex bg-white rounded-2xl p-1.5 shadow-sm border border-stone-100 overflow-x-auto scrollbar-hide">
-                                <button
-                                    onClick={() => setSelectedCategory('Todas')}
-                                    className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${selectedCategory === 'Todas' ? 'bg-stone-900 text-white shadow-md' : 'text-stone-500 hover:bg-stone-50'}`}
-                                >
-                                    Todas
-                                </button>
-                                {CLASSES.filter(cls => registrations.some(r => r.class === cls)).map(cls => (
+                            {!showAllRounds && (
+                                <div className="flex bg-white rounded-2xl p-1.5 shadow-sm border border-stone-100 overflow-x-auto scrollbar-hide">
                                     <button
-                                        key={cls}
-                                        onClick={() => setSelectedCategory(cls)}
-                                        className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${selectedCategory === cls ? 'bg-saibro-600 text-white shadow-md' : 'text-stone-500 hover:bg-stone-50'}`}
+                                        onClick={() => setSelectedCategory('Todas')}
+                                        className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${selectedCategory === 'Todas' ? 'bg-stone-900 text-white shadow-md' : 'text-stone-500 hover:bg-stone-50'}`}
                                     >
-                                        {cls}
+                                        Todas
                                     </button>
-                                ))}
-                            </div>
+                                    {CLASSES.filter(cls => registrations.some(r => r.class === cls)).map(cls => (
+                                        <button
+                                            key={cls}
+                                            onClick={() => setSelectedCategory(cls)}
+                                            className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${selectedCategory === cls ? 'bg-saibro-600 text-white shadow-md' : 'text-stone-500 hover:bg-stone-50'}`}
+                                        >
+                                            {cls}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
 
                             {/* Match Lists grouped by category */}
-                            {roundMatches.length > 0 ? (
+                            {(showAllRounds ? matches : roundMatches).length > 0 ? (
                                 <div className="space-y-4">
-                                    {roundMatches
+                                    {(showAllRounds ? matches : roundMatches)
                                         .filter(match => {
-                                            if (selectedCategory === 'Todas') return true;
+                                            if (selectedCategory === 'Todas' || showAllRounds) return true;
                                             // Find registration to check class
                                             const regA = registrations.find(r => r.id === match.registration_a_id);
                                             return regA?.class === selectedCategory;
+                                        })
+                                        .sort((a, b) => {
+                                            if (showAllRounds) {
+                                                // Sort by class then date if showing all
+                                                const regA1 = registrations.find(r => r.id === a.registration_a_id);
+                                                const regA2 = registrations.find(r => r.id === b.registration_a_id);
+                                                if (regA1?.class !== regA2?.class) return (regA1?.class || '').localeCompare(regA2?.class || '');
+                                            }
+                                            return 0;
                                         })
                                         .map(match => (
                                             <MatchCard
@@ -796,6 +825,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                                                 onEdit={() => currentUser.role === 'admin' && setEditingMatch(match)}
                                                 onSchedule={() => setSchedulingMatch(match)}
                                                 isAdmin={currentUser.role === 'admin'}
+                                                currentUserId={currentUser.id}
                                             />
                                         ))}
                                 </div>
@@ -806,7 +836,8 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                                         Partidas ainda não geradas para esta rodada.
                                     </p>
                                 </div>
-                            )}
+                            )
+                            }
                         </div>
                     );
                 })()}
@@ -869,28 +900,32 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
             </div>
 
             {/* 4. MODAL EDIT RESULT */}
-            {editingMatch && (
-                <ResultModal
-                    match={editingMatch}
-                    profiles={profiles}
-                    onClose={() => setEditingMatch(null)}
-                    onSave={(sA, sB) => handleSaveResult(editingMatch.id, sA, sB)}
-                />
-            )}
+            {
+                editingMatch && (
+                    <ResultModal
+                        match={editingMatch}
+                        profiles={profiles}
+                        onClose={() => setEditingMatch(null)}
+                        onSave={(sA, sB) => handleSaveResult(editingMatch.id, sA, sB)}
+                    />
+                )
+            }
 
-            {schedulingMatch && (
-                <MatchScheduleModal
-                    match={schedulingMatch}
-                    roundName={rounds.find(r => r.id === schedulingMatch.round_id)?.name || 'Rodada'}
-                    roundStartDate={rounds.find(r => r.id === schedulingMatch.round_id)?.start_date || ''}
-                    roundEndDate={rounds.find(r => r.id === schedulingMatch.round_id)?.end_date || ''}
-                    className={registrations.find(r => r.id === schedulingMatch.registration_a_id)?.class || ''}
-                    courts={courts}
-                    onSchedule={handleSchedule}
-                    onClose={() => setSchedulingMatch(null)}
-                />
-            )}
-        </div>
+            {
+                schedulingMatch && (
+                    <MatchScheduleModal
+                        match={schedulingMatch}
+                        roundName={rounds.find(r => r.id === schedulingMatch.round_id)?.name || 'Rodada'}
+                        roundStartDate={rounds.find(r => r.id === schedulingMatch.round_id)?.start_date || ''}
+                        roundEndDate={rounds.find(r => r.id === schedulingMatch.round_id)?.end_date || ''}
+                        className={registrations.find(r => r.id === schedulingMatch.registration_a_id)?.class || ''}
+                        courts={courts}
+                        onSchedule={handleSchedule}
+                        onClose={() => setSchedulingMatch(null)}
+                    />
+                )
+            }
+        </div >
     );
 };
 
@@ -1100,7 +1135,7 @@ export const ResultModal: React.FC<{ match: Match; profiles: User[]; onClose: ()
     );
 };
 
-const MatchCard: React.FC<{ match: Match; profiles: User[]; registrations: Registration[]; isAdmin?: boolean; onEdit?: () => void; onSchedule?: () => void }> = ({ match, profiles, registrations, isAdmin, onEdit, onSchedule }) => {
+const MatchCard: React.FC<{ match: Match; profiles: User[]; registrations: Registration[]; isAdmin?: boolean; currentUserId?: string; onEdit?: () => void; onSchedule?: () => void }> = ({ match, profiles, registrations, isAdmin, currentUserId, onEdit, onSchedule }) => {
     const regA = registrations.find(r => r.id === match.registration_a_id);
     const regB = registrations.find(r => r.id === match.registration_b_id);
 
@@ -1216,7 +1251,7 @@ const MatchCard: React.FC<{ match: Match; profiles: User[]; registrations: Regis
                         </button>
                     )}
 
-                    {!isFinished && !match.scheduledDate && (
+                    {!isFinished && !match.scheduledDate && (isAdmin || match.playerAId === currentUserId || match.playerBId === currentUserId) && (
                         <button
                             onClick={onSchedule}
                             className="bg-stone-900 text-white text-[10px] font-black uppercase px-4 py-2 rounded-xl shadow-lg shadow-stone-200 hover:bg-black hover:scale-105 transition-all flex items-center gap-1"

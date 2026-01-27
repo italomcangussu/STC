@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Championship, ChampionshipRound, Match, ChampionshipGroup, ChampionshipRegistration } from '../types';
-import { Play, Calendar, Trophy, AlertTriangle, Loader2, Check, Clock, ChevronLeft, ChevronRight, Info, MapPin } from 'lucide-react';
+import { Play, Calendar, Trophy, AlertTriangle, Loader2, Check, Clock, ChevronLeft, ChevronRight, Info, MapPin, Trash2, Shuffle } from 'lucide-react';
 import { generateRoundRobinMatches, getRoundDates } from '../lib/championshipUtils';
 import { MatchScheduleModal } from './MatchScheduleModal';
 import { GroupStandingsCard } from './GroupStandingsCard';
 import { calculateGroupStandings } from '../lib/championshipUtils';
 import { formatDateBr } from '../utils';
+import { MatchGenerationModal } from './MatchGenerationModal';
 
 interface Props {
     championship: Championship;
@@ -34,6 +35,8 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
 
     // Confirmation Modal State
     const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [showGenModal, setShowGenModal] = useState(false);
+    const [resetting, setResetting] = useState(false);
 
     useEffect(() => {
         fetchData();
@@ -236,6 +239,36 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
         fetchData();
     };
 
+    const handleResetMatches = async () => {
+        if (!confirm('ATENÇÃO: Isso irá apagar TODOS os confrontos deste campeonato. Os grupos serão mantidos. Deseja continuar?')) return;
+
+        setResetting(true);
+        try {
+            const roundIds = rounds.map(r => r.id);
+            if (roundIds.length === 0) {
+                // If no rounds yet, nothing to delete (or delete by championship_id if matches exist without rounds)
+                const { error } = await supabase
+                    .from('matches')
+                    .delete()
+                    .eq('championship_id', championship.id);
+                if (error) throw error;
+            } else {
+                const { error } = await supabase
+                    .from('matches')
+                    .delete()
+                    .in('round_id', roundIds);
+                if (error) throw error;
+            }
+
+            alert('Confrontos apagados com sucesso!');
+            fetchData();
+        } catch (error: any) {
+            console.error('Error resetting matches:', error);
+            alert('Erro ao resetar confrontos: ' + error.message);
+        }
+        setResetting(false);
+    };
+
     // Group matches by Round
     const matchesByRound = rounds.reduce((acc, round) => {
         acc[round.id] = matches.filter(m => m.round_id === round.id);
@@ -322,6 +355,30 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                 </div>
             </div>
 
+            {/* Match Management Actions (Admin Only) */}
+            {currentUser?.role === 'admin' && (
+                <div className="bg-white rounded-[2.5rem] p-6 shadow-sm border border-stone-100">
+                    <h3 className="text-xs font-black text-stone-400 uppercase tracking-widest mb-4 px-2">Gerenciamento de Confrontos</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <button
+                            onClick={() => setShowGenModal(true)}
+                            className="flex items-center justify-center gap-2 py-4 bg-amber-50 text-amber-700 font-bold rounded-2xl border border-amber-100 hover:bg-amber-100 transition-all active:scale-[0.98]"
+                        >
+                            <Shuffle size={18} />
+                            Gerar Manualmente
+                        </button>
+                        <button
+                            onClick={handleResetMatches}
+                            disabled={resetting}
+                            className="flex items-center justify-center gap-2 py-4 bg-red-50 text-red-700 font-bold rounded-2xl border border-red-100 hover:bg-red-100 transition-all active:scale-[0.98] disabled:opacity-50"
+                        >
+                            {resetting ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
+                            Limpar Confrontos
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {/* Main Tabs */}
             <div className="flex bg-stone-100 p-1.5 rounded-3xl shadow-inner">
                 <button
@@ -367,6 +424,37 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                                         <ChevronRight size={24} />
                                     </button>
                                 </div>
+
+                                {/* Publish Round Button (Admin Only) */}
+                                {currentUser?.role === 'admin' && currentRound.status === 'pending' && (
+                                    <div className="bg-amber-50 border border-amber-100 p-5 rounded-[2rem] flex items-center justify-between gap-4 animate-in fade-in slide-in-from-top-2">
+                                        <div className="flex-1">
+                                            <h4 className="text-sm font-black text-amber-900 leading-tight">Rodada em Rascunho</h4>
+                                            <p className="text-[10px] text-amber-700 font-bold mt-1">Os matches não estão visíveis para os sócios.</p>
+                                        </div>
+                                        <button
+                                            onClick={async () => {
+                                                setProcessing(true);
+                                                const { error } = await supabase
+                                                    .from('championship_rounds')
+                                                    .update({ status: 'active' })
+                                                    .eq('id', currentRound.id);
+
+                                                if (error) {
+                                                    alert('Erro ao publicar: ' + error.message);
+                                                } else {
+                                                    await fetchData();
+                                                }
+                                                setProcessing(false);
+                                            }}
+                                            disabled={processing}
+                                            className="px-6 py-3 bg-amber-500 text-white text-[11px] font-black uppercase rounded-xl hover:bg-amber-600 transition-all shadow-lg shadow-amber-200 flex items-center gap-2"
+                                        >
+                                            {processing ? <Loader2 size={14} className="animate-spin" /> : <Play size={14} fill="white" />}
+                                            Publicar Rodada
+                                        </button>
+                                    </div>
+                                )}
 
                                 <div className="space-y-4">
                                     {(matchesByRound[currentRound.id] || []).map(match => {
@@ -465,6 +553,17 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                     courts={courts}
                     onSchedule={handleSchedule}
                     onClose={() => setSchedulingMatch(null)}
+                />
+            )}
+
+            {showGenModal && (
+                <MatchGenerationModal
+                    championship={championship}
+                    rounds={rounds}
+                    groups={groups}
+                    registrations={registrations}
+                    onClose={() => setShowGenModal(false)}
+                    onGenerated={fetchData}
                 />
             )}
         </div>
