@@ -13,6 +13,7 @@ import { AdminPanel } from './components/AdminPanel';
 import { FinanceiroAdmin } from './components/FinanceiroAdmin';
 import { ChallengesView } from './components/Challenges';
 import { SuperSet } from './components/SuperSet';
+import { AdminStudents } from './components/AdminStudents';
 import { ChampionshipAdmin } from './components/ChampionshipAdmin';
 import { Auth } from './components/Auth';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -163,6 +164,7 @@ const AppContent: React.FC = () => {
           {view === 'perfil' && <Athletes initialUserId={currentUser.id} currentUser={currentUser} onClearRequest={() => setView('dashboard')} />}
           {view === 'ranking' && <Ranking onSelectProfile={handleOpenProfile} />}
           {view === 'professor' && <ProfessorProfile currentUser={currentUser} />}
+          {view === 'admin-students' && <AdminStudents />}
           {view === 'admin-professors' && <AdminProfessors />}
           {view === 'admin-panel' && <AdminPanel />}
           {view === 'financeiro-admin' && <FinanceiroAdmin />}

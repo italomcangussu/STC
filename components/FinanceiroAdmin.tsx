@@ -89,13 +89,14 @@ export const FinanceiroAdmin: React.FC = () => {
     }, []);
 
     const handleRegisterPayment = async (student: NonSocioStudent) => {
-        if (!confirm(`Confirmar pagamento de R$ ${CARD_MENSAL_PRICE},00 para ${student.name}? Isso ativará o plano por 30 dias.`)) return;
+        if (!confirm(`Confirmar pagamento de R$ ${CARD_MENSAL_PRICE},00 para ${student.name}? Isso ativará o plano por 1 mês (vencendo no mesmo dia do mês seguinte).`)) return;
 
         setProcessingPayment(student.id);
         try {
             const now = new Date();
             const validUntil = new Date(now);
-            validUntil.setDate(validUntil.getDate() + 30);
+            // Move to same day next month
+            validUntil.setMonth(validUntil.getMonth() + 1);
 
             const { error: auditError } = await supabase.from('student_payments').insert({
                 student_id: student.id,
@@ -357,11 +358,14 @@ export const FinanceiroAdmin: React.FC = () => {
                         onChange={e => setSelectedMonth(e.target.value)}
                         className="w-full px-4 py-3 border border-stone-200 rounded-xl bg-white"
                     >
-                        {financialData.map(m => (
-                            <option key={m.month} value={m.month}>
-                                {new Date(m.month + '-01').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
-                            </option>
-                        ))}
+                        {financialData.map(m => {
+                            const [year, month] = m.month.split('-');
+                            return (
+                                <option key={m.month} value={m.month}>
+                                    {new Date(parseInt(year), parseInt(month) - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+                                </option>
+                            );
+                        })}
                     </select>
                 </div>
 
@@ -407,7 +411,10 @@ export const FinanceiroAdmin: React.FC = () => {
                                 {financialData.map(m => (
                                     <tr key={m.month} className="hover:bg-stone-50 transition-colors">
                                         <td className="px-4 py-3 font-medium text-stone-700">
-                                            {new Date(m.month + '-01').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+                                            {(() => {
+                                                const [year, month] = m.month.split('-');
+                                                return new Date(parseInt(year), parseInt(month) - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+                                            })()}
                                         </td>
                                         <td className="px-4 py-3 text-right">
                                             <div className="text-stone-800">{m.friendlyCount} <span className="text-xs text-stone-400">un</span></div>

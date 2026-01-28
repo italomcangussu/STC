@@ -111,6 +111,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
     if (currentUser.role === 'admin') {
         navItems.push({ id: 'championship-admin', label: 'Campeonato Admin', icon: <Trophy size={20} />, roles: ['admin'] });
         navItems.push({ id: 'financeiro-admin', label: 'Financeiro', icon: <DollarSign size={20} />, roles: ['admin'] });
+        navItems.push({ id: 'admin-students', label: 'Alunos', icon: <Users size={20} />, roles: ['admin'] });
         navItems.push({ id: 'admin-professors', label: 'Gerenciar Pro.', icon: <Briefcase size={20} />, roles: ['admin'] });
         navItems.push({ id: 'admin-panel', label: 'Painel Admin', icon: <Settings size={20} />, roles: ['admin'] });
     }
