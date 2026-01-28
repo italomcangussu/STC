@@ -200,7 +200,7 @@ export const FinanceiroAdmin: React.FC = () => {
     }
 
     return (
-        <div className="p-4 md:p-6 space-y-8">
+        <div className="p-4 md:p-6 pb-40 space-y-8">
             {/* Header */}
             <div className="flex items-center gap-3">
                 <div className="p-3 bg-linear-to-br from-green-500 to-emerald-600 rounded-2xl shadow-lg shadow-green-200">

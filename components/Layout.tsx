@@ -221,7 +221,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
             </main>
 
             {/* Bottom Nav (Mobile Only) */}
-            <div className="flex-none md:hidden bg-white/95 backdrop-blur-md border-t border-saibro-200 flex justify-around px-2 pt-3 pb-[calc(24px+env(safe-area-inset-bottom,20px))] z-40 shadow-[0_-8px_20px_rgba(0,0,0,0.08)]">
+            <div className="flex-none md:hidden bg-white/95 backdrop-blur-md border-t border-saibro-200 flex justify-around px-6 pt-3 pb-[calc(35px+env(safe-area-inset-bottom,20px))] z-40 shadow-[0_-8px_20px_rgba(0,0,0,0.08)]">
                 {filteredNav.slice(0, 5).map(item => (
                     <button
                         key={item.id}

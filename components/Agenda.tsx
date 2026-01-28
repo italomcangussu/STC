@@ -1449,7 +1449,7 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
     };
 
     return (
-        <div className="p-4 space-y-4 pb-24">
+        <div className="p-4 space-y-4 pb-40">
             {/* Loading State */}
             {loading && (
                 <div className="flex items-center justify-center min-h-[60vh]">

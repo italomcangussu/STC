@@ -233,7 +233,7 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
     );
 
     return (
-        <div className="p-4 sm:p-6 pb-32 space-y-8 animate-in fade-in duration-500">
+        <div className="p-4 sm:p-6 pb-40 space-y-8 animate-in fade-in duration-500">
             {/* Header Section */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
                 <div className="text-center sm:text-left">

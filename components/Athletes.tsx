@@ -235,7 +235,7 @@ const AthleteProfile: React.FC<AthleteProfileProps> = ({ userId, currentUser, us
             </div>
 
             {/* --- TABS --- */}
-            <div className="max-w-4xl mx-auto px-4 mt-8 pb-24">
+            <div className="max-w-4xl mx-auto px-4 mt-8 pb-40">
                 <div className="flex bg-stone-100 p-1.5 rounded-2xl mb-6 shadow-inner">
                     {[
                         { id: 'stats', label: 'Estatísticas', icon: TrendingUp },
@@ -551,7 +551,7 @@ export const Athletes: React.FC<AthletesProps> = ({ initialUserId, currentUser, 
     }
 
     return (
-        <div className="p-4 pb-24 space-y-6">
+        <div className="p-4 pb-40 space-y-6">
             <h2 className="text-2xl font-bold text-saibro-900">Atletas</h2>
 
             {/* Search Bar */}
