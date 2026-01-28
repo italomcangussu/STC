@@ -331,9 +331,9 @@ const ReservationDetails: React.FC<{
         window.open(url, '_blank');
     };
 
-    return (
-        <div className="fixed inset-0 bg-stone-900/40 backdrop-blur-md z-70 flex flex-col justify-end sm:justify-center items-center p-0 sm:p-4 animate-in fade-in duration-300">
-            <div className="bg-stone-50 w-full max-w-lg rounded-t-[40px] sm:rounded-[40px] flex flex-col max-h-[92vh] overflow-hidden shadow-2xl animate-in slide-in-from-bottom duration-500">
+    return createPortal(
+        <div className="fixed inset-0 bg-stone-900/40 backdrop-blur-md z-70 flex items-center justify-center p-4 animate-in fade-in duration-300">
+            <div className="bg-stone-50 w-full max-w-lg rounded-[40px] flex flex-col max-h-[92vh] overflow-hidden shadow-2xl animate-in slide-in-from-bottom duration-500">
                 {/* 1. Header with Glass effect */}
                 <div className="bg-white/80 backdrop-blur-xl px-6 py-5 border-b border-stone-200/60 flex items-center justify-between sticky top-0 z-10">
                     <button onClick={onClose} className="p-2.5 -ml-2 text-stone-600 hover:bg-stone-100 rounded-full transition-all active:scale-90">
@@ -620,7 +620,8 @@ const ReservationDetails: React.FC<{
                     }}
                 />
             )}
-        </div>
+        </div>,
+        document.body
     );
 };
 
@@ -659,7 +660,7 @@ const ReservationCard: React.FC<{
     return (
         <div
             onClick={() => onSelect(res)}
-            className={`relative rounded-2xl border-l-[6px] bg-linear-to-br from-white to-stone-50/50 p-5 shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer active:scale-[0.99] ${style.border} group border-t border-r border-b border-stone-100/50`}
+            className={`relative rounded-2xl border-l-[6px] bg-linear-to-br from-white to-stone-50/50 p-5 shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer ${style.border} group border-t border-r border-b border-stone-100/50`}
         >
             {/* Header */}
             <div className="flex justify-between items-start mb-3">
@@ -749,7 +750,7 @@ const ReservationCard: React.FC<{
                             </div>
 
                             {(participants.length > 0 || res.guestName) && (
-                                <span className="text-xs font-medium text-stone-600 truncate max-w-[120px] sm:max-w-[180px]">
+                                <span className="text-sm font-bold text-stone-700 tracking-tight truncate max-w-[120px] sm:max-w-[180px]">
                                     {participants.map(p => p?.name.split(' ')[0]).concat(res.guestName ? [res.guestName.split(' ')[0]] : []).join(', ')}
                                 </span>
                             )}

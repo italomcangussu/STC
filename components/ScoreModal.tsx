@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Trophy, XCircle, Trash2, CheckCircle, Loader2 } from 'lucide-react';
+import { Trophy, XCircle, Trash2, CheckCircle, Loader2, Plus, Minus } from 'lucide-react';
 import { Challenge } from '../types';
 
 interface ScoreModalProps {
@@ -53,26 +53,67 @@ export const ScoreModal: React.FC<ScoreModalProps> = ({ challenge, challengerNam
                         <span>{challengedName}</span>
                     </div>
 
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                         {sets.map((set, idx) => (
-                            <div key={idx} className="flex items-center gap-4 bg-stone-50 p-3 rounded-xl">
-                                <span className="text-xs font-bold text-stone-400 w-8">Set {idx + 1}</span>
-                                <input
-                                    type="number"
-                                    value={set.a}
-                                    onChange={(e) => handleSetChange(idx, 'a', e.target.value)}
-                                    className="w-12 h-12 text-center text-xl font-bold rounded-lg border border-stone-200 focus:ring-2 focus:ring-saibro-500 outline-none"
-                                />
-                                <span className="text-stone-300 font-bold">x</span>
-                                <input
-                                    type="number"
-                                    value={set.b}
-                                    onChange={(e) => handleSetChange(idx, 'b', e.target.value)}
-                                    className="w-12 h-12 text-center text-xl font-bold rounded-lg border border-stone-200 focus:ring-2 focus:ring-saibro-500 outline-none"
-                                />
-                                {idx > 0 && (
-                                    <button onClick={() => removeSet(idx)} className="text-red-400 hover:text-red-500"><Trash2 size={16} /></button>
-                                )}
+                            <div key={idx} className="bg-stone-50 p-4 rounded-2xl border border-stone-100 animate-in slide-in-from-left duration-300" style={{ animationDelay: `${idx * 50}ms` }}>
+                                <div className="flex items-center justify-between mb-3 border-b border-stone-100 pb-2">
+                                    <span className="text-xs font-black text-saibro-500 uppercase tracking-widest">Set {idx + 1}</span>
+                                    {idx > 0 && (
+                                        <button onClick={() => removeSet(idx)} className="text-red-400 hover:text-red-500 p-1 hover:bg-red-50 rounded-lg transition-colors">
+                                            <Trash2 size={16} />
+                                        </button>
+                                    )}
+                                </div>
+
+                                <div className="flex items-center justify-between gap-2">
+                                    {/* Player A Controls */}
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={() => handleSetChange(idx, 'a', (Math.max(0, parseInt(set.a || '0') - 1)).toString())}
+                                            className="w-10 h-10 flex items-center justify-center bg-white border border-stone-200 rounded-xl text-stone-600 shadow-sm active:scale-95 transition-transform"
+                                        >
+                                            <Minus size={16} strokeWidth={3} />
+                                        </button>
+                                        <input
+                                            type="number"
+                                            value={set.a}
+                                            onChange={(e) => handleSetChange(idx, 'a', e.target.value)}
+                                            className="w-14 h-14 text-center text-3xl font-black rounded-2xl border-2 border-stone-100 bg-white text-stone-800 focus:border-saibro-500 outline-none transition-all"
+                                            placeholder="0"
+                                        />
+                                        <button
+                                            onClick={() => handleSetChange(idx, 'a', (parseInt(set.a || '0') + 1).toString())}
+                                            className="w-10 h-10 flex items-center justify-center bg-saibro-50 text-saibro-600 border border-saibro-100 rounded-xl shadow-sm active:scale-95 transition-transform"
+                                        >
+                                            <Plus size={16} strokeWidth={3} />
+                                        </button>
+                                    </div>
+
+                                    <span className="text-stone-300 font-black text-xl italic mx-1">vs</span>
+
+                                    {/* Player B Controls */}
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={() => handleSetChange(idx, 'b', (parseInt(set.b || '0') + 1).toString())}
+                                            className="w-10 h-10 flex items-center justify-center bg-saibro-50 text-saibro-600 border border-saibro-100 rounded-xl shadow-sm active:scale-95 transition-transform"
+                                        >
+                                            <Plus size={16} strokeWidth={3} />
+                                        </button>
+                                        <input
+                                            type="number"
+                                            value={set.b}
+                                            onChange={(e) => handleSetChange(idx, 'b', e.target.value)}
+                                            className="w-14 h-14 text-center text-3xl font-black rounded-2xl border-2 border-stone-100 bg-white text-stone-800 focus:border-saibro-500 outline-none transition-all"
+                                            placeholder="0"
+                                        />
+                                        <button
+                                            onClick={() => handleSetChange(idx, 'b', (Math.max(0, parseInt(set.b || '0') - 1)).toString())}
+                                            className="w-10 h-10 flex items-center justify-center bg-white border border-stone-200 rounded-xl text-stone-600 shadow-sm active:scale-95 transition-transform"
+                                        >
+                                            <Minus size={16} strokeWidth={3} />
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         ))}
                     </div>

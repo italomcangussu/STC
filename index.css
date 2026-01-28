@@ -98,7 +98,6 @@
     body {
         background-color: #fff7ed;
         color: #431407;
-        position: fixed; /* Extra stability for iOS */
         width: 100%;
     }
 }

@@ -3,7 +3,7 @@ import {
     Calendar, Trophy, Swords, DollarSign, Users,
     Search, Filter, CheckCircle, XCircle, Clock,
     ChevronRight, AlertTriangle, Eye, Trash2, Edit, Plus, AlertCircle, Loader2,
-    LayoutDashboard, Megaphone, Save
+    LayoutDashboard, Megaphone, Save, PlusSquare, Zap, History
 } from 'lucide-react';
 import { Dashboard } from './Dashboard';
 import { Reservation, User, Championship, Challenge, AccessRequest, Match, Consumption, Product, NonSocioStudent } from '../types';
@@ -213,11 +213,13 @@ interface ScoreModalProps {
 // Tab configuration
 const TABS = [
     { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={18} /> },
+    { id: 'lancamentos', label: 'Lançamentos', icon: <PlusSquare size={18} /> },
     { id: 'superset', label: 'SuperSet', icon: <Trophy size={18} /> },
     { id: 'reservas', label: 'Reservas', icon: <Calendar size={18} /> },
     { id: 'desafios', label: 'Desafios', icon: <Swords size={18} /> },
-    { id: 'avisos', label: 'Avisos', icon: <Megaphone size={18} /> },
+    { id: 'financeiro', label: 'Financeiro', icon: <DollarSign size={18} /> },
     { id: 'socios', label: 'Sócios', icon: <Users size={18} /> },
+    { id: 'avisos', label: 'Avisos', icon: <Megaphone size={18} /> },
 ];
 
 interface Court {
@@ -1444,11 +1446,14 @@ const SociosTab: React.FC = () => {
         if (!editingMember || !editName.trim()) return;
         setSaving(true);
 
+        // Priority 1: Sync email with phone if phone changed
+        const newEmail = generateEmailFromPhone(editPhone);
+
         const { error } = await supabase
             .from('profiles')
             .update({
                 name: editName.trim(),
-                email: editEmail.trim() || null,
+                email: newEmail,
                 phone: editPhone.trim() || null,
                 age: editAge ? parseInt(editAge) : null,
                 category: editCategory || null,
@@ -1457,12 +1462,18 @@ const SociosTab: React.FC = () => {
             .eq('id', editingMember.id);
 
         if (!error) {
+            // Note: In a production app with real Supabase Auth, 
+            // we would also need to update the auth user's email 
+            // via a service role or edge function.
             setMembers(members.map(m =>
                 m.id === editingMember.id
-                    ? { ...m, name: editName.trim(), email: editEmail.trim(), phone: editPhone.trim(), age: editAge ? parseInt(editAge) : undefined, category: editCategory, avatar: editAvatarUrl.trim() }
+                    ? { ...m, name: editName.trim(), email: newEmail, phone: editPhone.trim(), age: editAge ? parseInt(editAge) : undefined, category: editCategory, avatar: editAvatarUrl.trim() }
                     : m
             ));
             setEditingMember(null);
+            alert('Sócio atualizado com sucesso! O e-mail de login foi sincronizado.');
+        } else {
+            alert('Erro ao atualizar sócio: ' + error.message);
         }
         setSaving(false);
     };
@@ -1643,51 +1654,121 @@ const SociosTab: React.FC = () => {
     );
 };
 
+// --- Sub-component: Lançamentos Tab (Retroativo & Auditoria) ---
+const LancamentosTab: React.FC = () => {
+    const [loading, setLoading] = useState(false);
+    const [auditLogs, setAuditLogs] = useState<any[]>([]);
+
+    useEffect(() => {
+        const fetchAudit = async () => {
+            const { data } = await supabase
+                .from('point_history')
+                .select('*, profiles(name)')
+                .order('created_at', { ascending: false })
+                .limit(50);
+            if (data) setAuditLogs(data);
+        };
+        fetchAudit();
+    }, []);
+
+    return (
+        <div className="space-y-8">
+            <div className="bg-saibro-50 p-6 rounded-[24px] border border-saibro-100">
+                <h3 className="text-xl font-black text-saibro-900 mb-2">Lançamento Histórico</h3>
+                <p className="text-saibro-600 text-sm mb-6">Registre partidas que já aconteceram para pontuar o ranking retroativamente.</p>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <button className="p-4 bg-white border-2 border-dashed border-stone-200 rounded-2xl text-stone-500 font-bold hover:border-saibro-300 hover:text-saibro-600 transition-all flex flex-col items-center gap-2">
+                        <Trophy size={32} />
+                        Registrar Desafio (3 Sets)
+                    </button>
+                    <button className="p-4 bg-white border-2 border-dashed border-stone-200 rounded-2xl text-stone-500 font-bold hover:border-saibro-300 hover:text-saibro-600 transition-all flex flex-col items-center gap-2">
+                        <Zap size={32} />
+                        Registrar SuperSet (1 Set)
+                    </button>
+                </div>
+            </div>
+
+            <div className="space-y-4">
+                <h3 className="text-lg font-bold text-stone-800 flex items-center gap-2">
+                    <History size={20} className="text-stone-400" /> Auditoria de Pontos
+                </h3>
+                <div className="space-y-2">
+                    {auditLogs.map(log => (
+                        <div key={log.id} className="bg-stone-50 p-4 rounded-xl flex justify-between items-center border border-stone-100">
+                            <div>
+                                <p className="font-bold text-stone-800">{log.profiles?.name}</p>
+                                <p className="text-xs text-stone-500">{log.reason}</p>
+                            </div>
+                            <div className={`font-black text-lg ${log.points > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                {log.points > 0 ? '+' : ''}{log.points}
+                            </div>
+                        </div>
+                    ))}
+                    {auditLogs.length === 0 && <p className="text-center py-8 text-stone-400 italic">Nenhum histórico encontrado.</p>}
+                </div>
+            </div>
+        </div>
+    );
+};
+
 // --- Main Admin Panel Component ---
 
 export const AdminPanel: React.FC = () => {
     const [activeTab, setActiveTab] = useState('dashboard');
 
-
-
     const renderTabContent = () => {
         switch (activeTab) {
             case 'dashboard': return <Dashboard />;
+            case 'lancamentos': return <LancamentosTab />;
             case 'superset': return <SuperSet />;
             case 'reservas': return <ReservasTab />;
             case 'desafios': return <DesafiosTab />;
             case 'financeiro': return <FinanceiroTab />;
             case 'avisos': return <AnunciosTab />;
             case 'socios': return <SociosTab />;
-            default: return <ReservasTab />;
+            default: return <Dashboard />;
         }
     };
 
     return (
-        <div className="p-4 pb-24 space-y-6">
-            <div className="bg-linear-to-r from-saibro-600 to-saibro-500 p-6 rounded-2xl shadow-lg text-white">
-                <h1 className="text-2xl font-bold">Painel Administrativo</h1>
-                <p className="text-saibro-100 text-sm mt-1">Gerencie reservas, desafios, financeiro e sócios</p>
+        <div className="min-h-screen bg-stone-50 pb-24">
+            {/* Header Moderno */}
+            <div className="bg-saibro-600 pt-8 pb-20 px-6 rounded-b-[40px] shadow-2xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-saibro-500/20 rounded-full -mr-20 -mt-20 blur-3xl animate-pulse"></div>
+                <div className="relative z-10 flex flex-col gap-1">
+                    <span className="text-saibro-200 text-xs font-bold uppercase tracking-widest">Administração</span>
+                    <h1 className="text-3xl font-black text-white tracking-tight">Centro de Comando</h1>
+                    <p className="text-saibro-100 text-sm opacity-80">Gestão integrada do Reserva SCT</p>
+                </div>
             </div>
 
-            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                {TABS.map(tab => (
-                    <button
-                        key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium whitespace-nowrap transition-all ${activeTab === tab.id
-                            ? 'bg-saibro-500 text-white shadow-md'
-                            : 'bg-white text-stone-600 hover:bg-saibro-50 border border-stone-200'
-                            }`}
-                    >
-                        {tab.icon}
-                        {tab.label}
-                    </button>
-                ))}
+            {/* Navigation Cards (Overlapping) */}
+            <div className="px-4 -mt-12 relative z-20">
+                <div className="flex gap-3 overflow-x-auto pb-6 pt-2 scrollbar-hide px-2">
+                    {TABS.map(tab => (
+                        <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id)}
+                            className={`flex flex-col items-center justify-center min-w-[100px] h-[100px] rounded-3xl font-bold transition-all duration-300 shadow-xl ${activeTab === tab.id
+                                ? 'bg-white text-saibro-600 scale-105 border-b-4 border-saibro-500'
+                                : 'bg-white/90 text-stone-400 backdrop-blur-md hover:bg-white hover:text-stone-600'
+                                }`}
+                        >
+                            <div className={`p-2 rounded-xl mb-1 ${activeTab === tab.id ? 'bg-saibro-50 text-saibro-600' : 'bg-stone-50'}`}>
+                                {React.cloneElement(tab.icon as React.ReactElement, { size: 24 })}
+                            </div>
+                            <span className="text-[10px] uppercase tracking-tighter">{tab.label}</span>
+                        </button>
+                    ))}
+                </div>
             </div>
 
-            <div>
-                {renderTabContent()}
+            {/* Main Content Area */}
+            <div className="px-4 mt-4 animate-in fade-in slide-in-from-bottom-6 duration-500">
+                <div className="bg-white rounded-[32px] shadow-sm border border-stone-100 min-h-[500px] p-6">
+                    {renderTabContent()}
+                </div>
             </div>
         </div>
     );
