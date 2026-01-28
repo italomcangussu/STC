@@ -233,7 +233,7 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
     );
 
     return (
-        <div className="p-4 sm:p-6 pb-24 space-y-8 animate-in fade-in duration-500">
+        <div className="p-4 sm:p-6 pb-32 space-y-8 animate-in fade-in duration-500">
             {/* Header Section */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
                 <div className="text-center sm:text-left">
@@ -270,8 +270,11 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
                     <div className="px-4 sm:px-8 py-8 sm:py-10 text-center space-y-6">
                         <div className="flex items-center justify-center gap-4 sm:gap-12 mb-2">
                             {/* ATLETA A */}
-                            <div className="flex flex-col items-center gap-2 sm:gap-3 flex-1">
-                                <div className={`w-16 h-16 sm:w-24 sm:h-24 rounded-[20px] sm:rounded-[32px] border-2 sm:border-4 flex items-center justify-center transition-all duration-500 overflow-hidden shadow-xl sm:shadow-2xl ${playerAId ? 'border-saibro-500' : 'border-stone-100 bg-stone-50'}`}>
+                            <div
+                                className={`flex flex-col items-center gap-2 sm:gap-3 flex-1 transition-all ${playerAId ? 'cursor-pointer active:scale-95' : ''}`}
+                                onClick={() => playerAId && setPlayerAId('')}
+                            >
+                                <div className={`w-16 h-16 sm:w-24 sm:h-24 rounded-[20px] sm:rounded-[32px] border-2 sm:border-4 flex items-center justify-center transition-all duration-500 overflow-hidden shadow-xl sm:shadow-2xl ${playerAId ? 'border-saibro-500 hover:border-saibro-400' : 'border-stone-100 bg-stone-50'}`}>
                                     {playerAId ? (
                                         <img src={players.find(p => p.id === playerAId)?.avatar} className="w-full h-full object-cover animate-in zoom-in duration-300" alt="" />
                                     ) : (
@@ -284,9 +287,6 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
                                         {playerAId ? getPlayerName(playerAId).split(' ')[0] : 'Pendente'}
                                     </span>
                                 </div>
-                                {playerAId && (
-                                    <button onClick={() => setPlayerAId('')} className="text-[9px] sm:text-[10px] font-black text-saibro-600 uppercase hover:underline">Trocar</button>
-                                )}
                             </div>
 
                             <div className="flex flex-col items-center shrink-0">
@@ -295,7 +295,10 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
                             </div>
 
                             {/* ATLETA B */}
-                            <div className="flex flex-col items-center gap-2 sm:gap-3 flex-1">
+                            <div
+                                className={`flex flex-col items-center gap-2 sm:gap-3 flex-1 transition-all ${playerBId ? 'cursor-pointer active:scale-95' : ''}`}
+                                onClick={() => playerBId && setPlayerBId('')}
+                            >
                                 <div className={`w-16 h-16 sm:w-24 sm:h-24 rounded-[20px] sm:rounded-[32px] border-2 sm:border-4 flex items-center justify-center transition-all duration-500 overflow-hidden shadow-xl sm:shadow-2xl ${playerBId ? 'border-court-green' : 'border-stone-100 bg-stone-50'}`}>
                                     {playerBId ? (
                                         <img src={players.find(p => p.id === playerBId)?.avatar} className="w-full h-full object-cover animate-in zoom-in duration-300" alt="" />
@@ -309,9 +312,6 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
                                         {playerBId ? getPlayerName(playerBId).split(' ')[0] : 'Pendente'}
                                     </span>
                                 </div>
-                                {playerBId && (
-                                    <button onClick={() => setPlayerBId('')} className="text-[9px] sm:text-[10px] font-black text-court-green uppercase hover:underline">Trocar</button>
-                                )}
                             </div>
                         </div>
 

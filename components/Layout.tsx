@@ -118,7 +118,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
     const filteredNav = navItems.filter(item => (!item.roles || item.roles.includes(currentUser.role)));
 
     return (
-        <div className="h-screen flex flex-col md:flex-row overflow-hidden bg-clay-pattern">
+        <div className="h-screen h-[100dvh] flex flex-col md:flex-row overflow-hidden bg-clay-pattern">
             {/* Mobile Header */}
             <header className="flex-none md:hidden bg-white border-b border-saibro-200 p-4 flex justify-between items-center z-50 pt-safe">
                 <div className="flex items-center gap-3">
@@ -220,15 +220,15 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
             </main>
 
             {/* Bottom Nav (Mobile Only) */}
-            <div className="flex-none md:hidden bg-white border-t border-saibro-200 flex justify-around p-2 z-40 pb-safe">
+            <div className="flex-none md:hidden bg-white/95 backdrop-blur-md border-t border-saibro-200 flex justify-around px-2 pt-2 pb-[calc(8px+env(safe-area-inset-bottom))] z-40 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
                 {filteredNav.slice(0, 5).map(item => (
                     <button
                         key={item.id}
                         onClick={() => setView(item.id)}
-                        className={`flex flex-col items-center justify-center py-2 px-1 rounded-lg flex-1 transition-all active:scale-90 ${view === item.id ? 'text-saibro-600' : 'text-stone-400'}`}
+                        className={`flex flex-col items-center justify-center py-1 px-1 rounded-xl flex-1 transition-all active:scale-90 ${view === item.id ? 'text-saibro-600 bg-saibro-50' : 'text-stone-400'}`}
                     >
-                        {React.cloneElement(item.icon as React.ReactElement<any>, { size: 24 })}
-                        <span className="text-[10px] mt-1 font-medium truncate w-full text-center">{item.label}</span>
+                        {React.cloneElement(item.icon as React.ReactElement<any>, { size: 22 })}
+                        <span className="text-[9px] mt-0.5 font-bold uppercase tracking-tighter truncate w-full text-center">{item.label}</span>
                     </button>
                 ))}
             </div>
