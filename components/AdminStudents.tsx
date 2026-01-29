@@ -125,15 +125,16 @@ export const AdminStudents: React.FC = () => {
                 </div>
             </div>
 
-            {/* Students Grid */}
+            {/* Students List */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredStudents.map(student => {
+                {filteredStudents.map((student, idx) => {
                     const stats = getStudentStats(student.id);
                     return (
                         <div
                             key={student.id}
                             onClick={() => setSelectedStudent(student)}
-                            className="bg-white p-5 rounded-2xl border border-stone-100 shadow-sm hover:shadow-md transition-all cursor-pointer group hover:-translate-y-1"
+                            className="bg-white rounded-2xl p-4 border border-stone-100 shadow-sm hover:shadow-md hover:border-saibro-200 transition-all cursor-pointer group animate-slide-in opacity-0"
+                            style={{ animationDelay: `${idx * 40}ms`, animationFillMode: 'forwards' }}
                         >
                             <div className="flex items-start justify-between mb-4">
                                 <div className="space-y-1">
@@ -179,8 +180,8 @@ export const AdminStudents: React.FC = () => {
 
             {/* Student Detail Modal */}
             {selectedStudent && (
-                <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="bg-white rounded-[32px] max-w-2xl w-full max-h-[90vh] overflow-hidden shadow-2xl animate-in zoom-in duration-300">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm animate-fade-in">
+                    <div className="bg-white rounded-[32px] w-full max-w-lg max-h-[90vh] overflow-y-auto relative shadow-2xl animate-zoom-smooth">
                         <div className="bg-saibro-600 p-8 text-white relative">
                             <button
                                 onClick={() => setSelectedStudent(null)}

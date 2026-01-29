@@ -226,10 +226,12 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
                     <button
                         key={item.id}
                         onClick={() => setView(item.id)}
-                        className={`flex flex-col items-center justify-center py-1 px-1 rounded-xl flex-1 transition-all active:scale-90 ${view === item.id ? 'text-saibro-600 bg-saibro-50' : 'text-stone-400'}`}
+                        className={`flex flex-col items-center justify-center py-1 px-1 rounded-xl flex-1 transition-all duration-300 active:scale-75 ${view === item.id ? 'text-saibro-600 bg-saibro-50/50 shadow-inner' : 'text-stone-400 hover:text-stone-600'}`}
                     >
-                        {React.cloneElement(item.icon as React.ReactElement<any>, { size: 22 })}
-                        <span className="text-[9px] mt-0.5 font-bold uppercase tracking-tighter truncate w-full text-center">{item.label}</span>
+                        <div className={`transition-transform duration-300 ${view === item.id ? 'scale-110 drop-shadow-[0_0_8px_rgba(249,115,22,0.3)]' : ''}`}>
+                            {React.cloneElement(item.icon as React.ReactElement<any>, { size: 22 })}
+                        </div>
+                        <span className={`text-[9px] mt-1 font-bold uppercase tracking-tighter truncate w-full text-center transition-all ${view === item.id ? 'opacity-100 scale-105' : 'opacity-70'}`}>{item.label}</span>
                     </button>
                 ))}
             </div>

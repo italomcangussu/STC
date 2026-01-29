@@ -199,7 +199,7 @@ export const Ranking: React.FC<RankingProps> = ({ onSelectProfile }) => {
                 if (categoryPlayers.length === 0) return null;
 
                 return (
-                  <div key={category}>
+                  <div key={category} className="animate-fade-in">
                     <div className="flex items-center gap-2 mb-2 mt-4">
                       <div className="flex items-center gap-1 bg-saibro-100 text-saibro-700 px-3 py-1 rounded-full">
                         <Target size={14} />
@@ -208,17 +208,18 @@ export const Ranking: React.FC<RankingProps> = ({ onSelectProfile }) => {
                       <div className="flex-1 h-px bg-stone-200" />
                     </div>
                     <div className="space-y-2">
-                      {categoryPlayers.map(player => {
+                      {categoryPlayers.map((player, idx) => {
                         globalPosition++;
                         return (
-                          <PlayerCard
-                            key={player.id}
-                            player={player}
-                            rank={globalPosition}
-                            showPoints={false}
-                            showCategory={false}
-                            onClick={() => onSelectProfile(player.id)}
-                          />
+                          <div key={player.id} className="animate-slide-in opacity-0" style={{ animationDelay: `${idx * 40}ms`, animationFillMode: 'forwards' }}>
+                            <PlayerCard
+                              player={player}
+                              rank={globalPosition}
+                              showPoints={false}
+                              showCategory={false}
+                              onClick={() => onSelectProfile(player.id)}
+                            />
+                          </div>
                         );
                       })}
                     </div>
@@ -229,13 +230,14 @@ export const Ranking: React.FC<RankingProps> = ({ onSelectProfile }) => {
           </>
         ) : (
           // Category view: simple list
-          displayPlayers.map(player => (
-            <PlayerCard
-              key={player.id}
-              player={player}
-              rank={player.categoryPosition}
-              onClick={() => onSelectProfile(player.id)}
-            />
+          displayPlayers.map((player, idx) => (
+            <div key={player.id} className="animate-slide-in opacity-0" style={{ animationDelay: `${idx * 40}ms`, animationFillMode: 'forwards' }}>
+              <PlayerCard
+                player={player}
+                rank={player.categoryPosition}
+                onClick={() => onSelectProfile(player.id)}
+              />
+            </div>
           ))
         )}
 

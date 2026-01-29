@@ -118,14 +118,19 @@
 
     /* iOS 26 Liquid Glass - Frosted Glass Effect */
     .card-court {
-        background: rgba(255, 255, 255, 0.65);
-        backdrop-filter: blur(20px) saturate(180%);
-        -webkit-backdrop-filter: blur(20px) saturate(180%);
-        border: 1px solid rgba(255, 255, 255, 0.5);
-        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.75);
+        backdrop-filter: blur(25px) saturate(200%);
+        -webkit-backdrop-filter: blur(25px) saturate(200%);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        border-radius: 24px;
         box-shadow:
-            0 8px 32px rgba(0, 0, 0, 0.12),
-            inset 0 1px 0 rgba(255, 255, 255, 0.6);
+            0 10px 40px rgba(0, 0, 0, 0.08),
+            inset 0 1px 0 rgba(255, 255, 255, 0.8);
+        transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+    }
+
+    .card-court:active {
+        transform: scale(0.98);
     }
 
     /* Text Readable - For texts outside cards */
@@ -345,6 +350,38 @@
     animation: spinSlow 3s linear infinite;
 }
 
+@keyframes blurIn {
+    from {
+        opacity: 0;
+        filter: blur(10px);
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        filter: blur(0);
+        transform: scale(1);
+    }
+}
+
+.animate-blur-in {
+    animation: blurIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes zoomSmooth {
+    from {
+        opacity: 0;
+        transform: scale(0.85);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.animate-zoom-smooth {
+    animation: zoomSmooth 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
 /* Staggered Animation Delays */
 .delay-50 {
     animation-delay: 50ms;
@@ -368,6 +405,14 @@
 
 .delay-300 {
     animation-delay: 300ms;
+}
+
+.delay-400 {
+    animation-delay: 400ms;
+}
+
+.delay-500 {
+    animation-delay: 500ms;
 }
 
 /* Smooth transitions for interactive elements */

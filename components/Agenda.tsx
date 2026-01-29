@@ -1318,21 +1318,22 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
             </h3>
             <div className="space-y-3">
                 {filteredReservations.length === 0 ? (
-                    <div className="text-center py-10 text-stone-600 section-header">Nenhuma reserva para este dia.</div>
+                    <div className="text-center py-10 text-stone-600 section-header animate-fade-in">Nenhuma reserva para este dia.</div>
                 ) : (
-                    filteredReservations.map(res => (
-                        <ReservationCard
-                            key={res.id}
-                            res={res}
-                            currentUser={currentUser}
-                            profiles={profiles}
-                            courts={courts}
-                            professors={professors}
-                            nonSocioStudents={nonSocioStudents}
-                            onSelect={handleSelectReservation}
-                            challenges={challenges}
-                            onLaunchScore={handleLaunchScore}
-                        />
+                    filteredReservations.map((res, index) => (
+                        <div key={res.id} className={`animate-slide-in opacity-0`} style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'forwards' }}>
+                            <ReservationCard
+                                res={res}
+                                currentUser={currentUser}
+                                profiles={profiles}
+                                courts={courts}
+                                professors={professors}
+                                nonSocioStudents={nonSocioStudents}
+                                onSelect={handleSelectReservation}
+                                challenges={challenges}
+                                onLaunchScore={handleLaunchScore}
+                            />
+                        </div>
                     ))
                 )}
             </div>
