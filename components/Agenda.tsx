@@ -1705,13 +1705,38 @@ const AddReservationModal: React.FC<{
         let startHour = 5;
         const endHour = 22;
 
+        // NEW RULES FOR AULA:
+        // - Sócios (socio): Any time allowed
+        // - Não-sócios (non-socio): Only morning (5h-12h) OR night (20h+)
         if (resType === 'Aula' && dayOfWeek !== 0) {
-            startHour = 19; // Starts at 19:30
+            if (studentType === 'non-socio') {
+                // Non-socio students: morning (5h-11h59) OR night (20h+)
+                const morningTimes: string[] = [];
+                const nightTimes: string[] = [];
+
+                // Morning slots: 5:00 to 11:30
+                for (let h = 5; h <= 11; h++) {
+                    ['00', '30'].forEach(m => {
+                        morningTimes.push(`${String(h).padStart(2, '0')}:${m}`);
+                    });
+                }
+
+                // Night slots: 20:00 to 22:30
+                for (let h = 20; h <= 22; h++) {
+                    ['00', '30'].forEach(m => {
+                        if (h === 23) return;
+                        nightTimes.push(`${String(h).padStart(2, '0')}:${m}`);
+                    });
+                }
+
+                return [...morningTimes, ...nightTimes];
+            }
+            // Socio students: all times allowed (fall through to default logic)
         }
 
+        // Default logic for Play, Campeonato, or socio Aula
         for (let h = startHour; h <= endHour; h++) {
             ['00', '30'].forEach(m => {
-                if (resType === 'Aula' && dayOfWeek !== 0 && h === 19 && m === '00') return;
                 if (h === 23) return;
                 times.push(`${String(h).padStart(2, '0')}:${m}`);
             });
@@ -1977,7 +2002,9 @@ const AddReservationModal: React.FC<{
                                 <p className="text-xs font-medium leading-relaxed">
                                     {type === 'Play'
                                         ? "Jogos amistosos padrão têm duração de 60-120min. Quadras de saibro são a preferência."
-                                        : "Aulas têm duração de 30 ou 60min e ocorrem exclusivamente na Quadra Rápida."}
+                                        : type === 'Aula' && studentType === 'non-socio'
+                                            ? "Aulas de não-sócios: permitidas pela manhã (5h-12h) ou à noite (20h+). Duração de 30min na Quadra Rápida."
+                                            : "Aulas de sócios: permitidas em qualquer horário. Duração de 30min na Quadra Rápida."}
                                 </p>
                             </div>
                         </div>

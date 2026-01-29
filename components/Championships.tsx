@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Trophy, Calendar, History, ListOrdered, GitMerge, ChevronDown, Loader2, Download, Share2, Users, Shirt, ChevronLeft, ChevronRight, Clock, MapPin, Info, Save, Plus, Minus } from 'lucide-react';
+import { Trophy, Calendar, CalendarCheck, History, ListOrdered, GitMerge, ChevronDown, Loader2, Download, Share2, Users, Shirt, ChevronLeft, ChevronRight, Clock, MapPin, Info, Save, Plus, Minus } from 'lucide-react';
 import { Championship, Match, User, ChampionshipRound } from '../types';
 import { getMatchWinner, formatDateBr } from '../utils';
 import { supabase } from '../lib/supabase';
@@ -68,6 +68,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
     // Round navigation
     const [rounds, setRounds] = useState<ChampionshipRound[]>([]);
     const [selectedRoundIndex, setSelectedRoundIndex] = useState(0);
+    const [selectedRoundIndexJogos, setSelectedRoundIndexJogos] = useState(0); // For Jogos tab
 
     // Group matches by Round
     const matchesByRound = rounds.reduce((acc, round) => {
@@ -221,8 +222,9 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                 scoreB: m.score_b || [],
                 winnerId: m.winner_id,
                 date: m.date,
-                scheduledTime: m.scheduled_time,
-                scheduledDate: m.scheduled_date,
+                scheduled_time: m.scheduled_time,  // Use snake_case
+                scheduled_date: m.scheduled_date,  // Use snake_case
+                court_id: m.court_id,              // Use snake_case
                 status: m.status || 'pending',
                 championship_group_id: m.championship_group_id,
                 round_id: m.round_id
@@ -700,20 +702,26 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
             <div className="flex bg-stone-100 p-1.5 rounded-2xl shadow-inner overflow-x-auto scrollbar-hide">
                 <button
                     onClick={() => setActiveTab('partidas')}
-                    className={`flex-1 min-w-[100px] flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-all ${activeTab === 'partidas' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}
+                    className={`flex-1 min-w-[90px] flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-all ${activeTab === 'partidas' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}
                 >
                     <Trophy size={16} /> Partidas
                 </button>
                 <button
+                    onClick={() => setActiveTab('jogos')}
+                    className={`flex-1 min-w-[90px] flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-all ${activeTab === 'jogos' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}
+                >
+                    <CalendarCheck size={16} /> Jogos
+                </button>
+                <button
                     onClick={() => setActiveTab('classificacao')}
-                    className={`flex-1 min-w-[100px] flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-all ${activeTab === 'classificacao' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}
+                    className={`flex-1 min-w-[90px] flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-all ${activeTab === 'classificacao' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}
                 >
                     <ListOrdered size={16} /> Classificação
                 </button>
                 {selectedChamp.format === 'mata-mata' && (
                     <button
                         onClick={() => setActiveTab('chaveamento')}
-                        className={`flex-1 min-w-[100px] flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-all ${activeTab === 'chaveamento' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}
+                        className={`flex-1 min-w-[90px] flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-all ${activeTab === 'chaveamento' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}
                     >
                         <GitMerge size={16} /> Chaveamento
                     </button>
@@ -838,6 +846,204 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                                 </div>
                             )
                             }
+                        </div>
+                    );
+                })()}
+
+                {activeTab === 'jogos' && (() => {
+                    // Get selected round for Jogos tab
+                    const selectedRound = rounds[selectedRoundIndexJogos];
+
+                    // Filter matches by selected round
+                    const filteredMatches = selectedRound
+                        ? matches.filter(m => m.round_id === selectedRound.id)
+                        : matches;
+
+                    // Group matches by class, then by round
+                    const matchesByClass: Record<string, Record<string, typeof matches>> = {};
+
+                    filteredMatches.forEach(match => {
+                        const regA = registrations.find(r => r.id === match.registration_a_id);
+                        const className = regA?.class || 'Sem Classe';
+                        const round = rounds.find(r => r.id === match.round_id);
+                        const roundName = round?.name || 'Sem Rodada';
+
+                        if (!matchesByClass[className]) {
+                            matchesByClass[className] = {};
+                        }
+                        if (!matchesByClass[className][roundName]) {
+                            matchesByClass[className][roundName] = [];
+                        }
+                        matchesByClass[className][roundName].push(match);
+                    });
+
+                    return (
+                        <div className="space-y-6">
+                            {/* Round Selector */}
+                            {rounds.length > 0 && (
+                                <div className="flex items-center justify-between bg-white p-4 rounded-[2.5rem] border border-stone-100 shadow-sm sticky top-2 z-20">
+                                    <button
+                                        onClick={() => setSelectedRoundIndexJogos(prev => Math.max(0, prev - 1))}
+                                        className={`p-2 rounded-xl transition-colors ${selectedRoundIndexJogos > 0 ? 'text-saibro-600 bg-saibro-50' : 'text-stone-200 cursor-not-allowed'}`}
+                                        disabled={selectedRoundIndexJogos === 0}
+                                    >
+                                        <ChevronLeft size={24} />
+                                    </button>
+                                    <div className="text-center">
+                                        <h3 className="font-black text-stone-800 text-sm">{selectedRound?.name || 'Todas as Rodadas'}</h3>
+                                        {selectedRound && (
+                                            <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mt-0.5">
+                                                {formatDateBr(selectedRound.start_date)} - {formatDateBr(selectedRound.end_date)}
+                                            </p>
+                                        )}
+                                    </div>
+                                    <button
+                                        onClick={() => setSelectedRoundIndexJogos(prev => Math.min(rounds.length - 1, prev + 1))}
+                                        className={`p-2 rounded-xl transition-colors ${selectedRoundIndexJogos < rounds.length - 1 ? 'text-saibro-600 bg-saibro-50' : 'text-stone-200 cursor-not-allowed'}`}
+                                        disabled={selectedRoundIndexJogos === rounds.length - 1}
+                                    >
+                                        <ChevronRight size={24} />
+                                    </button>
+                                </div>
+                            )}
+
+                            {Object.keys(matchesByClass).length > 0 ? (
+                                CLASSES.filter(cls => matchesByClass[cls]).map(className => (
+                                    <div key={className} className="space-y-4">
+                                        {/* Class Header */}
+                                        <div className="sticky top-0 z-10 bg-saibro-600 text-white px-5 py-3 rounded-2xl shadow-md">
+                                            <h3 className="text-sm font-black uppercase tracking-tight">{className}</h3>
+                                        </div>
+
+                                        {/* Rounds within this class */}
+                                        {Object.keys(matchesByClass[className])
+                                            .sort((a, b) => {
+                                                // Sort rounds by their index
+                                                const roundA = rounds.find(r => r.name === a);
+                                                const roundB = rounds.find(r => r.name === b);
+                                                if (!roundA || !roundB) return 0;
+                                                return rounds.indexOf(roundA) - rounds.indexOf(roundB);
+                                            })
+                                            .map(roundName => {
+                                                const roundMatches = matchesByClass[className][roundName];
+                                                const round = rounds.find(r => r.name === roundName);
+
+                                                return (
+                                                    <div key={roundName} className="bg-white rounded-2xl shadow-sm border border-stone-100 overflow-hidden">
+                                                        {/* Round Header */}
+                                                        <div className="px-4 py-2.5 bg-stone-50 border-b border-stone-100 flex items-center justify-between">
+                                                            <h4 className="text-xs font-black text-stone-700 uppercase tracking-tight">{roundName}</h4>
+                                                            {round && (
+                                                                <span className="text-[10px] font-bold text-stone-400 uppercase">
+                                                                    {formatDateBr(round.start_date)} - {formatDateBr(round.end_date)}
+                                                                </span>
+                                                            )}
+                                                        </div>
+
+                                                        {/* Matches */}
+                                                        <div className="divide-y divide-stone-50">
+                                                            {roundMatches
+                                                                .sort((a, b) => {
+                                                                    // Sort: pending first, then by date
+                                                                    if (a.status === 'finished' && b.status !== 'finished') return 1;
+                                                                    if (a.status !== 'finished' && b.status === 'finished') return -1;
+                                                                    if (a.scheduled_date && b.scheduled_date) {
+                                                                        return a.scheduled_date.localeCompare(b.scheduled_date);
+                                                                    }
+                                                                    return 0;
+                                                                })
+                                                                .map(match => {
+                                                                    const regA = registrations.find(r => r.id === match.registration_a_id);
+                                                                    const regB = registrations.find(r => r.id === match.registration_b_id);
+                                                                    const nameA = regA?.user?.name || regA?.guest_name || '...';
+                                                                    const nameB = regB?.user?.name || regB?.guest_name || '...';
+                                                                    const avatarA = regA?.user?.avatar_url || `https://ui-avatars.com/api/?name=${nameA}&background=random`;
+                                                                    const avatarB = regB?.user?.avatar_url || `https://ui-avatars.com/api/?name=${nameB}&background=random`;
+                                                                    const isFinished = match.status === 'finished';
+                                                                    const court = courts.find(c => c.id === match.court_id);
+
+                                                                    return (
+                                                                        <div key={match.id} className="p-4 hover:bg-stone-25 transition-colors">
+                                                                            <div className="flex items-center justify-between gap-4">
+                                                                                {/* Players */}
+                                                                                <div className="flex-1">
+                                                                                    <div className="flex items-center gap-3 mb-2">
+                                                                                        <img src={avatarA} className={`w-8 h-8 rounded-full border-2 ${match.winnerId === match.playerAId ? 'border-saibro-500' : 'border-stone-100'}`} />
+                                                                                        <p className={`text-sm font-bold ${match.winnerId === match.playerAId ? 'text-stone-900' : 'text-stone-600'}`}>
+                                                                                            {nameA}
+                                                                                            {match.winnerId === match.playerAId && <Trophy className="inline ml-1 text-saibro-500" size={12} />}
+                                                                                        </p>
+                                                                                    </div>
+                                                                                    <div className="flex items-center gap-3">
+                                                                                        <img src={avatarB} className={`w-8 h-8 rounded-full border-2 ${match.winnerId === match.playerBId ? 'border-saibro-500' : 'border-stone-100'}`} />
+                                                                                        <p className={`text-sm font-bold ${match.winnerId === match.playerBId ? 'text-stone-900' : 'text-stone-600'}`}>
+                                                                                            {nameB}
+                                                                                            {match.winnerId === match.playerBId && <Trophy className="inline ml-1 text-saibro-500" size={12} />}
+                                                                                        </p>
+                                                                                    </div>
+                                                                                </div>
+
+                                                                                {/* Score or Schedule Info */}
+                                                                                <div className="text-right">
+                                                                                    {isFinished ? (
+                                                                                        <div className="flex flex-col gap-2">
+                                                                                            <div className="flex gap-1.5">
+                                                                                                {match.scoreA.map((s, i) => (
+                                                                                                    <div key={i} className="flex flex-col items-center gap-0.5">
+                                                                                                        <span className={`w-8 h-8 flex items-center justify-center rounded-lg text-xs font-black ${match.scoreA[i] > match.scoreB[i] ? 'bg-saibro-600 text-white' : 'bg-stone-100 text-stone-400'}`}>
+                                                                                                            {s}
+                                                                                                        </span>
+                                                                                                        <span className={`w-8 h-8 flex items-center justify-center rounded-lg text-xs font-black ${match.scoreB[i] > match.scoreA[i] ? 'bg-saibro-600 text-white' : 'bg-stone-100 text-stone-400'}`}>
+                                                                                                            {match.scoreB[i]}
+                                                                                                        </span>
+                                                                                                    </div>
+                                                                                                ))}
+                                                                                            </div>
+                                                                                            <span className="text-[9px] font-bold uppercase text-green-600 bg-green-50 px-2 py-0.5 rounded-full">Disputado</span>
+                                                                                        </div>
+                                                                                    ) : (
+                                                                                        <div className="flex flex-col items-end gap-1">
+                                                                                            {match.scheduled_date ? (
+                                                                                                <>
+                                                                                                    <div className="flex items-center gap-1 text-xs text-stone-600">
+                                                                                                        <Calendar size={12} className="text-saibro-500" />
+                                                                                                        <span className="font-bold">{new Date(match.scheduled_date + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}</span>
+                                                                                                    </div>
+                                                                                                    {match.scheduled_time && (
+                                                                                                        <div className="flex items-center gap-1 text-xs text-stone-600">
+                                                                                                            <Clock size={12} className="text-saibro-500" />
+                                                                                                            <span className="font-bold">{match.scheduled_time}</span>
+                                                                                                        </div>
+                                                                                                    )}
+                                                                                                    {court && (
+                                                                                                        <div className="flex items-center gap-1 text-xs text-stone-600">
+                                                                                                            <MapPin size={12} className="text-saibro-500" />
+                                                                                                            <span className="font-bold">{court.name}</span>
+                                                                                                        </div>
+                                                                                                    )}
+                                                                                                </>
+                                                                                            ) : (
+                                                                                                <span className="text-[9px] font-bold uppercase text-stone-400 bg-stone-100 px-2 py-1 rounded-full">Aguardando agendamento</span>
+                                                                                            )}
+                                                                                        </div>
+                                                                                    )}
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    );
+                                                                })}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="bg-white rounded-3xl shadow-sm border border-stone-100 p-8 text-center text-stone-400">
+                                    <CalendarCheck size={48} className="mx-auto mb-2 text-stone-200" />
+                                    <p className="text-sm font-medium">Nenhum jogo gerado ainda</p>
+                                </div>
+                            )}
                         </div>
                     );
                 })()}
