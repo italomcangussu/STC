@@ -3,17 +3,23 @@ import {
     Calendar, Trophy, Swords, DollarSign, Users,
     Search, Filter, CheckCircle, XCircle, Clock,
     ChevronRight, AlertTriangle, Eye, Trash2, Edit, Plus, AlertCircle, Loader2,
-    LayoutDashboard, Megaphone, Save, PlusSquare, Zap, History
+    LayoutDashboard, Megaphone, Save, PlusSquare, Zap, History, GraduationCap, Settings
 } from 'lucide-react';
 import { Dashboard } from './Dashboard';
 import { Reservation, User, Championship, Challenge, AccessRequest, Match, Consumption, Product, NonSocioStudent } from '../types';
 import { formatDateBr, getDayName } from '../utils';
-import { NewChampionship } from './NewChampionship';
 import { supabase } from '../lib/supabase';
+import { AdminUserEditor } from './AdminUserEditor';
+import { AdminMatchCreator } from './AdminMatchCreator';
 
 
 import { SuperSet } from './SuperSet';
+
 import { ScoreModal } from './ScoreModal';
+import { FinanceiroAdmin } from './FinanceiroAdmin';
+import { AdminProfessors } from './AdminProfessors';
+import { AdminRules } from './AdminRules';
+import { AdminTournaments } from './AdminTournaments';
 
 // --- Helpers ---
 const addMinutes = (time: string, minutes: number): string => {
@@ -215,10 +221,13 @@ const TABS = [
     { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={18} /> },
     { id: 'lancamentos', label: 'Lançamentos', icon: <PlusSquare size={18} /> },
     { id: 'superset', label: 'SuperSet', icon: <Trophy size={18} /> },
+    { id: 'torneios', label: 'Torneios', icon: <Trophy size={18} /> },
     { id: 'reservas', label: 'Reservas', icon: <Calendar size={18} /> },
     { id: 'desafios', label: 'Desafios', icon: <Swords size={18} /> },
     { id: 'financeiro', label: 'Financeiro', icon: <DollarSign size={18} /> },
     { id: 'socios', label: 'Sócios', icon: <Users size={18} /> },
+    { id: 'professores', label: 'Professores', icon: <GraduationCap size={18} /> },
+    { id: 'regras', label: 'Regras', icon: <Settings size={18} /> },
     { id: 'avisos', label: 'Avisos', icon: <Megaphone size={18} /> },
 ];
 
@@ -742,365 +751,7 @@ const DesafiosTab: React.FC = () => {
     );
 };
 
-// --- Sub-component: Financeiro Tab ---
-const FinanceiroTab: React.FC = () => {
-    const [reservations, setReservations] = useState<Reservation[]>([]);
-    const [monthlyStudents, setMonthlyStudents] = useState<NonSocioStudent[]>([]);
-    const [studentPayments, setStudentPayments] = useState<{ amount: number, paymentDate: string }[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
-    const [processingPayment, setProcessingPayment] = useState<string | null>(null);
 
-    // Day Use price
-    const DAY_USE_PRICE = 50;
-
-    const fetchData = async () => {
-        setLoading(true);
-        // 1. Fetch Reservations (Play & Aula) to calculate Day Uses
-        const { data: resData } = await supabase
-            .from('reservations')
-            .select('*')
-            .neq('status', 'cancelled')
-            .order('date', { ascending: false });
-
-        if (resData) {
-            setReservations(resData.map(r => ({
-                id: r.id,
-                type: r.type,
-                date: r.date,
-                startTime: r.start_time,
-                endTime: r.end_time,
-                courtId: r.court_id,
-                creatorId: r.creator_id,
-                participantIds: r.participant_ids || [],
-                guestName: r.guest_name,
-                studentType: r.student_type,
-                nonSocioStudentId: r.non_socio_student_id,
-                status: r.status
-            } as Reservation)));
-        }
-
-        // 2. Fetch Card Mensal Students
-        const { data: studentsData } = await supabase
-            .from('non_socio_students')
-            .select('*')
-            .eq('plan_type', 'Card Mensal')
-            .order('name');
-
-        if (studentsData) {
-            setMonthlyStudents(studentsData.map(s => ({
-                id: s.id,
-                name: s.name,
-                planType: s.plan_type,
-                planStatus: s.plan_status,
-                masterExpirationDate: s.master_expiration_date,
-                professorId: s.professor_id
-            })));
-        }
-
-        // 3. Fetch Historical Student Payments (for Card Mensal Revenue)
-        const { data: paymentsData } = await supabase
-            .from('student_payments')
-            .select('amount, payment_date');
-
-        if (paymentsData) {
-            setStudentPayments(paymentsData.map(p => ({
-                amount: p.amount,
-                paymentDate: p.payment_date
-            })));
-        }
-
-        setLoading(false);
-    };
-
-    useEffect(() => {
-        fetchData();
-    }, []);
-
-    const handleRegisterPayment = async (student: NonSocioStudent) => {
-        if (!confirm(`Confirmar pagamento de R$ 200,00 para ${student.name}? Isso ativará o plano por 30 dias.`)) return;
-
-        setProcessingPayment(student.id);
-        try {
-            const now = new Date();
-            const validUntil = new Date(now);
-            validUntil.setDate(validUntil.getDate() + 30);
-
-            // 1. Audit Log
-            const { error: auditError } = await supabase.from('student_payments').insert({
-                student_id: student.id,
-                amount: 200.00,
-                valid_until: validUntil.toISOString(),
-                payment_date: now.toISOString()
-            });
-
-            if (auditError) throw auditError;
-
-            // 2. Update Student
-            const { error: updateError } = await supabase
-                .from('non_socio_students')
-                .update({
-                    plan_status: 'active',
-                    master_expiration_date: validUntil.toISOString().split('T')[0] // DATE type
-                })
-                .eq('id', student.id);
-
-            if (updateError) throw updateError;
-
-            alert('Pagamento registrado e plano ativado com sucesso!');
-            fetchData(); // Refresh list
-
-        } catch (error: any) {
-            console.error('Payment Error:', error);
-            alert(`Erro ao registrar pagamento: ${error.message}`);
-        } finally {
-            setProcessingPayment(null);
-        }
-    };
-
-    // Calculate Financial Data grouped by month
-    const financialData = useMemo(() => {
-        const grouped: Record<string, {
-            friendlyDayCount: number,
-            studentDayCount: number,
-            cardMensalTotal: number
-        }> = {};
-
-        // 1. Process Reservations (Day Use)
-        reservations.forEach(r => {
-            const month = r.date.slice(0, 7); // YYYY-MM
-            if (!grouped[month]) grouped[month] = { friendlyDayCount: 0, studentDayCount: 0, cardMensalTotal: 0 };
-
-            // Friendly Day Use: Type Play + Has Guest
-            if (r.type === 'Play' && r.guestName) {
-                grouped[month].friendlyDayCount++;
-            }
-
-            // Student Day Use: Type Aula + NonSocio
-            // Note: Ideally we should check if the student is 'Day Card' type, but for now we assume non-socio in Aula is Day Use unless logic changes.
-            // If strict 'Day Card' check is needed, we'd need to fetch all students map.
-            // Assuming simplified logic: If it's a non-socio student reservation, it counts as Day Use.
-            if (r.type === 'Aula' && r.studentType === 'non-socio') {
-                grouped[month].studentDayCount++;
-            }
-        });
-
-        // 2. Process Student Payments (Card Mensal)
-        studentPayments.forEach(p => {
-            const month = p.paymentDate.slice(0, 7); // YYYY-MM
-            if (!grouped[month]) grouped[month] = { friendlyDayCount: 0, studentDayCount: 0, cardMensalTotal: 0 };
-            grouped[month].cardMensalTotal += p.amount;
-        });
-
-        return Object.entries(grouped)
-            .map(([month, data]) => ({
-                month,
-                friendlyCount: data.friendlyDayCount,
-                friendlyTotal: data.friendlyDayCount * DAY_USE_PRICE,
-                studentCount: data.studentDayCount,
-                studentTotal: data.studentDayCount * DAY_USE_PRICE,
-                cardMensalTotal: data.cardMensalTotal,
-                grandTotal: (data.friendlyDayCount * DAY_USE_PRICE) + (data.studentDayCount * DAY_USE_PRICE) + data.cardMensalTotal
-            }))
-            .sort((a, b) => b.month.localeCompare(a.month));
-
-    }, [reservations, studentPayments]);
-
-    // Current month stats
-    const currentMonthData = financialData.find(m => m.month === selectedMonth);
-
-    if (loading) {
-        return <div className="flex justify-center py-8"><Loader2 className="animate-spin text-saibro-500" size={32} /></div>;
-    }
-
-    return (
-        <div className="space-y-8">
-            {/* --- SECTION 1: CARD MENSAL MANAGEMENT --- */}
-            <div>
-                <h3 className="text-lg font-bold text-saibro-800 mb-4 flex items-center gap-2">
-                    <CheckCircle className="text-saibro-500" size={20} /> Gestão de Mensalidades (Card Mensal)
-                </h3>
-
-                {/* PENDING / EXPIRED LIST */}
-                <div className="mb-8">
-                    <h4 className="text-sm font-bold text-orange-600 uppercase mb-3 flex items-center gap-2">
-                        <AlertCircle size={16} /> Pendências (Aprovação Necessária / Vencidos)
-                    </h4>
-                    <div className="grid gap-3 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-                        {monthlyStudents.filter(s => {
-                            const isExpired = !s.masterExpirationDate || new Date(s.masterExpirationDate) < new Date();
-                            const isInactive = s.planStatus !== 'active';
-                            return isExpired || isInactive;
-                        }).length === 0 && <p className="text-stone-400 text-sm italic">Nenhuma pendência.</p>}
-
-                        {monthlyStudents.filter(s => {
-                            const isExpired = !s.masterExpirationDate || new Date(s.masterExpirationDate) < new Date();
-                            const isInactive = s.planStatus !== 'active';
-                            return isExpired || isInactive;
-                        }).map(student => {
-                            const isExpired = !student.masterExpirationDate || new Date(student.masterExpirationDate) < new Date();
-                            return (
-                                <div key={student.id} className="p-4 rounded-xl border-2 flex flex-col justify-between gap-3 bg-red-50 text-red-600 border-red-100">
-                                    <div>
-                                        <h4 className="font-bold text-lg text-stone-800">{student.name}</h4>
-                                        <div className="flex items-center gap-2 mt-1">
-                                            <span className="text-[10px] font-bold uppercase tracking-wider bg-white/50 px-2 py-0.5 rounded border border-current">
-                                                {student.planStatus === 'active' ? 'VENCIDO' : 'AGUARDANDO PAGAMENTO'}
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <p className="text-xs font-medium mb-3">
-                                            {isExpired
-                                                ? `Venceu em: ${new Date(student.masterExpirationDate!).toLocaleDateString()}`
-                                                : 'Novo Aluno (Sem validade)'}
-                                        </p>
-                                        <button
-                                            onClick={() => handleRegisterPayment(student)}
-                                            disabled={!!processingPayment}
-                                            className="w-full py-2 bg-saibro-600 hover:bg-saibro-700 text-white rounded-lg font-bold text-sm shadow-sm flex items-center justify-center gap-2 transition-all active:scale-95"
-                                        >
-                                            {processingPayment === student.id ? <Loader2 className="animate-spin" size={16} /> : <DollarSign size={16} />}
-                                            Aprovar Pagamento (R$ 200)
-                                        </button>
-                                    </div>
-                                </div>
-                            )
-                        })}
-                    </div>
-                </div>
-
-                {/* ACTIVE LIST */}
-                <div>
-                    <h4 className="text-sm font-bold text-stone-500 uppercase mb-3 flex items-center gap-2">
-                        <CheckCircle size={16} /> Mensalistas Ativos
-                    </h4>
-                    <div className="grid gap-3 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-                        {monthlyStudents.filter(s => {
-                            const isExpired = !s.masterExpirationDate || new Date(s.masterExpirationDate) < new Date();
-                            const isInactive = s.planStatus !== 'active';
-                            return !isExpired && !isInactive;
-                        }).length === 0 && <p className="text-stone-400 text-sm italic">Nenhum mensalista ativo.</p>}
-
-                        {monthlyStudents.filter(s => {
-                            const isExpired = !s.masterExpirationDate || new Date(s.masterExpirationDate) < new Date();
-                            const isInactive = s.planStatus !== 'active';
-                            return !isExpired && !isInactive;
-                        }).map(student => (
-                            <div key={student.id} className="p-4 rounded-xl border border-green-200 bg-green-50 flex flex-col justify-between gap-3">
-                                <div>
-                                    <h4 className="font-bold text-lg text-green-900">{student.name}</h4>
-                                    <p className="text-xs text-green-700 font-bold uppercase tracking-wider">Ativo</p>
-                                </div>
-                                <div className="text-right">
-                                    <p className="text-[10px] text-green-600 uppercase font-bold">Vence em</p>
-                                    <p className="font-mono font-bold text-green-800">{new Date(student.masterExpirationDate!).toLocaleDateString()}</p>
-                                    <button
-                                        onClick={() => handleRegisterPayment(student)} // Allow re-payment even if active (early renewal)
-                                        className="mt-2 text-xs text-saibro-600 hover:text-saibro-800 underline font-bold"
-                                    >
-                                        Renovar Antecipado
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                <hr className="border-stone-200" />
-
-                {/* --- SECTION 2: RELATÓRIO FINANCEIRO DETALHADO --- */}
-                <div className="space-y-6">
-                    <h3 className="text-lg font-bold text-stone-700 mb-4 flex items-center gap-2">
-                        <DollarSign className="text-green-600" size={20} /> Relatório Financeiro
-                    </h3>
-
-                    {/* Month Selector */}
-                    <div className="bg-white rounded-xl p-4 shadow-sm border border-stone-100">
-                        <label className="text-xs text-stone-500 uppercase font-semibold block mb-2">Selecionar Mês</label>
-                        <select
-                            value={selectedMonth}
-                            onChange={e => setSelectedMonth(e.target.value)}
-                            className="w-full px-4 py-3 border border-stone-200 rounded-xl bg-white"
-                        >
-                            {financialData.map(m => (
-                                <option key={m.month} value={m.month}>
-                                    {new Date(m.month + '-01').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-
-                    {/* Summary Cards for Selected Month */}
-                    {currentMonthData && (
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                            <div className="bg-white rounded-xl p-4 shadow-sm border border-stone-100">
-                                <p className="text-[10px] text-stone-500 uppercase font-semibold">Day Use (Amistoso)</p>
-                                <p className="text-xl font-bold text-saibro-600">{currentMonthData.friendlyCount}</p>
-                                <p className="text-xs text-green-600 font-semibold">R$ {currentMonthData.friendlyTotal.toFixed(2)}</p>
-                            </div>
-                            <div className="bg-white rounded-xl p-4 shadow-sm border border-stone-100">
-                                <p className="text-[10px] text-stone-500 uppercase font-semibold">Day Use (Aluno)</p>
-                                <p className="text-xl font-bold text-saibro-600">{currentMonthData.studentCount}</p>
-                                <p className="text-xs text-green-600 font-semibold">R$ {currentMonthData.studentTotal.toFixed(2)}</p>
-                            </div>
-                            <div className="bg-white rounded-xl p-4 shadow-sm border border-stone-100">
-                                <p className="text-[10px] text-stone-500 uppercase font-semibold">Card Mensal</p>
-                                <p className="text-xl font-bold text-saibro-600">-</p>
-                                <p className="text-xs text-green-600 font-semibold">R$ {currentMonthData.cardMensalTotal.toFixed(2)}</p>
-                            </div>
-                            <div className="bg-saibro-600 rounded-xl p-4 shadow-sm border border-saibro-700 text-white">
-                                <p className="text-[10px] text-saibro-100 uppercase font-semibold">Total Geral</p>
-                                <p className="text-xl font-bold">R$ {currentMonthData.grandTotal.toFixed(2)}</p>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Detailed Table */}
-                    <div className="bg-white rounded-xl shadow-sm border border-stone-100 overflow-hidden">
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-sm text-left">
-                                <thead className="bg-stone-50 text-stone-500 font-semibold uppercase text-xs">
-                                    <tr>
-                                        <th className="px-4 py-3">Mês</th>
-                                        <th className="px-4 py-3 text-right">Day Use (Amistoso)</th>
-                                        <th className="px-4 py-3 text-right">Day Use (Aluno)</th>
-                                        <th className="px-4 py-3 text-right">Card Mensal</th>
-                                        <th className="px-4 py-3 text-right text-green-700">Total Arrecadado</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-stone-100">
-                                    {financialData.map(m => (
-                                        <tr key={m.month} className="hover:bg-stone-50 transition-colors">
-                                            <td className="px-4 py-3 font-medium text-stone-700">
-                                                {new Date(m.month + '-01').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
-                                            </td>
-                                            <td className="px-4 py-3 text-right">
-                                                <div className="text-stone-800">{m.friendlyCount} <span className="text-xs text-stone-400">un</span></div>
-                                                <div className="text-xs text-green-600">R$ {m.friendlyTotal.toFixed(2)}</div>
-                                            </td>
-                                            <td className="px-4 py-3 text-right">
-                                                <div className="text-stone-800">{m.studentCount} <span className="text-xs text-stone-400">un</span></div>
-                                                <div className="text-xs text-green-600">R$ {m.studentTotal.toFixed(2)}</div>
-                                            </td>
-                                            <td className="px-4 py-3 text-right text-green-600 font-medium">
-                                                R$ {m.cardMensalTotal.toFixed(2)}
-                                            </td>
-                                            <td className="px-4 py-3 text-right font-bold text-saibro-700 bg-saibro-50/50">
-                                                R$ {m.grandTotal.toFixed(2)}
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div >
-        </div>
-    );
-};
 
 // --- Sub-component: Anuncios Tab ---
 interface Announcement {
@@ -1344,14 +995,7 @@ const SociosTab: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [editingMember, setEditingMember] = useState<User | null>(null);
 
-    // Edit form state
-    const [editName, setEditName] = useState('');
-    const [editEmail, setEditEmail] = useState('');
-    const [editPhone, setEditPhone] = useState('');
-    const [editAge, setEditAge] = useState('');
-    const [editCategory, setEditCategory] = useState('');
-    const [editAvatarUrl, setEditAvatarUrl] = useState('');
-    const [saving, setSaving] = useState(false);
+
 
     useEffect(() => {
         fetchData();
@@ -1434,53 +1078,8 @@ const SociosTab: React.FC = () => {
 
     const openEditMember = (member: User) => {
         setEditingMember(member);
-        setEditName(member.name || '');
-        setEditEmail(member.email || '');
-        setEditPhone(member.phone || '');
-        setEditAge(member.age?.toString() || '');
-        setEditCategory(member.category || '');
-        setEditAvatarUrl(member.avatar || '');
     };
 
-    const handleSaveEdit = async () => {
-        if (!editingMember || !editName.trim()) return;
-        setSaving(true);
-
-        // Priority 1: Sync email with phone if phone changed
-        const newEmail = generateEmailFromPhone(editPhone);
-
-        const { error } = await supabase
-            .from('profiles')
-            .update({
-                name: editName.trim(),
-                email: newEmail,
-                phone: editPhone.trim() || null,
-                age: editAge ? parseInt(editAge) : null,
-                category: editCategory || null,
-                avatar_url: editAvatarUrl.trim() || null
-            })
-            .eq('id', editingMember.id);
-
-        if (!error) {
-            // Note: In a production app with real Supabase Auth, 
-            // we would also need to update the auth user's email 
-            // via a service role or edge function.
-            setMembers(members.map(m =>
-                m.id === editingMember.id
-                    ? { ...m, name: editName.trim(), email: newEmail, phone: editPhone.trim(), age: editAge ? parseInt(editAge) : undefined, category: editCategory, avatar: editAvatarUrl.trim() }
-                    : m
-            ));
-            setEditingMember(null);
-            alert('Sócio atualizado com sucesso! O e-mail de login foi sincronizado.');
-        } else {
-            alert('Erro ao atualizar sócio: ' + error.message);
-        }
-        setSaving(false);
-    };
-
-    if (loading) {
-        return <div className="flex justify-center py-8"><Loader2 className="animate-spin text-saibro-500" size={32} /></div>;
-    }
 
     return (
         <div className="space-y-6">
@@ -1559,96 +1158,14 @@ const SociosTab: React.FC = () => {
 
             {/* Edit Member Modal */}
             {editingMember && (
-                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-2xl w-full max-w-md p-6 space-y-4 max-h-[90vh] overflow-y-auto">
-                        <h3 className="text-lg font-bold">Editar Sócio</h3>
-
-                        <div>
-                            <label className="text-xs text-stone-500 block mb-1">Nome*</label>
-                            <input
-                                type="text"
-                                value={editName}
-                                onChange={e => setEditName(e.target.value)}
-                                className="w-full px-4 py-3 border border-stone-200 rounded-xl"
-                            />
-                        </div>
-
-                        <div>
-                            <label className="text-xs text-stone-500 block mb-1">Email</label>
-                            <input
-                                type="email"
-                                value={editEmail}
-                                onChange={e => setEditEmail(e.target.value)}
-                                className="w-full px-4 py-3 border border-stone-200 rounded-xl"
-                            />
-                        </div>
-
-                        <div>
-                            <label className="text-xs text-stone-500 block mb-1">Telefone</label>
-                            <input
-                                type="text"
-                                value={editPhone}
-                                onChange={e => setEditPhone(e.target.value)}
-                                className="w-full px-4 py-3 border border-stone-200 rounded-xl"
-                            />
-                        </div>
-
-                        <div>
-                            <label className="text-xs text-stone-500 block mb-1">Idade</label>
-                            <input
-                                type="number"
-                                value={editAge}
-                                onChange={e => setEditAge(e.target.value)}
-                                className="w-full px-4 py-3 border border-stone-200 rounded-xl"
-                            />
-                        </div>
-
-                        <div>
-                            <label className="text-xs text-stone-500 block mb-1">Classe</label>
-                            <select
-                                value={editCategory}
-                                onChange={e => setEditCategory(e.target.value)}
-                                className="w-full px-4 py-3 border border-stone-200 rounded-xl bg-white"
-                            >
-                                <option value="">Sem classe</option>
-                                <option value="4ª Classe">4ª Classe</option>
-                                <option value="5ª Classe">5ª Classe</option>
-                                <option value="6ª Classe">6ª Classe</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label className="text-xs text-stone-500 block mb-1">URL do Avatar</label>
-                            <input
-                                type="text"
-                                value={editAvatarUrl}
-                                onChange={e => setEditAvatarUrl(e.target.value)}
-                                placeholder="https://..."
-                                className="w-full px-4 py-3 border border-stone-200 rounded-xl"
-                            />
-                            {editAvatarUrl && (
-                                <img src={editAvatarUrl} alt="Preview" className="w-16 h-16 mt-2 rounded-full object-cover border" />
-                            )}
-                        </div>
-
-                        <div className="flex gap-3 pt-2">
-                            <button
-                                onClick={() => setEditingMember(null)}
-                                className="flex-1 py-3 border border-stone-200 rounded-xl font-bold text-stone-600"
-                            >
-                                Cancelar
-                            </button>
-                            <button
-                                onClick={handleSaveEdit}
-                                disabled={saving || !editName.trim()}
-                                className="flex-1 py-3 bg-saibro-600 text-white rounded-xl font-bold disabled:opacity-50 flex items-center justify-center gap-2"
-                            >
-                                {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-                                Salvar
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                <AdminUserEditor
+                    user={editingMember}
+                    onClose={() => setEditingMember(null)}
+                    onSave={() => {
+                        fetchData(); // Refresh list to get new role/points
+                        setEditingMember(null);
+                    }}
+                />
             )}
         </div>
     );
@@ -1659,17 +1176,39 @@ const LancamentosTab: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [auditLogs, setAuditLogs] = useState<any[]>([]);
 
+    // Creator State
+    const [showCreator, setShowCreator] = useState(false);
+    const [creatorType, setCreatorType] = useState<'Desafio' | 'SuperSet'>('Desafio');
+    const [profiles, setProfiles] = useState<User[]>([]);
+    const [courts, setCourts] = useState<Court[]>([]);
+
+    const fetchAudit = async () => {
+        const { data } = await supabase
+            .from('point_history')
+            .select('*, profiles(name)')
+            .order('created_at', { ascending: false })
+            .limit(50);
+        if (data) setAuditLogs(data);
+    };
+
     useEffect(() => {
-        const fetchAudit = async () => {
-            const { data } = await supabase
-                .from('point_history')
-                .select('*, profiles(name)')
-                .order('created_at', { ascending: false })
-                .limit(50);
-            if (data) setAuditLogs(data);
-        };
         fetchAudit();
+        fetchDeps();
     }, []);
+
+    const fetchDeps = async () => {
+        const [profData, courtData] = await Promise.all([
+            supabase.from('profiles').select('id, name, avatar_url').eq('is_active', true).order('name'),
+            supabase.from('courts').select('id, name')
+        ]);
+        if (profData.data) setProfiles(profData.data as any);
+        if (courtData.data) setCourts(courtData.data as any);
+    };
+
+    const openCreator = (type: 'Desafio' | 'SuperSet') => {
+        setCreatorType(type);
+        setShowCreator(true);
+    };
 
     return (
         <div className="space-y-8">
@@ -1678,11 +1217,17 @@ const LancamentosTab: React.FC = () => {
                 <p className="text-saibro-600 text-sm mb-6">Registre partidas que já aconteceram para pontuar o ranking retroativamente.</p>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <button className="p-4 bg-white border-2 border-dashed border-stone-200 rounded-2xl text-stone-500 font-bold hover:border-saibro-300 hover:text-saibro-600 transition-all flex flex-col items-center gap-2">
+                    <button
+                        onClick={() => openCreator('Desafio')}
+                        className="p-4 bg-white border-2 border-dashed border-stone-200 rounded-2xl text-stone-500 font-bold hover:border-saibro-300 hover:text-saibro-600 transition-all flex flex-col items-center gap-2"
+                    >
                         <Trophy size={32} />
                         Registrar Desafio (3 Sets)
                     </button>
-                    <button className="p-4 bg-white border-2 border-dashed border-stone-200 rounded-2xl text-stone-500 font-bold hover:border-saibro-300 hover:text-saibro-600 transition-all flex flex-col items-center gap-2">
+                    <button
+                        onClick={() => openCreator('SuperSet')}
+                        className="p-4 bg-white border-2 border-dashed border-stone-200 rounded-2xl text-stone-500 font-bold hover:border-saibro-300 hover:text-saibro-600 transition-all flex flex-col items-center gap-2"
+                    >
                         <Zap size={32} />
                         Registrar SuperSet (1 Set)
                     </button>
@@ -1708,6 +1253,19 @@ const LancamentosTab: React.FC = () => {
                     {auditLogs.length === 0 && <p className="text-center py-8 text-stone-400 italic">Nenhum histórico encontrado.</p>}
                 </div>
             </div>
+
+            {/* Match Creator Modal */}
+            <AdminMatchCreator
+                isOpen={showCreator}
+                onClose={() => setShowCreator(false)}
+                matchType={creatorType}
+                profiles={profiles}
+                courts={courts}
+                onSuccess={() => {
+                    fetchAudit(); // Refresh audit logs
+                    alert('Pontos atualizados!');
+                }}
+            />
         </div>
     );
 };
@@ -1722,9 +1280,12 @@ export const AdminPanel: React.FC = () => {
             case 'dashboard': return <Dashboard />;
             case 'lancamentos': return <LancamentosTab />;
             case 'superset': return <SuperSet />;
+            case 'torneios': return <AdminTournaments />;
             case 'reservas': return <ReservasTab />;
             case 'desafios': return <DesafiosTab />;
-            case 'financeiro': return <FinanceiroTab />;
+            case 'financeiro': return <FinanceiroAdmin />;
+            case 'professores': return <AdminProfessors />;
+            case 'regras': return <AdminRules />;
             case 'avisos': return <AnunciosTab />;
             case 'socios': return <SociosTab />;
             default: return <Dashboard />;

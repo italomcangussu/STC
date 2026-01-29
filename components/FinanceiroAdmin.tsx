@@ -1,9 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
-    DollarSign, CheckCircle, AlertCircle, Loader2, TrendingUp, Calendar, Users, ArrowUpRight
+    DollarSign, CheckCircle, AlertCircle, Loader2, TrendingUp, Calendar, Users, ArrowUpRight, Download, PieChart as PieChartIcon, BarChart as BarChartIcon
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Reservation, NonSocioStudent } from '../types';
+import {
+    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+    PieChart, Pie, Cell
+} from 'recharts';
 
 // Day Use price constant
 const DAY_USE_PRICE = 50;
@@ -14,6 +18,8 @@ interface StudentPayment {
     paymentDate: string;
     studentId: string;
 }
+
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
 export const FinanceiroAdmin: React.FC = () => {
     const [reservations, setReservations] = useState<Reservation[]>([]);
@@ -165,7 +171,7 @@ export const FinanceiroAdmin: React.FC = () => {
                 cardMensalTotal: data.cardMensalTotal,
                 grandTotal: (data.friendlyDayCount * DAY_USE_PRICE) + (data.studentDayCount * DAY_USE_PRICE) + data.cardMensalTotal
             }))
-            .sort((a, b) => b.month.localeCompare(a.month));
+            .sort((a, b) => b.month.localeCompare(a.month)); // Sort pending (desc)
 
     }, [reservations, studentPayments]);
 
@@ -191,6 +197,46 @@ export const FinanceiroAdmin: React.FC = () => {
 
     const currentMonthData = financialData.find(m => m.month === selectedMonth);
 
+    // Prepare chart data (reverse order for chronological left-to-right)
+    const chartData = [...financialData].reverse().map(d => ({
+        name: d.month.split('-')[1] + '/' + d.month.split('-')[0].slice(2), // MM/YY
+        'Day Use': d.friendlyTotal + d.studentTotal,
+        'Card Mensal': d.cardMensalTotal
+    }));
+
+    // Pie chart data for current month
+    const pieData = currentMonthData ? [
+        { name: 'Day Use (Amistoso)', value: currentMonthData.friendlyTotal },
+        { name: 'Day Use (Aula)', value: currentMonthData.studentTotal },
+        { name: 'Card Mensal', value: currentMonthData.cardMensalTotal },
+    ] : [];
+
+    const exportToCSV = () => {
+        if (!currentMonthData) return;
+        const headers = ['Mês', 'Day Use (Amistoso) Qtd', 'Day Use (Amistoso) R$', 'Day Use (Aula) Qtd', 'Day Use (Aula) R$', 'Card Mensal R$', 'Total R$'];
+        const rows = financialData.map(d => [
+            d.month,
+            d.friendlyCount,
+            d.friendlyTotal.toFixed(2),
+            d.studentCount,
+            d.studentTotal.toFixed(2),
+            d.cardMensalTotal.toFixed(2),
+            d.grandTotal.toFixed(2)
+        ]);
+
+        const csvContent = "data:text/csv;charset=utf-8,"
+            + headers.join(";") + "\n"
+            + rows.map(e => e.join(";")).join("\n");
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `financeiro_reserva_sct_${new Date().toISOString().slice(0, 10)}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     if (loading) {
         return (
             <div className="flex justify-center items-center min-h-[50vh]">
@@ -202,14 +248,22 @@ export const FinanceiroAdmin: React.FC = () => {
     return (
         <div className="p-4 md:p-6 pb-40 space-y-8">
             {/* Header */}
-            <div className="flex items-center gap-3">
-                <div className="p-3 bg-linear-to-br from-green-500 to-emerald-600 rounded-2xl shadow-lg shadow-green-200">
-                    <DollarSign size={28} className="text-white" />
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                    <div className="p-3 bg-linear-to-br from-green-500 to-emerald-600 rounded-2xl shadow-lg shadow-green-200">
+                        <DollarSign size={28} className="text-white" />
+                    </div>
+                    <div>
+                        <h1 className="text-2xl md:text-3xl font-bold text-stone-800">Painel Financeiro</h1>
+                        <p className="text-sm text-stone-500">Controle de receitas e mensalidades</p>
+                    </div>
                 </div>
-                <div>
-                    <h1 className="text-2xl md:text-3xl font-bold text-stone-800">Painel Financeiro</h1>
-                    <p className="text-sm text-stone-500">Controle de receitas e mensalidades</p>
-                </div>
+                <button
+                    onClick={exportToCSV}
+                    className="flex items-center gap-2 px-4 py-2 bg-stone-100 text-stone-600 font-bold rounded-xl hover:bg-stone-200 transition-colors"
+                >
+                    <Download size={18} /> Exportar CSV
+                </button>
             </div>
 
             {/* --- DASHBOARD CARDS --- */}
@@ -248,6 +302,69 @@ export const FinanceiroAdmin: React.FC = () => {
                     <p className="text-2xl md:text-3xl font-bold text-stone-800">{dashboardMetrics.activeSubscribers}</p>
                     <p className="text-xs text-stone-500 mt-1">Mensalistas Ativos</p>
                 </div>
+            </div>
+
+            {/* --- CHARTS SECTION --- */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                {/* 1. Bar Chart: Revenue Over Time */}
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-stone-100">
+                    <h3 className="text-lg font-bold text-stone-800 mb-6 flex items-center gap-2">
+                        <BarChartIcon size={20} className="text-saibro-500" /> Evolução da Receita
+                    </h3>
+                    <div className="h-64 w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E5E5" />
+                                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#78716C', fontSize: 12 }} dy={10} />
+                                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#78716C', fontSize: 12 }} tickFormatter={(value) => `R$${value}`} />
+                                <Tooltip
+                                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                                    cursor={{ fill: '#F5F5F4' }}
+                                />
+                                <Legend wrapperStyle={{ paddingTop: '20px' }} />
+                                <Bar dataKey="Day Use" fill="#F97316" radius={[4, 4, 0, 0]} stackId="a" />
+                                <Bar dataKey="Card Mensal" fill="#22C55E" radius={[4, 4, 0, 0]} stackId="a" />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+
+                {/* 2. Pie Chart: Revenue Distribution (Current Month) */}
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-stone-100">
+                    <h3 className="text-lg font-bold text-stone-800 mb-6 flex items-center gap-2">
+                        <PieChartIcon size={20} className="text-saibro-500" /> Distribuição ({selectedMonth})
+                    </h3>
+                    <div className="h-64 w-full flex items-center justify-center">
+                        {currentMonthData && currentMonthData.grandTotal > 0 ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                    <Pie
+                                        data={pieData}
+                                        cx="50%"
+                                        cy="50%"
+                                        innerRadius={60}
+                                        outerRadius={80}
+                                        paddingAngle={5}
+                                        dataKey="value"
+                                    >
+                                        {pieData.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                        ))}
+                                    </Pie>
+                                    <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                                    <Legend layout='vertical' verticalAlign='middle' align='right' />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            <div className="text-stone-400 italic flex flex-col items-center">
+                                <AlertCircle size={32} className="mb-2 opacity-50" />
+                                Sem dados para este mês
+                            </div>
+                        )}
+                    </div>
+                </div>
+
             </div>
 
             {/* --- SECTION 1: CARD MENSAL MANAGEMENT --- */}

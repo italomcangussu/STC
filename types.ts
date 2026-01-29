@@ -224,3 +224,11 @@ export interface Challenge {
   courtId?: string;
   notificationSeen?: boolean;
 }
+
+export interface PointRule {
+  id: string;
+  rule_key: string;
+  points: number;
+  description: string;
+  updated_at: string;
+}

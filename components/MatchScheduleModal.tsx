@@ -49,11 +49,13 @@ export const MatchScheduleModal: React.FC<Props> = ({
 
         const normalizedClassName = (className || '').trim();
 
-        // 6th class -> Hard Court (Rápida)
-        if (normalizedClassName.includes('6ª')) return court.type === 'Rápida';
+        const type = (court.type || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+        // 6th class -> Hard Court (Rápida or Rapida)
+        if (normalizedClassName.includes('6ª')) return type.includes('rapida');
 
         // 4th/5th class -> Clay Court (Saibro)
-        if (normalizedClassName.includes('4ª') || normalizedClassName.includes('5ª')) return court.type === 'Saibro';
+        if (normalizedClassName.includes('4ª') || normalizedClassName.includes('5ª')) return type.includes('saibro');
 
         return true; // Other classes (1, 2, 3, etc.) - any court
     });

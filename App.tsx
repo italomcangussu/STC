@@ -15,6 +15,7 @@ import { ChallengesView } from './components/Challenges';
 import { SuperSet } from './components/SuperSet';
 import { AdminStudents } from './components/AdminStudents';
 import { ChampionshipAdmin } from './components/ChampionshipAdmin';
+import { AdminProtect } from './components/AdminProtect';
 import { Auth } from './components/Auth';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { User } from './types';
@@ -164,11 +165,11 @@ const AppContent: React.FC = () => {
           {view === 'perfil' && <Athletes initialUserId={currentUser.id} currentUser={currentUser} onClearRequest={() => setView('dashboard')} />}
           {view === 'ranking' && <Ranking onSelectProfile={handleOpenProfile} />}
           {view === 'professor' && <ProfessorProfile currentUser={currentUser} />}
-          {view === 'admin-students' && <AdminStudents />}
-          {view === 'admin-professors' && <AdminProfessors />}
-          {view === 'admin-panel' && <AdminPanel />}
-          {view === 'financeiro-admin' && <FinanceiroAdmin />}
-          {view === 'championship-admin' && <ChampionshipAdmin currentUser={currentUser} />}
+          {view === 'admin-students' && <AdminProtect><AdminStudents /></AdminProtect>}
+          {view === 'admin-professors' && <AdminProtect><AdminProfessors /></AdminProtect>}
+          {view === 'admin-panel' && <AdminProtect><AdminPanel /></AdminProtect>}
+          {view === 'financeiro-admin' && <AdminProtect><FinanceiroAdmin /></AdminProtect>}
+          {view === 'championship-admin' && <AdminProtect><ChampionshipAdmin currentUser={currentUser} /></AdminProtect>}
         </div>
       </Layout>
       {showAnnouncement && !needsOnboarding && (

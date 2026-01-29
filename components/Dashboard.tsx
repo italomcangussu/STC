@@ -364,7 +364,7 @@ export const Dashboard: React.FC<DashboardProps> = () => {
         <div className="bg-white p-4 rounded-xl border border-stone-100 shadow-sm min-w-0">
           <h3 className="font-bold text-stone-700 mb-4">Utilização por Quadra</h3>
           <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               <BarChart data={courtUsageData} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" horizontal={false} />
                 <XAxis type="number" />
@@ -380,7 +380,7 @@ export const Dashboard: React.FC<DashboardProps> = () => {
         <div className="bg-white p-4 rounded-xl border border-stone-100 shadow-sm min-w-0">
           <h3 className="font-bold text-stone-700 mb-4">Movimento Semanal</h3>
           <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               <BarChart data={weekdayData}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis dataKey="day" />
@@ -397,7 +397,7 @@ export const Dashboard: React.FC<DashboardProps> = () => {
       <div className="bg-white p-4 rounded-xl border border-stone-100 shadow-sm min-w-0">
         <h3 className="font-bold text-stone-700 mb-4">Horários Mais Movimentados</h3>
         <div className="h-64">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <AreaChart data={hourlyData}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="hour" />

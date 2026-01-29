@@ -1737,7 +1737,13 @@ const AddReservationModal: React.FC<{
 
         if (type === 'Aula') {
             const selectedCourt = courts.find(c => c.id === courtId);
-            if (selectedCourt?.type !== 'Rápida') return "Aulas são permitidas apenas na Quadra Rápida.";
+            if (selectedCourt) {
+                const rawType = selectedCourt.type || '';
+                const courtType = rawType.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                if (!courtType.includes('rapida')) {
+                    return "Aulas são permitidas apenas na Quadra Rápida.";
+                }
+            }
         }
         return null; // OK
     };
@@ -1863,7 +1869,7 @@ const AddReservationModal: React.FC<{
                             <p className="text-sm text-stone-500 font-medium">O que você vai marcar hoje?</p>
 
                             <button
-                                onClick={() => setType('Play')}
+                                onClick={() => { setType('Play'); setCourtId(''); }}
                                 className={`w-full p-6 rounded-2xl border-2 text-left transition-all group ${type === 'Play' ? 'border-saibro-500 bg-saibro-50' : 'border-stone-100 bg-white hover:border-saibro-200 hover:bg-stone-50'}`}
                             >
                                 <div className="flex items-center justify-between mb-2">
@@ -1878,7 +1884,11 @@ const AddReservationModal: React.FC<{
 
                             {canCreateAula && (
                                 <button
-                                    onClick={() => setType('Aula')}
+                                    onClick={() => {
+                                        setType('Aula');
+                                        const rapidaId = courts.find(c => (c.type || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes('rapida'))?.id || '';
+                                        setCourtId(rapidaId);
+                                    }}
                                     className={`w-full p-6 rounded-2xl border-2 text-left transition-all group ${type === 'Aula' ? 'border-saibro-500 bg-saibro-50' : 'border-stone-100 bg-white hover:border-saibro-200 hover:bg-stone-50'}`}
                                 >
                                     <div className="flex items-center justify-between mb-2">
@@ -1911,16 +1921,22 @@ const AddReservationModal: React.FC<{
                                 </div>
                                 <div>
                                     <label className="block text-[10px] font-bold text-stone-500 uppercase mb-1.5">Quadra</label>
-                                    <select
-                                        className="w-full px-3 py-3 bg-stone-50 border-none rounded-xl outline-none focus:ring-2 focus:ring-saibro-500 text-sm font-bold text-stone-700"
-                                        value={courtId}
-                                        onChange={e => { setCourtId(e.target.value); setError(null); }}
-                                    >
-                                        {courts
-                                            .filter(c => c.isActive)
-                                            .filter(c => type === 'Aula' ? c.type === 'Rápida' : true)
-                                            .map(c => <option key={c.id} value={c.id}>{c.name} ({c.type})</option>)}
-                                    </select>
+                                    {type === 'Aula' ? (
+                                        <div className="w-full px-3 py-3 bg-stone-100 border-none rounded-xl text-sm font-bold text-stone-500 flex items-center gap-2 cursor-not-allowed">
+                                            <Check size={16} className="text-saibro-500" /> Quadra Rápida (Automático)
+                                        </div>
+                                    ) : (
+                                        <select
+                                            className="w-full px-3 py-3 bg-stone-50 border-none rounded-xl outline-none focus:ring-2 focus:ring-saibro-500 text-sm font-bold text-stone-700"
+                                            value={courtId}
+                                            onChange={e => { setCourtId(e.target.value); setError(null); }}
+                                        >
+                                            <option value="">Selecione...</option>
+                                            {courts
+                                                .filter(c => c.isActive)
+                                                .map(c => <option key={c.id} value={c.id}>{c.name} ({c.type})</option>)}
+                                        </select>
+                                    )}
                                 </div>
                             </div>
 

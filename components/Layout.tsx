@@ -8,6 +8,7 @@ import { supabase } from '../lib/supabase';
 import { isPushSupported, isInstalledPWA, isIOS, getPermissionStatus, subscribeToPush, isSubscribed } from '../lib/pushNotifications';
 import { PushPermissionPrompt } from './PushPermissionPrompt';
 import { InstallPrompt } from './InstallPrompt';
+import { AdminLogin } from './AdminLogin';
 
 interface NavItem {
     id: string;
@@ -29,6 +30,29 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
     const [hasActiveChamps, setHasActiveChamps] = useState(false);
     const [pushEnabled, setPushEnabled] = useState<boolean | null>(null);
     const [showPushBanner, setShowPushBanner] = useState(false);
+    const [showAdminLogin, setShowAdminLogin] = useState(false);
+    const [logoClicks, setLogoClicks] = useState(0);
+
+    // Secret Admin Trigger
+    const handleLogoClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+        setLogoClicks(prev => prev + 1);
+
+        // Reset clicks after 2 seconds of inactivity
+        setTimeout(() => setLogoClicks(0), 2000);
+    };
+
+    // Handle Admin Trigger Effect
+    useEffect(() => {
+        if (logoClicks >= 5) {
+            if (currentUser.role === 'admin') {
+                setView('admin-panel');
+            } else {
+                setShowAdminLogin(true);
+            }
+            setLogoClicks(0);
+        }
+    }, [logoClicks, currentUser.role, setView]);
 
     // Check for active championships
     useEffect(() => {
@@ -123,7 +147,12 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
             {/* Mobile Header */}
             <header className="flex-none md:hidden bg-white border-b border-saibro-200 p-4 flex justify-between items-center z-50 pt-safe">
                 <div className="flex items-center gap-3">
-                    <img src="https://smztsayzldjmkzmufqcz.supabase.co/storage/v1/object/public/logoapp/SOBRAL.zip%20-%201.png" className="w-8 h-8 object-contain" alt="Logo" />
+                    <img
+                        src="https://smztsayzldjmkzmufqcz.supabase.co/storage/v1/object/public/logoapp/SOBRAL.zip%20-%201.png"
+                        className="w-8 h-8 object-contain active:scale-90 transition-transform"
+                        alt="Logo"
+                        onClick={handleLogoClick}
+                    />
                     <h1 className="text-xl font-bold text-saibro-700">STC Play</h1>
                 </div>
                 <button onClick={() => setSidebarOpen(true)} className="text-saibro-800">
@@ -144,7 +173,12 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
             `}>
                 <div className="p-6 flex-none flex justify-between items-center">
                     <div className="hidden md:flex items-center gap-2">
-                        <img src="https://smztsayzldjmkzmufqcz.supabase.co/storage/v1/object/public/logoapp/SOBRAL.zip%20-%201.png" className="w-10 h-10 object-contain" alt="Logo" />
+                        <img
+                            src="https://smztsayzldjmkzmufqcz.supabase.co/storage/v1/object/public/logoapp/SOBRAL.zip%20-%201.png"
+                            className="w-10 h-10 object-contain cursor-pointer active:scale-95 transition-transform"
+                            alt="Logo"
+                            onClick={handleLogoClick}
+                        />
                         <h1 className="text-2xl font-bold text-saibro-700">STC Play</h1>
                     </div>
                     <button onClick={() => setSidebarOpen(false)} className="md:hidden text-stone-500">
@@ -237,6 +271,16 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
             </div>
 
             <PushPermissionPrompt />
+
+            {showAdminLogin && (
+                <AdminLogin
+                    onSuccess={() => {
+                        setShowAdminLogin(false);
+                        setView('admin-panel');
+                    }}
+                    onClose={() => setShowAdminLogin(false)}
+                />
+            )}
         </div>
     );
 };
