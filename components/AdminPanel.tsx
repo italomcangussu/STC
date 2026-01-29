@@ -597,9 +597,13 @@ const DesafiosTab: React.FC = () => {
             // Let's assume we can query it or use a trigger. For now, we update challenges locally.
 
             // Also update reservation status if linked
+            // Note: Reservation status enum is likely 'active' | 'cancelled'. 
+            // 'finished' is invalid. We leave it as 'active' (occupied).
+            /* 
             if (selectedChallenge.reservationId) {
-                await supabase.from('reservations').update({ status: 'finished' }).eq('id', selectedChallenge.reservationId);
+                 // await supabase.from('reservations').update({ status: 'finished' }).eq('id', selectedChallenge.reservationId);
             }
+            */
 
 
             // Update Local State

@@ -89,7 +89,7 @@ export async function fetchRanking(categoryFilter?: string): Promise<PlayerStats
     const { data: matches, error: matchesError } = await supabase
         .from('matches')
         .select('player_a_id, player_b_id, score_a, score_b, winner_id, type')
-        .in('type', ['Desafio Ranking', 'SuperSet'])
+        .in('type', ['Desafio', 'Desafio Ranking', 'SuperSet'])
         .eq('status', 'finished');
 
     if (matchesError) {
@@ -208,15 +208,9 @@ export async function fetchRanking(categoryFilter?: string): Promise<PlayerStats
             if (type === 'SuperSet') {
                 challengeStats[playerA].points += 10;
             } else {
-                // Standard Formula: Win(100) + Sets(10 each) + Games(1 each)
-                const pts = PTS_WIN + (matchSetsA * PTS_SET) + (matchGamesA * PTS_GAME);
-                challengeStats[playerA].points += pts;
-                // Loser also gets points for sets/games won?
-                // Standard ranking logic usually gives points for everything stats-based?
-                // "vencedor desse Set ganha 10 pontos" implies ONLY winner gets points for SuperSet?
-                // For regular matches, the formula puts points on the PlayerStats.
-                // The original code was: `challenge.wins * PTS_WIN + challenge.setsWon * PTS_SET...`
-                // This means YES, even the loser got points for sets/games won.
+                // New Rule (User Request): Desafio only gives 100 points for Win. 
+                // No points for sets or games.
+                challengeStats[playerA].points += PTS_WIN;
             }
 
         } else if (match.winner_id === playerB) {
@@ -226,24 +220,15 @@ export async function fetchRanking(categoryFilter?: string): Promise<PlayerStats
             if (type === 'SuperSet') {
                 challengeStats[playerB].points += 10;
             } else {
-                const pts = PTS_WIN + (matchSetsB * PTS_SET) + (matchGamesB * PTS_GAME);
-                challengeStats[playerB].points += pts;
+                challengeStats[playerB].points += PTS_WIN;
             }
         }
 
-        // Apply Loser Points for Standard Matches (Games/Sets won count)
-        // If type is SuperSet, does loser get points for games?
-        // Proposal: SuperSet = Fixed 10 pts for Winner. 0 for Loser (implied by "winner receives 10").
-        // Standard Match: Loser gets points for sets/games won.
-        if (type !== 'SuperSet') {
-            if (match.winner_id === playerA) {
-                // Player B (Loser) points
-                challengeStats[playerB].points += (matchSetsB * PTS_SET) + (matchGamesB * PTS_GAME);
-            } else {
-                // Player A (Loser) points
-                challengeStats[playerA].points += (matchSetsA * PTS_SET) + (matchGamesA * PTS_GAME);
-            }
-        }
+        // Apply Loser Points?
+        // User said: "desafio não da pontos de games e sets"
+        // If we remove sets/games points, loser gets 0.
+        // So we remove the block that gave loser points.
+
     });
 
     // 4. Combine legacy + challenge stats

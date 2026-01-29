@@ -50,6 +50,20 @@ export const AdminMatchCreator: React.FC<AdminMatchCreatorProps> = ({ isOpen, on
         setSets(sets.filter((_, i) => i !== index));
     };
 
+    // LiveScore Helpers (Embedded for consistency)
+    const getSetWinner = (scoreA: number, scoreB: number, isSuperTiebreak = false): 'A' | 'B' | null => {
+        if (isSuperTiebreak) {
+            if (scoreA >= 10 && scoreA - scoreB >= 2) return 'A';
+            if (scoreB >= 10 && scoreB - scoreA >= 2) return 'B';
+            return null;
+        }
+        if (scoreA === 7) return 'A';
+        if (scoreB === 7) return 'B';
+        if (scoreA === 6 && scoreB <= 4) return 'A';
+        if (scoreB === 6 && scoreA <= 4) return 'B';
+        return null;
+    };
+
     const handleSave = async () => {
         // Validation
         if (!playerAId || !playerBId || !date || !time) {
@@ -68,48 +82,55 @@ export const AdminMatchCreator: React.FC<AdminMatchCreatorProps> = ({ isOpen, on
             return;
         }
 
-        // Validate Winner logic
-        let winsA = 0;
-        let winsB = 0;
-        validSets.forEach(s => {
-            if (parseInt(s.a) > parseInt(s.b)) winsA++;
-            if (parseInt(s.b) > parseInt(s.a)) winsB++;
+        // Validate Winner logic using LiveScore rules
+        let setsWonA = 0;
+        let setsWonB = 0;
+
+        validSets.forEach((s, idx) => {
+            const valA = parseInt(s.a);
+            const valB = parseInt(s.b);
+            const isSuperTie = (matchType === 'SuperSet') || (idx === 2); // 3rd set is super tiebreak usually? Or standard? 
+            // In Desafio (3 sets), 3rd set might be SuperTiebreak. Let's assume standard set unless explicitly SuperSet type, 
+            // BUT LiveScore logic handles 3rd set as SuperTiebreak usually. 
+            // For safety in Admin input, let's treat 3rd set as SuperTiebreak if it looks like one (goes to 10)?
+            // Or just use the helper which handles "isSuperTiebreak".
+            // Let's assume strict set rules based on typical logic:
+            const setWinner = getSetWinner(valA, valB, matchType === 'SuperSet' || idx === 2);
+
+            if (setWinner === 'A') setsWonA++;
+            if (setWinner === 'B') setsWonB++;
         });
 
-        if (winsA === winsB) {
+        if (setsWonA === setsWonB) {
             alert('O jogo não pode terminar empatado. Verifique os placares.');
             return;
         }
 
         setLoading(true);
         try {
-            const winnerId = winsA > winsB ? playerAId : playerBId;
+            const winnerId = setsWonA > setsWonB ? playerAId : playerBId;
             const scoreA = validSets.map(s => parseInt(s.a));
             const scoreB = validSets.map(s => parseInt(s.b));
 
             // 1. Create Reservation (Historical placeholder)
-            // Even though it's past, we create it for record consistency logic
-            // Or maybe skip reservation if it's purely retroactive?
-            // The system links challenges to reservations usually. 
-            // Let's create a "finished" reservation.
             const { data: resData, error: resError } = await supabase
                 .from('reservations')
                 .insert({
                     type: matchType,
                     date: date,
                     start_time: time,
-                    end_time: time, // Zero duration or fix later
+                    end_time: time,
                     court_id: courtId || null,
-                    creator_id: playerAId, // Assume P1 created or Admin
+                    creator_id: playerAId,
                     participant_ids: [playerAId, playerBId],
-                    status: 'finished'
+                    status: 'active'
                 })
                 .select()
                 .single();
 
             if (resError) throw resError;
 
-            // 2. Create Match (This triggers points)
+            // 2. Create Match
             const { data: matchData, error: matchError } = await supabase
                 .from('matches')
                 .insert({
@@ -121,17 +142,14 @@ export const AdminMatchCreator: React.FC<AdminMatchCreatorProps> = ({ isOpen, on
                     winner_id: winnerId,
                     date: `${date}T${time}:00`,
                     status: 'finished',
-                    championship_id: null // Unless we allow selecting champ later
+                    championship_id: null
                 })
                 .select()
                 .single();
 
             if (matchError) throw matchError;
 
-            // 3. Create Challenge (Linked to Match & Reservation)
-            // Only if type is Desafio. SuperSet might verify differnetly?
-            // Actually usually SuperSet is also a challenge type record in this system?
-            // Assuming yes for now if we want it in history.
+            // 3. Create Challenge
             if (matchType === 'Desafio') {
                 const { error: chalError } = await supabase
                     .from('challenges')
@@ -139,7 +157,8 @@ export const AdminMatchCreator: React.FC<AdminMatchCreatorProps> = ({ isOpen, on
                         challenger_id: playerAId,
                         challenged_id: playerBId,
                         status: 'finished',
-                        date: date,
+                        scheduled_date: date, // Renamed from 'date'
+                        month_ref: date.substring(0, 7), // Add month_ref YYYY-MM
                         reservation_id: resData.id,
                         match_id: matchData.id,
                         created_at: `${date}T${time}:00`
@@ -147,7 +166,10 @@ export const AdminMatchCreator: React.FC<AdminMatchCreatorProps> = ({ isOpen, on
                 if (chalError) throw chalError;
             }
 
-            alert('Partida retroativa registrada com sucesso! Pontos recalculados.');
+            // 4. Points are handled automatically by DB Triggers (trg_calculate_match_points)
+            // when match is inserted with status='finished'.
+
+            alert('Partida retroativa registrada com sucesso! Pontos e histórico calculados automaticamente.');
             onSuccess();
             onClose();
 
