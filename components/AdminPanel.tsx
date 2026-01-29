@@ -20,6 +20,7 @@ import { FinanceiroAdmin } from './FinanceiroAdmin';
 import { AdminProfessors } from './AdminProfessors';
 import { AdminRules } from './AdminRules';
 import { AdminTournaments } from './AdminTournaments';
+import { AdminStudents } from './AdminStudents';
 
 // --- Helpers ---
 const addMinutes = (time: string, minutes: number): string => {
@@ -226,6 +227,7 @@ const TABS = [
     { id: 'desafios', label: 'Desafios', icon: <Swords size={18} /> },
     { id: 'financeiro', label: 'Financeiro', icon: <DollarSign size={18} /> },
     { id: 'socios', label: 'Sócios', icon: <Users size={18} /> },
+    { id: 'alunos', label: 'Alunos', icon: <Users size={18} /> },
     { id: 'professores', label: 'Professores', icon: <GraduationCap size={18} /> },
     { id: 'regras', label: 'Regras', icon: <Settings size={18} /> },
     { id: 'avisos', label: 'Avisos', icon: <Megaphone size={18} /> },
@@ -364,119 +366,7 @@ const ReservasTab: React.FC = () => {
     );
 };
 
-// --- Sub-component: Campeonatos Tab ---
-const CampeonatosTab: React.FC<{ onOpenWizard: () => void, onSelectChampionship: (c: Championship) => void }> = ({ onOpenWizard, onSelectChampionship }) => {
-    const [championships, setChampionships] = useState<Championship[]>([]);
-    const [matchCounts, setMatchCounts] = useState<Record<string, number>>({});
-    const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const fetchData = async () => {
-            setLoading(true);
-            const { data: champsData } = await supabase
-                .from('championships')
-                .select('*')
-                .order('created_at', { ascending: false });
-
-            setChampionships((champsData || []).map(c => ({
-                id: c.id,
-                name: c.name,
-                status: c.status,
-                format: c.format,
-                participantIds: c.participant_ids || [],
-                startDate: c.start_date,
-                endDate: c.end_date,
-                rules: c.rules,
-                logoUrl: c.logo_url,
-                ptsVictory: c.pts_victory,
-                ptsDefeat: c.pts_defeat, // Mapping new field (assuming snake_case in DB)
-                ptsWoVictory: c.pts_wo_victory,
-                finalRankingPts: c.final_ranking_pts,
-                ptsSet: c.pts_set,
-                ptsGame: c.pts_game,
-                groups: c.groups // Mapping JSONB groups column
-            })));
-
-            // Get match counts per championship
-            const { data: matchesData } = await supabase
-                .from('matches')
-                .select('championship_id');
-
-            const counts: Record<string, number> = {};
-            (matchesData || []).forEach(m => {
-                if (m.championship_id) {
-                    counts[m.championship_id] = (counts[m.championship_id] || 0) + 1;
-                }
-            });
-            setMatchCounts(counts);
-            setLoading(false);
-        };
-        fetchData();
-    }, []);
-
-    const getStatusColor = (status: string) => {
-        switch (status) {
-            case 'ongoing': return 'bg-green-100 text-green-700';
-            case 'finished': return 'bg-stone-100 text-stone-600';
-            default: return 'bg-yellow-100 text-yellow-700';
-        }
-    };
-
-    const getStatusLabel = (status: string) => {
-        switch (status) {
-            case 'ongoing': return 'Em Andamento';
-            case 'finished': return 'Finalizado';
-            default: return 'Rascunho';
-        }
-    };
-
-    if (loading) {
-        return <div className="flex justify-center py-8"><Loader2 className="animate-spin text-saibro-500" size={32} /></div>;
-    }
-
-    return (
-        <div className="space-y-4">
-            <button
-                onClick={onOpenWizard}
-                className="flex items-center gap-2 px-4 py-2 bg-saibro-500 text-white rounded-lg font-medium hover:bg-saibro-600 transition-colors"
-            >
-                <Plus size={18} /> Novo Campeonato
-            </button>
-
-            <div className="space-y-3">
-                {championships.map(champ => (
-                    <div key={champ.id} className="bg-white rounded-xl p-4 shadow-sm border border-stone-100 group hover:border-saibro-200 transition-all">
-                        <div className="flex justify-between items-start">
-                            <div className="cursor-pointer flex-1" onClick={() => onSelectChampionship(champ)}>
-                                <div className="flex items-center gap-2 mb-1">
-                                    <span className={`text-xs font-bold px-2 py-0.5 rounded ${getStatusColor(champ.status)}`}>
-                                        {getStatusLabel(champ.status)}
-                                    </span>
-                                    <span className="text-xs text-stone-400">
-                                        {champ.format === 'mata-mata' ? 'Mata-Mata' : 'Pontos Corridos'}
-                                    </span>
-                                </div>
-                                <h3 className="font-bold text-lg text-stone-800 group-hover:text-saibro-600 transition-colors">{champ.name}</h3>
-                                <p className="text-sm text-stone-500">{matchCounts[champ.id] || 0} partidas registradas</p>
-                            </div>
-                            <div className="flex gap-2">
-                                <button
-                                    onClick={() => onSelectChampionship(champ)}
-                                    className="p-2 text-stone-400 hover:text-saibro-500 hover:bg-saibro-50 rounded-lg transition-colors"
-                                >
-                                    <Edit size={18} />
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                ))}
-                {championships.length === 0 && (
-                    <p className="text-center text-stone-400 py-8">Nenhum campeonato cadastrado.</p>
-                )}
-            </div>
-        </div>
-    );
-};
 
 // --- Sub-component: Desafios Tab ---
 const DesafiosTab: React.FC = () => {
@@ -1292,46 +1182,47 @@ export const AdminPanel: React.FC = () => {
             case 'regras': return <AdminRules />;
             case 'avisos': return <AnunciosTab />;
             case 'socios': return <SociosTab />;
+            case 'alunos': return <AdminStudents />;
             default: return <Dashboard />;
         }
     };
 
     return (
-        <div className="min-h-screen bg-stone-50 pb-24">
+        <div className="flex flex-col min-h-screen bg-stone-50">
             {/* Header Moderno */}
-            <div className="bg-saibro-600 pt-8 pb-20 px-6 rounded-b-[40px] shadow-2xl relative overflow-hidden">
+            <div className="bg-saibro-600 pt-8 pb-16 px-4 md:px-8 rounded-b-[40px] shadow-2xl relative overflow-hidden shrink-0">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-saibro-500/20 rounded-full -mr-20 -mt-20 blur-3xl animate-pulse"></div>
-                <div className="relative z-10 flex flex-col gap-1">
+                <div className="relative z-10 flex flex-col gap-1 max-w-7xl mx-auto w-full">
                     <span className="text-saibro-200 text-xs font-bold uppercase tracking-widest">Administração</span>
-                    <h1 className="text-3xl font-black text-white tracking-tight">Centro de Comando</h1>
+                    <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">Centro de Comando</h1>
                     <p className="text-saibro-100 text-sm opacity-80">Gestão integrada do Reserva SCT</p>
                 </div>
             </div>
 
             {/* Navigation Cards (Overlapping) */}
-            <div className="px-4 -mt-12 relative z-20">
-                <div className="flex gap-3 overflow-x-auto pb-6 pt-2 scrollbar-hide px-2">
+            <div className="px-2 md:px-8 -mt-10 relative z-20 max-w-7xl mx-auto w-full">
+                <div className="flex gap-2 overflow-x-auto pb-4 pt-2 scrollbar-hide snap-x">
                     {TABS.map(tab => (
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
-                            className={`flex flex-col items-center justify-center min-w-[100px] h-[100px] rounded-3xl font-bold transition-all duration-300 shadow-xl ${activeTab === tab.id
+                            className={`flex flex-col items-center justify-center min-w-[90px] h-[90px] md:min-w-[100px] md:h-[100px] rounded-2xl md:rounded-3xl font-bold transition-all duration-300 shadow-lg snap-start ${activeTab === tab.id
                                 ? 'bg-white text-saibro-600 scale-105 border-b-4 border-saibro-500'
-                                : 'bg-white/90 text-stone-400 backdrop-blur-md hover:bg-white hover:text-stone-600'
+                                : 'bg-white/95 text-stone-400 backdrop-blur-md hover:bg-white hover:text-stone-600'
                                 }`}
                         >
                             <div className={`p-2 rounded-xl mb-1 ${activeTab === tab.id ? 'bg-saibro-50 text-saibro-600' : 'bg-stone-50'}`}>
-                                {React.cloneElement(tab.icon as React.ReactElement, { size: 24 })}
+                                {React.cloneElement(tab.icon as React.ReactElement, { size: 20 })}
                             </div>
-                            <span className="text-[10px] uppercase tracking-tighter">{tab.label}</span>
+                            <span className="text-[9px] uppercase tracking-tighter">{tab.label}</span>
                         </button>
                     ))}
                 </div>
             </div>
 
             {/* Main Content Area */}
-            <div className="px-4 mt-4 animate-in fade-in slide-in-from-bottom-6 duration-500">
-                <div className="bg-white rounded-[32px] shadow-sm border border-stone-100 min-h-[500px] p-6">
+            <div className="flex-1 px-2 md:px-8 mt-2 pb-8 animate-in fade-in slide-in-from-bottom-6 duration-500 max-w-7xl mx-auto w-full">
+                <div className="bg-white rounded-[24px] md:rounded-[32px] shadow-sm border border-stone-100 min-h-[500px] p-4 md:p-6 overflow-x-hidden">
                     {renderTabContent()}
                 </div>
             </div>

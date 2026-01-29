@@ -58,8 +58,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ currentUser,
                 name,
                 category,
                 avatar_url: avatarUrl,
-                age: age ? parseInt(age) : null,
-                updated_at: new Date()
+                age: age ? parseInt(age) : null
             };
 
             const { error } = await supabase

@@ -1,18 +1,28 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import {
-    Users, Search, Filter, Calendar, TrendingUp, Info, ArrowRight, Loader2,
-    CheckCircle, AlertCircle, Clock, Award, Trophy
-} from 'lucide-react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { NonSocioStudent, Reservation } from '../types';
+import { NonSocioStudent, Professor } from '../types';
+import {
+    Users, Plus, Search, Edit, Trash2, CheckCircle, AlertCircle,
+    Calendar, Loader2, DollarSign, X
+} from 'lucide-react';
+
+const CARD_MENSAL_PRICE = 200;
 
 export const AdminStudents: React.FC = () => {
     const [students, setStudents] = useState<NonSocioStudent[]>([]);
-    const [reservations, setReservations] = useState<Reservation[]>([]);
+    const [professors, setProfessors] = useState<Professor[]>([]);
     const [loading, setLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [filterType, setFilterType] = useState<string>('all');
-    const [selectedStudent, setSelectedStudent] = useState<NonSocioStudent | null>(null);
+    const [filter, setFilter] = useState('');
+
+    // --- Modal States ---
+    const [showStudentModal, setShowStudentModal] = useState(false);
+    const [editingStudent, setEditingStudent] = useState<NonSocioStudent | null>(null);
+    const [studentForm, setStudentForm] = useState({ name: '', phone: '', professorId: '' });
+
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
+    const [paymentStudent, setPaymentStudent] = useState<NonSocioStudent | null>(null);
+    const [paymentDate, setPaymentDate] = useState(new Date().toISOString().slice(0, 10));
+    const [processing, setProcessing] = useState(false);
 
     useEffect(() => {
         fetchData();
@@ -20,303 +30,325 @@ export const AdminStudents: React.FC = () => {
 
     const fetchData = async () => {
         setLoading(true);
-        try {
-            // 1. Fetch Students
-            const { data: studentsData } = await supabase
-                .from('non_socio_students')
-                .select('*')
-                .order('name');
+        const { data: sData } = await supabase.from('non_socio_students').select('*').order('name');
+        const { data: pData } = await supabase.from('professors').select('*').eq('is_active', true);
 
-            if (studentsData) setStudents(studentsData.map(s => ({
+        if (sData) {
+            setStudents(sData.map(s => ({
                 id: s.id,
                 name: s.name,
+                phone: s.phone,
                 planType: s.plan_type,
                 planStatus: s.plan_status,
                 masterExpirationDate: s.master_expiration_date,
                 professorId: s.professor_id
             })));
+        }
+        if (pData) {
+            setProfessors(pData.map(p => ({
+                id: p.id,
+                userId: p.user_id,
+                name: p.name,
+                isActive: p.is_active,
+                bio: p.bio
+            })));
+        }
+        setLoading(false);
+    };
 
-            // 2. Fetch Reservations for stats
-            const { data: resData } = await supabase
-                .from('reservations')
-                .select('*')
-                .neq('status', 'cancelled');
+    // --- Student CRUD ---
+    const handleSaveStudent = async () => {
+        if (!studentForm.name || !studentForm.professorId) return alert('Nome e Professor obrigatórios.');
 
-            if (resData) setReservations(resData.map(r => ({
-                id: r.id,
-                date: r.date,
-                type: r.type,
-                nonSocioStudentId: r.non_socio_student_id,
-                status: r.status
-            } as any)));
-
-        } catch (error) {
-            console.error('Error fetching students:', error);
+        setProcessing(true);
+        try {
+            if (editingStudent) {
+                await supabase.from('non_socio_students').update({
+                    name: studentForm.name,
+                    phone: studentForm.phone,
+                    professor_id: studentForm.professorId
+                }).eq('id', editingStudent.id);
+            } else {
+                await supabase.from('non_socio_students').insert({
+                    name: studentForm.name,
+                    phone: studentForm.phone,
+                    professor_id: studentForm.professorId,
+                    plan_type: 'Day Card', // Default
+                    plan_status: 'inactive'
+                });
+            }
+            fetchData();
+            setShowStudentModal(false);
+            setEditingStudent(null);
+            setStudentForm({ name: '', phone: '', professorId: '' });
+        } catch (error: any) {
+            alert('Erro ao salvar: ' + error.message);
         } finally {
-            setLoading(false);
+            setProcessing(false);
         }
     };
 
-    const filteredStudents = useMemo(() => {
-        return students.filter(s => {
-            const matchesSearch = s.name.toLowerCase().includes(searchTerm.toLowerCase());
-            const matchesType = filterType === 'all' || s.planType === filterType;
-            return matchesSearch && matchesType;
-        });
-    }, [students, searchTerm, filterType]);
-
-    const getStudentStats = (studentId: string) => {
-        const studentRes = reservations.filter(r => r.nonSocioStudentId === studentId);
-        const totalVisits = studentRes.length;
-        const lastVisit = studentRes.length > 0
-            ? studentRes.sort((a, b) => b.date.localeCompare(a.date))[0].date
-            : null;
-
-        // Classes vs Play
-        const classes = studentRes.filter(r => r.type === 'Aula').length;
-        const play = studentRes.filter(r => r.type === 'Play').length;
-
-        return { totalVisits, lastVisit, classes, play };
+    const handleDeleteStudent = async (id: string) => {
+        if (!confirm('Tem certeza? Isso apagará histórico e pagamentos.')) return;
+        setProcessing(true);
+        await supabase.from('non_socio_students').delete().eq('id', id);
+        fetchData();
+        setProcessing(false);
     };
 
-    if (loading) {
-        return (
-            <div className="flex justify-center items-center min-h-[50vh]">
-                <Loader2 className="animate-spin text-saibro-500" size={48} />
-            </div>
-        );
-    }
+    // --- Payment Logic ---
+    const handleOpenPayment = (student: NonSocioStudent) => {
+        setPaymentStudent(student);
+        setPaymentDate(new Date().toISOString().slice(0, 10));
+        setShowPaymentModal(true);
+    };
+
+    const handleConfirmPayment = async () => {
+        if (!paymentStudent || !paymentDate) return;
+        setProcessing(true);
+
+        try {
+            // Calculate Expiration: Payment Date + 1 Month
+            // Example: 2026-01-15 -> 2026-02-15
+            // Handle edge cases: Jan 31 -> Feb 28/29?
+            const payDate = new Date(paymentDate);
+            // We want same day next month
+            const expDate = new Date(payDate);
+            expDate.setMonth(expDate.getMonth() + 1);
+
+            // Edge case check: Jan 31 -> Mar 3 is wrong, should be last day of Feb?
+            // JS setMonth handles overflow automatically (Jan 31 + 1 mo -> Feb 28/29 is hard, usually goes to Mar 2/3)
+            // Let's implement strict "Same Day or Last Day of Month" if needed?
+            // Standard business logic usually accepts overflow or snaps to last day.
+            // Let's use straightforward JS date math unless user complains. Jan 31 -> Mar 3 gives 31 days. Fair.
+
+            const isoExp = expDate.toISOString().split('T')[0];
+
+            // 1. Insert Payment Record
+            const { error: payError } = await supabase.from('student_payments').insert({
+                student_id: paymentStudent.id,
+                amount: CARD_MENSAL_PRICE,
+                payment_date: new Date(paymentDate).toISOString(), // save full timestamp with offset? using provided date at 00:00
+                valid_until: expDate.toISOString(),
+                approved_by: (await supabase.auth.getUser()).data.user?.id
+            });
+            if (payError) throw payError;
+
+            // 2. Update Student Status
+            const { error: upError } = await supabase.from('non_socio_students').update({
+                plan_type: 'Card Mensal',
+                plan_status: 'active',
+                master_expiration_date: isoExp
+            }).eq('id', paymentStudent.id);
+            if (upError) throw upError;
+
+            fetchData();
+            setShowPaymentModal(false);
+            setPaymentStudent(null);
+            alert(`Pagamento registrado! Vencimento: ${isoExp}`);
+
+        } catch (error: any) {
+            alert('Erro ao registrar pagamento: ' + error.message);
+        } finally {
+            setProcessing(false);
+        }
+    };
+
+    // --- Render ---
+    const filteredStudents = students.filter(s => s.name.toLowerCase().includes(filter.toLowerCase()));
 
     return (
-        <div className="p-4 md:p-6 pb-40 space-y-8 animate-in fade-in duration-500">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                    <div className="p-3 bg-linear-to-br from-saibro-500 to-orange-600 rounded-2xl shadow-lg shadow-orange-100">
-                        <Users size={28} className="text-white" />
-                    </div>
-                    <div>
-                        <h1 className="text-2xl md:text-3xl font-bold text-stone-800">Gestão de Alunos</h1>
-                        <p className="text-sm text-stone-500">Alunos não-sócios e visitantes</p>
-                    </div>
+        <div className="p-4 md:p-6 pb-40 space-y-6">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h1 className="text-2xl font-bold text-stone-800 flex items-center gap-2">
+                        <Users className="text-saibro-500" /> Gestão de Alunos (Non-Sócio)
+                    </h1>
+                    <p className="text-sm text-stone-500">Cadastre alunos e gerencie o Card Mensal</p>
                 </div>
-
-                <div className="flex flex-col sm:flex-row gap-2">
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" size={18} />
-                        <input
-                            type="text"
-                            placeholder="Buscar aluno..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-10 pr-4 py-2 bg-white border border-stone-200 rounded-xl focus:ring-2 focus:ring-saibro-500 outline-none w-full sm:w-64"
-                        />
-                    </div>
-                    <select
-                        value={filterType}
-                        onChange={(e) => setFilterType(e.target.value)}
-                        className="px-4 py-2 bg-white border border-stone-200 rounded-xl outline-none focus:ring-2 focus:ring-saibro-500"
-                    >
-                        <option value="all">Todos os Planos</option>
-                        <option value="Card Mensal">Card Mensal</option>
-                        <option value="Daycard">Daycard</option>
-                        <option value="Experimental">Experimental</option>
-                    </select>
-                </div>
+                <button
+                    onClick={() => {
+                        setEditingStudent(null);
+                        setStudentForm({ name: '', phone: '', professorId: '' });
+                        setShowStudentModal(true);
+                    }}
+                    className="bg-saibro-500 hover:bg-saibro-600 text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2"
+                >
+                    <Plus size={18} /> Novo Aluno
+                </button>
             </div>
 
-            {/* Students List */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredStudents.map((student, idx) => {
-                    const stats = getStudentStats(student.id);
-                    return (
-                        <div
-                            key={student.id}
-                            onClick={() => setSelectedStudent(student)}
-                            className="bg-white rounded-2xl p-4 border border-stone-100 shadow-sm hover:shadow-md hover:border-saibro-200 transition-all cursor-pointer group animate-slide-in opacity-0"
-                            style={{ animationDelay: `${idx * 40}ms`, animationFillMode: 'forwards' }}
+            {/* Filter */}
+            <div className="bg-white p-4 rounded-xl shadow-sm border border-stone-100 flex items-center gap-2">
+                <Search className="text-stone-400" size={20} />
+                <input
+                    type="text"
+                    placeholder="Buscar aluno..."
+                    value={filter}
+                    onChange={e => setFilter(e.target.value)}
+                    className="flex-1 outline-none text-stone-600"
+                />
+            </div>
+
+            {/* List */}
+            {loading ? (
+                <div className="flex justify-center py-10"><Loader2 className="animate-spin text-saibro-500" /></div>
+            ) : (
+                <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                    {filteredStudents.map(student => {
+                        const isExpired = !student.masterExpirationDate || new Date(student.masterExpirationDate) < new Date();
+                        const isActive = student.planStatus === 'active' && !isExpired;
+                        const profName = professors.find(p => p.id === student.professorId)?.name || 'N/A';
+
+                        return (
+                            <div key={student.id} className={`relative p-5 rounded-2xl border-2 transition-all ${isActive ? 'bg-white border-green-100' : 'bg-stone-50 border-stone-100 opacity-90'}`}>
+                                <div className="flex justify-between items-start mb-3">
+                                    <div className="bg-stone-100 p-2 rounded-lg">
+                                        <Users size={20} className={isActive ? 'text-green-600' : 'text-stone-400'} />
+                                    </div>
+                                    <div className="flex gap-1">
+                                        <button
+                                            onClick={() => {
+                                                setEditingStudent(student);
+                                                setStudentForm({ name: student.name, phone: student.phone || '', professorId: student.professorId });
+                                                setShowStudentModal(true);
+                                            }}
+                                            className="p-2 hover:bg-stone-100 rounded-lg text-stone-500"
+                                        >
+                                            <Edit size={16} />
+                                        </button>
+                                        <button
+                                            onClick={() => handleDeleteStudent(student.id)}
+                                            className="p-2 hover:bg-red-50 rounded-lg text-red-500"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <h3 className="font-bold text-lg text-stone-800 mb-1">{student.name}</h3>
+                                <p className="text-xs text-stone-500 mb-4 flex items-center gap-1">
+                                    <span className="font-semibold">Prof:</span> {profName}
+                                </p>
+
+                                <div className="pt-4 border-t border-stone-100">
+                                    <div className="flex justify-between items-center mb-3">
+                                        <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded ${isActive ? 'bg-green-100 text-green-700' : 'bg-stone-200 text-stone-500'}`}>
+                                            {isActive ? 'Card Mensal Ativo' : 'Day Card / Inativo'}
+                                        </span>
+                                        {student.masterExpirationDate && (
+                                            <span className={`text-xs font-mono font-bold ${isActive ? 'text-green-600' : 'text-red-400'}`}>
+                                                Vence: {new Date(student.masterExpirationDate).toLocaleDateString()}
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    <button
+                                        onClick={() => handleOpenPayment(student)}
+                                        className={`w-full py-2.5 rounded-xl font-bold text-sm flex justify-center items-center gap-2 transition-colors ${isActive
+                                            ? 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                                            : 'bg-green-500 text-white hover:bg-green-600 shadow-md shadow-green-100'
+                                            }`}
+                                    >
+                                        <DollarSign size={16} />
+                                        {isActive ? 'Renovar Plano' : 'Ativar Card Mensal'}
+                                    </button>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
+
+            {/* --- Modals --- */}
+            {/* Student Edit Modal */}
+            {showStudentModal && (
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl">
+                        <h3 className="text-xl font-bold mb-4">{editingStudent ? 'Editar Aluno' : 'Novo Aluno'}</h3>
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-bold text-stone-500 uppercase mb-1">Nome Completo</label>
+                                <input
+                                    value={studentForm.name}
+                                    onChange={e => setStudentForm({ ...studentForm, name: e.target.value })}
+                                    className="w-full p-3 bg-stone-50 rounded-xl"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-stone-500 uppercase mb-1">Telefone</label>
+                                <input
+                                    value={studentForm.phone}
+                                    onChange={e => setStudentForm({ ...studentForm, phone: e.target.value })}
+                                    className="w-full p-3 bg-stone-50 rounded-xl"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-stone-500 uppercase mb-1">Professor Responsável</label>
+                                <select
+                                    value={studentForm.professorId}
+                                    onChange={e => setStudentForm({ ...studentForm, professorId: e.target.value })}
+                                    className="w-full p-3 bg-stone-50 rounded-xl"
+                                >
+                                    <option value="">Selecione...</option>
+                                    {professors.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                                </select>
+                            </div>
+                        </div>
+                        <div className="flex gap-2 mt-6">
+                            <button onClick={() => setShowStudentModal(false)} className="flex-1 py-3 bg-stone-100 rounded-xl font-bold text-stone-600">Cancelar</button>
+                            <button onClick={handleSaveStudent} disabled={processing} className="flex-1 py-3 bg-saibro-500 text-white rounded-xl font-bold">
+                                {processing ? <Loader2 className="animate-spin mx-auto" /> : 'Salvar'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Payment Modal */}
+            {showPaymentModal && paymentStudent && (
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-xl font-bold text-stone-800">Registrar Pagamento</h3>
+                            <button onClick={() => setShowPaymentModal(false)}><X className="text-stone-400" /></button>
+                        </div>
+
+                        <div className="bg-stone-50 p-4 rounded-xl mb-6">
+                            <p className="text-sm text-stone-500 mb-1">Aluno</p>
+                            <p className="font-bold text-lg text-stone-800">{paymentStudent.name}</p>
+                            <div className="h-px bg-stone-200 my-3"></div>
+                            <div className="flex justify-between items-center">
+                                <span className="text-stone-500 text-sm">Valor</span>
+                                <span className="font-bold text-xl text-green-600">R$ {CARD_MENSAL_PRICE},00</span>
+                            </div>
+                        </div>
+
+                        <div className="mb-6">
+                            <label className="block text-xs font-bold text-stone-500 uppercase mb-2">Data do Pagamento</label>
+                            <input
+                                type="date"
+                                value={paymentDate}
+                                onChange={e => setPaymentDate(e.target.value)}
+                                className="w-full p-3 border-2 border-stone-200 rounded-xl text-lg font-bold text-stone-800 focus:border-saibro-500 outline-none"
+                            />
+                            <p className="text-xs text-stone-400 mt-2">
+                                O vencimento será calculado para <b>1 mês</b> após esta data.
+                            </p>
+                        </div>
+
+                        <button
+                            onClick={handleConfirmPayment}
+                            disabled={processing}
+                            className="w-full py-4 bg-green-500 hover:bg-green-600 text-white rounded-xl font-bold shadow-lg shadow-green-100 flex justify-center items-center gap-2"
                         >
-                            <div className="flex items-start justify-between mb-4">
-                                <div className="space-y-1">
-                                    <h4 className="font-bold text-lg text-stone-800 group-hover:text-saibro-600 transition-colors uppercase">{student.name}</h4>
-                                    <span className={`text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider ${student.planType === 'Card Mensal' ? 'bg-orange-100 text-orange-700' :
-                                        student.planType === 'Experimental' ? 'bg-purple-100 text-purple-700' :
-                                            'bg-blue-100 text-blue-700'
-                                        }`}>
-                                        {student.planType}
-                                    </span>
-                                </div>
-                                <div className="p-2 bg-stone-50 rounded-xl">
-                                    <TrendingUp size={16} className="text-stone-400" />
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-stone-50">
-                                <div>
-                                    <p className="text-[10px] text-stone-400 font-bold uppercase">Frequência</p>
-                                    <p className="text-lg font-black text-stone-700">{stats.totalVisits} <span className="text-xs font-normal">idas</span></p>
-                                </div>
-                                <div>
-                                    <p className="text-[10px] text-stone-400 font-bold uppercase">Última Ida</p>
-                                    <p className="text-sm font-bold text-stone-600">{stats.lastVisit ? new Date(stats.lastVisit).toLocaleDateString() : 'Nunca'}</p>
-                                </div>
-                            </div>
-
-                            <div className="mt-4 flex items-center justify-between text-saibro-600 font-bold text-xs pt-2">
-                                <span>Ver detalhes completos</span>
-                                <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-                            </div>
-                        </div>
-                    );
-                })}
-
-                {filteredStudents.length === 0 && (
-                    <div className="col-span-full py-12 text-center bg-white rounded-2xl border-2 border-dashed border-stone-100">
-                        <Users className="mx-auto text-stone-200 mb-2" size={48} />
-                        <p className="text-stone-400 font-medium">Nenhum aluno encontrado.</p>
-                    </div>
-                )}
-            </div>
-
-            {/* Student Detail Modal */}
-            {selectedStudent && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm animate-fade-in">
-                    <div className="bg-white rounded-[32px] w-full max-w-lg max-h-[90vh] overflow-y-auto relative shadow-2xl animate-zoom-smooth">
-                        <div className="bg-saibro-600 p-8 text-white relative">
-                            <button
-                                onClick={() => setSelectedStudent(null)}
-                                className="absolute top-6 right-6 p-2 bg-white/20 hover:bg-white/30 rounded-xl transition-colors"
-                            >
-                                <Users size={20} />
-                            </button>
-                            <h2 className="text-3xl font-black uppercase tracking-tight">{selectedStudent.name}</h2>
-                            <div className="flex items-center gap-3 mt-2">
-                                <span className="bg-white/20 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest">
-                                    {selectedStudent.planType}
-                                </span>
-                                <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest ${selectedStudent.planStatus === 'active' ? 'bg-green-400 text-green-950' : 'bg-red-400 text-red-950'
-                                    }`}>
-                                    {selectedStudent.planStatus === 'active' ? 'Ativo' : 'Inativo'}
-                                </span>
-                            </div>
-                        </div>
-
-                        <div className="p-8 overflow-y-auto custom-scrollbar max-h-[calc(90vh-160px)]">
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-                                <div className="bg-stone-50 p-4 rounded-2xl border border-stone-100">
-                                    <div className="p-2 bg-saibro-100 text-saibro-600 rounded-lg w-fit mb-2">
-                                        <TrendingUp size={16} />
-                                    </div>
-                                    <p className="text-[10px] text-stone-400 font-bold uppercase">Total Idas</p>
-                                    <p className="text-2xl font-black text-stone-800">{getStudentStats(selectedStudent.id).totalVisits}</p>
-                                </div>
-                                <div className="bg-stone-50 p-4 rounded-2xl border border-stone-100">
-                                    <div className="p-2 bg-blue-100 text-blue-600 rounded-lg w-fit mb-2">
-                                        <Calendar size={16} />
-                                    </div>
-                                    <p className="text-[10px] text-stone-400 font-bold uppercase">Aulas</p>
-                                    <p className="text-2xl font-black text-stone-800">{getStudentStats(selectedStudent.id).classes}</p>
-                                </div>
-                                <div className="bg-stone-50 p-4 rounded-2xl border border-stone-100">
-                                    <div className="p-2 bg-green-100 text-green-600 rounded-lg w-fit mb-2">
-                                        <Award size={16} />
-                                    </div>
-                                    <p className="text-[10px] text-stone-400 font-bold uppercase">Play</p>
-                                    <p className="text-2xl font-black text-stone-800">{getStudentStats(selectedStudent.id).play}</p>
-                                </div>
-                                <div className="bg-stone-50 p-4 rounded-2xl border border-stone-100">
-                                    <div className="p-2 bg-orange-100 text-orange-600 rounded-lg w-fit mb-2">
-                                        <Clock size={16} />
-                                    </div>
-                                    <p className="text-[10px] text-stone-400 font-bold uppercase">Expira em</p>
-                                    <p className="text-sm font-black text-stone-800">
-                                        {selectedStudent.masterExpirationDate
-                                            ? new Date(selectedStudent.masterExpirationDate).toLocaleDateString()
-                                            : 'N/A'}
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="space-y-6">
-                                <h4 className="font-bold text-stone-800 flex items-center gap-2">
-                                    <History className="text-saibro-500" size={18} /> Histórico Recente
-                                </h4>
-                                <div className="space-y-3">
-                                    {reservations
-                                        .filter(r => r.nonSocioStudentId === selectedStudent.id)
-                                        .sort((a, b) => b.date.localeCompare(a.date))
-                                        .slice(0, 10)
-                                        .map(res => (
-                                            <div key={res.id} className="flex items-center justify-between p-4 bg-white border border-stone-100 rounded-xl shadow-xs">
-                                                <div className="flex items-center gap-4">
-                                                    <div className={`p-2 rounded-lg ${res.type === 'Aula' ? 'bg-blue-50 text-blue-600' : 'bg-green-50 text-green-600'}`}>
-                                                        {res.type === 'Aula' ? <GraduationCap size={18} /> : <Trophy size={18} />}
-                                                    </div>
-                                                    <div>
-                                                        <p className="font-bold text-stone-800">{res.type}</p>
-                                                        <p className="text-xs text-stone-400">{new Date(res.date).toLocaleDateString()}</p>
-                                                    </div>
-                                                </div>
-                                                <div className="text-right">
-                                                    <span className="text-[10px] font-black px-2 py-0.5 bg-stone-100 text-stone-600 rounded-full uppercase tracking-tighter">
-                                                        Realizada
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    {reservations.filter(r => r.nonSocioStudentId === selectedStudent.id).length === 0 && (
-                                        <p className="text-sm text-stone-400 italic">Nenhuma atividade registrada.</p>
-                                    )}
-                                </div>
-                            </div>
-
-                            <button
-                                onClick={() => setSelectedStudent(null)}
-                                className="w-full mt-8 py-4 bg-stone-100 hover:bg-stone-200 text-stone-600 font-black uppercase tracking-widest rounded-2xl transition-all"
-                            >
-                                Fechar Detalhes
-                            </button>
-                        </div>
+                            {processing ? <Loader2 className="animate-spin" /> : <>
+                                <CheckCircle size={20} /> Confirmar Pagamento
+                            </>}
+                        </button>
                     </div>
                 </div>
             )}
         </div>
     );
 };
-
-const History = ({ className, size }: { className?: string, size?: number }) => (
-    <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width={size || 24}
-        height={size || 24}
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className={className}
-    >
-        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-        <path d="M3 3v5h5" />
-        <path d="M12 7v5l4 2" />
-    </svg>
-);
-
-const GraduationCap = ({ className, size }: { className?: string, size?: number }) => (
-    <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width={size || 24}
-        height={size || 24}
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className={className}
-    >
-        <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-        <path d="M6 12v5c3 3 9 3 12 0v-5" />
-    </svg>
-);

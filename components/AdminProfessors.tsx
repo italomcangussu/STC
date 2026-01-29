@@ -1,13 +1,93 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Professor, NonSocioStudent } from '../types';
-import { Users, GraduationCap, Calendar, DollarSign, Loader2, ChevronRight, ChevronDown } from 'lucide-react';
+import { Users, GraduationCap, Calendar, DollarSign, Loader2, ChevronRight, ChevronDown, Plus, Edit, Trash2 } from 'lucide-react';
+
+// --- Modal Component ---
+interface ProfessorModalProps {
+    professor?: Professor | null;
+    onClose: () => void;
+    onSave: (data: any) => Promise<void>;
+}
+
+const ProfessorModal: React.FC<ProfessorModalProps> = ({ professor, onClose, onSave }) => {
+    const [name, setName] = useState(professor?.name || '');
+    const [bio, setBio] = useState(professor?.bio || '');
+    const [isActive, setIsActive] = useState(professor?.isActive ?? true);
+    const [saving, setSaving] = useState(false);
+
+    const handleSubmit = async () => {
+        if (!name) return;
+        setSaving(true);
+        try {
+            await onSave({ name, bio, is_active: isActive });
+            onClose();
+        } catch (error) {
+            console.error(error);
+            alert('Erro ao salvar.');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl w-full max-w-md p-6 space-y-4 animate-in scale-in-95 duration-200">
+                <h3 className="text-xl font-bold text-stone-800">{professor ? 'Editar Professor' : 'Novo Professor'}</h3>
+
+                <div className="space-y-3">
+                    <div>
+                        <label className="block text-xs font-bold text-stone-500 uppercase mb-1">Nome</label>
+                        <input
+                            value={name}
+                            onChange={e => setName(e.target.value)}
+                            className="w-full p-3 border border-stone-200 rounded-xl outline-none focus:ring-2 focus:ring-saibro-500"
+                            placeholder="Nome do Professor"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-bold text-stone-500 uppercase mb-1">Bio / Especialidade</label>
+                        <textarea
+                            value={bio}
+                            onChange={e => setBio(e.target.value)}
+                            className="w-full p-3 border border-stone-200 rounded-xl outline-none focus:ring-2 focus:ring-saibro-500 h-24 resize-none"
+                            placeholder="Ex: Especialista em Tênis Avançado..."
+                        />
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <input
+                            type="checkbox"
+                            checked={isActive}
+                            onChange={e => setIsActive(e.target.checked)}
+                            className="w-5 h-5 text-saibro-600 rounded"
+                            id="isActive"
+                        />
+                        <label htmlFor="isActive" className="text-stone-700 font-medium cursor-pointer">Professor Ativo</label>
+                    </div>
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                    <button onClick={onClose} className="flex-1 py-3 border border-stone-200 rounded-xl font-bold text-stone-500 hover:bg-stone-50">Cancelar</button>
+                    <button
+                        onClick={handleSubmit}
+                        disabled={saving || !name}
+                        className="flex-1 py-3 bg-saibro-600 text-white rounded-xl font-bold hover:bg-saibro-700 disabled:opacity-50 flex justify-center"
+                    >
+                        {saving ? <Loader2 className="animate-spin" /> : 'Salvar'}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
 
 export const AdminProfessors: React.FC = () => {
     const [professors, setProfessors] = useState<Professor[]>([]);
     const [students, setStudents] = useState<NonSocioStudent[]>([]);
     const [loading, setLoading] = useState(true);
     const [expandedProf, setExpandedProf] = useState<string | null>(null);
+    const [showModal, setShowModal] = useState(false);
+    const [editingProf, setEditingProf] = useState<Professor | null>(null);
 
     useEffect(() => {
         fetchData();
@@ -32,8 +112,7 @@ export const AdminProfessors: React.FC = () => {
 
             if (studError) throw studError;
 
-            // Map database fields to TS types if needed, though simple select * usually matches if names align.
-            // Adjusting for potential snake_case from DB if not handled by client:
+            // Map database fields to TS types
             const mappedProfs = (profs || []).map((p: any) => ({
                 id: p.id,
                 userId: p.user_id,
@@ -62,12 +141,28 @@ export const AdminProfessors: React.FC = () => {
         }
     };
 
+    const handleSaveProfessor = async (data: any) => {
+        if (editingProf) {
+            await supabase.from('professors').update(data).eq('id', editingProf.id);
+        } else {
+            await supabase.from('professors').insert(data);
+        }
+        fetchData();
+    };
+
+    const handleDeleteProfessor = async (id: string) => {
+        if (!confirm('Tem certeza que deseja remover este professor?')) return;
+        const { error } = await supabase.from('professors').delete().eq('id', id);
+        if (error) {
+            alert('Não é possível excluir professores com alunos vinculados.');
+        } else {
+            fetchData();
+        }
+    };
+
     const getProfessorStats = (profId: string) => {
         const profStudents = students.filter(s => s.professor_id === profId || s.professorId === profId);
         const activeStudents = profStudents.filter(s => s.planStatus === 'active');
-
-        // Revenue estimation (simplified: 200 per active student)
-        // Ideally we should sum actual payments, but this is a quick projection
         const estimatedRevenue = activeStudents.length * 200;
 
         return {
@@ -98,15 +193,7 @@ export const AdminProfessors: React.FC = () => {
                         <p className="text-2xl font-black text-stone-800">{professors.length}</p>
                     </div>
                 </div>
-                <div className="bg-white p-5 rounded-2xl shadow-sm border border-stone-100 flex items-center gap-4">
-                    <div className="p-3 bg-indigo-100 text-indigo-600 rounded-xl">
-                        <Users size={24} />
-                    </div>
-                    <div>
-                        <p className="text-xs text-stone-500 uppercase font-bold">Alunos Vinculados</p>
-                        <p className="text-2xl font-black text-stone-800">{students.length}</p>
-                    </div>
-                </div>
+                {/* ... other stats ... */}
                 <div className="bg-white p-5 rounded-2xl shadow-sm border border-stone-100 flex items-center gap-4">
                     <div className="p-3 bg-green-100 text-green-600 rounded-xl">
                         <DollarSign size={24} />
@@ -118,6 +205,15 @@ export const AdminProfessors: React.FC = () => {
                         </p>
                     </div>
                 </div>
+
+                {/* Add Button */}
+                <button
+                    onClick={() => { setEditingProf(null); setShowModal(true); }}
+                    className="bg-saibro-600 hover:bg-saibro-700 text-white p-5 rounded-2xl shadow-lg shadow-saibro-200 flex flex-col items-center justify-center gap-1 transition-all active:scale-95"
+                >
+                    <Plus size={24} />
+                    <span className="font-bold text-sm">Novo Professor</span>
+                </button>
             </div>
 
             {/* Professors List */}
@@ -135,12 +231,12 @@ export const AdminProfessors: React.FC = () => {
                         const isExpanded = expandedProf === prof.id;
 
                         return (
-                            <div key={prof.id} className="transition-colors hover:bg-stone-50">
-                                <div
-                                    className="p-6 cursor-pointer flex items-center justify-between"
-                                    onClick={() => setExpandedProf(isExpanded ? null : prof.id)}
-                                >
-                                    <div className="flex items-center gap-4">
+                            <div key={prof.id} className="transition-colors hover:bg-stone-50 group">
+                                <div className="p-6 flex items-center justify-between">
+                                    <div
+                                        className="flex items-center gap-4 cursor-pointer flex-1"
+                                        onClick={() => setExpandedProf(isExpanded ? null : prof.id)}
+                                    >
                                         <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg ${prof.isActive ? 'bg-saibro-100 text-saibro-700' : 'bg-stone-200 text-stone-500'}`}>
                                             {prof.name.charAt(0)}
                                         </div>
@@ -152,18 +248,33 @@ export const AdminProfessors: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center gap-8">
-                                        <div className="text-right hidden md:block">
-                                            <p className="text-[10px] text-stone-400 uppercase font-bold">Alunos Ativos</p>
-                                            <p className="font-bold text-stone-800">{stats.active} <span className="text-stone-400 text-xs font-normal">/ {stats.total}</span></p>
+                                    <div className="flex items-center gap-4">
+                                        <div className="hidden md:block text-right mr-4">
+                                            <p className="text-[10px] text-stone-400 uppercase font-bold">Alunos</p>
+                                            <p className="font-bold text-stone-800">{stats.active}</p>
                                         </div>
-                                        <div className="text-right hidden md:block">
-                                            <p className="text-[10px] text-stone-400 uppercase font-bold">Gerado</p>
-                                            <p className="font-bold text-green-600">R$ {stats.revenue.toLocaleString('pt-BR')}</p>
+
+                                        <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button
+                                                onClick={() => { setEditingProf(prof); setShowModal(true); }}
+                                                className="p-2 text-stone-400 hover:text-saibro-600 hover:bg-white rounded-lg"
+                                            >
+                                                <Edit size={18} />
+                                            </button>
+                                            <button
+                                                onClick={() => handleDeleteProfessor(prof.id)}
+                                                className="p-2 text-stone-400 hover:text-red-500 hover:bg-red-50 rounded-lg"
+                                            >
+                                                <Trash2 size={18} />
+                                            </button>
                                         </div>
-                                        <div className="text-stone-400">
+
+                                        <button
+                                            onClick={() => setExpandedProf(isExpanded ? null : prof.id)}
+                                            className="text-stone-400"
+                                        >
                                             {isExpanded ? <ChevronDown /> : <ChevronRight />}
-                                        </div>
+                                        </button>
                                     </div>
                                 </div>
 
@@ -187,8 +298,8 @@ export const AdminProfessors: React.FC = () => {
                                                                 <p className="text-xs text-stone-500">{student.planType}</p>
                                                             </div>
                                                             <div className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${student.planStatus === 'active'
-                                                                    ? 'bg-green-100 text-green-700'
-                                                                    : 'bg-red-100 text-red-700'
+                                                                ? 'bg-green-100 text-green-700'
+                                                                : 'bg-red-100 text-red-700'
                                                                 }`}>
                                                                 {student.planStatus === 'active' ? 'Ativo' : 'Inativo'}
                                                             </div>
@@ -204,6 +315,14 @@ export const AdminProfessors: React.FC = () => {
                     })}
                 </div>
             </div>
+
+            {showModal && (
+                <ProfessorModal
+                    professor={editingProf}
+                    onClose={() => setShowModal(false)}
+                    onSave={handleSaveProfessor}
+                />
+            )}
         </div>
     );
 };

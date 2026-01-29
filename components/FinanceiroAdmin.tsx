@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
-    DollarSign, CheckCircle, AlertCircle, Loader2, TrendingUp, Calendar, Users, ArrowUpRight, Download, PieChart as PieChartIcon, BarChart as BarChartIcon
+    DollarSign, CheckCircle, AlertCircle, Loader2, TrendingUp, Calendar, Users, ArrowUpRight, Download, PieChart as PieChartIcon, BarChart as BarChartIcon, Trash2, Sparkles, CreditCard, UserCheck, Receipt
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Reservation, NonSocioStudent } from '../types';
@@ -14,6 +14,7 @@ const DAY_USE_PRICE = 50;
 const CARD_MENSAL_PRICE = 200;
 
 interface StudentPayment {
+    id?: string;
     amount: number;
     paymentDate: string;
     studentId: string;
@@ -28,6 +29,7 @@ export const FinanceiroAdmin: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
     const [processingPayment, setProcessingPayment] = useState<string | null>(null);
+    const [deleteSuccess, setDeleteSuccess] = useState<string | null>(null);
 
     const fetchData = async () => {
         setLoading(true);
@@ -52,8 +54,9 @@ export const FinanceiroAdmin: React.FC = () => {
                 guestName: r.guest_name,
                 studentType: r.student_type,
                 nonSocioStudentId: r.non_socio_student_id,
-                status: r.status
-            } as Reservation)));
+                status: r.status,
+                payment_status: r.payment_status
+            } as any)));
         }
 
         // 2. Fetch Card Mensal Students
@@ -77,10 +80,11 @@ export const FinanceiroAdmin: React.FC = () => {
         // 3. Fetch Historical Student Payments (for Card Mensal Revenue)
         const { data: paymentsData } = await supabase
             .from('student_payments')
-            .select('amount, payment_date, student_id');
+            .select('id, amount, payment_date, student_id');
 
         if (paymentsData) {
             setStudentPayments(paymentsData.map(p => ({
+                id: p.id,
                 amount: p.amount,
                 paymentDate: p.payment_date,
                 studentId: p.student_id
@@ -94,463 +98,308 @@ export const FinanceiroAdmin: React.FC = () => {
         fetchData();
     }, []);
 
-    const handleRegisterPayment = async (student: NonSocioStudent) => {
-        if (!confirm(`Confirmar pagamento de R$ ${CARD_MENSAL_PRICE},00 para ${student.name}? Isso ativará o plano por 1 mês (vencendo no mesmo dia do mês seguinte).`)) return;
-
-        setProcessingPayment(student.id);
-        try {
-            const now = new Date();
-            const validUntil = new Date(now);
-            // Move to same day next month
-            validUntil.setMonth(validUntil.getMonth() + 1);
-
-            const { error: auditError } = await supabase.from('student_payments').insert({
-                student_id: student.id,
-                amount: CARD_MENSAL_PRICE,
-                valid_until: validUntil.toISOString(),
-                payment_date: now.toISOString()
-            });
-
-            if (auditError) throw auditError;
-
-            const { error: updateError } = await supabase
-                .from('non_socio_students')
-                .update({
-                    plan_status: 'active',
-                    master_expiration_date: validUntil.toISOString().split('T')[0]
-                })
-                .eq('id', student.id);
-
-            if (updateError) throw updateError;
-
-            alert('Pagamento registrado e plano ativado com sucesso!');
+    // --- Actions ---
+    const handleDeletePayment = async (id: string) => {
+        if (!confirm('Deseja excluir este pagamento de Card Mensal? O valor será removido do relatório.')) return;
+        setProcessingPayment(id);
+        const { error } = await supabase.from('student_payments').delete().eq('id', id);
+        if (error) {
+            alert('Erro ao excluir: ' + error.message);
+        } else {
+            setDeleteSuccess(id);
+            setTimeout(() => setDeleteSuccess(null), 1500);
             fetchData();
-
-        } catch (error: any) {
-            console.error('Payment Error:', error);
-            alert(`Erro ao registrar pagamento: ${error.message}`);
-        } finally {
-            setProcessingPayment(null);
         }
+        setProcessingPayment(null);
     };
 
-    // Calculate Financial Data grouped by month
-    const financialData = useMemo(() => {
-        const grouped: Record<string, {
-            friendlyDayCount: number,
-            studentDayCount: number,
-            cardMensalTotal: number
-        }> = {};
+    const handleToggleDayUseExempt = async (reservation: Reservation) => {
+        if (!confirm('Tem certeza que deseja isentar este Day Use? O valor será removido do relatório mensal.')) return;
 
-        reservations.forEach(r => {
-            const month = r.date.slice(0, 7);
-            if (!grouped[month]) grouped[month] = { friendlyDayCount: 0, studentDayCount: 0, cardMensalTotal: 0 };
+        const newStatus = (reservation as any).payment_status === 'exempt' ? 'paid' : 'exempt';
+        setProcessingPayment(reservation.id);
 
-            if (r.type === 'Play' && r.guestName) {
-                grouped[month].friendlyDayCount++;
-            }
+        const { error } = await supabase
+            .from('reservations')
+            .update({ payment_status: newStatus })
+            .eq('id', reservation.id);
 
-            if (r.type === 'Aula' && r.studentType === 'non-socio') {
-                grouped[month].studentDayCount++;
-            }
-        });
+        if (error) {
+            alert('Erro ao atualizar: ' + error.message);
+        } else {
+            setDeleteSuccess(reservation.id);
+            setTimeout(() => setDeleteSuccess(null), 1500);
+            fetchData();
+        }
+        setProcessingPayment(null);
+    };
 
-        studentPayments.forEach(p => {
-            const month = p.paymentDate.slice(0, 7);
-            if (!grouped[month]) grouped[month] = { friendlyDayCount: 0, studentDayCount: 0, cardMensalTotal: 0 };
-            grouped[month].cardMensalTotal += p.amount;
-        });
+    // Calculate Financial Data for SELECTED MONTH ONLY
+    const reportData = useMemo(() => {
+        const [year, month] = selectedMonth.split('-');
 
-        return Object.entries(grouped)
-            .map(([month, data]) => ({
-                month,
-                friendlyCount: data.friendlyDayCount,
-                friendlyTotal: data.friendlyDayCount * DAY_USE_PRICE,
-                studentCount: data.studentDayCount,
-                studentTotal: data.studentDayCount * DAY_USE_PRICE,
-                cardMensalTotal: data.cardMensalTotal,
-                grandTotal: (data.friendlyDayCount * DAY_USE_PRICE) + (data.studentDayCount * DAY_USE_PRICE) + data.cardMensalTotal
-            }))
-            .sort((a, b) => b.month.localeCompare(a.month)); // Sort pending (desc)
+        // Filter Reservations for this month
+        const monthReservations = reservations.filter(r => r.date.startsWith(selectedMonth));
 
-    }, [reservations, studentPayments]);
+        // Filter Payments for this month
+        const monthPayments = studentPayments.filter(p => p.paymentDate.startsWith(selectedMonth));
 
-    // Dashboard Metrics
-    const dashboardMetrics = useMemo(() => {
-        const totalAllTime = financialData.reduce((sum, m) => sum + m.grandTotal, 0);
-        const thisMonth = financialData.find(m => m.month === new Date().toISOString().slice(0, 7));
-        const pendingCount = monthlyStudents.filter(s => {
-            const isExpired = !s.masterExpirationDate || new Date(s.masterExpirationDate) < new Date();
-            const isInactive = s.planStatus !== 'active';
-            return isExpired || isInactive;
-        }).length;
-        const activeCount = monthlyStudents.length - pendingCount;
+        // Group Day Uses
+        const friendlyDayUses = monthReservations.filter(r => r.type === 'Play' && r.guestName && (r as any).payment_status !== 'exempt');
+        const studentDayUses = monthReservations.filter(r => r.type === 'Aula' && r.studentType === 'non-socio' && (r as any).payment_status !== 'exempt');
+
+        const friendlyCount = friendlyDayUses.length;
+        const friendlyTotal = friendlyCount * DAY_USE_PRICE;
+
+        const studentCount = studentDayUses.length;
+        const studentTotal = studentCount * DAY_USE_PRICE;
+
+        const cardMensalTotal = monthPayments.reduce((sum, p) => sum + p.amount, 0);
 
         return {
-            totalAllTime,
-            thisMonthTotal: thisMonth?.grandTotal || 0,
-            pendingPayments: pendingCount,
-            activeSubscribers: activeCount,
-            totalPayments: studentPayments.length
+            friendlyCount,
+            friendlyTotal,
+            studentCount,
+            studentTotal,
+            cardMensalTotal,
+            grandTotal: friendlyTotal + studentTotal + cardMensalTotal,
+            details: {
+                friendly: friendlyDayUses,
+                student: studentDayUses,
+                payments: monthPayments
+            }
         };
-    }, [financialData, monthlyStudents, studentPayments]);
-
-    const currentMonthData = financialData.find(m => m.month === selectedMonth);
-
-    // Prepare chart data (reverse order for chronological left-to-right)
-    const chartData = [...financialData].reverse().map(d => ({
-        name: d.month.split('-')[1] + '/' + d.month.split('-')[0].slice(2), // MM/YY
-        'Day Use': d.friendlyTotal + d.studentTotal,
-        'Card Mensal': d.cardMensalTotal
-    }));
-
-    // Pie chart data for current month
-    const pieData = currentMonthData ? [
-        { name: 'Day Use (Amistoso)', value: currentMonthData.friendlyTotal },
-        { name: 'Day Use (Aula)', value: currentMonthData.studentTotal },
-        { name: 'Card Mensal', value: currentMonthData.cardMensalTotal },
-    ] : [];
-
-    const exportToCSV = () => {
-        if (!currentMonthData) return;
-        const headers = ['Mês', 'Day Use (Amistoso) Qtd', 'Day Use (Amistoso) R$', 'Day Use (Aula) Qtd', 'Day Use (Aula) R$', 'Card Mensal R$', 'Total R$'];
-        const rows = financialData.map(d => [
-            d.month,
-            d.friendlyCount,
-            d.friendlyTotal.toFixed(2),
-            d.studentCount,
-            d.studentTotal.toFixed(2),
-            d.cardMensalTotal.toFixed(2),
-            d.grandTotal.toFixed(2)
-        ]);
-
-        const csvContent = "data:text/csv;charset=utf-8,"
-            + headers.join(";") + "\n"
-            + rows.map(e => e.join(";")).join("\n");
-
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", `financeiro_reserva_sct_${new Date().toISOString().slice(0, 10)}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    };
+    }, [reservations, studentPayments, selectedMonth]);
 
     if (loading) {
         return (
-            <div className="flex justify-center items-center min-h-[50vh]">
-                <Loader2 className="animate-spin text-saibro-500" size={48} />
+            <div className="flex flex-col items-center justify-center py-20">
+                <Loader2 className="animate-spin text-saibro-600 mb-4" size={40} />
+                <p className="text-stone-500 font-medium">Carregando dados financeiros...</p>
             </div>
         );
     }
 
     return (
-        <div className="p-4 md:p-6 pb-40 space-y-8">
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-6 duration-700">
             {/* Header */}
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                    <div className="p-3 bg-linear-to-br from-green-500 to-emerald-600 rounded-2xl shadow-lg shadow-green-200">
-                        <DollarSign size={28} className="text-white" />
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div className="flex items-center gap-4">
+                    <div className="p-4 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl shadow-lg shadow-green-200">
+                        <DollarSign size={32} className="text-white" />
                     </div>
                     <div>
-                        <h1 className="text-2xl md:text-3xl font-bold text-stone-800">Painel Financeiro</h1>
-                        <p className="text-sm text-stone-500">Controle de receitas e mensalidades</p>
+                        <h1 className="text-3xl font-black text-stone-800 tracking-tight">Painel Financeiro</h1>
+                        <p className="text-sm text-stone-500 font-medium">Controle de receitas e mensalidades</p>
                     </div>
                 </div>
-                <button
-                    onClick={exportToCSV}
-                    className="flex items-center gap-2 px-4 py-2 bg-stone-100 text-stone-600 font-bold rounded-xl hover:bg-stone-200 transition-colors"
-                >
-                    <Download size={18} /> Exportar CSV
-                </button>
-            </div>
-
-            {/* --- DASHBOARD CARDS --- */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-linear-to-br from-green-500 to-emerald-600 rounded-2xl p-4 text-white shadow-lg shadow-green-100">
-                    <div className="flex items-center justify-between mb-2">
-                        <TrendingUp size={20} className="opacity-80" />
-                        <span className="text-[10px] font-bold uppercase bg-white/20 px-2 py-0.5 rounded">Total</span>
-                    </div>
-                    <p className="text-2xl md:text-3xl font-bold">R$ {dashboardMetrics.totalAllTime.toFixed(2)}</p>
-                    <p className="text-xs opacity-80 mt-1">Receita Total</p>
-                </div>
-
-                <div className="bg-white rounded-2xl p-4 border border-stone-200 shadow-sm">
-                    <div className="flex items-center justify-between mb-2">
-                        <Calendar size={20} className="text-saibro-500" />
-                        <ArrowUpRight size={16} className="text-green-500" />
-                    </div>
-                    <p className="text-2xl md:text-3xl font-bold text-stone-800">R$ {dashboardMetrics.thisMonthTotal.toFixed(2)}</p>
-                    <p className="text-xs text-stone-500 mt-1">Este Mês</p>
-                </div>
-
-                <div className="bg-white rounded-2xl p-4 border border-orange-200 shadow-sm">
-                    <div className="flex items-center justify-between mb-2">
-                        <AlertCircle size={20} className="text-orange-500" />
-                    </div>
-                    <p className="text-2xl md:text-3xl font-bold text-orange-600">{dashboardMetrics.pendingPayments}</p>
-                    <p className="text-xs text-stone-500 mt-1">Pendências</p>
-                </div>
-
-                <div className="bg-white rounded-2xl p-4 border border-stone-200 shadow-sm">
-                    <div className="flex items-center justify-between mb-2">
-                        <Users size={20} className="text-stone-500" />
-                        <CheckCircle size={16} className="text-green-500" />
-                    </div>
-                    <p className="text-2xl md:text-3xl font-bold text-stone-800">{dashboardMetrics.activeSubscribers}</p>
-                    <p className="text-xs text-stone-500 mt-1">Mensalistas Ativos</p>
-                </div>
-            </div>
-
-            {/* --- CHARTS SECTION --- */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-                {/* 1. Bar Chart: Revenue Over Time */}
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-stone-100">
-                    <h3 className="text-lg font-bold text-stone-800 mb-6 flex items-center gap-2">
-                        <BarChartIcon size={20} className="text-saibro-500" /> Evolução da Receita
-                    </h3>
-                    <div className="h-64 w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E5E5" />
-                                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#78716C', fontSize: 12 }} dy={10} />
-                                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#78716C', fontSize: 12 }} tickFormatter={(value) => `R$${value}`} />
-                                <Tooltip
-                                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                                    cursor={{ fill: '#F5F5F4' }}
-                                />
-                                <Legend wrapperStyle={{ paddingTop: '20px' }} />
-                                <Bar dataKey="Day Use" fill="#F97316" radius={[4, 4, 0, 0]} stackId="a" />
-                                <Bar dataKey="Card Mensal" fill="#22C55E" radius={[4, 4, 0, 0]} stackId="a" />
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
-
-                {/* 2. Pie Chart: Revenue Distribution (Current Month) */}
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-stone-100">
-                    <h3 className="text-lg font-bold text-stone-800 mb-6 flex items-center gap-2">
-                        <PieChartIcon size={20} className="text-saibro-500" /> Distribuição ({selectedMonth})
-                    </h3>
-                    <div className="h-64 w-full flex items-center justify-center">
-                        {currentMonthData && currentMonthData.grandTotal > 0 ? (
-                            <ResponsiveContainer width="100%" height="100%">
-                                <PieChart>
-                                    <Pie
-                                        data={pieData}
-                                        cx="50%"
-                                        cy="50%"
-                                        innerRadius={60}
-                                        outerRadius={80}
-                                        paddingAngle={5}
-                                        dataKey="value"
-                                    >
-                                        {pieData.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                        ))}
-                                    </Pie>
-                                    <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
-                                    <Legend layout='vertical' verticalAlign='middle' align='right' />
-                                </PieChart>
-                            </ResponsiveContainer>
-                        ) : (
-                            <div className="text-stone-400 italic flex flex-col items-center">
-                                <AlertCircle size={32} className="mb-2 opacity-50" />
-                                Sem dados para este mês
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-            </div>
-
-            {/* --- SECTION 1: CARD MENSAL MANAGEMENT --- */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-stone-100">
-                <h3 className="text-lg font-bold text-saibro-800 mb-4 flex items-center gap-2">
-                    <CheckCircle className="text-saibro-500" size={20} /> Gestão de Mensalidades (Card Mensal)
-                </h3>
-
-                {/* PENDING / EXPIRED LIST */}
-                <div className="mb-8">
-                    <h4 className="text-sm font-bold text-orange-600 uppercase mb-3 flex items-center gap-2">
-                        <AlertCircle size={16} /> Pendências (Aprovação Necessária / Vencidos)
-                    </h4>
-                    <div className="grid gap-3 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-                        {monthlyStudents.filter(s => {
-                            const isExpired = !s.masterExpirationDate || new Date(s.masterExpirationDate) < new Date();
-                            const isInactive = s.planStatus !== 'active';
-                            return isExpired || isInactive;
-                        }).length === 0 && <p className="text-stone-400 text-sm italic">Nenhuma pendência.</p>}
-
-                        {monthlyStudents.filter(s => {
-                            const isExpired = !s.masterExpirationDate || new Date(s.masterExpirationDate) < new Date();
-                            const isInactive = s.planStatus !== 'active';
-                            return isExpired || isInactive;
-                        }).map(student => {
-                            const isExpired = !student.masterExpirationDate || new Date(student.masterExpirationDate) < new Date();
-                            return (
-                                <div key={student.id} className="p-4 rounded-xl border-2 flex flex-col justify-between gap-3 bg-red-50 text-red-600 border-red-100">
-                                    <div>
-                                        <h4 className="font-bold text-lg text-stone-800">{student.name}</h4>
-                                        <div className="flex items-center gap-2 mt-1">
-                                            <span className="text-[10px] font-bold uppercase tracking-wider bg-white/50 px-2 py-0.5 rounded border border-current">
-                                                {student.planStatus === 'active' ? 'VENCIDO' : 'AGUARDANDO PAGAMENTO'}
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <p className="text-xs font-medium mb-3">
-                                            {isExpired
-                                                ? `Venceu em: ${new Date(student.masterExpirationDate!).toLocaleDateString()}`
-                                                : 'Novo Aluno (Sem validade)'}
-                                        </p>
-                                        <button
-                                            onClick={() => handleRegisterPayment(student)}
-                                            disabled={!!processingPayment}
-                                            className="w-full py-2 bg-saibro-600 hover:bg-saibro-700 text-white rounded-lg font-bold text-sm shadow-sm flex items-center justify-center gap-2 transition-all active:scale-95"
-                                        >
-                                            {processingPayment === student.id ? <Loader2 className="animate-spin" size={16} /> : <DollarSign size={16} />}
-                                            Aprovar Pagamento (R$ {CARD_MENSAL_PRICE})
-                                        </button>
-                                    </div>
-                                </div>
-                            )
-                        })}
-                    </div>
-                </div>
-
-                {/* ACTIVE LIST */}
-                <div>
-                    <h4 className="text-sm font-bold text-stone-500 uppercase mb-3 flex items-center gap-2">
-                        <CheckCircle size={16} /> Mensalistas Ativos
-                    </h4>
-                    <div className="grid gap-3 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-                        {monthlyStudents.filter(s => {
-                            const isExpired = !s.masterExpirationDate || new Date(s.masterExpirationDate) < new Date();
-                            const isInactive = s.planStatus !== 'active';
-                            return !isExpired && !isInactive;
-                        }).length === 0 && <p className="text-stone-400 text-sm italic">Nenhum mensalista ativo.</p>}
-
-                        {monthlyStudents.filter(s => {
-                            const isExpired = !s.masterExpirationDate || new Date(s.masterExpirationDate) < new Date();
-                            const isInactive = s.planStatus !== 'active';
-                            return !isExpired && !isInactive;
-                        }).map(student => (
-                            <div key={student.id} className="p-4 rounded-xl border border-green-200 bg-green-50 flex flex-col justify-between gap-3">
-                                <div>
-                                    <h4 className="font-bold text-lg text-green-900">{student.name}</h4>
-                                    <p className="text-xs text-green-700 font-bold uppercase tracking-wider">Ativo</p>
-                                </div>
-                                <div className="text-right">
-                                    <p className="text-[10px] text-green-600 uppercase font-bold">Vence em</p>
-                                    <p className="font-mono font-bold text-green-800">{new Date(student.masterExpirationDate!).toLocaleDateString()}</p>
-                                    <button
-                                        onClick={() => handleRegisterPayment(student)}
-                                        className="mt-2 text-xs text-saibro-600 hover:text-saibro-800 underline font-bold"
-                                    >
-                                        Renovar Antecipado
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
-
-            {/* --- SECTION 2: RELATÓRIO FINANCEIRO DETALHADO --- */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-stone-100 space-y-6">
-                <h3 className="text-lg font-bold text-stone-700 flex items-center gap-2">
-                    <DollarSign className="text-green-600" size={20} /> Relatório Financeiro Mensal
-                </h3>
 
                 {/* Month Selector */}
-                <div>
-                    <label className="text-xs text-stone-500 uppercase font-semibold block mb-2">Selecionar Mês</label>
-                    <select
-                        value={selectedMonth}
-                        onChange={e => setSelectedMonth(e.target.value)}
-                        className="w-full px-4 py-3 border border-stone-200 rounded-xl bg-white"
-                    >
-                        {financialData.map(m => {
-                            const [year, month] = m.month.split('-');
-                            return (
-                                <option key={m.month} value={m.month}>
-                                    {new Date(parseInt(year), parseInt(month) - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
-                                </option>
-                            );
-                        })}
-                    </select>
+                <div className="flex items-center gap-3 bg-gradient-to-r from-stone-50 to-stone-100 p-4 rounded-2xl border-2 border-stone-200 shadow-sm">
+                    <Calendar className="text-stone-600" size={20} />
+                    <div className="flex flex-col">
+                        <span className="text-[10px] font-black uppercase text-stone-400 tracking-wider">Mês de Referência</span>
+                        <input
+                            type="month"
+                            value={selectedMonth}
+                            onChange={e => setSelectedMonth(e.target.value)}
+                            className="bg-transparent font-black text-stone-800 text-lg outline-none cursor-pointer"
+                        />
+                    </div>
                 </div>
+            </div>
 
-                {/* Summary Cards for Selected Month */}
-                {currentMonthData && (
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                        <div className="bg-stone-50 rounded-xl p-4 border border-stone-100">
-                            <p className="text-[10px] text-stone-500 uppercase font-semibold">Day Use (Amistoso)</p>
-                            <p className="text-xl font-bold text-saibro-600">{currentMonthData.friendlyCount}</p>
-                            <p className="text-xs text-green-600 font-semibold">R$ {currentMonthData.friendlyTotal.toFixed(2)}</p>
+            {/* Dashboard Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                {/* Total Revenue */}
+                <div className="md:col-span-2 bg-gradient-to-br from-saibro-500 via-saibro-600 to-orange-600 p-8 rounded-2xl shadow-xl shadow-saibro-200 text-white relative overflow-hidden group">
+                    <div className="absolute right-0 top-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <Sparkles size={80} className="text-white" />
+                    </div>
+                    <div className="relative z-10">
+                        <div className="flex items-center gap-2 mb-2">
+                            <DollarSign size={24} className="opacity-90" />
+                            <p className="text-xs font-black uppercase tracking-wider opacity-90">Receita Total</p>
                         </div>
-                        <div className="bg-stone-50 rounded-xl p-4 border border-stone-100">
-                            <p className="text-[10px] text-stone-500 uppercase font-semibold">Day Use (Aluno)</p>
-                            <p className="text-xl font-bold text-saibro-600">{currentMonthData.studentCount}</p>
-                            <p className="text-xs text-green-600 font-semibold">R$ {currentMonthData.studentTotal.toFixed(2)}</p>
-                        </div>
-                        <div className="bg-stone-50 rounded-xl p-4 border border-stone-100">
-                            <p className="text-[10px] text-stone-500 uppercase font-semibold">Card Mensal</p>
-                            <p className="text-xl font-bold text-saibro-600">-</p>
-                            <p className="text-xs text-green-600 font-semibold">R$ {currentMonthData.cardMensalTotal.toFixed(2)}</p>
-                        </div>
-                        <div className="bg-saibro-600 rounded-xl p-4 text-white">
-                            <p className="text-[10px] text-saibro-100 uppercase font-semibold">Total do Mês</p>
-                            <p className="text-xl font-bold">R$ {currentMonthData.grandTotal.toFixed(2)}</p>
+                        <p className="text-5xl font-black mb-2">R$ {reportData.grandTotal.toFixed(2)}</p>
+                        <div className="flex items-center gap-2 text-saibro-100">
+                            <TrendingUp size={16} />
+                            <span className="text-sm font-bold">
+                                {new Date(selectedMonth + '-01').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+                            </span>
                         </div>
                     </div>
-                )}
+                </div>
 
-                {/* Detailed Table */}
-                <div className="rounded-xl border border-stone-100 overflow-hidden">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-sm text-left">
-                            <thead className="bg-stone-50 text-stone-500 font-semibold uppercase text-xs">
-                                <tr>
-                                    <th className="px-4 py-3">Mês</th>
-                                    <th className="px-4 py-3 text-right">Day Use (Amistoso)</th>
-                                    <th className="px-4 py-3 text-right">Day Use (Aluno)</th>
-                                    <th className="px-4 py-3 text-right">Card Mensal</th>
-                                    <th className="px-4 py-3 text-right text-green-700">Total Arrecadado</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-stone-100">
-                                {financialData.map(m => (
-                                    <tr key={m.month} className="hover:bg-stone-50 transition-colors">
-                                        <td className="px-4 py-3 font-medium text-stone-700">
-                                            {(() => {
-                                                const [year, month] = m.month.split('-');
-                                                return new Date(parseInt(year), parseInt(month) - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
-                                            })()}
-                                        </td>
-                                        <td className="px-4 py-3 text-right">
-                                            <div className="text-stone-800">{m.friendlyCount} <span className="text-xs text-stone-400">un</span></div>
-                                            <div className="text-xs text-green-600">R$ {m.friendlyTotal.toFixed(2)}</div>
-                                        </td>
-                                        <td className="px-4 py-3 text-right">
-                                            <div className="text-stone-800">{m.studentCount} <span className="text-xs text-stone-400">un</span></div>
-                                            <div className="text-xs text-green-600">R$ {m.studentTotal.toFixed(2)}</div>
-                                        </td>
-                                        <td className="px-4 py-3 text-right text-green-600 font-medium">
-                                            R$ {m.cardMensalTotal.toFixed(2)}
-                                        </td>
-                                        <td className="px-4 py-3 text-right font-bold text-saibro-700 bg-saibro-50/50">
-                                            R$ {m.grandTotal.toFixed(2)}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                {/* Day Use Total */}
+                <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-6 rounded-2xl shadow-lg shadow-blue-200 text-white relative overflow-hidden group">
+                    <div className="absolute right-0 bottom-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <Users size={60} />
+                    </div>
+                    <div className="relative z-10">
+                        <p className="text-[10px] font-black uppercase tracking-wider mb-2 opacity-90">Day Use</p>
+                        <p className="text-3xl font-black mb-1">R$ {(reportData.friendlyTotal + reportData.studentTotal).toFixed(2)}</p>
+                        <div className="flex items-center gap-1 text-blue-100 text-xs font-bold">
+                            <UserCheck size={14} />
+                            <span>{reportData.friendlyCount + reportData.studentCount} usos</span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Monthly Cards */}
+                <div className="bg-gradient-to-br from-emerald-500 to-green-600 p-6 rounded-2xl shadow-lg shadow-green-200 text-white relative overflow-hidden group">
+                    <div className="absolute right-0 bottom-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <CreditCard size={60} />
+                    </div>
+                    <div className="relative z-10">
+                        <p className="text-[10px] font-black uppercase tracking-wider mb-2 opacity-90">Card Mensal</p>
+                        <p className="text-3xl font-black mb-1">R$ {reportData.cardMensalTotal.toFixed(2)}</p>
+                        <div className="flex items-center gap-1 text-emerald-100 text-xs font-bold">
+                            <Receipt size={14} />
+                            <span>{reportData.details.payments.length} pagamentos</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Detailed Reports */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Day Use Transactions */}
+                <div className="bg-white rounded-2xl border-2 border-stone-100 overflow-hidden shadow-sm">
+                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-5 border-b-2 border-blue-100">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-blue-100 rounded-xl">
+                                    <Users className="text-blue-600" size={20} />
+                                </div>
+                                <div>
+                                    <h3 className="font-black text-stone-800">Day Uses</h3>
+                                    <p className="text-xs text-stone-500 font-medium">
+                                        {reportData.friendlyCount + reportData.studentCount} transações • R$ {(reportData.friendlyTotal + reportData.studentTotal).toFixed(2)}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="p-5 space-y-3 max-h-[500px] overflow-y-auto">
+                        {[...reportData.details.friendly, ...reportData.details.student].length === 0 && (
+                            <div className="text-center py-12">
+                                <Users className="mx-auto text-stone-300 mb-3" size={48} />
+                                <p className="text-stone-400 font-medium">Nenhum Day Use neste mês</p>
+                            </div>
+                        )}
+                        {[...reportData.details.friendly, ...reportData.details.student]
+                            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                            .map(r => {
+                                const isDeleting = processingPayment === r.id;
+                                const isDeleted = deleteSuccess === r.id;
+
+                                return (
+                                    <div
+                                        key={r.id}
+                                        className={`group p-4 rounded-xl border-2 transition-all duration-300 ${isDeleted
+                                                ? 'bg-red-50 border-red-200 scale-95'
+                                                : 'bg-stone-50 border-stone-100 hover:border-blue-200 hover:shadow-sm'
+                                            }`}
+                                    >
+                                        <div className="flex justify-between items-start gap-3">
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <p className="font-bold text-stone-800 truncate">
+                                                        {r.guestName || (monthlyStudents.find(s => s.id === r.nonSocioStudentId)?.name || 'Aluno')}
+                                                    </p>
+                                                    <span className={`px-2 py-0.5 text-[10px] font-black rounded-full ${r.type === 'Play'
+                                                            ? 'bg-orange-100 text-orange-700'
+                                                            : 'bg-purple-100 text-purple-700'
+                                                        }`}>
+                                                        {r.type === 'Play' ? 'AMISTOSO' : 'AULA'}
+                                                    </span>
+                                                </div>
+                                                <p className="text-xs text-stone-500 font-medium">
+                                                    📅 {new Date(r.date).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
+                                                </p>
+                                            </div>
+
+                                            <div className="flex items-center gap-3">
+                                                <span className="font-black text-green-600 text-lg">R$ {DAY_USE_PRICE}</span>
+                                                <button
+                                                    onClick={() => handleToggleDayUseExempt(r)}
+                                                    disabled={isDeleting}
+                                                    title="Isentar (Remover do relatório)"
+                                                    className="p-2.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-all active:scale-95 disabled:opacity-50"
+                                                >
+                                                    {isDeleting ? <Loader2 className="animate-spin" size={18} /> : <Trash2 size={18} />}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                    </div>
+                </div>
+
+                {/* Monthly Card Payments */}
+                <div className="bg-white rounded-2xl border-2 border-stone-100 overflow-hidden shadow-sm">
+                    <div className="bg-gradient-to-r from-emerald-50 to-green-50 p-5 border-b-2 border-emerald-100">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-emerald-100 rounded-xl">
+                                    <CreditCard className="text-emerald-600" size={20} />
+                                </div>
+                                <div>
+                                    <h3 className="font-black text-stone-800">Mensalidades</h3>
+                                    <p className="text-xs text-stone-500 font-medium">
+                                        {reportData.details.payments.length} pagamentos • R$ {reportData.cardMensalTotal.toFixed(2)}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="p-5 space-y-3 max-h-[500px] overflow-y-auto">
+                        {reportData.details.payments.length === 0 && (
+                            <div className="text-center py-12">
+                                <CreditCard className="mx-auto text-stone-300 mb-3" size={48} />
+                                <p className="text-stone-400 font-medium">Nenhum pagamento neste mês</p>
+                            </div>
+                        )}
+                        {reportData.details.payments.map((p: any) => {
+                            const studentName = monthlyStudents.find(s => s.id === p.studentId)?.name || 'Aluno Excluído';
+                            const isDeleting = processingPayment === p.id;
+                            const isDeleted = deleteSuccess === p.id;
+
+                            return (
+                                <div
+                                    key={p.id || Math.random()}
+                                    className={`group p-4 rounded-xl border-2 transition-all duration-300 ${isDeleted
+                                            ? 'bg-red-50 border-red-200 scale-95'
+                                            : 'bg-stone-50 border-stone-100 hover:border-emerald-200 hover:shadow-sm'
+                                        }`}
+                                >
+                                    <div className="flex justify-between items-start gap-3">
+                                        <div className="flex-1 min-w-0">
+                                            <p className="font-bold text-stone-800 truncate mb-1">{studentName}</p>
+                                            <p className="text-xs text-stone-500 font-medium">
+                                                💳 Pago em {new Date(p.paymentDate).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
+                                            </p>
+                                        </div>
+
+                                        <div className="flex items-center gap-3">
+                                            <span className="font-black text-green-600 text-lg">R$ {p.amount}</span>
+                                            <button
+                                                onClick={() => handleDeletePayment(p.id)}
+                                                disabled={isDeleting}
+                                                title="Excluir pagamento"
+                                                className="p-2.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-all active:scale-95 disabled:opacity-50 opacity-0 group-hover:opacity-100"
+                                            >
+                                                {isDeleting ? <Loader2 className="animate-spin" size={18} /> : <Trash2 size={18} />}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </div>
                 </div>
             </div>
