@@ -99,7 +99,7 @@ export const MatchScheduleModal: React.FC<Props> = ({
     };
 
     return (
-        <div className="fixed inset-0 z-[110] flex items-start justify-center p-0 sm:p-4">
+        <div className="fixed inset-0 z-110 flex items-start justify-center p-0 sm:p-4">
             {/* Backdrop */}
             <div
                 className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300"

@@ -185,7 +185,7 @@ export const FinanceiroAdmin: React.FC = () => {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div className="flex items-center gap-4">
-                    <div className="p-4 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl shadow-lg shadow-green-200">
+                    <div className="p-4 bg-linear-to-br from-green-500 to-emerald-600 rounded-2xl shadow-lg shadow-green-200">
                         <DollarSign size={32} className="text-white" />
                     </div>
                     <div>
@@ -195,7 +195,7 @@ export const FinanceiroAdmin: React.FC = () => {
                 </div>
 
                 {/* Month Selector */}
-                <div className="flex items-center gap-3 bg-gradient-to-r from-stone-50 to-stone-100 p-4 rounded-2xl border-2 border-stone-200 shadow-sm">
+                <div className="flex items-center gap-3 bg-linear-to-r from-stone-50 to-stone-100 p-4 rounded-2xl border-2 border-stone-200 shadow-sm">
                     <Calendar className="text-stone-600" size={20} />
                     <div className="flex flex-col">
                         <span className="text-[10px] font-black uppercase text-stone-400 tracking-wider">Mês de Referência</span>
@@ -212,7 +212,7 @@ export const FinanceiroAdmin: React.FC = () => {
             {/* Dashboard Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 {/* Total Revenue */}
-                <div className="md:col-span-2 bg-gradient-to-br from-saibro-500 via-saibro-600 to-orange-600 p-8 rounded-2xl shadow-xl shadow-saibro-200 text-white relative overflow-hidden group">
+                <div className="md:col-span-2 bg-linear-to-br from-saibro-500 via-saibro-600 to-orange-600 p-8 rounded-2xl shadow-xl shadow-saibro-200 text-white relative overflow-hidden group">
                     <div className="absolute right-0 top-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
                         <Sparkles size={80} className="text-white" />
                     </div>
@@ -232,7 +232,7 @@ export const FinanceiroAdmin: React.FC = () => {
                 </div>
 
                 {/* Day Use Total */}
-                <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-6 rounded-2xl shadow-lg shadow-blue-200 text-white relative overflow-hidden group">
+                <div className="bg-linear-to-br from-blue-500 to-blue-600 p-6 rounded-2xl shadow-lg shadow-blue-200 text-white relative overflow-hidden group">
                     <div className="absolute right-0 bottom-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                         <Users size={60} />
                     </div>
@@ -247,7 +247,7 @@ export const FinanceiroAdmin: React.FC = () => {
                 </div>
 
                 {/* Monthly Cards */}
-                <div className="bg-gradient-to-br from-emerald-500 to-green-600 p-6 rounded-2xl shadow-lg shadow-green-200 text-white relative overflow-hidden group">
+                <div className="bg-linear-to-br from-emerald-500 to-emerald-600 p-6 rounded-2xl shadow-lg shadow-emerald-200 text-white relative overflow-hidden group">
                     <div className="absolute right-0 bottom-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                         <CreditCard size={60} />
                     </div>
@@ -266,7 +266,7 @@ export const FinanceiroAdmin: React.FC = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Day Use Transactions */}
                 <div className="bg-white rounded-2xl border-2 border-stone-100 overflow-hidden shadow-sm">
-                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-5 border-b-2 border-blue-100">
+                    <div className="bg-linear-to-r from-blue-50 to-indigo-50 p-5 border-b-2 border-blue-100">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <div className="p-2 bg-blue-100 rounded-xl">
@@ -299,8 +299,8 @@ export const FinanceiroAdmin: React.FC = () => {
                                     <div
                                         key={r.id}
                                         className={`group p-4 rounded-xl border-2 transition-all duration-300 ${isDeleted
-                                                ? 'bg-red-50 border-red-200 scale-95'
-                                                : 'bg-stone-50 border-stone-100 hover:border-blue-200 hover:shadow-sm'
+                                            ? 'bg-red-50 border-red-200 scale-95'
+                                            : 'bg-stone-50 border-stone-100 hover:border-blue-200 hover:shadow-sm'
                                             }`}
                                     >
                                         <div className="flex justify-between items-start gap-3">
@@ -310,8 +310,8 @@ export const FinanceiroAdmin: React.FC = () => {
                                                         {r.guestName || (monthlyStudents.find(s => s.id === r.nonSocioStudentId)?.name || 'Aluno')}
                                                     </p>
                                                     <span className={`px-2 py-0.5 text-[10px] font-black rounded-full ${r.type === 'Play'
-                                                            ? 'bg-orange-100 text-orange-700'
-                                                            : 'bg-purple-100 text-purple-700'
+                                                        ? 'bg-orange-100 text-orange-700'
+                                                        : 'bg-purple-100 text-purple-700'
                                                         }`}>
                                                         {r.type === 'Play' ? 'AMISTOSO' : 'AULA'}
                                                     </span>
@@ -341,7 +341,7 @@ export const FinanceiroAdmin: React.FC = () => {
 
                 {/* Monthly Card Payments */}
                 <div className="bg-white rounded-2xl border-2 border-stone-100 overflow-hidden shadow-sm">
-                    <div className="bg-gradient-to-r from-emerald-50 to-green-50 p-5 border-b-2 border-emerald-100">
+                    <div className="bg-linear-to-r from-emerald-50 to-green-50 p-5 border-b-2 border-emerald-100">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <div className="p-2 bg-emerald-100 rounded-xl">
@@ -373,8 +373,8 @@ export const FinanceiroAdmin: React.FC = () => {
                                 <div
                                     key={p.id || Math.random()}
                                     className={`group p-4 rounded-xl border-2 transition-all duration-300 ${isDeleted
-                                            ? 'bg-red-50 border-red-200 scale-95'
-                                            : 'bg-stone-50 border-stone-100 hover:border-emerald-200 hover:shadow-sm'
+                                        ? 'bg-red-50 border-red-200 scale-95'
+                                        : 'bg-stone-50 border-stone-100 hover:border-emerald-200 hover:shadow-sm'
                                         }`}
                                 >
                                     <div className="flex justify-between items-start gap-3">

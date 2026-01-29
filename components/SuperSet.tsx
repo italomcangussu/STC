@@ -403,7 +403,7 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
 
                                 <div className="flex flex-col items-center gap-2 sm:gap-4 py-4 sm:py-8 shrink-0">
                                     <div className="px-3 py-1 bg-stone-800 text-stone-300 rounded-full text-[8px] sm:text-[10px] font-black uppercase tracking-widest shadow-lg">SET</div>
-                                    <div className="h-20 sm:h-40 w-0.5 sm:w-1 rounded-full bg-gradient-to-b from-transparent via-stone-200 to-transparent"></div>
+                                    <div className="h-20 sm:h-40 w-0.5 sm:w-1 rounded-full bg-linear-to-b from-transparent via-stone-200 to-transparent"></div>
                                 </div>
 
                                 {/* Score B */}

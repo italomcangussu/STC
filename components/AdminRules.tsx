@@ -111,10 +111,10 @@ export const AdminRules: React.FC = () => {
 
         return (
             <div className={`group p-5 rounded-xl border transition-all duration-300 ${hasChanges
-                    ? 'bg-amber-50 border-amber-200 shadow-md'
-                    : isSaved
-                        ? 'bg-green-50 border-green-200 shadow-md'
-                        : 'bg-white border-stone-100 hover:border-saibro-200 hover:shadow-sm'
+                ? 'bg-amber-50 border-amber-200 shadow-md'
+                : isSaved
+                    ? 'bg-green-50 border-green-200 shadow-md'
+                    : 'bg-white border-stone-100 hover:border-saibro-200 hover:shadow-sm'
                 }`}>
                 <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">
@@ -142,8 +142,8 @@ export const AdminRules: React.FC = () => {
                                 value={edits[rule.id] !== undefined ? edits[rule.id] : rule.points}
                                 onChange={e => handleEditChange(rule.id, e.target.value)}
                                 className={`w-20 px-3 py-2.5 border-2 rounded-xl text-center font-black text-lg transition-all outline-none ${hasChanges
-                                        ? 'border-amber-400 bg-white text-amber-700 ring-4 ring-amber-100'
-                                        : 'border-stone-200 bg-stone-50 text-stone-800 focus:border-saibro-500 focus:ring-4 focus:ring-saibro-100'
+                                    ? 'border-amber-400 bg-white text-amber-700 ring-4 ring-amber-100'
+                                    : 'border-stone-200 bg-stone-50 text-stone-800 focus:border-saibro-500 focus:ring-4 focus:ring-saibro-100'
                                     }`}
                             />
                         </div>
@@ -152,8 +152,8 @@ export const AdminRules: React.FC = () => {
                             onClick={() => handleSave(rule)}
                             disabled={!hasChanges || saving === rule.id}
                             className={`p-3 rounded-xl transition-all duration-200 font-bold ${hasChanges
-                                    ? 'bg-gradient-to-br from-saibro-600 to-saibro-700 text-white hover:from-saibro-700 hover:to-saibro-800 shadow-lg shadow-saibro-200 active:scale-95'
-                                    : 'bg-stone-100 text-stone-300 cursor-not-allowed'
+                                ? 'bg-linear-to-br from-saibro-600 to-saibro-700 text-white hover:from-saibro-700 hover:to-saibro-800 shadow-lg shadow-saibro-200 active:scale-95'
+                                : 'bg-stone-100 text-stone-300 cursor-not-allowed'
                                 }`}
                         >
                             {saving === rule.id ? (
@@ -193,7 +193,7 @@ export const AdminRules: React.FC = () => {
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-6 duration-700">
             {/* Header with Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-6 rounded-2xl shadow-lg shadow-blue-200 text-white">
+                <div className="bg-linear-to-br from-blue-500 to-blue-600 p-6 rounded-2xl shadow-lg shadow-blue-200 text-white">
                     <div className="flex items-center justify-between mb-3">
                         <Trophy className="opacity-80" size={28} />
                         <Sparkles className="opacity-60" size={20} />
@@ -202,7 +202,7 @@ export const AdminRules: React.FC = () => {
                     <p className="text-4xl font-black">{totalRules}</p>
                 </div>
 
-                <div className="bg-gradient-to-br from-amber-500 to-amber-600 p-6 rounded-2xl shadow-lg shadow-amber-200 text-white">
+                <div className="bg-linear-to-br from-amber-500 to-amber-600 p-6 rounded-2xl shadow-lg shadow-amber-200 text-white">
                     <div className="flex items-center justify-between mb-3">
                         <Target className="opacity-80" size={28} />
                         <TrendingUp className="opacity-60" size={20} />
@@ -212,8 +212,8 @@ export const AdminRules: React.FC = () => {
                 </div>
 
                 <div className={`p-6 rounded-2xl shadow-lg text-white transition-all duration-500 ${modifiedRules > 0
-                        ? 'bg-gradient-to-br from-red-500 to-red-600 shadow-red-200 animate-pulse'
-                        : 'bg-gradient-to-br from-green-500 to-green-600 shadow-green-200'
+                    ? 'bg-gradient-to-br from-red-500 to-red-600 shadow-red-200 animate-pulse'
+                    : 'bg-gradient-to-br from-green-500 to-green-600 shadow-green-200'
                     }`}>
                     <div className="flex items-center justify-between mb-3">
                         <Award className="opacity-80" size={28} />
@@ -225,7 +225,7 @@ export const AdminRules: React.FC = () => {
             </div>
 
             {/* Alert Info */}
-            <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-200 p-5 rounded-2xl flex gap-4 shadow-sm">
+            <div className="bg-linear-to-r from-indigo-50 to-purple-50 border-2 border-indigo-200 p-5 rounded-2xl flex gap-4 shadow-sm">
                 <Info className="shrink-0 mt-0.5 text-indigo-600" size={24} />
                 <div>
                     <h4 className="font-black text-indigo-900 mb-1.5">Configuração Global de Pontuação</h4>

@@ -70,7 +70,7 @@ export const AdminUserEditor: React.FC<AdminUserEditorProps> = ({ user, onClose,
     };
 
     return (
-        <div className="fixed inset-0 z-[60] flex items-start sm:items-center justify-center p-4 sm:p-4 pt-10 sm:pt-4 bg-stone-900/40 backdrop-blur-md animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-60 flex items-start sm:items-center justify-center p-4 sm:p-4 pt-10 sm:pt-4 bg-stone-900/40 backdrop-blur-md animate-in fade-in duration-300">
             <div className="bg-white w-full max-w-2xl rounded-[32px] sm:rounded-[40px] shadow-2xl overflow-hidden flex flex-col max-h-[85vh] sm:max-h-[90vh] animate-in slide-in-from-bottom duration-500">
 
                 {/* Header with Glass Effect */}
@@ -261,7 +261,7 @@ export const AdminUserEditor: React.FC<AdminUserEditorProps> = ({ user, onClose,
                     <button
                         onClick={handleSave}
                         disabled={loading}
-                        className="flex-[2] py-4 bg-saibro-600 hover:bg-saibro-700 text-white font-black rounded-2xl shadow-xl shadow-saibro-200 hover:shadow-2xl hover:shadow-saibro-300 transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm uppercase tracking-wider"
+                        className="flex-2 py-4 bg-saibro-600 hover:bg-saibro-700 text-white font-black rounded-2xl shadow-xl shadow-saibro-200 hover:shadow-2xl hover:shadow-saibro-300 transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm uppercase tracking-wider"
                     >
                         {loading ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
                         Salvar Alterações

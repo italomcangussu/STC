@@ -122,7 +122,7 @@ export const MatchGenerationModal: React.FC<Props> = ({
     };
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div className="fixed inset-0 z-100 flex items-end sm:items-center justify-center p-0 sm:p-4">
             {/* Backdrop */}
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
@@ -250,7 +250,7 @@ export const MatchGenerationModal: React.FC<Props> = ({
                             </button>
                             <button
                                 onClick={() => setStep('confirm')}
-                                className="flex-[2] py-4 bg-saibro-600 text-white font-bold rounded-2xl hover:bg-saibro-700 shadow-lg shadow-orange-200 transition-all flex items-center justify-center gap-2 text-sm"
+                                className="flex-2 py-4 bg-saibro-600 text-white font-bold rounded-2xl hover:bg-saibro-700 shadow-lg shadow-orange-200 transition-all flex items-center justify-center gap-2 text-sm"
                             >
                                 <Play size={16} fill="white" />
                                 Salvar Confrontos
@@ -268,7 +268,7 @@ export const MatchGenerationModal: React.FC<Props> = ({
                             <button
                                 onClick={handleGenerate}
                                 disabled={processing}
-                                className="flex-[2] py-4 bg-saibro-600 text-white font-bold rounded-2xl hover:bg-saibro-700 shadow-lg shadow-orange-200 transition-all flex items-center justify-center gap-2 text-sm"
+                                className="flex-2 py-4 bg-saibro-600 text-white font-bold rounded-2xl hover:bg-saibro-700 shadow-lg shadow-orange-200 transition-all flex items-center justify-center gap-2 text-sm"
                             >
                                 {processing ? <Loader2 className="animate-spin" size={20} /> : <Check size={20} />}
                                 {processing ? 'Salvando...' : 'Confirmar e Salvar'}
