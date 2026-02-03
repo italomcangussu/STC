@@ -317,14 +317,18 @@ const AthleteProfile: React.FC<AthleteProfileProps> = ({ userId, currentUser, us
                         {userRankStats && (userRankStats.legacyPoints > 0 || userRankStats.challengePoints > 0) && (
                             <div className="bg-saibro-50 border border-saibro-100 rounded-xl p-4">
                                 <h4 className="text-xs font-bold text-saibro-700 uppercase mb-3">Composição de Pontos</h4>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-3 gap-2">
                                     <div className="text-center">
                                         <span className="block text-lg font-bold text-saibro-600">{userRankStats.legacyPoints}</span>
-                                        <span className="text-[10px] text-stone-500">Campeonatos</span>
+                                        <span className="text-[10px] text-stone-500 leading-none">Campeonatos</span>
+                                    </div>
+                                    <div className="text-center border-x border-saibro-100">
+                                        <span className="block text-lg font-bold text-saibro-600">{userRankStats.challengePoints}</span>
+                                        <span className="text-[10px] text-stone-500 leading-none">Desafios</span>
                                     </div>
                                     <div className="text-center">
-                                        <span className="block text-lg font-bold text-saibro-600">{userRankStats.challengePoints}</span>
-                                        <span className="text-[10px] text-stone-500">Desafios</span>
+                                        <span className="block text-lg font-bold text-saibro-600">{userRankStats.superSetPoints || 0}</span>
+                                        <span className="text-[10px] text-stone-500 leading-none">SuperSets</span>
                                     </div>
                                 </div>
                                 <div className="mt-3 bg-white rounded-lg p-2">
@@ -335,6 +339,10 @@ const AthleteProfile: React.FC<AthleteProfileProps> = ({ userId, currentUser, us
                                     <div className="flex justify-between text-xs mt-1">
                                         <span className="text-stone-500">V/D Desafios:</span>
                                         <span className="font-bold">{userRankStats.challengeWins}/{userRankStats.challengeLosses}</span>
+                                    </div>
+                                    <div className="flex justify-between text-xs mt-1">
+                                        <span className="text-stone-500">V/D SuperSets:</span>
+                                        <span className="font-bold">{userRankStats.superSetWins}/{userRankStats.superSetLosses}</span>
                                     </div>
                                 </div>
                             </div>

@@ -40,6 +40,12 @@ export interface PlayerStats {
     challengeMatchesWithTiebreak: number;
     challengePoints: number;
 
+    // SuperSet stats
+    superSetWins: number;
+    superSetLosses: number;
+    superSetPoints: number;
+    superSetMatchesPlayed: number;
+
     // Combined totals
     totalWins: number;
     totalLosses: number;
@@ -97,14 +103,17 @@ export async function fetchRanking(categoryFilter?: string): Promise<PlayerStats
         return [];
     }
 
-    // 3. Calculate challenge stats for each player
     const challengeStats: Record<string, {
         wins: number; losses: number;
         setsWon: number; setsLost: number;
         gamesWon: number; gamesLost: number;
         tiebreaksWon: number; tiebreaksLost: number;
         matchesPlayed: number; matchesWithTiebreak: number;
-        points: number; // Accumulated points
+        points: number; // Accumulated points (Challenges + SuperSets)
+        challengeWins: number; challengeLosses: number;
+        challengePoints: number;
+        superSetWins: number; superSetLosses: number;
+        superSetPoints: number;
     }> = {};
 
     // Initialize all players
@@ -115,7 +124,11 @@ export async function fetchRanking(categoryFilter?: string): Promise<PlayerStats
             gamesWon: 0, gamesLost: 0,
             tiebreaksWon: 0, tiebreaksLost: 0,
             matchesPlayed: 0, matchesWithTiebreak: 0,
-            points: 0
+            points: 0,
+            challengeWins: 0, challengeLosses: 0,
+            challengePoints: 0,
+            superSetWins: 0, superSetLosses: 0,
+            superSetPoints: 0
         };
     });
 
@@ -206,10 +219,14 @@ export async function fetchRanking(categoryFilter?: string): Promise<PlayerStats
             challengeStats[playerB].losses++;
 
             if (type === 'SuperSet') {
+                challengeStats[playerA].superSetWins++;
+                challengeStats[playerB].superSetLosses++;
+                challengeStats[playerA].superSetPoints += 10;
                 challengeStats[playerA].points += 10;
             } else {
-                // New Rule (User Request): Desafio only gives 100 points for Win. 
-                // No points for sets or games.
+                challengeStats[playerA].challengeWins++;
+                challengeStats[playerB].challengeLosses++;
+                challengeStats[playerA].challengePoints += PTS_WIN;
                 challengeStats[playerA].points += PTS_WIN;
             }
 
@@ -218,8 +235,14 @@ export async function fetchRanking(categoryFilter?: string): Promise<PlayerStats
             challengeStats[playerA].losses++;
 
             if (type === 'SuperSet') {
+                challengeStats[playerB].superSetWins++;
+                challengeStats[playerA].superSetLosses++;
+                challengeStats[playerB].superSetPoints += 10;
                 challengeStats[playerB].points += 10;
             } else {
+                challengeStats[playerB].challengeWins++;
+                challengeStats[playerA].challengeLosses++;
+                challengeStats[playerB].challengePoints += PTS_WIN;
                 challengeStats[playerB].points += PTS_WIN;
             }
         }
@@ -253,7 +276,11 @@ export async function fetchRanking(categoryFilter?: string): Promise<PlayerStats
             gamesWon: 0, gamesLost: 0,
             tiebreaksWon: 0, tiebreaksLost: 0,
             matchesPlayed: 0, matchesWithTiebreak: 0,
-            points: 0
+            points: 0,
+            challengeWins: 0, challengeLosses: 0,
+            challengePoints: 0,
+            superSetWins: 0, superSetLosses: 0,
+            superSetPoints: 0
         };
 
         // Calculate challenge points - ALREADY CALCULATED IN LOOP
@@ -296,7 +323,12 @@ export async function fetchRanking(categoryFilter?: string): Promise<PlayerStats
             challengeTiebreaksLost: challenge.tiebreaksLost,
             challengeMatchesPlayed: challenge.matchesPlayed,
             challengeMatchesWithTiebreak: challenge.matchesWithTiebreak,
-            challengePoints: challengePoints,
+            challengePoints: challenge.challengePoints,
+
+            superSetWins: challenge.superSetWins,
+            superSetLosses: challenge.superSetLosses,
+            superSetPoints: challenge.superSetPoints,
+            superSetMatchesPlayed: challenge.superSetWins + challenge.superSetLosses,
 
             totalWins,
             totalLosses,

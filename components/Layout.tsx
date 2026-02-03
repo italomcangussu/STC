@@ -143,7 +143,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
     const filteredNav = navItems.filter(item => (!item.roles || item.roles.includes(currentUser.role)));
 
     return (
-        <div className="h-screen h-[100dvh] flex flex-col md:flex-row overflow-hidden bg-clay-pattern">
+        <div className="h-dvh flex flex-col md:flex-row overflow-hidden bg-clay-pattern">
             {/* Mobile Header */}
             <header className="flex-none md:hidden bg-white border-b border-saibro-200 p-4 flex justify-between items-center z-50 pt-safe">
                 <div className="flex items-center gap-3">

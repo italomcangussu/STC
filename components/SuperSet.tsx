@@ -81,12 +81,13 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
 
     // Winner Detection logic (Standard Set)
     const getWinner = () => {
-        // 6-x (diff >= 2)
-        if ((scoreA === 6 && scoreB <= 4) || (scoreA === 7 && scoreB === 5)) return 'A';
-        if ((scoreB === 6 && scoreA <= 4) || (scoreB === 7 && scoreA === 5)) return 'B';
-        // Tiebreak
-        if (scoreA === 7 && scoreB === 6) return 'A';
-        if (scoreB === 7 && scoreA === 6) return 'B';
+        // Standard Win: 6-x where x <= 4
+        if (scoreA === 6 && scoreA - scoreB >= 2) return 'A';
+        if (scoreB === 6 && scoreB - scoreA >= 2) return 'B';
+
+        // Extended Win / Tiebreak: 7-x (7-5, 7-6) - Also catches overshoot safely
+        if (scoreA === 7) return 'A';
+        if (scoreB === 7) return 'B';
 
         return null;
     };
@@ -382,8 +383,9 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
                                 {/* Score A */}
                                 <div className="flex flex-col items-center gap-3 sm:gap-4 flex-1">
                                     <button
-                                        onClick={() => setScoreA(s => Math.min(s + 1, 7))}
-                                        className="w-12 h-12 sm:w-20 sm:h-20 rounded-[20px] sm:rounded-[28px] bg-white border-2 border-saibro-100 text-saibro-600 flex items-center justify-center text-2xl sm:text-4xl font-black hover:bg-saibro-500 hover:text-white transition-all active:scale-90 shadow-lg"
+                                        disabled={!!winner}
+                                        onClick={() => !winner && setScoreA(s => Math.min(s + 1, 7))}
+                                        className="w-12 h-12 sm:w-20 sm:h-20 rounded-[20px] sm:rounded-[28px] bg-white border-2 border-saibro-100 text-saibro-600 flex items-center justify-center text-2xl sm:text-4xl font-black hover:bg-saibro-500 hover:text-white transition-all active:scale-90 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                                     >+</button>
                                     <div className="relative group">
                                         <span className="text-7xl sm:text-[160px] font-black text-stone-800 tabular-nums leading-none tracking-tighter drop-shadow-sm transition-transform block">
@@ -409,8 +411,9 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
                                 {/* Score B */}
                                 <div className="flex flex-col items-center gap-3 sm:gap-4 flex-1">
                                     <button
-                                        onClick={() => setScoreB(s => Math.min(s + 1, 7))}
-                                        className="w-12 h-12 sm:w-20 sm:h-20 rounded-[20px] sm:rounded-[28px] bg-white border-2 border-court-green/20 text-court-green flex items-center justify-center text-2xl sm:text-4xl font-black hover:bg-court-green hover:text-white transition-all active:scale-90 shadow-lg"
+                                        disabled={!!winner}
+                                        onClick={() => !winner && setScoreB(s => Math.min(s + 1, 7))}
+                                        className="w-12 h-12 sm:w-20 sm:h-20 rounded-[20px] sm:rounded-[28px] bg-white border-2 border-court-green/20 text-court-green flex items-center justify-center text-2xl sm:text-4xl font-black hover:bg-court-green hover:text-white transition-all active:scale-90 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                                     >+</button>
                                     <div className="relative group">
                                         <span className="text-7xl sm:text-[160px] font-black text-stone-800 tabular-nums leading-none tracking-tighter drop-shadow-sm transition-transform block">
