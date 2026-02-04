@@ -289,8 +289,8 @@ const ReservationDetails: React.FC<{
     const isNotFinished = new Date(res.date + 'T' + res.endTime) > getNowInFortaleza();
 
     const canManageParticipants = isActive && (isAdmin || currentUser.role === 'socio' || currentUser.role === 'admin') && isFuture && res.type === 'Play';
-    const canEdit = isActive && (isAdmin || (isFuture && isCreator));
-    const canCancel = isActive && isFuture && (isAdmin || isCreator);
+    const canEdit = isActive && (isAdmin || (isFuture && isCreator)) && res.type !== 'Campeonato';
+    const canCancel = isActive && isFuture && (isAdmin || isCreator) && res.type !== 'Campeonato';
     const canJoin = res.type === 'Play' && isActive && isNotFinished && !isParticipant && (currentUser.role === 'socio' || isAdmin) && res.participantIds.length < 8;
     const canLeave = res.type === 'Play' && isActive && isNotFinished && isParticipant;
     const canShare = isActive;
@@ -298,9 +298,9 @@ const ReservationDetails: React.FC<{
     const handleShareWhatsapp = () => {
         const dateBr = formatDateBr(res.date);
         const dayWeek = getDayName(res.date);
-        const emoji = res.type === 'Aula' ? '🎓' : '🎾';
+        const emoji = res.type === 'Aula' ? '🎓' : res.type === 'Campeonato' ? '🏆' : '🎾';
 
-        let text = `*SCT TÊNIS - RESERVA CONFIRMADA*\n`;
+        let text = `*SCT TÊNIS - ${res.type === 'Campeonato' ? 'JOGO DE CAMPEONATO' : 'RESERVA CONFIRMADA'}*\n`;
         text += `------------------------------------\n`;
         text += `${emoji} *TIPO:* ${res.type.toUpperCase()}\n`;
         text += `📅 *DATA:* ${dateBr} (${dayWeek})\n`;
@@ -311,6 +311,10 @@ const ReservationDetails: React.FC<{
         if (res.type === 'Aula') {
             text += `🎓 *PROFESSOR:* ${professor?.name || 'N/A'}\n`;
             text += `👥 *ALUNOS:* ${res.studentType === 'socio' ? (participants[0]?.name || 'TBD') : (nonSocioStudentsList.map(s => s.name).join(', ') || 'TBD')}\n`;
+        } else if (res.type === 'Campeonato') {
+            text += `🏆 *CAMPEONATO:* ${res.observation?.split('|')[0] || 'Oficial'}\n`;
+            text += `⚔️ *CONFRONTO:*\n`;
+            text += `🎾 ${participants[0]?.name || 'TBD'} vs ${participants[1]?.name || 'TBD'}\n`;
         } else {
             text += `👥 *ATLETAS:* \n`;
             participants.forEach(p => {
@@ -350,7 +354,7 @@ const ReservationDetails: React.FC<{
                 <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
                     {/* 2. Main Info Card - High Visual Impact */}
                     <div className="relative group">
-                        <div className={`absolute -inset-1 bg-linear-to-r ${res.type === 'Play' ? 'from-court-green/30 to-saibro-500/30' : 'from-saibro-500/30 to-orange-400/30'} rounded-[32px] blur-xl opacity-50 group-hover:opacity-75 transition duration-1000 group-hover:duration-200`}></div>
+                        <div className={`absolute -inset-1 bg-linear-to-r ${res.type === 'Play' ? 'from-court-green/30 to-saibro-500/30' : res.type === 'Campeonato' ? 'from-yellow-400/30 to-orange-500/30' : 'from-saibro-500/30 to-orange-400/30'} rounded-[32px] blur-xl opacity-50 group-hover:opacity-75 transition duration-1000 group-hover:duration-200`}></div>
                         <div className={`relative bg-white rounded-[28px] p-6 shadow-xl border border-stone-100/50 overflow-hidden`}>
                             {/* Visual Stripe */}
                             <div className={`absolute top-0 right-0 w-32 h-32 -mr-16 -mt-16 rounded-full ${style.bg} opacity-20 blur-3xl`} />
@@ -423,7 +427,7 @@ const ReservationDetails: React.FC<{
                         <div className="flex justify-between items-center px-1">
                             <h3 className="text-sm font-black text-stone-800 uppercase tracking-widest flex items-center gap-2.5">
                                 <Users size={18} className="text-saibro-500" />
-                                {res.type === 'Aula' ? 'Alunos da Aula' : 'Lista de Atletas'}
+                                {res.type === 'Aula' ? 'Alunos da Aula' : res.type === 'Campeonato' ? 'Jogadores' : 'Lista de Atletas'}
                             </h3>
                             {res.type === 'Play' && (
                                 <span className={`text-[10px] font-black px-3 py-1 rounded-full ${participants.length + (res.guestName ? 1 : 0) === 8 ? 'bg-orange-100 text-orange-600' : 'bg-stone-100 text-stone-500'}`}>
@@ -496,6 +500,26 @@ const ReservationDetails: React.FC<{
                                         Convidado (Day Use)
                                     </button>
                                 )}
+                            </div>
+                        ) : res.type === 'Campeonato' ? (
+                            <div className="bg-white rounded-2xl p-6 border border-yellow-200 shadow-sm flex flex-col items-center gap-6">
+                                <div className="flex items-center justify-center w-full gap-8">
+                                    <div className="flex flex-col items-center gap-2">
+                                        <img src={participants[0]?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${participants[0]?.id || 'p1'}`} className="w-20 h-20 rounded-full border-4 border-stone-100 shadow-lg object-cover" alt="" />
+                                        <span className="font-black text-stone-800 text-sm">{participants[0]?.name || 'Jogador 1'}</span>
+                                    </div>
+                                    <div className="text-3xl font-black text-stone-300 italic">VS</div>
+                                    <div className="flex flex-col items-center gap-2">
+                                        <img src={participants[1]?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${participants[1]?.id || 'p2'}`} className="w-20 h-20 rounded-full border-4 border-stone-100 shadow-lg object-cover" alt="" />
+                                        <span className="font-black text-stone-800 text-sm">{participants[1]?.name || 'Jogador 2'}</span>
+                                    </div>
+                                </div>
+                                <div className="w-full h-px bg-stone-100"></div>
+                                <div className="text-center">
+                                    <p className="text-[10px] font-black text-yellow-600 uppercase tracking-widest">Campeonato</p>
+                                    <p className="font-black text-stone-800 text-lg uppercase tracking-tight">{res.observation?.split('|')[0]}</p>
+                                    <p className="text-xs text-stone-500 font-bold mt-1">{res.observation?.split('|')[1]}</p>
+                                </div>
                             </div>
                         ) : (
                             /* AULA INFO Stylization */
@@ -729,6 +753,26 @@ const ReservationCard: React.FC<{
                             </div>
                         </div>
                     </div>
+                ) : res.type === 'Campeonato' ? (
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3 w-full">
+                            <div className="flex items-center justify-between w-full bg-yellow-50/50 rounded-xl p-2 border border-yellow-100">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-8 h-8 rounded-full bg-white border border-stone-100 shadow-sm overflow-hidden">
+                                        <img src={participants[0]?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${participants[0]?.id}`} className="w-full h-full object-cover" alt="" />
+                                    </div>
+                                    <span className="text-xs font-bold text-stone-700 max-w-[80px] truncate">{participants[0]?.name.split(' ')[0]}</span>
+                                </div>
+                                <span className="text-[10px] font-black text-yellow-600 italic">VS</span>
+                                <div className="flex items-center gap-2 flex-row-reverse">
+                                    <div className="w-8 h-8 rounded-full bg-white border border-stone-100 shadow-sm overflow-hidden">
+                                        <img src={participants[1]?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${participants[1]?.id}`} className="w-full h-full object-cover" alt="" />
+                                    </div>
+                                    <span className="text-xs font-bold text-stone-700 max-w-[80px] truncate">{participants[1]?.name.split(' ')[0]}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 ) : (
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
@@ -873,9 +917,14 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
     const [courts, setCourts] = useState<Court[]>([]);
     const [professors, setProfessors] = useState<Professor[]>([]);
     const [nonSocioStudents, setNonSocioStudents] = useState<NonSocioStudent[]>([]);
+
     const [challenges, setChallenges] = useState<Challenge[]>([]);
     const [loading, setLoading] = useState(true);
     const [showCancelled, setShowCancelled] = useState(false);
+
+    // --- CHAMPIONSHIP DATA ---
+    // We will merge matches into reservations, but we can also store them if needed separately
+    // For now, we fetch and map them directly into the reservations array logic.
 
     // Modal States
     const [showAddModal, setShowAddModal] = useState(false);
@@ -918,11 +967,11 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                     .order('date', { ascending: true })
                     .order('start_time', { ascending: true });
 
+                let mappedReservations: Reservation[] = [];
                 if (reservationsError) {
                     console.log('Reservations table may not exist yet, using empty array');
-                    setReservations([]);
                 } else if (reservationsData) {
-                    const mappedReservations: Reservation[] = reservationsData.map(r => ({
+                    mappedReservations = reservationsData.map(r => ({
                         id: r.id,
                         type: r.type,
                         date: r.date,
@@ -939,8 +988,66 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                         observation: r.observation,
                         status: r.status || 'active'
                     }));
-                    setReservations(mappedReservations);
                 }
+
+                // Store all in a temporary array
+                let allCombined = [...mappedReservations];
+
+                // Fetch Championship Matches
+                const { data: matchesData } = await supabase
+                    .from('matches')
+                    .select(`
+                        *,
+                        championships(name),
+                        championship_rounds(name)
+                    `)
+                    .not('scheduled_date', 'is', null)
+                    .not('scheduled_time', 'is', null)
+                    .neq('status', 'finished');
+
+                if (matchesData) {
+                    const mappedMatches: Reservation[] = matchesData.map(m => {
+                        const [hours, minutes] = (m.scheduled_time || '00:00').split(':').map(Number);
+                        const endDate = new Date();
+                        endDate.setHours(hours, minutes + 90, 0);
+                        const endTime = endDate.toTimeString().slice(0, 5);
+
+                        return {
+                            id: `match_${m.id}`,
+                            type: 'Campeonato',
+                            date: m.scheduled_date!,
+                            startTime: (m.scheduled_time || '').slice(0, 5),
+                            endTime: endTime,
+                            courtId: m.court_id!,
+                            creatorId: 'system',
+                            participantIds: [m.player_a_id, m.player_b_id].filter(Boolean) as string[],
+                            guestName: null,
+                            guestResponsibleId: null,
+                            professorId: null,
+                            studentType: null,
+                            nonSocioStudentId: null,
+                            observation: `${(m.championships as any)?.name || 'Campeonato'} | ${(m.championship_rounds as any)?.name || 'Rodada'}`,
+                            status: 'active'
+                        };
+                    });
+                    allCombined = [...allCombined, ...mappedMatches];
+                }
+
+                // Deduplicate by slot (date, time, court)
+                const uniqueReservations = Array.from(
+                    allCombined.reduce((map, item) => {
+                        const key = `${item.date}_${item.startTime}_${item.courtId}`;
+                        const existing = map.get(key);
+
+                        // Keep 'match_' items over standard ones if same slot
+                        if (!existing || item.id.startsWith('match_')) {
+                            map.set(key, item);
+                        }
+                        return map;
+                    }, new Map<string, Reservation>()).values()
+                );
+
+                setReservations(uniqueReservations);
 
                 // Fetch courts
                 const { data: courtsData } = await supabase
@@ -995,7 +1102,6 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                 })));
             } catch (err) {
                 console.error('Error fetching data:', err);
-                // Fallback to empty arrays
                 setReservations([]);
             } finally {
                 setLoading(false);
