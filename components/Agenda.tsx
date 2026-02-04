@@ -907,14 +907,14 @@ const ReservationCard: React.FC<{
                         <div className="flex items-center gap-3 max-w-[65%] mx-auto">
                             <div className="flex items-center justify-between bg-yellow-50/70 rounded-xl p-2 border border-yellow-100 shadow-sm backdrop-blur-sm gap-3">
                                 <div className="flex items-center gap-2">
-                                    <div className="w-7 h-7 rounded-full bg-white border border-stone-100 shadow-sm overflow-hidden flex-shrink-0">
+                                    <div className="w-7 h-7 rounded-full bg-white border border-stone-100 shadow-sm overflow-hidden shrink-0">
                                         <img src={participants[0]?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${participants[0]?.id}`} className="w-full h-full object-cover" alt="" />
                                     </div>
                                     <span className="text-xs font-bold text-stone-700 max-w-[70px] truncate">{participants[0]?.name.split(' ')[0]}</span>
                                 </div>
                                 <span className="text-[10px] font-black text-yellow-600 italic px-1">VS</span>
                                 <div className="flex items-center gap-2 flex-row-reverse">
-                                    <div className="w-7 h-7 rounded-full bg-white border border-stone-100 shadow-sm overflow-hidden flex-shrink-0">
+                                    <div className="w-7 h-7 rounded-full bg-white border border-stone-100 shadow-sm overflow-hidden shrink-0">
                                         <img src={participants[1]?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${participants[1]?.id}`} className="w-full h-full object-cover" alt="" />
                                     </div>
                                     <span className="text-xs font-bold text-stone-700 max-w-[70px] truncate">{participants[1]?.name.split(' ')[0]}</span>
