@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { User, Reservation, ReservationType, NonSocioStudent, PlanType, Professor } from '../types';
-import { Calendar as CalIcon, ChevronLeft, ChevronRight, Plus, X, Calendar, Clock, MapPin, Users, Check, AlertCircle, Search, Filter, Loader2, Save, Trash2, Edit2, Play, Trophy, UserCog, ArrowRight, Info, UserPlus, LogOut, Wallet, Pencil, UserMinus, Share2, ArrowLeft } from 'lucide-react';
+import { Calendar as CalIcon, ChevronLeft, ChevronRight, Plus, X, Calendar, Clock, MapPin, Users, Check, AlertCircle, Search, Filter, Loader2, Save, Trash2, Edit2, Play, Trophy, UserCog, ArrowRight, Info, UserPlus, LogOut, Wallet, Pencil, UserMinus, Share2, ArrowLeft, Minus, CheckCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { ScoreModal } from './ScoreModal';
 import { Challenge } from '../types';
@@ -245,6 +245,138 @@ const ManageGuestModal: React.FC<{
     );
 };
 
+// --- HELPERS ---
+const isMatchLive = (res: Reservation) => {
+    if (res.type !== 'Campeonato' || res.status !== 'active') return false;
+    const now = getNowInFortaleza();
+    const matchStart = new Date(res.date + 'T' + res.startTime);
+    // Allow live HUD until 3 hours after start
+    const matchEnd = new Date(matchStart.getTime() + 180 * 60000);
+    return now >= matchStart && now <= matchEnd;
+};
+
+// --- COMPONENT: Live Score HUD ---
+const LiveScoreSection: React.FC<{
+    res: Reservation;
+    profiles: User[];
+    onFinish: (winnerId: string, scoreA: number[], scoreB: number[]) => Promise<void>;
+}> = ({ res, profiles, onFinish }) => {
+    const [scoreA, setScoreA] = useState<number[]>(res.scoreA || [0]);
+    const [scoreB, setScoreB] = useState<number[]>(res.scoreB || [0]);
+    const [saving, setSaving] = useState(false);
+
+    const playerA = profiles.find(p => p.id === res.participantIds[0]);
+    const playerB = profiles.find(p => p.id === res.participantIds[1]);
+
+    const handleUpdate = (player: 'a' | 'b', setIdx: number, delta: number) => {
+        if (player === 'a') {
+            const newScore = [...scoreA];
+            newScore[setIdx] = Math.max(0, (newScore[setIdx] || 0) + delta);
+            setScoreA(newScore);
+        } else {
+            const newScore = [...scoreB];
+            newScore[setIdx] = Math.max(0, (newScore[setIdx] || 0) + delta);
+            setScoreB(newScore);
+        }
+    };
+
+    const addSet = () => {
+        if (scoreA.length < 3) {
+            setScoreA([...scoreA, 0]);
+            setScoreB([...scoreB, 0]);
+        }
+    };
+
+    const removeSet = (idx: number) => {
+        if (scoreA.length <= 1) return;
+        setScoreA(scoreA.filter((_, i) => i !== idx));
+        setScoreB(scoreB.filter((_, i) => i !== idx));
+    };
+
+    const handleConfirm = async () => {
+        if (!res.participantIds[0] || !res.participantIds[1]) return;
+        setSaving(true);
+        try {
+            let winsA = 0;
+            let winsB = 0;
+            scoreA.forEach((s, i) => {
+                if (s > scoreB[i]) winsA++;
+                else if (scoreB[i] > s) winsB++;
+            });
+            const winnerId = winsA > winsB ? res.participantIds[0] : res.participantIds[1];
+            await onFinish(winnerId, scoreA, scoreB);
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    return (
+        <div className="bg-stone-900 rounded-[32px] p-6 shadow-2xl border border-white/10 overflow-hidden relative group">
+            <div className="absolute top-0 right-0 p-4">
+                <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-red-500/20 border border-red-500/40">
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                    <span className="text-[10px] font-black text-red-500 uppercase tracking-widest">Live</span>
+                </div>
+            </div>
+
+            <div className="space-y-6">
+                <div className="flex items-center justify-between gap-4">
+                    <div className="flex-1 flex flex-col items-center">
+                        <img src={playerA?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${playerA?.id}`} className="w-14 h-14 rounded-full border-2 border-white/20 mb-2 object-cover" />
+                        <span className="text-white font-black text-[10px] uppercase tracking-tighter truncate w-24 text-center">{playerA?.name.split(' ')[0]}</span>
+                    </div>
+                    <div className="text-stone-600 font-black italic text-xl">VS</div>
+                    <div className="flex-1 flex flex-col items-center">
+                        <img src={playerB?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${playerB?.id}`} className="w-14 h-14 rounded-full border-2 border-white/20 mb-2 object-cover" />
+                        <span className="text-white font-black text-[10px] uppercase tracking-tighter truncate w-24 text-center">{playerB?.name.split(' ')[0]}</span>
+                    </div>
+                </div>
+
+                <div className="space-y-4">
+                    {scoreA.map((_, idx) => (
+                        <div key={idx} className="flex items-center justify-between gap-4 bg-white/5 p-3 rounded-2xl border border-white/5">
+                            <div className="flex items-center gap-2">
+                                <button onClick={() => handleUpdate('a', idx, -1)} className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-white active:scale-90"><Minus size={14} /></button>
+                                <span className="text-3xl font-black text-white w-8 text-center tabular-nums">{scoreA[idx]}</span>
+                                <button onClick={() => handleUpdate('a', idx, 1)} className="w-8 h-8 rounded-lg bg-saibro-500 flex items-center justify-center text-white active:scale-90"><Plus size={14} /></button>
+                            </div>
+
+                            <div className="text-[10px] font-black text-white/30 uppercase tracking-widest">Set {idx + 1}</div>
+
+                            <div className="flex items-center gap-2">
+                                <button onClick={() => handleUpdate('b', idx, 1)} className="w-8 h-8 rounded-lg bg-saibro-500 flex items-center justify-center text-white active:scale-90"><Plus size={14} /></button>
+                                <span className="text-3xl font-black text-white w-8 text-center tabular-nums">{scoreB[idx]}</span>
+                                <button onClick={() => handleUpdate('b', idx, -1)} className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-white active:scale-90"><Minus size={14} /></button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                <div className="flex gap-2">
+                    {scoreA.length < 3 && (
+                        <button onClick={addSet} className="flex-1 py-3 border border-white/10 rounded-2xl text-[10px] font-black text-white uppercase tracking-widest hover:bg-white/5 transition-colors">
+                            + Set
+                        </button>
+                    )}
+                    {scoreA.length > 1 && (
+                        <button onClick={() => removeSet(scoreA.length - 1)} className="py-3 px-4 border border-white/10 rounded-2xl text-red-500 hover:bg-red-500/10 transition-colors">
+                            <Trash2 size={16} />
+                        </button>
+                    )}
+                </div>
+
+                <button
+                    onClick={handleConfirm}
+                    disabled={saving}
+                    className="w-full py-4 bg-saibro-600 text-white font-black rounded-2xl shadow-xl shadow-saibro-900/40 flex items-center justify-center gap-2 uppercase tracking-widest text-xs hover:bg-saibro-500 transition-all active:scale-[0.98]"
+                >
+                    {saving ? <Loader2 className="animate-spin" /> : <><CheckCircle size={18} /> Confirmar Resultado</>}
+                </button>
+            </div>
+        </div>
+    );
+};
+
 // --- COMPONENT: Reservation Details View ---
 const ReservationDetails: React.FC<{
     res: Reservation;
@@ -259,7 +391,8 @@ const ReservationDetails: React.FC<{
     onJoin: (id: string) => void;
     onLeave: (id: string) => void;
     onUpdate: (res: Reservation) => void;
-}> = ({ res, currentUser, profiles, courts, professors, nonSocioStudents, onClose, onEdit, onCancel, onJoin, onLeave, onUpdate }) => {
+    onFinishMatch: (matchId: string, winnerId: string, scoreA: number[], scoreB: number[]) => Promise<void>;
+}> = ({ res, currentUser, profiles, courts, professors, nonSocioStudents, onClose, onEdit, onCancel, onJoin, onLeave, onUpdate, onFinishMatch }) => {
     const [showManageParticipants, setShowManageParticipants] = useState(false);
     const [showGuestModal, setShowGuestModal] = useState(false);
     const court = courts.find(c => c.id === res.courtId);
@@ -422,7 +555,20 @@ const ReservationDetails: React.FC<{
                         </div>
                     </div>
 
-                    {/* 3. Participants / Students Section */}
+                    {/* 3. Live Score Section (Only during match time for championships) */}
+                    {isMatchLive(res) && res.matchId && (
+                        <div className="animate-in zoom-in-95 duration-500">
+                            <LiveScoreSection
+                                res={res}
+                                profiles={profiles}
+                                onFinish={async (winnerId, sA, sB) => {
+                                    await onFinishMatch(res.matchId!, winnerId, sA, sB);
+                                }}
+                            />
+                        </div>
+                    )}
+
+                    {/* 4. Participants / Students Section */}
                     <div className="space-y-4">
                         <div className="flex justify-between items-center px-1">
                             <h3 className="text-sm font-black text-stone-800 uppercase tracking-widest flex items-center gap-2.5">
@@ -1014,6 +1160,7 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
 
                         return {
                             id: `match_${m.id}`,
+                            matchId: m.id,
                             type: 'Campeonato',
                             date: m.scheduled_date!,
                             startTime: (m.scheduled_time || '').slice(0, 5),
@@ -1021,6 +1168,8 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                             courtId: m.court_id!,
                             creatorId: 'system',
                             participantIds: [m.player_a_id, m.player_b_id].filter(Boolean) as string[],
+                            scoreA: m.score_a || [0],
+                            scoreB: m.score_b || [0],
                             guestName: null,
                             guestResponsibleId: null,
                             professorId: null,
@@ -1220,6 +1369,31 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                 console.error('Error cancelling reservation:', err);
                 alert('Erro ao cancelar reserva');
             }
+        }
+    };
+
+    const handleFinishChampionshipMatch = async (matchId: string, winnerId: string, scoreA: number[], scoreB: number[]) => {
+        try {
+            const { error: matchError } = await supabase
+                .from('matches')
+                .update({
+                    score_a: scoreA,
+                    score_b: scoreB,
+                    winner_id: winnerId,
+                    status: 'finished'
+                })
+                .eq('id', matchId);
+
+            if (matchError) throw matchError;
+
+            const internalId = `match_${matchId}`;
+            setReservations(prev => prev.filter(r => r.id !== internalId));
+            setSelectedReservation(null);
+
+            alert('Resultado confirmado com sucesso!');
+        } catch (err) {
+            console.error('Error saving match result:', err);
+            alert('Erro ao salvar resultado. Tente novamente.');
         }
     };
 
@@ -1671,6 +1845,7 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                             onJoin={handleJoin}
                             onLeave={handleLeave}
                             onUpdate={handleSaveReservation}
+                            onFinishMatch={handleFinishChampionshipMatch}
                         />
                     )}
 

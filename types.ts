@@ -71,6 +71,11 @@ export interface Reservation {
 
   observation?: string;
   status: 'active' | 'cancelled';
+
+  // Match/Live Score specific
+  matchId?: string;
+  scoreA?: number[];
+  scoreB?: number[];
 }
 
 export interface Product {
