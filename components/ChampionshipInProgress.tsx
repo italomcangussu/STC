@@ -8,6 +8,10 @@ import { GroupStandingsCard } from './GroupStandingsCard';
 import { calculateGroupStandings } from '../lib/championshipUtils';
 import { formatDateBr } from '../utils';
 import { MatchGenerationModal } from './MatchGenerationModal';
+import { MatchExportPreview } from './MatchExportPreview';
+import html2canvas from 'html2canvas';
+import { Share2, Download, X } from 'lucide-react';
+import { getNowInFortaleza } from '../utils';
 
 interface Props {
     championship: Championship;
@@ -37,6 +41,13 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [showGenModal, setShowGenModal] = useState(false);
     const [resetting, setResetting] = useState(false);
+
+    // Export State
+    const [showExportModal, setShowExportModal] = useState(false);
+    const [exportDate, setExportDate] = useState<string>('');
+    const [exportGroupId, setExportGroupId] = useState<string>('');
+    const exportRef = React.useRef<HTMLDivElement>(null);
+    const [exporting, setExporting] = useState(false);
 
     useEffect(() => {
         fetchData();
@@ -269,6 +280,59 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
         setResetting(false);
     };
 
+    const handleExportImage = async () => {
+        if (!exportRef.current) return;
+        setExporting(true);
+        try {
+            const canvas = await html2canvas(exportRef.current, {
+                scale: 2,
+                useCORS: true,
+                backgroundColor: '#1c1917',
+            });
+
+            const link = document.createElement('a');
+            link.download = `agenda-${championship.name.replace(/\s+/g, '-').toLowerCase()}-${exportDate}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        } catch (err) {
+            console.error('Export failed:', err);
+            alert('Erro ao gerar imagem.');
+        } finally {
+            setExporting(false);
+        }
+    };
+
+    // Prepare data for Export Preview
+    // We map Registration IDs to Profiles for consistency (handling Guests)
+    const exportProfiles = registrations.map(r => ({
+        id: r.id,
+        name: r.participant_type === 'guest' ? (r.guest_name || 'Convidado') : (r.user?.name || 'Sócio'),
+        avatar: r.user?.avatar_url,
+        // Mock required fields for User type
+        role: 'socio', isActive: true, email: '', phone: '', balance: 0
+    } as any));
+
+    const exportMatches = matches
+        .filter(m => {
+            if (!exportDate) return false;
+            // Match date logic: use scheduled_date
+            return m.scheduled_date === exportDate &&
+                (exportGroupId ? m.championship_group_id === exportGroupId : true);
+        })
+        .map(m => ({
+            id: m.id,
+            playerAId: m.registration_a_id, // Map to Registration ID
+            playerBId: m.registration_b_id, // Map to Registration ID
+            scoreA: m.score_a,
+            scoreB: m.score_b,
+            date: m.scheduled_date,
+            scheduledTime: m.scheduled_time?.substring(0, 5),
+            status: m.status,
+            // ...
+        } as any));
+
+    const availableDates = Array.from(new Set(matches.map(m => m.scheduled_date).filter(Boolean))).sort();
+
     // Group matches by Round
     const matchesByRound = rounds.reduce((acc, round) => {
         acc[round.id] = matches.filter(m => m.round_id === round.id);
@@ -375,6 +439,13 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                             {resetting ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
                             Limpar Confrontos
                         </button>
+                        <button
+                            onClick={() => setShowExportModal(true)}
+                            className="col-span-1 sm:col-span-2 flex items-center justify-center gap-2 py-4 bg-saibro-50 text-saibro-700 font-bold rounded-2xl border border-saibro-100 hover:bg-saibro-100 transition-all active:scale-[0.98]"
+                        >
+                            <Share2 size={18} />
+                            Exportar Agenda (WhatsApp)
+                        </button>
                     </div>
                 </div>
             )}
@@ -427,7 +498,7 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
 
                                 {/* Publish Round Button (Admin Only) */}
                                 {currentUser?.role === 'admin' && currentRound.status === 'pending' && (
-                                    <div className="bg-amber-50 border border-amber-100 p-5 rounded-[2rem] flex items-center justify-between gap-4 animate-in fade-in slide-in-from-top-2">
+                                    <div className="bg-amber-50 border border-amber-100 p-5 rounded-4xl flex items-center justify-between gap-4 animate-in fade-in slide-in-from-top-2">
                                         <div className="flex-1">
                                             <h4 className="text-sm font-black text-amber-900 leading-tight">Rodada em Rascunho</h4>
                                             <p className="text-[10px] text-amber-700 font-bold mt-1">Os matches não estão visíveis para os sócios.</p>
@@ -565,6 +636,92 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                     onClose={() => setShowGenModal(false)}
                     onGenerated={fetchData}
                 />
+            )}
+
+            {/* EXPORT MODAL */}
+            {showExportModal && (
+                <div className="fixed inset-0 bg-black/80 z-200 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col md:flex-row">
+                        {/* CONTROLS */}
+                        <div className="p-6 md:w-80 border-r border-stone-100 bg-stone-50 flex flex-col gap-6 overflow-y-auto">
+                            <div className="flex items-center justify-between">
+                                <h3 className="font-black text-stone-800 text-lg tracking-tight">Exportar Agenda</h3>
+                                <button onClick={() => setShowExportModal(false)} className="text-stone-400 hover:text-stone-700">
+                                    <X size={20} />
+                                </button>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="text-xs font-bold text-stone-500 uppercase mb-2 block">Data dos Jogos</label>
+                                    <select
+                                        value={exportDate}
+                                        onChange={(e) => setExportDate(e.target.value)}
+                                        className="w-full p-3 rounded-xl border border-stone-200 bg-white font-bold text-stone-700 outline-none focus:border-saibro-500 transition-colors"
+                                    >
+                                        <option value="">Selecione uma data</option>
+                                        {availableDates.map(d => (
+                                            <option key={d} value={d}>
+                                                {new Date(d! + 'T12:00:00').toLocaleDateString('pt-BR', { timeZone: 'America/Fortaleza' })}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                {groups.length > 0 && (
+                                    <div>
+                                        <label className="text-xs font-bold text-stone-500 uppercase mb-2">Filtrar por Grupo (Opcional)</label>
+                                        <select
+                                            value={exportGroupId}
+                                            onChange={(e) => setExportGroupId(e.target.value)}
+                                            className="w-full p-3 rounded-xl border border-stone-200 bg-white font-bold text-stone-700 outline-none focus:border-saibro-500 transition-colors"
+                                        >
+                                            <option value="">Todos os Grupos</option>
+                                            {groups.map(g => (
+                                                <option key={g.id} value={g.id}>{g.category} - {g.group_name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="mt-auto">
+                                <button
+                                    onClick={handleExportImage}
+                                    disabled={!exportDate || exporting}
+                                    className="w-full py-4 bg-saibro-600 hover:bg-saibro-700 text-white rounded-xl font-black uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-saibro-200 transition-all active:scale-95 disabled:opacity-50 disabled:active:scale-100"
+                                >
+                                    {exporting ? <Loader2 className="animate-spin" /> : <Download size={20} />}
+                                    Baixar Imagem
+                                </button>
+                                <p className="text-[10px] text-stone-400 text-center mt-3">
+                                    A imagem será gerada com os jogos filtrados ao lado.
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* PREVIEW AREA */}
+                        <div className="flex-1 bg-stone-900 p-8 overflow-auto flex items-start justify-center">
+                            {exportDate ? (
+                                <div className="scale-[0.6] md:scale-[0.7] origin-top shadow-2xl rounded-lg overflow-hidden ring-4 ring-black/50">
+                                    <MatchExportPreview
+                                        ref={exportRef}
+                                        championship={championship}
+                                        date={exportDate}
+                                        groupName={groups.find(g => g.id === exportGroupId) ? `${groups.find(g => g.id === exportGroupId).category} - ${groups.find(g => g.id === exportGroupId).group_name}` : undefined}
+                                        profiles={exportProfiles}
+                                        matches={exportMatches}
+                                    />
+                                </div>
+                            ) : (
+                                <div className="h-full flex flex-col items-center justify-center text-stone-600 gap-4">
+                                    <Calendar size={48} className="opacity-20" />
+                                    <p className="font-bold">Selecione uma data para visualizar</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );
