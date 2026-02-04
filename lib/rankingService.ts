@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { logger } from './logger';
 
 // --- Class Hierarchy ---
 // Classes ordenadas do mais alto (melhor) para o mais baixo
@@ -6,6 +7,10 @@ export const CLASS_ORDER = ['4ª Classe', '5ª Classe', '6ª Classe'];
 
 // Quantos jogadores da classe acima o 1º lugar pode desafiar
 export const CROSS_CLASS_CHALLENGE_LIMIT = 2;
+
+// Cache simples para rankings (TTL: 30 segundos)
+let rankingCache: { data: PlayerStats[]; timestamp: number } | null = null;
+const CACHE_TTL = 30000; // 30 segundos
 
 // --- Types ---
 export interface PlayerStats {
@@ -67,9 +72,21 @@ const PTS_GAME = 1;
 
 /**
  * Fetch complete ranking from Supabase, combining legacy stats + challenge match stats
+ * Otimizado com cache e logs estruturados
  */
-export async function fetchRanking(categoryFilter?: string): Promise<PlayerStats[]> {
-    // 1. Fetch all profiles with legacy stats
+export async function fetchRanking(categoryFilter?: string, forceRefresh = false): Promise<PlayerStats[]> {
+    const startTime = performance.now();
+
+    // Verificar cache (apenas se não houver filtro e não for refresh forçado)
+    if (!categoryFilter && !forceRefresh && rankingCache) {
+        const age = Date.now() - rankingCache.timestamp;
+        if (age < CACHE_TTL) {
+            logger.debug('ranking_cache_hit', { age: `${age}ms` });
+            return rankingCache.data;
+        }
+    }
+
+    // 1. Fetch all profiles with legacy stats (OTIMIZADO: apenas campos necessários)
     let query = supabase
         .from('profiles')
         .select(`
@@ -87,9 +104,11 @@ export async function fetchRanking(categoryFilter?: string): Promise<PlayerStats
 
     const { data: profiles, error: profilesError } = await query;
     if (profilesError) {
-        console.error('Error fetching profiles:', profilesError);
+        logger.error('fetch_ranking_profiles_failed', { error: profilesError.message });
         return [];
     }
+
+    logger.debug('fetch_ranking_profiles_success', { count: profiles?.length || 0 });
 
     // 2. Fetch all challenge matches
     const { data: matches, error: matchesError } = await supabase
@@ -99,9 +118,11 @@ export async function fetchRanking(categoryFilter?: string): Promise<PlayerStats
         .eq('status', 'finished');
 
     if (matchesError) {
-        console.error('Error fetching matches:', matchesError);
+        logger.error('fetch_ranking_matches_failed', { error: matchesError.message });
         return [];
     }
+
+    logger.debug('fetch_ranking_matches_success', { count: matches?.length || 0 });
 
     const challengeStats: Record<string, {
         wins: number; losses: number;
@@ -379,6 +400,18 @@ export async function fetchRanking(categoryFilter?: string): Promise<PlayerStats
         player.globalPosition = index + 1;
     });
 
+    // Atualizar cache (apenas se não houver filtro)
+    if (!categoryFilter) {
+        rankingCache = { data: ranking, timestamp: Date.now() };
+    }
+
+    const duration = performance.now() - startTime;
+    logger.info('fetch_ranking_complete', {
+        count: ranking.length,
+        duration: `${duration.toFixed(2)}ms`,
+        cached: false,
+    });
+
     return ranking;
 }
 
@@ -468,7 +501,7 @@ export async function checkMonthlyChallengeLimit(
         .not('status', 'in', '("cancelled","expired","declined")');
 
     if (sentError || receivedError) {
-        console.error('Error checking challenge limits:', sentError || receivedError);
+        logger.error('check_monthly_limit_failed', { error: (sentError || receivedError)?.message });
         return { canChallengeOthers: false, canBeChallenged: false, challengesMade: 0, challengesReceived: 0 };
     }
 

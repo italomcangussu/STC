@@ -5,6 +5,7 @@ import { User, Reservation, ReservationType, NonSocioStudent, PlanType, Professo
 import { Calendar as CalIcon, ChevronLeft, ChevronRight, Plus, X, Calendar, Clock, MapPin, Users, Check, AlertCircle, Search, Filter, Loader2, Save, Trash2, Edit2, Play, Trophy, UserCog, ArrowRight, Info, UserPlus, LogOut, Wallet, Pencil, UserMinus, Share2, ArrowLeft, Minus, CheckCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { ScoreModal } from './ScoreModal';
+import { TennisCourtAnimation } from './ui/TennisCourtAnimation';
 import { Challenge } from '../types';
 import { getNowInFortaleza, formatDate, addDays, formatDateBr } from '../utils';
 
@@ -831,8 +832,11 @@ const ReservationCard: React.FC<{
             onClick={() => onSelect(res)}
             className={`relative rounded-2xl border-l-[6px] bg-linear-to-br from-white to-stone-50/50 p-5 shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer ${style.border} group border-t border-r border-b border-stone-100/50`}
         >
+            {/* ANIMAÇÃO DE QUADRA (apenas para Campeonatos) */}
+            {res.type === 'Campeonato' && <TennisCourtAnimation />}
+
             {/* Header */}
-            <div className="flex justify-between items-start mb-3">
+            <div className="relative z-10 flex justify-between items-start mb-3">
                 <div className="flex flex-col">
                     <div className="flex items-center gap-2 mb-1">
                         <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border ${style.text} bg-white border-current shadow-sm`}>
@@ -866,7 +870,7 @@ const ReservationCard: React.FC<{
             </div>
 
             {/* Content */}
-            <div className="space-y-2 min-h-[40px]">
+            <div className="relative z-10 space-y-2 min-h-[40px]">
                 {res.type === 'Aula' ? (
                     <div className="text-sm text-stone-600 space-y-1">
                         <div className="flex items-center gap-2">
@@ -899,21 +903,21 @@ const ReservationCard: React.FC<{
                         </div>
                     </div>
                 ) : res.type === 'Campeonato' ? (
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3 w-full">
-                            <div className="flex items-center justify-between w-full bg-yellow-50/50 rounded-xl p-2 border border-yellow-100">
+                    <div className="flex items-center justify-center">
+                        <div className="flex items-center gap-3 max-w-[65%] mx-auto">
+                            <div className="flex items-center justify-between bg-yellow-50/70 rounded-xl p-2 border border-yellow-100 shadow-sm backdrop-blur-sm gap-3">
                                 <div className="flex items-center gap-2">
-                                    <div className="w-8 h-8 rounded-full bg-white border border-stone-100 shadow-sm overflow-hidden">
+                                    <div className="w-7 h-7 rounded-full bg-white border border-stone-100 shadow-sm overflow-hidden flex-shrink-0">
                                         <img src={participants[0]?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${participants[0]?.id}`} className="w-full h-full object-cover" alt="" />
                                     </div>
-                                    <span className="text-xs font-bold text-stone-700 max-w-[80px] truncate">{participants[0]?.name.split(' ')[0]}</span>
+                                    <span className="text-xs font-bold text-stone-700 max-w-[70px] truncate">{participants[0]?.name.split(' ')[0]}</span>
                                 </div>
-                                <span className="text-[10px] font-black text-yellow-600 italic">VS</span>
+                                <span className="text-[10px] font-black text-yellow-600 italic px-1">VS</span>
                                 <div className="flex items-center gap-2 flex-row-reverse">
-                                    <div className="w-8 h-8 rounded-full bg-white border border-stone-100 shadow-sm overflow-hidden">
+                                    <div className="w-7 h-7 rounded-full bg-white border border-stone-100 shadow-sm overflow-hidden flex-shrink-0">
                                         <img src={participants[1]?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${participants[1]?.id}`} className="w-full h-full object-cover" alt="" />
                                     </div>
-                                    <span className="text-xs font-bold text-stone-700 max-w-[80px] truncate">{participants[1]?.name.split(' ')[0]}</span>
+                                    <span className="text-xs font-bold text-stone-700 max-w-[70px] truncate">{participants[1]?.name.split(' ')[0]}</span>
                                 </div>
                             </div>
                         </div>
@@ -953,7 +957,7 @@ const ReservationCard: React.FC<{
             </div>
 
             {/* Footer Hint or Action */}
-            <div className="mt-4 pt-3 border-t border-stone-100 flex justify-between items-center">
+            <div className="relative z-10 mt-4 pt-3 border-t border-stone-100 flex justify-between items-center">
                 <div className="flex gap-2 items-center">
                     {/* Time-based Status Tag */}
                     {(() => {

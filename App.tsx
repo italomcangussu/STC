@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Trophy, Loader2, X, Megaphone } from 'lucide-react';
+import { Toaster } from 'sonner';
 import { Layout } from './components/Layout';
 import { Dashboard } from './components/Dashboard';
 import { Klanches } from './components/Klanches';
@@ -190,6 +191,18 @@ const AppContent: React.FC = () => {
 export default function App() {
   return (
     <AuthProvider>
+      <Toaster
+        position="top-center"
+        richColors
+        expand={false}
+        closeButton
+        toastOptions={{
+          style: {
+            fontFamily: 'inherit',
+          },
+          className: 'toast-custom',
+        }}
+      />
       <AppContent />
     </AuthProvider>
   );

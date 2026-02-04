@@ -434,3 +434,1035 @@
         font-size: 16px !important;
     }
 }
+
+/* ========================================
+   TENNIS COURT ANIMATION - Championship Games
+   VISÃO TOP-DOWN (Câmera de Cima)
+   ======================================== */
+
+/* Container da quadra */
+.tennis-court-animation {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none; /* Não interferir com cliques */
+    opacity: 0.7; /* Um pouco mais visível para melhor apreciação */
+    z-index: 0;
+}
+
+/* Background da quadra (linhas e rede) - VISÃO HORIZONTAL */
+.tennis-court-bg {
+    position: absolute;
+    inset: 0;
+    background-image:
+        /* Rede central VERTICAL */
+        linear-gradient(to right, transparent 48%, #d4d4d4 48%, #d4d4d4 50%, #d4d4d4 50%, #d4d4d4 52%, transparent 52%),
+        /* Linha de base esquerda */
+        linear-gradient(to right, transparent 5%, #fff 5%, #fff 6%, transparent 6%),
+        /* Linha de base direita */
+        linear-gradient(to right, transparent 94%, #fff 94%, #fff 95%, transparent 95%),
+        /* Linhas laterais (horizontais) */
+        linear-gradient(to bottom, transparent 12%, #fff 12%, #fff 13%, transparent 13%),
+        linear-gradient(to bottom, transparent 87%, #fff 87%, #fff 88%, transparent 88%),
+        /* Linhas de serviço verticais */
+        linear-gradient(to right, transparent 26%, #fff 26%, #fff 26.5%, transparent 26.5%),
+        linear-gradient(to right, transparent 73.5%, #fff 73.5%, #fff 74%, transparent 74%),
+        /* Linha central de serviço (horizontal) */
+        linear-gradient(to bottom, transparent 49%, #fff 49%, #fff 51%, transparent 51%);
+    opacity: 0.35;
+}
+
+/* ===== JOGADORES (VISÃO DE CIMA - LATERAIS) ===== */
+
+/* Player 1 (Esquerda - Azul) */
+.player-1 {
+    position: absolute;
+    left: 8%;
+    top: 50%;
+    width: 20px;
+    height: 22px;
+    transform: translateY(-50%) rotate(-90deg); /* Rotacionado para jogar horizontalmente */
+    animation: player1-movement 12s ease-in-out infinite;
+    z-index: 5;
+}
+
+/* Corpo do Player 1 (visão de cima: cabeça + corpo + raquete) */
+.player-1::before {
+    content: '';
+    display: block;
+    width: 20px;
+    height: 22px;
+    background-image:
+        /* Cabeça (circular no topo) */
+        radial-gradient(circle at 10px 6px, #fcd34d 4.5px, transparent 4.5px),
+        /* Ombros/Corpo (oval azul) */
+        radial-gradient(ellipse 8px 10px at 10px 13px, #3b82f6 100%, transparent 100%),
+        /* Pernas (pequenos retângulos) */
+        linear-gradient(to bottom, transparent 17px, #2563eb 17px, #2563eb 22px, transparent 22px);
+    animation: player1-body-rotate 12s ease-in-out infinite;
+}
+
+/* Raquete do Player 1 (braço estendido com raquete) */
+.player-1::after {
+    content: '';
+    position: absolute;
+    top: 9px;
+    left: 15px;
+    width: 11px;
+    height: 3.5px;
+    background:
+        /* Cabo da raquete */
+        linear-gradient(to right, #78350f 0%, #78350f 60%, transparent 60%),
+        /* Cabeça da raquete (oval vermelha) */
+        radial-gradient(ellipse 4.5px 3.5px at 9px 1.8px, #dc2626 100%, transparent 100%);
+    transform-origin: left center;
+    animation: player1-racket-swing 12s ease-in-out infinite;
+}
+
+/* Player 2 (Direita - Vermelho) */
+.player-2 {
+    position: absolute;
+    right: 8%;
+    top: 50%;
+    width: 20px;
+    height: 22px;
+    transform: translateY(-50%) rotate(90deg); /* Rotacionado para jogar horizontalmente (virado para esquerda) */
+    animation: player2-movement 12s ease-in-out infinite;
+    z-index: 5;
+}
+
+/* Corpo do Player 2 (mesma estrutura mas vermelho) */
+.player-2::before {
+    content: '';
+    display: block;
+    width: 20px;
+    height: 22px;
+    background-image:
+        /* Cabeça */
+        radial-gradient(circle at 10px 6px, #fcd34d 4.5px, transparent 4.5px),
+        /* Corpo (vermelho) */
+        radial-gradient(ellipse 8px 10px at 10px 13px, #ef4444 100%, transparent 100%),
+        /* Pernas */
+        linear-gradient(to bottom, transparent 17px, #dc2626 17px, #dc2626 22px, transparent 22px);
+    animation: player2-body-rotate 12s ease-in-out infinite;
+}
+
+/* Raquete do Player 2 */
+.player-2::after {
+    content: '';
+    position: absolute;
+    top: 9px;
+    left: 15px;
+    width: 11px;
+    height: 3.5px;
+    background:
+        linear-gradient(to right, #78350f 0%, #78350f 60%, transparent 60%),
+        radial-gradient(ellipse 4.5px 3.5px at 9px 1.8px, #dc2626 100%, transparent 100%);
+    transform-origin: left center;
+    animation: player2-racket-swing 12s ease-in-out infinite;
+}
+
+/* ===== BOLINHA DE TÊNIS ===== */
+
+.tennis-ball {
+    position: absolute;
+    left: 8%;
+    top: 50%;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background:
+        radial-gradient(circle at 3.5px 3.5px, #d9f99d, #84cc16);
+    box-shadow:
+        0 2px 4px rgba(132, 204, 22, 0.7),
+        0 0 4px rgba(190, 242, 100, 0.9),
+        inset -1px -1px 2px rgba(0, 0, 0, 0.2);
+    animation:
+        ball-trajectory 12s ease-in-out infinite,
+        ball-rotation 1s linear infinite;
+    z-index: 8;
+}
+
+/* Linha característica da bola de tênis (mais escura) */
+.tennis-ball::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: -1px;
+    width: calc(100% + 2px);
+    height: 1.5px;
+    background: #65a30d;
+    transform: translateY(-50%);
+    border-radius: 1px;
+}
+
+/* ===== KEYFRAMES - TRAJETÓRIAS (SINCRONIZADAS - 12s) ===== */
+
+/* Trajetória da bola (5 rallies realistas - 12 segundos) */
+@keyframes ball-trajectory {
+    /* RALLY 1: Centro → Centro (0-20%) */
+    /* Player 1 rebate */
+    0% {
+        left: 8%;
+        top: 50%;
+        transform: translateY(-50%) scale(1);
+    }
+    2% {
+        left: 18%;
+        top: 50%;
+        transform: translateY(-50%) scale(0.95);
+    }
+    /* Bola cruza a quadra */
+    5% {
+        left: 35%;
+        top: 50%;
+        transform: translateY(-50%) scale(0.85);
+    }
+    7% {
+        left: 45%;
+        top: 50%;
+        transform: translateY(-50%) scale(0.75);
+    }
+    8% {
+        left: 50%;
+        top: 50%;
+        transform: translateY(-50%) scale(0.7);
+    }
+    9% {
+        left: 55%;
+        top: 50%;
+        transform: translateY(-50%) scale(0.75);
+    }
+    11% {
+        left: 65%;
+        top: 50%;
+        transform: translateY(-50%) scale(0.85);
+    }
+    13% {
+        left: 82%;
+        top: 50%;
+        transform: translateY(-50%) scale(0.95);
+    }
+    /* Player 2 recebe */
+    14% {
+        left: 92%;
+        top: 50%;
+        transform: translateY(-50%) scale(1);
+    }
+    /* Player 2 rebate de volta */
+    16% {
+        left: 92%;
+        top: 50%;
+        transform: translateY(-50%) scale(1);
+    }
+    /* Bola volta */
+    17% {
+        left: 85%;
+        top: 50%;
+        transform: translateY(-50%) scale(0.9);
+    }
+    18% {
+        left: 70%;
+        top: 50%;
+        transform: translateY(-50%) scale(0.8);
+    }
+    19% {
+        left: 50%;
+        top: 50%;
+        transform: translateY(-50%) scale(0.7);
+    }
+    19.5% {
+        left: 30%;
+        top: 50%;
+        transform: translateY(-50%) scale(0.85);
+    }
+    20% {
+        left: 8%;
+        top: 50%;
+        transform: translateY(-50%) scale(1);
+    }
+
+    /* RALLY 2: Cruzado para Cima (20-40%) */
+    /* Player 1 rebate cruzado cima */
+    20% {
+        left: 8%;
+        top: 50%;
+        transform: translateY(-50%) scale(1);
+    }
+    22% {
+        left: 20%;
+        top: 45%;
+        transform: translateY(-50%) scale(0.9);
+    }
+    25% {
+        left: 35%;
+        top: 35%;
+        transform: translateY(-50%) scale(0.85);
+    }
+    27% {
+        left: 45%;
+        top: 30%;
+        transform: translateY(-50%) scale(0.75);
+    }
+    28% {
+        left: 50%;
+        top: 28%;
+        transform: translateY(-50%) scale(0.7);
+    }
+    29% {
+        left: 55%;
+        top: 27%;
+        transform: translateY(-50%) scale(0.75);
+    }
+    31% {
+        left: 65%;
+        top: 25%;
+        transform: translateY(-50%) scale(0.85);
+    }
+    33% {
+        left: 80%;
+        top: 23%;
+        transform: translateY(-50%) scale(0.95);
+    }
+    /* Player 2 recebe na parte de cima */
+    34% {
+        left: 92%;
+        top: 22%;
+        transform: translateY(-50%) scale(1);
+    }
+    /* Player 2 devolve */
+    36% {
+        left: 92%;
+        top: 22%;
+        transform: translateY(-50%) scale(1);
+    }
+    37% {
+        left: 85%;
+        top: 25%;
+        transform: translateY(-50%) scale(0.9);
+    }
+    38% {
+        left: 70%;
+        top: 30%;
+        transform: translateY(-50%) scale(0.8);
+    }
+    39% {
+        left: 50%;
+        top: 35%;
+        transform: translateY(-50%) scale(0.7);
+    }
+    39.5% {
+        left: 28%;
+        top: 40%;
+        transform: translateY(-50%) scale(0.85);
+    }
+    40% {
+        left: 8%;
+        top: 45%;
+        transform: translateY(-50%) scale(1);
+    }
+
+    /* RALLY 3: Drop Shot / Curtinha (40-60%) */
+    /* Player 1 faz curtinha perto da rede */
+    40% {
+        left: 8%;
+        top: 45%;
+        transform: translateY(-50%) scale(1);
+    }
+    42% {
+        left: 20%;
+        top: 44%;
+        transform: translateY(-50%) scale(0.85);
+    }
+    43% {
+        left: 28%;
+        top: 42%;
+        transform: translateY(-50%) scale(0.8);
+    }
+    45% {
+        left: 38%;
+        top: 41%;
+        transform: translateY(-50%) scale(0.7);
+    }
+    46% {
+        left: 45%;
+        top: 40%;
+        transform: translateY(-50%) scale(0.65);
+    }
+    48% {
+        left: 50%;
+        top: 39%;
+        transform: translateY(-50%) scale(0.62);
+    }
+    /* Bola cai perto da rede (curtinha) */
+    49% {
+        left: 52%;
+        top: 38%;
+        transform: translateY(-50%) scale(0.6);
+    }
+    51% {
+        left: 57%;
+        top: 38%;
+        transform: translateY(-50%) scale(0.65);
+    }
+    /* Player 2 corre até a rede */
+    52% {
+        left: 60%;
+        top: 38%;
+        transform: translateY(-50%) scale(0.7);
+    }
+    /* Player 2 devolve da rede */
+    54% {
+        left: 65%;
+        top: 38%;
+        transform: translateY(-50%) scale(0.75);
+    }
+    55% {
+        left: 58%;
+        top: 42%;
+        transform: translateY(-50%) scale(0.72);
+    }
+    56% {
+        left: 50%;
+        top: 45%;
+        transform: translateY(-50%) scale(0.7);
+    }
+    57% {
+        left: 38%;
+        top: 48%;
+        transform: translateY(-50%) scale(0.78);
+    }
+    58% {
+        left: 25%;
+        top: 52%;
+        transform: translateY(-50%) scale(0.85);
+    }
+    59% {
+        left: 15%;
+        top: 55%;
+        transform: translateY(-50%) scale(0.92);
+    }
+    60% {
+        left: 8%;
+        top: 58%;
+        transform: translateY(-50%) scale(1);
+    }
+
+    /* RALLY 4: Cruzado para Baixo (60-80%) */
+    /* Player 1 rebate cruzado baixo */
+    60% {
+        left: 8%;
+        top: 58%;
+        transform: translateY(-50%) scale(1);
+    }
+    62% {
+        left: 20%;
+        top: 62%;
+        transform: translateY(-50%) scale(0.9);
+    }
+    65% {
+        left: 35%;
+        top: 65%;
+        transform: translateY(-50%) scale(0.85);
+    }
+    67% {
+        left: 45%;
+        top: 68%;
+        transform: translateY(-50%) scale(0.75);
+    }
+    68% {
+        left: 50%;
+        top: 70%;
+        transform: translateY(-50%) scale(0.7);
+    }
+    69% {
+        left: 55%;
+        top: 71%;
+        transform: translateY(-50%) scale(0.75);
+    }
+    71% {
+        left: 65%;
+        top: 73%;
+        transform: translateY(-50%) scale(0.85);
+    }
+    73% {
+        left: 80%;
+        top: 75%;
+        transform: translateY(-50%) scale(0.95);
+    }
+    /* Player 2 recebe na parte de baixo */
+    74% {
+        left: 92%;
+        top: 76%;
+        transform: translateY(-50%) scale(1);
+    }
+    /* Player 2 devolve */
+    76% {
+        left: 92%;
+        top: 76%;
+        transform: translateY(-50%) scale(1);
+    }
+    77% {
+        left: 85%;
+        top: 73%;
+        transform: translateY(-50%) scale(0.9);
+    }
+    78% {
+        left: 70%;
+        top: 68%;
+        transform: translateY(-50%) scale(0.8);
+    }
+    79% {
+        left: 50%;
+        top: 60%;
+        transform: translateY(-50%) scale(0.7);
+    }
+    79.5% {
+        left: 28%;
+        top: 55%;
+        transform: translateY(-50%) scale(0.85);
+    }
+    80% {
+        left: 8%;
+        top: 50%;
+        transform: translateY(-50%) scale(1);
+    }
+
+    /* RALLY 5: Voleio na Rede (80-100%) */
+    /* Player 1 prepara para subir à rede */
+    80% {
+        left: 8%;
+        top: 50%;
+        transform: translateY(-50%) scale(1);
+    }
+    /* Player 2 manda bola profunda */
+    81% {
+        left: 90%;
+        top: 50%;
+        transform: translateY(-50%) scale(0.95);
+    }
+    82% {
+        left: 85%;
+        top: 50%;
+        transform: translateY(-50%) scale(0.9);
+    }
+    84% {
+        left: 68%;
+        top: 50%;
+        transform: translateY(-50%) scale(0.8);
+    }
+    86% {
+        left: 50%;
+        top: 50%;
+        transform: translateY(-50%) scale(0.7);
+    }
+    88% {
+        left: 35%;
+        top: 50%;
+        transform: translateY(-50%) scale(0.8);
+    }
+    89% {
+        left: 25%;
+        top: 50%;
+        transform: translateY(-50%) scale(0.85);
+    }
+    /* Player 1 volea na rede */
+    91% {
+        left: 15%;
+        top: 50%;
+        transform: translateY(-50%) scale(0.9);
+    }
+    /* Voleio rápido de volta */
+    92% {
+        left: 22%;
+        top: 49%;
+        transform: translateY(-50%) scale(0.8);
+    }
+    93% {
+        left: 30%;
+        top: 48%;
+        transform: translateY(-50%) scale(0.75);
+    }
+    94% {
+        left: 42%;
+        top: 47.5%;
+        transform: translateY(-50%) scale(0.68);
+    }
+    95% {
+        left: 50%;
+        top: 47%;
+        transform: translateY(-50%) scale(0.65);
+    }
+    96% {
+        left: 62%;
+        top: 47.5%;
+        transform: translateY(-50%) scale(0.72);
+    }
+    97% {
+        left: 75%;
+        top: 48%;
+        transform: translateY(-50%) scale(0.8);
+    }
+    98% {
+        left: 85%;
+        top: 49%;
+        transform: translateY(-50%) scale(0.9);
+    }
+    99% {
+        left: 92%;
+        top: 50%;
+        transform: translateY(-50%) scale(0.95);
+    }
+    100% {
+        left: 8%;
+        top: 50%;
+        transform: translateY(-50%) scale(1);
+    }
+}
+
+/* Rotação da bola */
+@keyframes ball-rotation {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ===== MOVIMENTOS DOS JOGADORES (SINCRONIZADOS) ===== */
+
+/* Player 1 (Esquerda - Azul) - Movimento suave e sincronizado */
+@keyframes player1-movement {
+    /* RALLY 1: Centro - Rebate e recebe (0-20%) */
+    0% {
+        transform: translateY(-50%) rotate(-90deg);
+        left: 8%;
+    }
+    /* Aguarda bola voltar */
+    16%, 17% {
+        transform: translateY(-50%) rotate(-90deg);
+        left: 8%;
+    }
+    /* Recebe de volta */
+    19%, 21% {
+        transform: translateY(-50%) rotate(-90deg);
+        left: 8%;
+    }
+
+    /* RALLY 2: Rebate cruzado cima, recebe um pouco abaixo (20-40%) */
+    /* Preparar para rebater */
+    20% {
+        transform: translateY(-50%) rotate(-90deg);
+        left: 8%;
+    }
+    /* Move gradualmente para cima após rebater */
+    32% {
+        transform: translateY(calc(-50% - 5px)) rotate(-90deg);
+        left: 8%;
+    }
+    /* Recebe devolvido */
+    38%, 41% {
+        transform: translateY(calc(-50% - 8px)) rotate(-90deg);
+        left: 8%;
+    }
+
+    /* RALLY 3: Faz curtinha, recebe mais embaixo (40-60%) */
+    40% {
+        transform: translateY(calc(-50% - 8px)) rotate(-90deg);
+        left: 8%;
+    }
+    /* Move para frente gradualmente para fazer curtinha */
+    41% {
+        transform: translateY(calc(-50% - 10px)) rotate(-90deg);
+        left: 10%;
+    }
+    42%, 46% {
+        transform: translateY(calc(-50% - 12px)) rotate(-90deg);
+        left: 12%;
+    }
+    /* Volta gradualmente */
+    50% {
+        transform: translateY(calc(-50% - 5px)) rotate(-90deg);
+        left: 10%;
+    }
+    55% {
+        transform: translateY(calc(-50% + 5px)) rotate(-90deg);
+        left: 8%;
+    }
+    /* Recebe mais embaixo */
+    58%, 61% {
+        transform: translateY(calc(-50% + 12px)) rotate(-90deg);
+        left: 8%;
+    }
+
+    /* RALLY 4: Rebate cruzado baixo, recebe centro (60-80%) */
+    60% {
+        transform: translateY(calc(-50% + 12px)) rotate(-90deg);
+        left: 8%;
+    }
+    /* Volta gradualmente ao centro */
+    70% {
+        transform: translateY(calc(-50% + 5px)) rotate(-90deg);
+        left: 8%;
+    }
+    /* Recebe de volta no centro */
+    78%, 81% {
+        transform: translateY(-50%) rotate(-90deg);
+        left: 8%;
+    }
+
+    /* RALLY 5: Recebe e avança para rede para volear (80-100%) */
+    80% {
+        transform: translateY(-50%) rotate(-90deg);
+        left: 8%;
+    }
+    /* Avança gradualmente para rede */
+    85% {
+        transform: translateY(-50%) rotate(-90deg);
+        left: 11%;
+    }
+    88%, 92% {
+        transform: translateY(-50%) rotate(-90deg);
+        left: 15%;
+    }
+    /* Retorna gradualmente à posição inicial */
+    95% {
+        transform: translateY(-50%) rotate(-90deg);
+        left: 11%;
+    }
+    98%, 100% {
+        transform: translateY(-50%) rotate(-90deg);
+        left: 8%;
+    }
+}
+
+/* Player 1 - Rotação do corpo (sincronizada) */
+@keyframes player1-body-rotate {
+    0%, 100% {
+        transform: rotate(0deg);
+    }
+    /* RALLY 1: Rebatida inicial centro */
+    0%, 2% {
+        transform: rotate(-10deg);
+    }
+    /* RALLY 2: Rebatida cruzado cima */
+    20%, 22% {
+        transform: rotate(-12deg);
+    }
+    /* RALLY 3: Curtinha suave */
+    40%, 43% {
+        transform: rotate(-8deg);
+    }
+    /* RALLY 4: Cruzado baixo */
+    60%, 62% {
+        transform: rotate(-11deg);
+    }
+    /* RALLY 5: Voleio na rede */
+    89%, 92% {
+        transform: rotate(-15deg);
+    }
+    95%, 100% {
+        transform: rotate(0deg);
+    }
+}
+
+/* Player 1 - Swing da raquete (sincronizado com impactos) */
+@keyframes player1-racket-swing {
+    0%, 100% {
+        transform: rotate(0deg);
+    }
+    /* RALLY 1: Swing rebatida inicial (0%) */
+    0% {
+        transform: rotate(-50deg);
+    }
+    1%, 3% {
+        transform: rotate(40deg);
+    }
+    /* Preparar para receber */
+    16%, 18% {
+        transform: rotate(-45deg);
+    }
+    /* RALLY 2: Swing cruzado cima (20%) */
+    20% {
+        transform: rotate(-50deg);
+    }
+    21%, 23% {
+        transform: rotate(42deg);
+    }
+    /* RALLY 3: Swing curtinha suave (40-42%) */
+    40% {
+        transform: rotate(-40deg);
+    }
+    41%, 43% {
+        transform: rotate(30deg);
+    }
+    /* RALLY 4: Swing cruzado baixo (60%) */
+    60% {
+        transform: rotate(-48deg);
+    }
+    61%, 63% {
+        transform: rotate(38deg);
+    }
+    /* RALLY 5: Swing voleio rápido (91%) */
+    88%, 90% {
+        transform: rotate(-35deg);
+    }
+    91%, 93% {
+        transform: rotate(45deg);
+    }
+    95% {
+        transform: rotate(0deg);
+    }
+}
+
+/* Player 2 (Direita - Vermelho) - Movimento suave e sincronizado */
+@keyframes player2-movement {
+    /* RALLY 1: Recebe centro, rebate (0-20%) */
+    0%, 10% {
+        transform: translateY(-50%) rotate(90deg);
+        right: 8%;
+    }
+    /* Prepara para rebater */
+    12%, 13% {
+        transform: translateY(-50%) rotate(90deg);
+        right: 8%;
+    }
+    /* Rebate de volta */
+    14%, 17% {
+        transform: translateY(-50%) rotate(90deg);
+        right: 8%;
+    }
+    20% {
+        transform: translateY(-50%) rotate(90deg);
+        right: 8%;
+    }
+
+    /* RALLY 2: Move para cima, recebe cruzado, rebate (20-40%) */
+    /* Move gradualmente para cima */
+    27% {
+        transform: translateY(calc(-50% - 25px)) rotate(90deg);
+        right: 8%;
+    }
+    30%, 32% {
+        transform: translateY(calc(-50% - 38px)) rotate(90deg);
+        right: 8%;
+    }
+    /* Rebate */
+    34%, 37% {
+        transform: translateY(calc(-50% - 38px)) rotate(90deg);
+        right: 8%;
+    }
+    /* Volta gradualmente */
+    39% {
+        transform: translateY(calc(-50% - 25px)) rotate(90deg);
+        right: 8%;
+    }
+    40% {
+        transform: translateY(calc(-50% - 20px)) rotate(90deg);
+        right: 8%;
+    }
+
+    /* RALLY 3: Corre para rede para pegar curtinha (40-60%) */
+    /* Move gradualmente para frente e um pouco para cima */
+    45% {
+        transform: translateY(calc(-50% - 15px)) rotate(90deg);
+        right: 12%;
+    }
+    48%, 50% {
+        transform: translateY(calc(-50% - 18px)) rotate(90deg);
+        right: 20%;
+    }
+    /* Devolve da rede */
+    52%, 55% {
+        transform: translateY(calc(-50% - 18px)) rotate(90deg);
+        right: 18%;
+    }
+    /* Volta gradualmente para trás */
+    57% {
+        transform: translateY(calc(-50% - 5px)) rotate(90deg);
+        right: 12%;
+    }
+    60% {
+        transform: translateY(calc(-50% + 10px)) rotate(90deg);
+        right: 8%;
+    }
+
+    /* RALLY 4: Move para baixo, recebe cruzado baixo, rebate (60-80%) */
+    /* Move gradualmente para baixo */
+    68% {
+        transform: translateY(calc(-50% + 25px)) rotate(90deg);
+        right: 8%;
+    }
+    70%, 72% {
+        transform: translateY(calc(-50% + 35px)) rotate(90deg);
+        right: 8%;
+    }
+    /* Rebate */
+    74%, 77% {
+        transform: translateY(calc(-50% + 35px)) rotate(90deg);
+        right: 8%;
+    }
+    /* Volta gradualmente ao centro */
+    79% {
+        transform: translateY(calc(-50% + 20px)) rotate(90deg);
+        right: 8%;
+    }
+    80% {
+        transform: translateY(calc(-50% + 10px)) rotate(90deg);
+        right: 8%;
+    }
+
+    /* RALLY 5: Centro, manda profundo (80-100%) */
+    /* Retorna gradualmente ao centro */
+    80% {
+        transform: translateY(calc(-50% + 5px)) rotate(90deg);
+        right: 8%;
+    }
+    82%, 100% {
+        transform: translateY(-50%) rotate(90deg);
+        right: 8%;
+    }
+}
+
+/* Player 2 - Rotação do corpo (sincronizada) */
+@keyframes player2-body-rotate {
+    0%, 100% {
+        transform: rotate(0deg);
+    }
+    /* RALLY 1: Devolve centro */
+    14%, 17% {
+        transform: rotate(-11deg);
+    }
+    /* RALLY 2: Devolve de cima */
+    34%, 37% {
+        transform: rotate(-13deg);
+    }
+    /* RALLY 3: Devolve curtinha da rede */
+    52%, 55% {
+        transform: rotate(-9deg);
+    }
+    /* RALLY 4: Devolve de baixo */
+    74%, 77% {
+        transform: rotate(-12deg);
+    }
+    /* RALLY 5: Manda profundo */
+    80%, 83% {
+        transform: rotate(-10deg);
+    }
+    90%, 100% {
+        transform: rotate(0deg);
+    }
+}
+
+/* Player 2 - Swing da raquete (sincronizado com impactos) */
+@keyframes player2-racket-swing {
+    0%, 100% {
+        transform: rotate(0deg);
+    }
+    /* RALLY 1: Recebe e devolve centro (14-16%) */
+    12%, 14% {
+        transform: rotate(-42deg);
+    }
+    16%, 18% {
+        transform: rotate(38deg);
+    }
+    20% {
+        transform: rotate(0deg);
+    }
+
+    /* RALLY 2: Recebe cruzado cima e devolve (34-36%) */
+    32%, 34% {
+        transform: rotate(-45deg);
+    }
+    36%, 38% {
+        transform: rotate(40deg);
+    }
+    40% {
+        transform: rotate(0deg);
+    }
+
+    /* RALLY 3: Devolve curtinha (52-54%) */
+    50%, 52% {
+        transform: rotate(-35deg);
+    }
+    54%, 56% {
+        transform: rotate(32deg);
+    }
+    60% {
+        transform: rotate(0deg);
+    }
+
+    /* RALLY 4: Recebe cruzado baixo e devolve (74-76%) */
+    72%, 74% {
+        transform: rotate(-48deg);
+    }
+    76%, 78% {
+        transform: rotate(42deg);
+    }
+    80% {
+        transform: rotate(0deg);
+    }
+
+    /* RALLY 5: Manda bola profunda (80-82%) */
+    80% {
+        transform: rotate(-40deg);
+    }
+    82%, 84% {
+        transform: rotate(35deg);
+    }
+    90%, 100% {
+        transform: rotate(0deg);
+    }
+}
+
+/* ===== OTIMIZAÇÕES DE PERFORMANCE ===== */
+
+.tennis-court-animation * {
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+    -webkit-font-smoothing: subpixel-antialiased;
+}
+
+/* ===== RESPONSIVIDADE ===== */
+
+@media (max-width: 640px) {
+    .tennis-court-animation {
+        opacity: 0.5; /* Mais sutil em telas pequenas */
+    }
+
+    .player-1 {
+        transform: translateY(-50%) rotate(-90deg) scale(0.85);
+        left: 6%;
+    }
+
+    .player-2 {
+        transform: translateY(-50%) rotate(90deg) scale(0.85);
+        right: 6%;
+    }
+
+    .tennis-ball {
+        width: 6px;
+        height: 6px;
+    }
+}
+
+/* ===== MODO ESCURO (Opcional) ===== */
+
+@media (prefers-color-scheme: dark) {
+    .tennis-court-bg {
+        opacity: 0.2;
+    }
+
+    .tennis-court-animation {
+        opacity: 0.5;
+    }
+}
+
+/* ===== REDUÇÃO DE MOVIMENTO (Acessibilidade) ===== */
+
+@media (prefers-reduced-motion: reduce) {
+    .tennis-court-animation {
+        display: none;
+    }
+}
