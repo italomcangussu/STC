@@ -139,7 +139,7 @@ const CreateChallengeModal: React.FC<{
             if (selectedDate === today) {
                 const now = getNowInFortaleza();
                 const [h, m] = time.split(':').map(Number);
-                const slotTime = new Date(now); // Clone for date part
+                const slotTime = new Date(selectedDate + 'T' + time + ':00'); // Construct time for slot
                 slotTime.setHours(h, m, 0, 0);
                 if (slotTime <= now) return false;
             }
@@ -571,7 +571,7 @@ export const ChallengesView: React.FC<{ currentUser: User }> = ({ currentUser })
     const myRankEntry = ranking.find(p => p.id === currentUser.id);
 
     // Stats
-    const currentMonth = new Date().toISOString().slice(0, 7);
+    const currentMonth = getNowInFortaleza().toISOString().slice(0, 7);
     const monthlyStats = useMemo(() => {
         const asChallenger = challenges.filter(c => c.challengerId === currentUser.id && c.monthRef === currentMonth && c.status !== 'cancelled').length;
         const asChallenged = challenges.filter(c => c.challengedId === currentUser.id && c.monthRef === currentMonth && c.status !== 'cancelled').length;
@@ -644,7 +644,7 @@ export const ChallengesView: React.FC<{ currentUser: User }> = ({ currentUser })
             sendPushNotification({
                 userId: data.opponentId,
                 title: 'Novo Desafio! ⚔️',
-                body: `${currentUser.name} desafiou você para um jogo em ${new Date(data.date + 'T00:00:00').toLocaleDateString('pt-BR')}!`,
+                body: `${currentUser.name} desafiou você para um jogo em ${new Date(data.date + 'T12:00:00').toLocaleDateString('pt-BR', { timeZone: 'America/Fortaleza' })}!`,
                 url: '/desafios',
                 data: { challengeId: chalData.id }
             });
@@ -899,7 +899,7 @@ export const ChallengesView: React.FC<{ currentUser: User }> = ({ currentUser })
                                 {c.status === 'accepted' && c.scheduledDate && (
                                     <div className="mt-2 text-xs text-stone-500 flex items-center gap-2">
                                         <Calendar size={12} />
-                                        <span>Agendado: {new Date(c.scheduledDate + 'T00:00:00').toLocaleDateString('pt-BR')} às {c.scheduledTime}</span>
+                                        <span>Agendado: {new Date(c.scheduledDate + 'T12:00:00').toLocaleDateString('pt-BR', { timeZone: 'America/Fortaleza' })} às {c.scheduledTime}</span>
                                     </div>
                                 )}
                             </div>

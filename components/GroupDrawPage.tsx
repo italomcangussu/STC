@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { User } from '../types';
 import { supabase } from '../lib/supabase';
+import { getNowInFortaleza } from '../utils';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
@@ -541,7 +542,7 @@ export const GroupDrawPage: React.FC<Props> = ({ currentUser, onBack }) => {
                 ${buildGroupHTML(cls, categoryDraw)}
                 <div style="text-align: center; margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.1);">
                     <div style="font-size: 10px; color: rgba(255,255,255,0.4);">
-                        Gerado em ${new Date().toLocaleString('pt-BR')}
+                        Gerado em ${getNowInFortaleza().toLocaleString('pt-BR')}
                     </div>
                 </div>
             `;
@@ -645,7 +646,7 @@ export const GroupDrawPage: React.FC<Props> = ({ currentUser, onBack }) => {
             const currentY = 35 + imgHeight + 10;
             pdf.setFontSize(8);
             pdf.setTextColor(168, 162, 158); // stone-400
-            pdf.text(`Gerado em ${new Date().toLocaleString('pt-BR')}`, pageWidth / 2, currentY, { align: 'center' });
+            pdf.text(`Gerado em ${getNowInFortaleza().toLocaleString('pt-BR')}`, pageWidth / 2, currentY, { align: 'center' });
 
             // Download
             pdf.save(`${championship.name}-${cls}-grupos.pdf`);

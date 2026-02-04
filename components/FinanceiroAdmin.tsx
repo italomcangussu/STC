@@ -4,6 +4,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Reservation, NonSocioStudent } from '../types';
+import { getNowInFortaleza, formatDateBr } from '../utils';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
     PieChart, Pie, Cell
@@ -27,7 +28,7 @@ export const FinanceiroAdmin: React.FC = () => {
     const [monthlyStudents, setMonthlyStudents] = useState<NonSocioStudent[]>([]);
     const [studentPayments, setStudentPayments] = useState<StudentPayment[]>([]);
     const [loading, setLoading] = useState(true);
-    const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
+    const [selectedMonth, setSelectedMonth] = useState(getNowInFortaleza().toISOString().slice(0, 7));
     const [processingPayment, setProcessingPayment] = useState<string | null>(null);
     const [deleteSuccess, setDeleteSuccess] = useState<string | null>(null);
 
@@ -225,7 +226,7 @@ export const FinanceiroAdmin: React.FC = () => {
                         <div className="flex items-center gap-2 text-saibro-100">
                             <TrendingUp size={16} />
                             <span className="text-sm font-bold">
-                                {new Date(selectedMonth + '-01').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+                                {new Date(selectedMonth + '-01T12:00:00').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric', timeZone: 'America/Fortaleza' })}
                             </span>
                         </div>
                     </div>
@@ -317,7 +318,7 @@ export const FinanceiroAdmin: React.FC = () => {
                                                     </span>
                                                 </div>
                                                 <p className="text-xs text-stone-500 font-medium">
-                                                    📅 {new Date(r.date).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
+                                                    📅 {formatDateBr(r.date).slice(0, 5)}
                                                 </p>
                                             </div>
 
@@ -381,7 +382,7 @@ export const FinanceiroAdmin: React.FC = () => {
                                         <div className="flex-1 min-w-0">
                                             <p className="font-bold text-stone-800 truncate mb-1">{studentName}</p>
                                             <p className="text-xs text-stone-500 font-medium">
-                                                💳 Pago em {new Date(p.paymentDate).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
+                                                💳 Pago em {formatDateBr(p.paymentDate?.split('T')[0] || p.paymentDate).slice(0, 5)}
                                             </p>
                                         </div>
 

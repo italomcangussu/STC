@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { User } from '../types';
 import { Trophy, CheckCircle, AlertCircle, Save, Search, Users, ArrowRight, History, Zap, TrendingUp, Sparkles, Filter } from 'lucide-react';
+import { getNowInFortaleza, formatDate } from '../utils';
 
 interface SuperSetProps {
     // No props needed
@@ -49,7 +50,7 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
                 setPlayers(mappedPlayers);
 
                 // 2. Fetch Today's Reservations for Smart Suggestion
-                const today = new Date().toISOString().split('T')[0];
+                const today = formatDate(getNowInFortaleza());
                 const { data: reservations } = await supabase
                     .from('reservations')
                     .select('creator_id, participant_ids')
@@ -104,7 +105,7 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
             const { data: newMatch, error } = await supabase.from('matches').insert({
                 type: 'SuperSet',
                 status: 'finished',
-                date: new Date().toISOString(),
+                date: getNowInFortaleza().toISOString(),
                 player_a_id: playerAId,
                 player_b_id: playerBId,
                 score_a: [scoreA],
@@ -225,13 +226,22 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
     // Helper to get player name safely
     const getPlayerName = (id: string) => players.find(p => p.id === id)?.name || 'Anônimo';
 
-    // Filter logic: Only Today's players (from reservations)
-    const availableToday = players.filter(p => todayPlayers.includes(p.id));
+    // Optimized Filter Logic:
+    // 1. If searching, search GLOBAL list (all players), but prioritize today's players for visibility
+    // 2. If NOT searching, show ONLY today's players (smart suggestion default)
+    const filteredPlayers = searchTerm
+        ? players
+            .filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()))
+            .sort((a, b) => {
+                const aToday = todayPlayers.includes(a.id) ? 1 : 0;
+                const bToday = todayPlayers.includes(b.id) ? 1 : 0;
+                if (aToday !== bToday) return bToday - aToday; // Prioritize today's players
+                return a.name.localeCompare(b.name);
+            })
+        : players.filter(p => todayPlayers.includes(p.id));
 
-    // Filter by search
-    const filteredPlayers = availableToday.filter(p =>
-        p.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    // Helper for UI indicators
+    const playersPresentToday = players.filter(p => todayPlayers.includes(p.id));
 
     return (
         <div className="p-4 sm:p-6 pb-40 space-y-8 animate-in fade-in duration-500">
@@ -329,7 +339,7 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
                                     />
-                                    {availableToday.length > 0 && (
+                                    {playersPresentToday.length > 0 && (
                                         <div className="hidden sm:flex absolute right-4 inset-y-0 items-center gap-1.5">
                                             <span className="flex h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
                                             <span className="text-[10px] font-black text-stone-500 uppercase tracking-tight">Clube</span>
@@ -337,7 +347,7 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
                                     )}
                                 </div>
 
-                                {availableToday.length > 0 && !searchTerm && (
+                                {playersPresentToday.length > 0 && !searchTerm && (
                                     <div className="sm:hidden flex items-center justify-center gap-1.5 py-1">
                                         <span className="flex h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse"></span>
                                         <span className="text-[9px] font-black text-stone-400 uppercase tracking-widest">Atletas presentes hoje</span>
@@ -347,6 +357,7 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
                                 {/* Results Grid */}
                                 <div className="grid grid-cols-2 xs:grid-cols-3 gap-3 pt-2">
                                     {filteredPlayers.length > 0 ? filteredPlayers
+
                                         .filter(p => p.id !== playerAId && p.id !== playerBId)
                                         .slice(0, 6)
                                         .map(p => (
@@ -522,7 +533,7 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
                                                 {match.score_a[0]}<span className="text-stone-500 mx-1.5 font-light">-</span>{match.score_b[0]}
                                             </div>
                                             <span className="text-[9px] font-black text-stone-300 uppercase tracking-widest whitespace-nowrap">
-                                                {new Date(match.date).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
+                                                {new Date(match.date + 'T12:00:00').toLocaleDateString('pt-BR', { timeZone: 'America/Fortaleza', day: '2-digit', month: 'short' })}
                                             </span>
                                         </div>
 

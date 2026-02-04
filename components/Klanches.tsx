@@ -6,6 +6,7 @@ import {
     ChevronDown, ChevronUp, DollarSign, AlertCircle, Calendar, Clock, MapPin
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { getNowInFortaleza, formatDate } from '../utils';
 
 interface KlanchesProps {
     currentUser: User;
@@ -117,7 +118,7 @@ export const Klanches: React.FC<KlanchesProps> = ({ currentUser }) => {
                 productId: c.product_id,
                 quantity: c.quantity,
                 totalPrice: Number(c.total_price),
-                date: typeof c.date === 'string' ? c.date.split('T')[0] : new Date(c.date).toISOString().split('T')[0],
+                date: typeof c.date === 'string' ? c.date.split('T')[0] : getNowInFortaleza().toISOString().split('T')[0],
                 status: c.status
             })));
 
@@ -139,7 +140,7 @@ export const Klanches: React.FC<KlanchesProps> = ({ currentUser }) => {
             } as User)));
 
             // Fetch today's reservations
-            const today = new Date().toISOString().split('T')[0];
+            const today = formatDate(getNowInFortaleza());
             const { data: reservationsData } = await supabase
                 .from('reservations')
                 .select('*')
@@ -288,7 +289,7 @@ export const Klanches: React.FC<KlanchesProps> = ({ currentUser }) => {
                 product_id: item.productId,
                 quantity: item.quantity,
                 total_price: item.price * item.quantity,
-                date: new Date().toISOString(),
+                date: getNowInFortaleza().toISOString(),
                 status: 'open'
             });
         }
@@ -305,7 +306,7 @@ export const Klanches: React.FC<KlanchesProps> = ({ currentUser }) => {
             productId: c.product_id,
             quantity: c.quantity,
             totalPrice: Number(c.total_price),
-            date: typeof c.date === 'string' ? c.date.split('T')[0] : new Date(c.date).toISOString().split('T')[0],
+            date: typeof c.date === 'string' ? c.date.split('T')[0] : getNowInFortaleza().toISOString().split('T')[0],
             status: c.status
         })));
 

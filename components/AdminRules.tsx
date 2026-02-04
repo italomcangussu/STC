@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import { PointRule } from '../types';
+import { getNowInFortaleza } from '../utils';
 import { Settings, Save, Loader2, Info, Trophy, Target, Award, TrendingUp, CheckCircle2, Sparkles } from 'lucide-react';
 
 export const AdminRules: React.FC = () => {
@@ -41,7 +42,7 @@ export const AdminRules: React.FC = () => {
         try {
             const { error } = await supabase
                 .from('point_rules')
-                .update({ points: newValue, updated_at: new Date().toISOString() })
+                .update({ points: newValue, updated_at: getNowInFortaleza().toISOString() })
                 .eq('id', rule.id);
 
             if (error) throw error;
@@ -212,8 +213,8 @@ export const AdminRules: React.FC = () => {
                 </div>
 
                 <div className={`p-6 rounded-2xl shadow-lg text-white transition-all duration-500 ${modifiedRules > 0
-                    ? 'bg-gradient-to-br from-red-500 to-red-600 shadow-red-200 animate-pulse'
-                    : 'bg-gradient-to-br from-green-500 to-green-600 shadow-green-200'
+                    ? 'bg-linear-to-br from-red-500 to-red-600 shadow-red-200 animate-pulse'
+                    : 'bg-linear-to-br from-green-500 to-green-600 shadow-green-200'
                     }`}>
                     <div className="flex items-center justify-between mb-3">
                         <Award className="opacity-80" size={28} />

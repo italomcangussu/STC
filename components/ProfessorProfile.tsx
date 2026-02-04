@@ -2,12 +2,13 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { User, Professor, NonSocioStudent, Reservation, PlanType, Court } from '../types';
 import { Calendar, Users, Plus, Edit, CheckCircle, XCircle, Clock, MapPin, DollarSign, Wallet, Loader2, AlertCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { getNowInFortaleza } from '../utils';
 
 // --- HELPER: Student Card ---
 const StudentCard: React.FC<{ student: NonSocioStudent, onEdit: (s: NonSocioStudent) => void, onToggleStatus: (id: string) => void }> = ({ student, onEdit, onToggleStatus }) => {
     const isMaster = student.planType === 'Card Mensal';
     const isActive = student.planStatus === 'active';
-    const isExpired = isMaster && (!student.masterExpirationDate || new Date(student.masterExpirationDate) < new Date());
+    const isExpired = isMaster && (!student.masterExpirationDate || new Date(student.masterExpirationDate + 'T00:00:00') < getNowInFortaleza());
 
     let statusLabel = 'Ativo';
     let statusColor = 'text-green-600 bg-green-50';
@@ -39,7 +40,7 @@ const StudentCard: React.FC<{ student: NonSocioStudent, onEdit: (s: NonSocioStud
                 </span>
                 {isMaster && (
                     <span className="text-xs text-stone-400">
-                        {student.masterExpirationDate ? `Vence: ${new Date(student.masterExpirationDate).toLocaleDateString()}` : 'Sem validade definida'}
+                        {student.masterExpirationDate ? `Vence: ${new Date(student.masterExpirationDate + 'T12:00:00').toLocaleDateString('pt-BR', { timeZone: 'America/Fortaleza' })}` : 'Sem validade definida'}
                     </span>
                 )}
             </div>
@@ -171,7 +172,8 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
         .filter(r => r.type === 'Aula' && r.professorId === professorRecord?.id && r.status === 'active')
         .sort((a, b) => new Date(a.date + 'T' + a.startTime).getTime() - new Date(b.date + 'T' + b.startTime).getTime());
 
-    const todaysClasses = myClasses.filter(r => r.date === new Date().toISOString().split('T')[0]);
+    const today = getNowInFortaleza().toISOString().split('T')[0];
+    const todaysClasses = myClasses.filter(r => r.date === today);
 
     // --- HANDLERS ---
     const handleSaveStudent = async () => {
@@ -386,7 +388,7 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                                 return (
                                     <div key={r.id} className="bg-white p-3 rounded-lg border border-stone-100 flex justify-between items-center">
                                         <div>
-                                            <p className="font-bold text-stone-700 text-sm">{new Date(r.date + 'T12:00:00').toLocaleDateString('pt-BR')} • {r.startTime}</p>
+                                            <p className="font-bold text-stone-700 text-sm">{new Date(r.date + 'T12:00:00').toLocaleDateString('pt-BR', { timeZone: 'America/Fortaleza' })} • {r.startTime}</p>
                                             <p className="text-xs text-stone-500">{court?.name} • {studentName}</p>
                                         </div>
                                     </div>
@@ -411,7 +413,7 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                         {/* PENDING / EXPIRED SECTION */}
                         {myStudents.some(s => {
                             const isMaster = s.planType === 'Card Mensal';
-                            const isExpired = isMaster && (!s.masterExpirationDate || new Date(s.masterExpirationDate) < new Date());
+                            const isExpired = isMaster && (!s.masterExpirationDate || new Date(s.masterExpirationDate + 'T00:00:00') < getNowInFortaleza());
                             const isInactive = s.planStatus !== 'active';
                             return isMaster && (isExpired || isInactive);
                         }) && (
@@ -422,7 +424,7 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                                     <div className="grid gap-3">
                                         {myStudents.filter(s => {
                                             const isMaster = s.planType === 'Card Mensal';
-                                            const isExpired = isMaster && (!s.masterExpirationDate || new Date(s.masterExpirationDate) < new Date());
+                                            const isExpired = isMaster && (!s.masterExpirationDate || new Date(s.masterExpirationDate + 'T00:00:00') < getNowInFortaleza());
                                             const isInactive = s.planStatus !== 'active';
                                             return isMaster && (isExpired || isInactive);
                                         }).map(student => (
@@ -438,7 +440,7 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                             <div className="grid gap-3">
                                 {myStudents.filter(s => {
                                     const isMaster = s.planType === 'Card Mensal';
-                                    const isExpired = isMaster && (!s.masterExpirationDate || new Date(s.masterExpirationDate) < new Date());
+                                    const isExpired = isMaster && (!s.masterExpirationDate || new Date(s.masterExpirationDate + 'T00:00:00') < getNowInFortaleza());
                                     const isInactive = s.planStatus !== 'active';
                                     return !isMaster || (!isExpired && !isInactive);
                                 }).map(student => (
@@ -491,7 +493,7 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                                     </p>
                                     {editingStudent?.masterExpirationDate && (
                                         <p className="text-[10px] text-purple-600 mt-2 font-semibold">
-                                            Validade atual: {new Date(editingStudent.masterExpirationDate).toLocaleDateString('pt-BR')}
+                                            Validade atual: {new Date(editingStudent.masterExpirationDate + 'T12:00:00').toLocaleDateString('pt-BR', { timeZone: 'America/Fortaleza' })}
                                         </p>
                                     )}
                                 </div>

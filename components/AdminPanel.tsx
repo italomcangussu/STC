@@ -9,6 +9,7 @@ import { Dashboard } from './Dashboard';
 import { Reservation, User, Championship, Challenge, AccessRequest, Match, Consumption, Product, NonSocioStudent } from '../types';
 import { formatDateBr, getDayName } from '../utils';
 import { supabase } from '../lib/supabase';
+import { getNowInFortaleza, formatDate } from '../utils';
 import { AdminUserEditor } from './AdminUserEditor';
 import { AdminMatchCreator } from './AdminMatchCreator';
 
@@ -25,7 +26,7 @@ import { AdminStudents } from './AdminStudents';
 // --- Helpers ---
 const addMinutes = (time: string, minutes: number): string => {
     const [h, m] = time.split(':').map(Number);
-    const date = new Date();
+    const date = getNowInFortaleza();
     date.setHours(h, m + minutes);
     return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 };
@@ -45,7 +46,7 @@ interface NewChallengeModalProps {
 const NewChallengeModal: React.FC<NewChallengeModalProps> = ({ onClose, onSave, profiles, courts }) => {
     const [challengerId, setChallengerId] = useState('');
     const [challengedId, setChallengedId] = useState('');
-    const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+    const [date, setDate] = useState(formatDate(getNowInFortaleza()));
     const [time, setTime] = useState('');
     const [courtId, setCourtId] = useState(courts.length > 0 ? courts[0].id : '');
     const [loading, setLoading] = useState(false);
@@ -285,7 +286,7 @@ const ReservasTab: React.FC = () => {
 
     const filteredReservations = reservations.filter(r =>
         filter === 'all' || r.type === filter
-    ).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    ).sort((a, b) => new Date(b.date + 'T12:00:00').getTime() - new Date(a.date + 'T12:00:00').getTime());
 
     const handleCancel = async (id: string) => {
         await supabase.from('reservations').update({ status: 'cancelled' }).eq('id', id);
@@ -462,7 +463,7 @@ const DesafiosTab: React.FC = () => {
                     score_a: scoreA,
                     score_b: scoreB,
                     winner_id: winnerId,
-                    date: new Date().toISOString(), // Or usage date
+                    date: getNowInFortaleza().toISOString(), // Or usage date
                     status: 'finished'
                 })
                 .select()
@@ -542,7 +543,7 @@ const DesafiosTab: React.FC = () => {
                 status: 'scheduled',
                 date: data.date, // If challenge has date
                 reservation_id: resData.id,
-                created_at: new Date().toISOString()
+                created_at: getNowInFortaleza().toISOString()
             })
             .select()
             .single();
@@ -781,7 +782,7 @@ const AnunciosTab: React.FC = () => {
                                     <p className="text-sm text-stone-500 mt-1 line-clamp-2">{ann.message}</p>
                                     <div className="flex gap-2 mt-2 text-[10px] text-stone-400">
                                         {ann.showOnce && <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded">Única vez</span>}
-                                        {ann.expiresAt && <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded">Expira: {new Date(ann.expiresAt).toLocaleDateString('pt-BR')}</span>}
+                                        {ann.expiresAt && <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded">Expira: {new Date(ann.expiresAt).toLocaleDateString('pt-BR', { timeZone: 'America/Fortaleza' })}</span>}
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2">
@@ -989,7 +990,7 @@ const SociosTab: React.FC = () => {
                         <div key={req.id} className="bg-white p-3 rounded-xl border border-amber-200 flex justify-between items-center">
                             <div>
                                 <p className="text-sm font-bold text-stone-800">+{req.phone}</p>
-                                <p className="text-[10px] text-stone-400">Pendente desde {new Date(req.createdAt).toLocaleDateString('pt-BR')}</p>
+                                <p className="text-[10px] text-stone-400">Pendente desde {new Date(req.createdAt).toLocaleDateString('pt-BR', { timeZone: 'America/Fortaleza' })}</p>
                             </div>
                             <div className="flex gap-2">
                                 <button

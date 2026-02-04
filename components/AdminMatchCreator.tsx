@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { User, Court } from '../types';
 import { supabase } from '../lib/supabase';
 import { X, Save, Trophy, Calendar, Clock, User as UserIcon, CheckCircle, AlertCircle, Loader2, Minus, Plus } from 'lucide-react';
+import { getNowInFortaleza, formatDate } from '../utils';
 
 interface AdminMatchCreatorProps {
     isOpen: boolean;
@@ -18,7 +19,7 @@ export const AdminMatchCreator: React.FC<AdminMatchCreatorProps> = ({ isOpen, on
     // Form State
     const [playerAId, setPlayerAId] = useState('');
     const [playerBId, setPlayerBId] = useState('');
-    const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+    const [date, setDate] = useState(formatDate(getNowInFortaleza()));
     const [time, setTime] = useState('12:00');
     const [courtId, setCourtId] = useState(courts.length > 0 ? courts[0].id : '');
 

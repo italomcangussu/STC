@@ -5,6 +5,7 @@ import {
     Users, Plus, Search, Edit, Trash2, CheckCircle, AlertCircle,
     Calendar, Loader2, DollarSign, X
 } from 'lucide-react';
+import { getNowInFortaleza, formatDate, formatDateBr } from '../utils';
 
 const CARD_MENSAL_PRICE = 200;
 
@@ -21,7 +22,7 @@ export const AdminStudents: React.FC = () => {
 
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [paymentStudent, setPaymentStudent] = useState<NonSocioStudent | null>(null);
-    const [paymentDate, setPaymentDate] = useState(new Date().toISOString().slice(0, 10));
+    const [paymentDate, setPaymentDate] = useState(formatDate(getNowInFortaleza()));
     const [processing, setProcessing] = useState(false);
 
     useEffect(() => {
@@ -99,7 +100,7 @@ export const AdminStudents: React.FC = () => {
     // --- Payment Logic ---
     const handleOpenPayment = (student: NonSocioStudent) => {
         setPaymentStudent(student);
-        setPaymentDate(new Date().toISOString().slice(0, 10));
+        setPaymentDate(formatDate(getNowInFortaleza()));
         setShowPaymentModal(true);
     };
 
@@ -111,7 +112,7 @@ export const AdminStudents: React.FC = () => {
             // Calculate Expiration: Payment Date + 1 Month
             // Example: 2026-01-15 -> 2026-02-15
             // Handle edge cases: Jan 31 -> Feb 28/29?
-            const payDate = new Date(paymentDate);
+            const payDate = new Date(paymentDate + 'T00:00:00');
             // We want same day next month
             const expDate = new Date(payDate);
             expDate.setMonth(expDate.getMonth() + 1);
@@ -128,7 +129,7 @@ export const AdminStudents: React.FC = () => {
             const { error: payError } = await supabase.from('student_payments').insert({
                 student_id: paymentStudent.id,
                 amount: CARD_MENSAL_PRICE,
-                payment_date: new Date(paymentDate).toISOString(), // save full timestamp with offset? using provided date at 00:00
+                payment_date: getNowInFortaleza().toISOString(), // save full timestamp with offset? using provided date at 00:00
                 valid_until: expDate.toISOString(),
                 approved_by: (await supabase.auth.getUser()).data.user?.id
             });
@@ -196,7 +197,7 @@ export const AdminStudents: React.FC = () => {
             ) : (
                 <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                     {filteredStudents.map(student => {
-                        const isExpired = !student.masterExpirationDate || new Date(student.masterExpirationDate) < new Date();
+                        const isExpired = !student.masterExpirationDate || new Date(student.masterExpirationDate + 'T00:00:00') < getNowInFortaleza();
                         const isActive = student.planStatus === 'active' && !isExpired;
                         const profName = professors.find(p => p.id === student.professorId)?.name || 'N/A';
 
@@ -238,7 +239,7 @@ export const AdminStudents: React.FC = () => {
                                         </span>
                                         {student.masterExpirationDate && (
                                             <span className={`text-xs font-mono font-bold ${isActive ? 'text-green-600' : 'text-red-400'}`}>
-                                                Vence: {new Date(student.masterExpirationDate).toLocaleDateString()}
+                                                Vence: {formatDateBr(student.masterExpirationDate)}
                                             </span>
                                         )}
                                     </div>

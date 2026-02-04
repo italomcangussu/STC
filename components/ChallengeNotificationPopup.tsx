@@ -117,13 +117,13 @@ export const ChallengeNotificationPopup: React.FC<ChallengeNotificationPopupProp
     // Format date for display
     const formatDate = (dateStr?: string) => {
         if (!dateStr) return '';
-        const date = new Date(dateStr + 'T00:00:00');
+        const date = new Date(dateStr + 'T12:00:00'); // Consistent parsing
         return date.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
     };
 
     if (loading) {
         return (
-            <div className="fixed inset-0 bg-black/70 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
+            <div className="fixed inset-0 bg-black/70 z-100 flex items-center justify-center p-4 backdrop-blur-sm">
                 <div className="bg-white rounded-2xl p-8 flex items-center justify-center">
                     <Loader2 className="animate-spin text-saibro-600" size={32} />
                 </div>
@@ -134,10 +134,10 @@ export const ChallengeNotificationPopup: React.FC<ChallengeNotificationPopupProp
     if (!challenge) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/70 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 bg-black/70 z-100 flex items-center justify-center p-4 backdrop-blur-sm">
             <div className="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl animate-in zoom-in slide-in-from-bottom-4 duration-300">
                 {/* Header */}
-                <div className="bg-gradient-to-r from-indigo-600 to-indigo-500 p-6 text-center text-white relative overflow-hidden">
+                <div className="bg-linear-to-r from-indigo-600 to-indigo-500 p-6 text-center text-white relative overflow-hidden">
                     <div className="absolute -top-10 -left-10 w-32 h-32 bg-white/10 rounded-full" />
                     <div className="absolute -bottom-10 -right-10 w-24 h-24 bg-white/10 rounded-full" />
 
@@ -154,7 +154,7 @@ export const ChallengeNotificationPopup: React.FC<ChallengeNotificationPopupProp
                 <div className="p-6 space-y-4">
                     {/* Challenger Info */}
                     <div className="bg-stone-50 p-4 rounded-xl flex items-center gap-4">
-                        <div className="w-14 h-14 bg-gradient-to-br from-saibro-200 to-saibro-400 rounded-full flex items-center justify-center text-white font-bold text-xl">
+                        <div className="w-14 h-14 bg-linear-to-br from-saibro-200 to-saibro-400 rounded-full flex items-center justify-center text-white font-bold text-xl">
                             {challenger?.name?.charAt(0) || '?'}
                         </div>
                         <div>

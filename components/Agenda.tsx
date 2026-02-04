@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { User, Reservation, ReservationType, NonSocioStudent, PlanType, Professor } from '../types';
@@ -5,7 +6,7 @@ import { Calendar as CalIcon, ChevronLeft, ChevronRight, Plus, X, Calendar, Cloc
 import { supabase } from '../lib/supabase';
 import { ScoreModal } from './ScoreModal';
 import { Challenge } from '../types';
-import { getNowInFortaleza, formatDate, formatDateBr } from '../utils';
+import { getNowInFortaleza, formatDate, addDays, formatDateBr } from '../utils';
 
 // Court type
 interface Court {
@@ -19,7 +20,9 @@ interface Court {
 const getDayName = (dateStr: string) => {
     const days = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
     // Interpret dateStr as YYYY-MM-DD in local time (which matches our shifted strategy)
-    const d = new Date(dateStr + 'T12:00:00');
+    const d = new Date(dateStr + 'T12:00:00'); // Keep this for now as it's date parsing only
+    // Ideally we'd parse timezone aware but 'T12:00:00' hack is usually safe for pure date logic if consistent.
+    // Let's leave this one alone if it's just parsing the date string from the URL/State.
     return days[d.getDay()];
 };
 
@@ -27,16 +30,12 @@ const getDayName = (dateStr: string) => {
 // const formatDate = ... (imported from utils)
 // const formatDateBr = ... (imported from utils)
 
-const addDays = (date: Date, days: number) => {
-    const result = new Date(date);
-    result.setDate(result.getDate() + days);
-    return result;
-};
+
 
 const addMinutes = (time: string, minutes: number) => {
     const [h, m] = time.split(':').map(Number);
     // Create a dummy date for calculation
-    const date = new Date();
+    const date = getNowInFortaleza();
     date.setHours(h, m, 0, 0);
     date.setMinutes(date.getMinutes() + minutes);
     return date.toTimeString().slice(0, 5);
@@ -109,8 +108,8 @@ const ManageParticipantsModal: React.FC<{
                                 <button
                                     key={user.id}
                                     onClick={() => toggleId(user.id)}
-                                    className={`w-full flex items-center justify-between p-3 rounded-2xl border-2 transition-all ${isSelected ? 'bg-saibro-50 border-saibro-500' : 'bg-white border-stone-50 hover:border-stone-200'
-                                        }`}
+                                    className={`w - full flex items - center justify - between p - 3 rounded - 2xl border - 2 transition - all ${isSelected ? 'bg-saibro-50 border-saibro-500' : 'bg-white border-stone-50 hover:border-stone-200'
+                                        } `}
                                 >
                                     <div className="flex items-center gap-3 text-left">
                                         <img src={user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`} className="w-10 h-10 rounded-full border border-stone-100" />
@@ -118,16 +117,16 @@ const ManageParticipantsModal: React.FC<{
                                             <p className="font-bold text-stone-800 text-sm">{user.name}</p>
                                             <p className="text-[10px] text-stone-400">{user.phone ? `+${user.phone}` : user.email}</p>
                                         </div>
-                                    </div>
+                                    </div >
                                     <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 transition-colors ${isSelected ? 'bg-saibro-500 border-saibro-500 text-white' : 'border-stone-200'
                                         }`}>
                                         {isSelected && <Check size={14} strokeWidth={3} />}
                                     </div>
-                                </button>
+                                </button >
                             );
                         })}
-                    </div>
-                </div>
+                    </div >
+                </div >
 
                 <div className="p-4 border-t border-stone-100 flex gap-3">
                     <button
@@ -148,8 +147,8 @@ const ManageParticipantsModal: React.FC<{
                         Confirmar ({selectedIds.length})
                     </button>
                 </div>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 };
 
@@ -698,8 +697,8 @@ const ReservationDetails: React.FC<{
                                                 <div>
                                                     <div className="flex items-center gap-2 mb-0.5">
                                                         <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">{s.planType}</span>
-                                                        <span className={`text-[9px] px-1.5 py-0.5 rounded-md font-black border ${new Date(s.masterExpirationDate || '') < new Date() ? 'bg-red-50 text-red-600 border-red-100' : 'bg-green-50 text-green-600 border-green-100'}`}>
-                                                            {new Date(s.masterExpirationDate || '') < new Date() ? 'VENCIDO' : 'ATIVO'}
+                                                        <span className={`text-[9px] px-1.5 py-0.5 rounded-md font-black border ${new Date(s.masterExpirationDate || '') < getNowInFortaleza() ? 'bg-red-50 text-red-600 border-red-100' : 'bg-green-50 text-green-600 border-green-100'}`}>
+                                                            {new Date(s.masterExpirationDate || '') < getNowInFortaleza() ? 'VENCIDO' : 'ATIVO'}
                                                         </span>
                                                     </div>
                                                     <p className="font-black text-stone-800 text-lg uppercase leading-tight tracking-tight">{s.name}</p>
@@ -1078,187 +1077,208 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
     const [selectedReservation, setSelectedReservation] = useState<Reservation | undefined>(undefined);
     const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null);
 
-    // Fetch profiles and reservations from Supabase
-    useEffect(() => {
-        const fetchData = async () => {
-            setLoading(true);
-            try {
-                // Fetch profiles
-                const { data: profilesData, error: profilesError } = await supabase
-                    .from('profiles')
-                    .select('*')
-                    .eq('is_active', true);
+    // Stable fetchData function
+    const fetchData = React.useCallback(async (showLoading = true) => {
+        if (showLoading) setLoading(true);
+        try {
+            // Fetch profiles
+            const { data: profilesData, error: profilesError } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('is_active', true);
 
-                if (profilesError) throw profilesError;
+            if (profilesError) throw profilesError;
 
-                if (profilesData) {
-                    const mappedProfiles: User[] = profilesData.map(p => ({
-                        id: p.id,
-                        name: p.name || 'Sem Nome',
-                        email: p.email || '',
-                        phone: p.phone || '',
-                        role: p.role || 'socio',
-                        category: p.category,
-                        avatar: p.avatar_url,
-                        balance: 0,
-                        isActive: p.is_active !== false
-                    }));
-                    setProfiles(mappedProfiles);
-                }
-
-                // Fetch reservations from Supabase
-                const { data: reservationsData, error: reservationsError } = await supabase
-                    .from('reservations')
-                    .select('*')
-                    .order('date', { ascending: true })
-                    .order('start_time', { ascending: true });
-
-                let mappedReservations: Reservation[] = [];
-                if (reservationsError) {
-                    console.log('Reservations table may not exist yet, using empty array');
-                } else if (reservationsData) {
-                    mappedReservations = reservationsData.map(r => ({
-                        id: r.id,
-                        type: r.type,
-                        date: r.date,
-                        startTime: r.start_time,
-                        endTime: r.end_time,
-                        courtId: r.court_id,
-                        creatorId: r.creator_id,
-                        participantIds: r.participant_ids || [],
-                        guestName: r.guest_name,
-                        guestResponsibleId: r.guest_responsible_id,
-                        professorId: r.professor_id,
-                        studentType: r.student_type,
-                        nonSocioStudentId: r.non_socio_student_id,
-                        observation: r.observation,
-                        status: r.status || 'active'
-                    }));
-                }
-
-                // Store all in a temporary array
-                let allCombined = [...mappedReservations];
-
-                // Fetch Championship Matches
-                const { data: matchesData } = await supabase
-                    .from('matches')
-                    .select(`
-                        *,
-                        championships(name),
-                        championship_rounds(name)
-                    `)
-                    .not('scheduled_date', 'is', null)
-                    .not('scheduled_time', 'is', null)
-                    .neq('status', 'finished');
-
-                if (matchesData) {
-                    const mappedMatches: Reservation[] = matchesData.map(m => {
-                        const [hours, minutes] = (m.scheduled_time || '00:00').split(':').map(Number);
-                        const endDate = new Date();
-                        endDate.setHours(hours, minutes + 90, 0);
-                        const endTime = endDate.toTimeString().slice(0, 5);
-
-                        return {
-                            id: `match_${m.id}`,
-                            matchId: m.id,
-                            type: 'Campeonato',
-                            date: m.scheduled_date!,
-                            startTime: (m.scheduled_time || '').slice(0, 5),
-                            endTime: endTime,
-                            courtId: m.court_id!,
-                            creatorId: 'system',
-                            participantIds: [m.player_a_id, m.player_b_id].filter(Boolean) as string[],
-                            scoreA: m.score_a || [0],
-                            scoreB: m.score_b || [0],
-                            guestName: null,
-                            guestResponsibleId: null,
-                            professorId: null,
-                            studentType: null,
-                            nonSocioStudentId: null,
-                            observation: `${(m.championships as any)?.name || 'Campeonato'} | ${(m.championship_rounds as any)?.name || 'Rodada'}`,
-                            status: 'active'
-                        };
-                    });
-                    allCombined = [...allCombined, ...mappedMatches];
-                }
-
-                // Deduplicate by slot (date, time, court)
-                const uniqueReservations = Array.from(
-                    allCombined.reduce((map, item) => {
-                        const key = `${item.date}_${item.startTime}_${item.courtId}`;
-                        const existing = map.get(key);
-
-                        // Keep 'match_' items over standard ones if same slot
-                        if (!existing || item.id.startsWith('match_')) {
-                            map.set(key, item);
-                        }
-                        return map;
-                    }, new Map<string, Reservation>()).values()
-                );
-
-                setReservations(uniqueReservations);
-
-                // Fetch courts
-                const { data: courtsData } = await supabase
-                    .from('courts')
-                    .select('id, name, type, is_active');
-
-                setCourts((courtsData || []).map(c => ({
-                    id: c.id,
-                    name: c.name,
-                    type: c.type,
-                    isActive: c.is_active
-                })));
-
-                // Fetch professors
-                const { data: professorsData } = await supabase
-                    .from('professors')
-                    .select('id, user_id, bio, is_active, profiles(name)');
-
-                setProfessors((professorsData || []).map(p => ({
+            if (profilesData) {
+                const mappedProfiles: User[] = profilesData.map(p => ({
                     id: p.id,
-                    userId: p.user_id,
-                    name: (p.profiles as any)?.name || 'Professor',
-                    isActive: p.is_active,
-                    bio: p.bio
-                })));
-
-                // Fetch non-socio students
-                const { data: studentsData } = await supabase
-                    .from('non_socio_students')
-                    .select('*');
-
-                setNonSocioStudents((studentsData || []).map(s => ({
-                    id: s.id,
-                    name: s.name,
-                    planType: s.plan_type,
-                    planStatus: s.plan_status,
-                    masterExpirationDate: s.master_expiration_date,
-                    professorId: s.professor_id
-                })));
-
-                // Fetch Challenges
-                const { data: challengesData } = await supabase.from('challenges').select('*');
-                setChallenges((challengesData || []).map(c => ({
-                    id: c.id,
-                    status: c.status,
-                    monthRef: c.month_ref,
-                    createdAt: c.created_at,
-                    challengerId: c.challenger_id,
-                    challengedId: c.challenged_id,
-                    reservationId: c.reservation_id,
-                    matchId: c.match_id
-                })));
-            } catch (err) {
-                console.error('Error fetching data:', err);
-                setReservations([]);
-            } finally {
-                setLoading(false);
+                    name: p.name || 'Sem Nome',
+                    email: p.email || '',
+                    phone: p.phone || '',
+                    role: p.role || 'socio',
+                    category: p.category,
+                    avatar: p.avatar_url,
+                    balance: 0,
+                    isActive: p.is_active !== false
+                }));
+                setProfiles(mappedProfiles);
             }
-        };
 
-        fetchData();
+            // Fetch reservations from Supabase
+            const { data: reservationsData, error: reservationsError } = await supabase
+                .from('reservations')
+                .select('*')
+                .order('date', { ascending: true })
+                .order('start_time', { ascending: true });
+
+            let mappedReservations: Reservation[] = [];
+            if (reservationsError) {
+                console.log('Reservations table may not exist yet, using empty array');
+            } else if (reservationsData) {
+                mappedReservations = reservationsData.map(r => ({
+                    id: r.id,
+                    type: r.type,
+                    date: r.date,
+                    startTime: r.start_time,
+                    endTime: r.end_time,
+                    courtId: r.court_id,
+                    creatorId: r.creator_id,
+                    participantIds: r.participant_ids || [],
+                    guestName: r.guest_name,
+                    guestResponsibleId: r.guest_responsible_id,
+                    professorId: r.professor_id,
+                    studentType: r.student_type,
+                    nonSocioStudentId: r.non_socio_student_id,
+                    observation: r.observation,
+                    status: r.status || 'active'
+                }));
+            }
+
+            // Store all in a temporary array
+            let allCombined = [...mappedReservations];
+
+            // Fetch Championship Matches
+            const { data: matchesData } = await supabase
+                .from('matches')
+                .select(`
+                    *,
+                    championships(name),
+                    championship_rounds(name)
+                `)
+                .not('scheduled_date', 'is', null)
+                .not('scheduled_time', 'is', null)
+                .neq('status', 'finished');
+
+            if (matchesData) {
+                const mappedMatches: Reservation[] = matchesData.map(m => {
+                    const [hours, minutes] = (m.scheduled_time || '00:00').split(':').map(Number);
+                    const endDate = getNowInFortaleza();
+                    endDate.setHours(hours, minutes + 90, 0);
+                    const endTime = endDate.toTimeString().slice(0, 5);
+
+                    return {
+                        id: `match_${m.id}`,
+                        matchId: m.id,
+                        type: 'Campeonato',
+                        date: m.scheduled_date!,
+                        startTime: (m.scheduled_time || '').slice(0, 5),
+                        endTime: endTime,
+                        courtId: m.court_id!,
+                        creatorId: 'system',
+                        participantIds: [m.player_a_id, m.player_b_id].filter(Boolean) as string[],
+                        scoreA: m.score_a || [0],
+                        scoreB: m.score_b || [0],
+                        guestName: null,
+                        guestResponsibleId: null,
+                        professorId: null,
+                        studentType: null,
+                        nonSocioStudentId: null,
+                        observation: `${(m.championships as any)?.name || 'Campeonato'} | ${(m.championship_rounds as any)?.name || 'Rodada'}`,
+                        status: 'active'
+                    };
+                });
+                allCombined = [...allCombined, ...mappedMatches];
+            }
+
+            // Deduplicate by slot (date, time, court)
+            const uniqueReservations = Array.from(
+                allCombined.reduce((map, item) => {
+                    const key = `${item.date}_${item.startTime}_${item.courtId}`;
+                    const existing = map.get(key);
+
+                    // Keep 'match_' items over standard ones if same slot
+                    if (!existing || item.id.startsWith('match_')) {
+                        map.set(key, item);
+                    }
+                    return map;
+                }, new Map<string, Reservation>()).values()
+            );
+
+            setReservations(uniqueReservations);
+
+            // Fetch courts
+            const { data: courtsData } = await supabase
+                .from('courts')
+                .select('id, name, type, is_active');
+
+            setCourts((courtsData || []).map(c => ({
+                id: c.id,
+                name: c.name,
+                type: c.type,
+                isActive: c.is_active
+            })));
+
+            // Fetch professors
+            const { data: professorsData } = await supabase
+                .from('professors')
+                .select('id, user_id, bio, is_active, profiles(name)');
+
+            setProfessors((professorsData || []).map(p => ({
+                id: p.id,
+                userId: p.user_id,
+                name: (p.profiles as any)?.name || 'Professor',
+                isActive: p.is_active,
+                bio: p.bio
+            })));
+
+            // Fetch non-socio students
+            const { data: studentsData } = await supabase
+                .from('non_socio_students')
+                .select('*');
+
+            setNonSocioStudents((studentsData || []).map(s => ({
+                id: s.id,
+                name: s.name,
+                planType: s.plan_type,
+                planStatus: s.plan_status,
+                masterExpirationDate: s.master_expiration_date,
+                professorId: s.professor_id
+            })));
+
+            // Fetch Challenges
+            const { data: challengesData } = await supabase.from('challenges').select('*');
+            setChallenges((challengesData || []).map(c => ({
+                id: c.id,
+                status: c.status,
+                monthRef: c.month_ref,
+                createdAt: c.created_at,
+                challengerId: c.challenger_id,
+                challengedId: c.challenged_id,
+                reservationId: c.reservation_id,
+                matchId: c.match_id
+            })));
+        } catch (err) {
+            console.error('Error fetching data:', err);
+            setReservations([]);
+        } finally {
+            if (showLoading) setLoading(false);
+        }
     }, []);
+
+    // Initial Fetch
+    useEffect(() => {
+        fetchData(true);
+    }, [fetchData]);
+
+    // Supabase Real-time Subscription
+    useEffect(() => {
+        const channel = supabase
+            .channel('agenda-changes')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'reservations' }, () => {
+                fetchData(false);
+            })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'matches' }, () => {
+                fetchData(false);
+            })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'challenges' }, () => {
+                fetchData(false);
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [fetchData]);
 
     // Helper to get user by ID from fetched profiles
     const getUserById = (id: string): User | undefined => {
@@ -1519,7 +1539,7 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                     score_a: scoreA,
                     score_b: scoreB,
                     winner_id: winnerId,
-                    date: new Date().toISOString(),
+                    date: getNowInFortaleza().toISOString(),
                     status: 'finished'
                 })
                 .select()
@@ -1562,7 +1582,7 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
     };
 
     // --- Navigation ---
-    const goToToday = () => setCurrentDate(new Date());
+    const goToToday = () => setCurrentDate(getNowInFortaleza());
     const navigate = (direction: 'prev' | 'next') => {
         const diff = view === 'week' ? 7 : 1;
         setCurrentDate(addDays(currentDate, direction === 'next' ? diff : -diff));
@@ -1629,7 +1649,7 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                 {days.map(day => {
                     const dayStr = formatDate(day);
                     const dayRes = filteredReservations.filter(r => r.date === dayStr);
-                    const isToday = dayStr === formatDate(new Date());
+                    const isToday = dayStr === formatDate(getNowInFortaleza());
 
                     return (
                         <div key={dayStr} className={`rounded-xl border ${isToday ? 'bg-orange-50/50 border-orange-200' : 'bg-transparent border-transparent'}`}>
@@ -1684,7 +1704,7 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                         const dateStr = formatDate(new Date(year, month, d));
                         const dayRes = filteredReservations.filter(r => r.date === dateStr);
                         const hasEvent = dayRes.length > 0;
-                        const isToday = dateStr === formatDate(new Date());
+                        const isToday = dateStr === formatDate(getNowInFortaleza());
 
                         // Check for special types to color the dot
                         const hasComp = dayRes.some(r => r.type === 'Campeonato');
@@ -1911,7 +1931,7 @@ const AddReservationModal: React.FC<{
 
     // 1. Basic Fields
     const [type, setType] = useState<ReservationType>(initialData?.type || 'Play');
-    const [date, setDate] = useState(initialData?.date || new Date().toISOString().split('T')[0]);
+    const [date, setDate] = useState(initialData?.date || formatDate(getNowInFortaleza()));
     const [courtId, setCourtId] = useState(initialData?.courtId || (courts.length > 0 ? courts[0].id : ''));
     const [startTime, setStartTime] = useState(initialData?.startTime || '');
     const [duration, setDuration] = useState(getInitialDuration());
@@ -2071,7 +2091,7 @@ const AddReservationModal: React.FC<{
                     const student = localNonSocioStudents.find(s => s.id === pid);
                     if (student?.planType === 'Card Mensal') {
                         if (student.planStatus !== 'active') return `Bloqueado: ${student.name} Inativo.`;
-                        if (!student.masterExpirationDate || new Date(student.masterExpirationDate) < new Date(date)) {
+                        if (!student.masterExpirationDate || new Date(student.masterExpirationDate + 'T23:59:59') < new Date(date + 'T12:00:00')) {
                             return `Bloqueado: Card Mensal de ${student.name} Vencido.`;
                         }
                     }

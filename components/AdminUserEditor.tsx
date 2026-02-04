@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { User } from '../types';
 import { supabase } from '../lib/supabase';
 import { X, Save, Camera, Shield, Trophy, Mail, Phone, User as UserIcon, AlertTriangle, Loader2, DollarSign } from 'lucide-react';
+import { getNowInFortaleza } from '../utils';
 
 interface AdminUserEditorProps {
     user: User;
@@ -52,7 +53,7 @@ export const AdminUserEditor: React.FC<AdminUserEditorProps> = ({ user, onClose,
                         amount: pointsDelta,
                         event_type: 'Manual Adjustment',
                         description: adjustmentReason,
-                        earned_date: new Date().toISOString()
+                        earned_date: getNowInFortaleza().toISOString()
                     });
 
                 if (pointsError) throw pointsError;

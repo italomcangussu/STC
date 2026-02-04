@@ -118,7 +118,7 @@ export const AdminTournaments: React.FC = () => {
                                 <div>
                                     <h3 className="font-bold text-stone-800 text-lg group-hover:text-saibro-600 transition-colors">{t.name}</h3>
                                     <div className="flex gap-4 mt-1 text-xs font-medium text-stone-400">
-                                        <span className="flex items-center gap-1"><Calendar size={12} /> {new Date(t.startDate!).toLocaleDateString()}</span>
+                                        <span className="flex items-center gap-1"><Calendar size={12} /> {new Date(t.startDate!).toLocaleDateString('pt-BR', { timeZone: 'America/Fortaleza' })}</span>
                                         <span className="uppercase tracking-wide px-2 py-0.5 rounded bg-stone-100 text-stone-500">{t.status}</span>
                                     </div>
                                 </div>
@@ -198,7 +198,7 @@ export const AdminTournaments: React.FC = () => {
                             <button
                                 onClick={handleCreate}
                                 disabled={creating || !newName || !newStartDate}
-                                className="flex-[2] py-3.5 bg-saibro-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-saibro-700 disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-saibro-200 hover:shadow-xl transition-all active:scale-95"
+                                className="flex-2 py-3.5 bg-saibro-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-saibro-700 disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-saibro-200 hover:shadow-xl transition-all active:scale-95"
                             >
                                 {creating ? <Loader2 className="animate-spin" /> : 'Criar Torneio'}
                             </button>

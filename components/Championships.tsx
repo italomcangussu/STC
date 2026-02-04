@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Trophy, Calendar, CalendarCheck, History, ListOrdered, GitMerge, ChevronDown, Loader2, Download, Share2, Users, Shirt, ChevronLeft, ChevronRight, Clock, MapPin, Info, Save, Plus, Minus } from 'lucide-react';
 import { Championship, Match, User, ChampionshipRound } from '../types';
-import { getMatchWinner, formatDateBr } from '../utils';
+import { getMatchWinner, formatDateBr, getNowInFortaleza, formatDate } from '../utils';
 import { supabase } from '../lib/supabase';
 import { LiveScoreboard } from './LiveScoreboard';
 import html2canvas from 'html2canvas';
@@ -222,9 +222,11 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                 scoreB: m.score_b || [],
                 winnerId: m.winner_id,
                 date: m.date,
-                scheduled_time: m.scheduled_time,  // Use snake_case
-                scheduled_date: m.scheduled_date,  // Use snake_case
-                court_id: m.court_id,              // Use snake_case
+                scheduled_time: m.scheduled_time,
+                scheduled_date: m.scheduled_date,
+                scheduledTime: m.scheduled_time,
+                scheduledDate: m.scheduled_date,
+                court_id: m.court_id,
                 status: m.status || 'pending',
                 championship_group_id: m.championship_group_id,
                 round_id: m.round_id
@@ -370,7 +372,14 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
         // Update local state
         setMatches(prev => prev.map(m =>
             m.id === schedulingMatch.id
-                ? { ...m, scheduledDate: date, scheduledTime: time, status: 'pending' } // Optimistic update
+                ? {
+                    ...m,
+                    scheduledDate: date,
+                    scheduledTime: time,
+                    scheduled_date: date,
+                    scheduled_time: time,
+                    status: 'pending'
+                }
                 : m
         ));
 
@@ -394,7 +403,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                 score_b: scoreB,
                 winner_id: winnerId,
                 status: 'finished',
-                date: new Date().toISOString().split('T')[0]
+                date: formatDate(getNowInFortaleza())
             })
             .eq('id', matchId);
 
@@ -407,7 +416,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
         // Update local state
         setMatches(prev => prev.map(m =>
             m.id === matchId
-                ? { ...m, scoreA, scoreB, winnerId, status: 'finished' as const, date: new Date().toISOString().split('T')[0] }
+                ? { ...m, scoreA, scoreB, winnerId, status: 'finished' as const, date: formatDate(getNowInFortaleza()) }
                 : m
         ));
 

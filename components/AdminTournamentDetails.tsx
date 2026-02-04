@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Championship, ChampionshipRegistration, Match, User } from '../types';
 import { ArrowLeft, Users, Trophy, Settings, Loader2, Plus, Trash2, Shuffle, AlertCircle } from 'lucide-react';
+import { getNowInFortaleza } from '../utils';
 
 interface TournamentManagerProps {
     tournamentId: string;
@@ -87,7 +88,7 @@ export const TournamentManager: React.FC<TournamentManagerProps> = ({ tournament
                         player_b_id: playerB.user_id,
                         registration_a_id: playerA.id,
                         registration_b_id: playerB.id,
-                        scheduled_date: new Date().toISOString().split('T')[0] // Default to today
+                        scheduled_date: getNowInFortaleza().toISOString().split('T')[0] // Default to today
                     });
                 } else {
                     // Bye (Free Pass) logic or just leave unmatched for manual

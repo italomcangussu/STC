@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { User, Championship, Match, ChampionshipGroup } from '../types';
 import { supabase } from '../lib/supabase';
+import { getNowInFortaleza } from '../utils';
 
 interface NewChampionshipProps {
     onClose: () => void;
@@ -19,7 +20,7 @@ export const NewChampionship: React.FC<NewChampionshipProps> = ({ onClose, onSav
         description: '',
         format: 'mata-mata',
         participantIds: [],
-        startDate: new Date().toISOString().split('T')[0],
+        startDate: getNowInFortaleza().toISOString().split('T')[0],
         ptsVictory: 3,
         ptsDefeat: 0,
         ptsWoVictory: 3,

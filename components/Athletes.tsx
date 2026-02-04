@@ -3,6 +3,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Search, Trophy, Calendar, Mail, User as UserIcon, ArrowLeft, TrendingUp, Activity, MapPin, Clock, History, Crown, AlertCircle, ArrowRight, Edit2, Loader2 } from 'lucide-react';
 import { User, Match, Reservation } from '../types';
 import { supabase } from '../lib/supabase';
+import { getNowInFortaleza, formatDateBr } from '../utils';
 import { EditProfileModal } from './EditProfileModal';
 import { fetchRanking, canChallenge, PlayerStats, CLASS_ORDER } from '../lib/rankingService';
 
@@ -104,7 +105,7 @@ const AthleteProfile: React.FC<AthleteProfileProps> = ({ userId, currentUser, us
                 challenger_id: currentUser.id,
                 challenged_id: userId,
                 status: 'proposed',
-                month_ref: new Date().toISOString().slice(0, 7)
+                month_ref: getNowInFortaleza().toISOString().slice(0, 7)
             }).then(({ error }) => {
                 if (error) {
                     alert('Erro ao criar desafio');
@@ -403,7 +404,7 @@ const AthleteProfile: React.FC<AthleteProfileProps> = ({ userId, currentUser, us
                                             </div>
                                         </div>
                                         <div className="text-[10px] text-stone-400 text-right">
-                                            {m.date ? new Date(m.date).toLocaleDateString() : 'Data N/A'}
+                                            {m.date ? formatDateBr(m.date.split('T')[0]) : 'Data N/A'}
                                         </div>
                                     </div>
                                 );
@@ -434,7 +435,7 @@ const AthleteProfile: React.FC<AthleteProfileProps> = ({ userId, currentUser, us
                                 ) : (
                                     userReservations.map(r => {
                                         const court = courts.find(c => c.id === r.courtId);
-                                        const isUpcoming = new Date(r.date + 'T' + r.startTime) > new Date();
+                                        const isUpcoming = new Date(r.date + 'T' + r.startTime) > getNowInFortaleza();
 
                                         return (
                                             <div key={r.id} className={`p-4 rounded-xl border flex items-center gap-3 transition-shadow ${isUpcoming ? 'bg-white border-saibro-200 shadow-sm hover:shadow-md' : 'bg-stone-50 border-stone-100 opacity-75'}`}>
@@ -447,7 +448,7 @@ const AthleteProfile: React.FC<AthleteProfileProps> = ({ userId, currentUser, us
                                                         <span className="text-[10px] uppercase font-bold text-stone-400">{r.type}</span>
                                                     </div>
                                                     <p className="text-xs text-stone-500">
-                                                        {new Date(r.date + 'T12:00:00').toLocaleDateString()}
+                                                        {formatDateBr(r.date)}
                                                     </p>
                                                 </div>
                                             </div>

@@ -6,7 +6,7 @@ import {
 import { Championship, Match, User } from '../types';
 import { ResultModal } from './Championships';
 import { supabase } from '../lib/supabase';
-import { getMatchWinner } from '../utils';
+import { getNowInFortaleza, getMatchWinner, formatDate } from '../utils';
 
 interface AdminChampionshipDetailProps {
     championship: Championship;
@@ -152,7 +152,7 @@ export const AdminChampionshipDetail: React.FC<AdminChampionshipDetailProps> = (
                 score_b: scoreB,
                 winner_id: winnerId,
                 status: 'finished',
-                date: new Date().toISOString().split('T')[0]
+                date: getNowInFortaleza().toISOString().split('T')[0]
             })
             .eq('id', matchId);
 
@@ -169,7 +169,7 @@ export const AdminChampionshipDetail: React.FC<AdminChampionshipDetailProps> = (
             scoreB,
             winnerId,
             status: 'finished' as const,
-            date: new Date().toISOString().split('T')[0]
+            date: formatDate(getNowInFortaleza())
         } : m));
         setEditingMatch(null);
     };
@@ -226,7 +226,7 @@ export const AdminChampionshipDetail: React.FC<AdminChampionshipDetailProps> = (
                                     data.status === 'finished' ? 'Finalizado' : 'Rascunho'}
                             </span>
                             <span className="text-stone-400 flex items-center gap-1">
-                                <Calendar size={12} /> {data.startDate ? new Date(data.startDate).toLocaleDateString() : 'Indefinido'}
+                                <Calendar size={12} /> {data.startDate ? new Date(data.startDate + 'T12:00:00').toLocaleDateString('pt-BR', { timeZone: 'America/Fortaleza' }) : 'Indefinido'}
                             </span>
                         </div>
                     </div>
