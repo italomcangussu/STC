@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Championship, ChampionshipRound, Match, ChampionshipGroup, ChampionshipRegistration } from '../types';
-import { Play, Calendar, Trophy, AlertTriangle, Loader2, Check, Clock, ChevronLeft, ChevronRight, Info, MapPin, Trash2, Shuffle } from 'lucide-react';
+import { Play, Calendar, Trophy, AlertTriangle, Loader2, Check, Clock, ChevronLeft, ChevronRight, Info, MapPin, Trash2, Shuffle, Target } from 'lucide-react';
 import { generateRoundRobinMatches, getRoundDates } from '../lib/championshipUtils';
 import { MatchScheduleModal } from './MatchScheduleModal';
 import { GroupStandingsCard } from './GroupStandingsCard';
@@ -9,9 +9,12 @@ import { calculateGroupStandings } from '../lib/championshipUtils';
 import { formatDateBr } from '../utils';
 import { MatchGenerationModal } from './MatchGenerationModal';
 import { MatchExportPreview } from './MatchExportPreview';
+import { BracketView } from './BracketView';
+import { StandingsDetailModal } from './StandingsDetailModal';
 import html2canvas from 'html2canvas';
 import { Share2, Download, X } from 'lucide-react';
 import { getNowInFortaleza } from '../utils';
+
 
 interface Props {
     championship: Championship;
@@ -31,7 +34,7 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
     const [selectedRoundIndex, setSelectedRoundIndex] = useState(0);
 
     // Tab for navigation
-    const [activeTab, setActiveTab] = useState<'matches' | 'standings'>('matches');
+    const [activeTab, setActiveTab] = useState<'matches' | 'standings' | 'bracket'>('matches');
 
     // Scheduling State
     const [schedulingMatch, setSchedulingMatch] = useState<Match | null>(null);
@@ -48,6 +51,10 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
     const [exportGroupId, setExportGroupId] = useState<string>('');
     const exportRef = React.useRef<HTMLDivElement>(null);
     const [exporting, setExporting] = useState(false);
+
+    // Standings Detail Modal State
+    const [showStandingsDetail, setShowStandingsDetail] = useState(false);
+    const [selectedGroupForDetail, setSelectedGroupForDetail] = useState<{ group: any, standings: any[] } | null>(null);
 
     useEffect(() => {
         fetchData();
@@ -465,6 +472,12 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                 >
                     CLASSIFICAÇÃO
                 </button>
+                <button
+                    onClick={() => setActiveTab('bracket')}
+                    className={`flex-1 py-3 rounded-2xl text-[10px] font-black tracking-widest transition-all ${activeTab === 'bracket' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-400'}`}
+                >
+                    CHAVEAMENTO
+                </button>
             </div>
 
             {activeTab === 'matches' ? (
@@ -595,7 +608,7 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                         );
                     })()}
                 </div>
-            ) : (
+            ) : activeTab === 'standings' ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-20">
                     {groups.map(group => {
                         const groupMatches = matches.filter(m => m.championship_group_id === group.id);
@@ -609,9 +622,50 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                                 groupName={`${group.category} - Grupo ${group.group_name}`}
                                 standings={standings}
                                 registrations={registrations}
+                                onShowDetails={() => {
+                                    setSelectedGroupForDetail({ group, standings });
+                                    setShowStandingsDetail(true);
+                                }}
                             />
                         );
                     })}
+                </div>
+            ) : (
+                // Bracket Tab - Sub-tabs by class
+                <div className="space-y-6 pb-20">
+                    {/* Class Sub-Tabs */}
+                    {(() => {
+                        const categories = [...new Set(groups.map(g => g.category))];
+                        const [selectedCategory, setSelectedCategory] = React.useState(categories[0] || '');
+
+                        return (
+                            <>
+                                <div className="flex bg-white p-2 rounded-3xl shadow-sm border border-stone-200 gap-2 overflow-x-auto">
+                                    {categories.map(category => (
+                                        <button
+                                            key={category}
+                                            onClick={() => setSelectedCategory(category)}
+                                            className={`flex-1 min-w-[100px] py-3 px-4 rounded-2xl text-xs font-black tracking-wider transition-all ${
+                                                selectedCategory === category
+                                                    ? 'bg-saibro-600 text-white shadow-md'
+                                                    : 'text-stone-400 hover:text-stone-600'
+                                            }`}
+                                        >
+                                            {category}
+                                        </button>
+                                    ))}
+                                </div>
+
+                                {/* Bracket View */}
+                                <BracketView
+                                    groups={groups}
+                                    registrations={registrations}
+                                    matches={matches}
+                                    category={selectedCategory}
+                                />
+                            </>
+                        );
+                    })()}
                 </div>
             )}
             {/* Modals */}
@@ -723,6 +777,21 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* Standings Detail Modal */}
+            {showStandingsDetail && selectedGroupForDetail && (
+                <StandingsDetailModal
+                    isOpen={showStandingsDetail}
+                    onClose={() => {
+                        setShowStandingsDetail(false);
+                        setSelectedGroupForDetail(null);
+                    }}
+                    standings={selectedGroupForDetail.standings}
+                    registrations={registrations}
+                    groupName={selectedGroupForDetail.group.group_name}
+                    category={selectedGroupForDetail.group.category}
+                />
             )}
         </div>
     );

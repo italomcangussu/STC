@@ -1,10 +1,11 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { User, Reservation, ReservationType, NonSocioStudent, PlanType, Professor } from '../types';
+import { User, Reservation, ReservationType, NonSocioStudent, PlanType, Professor, Match } from '../types';
 import { Calendar as CalIcon, ChevronLeft, ChevronRight, Plus, X, Calendar, Clock, MapPin, Users, Check, AlertCircle, Search, Filter, Loader2, Save, Trash2, Edit2, Play, Trophy, UserCog, ArrowRight, Info, UserPlus, LogOut, Wallet, Pencil, UserMinus, Share2, ArrowLeft, Minus, CheckCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { ScoreModal } from './ScoreModal';
+import { LiveScoreboard } from './LiveScoreboard';
 import { StandardModal } from './StandardModal';
 import { TennisCourtAnimation } from './ui/TennisCourtAnimation';
 import { Challenge } from '../types';
@@ -19,6 +20,47 @@ interface Court {
 }
 
 // --- HELPERS ---
+const getSetWinner = (scoreA: number, scoreB: number, isSuperTiebreak = false): 'A' | 'B' | null => {
+    if (isSuperTiebreak) {
+        if (scoreA >= 10 && scoreA - scoreB >= 2) return 'A';
+        if (scoreB >= 10 && scoreB - scoreA >= 2) return 'B';
+        return null;
+    }
+    if (scoreA === 7) return 'A';
+    if (scoreB === 7) return 'B';
+    if (scoreA === 6 && scoreB <= 4) return 'A';
+    if (scoreB === 6 && scoreA <= 4) return 'B';
+    return null;
+};
+
+// Check if user can launch score (same logic as LiveScoreboard)
+const canLaunchScore = (match: Match, userId?: string, isAdmin?: boolean): boolean => {
+    if (isAdmin) return true;
+    if (!userId) return false;
+    
+    // Must be one of the players
+    if (match.playerAId !== userId && match.playerBId !== userId) return false;
+    // If no scheduled time, allow anytime if created
+    if (!match.scheduled_date || !match.scheduled_time) return true;
+    
+    // Use Fortaleza time for checks
+    const now = getNowInFortaleza();
+    const today = formatDate(now);
+    
+    // Must be on/after match day (allowing past days if pending?? Logic in Championships was strict 'today')
+    // Let's keep strict 'today' or allow if status is not finished?
+    // User request: "se horário for após inicio do jogo"
+    // Championship logic was:
+    if (match.scheduled_date !== today) return false;
+    
+    // Check if current time >= scheduled time
+    const [hours, minutes] = match.scheduled_time.split(':').map(Number);
+    const scheduledDateTime = new Date(now); // now is Fortaleza time
+    scheduledDateTime.setHours(hours, minutes, 0, 0);
+    
+    return now >= scheduledDateTime;
+};
+
 const getDayName = (dateStr: string) => {
     const days = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
     // Interpret dateStr as YYYY-MM-DD in local time (which matches our shifted strategy)
@@ -392,7 +434,8 @@ const ReservationDetails: React.FC<{
     onLeave: (id: string) => void;
     onUpdate: (res: Reservation) => void;
     onFinishMatch: (matchId: string, winnerId: string, scoreA: number[], scoreB: number[]) => Promise<void>;
-}> = ({ res, currentUser, profiles, courts, professors, nonSocioStudents, onClose, onEdit, onCancel, onJoin, onLeave, onUpdate, onFinishMatch }) => {
+    onDataRefresh?: () => void;
+}> = ({ res, currentUser, profiles, courts, professors, nonSocioStudents, onClose, onEdit, onCancel, onJoin, onLeave, onUpdate, onFinishMatch, onDataRefresh }) => {
     const [showManageParticipants, setShowManageParticipants] = useState(false);
     const [showGuestModal, setShowGuestModal] = useState(false);
     const court = courts.find(c => c.id === res.courtId);
@@ -649,25 +692,150 @@ const ReservationDetails: React.FC<{
                                 )}
                             </div>
                         ) : res.type === 'Campeonato' ? (
-                            <div className="bg-white rounded-2xl p-6 border border-yellow-200 shadow-sm flex flex-col items-center gap-6">
-                                <div className="flex items-center justify-center w-full gap-8">
-                                    <div className="flex flex-col items-center gap-2">
-                                        <img src={participants[0]?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${participants[0]?.id || 'p1'}`} className="w-20 h-20 rounded-full border-4 border-stone-100 shadow-lg object-cover" alt="" />
-                                        <span className="font-black text-stone-800 text-sm">{participants[0]?.name || 'Jogador 1'}</span>
+                            (() => {
+                                const hasScore = res.scoreA && res.scoreA.length > 0 && (res.scoreA[0] > 0 || (res.scoreB && res.scoreB.length > 0 && res.scoreB[0] > 0));
+
+                                if (hasScore) {
+                                    // Calculate winners
+                                    const set1Winner = getSetWinner(res.scoreA![0], res.scoreB![0]);
+                                    const set2Winner = res.scoreA![1] !== undefined && res.scoreB![1] !== undefined ? getSetWinner(res.scoreA![1], res.scoreB![1]) : null;
+
+                                    const setsWonA = (set1Winner === 'A' ? 1 : 0) + (set2Winner === 'A' ? 1 : 0);
+                                    const setsWonB = (set1Winner === 'B' ? 1 : 0) + (set2Winner === 'B' ? 1 : 0);
+                                    const showThirdSet = setsWonA === 1 && setsWonB === 1;
+
+                                    const set3Winner = showThirdSet && res.scoreA![2] !== undefined && res.scoreB![2] !== undefined ? getSetWinner(res.scoreA![2], res.scoreB![2], true) : null;
+
+                                    const displayScoresA = showThirdSet ? res.scoreA : res.scoreA!.slice(0, 2);
+                                    const displayScoresB = showThirdSet ? res.scoreB : res.scoreB!.slice(0, 2);
+
+                                    const isWinnerA = setsWonA >= 2 || (showThirdSet && set3Winner === 'A');
+                                    const isWinnerB = setsWonB >= 2 || (showThirdSet && set3Winner === 'B');
+
+                                    return (
+                                        <div className="bg-white rounded-2xl p-6 border border-yellow-200 shadow-sm flex flex-col gap-6">
+                                            {/* Player A Row */}
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="relative">
+                                                        <img src={participants[0]?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${participants[0]?.id || 'p1'}`} className={`w-14 h-14 rounded-full border-4 object-cover ${isWinnerA ? 'border-saibro-500 shadow-md ring-2 ring-saibro-100' : 'border-stone-100'}`} alt="" />
+                                                        {isWinnerA && <div className="absolute -top-1 -right-1 bg-amber-500 text-white p-0.5 rounded-full shadow-lg"><Trophy size={10} fill="currentColor" /></div>}
+                                                    </div>
+                                                    <div className="flex flex-col">
+                                                        <span className={`font-black text-lg ${isWinnerA ? 'text-stone-900' : 'text-stone-600'}`}>{participants[0]?.name || 'Jogador 1'}</span>
+                                                        {isWinnerA && <span className="text-[10px] font-black uppercase text-saibro-600 tracking-wider">Vencedor</span>}
+                                                    </div>
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    {displayScoresA?.map((s, i) => (
+                                                        <span key={i} className={`w-10 h-10 flex items-center justify-center rounded-xl text-lg font-black shadow-sm transition-all ${
+                                                            (i === 0 && set1Winner === 'A') || (i === 1 && set2Winner === 'A') || (i === 2 && set3Winner === 'A')
+                                                                ? 'bg-linear-to-br from-saibro-500 to-saibro-600 text-white shadow-saibro-200'
+                                                                : 'bg-stone-100 text-stone-400'
+                                                        }`}>
+                                                            {s}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            {/* Player B Row */}
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="relative">
+                                                        <img src={participants[1]?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${participants[1]?.id || 'p2'}`} className={`w-14 h-14 rounded-full border-4 object-cover ${isWinnerB ? 'border-saibro-500 shadow-md ring-2 ring-saibro-100' : 'border-stone-100'}`} alt="" />
+                                                        {isWinnerB && <div className="absolute -top-1 -right-1 bg-amber-500 text-white p-0.5 rounded-full shadow-lg"><Trophy size={10} fill="currentColor" /></div>}
+                                                    </div>
+                                                    <div className="flex flex-col">
+                                                        <span className={`font-black text-lg ${isWinnerB ? 'text-stone-900' : 'text-stone-600'}`}>{participants[1]?.name || 'Jogador 2'}</span>
+                                                        {isWinnerB && <span className="text-[10px] font-black uppercase text-saibro-600 tracking-wider">Vencedor</span>}
+                                                    </div>
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    {displayScoresB?.map((s, i) => (
+                                                        <span key={i} className={`w-10 h-10 flex items-center justify-center rounded-xl text-lg font-black shadow-sm transition-all ${
+                                                            (i === 0 && set1Winner === 'B') || (i === 1 && set2Winner === 'B') || (i === 2 && set3Winner === 'B')
+                                                                ? 'bg-linear-to-br from-saibro-500 to-saibro-600 text-white shadow-saibro-200'
+                                                                : 'bg-stone-100 text-stone-400'
+                                                        }`}>
+                                                            {s}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            <div className="w-full h-px bg-stone-100 mt-2"></div>
+                                            <div className="text-center">
+                                                <p className="text-[10px] font-black text-yellow-600 uppercase tracking-widest">Campeonato</p>
+                                                <p className="font-black text-stone-800 text-lg uppercase tracking-tight">{res.observation?.split('|')[0]}</p>
+                                                <p className="text-xs text-stone-500 font-bold mt-1">{res.observation?.split('|')[1]}</p>
+                                            </div>
+                                        </div>
+                                    );
+                                }
+
+                                // Check if can launch live score
+                                const matchObj: Match = {
+                                    id: res.matchId!,
+                                    type: 'Campeonato',
+                                    playerAId: participants[0]?.id || res.participantIds[0],
+                                    playerBId: participants[1]?.id || res.participantIds[1],
+                                    scoreA: res.scoreA || [0, 0, 0],
+                                    scoreB: res.scoreB || [0, 0, 0],
+                                    scheduled_date: res.date,
+                                    scheduled_time: res.startTime,
+                                    status: 'pending'
+                                };
+
+                                if (canLaunchScore(matchObj, currentUser?.id, currentUser?.role === 'admin')) {
+                                    return (
+                                        <div className="bg-white rounded-2xl border border-saibro-200 shadow-sm overflow-hidden flex flex-col">
+                                            <div className="bg-saibro-50 px-4 py-2 border-b border-saibro-100 flex items-center justify-between">
+                                                <span className="text-[10px] font-black text-saibro-600 uppercase tracking-widest flex items-center gap-1">
+                                                    <Trophy size={10} /> Lançamento de Resultado
+                                                </span>
+                                                <span className="text-[10px] text-saibro-400 font-bold animate-pulse">EM ANDAMENTO</span>
+                                            </div>
+
+                                            <div className="p-0">
+                                                <LiveScoreboard
+                                                    match={matchObj}
+                                                    profiles={participants as User[]}
+                                                    currentUser={currentUser}
+                                                    onScoreSaved={() => onDataRefresh?.()}
+                                                />
+                                            </div>
+
+                                            <div className="bg-stone-50 px-4 py-2 border-t border-stone-100 text-center">
+                                                <p className="font-black text-stone-600 text-xs uppercase tracking-tight">{res.observation?.split('|')[0]}</p>
+                                                <p className="text-[10px] text-stone-400 font-bold mt-0.5">{res.observation?.split('|')[1]}</p>
+                                            </div>
+                                        </div>
+                                    );
+                                }
+
+                                return (
+                                    <div className="bg-white rounded-2xl p-6 border border-yellow-200 shadow-sm flex flex-col items-center gap-6">
+                                        <div className="flex items-center justify-center w-full gap-8">
+                                            <div className="flex flex-col items-center gap-2">
+                                                <img src={participants[0]?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${participants[0]?.id || 'p1'}`} className="w-20 h-20 rounded-full border-4 border-stone-100 shadow-lg object-cover" alt="" />
+                                                <span className="font-black text-stone-800 text-sm">{participants[0]?.name || 'Jogador 1'}</span>
+                                            </div>
+                                            <div className="text-3xl font-black text-stone-300 italic">VS</div>
+                                            <div className="flex flex-col items-center gap-2">
+                                                <img src={participants[1]?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${participants[1]?.id || 'p2'}`} className="w-20 h-20 rounded-full border-4 border-stone-100 shadow-lg object-cover" alt="" />
+                                                <span className="font-black text-stone-800 text-sm">{participants[1]?.name || 'Jogador 2'}</span>
+                                            </div>
+                                        </div>
+                                        <div className="w-full h-px bg-stone-100"></div>
+                                        <div className="text-center">
+                                            <p className="text-[10px] font-black text-yellow-600 uppercase tracking-widest">Campeonato</p>
+                                            <p className="font-black text-stone-800 text-lg uppercase tracking-tight">{res.observation?.split('|')[0]}</p>
+                                            <p className="text-xs text-stone-500 font-bold mt-1">{res.observation?.split('|')[1]}</p>
+                                        </div>
                                     </div>
-                                    <div className="text-3xl font-black text-stone-300 italic">VS</div>
-                                    <div className="flex flex-col items-center gap-2">
-                                        <img src={participants[1]?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${participants[1]?.id || 'p2'}`} className="w-20 h-20 rounded-full border-4 border-stone-100 shadow-lg object-cover" alt="" />
-                                        <span className="font-black text-stone-800 text-sm">{participants[1]?.name || 'Jogador 2'}</span>
-                                    </div>
-                                </div>
-                                <div className="w-full h-px bg-stone-100"></div>
-                                <div className="text-center">
-                                    <p className="text-[10px] font-black text-yellow-600 uppercase tracking-widest">Campeonato</p>
-                                    <p className="font-black text-stone-800 text-lg uppercase tracking-tight">{res.observation?.split('|')[0]}</p>
-                                    <p className="text-xs text-stone-500 font-bold mt-1">{res.observation?.split('|')[1]}</p>
-                                </div>
-                            </div>
+                                );
+                            })()
                         ) : (
                             /* AULA INFO Stylization */
                             <div className="space-y-3">
@@ -1151,8 +1319,7 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                     championship_rounds(name)
                 `)
                 .not('scheduled_date', 'is', null)
-                .not('scheduled_time', 'is', null)
-                .neq('status', 'finished');
+                .not('scheduled_time', 'is', null);
 
             if (matchesData) {
                 const mappedMatches: Reservation[] = matchesData.map(m => {
@@ -1871,6 +2038,7 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                             onLeave={handleLeave}
                             onUpdate={handleSaveReservation}
                             onFinishMatch={handleFinishChampionshipMatch}
+                            onDataRefresh={() => fetchData(false)}
                         />
                     )}
 

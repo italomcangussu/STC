@@ -107,7 +107,38 @@ function createMatch(
 }
 
 /**
- * Calculate Group Standings
+ * Helper: Get Head-to-Head wins between two players
+ */
+function getH2HWins(regIdA: string, regIdB: string, matches: Match[]): number {
+    const h2hMatches = matches.filter(m =>
+        m.status === 'finished' &&
+        ((m.registration_a_id === regIdA && m.registration_b_id === regIdB) ||
+         (m.registration_a_id === regIdB && m.registration_b_id === regIdA))
+    );
+
+    return h2hMatches.filter(m => {
+        // Count sets to determine winner
+        let setsA = 0;
+        let setsB = 0;
+
+        m.scoreA.forEach((sA, idx) => {
+            const sB = m.scoreB[idx];
+            if (sA === 0 && sB === 0 && idx > 0) return; // Skip empty sets
+            if (sA > sB) setsA++;
+            else if (sB > sA) setsB++;
+        });
+
+        // Check if player A won this match
+        if (m.registration_a_id === regIdA) {
+            return setsA > setsB;
+        } else {
+            return setsB > setsA;
+        }
+    }).length;
+}
+
+/**
+ * Calculate Group Standings with H2H tiebreaker
  */
 export function calculateGroupStandings(
     registrations: ChampionshipRegistration[],
@@ -163,22 +194,19 @@ export function calculateGroupStandings(
                 // WO Handling is specific
             } else {
                 // Determine set winner
-                // Simple logic: 6-x, 7-5, 7-6, 10-x (supertie)
-                if (idx === 2) {
-                    if (sA > sB) setsA++; else if (sB > sA) setsB++;
-                } else {
-                    if (sA > sB) setsA++; else if (sB > sA) setsB++;
-                }
+                if (sA > sB) setsA++;
+                else if (sB > sA) setsB++;
             }
         });
 
         // WO Logic overrides scores
         if (match.is_walkover) {
-            if (match.walkover_winner_id === match.playerAId || match.winnerId === match.playerAId) { // Fallback check
-                // Check if winner is A via reg ID?
-                // The best way implies winnerId matches playerAId (if profiles linked)
-                // Or we check walkover_winner logic
-                // For now, let's trust match.winnerId logic
+            if (match.walkover_winner_id === match.playerAId || match.winnerId === match.playerAId) {
+                setsA = 2;
+                setsB = 0;
+            } else {
+                setsA = 0;
+                setsB = 2;
             }
         }
 
@@ -191,29 +219,6 @@ export function calculateGroupStandings(
         statB.setsLost += setsA;
         statB.gamesWon += gamesB;
         statB.gamesLost += gamesA;
-
-        // Points
-        const winnerIsA = match.is_walkover
-            ? (match.walkover_winner_id ? match.walkover_winner_id === match.playerAId : match.winnerId === match.playerAId)
-            : (setsA > setsB); // Simple winner check
-
-        // Use match.winnerId if reliable
-        // Actually best to resolve winner based on registration ID in caller, 
-        // but here we can infer from match.winnerId if it matches reg.user_id
-        // LIMITATION: guest players don't have user_id. 
-        // We should fix winner logic to store 'A' or 'B' or use registration_id for winner.
-
-        // Let's assume for calculating standings, we deduce winner from scores/WO
-        let regWinnerId = null;
-        if (match.is_walkover) {
-            // we need validation here. Assuming winnerId is set correctly.
-            if (match.winnerId) {
-                // Convert profile ID to Reg ID? Hard.
-                // Better if match stored winner_registration_id (we added walkover_winner_registration_id)
-                // If standard winner_id is used, we need to map back.
-            }
-            // For MVP, lets assume score reflects result (6-0 6-0 usually for WO)
-        }
 
         // Deterministic winner from scores/metadata
         const isWinA = (setsA > setsB) || (match.winnerId && match.playerAId === match.winnerId);
@@ -230,11 +235,23 @@ export function calculateGroupStandings(
     });
 
     return Object.values(standings).sort((a, b) => {
+        // 1º: Pontos
         if (b.points !== a.points) return b.points - a.points;
-        if (b.wins !== a.wins) return b.wins - a.wins; // Most wins usually 2nd tiebreak
-        // H2H would go here (complex to check in simple sort)
-        if ((b.setsWon - b.setsLost) !== (a.setsWon - a.setsLost)) return (b.setsWon - b.setsLost) - (a.setsWon - a.setsLost);
-        return (b.gamesWon - b.gamesLost) - (a.gamesWon - a.gamesLost);
+
+        // 2º: Head-to-Head (confronto direto)
+        const h2hA = getH2HWins(a.userId, b.userId, matches);
+        const h2hB = getH2HWins(b.userId, a.userId, matches);
+        if (h2hA !== h2hB) return h2hB - h2hA;
+
+        // 3º: Saldo de Sets
+        const setsDiffA = a.setsWon - a.setsLost;
+        const setsDiffB = b.setsWon - b.setsLost;
+        if (setsDiffB !== setsDiffA) return setsDiffB - setsDiffA;
+
+        // 4º: Saldo de Games
+        const gamesDiffA = a.gamesWon - a.gamesLost;
+        const gamesDiffB = b.gamesWon - b.gamesLost;
+        return gamesDiffB - gamesDiffA;
     });
 }
 
