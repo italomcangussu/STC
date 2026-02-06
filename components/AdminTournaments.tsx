@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Championship } from '../types';
 import { Trophy, Calendar, Plus, ChevronRight, Loader2, Users } from 'lucide-react';
+import { StandardModal } from './StandardModal';
 // Sub-component for managing specific tournament details
 import { TournamentManager } from './AdminTournamentDetails';
 
@@ -131,9 +132,8 @@ export const AdminTournaments: React.FC = () => {
 
             {/* Create Modal */}
             {/* Create Modal - Premium Design */}
-            {showCreateModal && (
-                <div className="fixed inset-0 bg-stone-900/40 backdrop-blur-md z-50 flex items-start sm:items-center justify-center p-4 sm:p-4 pt-10 sm:pt-4 animate-in fade-in duration-300">
-                    <div className="bg-white rounded-[32px] sm:rounded-[40px] w-full max-w-md shadow-2xl animate-in slide-in-from-bottom duration-500 overflow-hidden max-h-[85vh] sm:max-h-none flex flex-col">
+            <StandardModal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} verticalAlign="start">
+                <div className="bg-white rounded-[32px] sm:rounded-[40px] w-full max-w-md shadow-2xl overflow-hidden max-h-[85vh] sm:max-h-none flex flex-col">
 
                         {/* Header */}
                         <div className="px-8 py-6 bg-white/80 backdrop-blur-xl border-b border-stone-100/50 flex justify-between items-center">
@@ -204,8 +204,7 @@ export const AdminTournaments: React.FC = () => {
                             </button>
                         </div>
                     </div>
-                </div>
-            )}
+                </StandardModal>
         </div>
     );
 };

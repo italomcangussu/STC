@@ -3,6 +3,7 @@ import { User, Court } from '../types';
 import { supabase } from '../lib/supabase';
 import { X, Save, Trophy, Calendar, Clock, User as UserIcon, CheckCircle, AlertCircle, Loader2, Minus, Plus } from 'lucide-react';
 import { getNowInFortaleza, formatDate } from '../utils';
+import { StandardModal } from './StandardModal';
 
 interface AdminMatchCreatorProps {
     isOpen: boolean;
@@ -187,8 +188,8 @@ export const AdminMatchCreator: React.FC<AdminMatchCreatorProps> = ({ isOpen, on
     };
 
     return (
-        <div className="fixed inset-0 z-70 flex items-start sm:items-center justify-center p-4 sm:p-4 pt-10 sm:pt-4 bg-stone-900/40 backdrop-blur-md animate-in fade-in duration-300">
-            <div className="bg-white w-full max-w-lg rounded-[32px] sm:rounded-[40px] shadow-2xl overflow-hidden flex flex-col max-h-[85vh] sm:max-h-[90vh] animate-in slide-in-from-bottom duration-500">
+        <StandardModal isOpen={isOpen} onClose={onClose} verticalAlign="start">
+            <div className="bg-white w-full max-w-lg rounded-[32px] sm:rounded-[40px] shadow-2xl overflow-hidden flex flex-col max-h-[85vh] sm:max-h-[90vh]">
 
                 {/* Header */}
                 <div className="px-8 py-6 border-b border-stone-100/50 bg-white/80 backdrop-blur-xl sticky top-0 z-10 flex justify-between items-center">
@@ -410,6 +411,6 @@ export const AdminMatchCreator: React.FC<AdminMatchCreatorProps> = ({ isOpen, on
                     </button>
                 </div>
             </div>
-        </div>
+        </StandardModal>
     );
 };

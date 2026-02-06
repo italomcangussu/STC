@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { StandardModal } from './StandardModal';
 import { Calendar, Clock, MapPin, X, Check, AlertCircle, Loader2 } from 'lucide-react';
 import { Match, Court } from '../types';
 import { formatDateBr } from '../utils';
@@ -32,14 +33,6 @@ export const MatchScheduleModal: React.FC<Props> = ({
     const [selectedCourtId, setSelectedCourtId] = useState(match.court_id || '');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
-
-    // Lock body scroll
-    useEffect(() => {
-        document.body.style.overflow = 'hidden';
-        return () => {
-            document.body.style.overflow = 'unset';
-        };
-    }, []);
 
     // Filter courts based on class (robust check)
     const availableCourts = courts.filter(court => {
@@ -99,28 +92,19 @@ export const MatchScheduleModal: React.FC<Props> = ({
     };
 
     return (
-        <div className="fixed inset-0 z-110 flex items-start justify-center p-0 sm:p-4">
-            {/* Backdrop */}
-            <div
-                className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300"
-                onClick={onClose}
-            />
-
-            <div className="relative bg-white sm:rounded-[2.5rem] w-full max-w-md overflow-hidden shadow-2xl animate-in slide-in-from-top duration-300 max-h-screen flex flex-col pt-safe pb-safe outline-none">
+        <StandardModal isOpen={true} onClose={onClose}>
+            <div className="bg-white rounded-t-[2.5rem] sm:rounded-[2.5rem] w-full max-w-md overflow-hidden shadow-2xl flex flex-col pt-safe pb-safe max-h-[90vh]">
                 {/* Header */}
-                <div className="bg-saibro-50 p-6 border-b border-saibro-100 flex justify-between items-center flex-none">
-                    <div>
-                        <h3 className="text-lg font-black text-stone-900 leading-tight">Agendar Partida</h3>
-                        <p className="text-[10px] font-bold text-saibro-600 uppercase tracking-widest mt-1">
-                            {roundName} • {formatDateBr(roundStartDate)} a {formatDateBr(roundEndDate)}
-                        </p>
+                <div className="p-6 border-b border-stone-100 flex justify-between items-center bg-saibro-50/50 flex-none">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-saibro-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-orange-200">
+                            <Calendar size={20} />
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-black text-stone-800">Agendar Partida</h3>
+                            <p className="text-[10px] font-bold text-saibro-600 uppercase tracking-widest">{roundName}</p>
+                        </div>
                     </div>
-                    <button
-                        onClick={onClose}
-                        className="w-10 h-10 rounded-full bg-white shadow-sm border border-stone-100 flex items-center justify-center text-stone-400 hover:text-saibro-600 transition-all hover:rotate-90"
-                    >
-                        <X size={20} />
-                    </button>
                 </div>
 
                 {/* Content - Scrollable area */}
@@ -255,6 +239,6 @@ export const MatchScheduleModal: React.FC<Props> = ({
                     </button>
                 </div>
             </div>
-        </div>
+        </StandardModal>
     );
 };

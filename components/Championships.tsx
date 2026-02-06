@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Trophy, Calendar, CalendarCheck, History, ListOrdered, GitMerge, ChevronDown, Loader2, Download, Share2, Users, Shirt, ChevronLeft, ChevronRight, Clock, MapPin, Info, Save, Plus, Minus } from 'lucide-react';
 import { Championship, Match, User, ChampionshipRound } from '../types';
 import { getMatchWinner, formatDateBr, getNowInFortaleza, formatDate } from '../utils';
@@ -628,6 +629,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
     }
 
     return (
+        <>
         <div className="p-4 space-y-6 pb-24">
             {/* 1. HEADER PREMIUM */}
             <div className="bg-linear-to-br from-saibro-600 to-saibro-500 p-6 rounded-3xl shadow-xl text-white relative overflow-hidden">
@@ -1115,6 +1117,9 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
             </div>
 
             {/* 4. MODAL EDIT RESULT */}
+        </div>
+
+            {/* Modals rendered outside main container for full-screen overlay */}
             {
                 editingMatch && (
                     <ResultModal
@@ -1140,7 +1145,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                     />
                 )
             }
-        </div >
+        </>
     );
 };
 
@@ -1226,8 +1231,8 @@ export const ResultModal: React.FC<{ match: Match; profiles: User[]; onClose: ()
         return 'border-stone-200';
     };
 
-    return (
-        <div className="fixed inset-0 z-50 bg-stone-900/60 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
+    return createPortal(
+        <div className="fixed inset-0 z-999 bg-stone-900/60 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
             <div className="bg-white rounded-[2.5rem] w-full max-w-sm overflow-visible shadow-2xl animate-in zoom-in-95 duration-300 relative">
                 <button
                     onClick={onClose}
@@ -1347,7 +1352,8 @@ export const ResultModal: React.FC<{ match: Match; profiles: User[]; onClose: ()
                     )}
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };
 

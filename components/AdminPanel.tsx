@@ -12,6 +12,7 @@ import { supabase } from '../lib/supabase';
 import { getNowInFortaleza, formatDate } from '../utils';
 import { AdminUserEditor } from './AdminUserEditor';
 import { AdminMatchCreator } from './AdminMatchCreator';
+import { StandardModal } from './StandardModal';
 
 
 import { SuperSet } from './SuperSet';
@@ -112,8 +113,8 @@ const NewChallengeModal: React.FC<NewChallengeModalProps> = ({ onClose, onSave, 
     };
 
     return (
-        <div className="fixed inset-0 bg-black/60 z-60 flex items-center justify-center p-4 backdrop-blur-sm">
-            <div className="bg-white rounded-2xl p-6 w-full max-w-md space-y-5 shadow-2xl animate-in zoom-in duration-200">
+        <StandardModal isOpen={true} onClose={onClose}>
+            <div className="bg-white rounded-2xl p-6 w-full max-w-md space-y-5 shadow-2xl">
                 <div className="flex justify-between items-center border-b border-stone-100 pb-3">
                     <h3 className="text-xl font-bold text-saibro-800 flex items-center gap-2">
                         <Swords size={20} className="text-saibro-500" /> Novo Desafio
@@ -204,7 +205,7 @@ const NewChallengeModal: React.FC<NewChallengeModalProps> = ({ onClose, onSave, 
                     </button>
                 </div>
             </div>
-        </div>
+        </StandardModal>
     );
 };
 
@@ -806,76 +807,74 @@ const AnunciosTab: React.FC = () => {
             )}
 
             {/* Modal */}
-            {showModal && (
-                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-2xl w-full max-w-md p-6 space-y-4">
-                        <h3 className="text-lg font-bold">{editingAnn ? 'Editar Aviso' : 'Novo Aviso'}</h3>
+            <StandardModal isOpen={showModal} onClose={() => setShowModal(false)}>
+                <div className="bg-white rounded-2xl w-full max-w-md p-6 space-y-4">
+                    <h3 className="text-lg font-bold">{editingAnn ? 'Editar Aviso' : 'Novo Aviso'}</h3>
 
-                        <input
-                            type="text"
-                            value={title}
-                            onChange={e => setTitle(e.target.value)}
-                            placeholder="Título"
-                            className="w-full px-4 py-3 border border-stone-200 rounded-xl"
-                        />
+                    <input
+                        type="text"
+                        value={title}
+                        onChange={e => setTitle(e.target.value)}
+                        placeholder="Título"
+                        className="w-full px-4 py-3 border border-stone-200 rounded-xl"
+                    />
 
-                        <textarea
-                            value={message}
-                            onChange={e => setMessage(e.target.value)}
-                            placeholder="Mensagem"
-                            rows={4}
-                            className="w-full px-4 py-3 border border-stone-200 rounded-xl resize-none"
-                        />
+                    <textarea
+                        value={message}
+                        onChange={e => setMessage(e.target.value)}
+                        placeholder="Mensagem"
+                        rows={4}
+                        className="w-full px-4 py-3 border border-stone-200 rounded-xl resize-none"
+                    />
 
-                        <input
-                            type="text"
-                            value={imageUrl}
-                            onChange={e => setImageUrl(e.target.value)}
-                            placeholder="URL da imagem (opcional)"
-                            className="w-full px-4 py-3 border border-stone-200 rounded-xl"
-                        />
+                    <input
+                        type="text"
+                        value={imageUrl}
+                        onChange={e => setImageUrl(e.target.value)}
+                        placeholder="URL da imagem (opcional)"
+                        className="w-full px-4 py-3 border border-stone-200 rounded-xl"
+                    />
 
-                        <div className="flex items-center gap-4">
-                            <label className="flex items-center gap-2 text-sm">
-                                <input
-                                    type="checkbox"
-                                    checked={showOnce}
-                                    onChange={e => setShowOnce(e.target.checked)}
-                                    className="rounded"
-                                />
-                                Mostrar apenas uma vez
-                            </label>
-                        </div>
-
-                        <div>
-                            <label className="text-xs text-stone-500 block mb-1">Data de expiração (opcional)</label>
+                    <div className="flex items-center gap-4">
+                        <label className="flex items-center gap-2 text-sm">
                             <input
-                                type="date"
-                                value={expiresAt}
-                                onChange={e => setExpiresAt(e.target.value)}
-                                className="w-full px-4 py-3 border border-stone-200 rounded-xl"
+                                type="checkbox"
+                                checked={showOnce}
+                                onChange={e => setShowOnce(e.target.checked)}
+                                className="rounded"
                             />
-                        </div>
+                            Mostrar apenas uma vez
+                        </label>
+                    </div>
 
-                        <div className="flex gap-3 pt-2">
-                            <button
-                                onClick={() => setShowModal(false)}
-                                className="flex-1 py-3 border border-stone-200 rounded-xl font-bold text-stone-600"
-                            >
-                                Cancelar
-                            </button>
-                            <button
-                                onClick={handleSave}
-                                disabled={saving || !title.trim() || !message.trim()}
-                                className="flex-1 py-3 bg-saibro-600 text-white rounded-xl font-bold disabled:opacity-50 flex items-center justify-center gap-2"
-                            >
-                                {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-                                Salvar
-                            </button>
-                        </div>
+                    <div>
+                        <label className="text-xs text-stone-500 block mb-1">Data de expiração (opcional)</label>
+                        <input
+                            type="date"
+                            value={expiresAt}
+                            onChange={e => setExpiresAt(e.target.value)}
+                            className="w-full px-4 py-3 border border-stone-200 rounded-xl"
+                        />
+                    </div>
+
+                    <div className="flex gap-3 pt-2">
+                        <button
+                            onClick={() => setShowModal(false)}
+                            className="flex-1 py-3 border border-stone-200 rounded-xl font-bold text-stone-600"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            onClick={handleSave}
+                            disabled={saving || !title.trim() || !message.trim()}
+                            className="flex-1 py-3 bg-saibro-600 text-white rounded-xl font-bold disabled:opacity-50 flex items-center justify-center gap-2"
+                        >
+                            {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                            Salvar
+                        </button>
                     </div>
                 </div>
-            )}
+            </StandardModal>
         </div>
     );
 };

@@ -5,6 +5,7 @@ import { User, Reservation, ReservationType, NonSocioStudent, PlanType, Professo
 import { Calendar as CalIcon, ChevronLeft, ChevronRight, Plus, X, Calendar, Clock, MapPin, Users, Check, AlertCircle, Search, Filter, Loader2, Save, Trash2, Edit2, Play, Trophy, UserCog, ArrowRight, Info, UserPlus, LogOut, Wallet, Pencil, UserMinus, Share2, ArrowLeft, Minus, CheckCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { ScoreModal } from './ScoreModal';
+import { StandardModal } from './StandardModal';
 import { TennisCourtAnimation } from './ui/TennisCourtAnimation';
 import { Challenge } from '../types';
 import { getNowInFortaleza, formatDate, addDays, formatDateBr } from '../utils';
@@ -81,8 +82,8 @@ const ManageParticipantsModal: React.FC<{
     };
 
     return (
-        <div className="fixed inset-0 bg-stone-900/60 z-80 flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-md animate-in fade-in duration-300">
-            <div className="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col max-h-[90vh] animate-in slide-in-from-bottom duration-300">
+        <StandardModal isOpen={true} onClose={onClose}>
+            <div className="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col max-h-[90vh]">
                 <div className="p-4 border-b border-stone-100 flex items-center justify-between">
                     <h3 className="text-lg font-bold text-stone-800">Gerenciar Atletas</h3>
                     <button onClick={onClose} className="p-2 text-stone-400 hover:bg-stone-50 rounded-full">
@@ -126,9 +127,8 @@ const ManageParticipantsModal: React.FC<{
                                 </button >
                             );
                         })}
-                    </div >
-                </div >
-
+                    </div>
+                </div>
                 <div className="p-4 border-t border-stone-100 flex gap-3">
                     <button
                         onClick={onClose}
@@ -148,8 +148,8 @@ const ManageParticipantsModal: React.FC<{
                         Confirmar ({selectedIds.length})
                     </button>
                 </div>
-            </div >
-        </div >
+            </div>
+        </StandardModal>
     );
 };
 
@@ -187,8 +187,8 @@ const ManageGuestModal: React.FC<{
     };
 
     return (
-        <div className="fixed inset-0 bg-stone-900/40 z-80 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl p-6 space-y-4 animate-in zoom-in duration-300">
+        <StandardModal isOpen={true} onClose={onClose}>
+            <div className="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl">
                 <div className="flex justify-between items-center border-b border-stone-100 pb-3">
                     <h3 className="text-lg font-bold text-stone-800">{res.guestName ? 'Editar Convidado' : 'Adicionar Convidado'}</h3>
                     <button onClick={onClose} className="p-2 text-stone-400 hover:bg-stone-50 rounded-full">
@@ -241,7 +241,7 @@ const ManageGuestModal: React.FC<{
                     )}
                 </div>
             </div>
-        </div>
+        </StandardModal>
     );
 };
 
@@ -468,9 +468,10 @@ const ReservationDetails: React.FC<{
         window.open(url, '_blank');
     };
 
-    return createPortal(
-        <div className="fixed inset-0 bg-stone-900/40 backdrop-blur-md z-70 flex items-center justify-center p-4 animate-in fade-in duration-300">
-            <div className="bg-stone-50 w-full max-w-lg rounded-[40px] flex flex-col max-h-[92vh] overflow-hidden shadow-2xl animate-in slide-in-from-bottom duration-500">
+    return (
+        <StandardModal isOpen={true} onClose={onClose}>
+            <>
+                <div className="bg-stone-50 w-full max-w-lg rounded-[40px] flex flex-col max-h-[92vh] overflow-hidden shadow-2xl">
                 {/* 1. Header with Glass effect */}
                 <div className="bg-white/80 backdrop-blur-xl px-6 py-5 border-b border-stone-200/60 flex items-center justify-between sticky top-0 z-10">
                     <button onClick={onClose} className="p-2.5 -ml-2 text-stone-600 hover:bg-stone-100 rounded-full transition-all active:scale-90">
@@ -762,11 +763,11 @@ const ReservationDetails: React.FC<{
                                 <Trash2 size={20} /> <span className="hidden xs:inline">Cancelar</span>
                             </button>
                         )}
-                    </div>
-                )}
-            </div>
+                </div>
+            )}
+        </div>
 
-            {showManageParticipants && (
+        {showManageParticipants && (
                 <ManageParticipantsModal
                     currentParticipants={res.participantIds}
                     profiles={profiles}
@@ -790,8 +791,8 @@ const ReservationDetails: React.FC<{
                     }}
                 />
             )}
-        </div>,
-        document.body
+            </>
+        </StandardModal>
     );
 };
 

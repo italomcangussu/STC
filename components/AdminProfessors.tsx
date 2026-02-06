@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Professor, NonSocioStudent } from '../types';
 import { Users, GraduationCap, Calendar, DollarSign, Loader2, ChevronRight, ChevronDown, Plus, Edit, Trash2 } from 'lucide-react';
+import { StandardModal } from './StandardModal';
 
 // --- Modal Component ---
 interface ProfessorModalProps {
@@ -31,8 +32,8 @@ const ProfessorModal: React.FC<ProfessorModalProps> = ({ professor, onClose, onS
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl w-full max-w-md p-6 space-y-4 animate-in scale-in-95 duration-200">
+        <StandardModal isOpen={true} onClose={onClose}>
+            <div className="bg-white rounded-2xl w-full max-w-md p-6 space-y-4">
                 <h3 className="text-xl font-bold text-stone-800">{professor ? 'Editar Professor' : 'Novo Professor'}</h3>
 
                 <div className="space-y-3">
@@ -77,7 +78,7 @@ const ProfessorModal: React.FC<ProfessorModalProps> = ({ professor, onClose, onS
                     </button>
                 </div>
             </div>
-        </div>
+        </StandardModal>
     );
 };
 

@@ -6,6 +6,7 @@ import {
     Calendar, Loader2, DollarSign, X, UserPlus
 } from 'lucide-react';
 import { getNowInFortaleza, formatDate, formatDateBr } from '../utils';
+import { StandardModal } from './StandardModal';
 
 const CARD_MENSAL_PRICE = 200;
 
@@ -352,197 +353,201 @@ export const AdminStudents: React.FC = () => {
 
             {/* --- Modals --- */}
             {/* Student Edit Modal */}
-            {showStudentModal && (
-                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl">
-                        <h3 className="text-xl font-bold mb-4">{editingStudent ? 'Editar Aluno' : 'Novo Aluno'}</h3>
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-xs font-bold text-stone-500 uppercase mb-1">Nome Completo</label>
-                                <input
-                                    value={studentForm.name}
-                                    onChange={e => setStudentForm({ ...studentForm, name: e.target.value })}
-                                    className="w-full p-3 bg-stone-50 rounded-xl"
-                                />
+            <StandardModal isOpen={showStudentModal} onClose={() => setShowStudentModal(false)}>
+                <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl">
+                    <h3 className="text-xl font-bold mb-4">{editingStudent ? 'Editar Aluno' : 'Novo Aluno'}</h3>
+                    <div className="space-y-4">
+                        <div>
+                            <label className="block text-xs font-bold text-stone-500 uppercase mb-1">Nome Completo</label>
+                            <input
+                                value={studentForm.name}
+                                onChange={e => setStudentForm({ ...studentForm, name: e.target.value })}
+                                className="w-full p-3 bg-stone-50 rounded-xl"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-bold text-stone-500 uppercase mb-1">Telefone</label>
+                            <input
+                                value={studentForm.phone}
+                                onChange={e => setStudentForm({ ...studentForm, phone: e.target.value })}
+                                className="w-full p-3 bg-stone-50 rounded-xl"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-bold text-stone-500 uppercase mb-1">Tipo de Aluno</label>
+                            <div className="grid grid-cols-2 gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setStudentForm({ ...studentForm, studentType: 'regular' })}
+                                    className={`py-3 px-4 rounded-xl font-bold text-sm transition-all ${studentForm.studentType === 'regular'
+                                        ? 'bg-orange-500 text-white shadow-lg'
+                                        : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                                        }`}
+                                >
+                                    Regular
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setStudentForm({ ...studentForm, studentType: 'dependent' })}
+                                    className={`py-3 px-4 rounded-xl font-bold text-sm transition-all ${studentForm.studentType === 'dependent'
+                                        ? 'bg-blue-500 text-white shadow-lg'
+                                        : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                                        }`}
+                                >
+                                    Dependente
+                                </button>
                             </div>
-                            <div>
-                                <label className="block text-xs font-bold text-stone-500 uppercase mb-1">Telefone</label>
-                                <input
-                                    value={studentForm.phone}
-                                    onChange={e => setStudentForm({ ...studentForm, phone: e.target.value })}
-                                    className="w-full p-3 bg-stone-50 rounded-xl"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-bold text-stone-500 uppercase mb-1">Tipo de Aluno</label>
-                                <div className="grid grid-cols-2 gap-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => setStudentForm({ ...studentForm, studentType: 'regular' })}
-                                        className={`p-3 rounded-xl font-bold text-sm transition-all ${studentForm.studentType === 'regular' 
-                                            ? 'bg-saibro-500 text-white shadow-md' 
-                                            : 'bg-stone-100 text-stone-600 hover:bg-stone-200'}`}
-                                    >
-                                        👨‍🎓 Regular
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setStudentForm({ ...studentForm, studentType: 'dependent' })}
-                                        className={`p-3 rounded-xl font-bold text-sm transition-all ${studentForm.studentType === 'dependent' 
-                                            ? 'bg-blue-500 text-white shadow-md' 
-                                            : 'bg-stone-100 text-stone-600 hover:bg-stone-200'}`}
-                                    >
-                                        👨‍👩‍👧 Dependente
-                                    </button>
-                                </div>
-                                <p className="text-[10px] text-stone-400 mt-1 italic">
-                                    {studentForm.studentType === 'dependent' 
-                                        ? 'Dependente: familiar do sócio, sem cobrança de mensalidade' 
-                                        : 'Regular: paga Day Card ou Card Mensal'}
-                                </p>
-                            </div>
-                            
-                            {/* Campos condicionais baseados no tipo */}
-                            {studentForm.studentType === 'regular' ? (
-                                <>
+                        </div>
+
+                        {/* Fields for Regular */}
+                        {studentForm.studentType === 'regular' && (
+                            <>
+                                {professors.length > 0 ? (
                                     <div>
-                                        <label className="block text-xs font-bold text-stone-500 uppercase mb-1">
-                                            Professor Responsável {professors.length === 0 && <span className="text-orange-500">(Opcional)</span>}
-                                        </label>
-                                        {professors.length === 0 ? (
-                                            <div className="w-full p-3 bg-stone-100 rounded-xl text-stone-500 italic text-sm">
-                                                Nenhum professor cadastrado. O aluno poderá ser vinculado depois.
-                                            </div>
-                                        ) : (
-                                            <select
-                                                value={studentForm.professorId}
-                                                onChange={e => setStudentForm({ ...studentForm, professorId: e.target.value })}
-                                                className="w-full p-3 bg-stone-50 rounded-xl"
-                                            >
-                                                <option value="">Selecione...</option>
-                                                {professors.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                                            </select>
-                                        )}
-                                    </div>
-                                    
-                                    <div>
-                                        <label className="block text-xs font-bold text-stone-500 uppercase mb-1">Tipo de Plano</label>
-                                        <div className="grid grid-cols-2 gap-2">
-                                            <button
-                                                type="button"
-                                                onClick={() => setStudentForm({ ...studentForm, planType: 'Day Card' })}
-                                                className={`p-3 rounded-xl font-bold text-sm transition-all ${studentForm.planType === 'Day Card' 
-                                                    ? 'bg-orange-500 text-white shadow-md' 
-                                                    : 'bg-stone-100 text-stone-600 hover:bg-stone-200'}`}
-                                            >
-                                                🎫 Day Card
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => setStudentForm({ ...studentForm, planType: 'Card Mensal' })}
-                                                className={`p-3 rounded-xl font-bold text-sm transition-all ${studentForm.planType === 'Card Mensal' 
-                                                    ? 'bg-green-500 text-white shadow-md' 
-                                                    : 'bg-stone-100 text-stone-600 hover:bg-stone-200'}`}
-                                            >
-                                                📅 Card Mensal
-                                            </button>
-                                        </div>
-                                        <p className="text-[10px] text-stone-400 mt-1 italic">
-                                            {studentForm.planType === 'Day Card' 
-                                                ? 'Day Card: pagamento por aula/uso' 
-                                                : 'Card Mensal: mensalidade recorrente de R$ 200'}
-                                        </p>
-                                    </div>
-                                </>
-                            ) : (
-                                <>
-                                    <div>
-                                        <label className="block text-xs font-bold text-stone-500 uppercase mb-1">
-                                            Sócio Responsável <span className="text-red-500">*</span>
-                                        </label>
+                                        <label className="block text-xs font-bold text-stone-500 uppercase mb-1">Professor Responsável</label>
                                         <select
-                                            value={studentForm.responsibleSocioId}
-                                            onChange={e => setStudentForm({ ...studentForm, responsibleSocioId: e.target.value })}
-                                            className="w-full p-3 bg-stone-50 rounded-xl border-2 border-blue-100"
-                                        >
-                                            <option value="">Selecione o sócio...</option>
-                                            {socios.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-stone-500 uppercase mb-1">
-                                            Tipo de Relacionamento <span className="text-red-500">*</span>
-                                        </label>
-                                        <select
-                                            value={studentForm.relationshipType}
-                                            onChange={e => setStudentForm({ ...studentForm, relationshipType: e.target.value as any })}
-                                            className="w-full p-3 bg-stone-50 rounded-xl border-2 border-blue-100"
+                                            value={studentForm.professorId}
+                                            onChange={e => setStudentForm({ ...studentForm, professorId: e.target.value })}
+                                            className="w-full p-3 bg-stone-50 rounded-xl"
                                         >
                                             <option value="">Selecione...</option>
-                                            <option value="filho">Filho</option>
-                                            <option value="filha">Filha</option>
-                                            <option value="esposo">Esposo</option>
-                                            <option value="esposa">Esposa</option>
-                                            <option value="outro">Outro</option>
+                                            {professors.map(p => (
+                                                <option key={p.id} value={p.id}>{p.name}</option>
+                                            ))}
                                         </select>
                                     </div>
-                                </>
-                            )}
-                        </div>
-                        <div className="flex gap-2 mt-6">
-                            <button onClick={() => setShowStudentModal(false)} className="flex-1 py-3 bg-stone-100 rounded-xl font-bold text-stone-600">Cancelar</button>
-                            <button onClick={handleSaveStudent} disabled={processing} className="flex-1 py-3 bg-saibro-500 text-white rounded-xl font-bold">
+                                ) : (
+                                    <p className="text-xs text-stone-400 italic">
+                                        Nenhum professor cadastrado. As aulas atribuirão professores automaticamente na Agenda.
+                                    </p>
+                                )}
+
+                                <div>
+                                    <label className="block text-xs font-bold text-stone-500 uppercase mb-1">Tipo de Plano</label>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setStudentForm({ ...studentForm, planType: 'Day Card' })}
+                                            className={`py-3 px-4 rounded-xl font-bold text-sm transition-all ${studentForm.planType === 'Day Card'
+                                                ? 'bg-saibro-600 text-white shadow-lg'
+                                                : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                                                }`}
+                                        >
+                                            Day Card
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setStudentForm({ ...studentForm, planType: 'Card Mensal' })}
+                                            className={`py-3 px-4 rounded-xl font-bold text-sm transition-all ${studentForm.planType === 'Card Mensal'
+                                                ? 'bg-saibro-600 text-white shadow-lg'
+                                                : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                                                }`}
+                                        >
+                                            Card Mensal
+                                        </button>
+                                    </div>
+                                </div>
+                            </>
+                        )}
+
+                        {/* Fields for Dependent */}
+                        {studentForm.studentType === 'dependent' && (
+                            <>
+                                <div>
+                                    <label className="block text-xs font-bold text-stone-500 uppercase mb-1">Sócio Responsável *</label>
+                                    <select
+                                        value={studentForm.responsibleSocioId}
+                                        onChange={e => setStudentForm({ ...studentForm, responsibleSocioId: e.target.value })}
+                                        className="w-full p-3 bg-stone-50 rounded-xl"
+                                    >
+                                        <option value="">Selecione...</option>
+                                        {socios.map(s => (
+                                            <option key={s.id} value={s.id}>{s.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-stone-500 uppercase mb-1">Tipo de Relacionamento *</label>
+                                    <select
+                                        value={studentForm.relationshipType}
+                                        onChange={e => setStudentForm({ ...studentForm, relationshipType: e.target.value as RelationshipType })}
+                                        className="w-full p-3 bg-stone-50 rounded-xl"
+                                    >
+                                        <option value="">Selecione...</option>
+                                        <option value="filho">Filho</option>
+                                        <option value="filha">Filha</option>
+                                        <option value="esposo">Esposo</option>
+                                        <option value="esposa">Esposa</option>
+                                        <option value="outro">Outro</option>
+                                    </select>
+                                </div>
+                            </>
+                        )}
+
+                        <div className="flex gap-2 pt-2">
+                            <button
+                                onClick={() => setShowStudentModal(false)}
+                                className="px-6 py-3 bg-stone-200 text-stone-700 font-bold rounded-xl hover:bg-stone-300"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={handleSaveStudent}
+                                disabled={processing}
+                                className="flex-1 py-3 bg-saibro-600 text-white font-bold rounded-xl hover:bg-saibro-700 disabled:opacity-50"
+                            >
                                 {processing ? <Loader2 className="animate-spin mx-auto" /> : 'Salvar'}
                             </button>
                         </div>
                     </div>
                 </div>
-            )}
+            </StandardModal>
 
             {/* Payment Modal */}
-            {showPaymentModal && paymentStudent && (
-                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl">
-                        <div className="flex justify-between items-center mb-6">
-                            <h3 className="text-xl font-bold text-stone-800">Registrar Pagamento</h3>
-                            <button onClick={() => setShowPaymentModal(false)}><X className="text-stone-400" /></button>
-                        </div>
-
-                        <div className="bg-stone-50 p-4 rounded-xl mb-6">
-                            <p className="text-sm text-stone-500 mb-1">Aluno</p>
-                            <p className="font-bold text-lg text-stone-800">{paymentStudent.name}</p>
-                            <div className="h-px bg-stone-200 my-3"></div>
-                            <div className="flex justify-between items-center">
-                                <span className="text-stone-500 text-sm">Valor</span>
-                                <span className="font-bold text-xl text-green-600">R$ {CARD_MENSAL_PRICE},00</span>
-                            </div>
-                        </div>
-
-                        <div className="mb-6">
-                            <label className="block text-xs font-bold text-stone-500 uppercase mb-2">Data do Pagamento</label>
-                            <input
-                                type="date"
-                                value={paymentDate}
-                                onChange={e => setPaymentDate(e.target.value)}
-                                className="w-full p-3 border-2 border-stone-200 rounded-xl text-lg font-bold text-stone-800 focus:border-saibro-500 outline-none"
-                            />
-                            <p className="text-xs text-stone-400 mt-2">
-                                O vencimento será calculado para <b>1 mês</b> após esta data.
-                            </p>
-                        </div>
-
-                        <button
-                            onClick={handleConfirmPayment}
-                            disabled={processing}
-                            className="w-full py-4 bg-green-500 hover:bg-green-600 text-white rounded-xl font-bold shadow-lg shadow-green-100 flex justify-center items-center gap-2"
-                        >
-                            {processing ? <Loader2 className="animate-spin" /> : <>
-                                <CheckCircle size={20} /> Confirmar Pagamento
-                            </>}
-                        </button>
+            <StandardModal 
+                isOpen={showPaymentModal && !!paymentStudent} 
+                onClose={() => setShowPaymentModal(false)}
+            >
+                <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl">
+                    <div className="flex justify-between items-center mb-6">
+                        <h3 className="text-xl font-bold text-stone-800">Registrar Pagamento</h3>
+                        <button onClick={() => setShowPaymentModal(false)}><X className="text-stone-400" /></button>
                     </div>
+
+                    <div className="bg-stone-50 p-4 rounded-xl mb-6">
+                        <p className="text-sm text-stone-500 mb-1">Aluno</p>
+                        <p className="font-bold text-lg text-stone-800">{paymentStudent?.name}</p>
+                        <div className="h-px bg-stone-200 my-3"></div>
+                        <div className="flex justify-between items-center">
+                            <span className="text-stone-500 text-sm">Valor</span>
+                            <span className="font-bold text-xl text-green-600">R$ {CARD_MENSAL_PRICE},00</span>
+                        </div>
+                    </div>
+
+                    <div className="mb-6">
+                        <label className="block text-xs font-bold text-stone-500 uppercase mb-2">Data do Pagamento</label>
+                        <input
+                            type="date"
+                            value={paymentDate}
+                            onChange={e => setPaymentDate(e.target.value)}
+                            className="w-full p-3 border-2 border-stone-200 rounded-xl text-lg font-bold text-stone-800 focus:border-saibro-500 outline-none"
+                        />
+                        <p className="text-xs text-stone-400 mt-2">
+                            O vencimento será calculado para <b>1 mês</b> após esta data.
+                        </p>
+                    </div>
+
+                    <button
+                        onClick={handleConfirmPayment}
+                        disabled={processing}
+                        className="w-full py-4 bg-green-500 hover:bg-green-600 text-white rounded-xl font-bold shadow-lg shadow-green-100 flex justify-center items-center gap-2"
+                    >
+                        {processing ? <Loader2 className="animate-spin" /> : <>
+                            <CheckCircle size={20} /> Confirmar Pagamento
+                        </>}
+                    </button>
                 </div>
-            )}
+            </StandardModal>
         </div>
     );
 };

@@ -185,6 +185,7 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
             // Convert to database schema (snake_case)
             const matchesForDB = allMatches.map(m => ({
                 type: m.type,
+                championship_id: championship.id,
                 championship_group_id: m.championship_group_id,
                 round_id: m.round_id,
                 player_a_id: m.player_a_id,
