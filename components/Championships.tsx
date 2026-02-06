@@ -1467,6 +1467,7 @@ const MatchCard: React.FC<{ match: Match; profiles: User[]; registrations: Regis
                         </button>
                     )}
 
+                    {/* Botão Agendar - para partidas sem agendamento */}
                     {!isFinished && !match.scheduledDate && (isAdmin || match.playerAId === currentUserId || match.playerBId === currentUserId) && (
                         <button
                             onClick={onSchedule}
@@ -1474,6 +1475,17 @@ const MatchCard: React.FC<{ match: Match; profiles: User[]; registrations: Regis
                         >
                             <Calendar size={12} />
                             Agendar
+                        </button>
+                    )}
+
+                    {/* Botão Reagendar - para partidas já agendadas */}
+                    {!isFinished && match.scheduledDate && (isAdmin || match.playerAId === currentUserId || match.playerBId === currentUserId) && (
+                        <button
+                            onClick={onSchedule}
+                            className="bg-blue-600 text-white text-[10px] font-black uppercase px-4 py-2 rounded-xl shadow-lg shadow-blue-200 hover:bg-blue-700 hover:scale-105 transition-all flex items-center gap-1"
+                        >
+                            <Clock size={12} />
+                            Reagendar
                         </button>
                     )}
                 </div>

@@ -38,7 +38,9 @@ export interface Professor {
   bio?: string;
 }
 
-export type PlanType = 'Day Card' | 'Card Mensal';
+export type PlanType = 'Day Card' | 'Card Mensal' | 'Dependente';
+export type StudentType = 'regular' | 'dependent';
+export type RelationshipType = 'filho' | 'filha' | 'esposo' | 'esposa' | 'outro';
 
 export interface NonSocioStudent {
   id: string;
@@ -47,7 +49,12 @@ export interface NonSocioStudent {
   planType: PlanType;
   planStatus: 'active' | 'inactive';
   masterExpirationDate?: string; // YYYY-MM-DD, required if Master Card
-  professorId: string; // The professor who manages this student
+  professorId: string | null; // The professor who manages this student (null for dependents)
+  
+  // Dependent student fields
+  studentType?: StudentType; // 'regular' or 'dependent'
+  responsibleSocioId?: string; // ID of the socio responsible for dependent
+  relationshipType?: RelationshipType; // Relationship to responsible socio
 }
 
 export type ReservationType = 'Play' | 'Aula' | 'Campeonato' | 'Desafio';

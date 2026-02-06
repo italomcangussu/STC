@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { NonSocioStudent, Professor } from '../types';
+import { NonSocioStudent, Professor, User, RelationshipType } from '../types';
 import {
     Users, Plus, Search, Edit, Trash2, CheckCircle, AlertCircle,
-    Calendar, Loader2, DollarSign, X
+    Calendar, Loader2, DollarSign, X, UserPlus
 } from 'lucide-react';
 import { getNowInFortaleza, formatDate, formatDateBr } from '../utils';
 
@@ -12,13 +12,23 @@ const CARD_MENSAL_PRICE = 200;
 export const AdminStudents: React.FC = () => {
     const [students, setStudents] = useState<NonSocioStudent[]>([]);
     const [professors, setProfessors] = useState<Professor[]>([]);
+    const [socios, setSocios] = useState<User[]>([]); // Lista de sócios para dependentes
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('');
+    const [studentTypeFilter, setStudentTypeFilter] = useState<'all' | 'regular' | 'dependent'>('all');
 
     // --- Modal States ---
     const [showStudentModal, setShowStudentModal] = useState(false);
     const [editingStudent, setEditingStudent] = useState<NonSocioStudent | null>(null);
-    const [studentForm, setStudentForm] = useState({ name: '', phone: '', professorId: '' });
+    const [studentForm, setStudentForm] = useState({ 
+        name: '', 
+        phone: '', 
+        professorId: '', 
+        studentType: 'regular' as 'regular' | 'dependent',
+        responsibleSocioId: '',
+        relationshipType: '' as RelationshipType | '',
+        planType: 'Day Card' as 'Day Card' | 'Card Mensal'
+    });
 
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [paymentStudent, setPaymentStudent] = useState<NonSocioStudent | null>(null);
@@ -29,10 +39,16 @@ export const AdminStudents: React.FC = () => {
         fetchData();
     }, []);
 
-    const fetchData = async () => {
+    const fetchData = async () =>{
         setLoading(true);
         const { data: sData } = await supabase.from('non_socio_students').select('*').order('name');
         const { data: pData } = await supabase.from('professors').select('*').eq('is_active', true);
+        const { data: sociosData } = await supabase
+            .from('profiles')
+            .select('id, name, email, phone, role')
+            .eq('role', 'socio')
+            .eq('is_active', true)
+            .order('name');
 
         if (sData) {
             setStudents(sData.map(s => ({
@@ -42,16 +58,30 @@ export const AdminStudents: React.FC = () => {
                 planType: s.plan_type,
                 planStatus: s.plan_status,
                 masterExpirationDate: s.master_expiration_date,
-                professorId: s.professor_id
+                professorId: s.professor_id,
+                studentType: s.student_type || 'regular',
+                responsibleSocioId: s.responsible_socio_id,
+                relationshipType: s.relationship_type
             })));
         }
         if (pData) {
             setProfessors(pData.map(p => ({
                 id: p.id,
                 userId: p.user_id,
-                name: p.name,
+               name: p.name,
                 isActive: p.is_active,
                 bio: p.bio
+            })));
+        }
+        if (sociosData) {
+            setSocios(sociosData.map(u => ({
+                id: u.id,
+                name: u.name,
+                email: u.email,
+                phone: u.phone,
+                role: u.role,
+                balance: 0,
+                isActive: true
             })));
         }
         setLoading(false);
@@ -59,31 +89,53 @@ export const AdminStudents: React.FC = () => {
 
     // --- Student CRUD ---
     const handleSaveStudent = async () => {
-        if (!studentForm.name || !studentForm.professorId) return alert('Nome e Professor obrigatórios.');
+        // Validação aprimorada
+        if (!studentForm.name || !studentForm.name.trim()) {
+            return alert('❌ O nome do aluno é obrigatório.');
+        }
+
+        // Validações específicas por tipo
+        if (studentForm.studentType === 'dependent') {
+            // Para dependentes: responsável sócio e relação são obrigatórios
+            if (!studentForm.responsibleSocioId) {
+                return alert('❌ Selecione o sócio responsável pelo dependente.');
+            }
+            if (!studentForm.relationshipType) {
+                return alert('❌ Selecione o tipo de relacionamento.');
+            }
+        } else {
+            // Para alunos regulares: professor é obrigatório SE houver professores
+            if (professors.length > 0 && !studentForm.professorId) {
+                return alert('❌ Selecione um professor responsável.');
+            }
+        }
 
         setProcessing(true);
         try {
+            const studentData = {
+                name: studentForm.name,
+                phone: studentForm.phone,
+                professor_id: studentForm.studentType === 'regular' ? (studentForm.professorId || null) : null,
+                student_type: studentForm.studentType,
+                responsible_socio_id: studentForm.studentType === 'dependent' ? studentForm.responsibleSocioId : null,
+                relationship_type: studentForm.studentType === 'dependent' ? studentForm.relationshipType : null,
+                plan_type: studentForm.studentType === 'dependent' ? 'Dependente' : studentForm.planType,
+                plan_status: studentForm.studentType === 'dependent' ? 'active' : 'inactive'
+            };
+
             if (editingStudent) {
-                await supabase.from('non_socio_students').update({
-                    name: studentForm.name,
-                    phone: studentForm.phone,
-                    professor_id: studentForm.professorId
-                }).eq('id', editingStudent.id);
+                await supabase.from('non_socio_students').update(studentData).eq('id', editingStudent.id);
             } else {
-                await supabase.from('non_socio_students').insert({
-                    name: studentForm.name,
-                    phone: studentForm.phone,
-                    professor_id: studentForm.professorId,
-                    plan_type: 'Day Card', // Default
-                    plan_status: 'inactive'
-                });
+                await supabase.from('non_socio_students').insert(studentData);
             }
-            fetchData();
+            await fetchData();
             setShowStudentModal(false);
             setEditingStudent(null);
-            setStudentForm({ name: '', phone: '', professorId: '' });
+            setStudentForm({ name: '', phone: '', professorId: '', studentType: 'regular', responsibleSocioId: '', relationshipType: '' });
+            alert('✅ Aluno salvo com sucesso!');
         } catch (error: any) {
-            alert('Erro ao salvar: ' + error.message);
+            console.error('Erro ao salvar aluno:', error);
+            alert('❌ Erro ao salvar: ' + error.message);
         } finally {
             setProcessing(false);
         }
@@ -170,7 +222,7 @@ export const AdminStudents: React.FC = () => {
                 <button
                     onClick={() => {
                         setEditingStudent(null);
-                        setStudentForm({ name: '', phone: '', professorId: '' });
+                        setStudentForm({ name: '', phone: '', professorId: '', studentType: 'regular', responsibleSocioId: '', relationshipType: '', planType: 'Day Card' });
                         setShowStudentModal(true);
                     }}
                     className="bg-saibro-500 hover:bg-saibro-600 text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2"
@@ -204,15 +256,27 @@ export const AdminStudents: React.FC = () => {
                         return (
                             <div key={student.id} className={`relative p-5 rounded-2xl border-2 transition-all ${isActive ? 'bg-white border-green-100' : 'bg-stone-50 border-stone-100 opacity-90'}`}>
                                 <div className="flex justify-between items-start mb-3">
-                                    <div className="bg-stone-100 p-2 rounded-lg">
-                                        <Users size={20} className={isActive ? 'text-green-600' : 'text-stone-400'} />
+                                    <div className={`p-2 rounded-lg ${student.studentType === 'dependent' ? 'bg-blue-50' : 'bg-stone-100'}`}>
+                                        {student.studentType === 'dependent' ? (
+                                            <UserPlus size={20} className="text-blue-600" />
+                                        ) : (
+                                            <Users size={20} className={isActive ? 'text-green-600' : 'text-stone-400'} />
+                                        )}
                                     </div>
                                     <div className="flex gap-1">
                                         <button
                                             onClick={() => {
                                                 setEditingStudent(student);
-                                                setStudentForm({ name: student.name, phone: student.phone || '', professorId: student.professorId });
-                                                setShowStudentModal(true);
+                                                setStudentForm({ 
+                                                    name: student.name, 
+                                                    phone: student.phone || '', 
+                                                    professorId: student.professorId || '',
+                                                    studentType: student.studentType || 'regular',
+                                                    responsibleSocioId: student.responsibleSocioId || '',
+                                                    relationshipType: student.relationshipType || '',
+                                                    planType: (student.planType === 'Day Card' || student.planType === 'Card Mensal') ? student.planType : 'Day Card'
+                                                });
+                                                 setShowStudentModal(true);
                                             }}
                                             className="p-2 hover:bg-stone-100 rounded-lg text-stone-500"
                                         >
@@ -228,32 +292,57 @@ export const AdminStudents: React.FC = () => {
                                 </div>
 
                                 <h3 className="font-bold text-lg text-stone-800 mb-1">{student.name}</h3>
-                                <p className="text-xs text-stone-500 mb-4 flex items-center gap-1">
-                                    <span className="font-semibold">Prof:</span> {profName}
-                                </p>
+                                
+                                {student.studentType === 'dependent' ? (
+                                    <div className="space-y-1 mb-4">
+                                        <p className="text-xs text-blue-600 font-bold flex items-center gap-1">
+                                            👨‍👩‍👧 Dependente
+                                        </p>
+                                        <p className="text-xs text-stone-500">
+                                            <span className="font-semibold">Responsável:</span> {socios.find(s => s.id === student.responsibleSocioId)?.name || 'N/A'}
+                                        </p>
+                                        {student.relationshipType && (
+                                            <p className="text-xs text-stone-500 capitalize">
+                                                <span className="font-semibold">Relação:</span> {student.relationshipType}
+                                            </p>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <p className="text-xs text-stone-500 mb-4 flex items-center gap-1">
+                                        <span className="font-semibold">Prof:</span> {profName}
+                                    </p>
+                                )}
 
                                 <div className="pt-4 border-t border-stone-100">
                                     <div className="flex justify-between items-center mb-3">
-                                        <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded ${isActive ? 'bg-green-100 text-green-700' : 'bg-stone-200 text-stone-500'}`}>
-                                            {isActive ? 'Card Mensal Ativo' : 'Day Card / Inativo'}
+                                        <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded ${
+                                            student.studentType === 'dependent' 
+                                                ? 'bg-blue-100 text-blue-700'
+                                                : isActive ? 'bg-green-100 text-green-700' : 'bg-stone-200 text-stone-500'
+                                        }`}>
+                                            {student.studentType === 'dependent' 
+                                                ? 'Dependente - Sem Cobrança' 
+                                                : isActive ? 'Card Mensal Ativo' : 'Day Card / Inativo'}
                                         </span>
-                                        {student.masterExpirationDate && (
+                                        {student.masterExpirationDate && student.studentType !== 'dependent' && (
                                             <span className={`text-xs font-mono font-bold ${isActive ? 'text-green-600' : 'text-red-400'}`}>
                                                 Vence: {formatDateBr(student.masterExpirationDate)}
                                             </span>
                                         )}
                                     </div>
 
-                                    <button
-                                        onClick={() => handleOpenPayment(student)}
-                                        className={`w-full py-2.5 rounded-xl font-bold text-sm flex justify-center items-center gap-2 transition-colors ${isActive
-                                            ? 'bg-stone-100 text-stone-600 hover:bg-stone-200'
-                                            : 'bg-green-500 text-white hover:bg-green-600 shadow-md shadow-green-100'
-                                            }`}
-                                    >
-                                        <DollarSign size={16} />
-                                        {isActive ? 'Renovar Plano' : 'Ativar Card Mensal'}
-                                    </button>
+                                    {student.studentType !== 'dependent' && (
+                                        <button
+                                            onClick={() => handleOpenPayment(student)}
+                                            className={`w-full py-2.5 rounded-xl font-bold text-sm flex justify-center items-center gap-2 transition-colors ${isActive
+                                                ? 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                                                : 'bg-green-500 text-white hover:bg-green-600 shadow-md shadow-green-100'
+                                                }`}
+                                        >
+                                            <DollarSign size={16} />
+                                            {isActive ? 'Renovar Plano' : 'Ativar Card Mensal'}
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         );
@@ -285,16 +374,120 @@ export const AdminStudents: React.FC = () => {
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-stone-500 uppercase mb-1">Professor Responsável</label>
-                                <select
-                                    value={studentForm.professorId}
-                                    onChange={e => setStudentForm({ ...studentForm, professorId: e.target.value })}
-                                    className="w-full p-3 bg-stone-50 rounded-xl"
-                                >
-                                    <option value="">Selecione...</option>
-                                    {professors.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                                </select>
+                                <label className="block text-xs font-bold text-stone-500 uppercase mb-1">Tipo de Aluno</label>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setStudentForm({ ...studentForm, studentType: 'regular' })}
+                                        className={`p-3 rounded-xl font-bold text-sm transition-all ${studentForm.studentType === 'regular' 
+                                            ? 'bg-saibro-500 text-white shadow-md' 
+                                            : 'bg-stone-100 text-stone-600 hover:bg-stone-200'}`}
+                                    >
+                                        👨‍🎓 Regular
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setStudentForm({ ...studentForm, studentType: 'dependent' })}
+                                        className={`p-3 rounded-xl font-bold text-sm transition-all ${studentForm.studentType === 'dependent' 
+                                            ? 'bg-blue-500 text-white shadow-md' 
+                                            : 'bg-stone-100 text-stone-600 hover:bg-stone-200'}`}
+                                    >
+                                        👨‍👩‍👧 Dependente
+                                    </button>
+                                </div>
+                                <p className="text-[10px] text-stone-400 mt-1 italic">
+                                    {studentForm.studentType === 'dependent' 
+                                        ? 'Dependente: familiar do sócio, sem cobrança de mensalidade' 
+                                        : 'Regular: paga Day Card ou Card Mensal'}
+                                </p>
                             </div>
+                            
+                            {/* Campos condicionais baseados no tipo */}
+                            {studentForm.studentType === 'regular' ? (
+                                <>
+                                    <div>
+                                        <label className="block text-xs font-bold text-stone-500 uppercase mb-1">
+                                            Professor Responsável {professors.length === 0 && <span className="text-orange-500">(Opcional)</span>}
+                                        </label>
+                                        {professors.length === 0 ? (
+                                            <div className="w-full p-3 bg-stone-100 rounded-xl text-stone-500 italic text-sm">
+                                                Nenhum professor cadastrado. O aluno poderá ser vinculado depois.
+                                            </div>
+                                        ) : (
+                                            <select
+                                                value={studentForm.professorId}
+                                                onChange={e => setStudentForm({ ...studentForm, professorId: e.target.value })}
+                                                className="w-full p-3 bg-stone-50 rounded-xl"
+                                            >
+                                                <option value="">Selecione...</option>
+                                                {professors.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                                            </select>
+                                        )}
+                                    </div>
+                                    
+                                    <div>
+                                        <label className="block text-xs font-bold text-stone-500 uppercase mb-1">Tipo de Plano</label>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => setStudentForm({ ...studentForm, planType: 'Day Card' })}
+                                                className={`p-3 rounded-xl font-bold text-sm transition-all ${studentForm.planType === 'Day Card' 
+                                                    ? 'bg-orange-500 text-white shadow-md' 
+                                                    : 'bg-stone-100 text-stone-600 hover:bg-stone-200'}`}
+                                            >
+                                                🎫 Day Card
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setStudentForm({ ...studentForm, planType: 'Card Mensal' })}
+                                                className={`p-3 rounded-xl font-bold text-sm transition-all ${studentForm.planType === 'Card Mensal' 
+                                                    ? 'bg-green-500 text-white shadow-md' 
+                                                    : 'bg-stone-100 text-stone-600 hover:bg-stone-200'}`}
+                                            >
+                                                📅 Card Mensal
+                                            </button>
+                                        </div>
+                                        <p className="text-[10px] text-stone-400 mt-1 italic">
+                                            {studentForm.planType === 'Day Card' 
+                                                ? 'Day Card: pagamento por aula/uso' 
+                                                : 'Card Mensal: mensalidade recorrente de R$ 200'}
+                                        </p>
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <div>
+                                        <label className="block text-xs font-bold text-stone-500 uppercase mb-1">
+                                            Sócio Responsável <span className="text-red-500">*</span>
+                                        </label>
+                                        <select
+                                            value={studentForm.responsibleSocioId}
+                                            onChange={e => setStudentForm({ ...studentForm, responsibleSocioId: e.target.value })}
+                                            className="w-full p-3 bg-stone-50 rounded-xl border-2 border-blue-100"
+                                        >
+                                            <option value="">Selecione o sócio...</option>
+                                            {socios.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-stone-500 uppercase mb-1">
+                                            Tipo de Relacionamento <span className="text-red-500">*</span>
+                                        </label>
+                                        <select
+                                            value={studentForm.relationshipType}
+                                            onChange={e => setStudentForm({ ...studentForm, relationshipType: e.target.value as any })}
+                                            className="w-full p-3 bg-stone-50 rounded-xl border-2 border-blue-100"
+                                        >
+                                            <option value="">Selecione...</option>
+                                            <option value="filho">Filho</option>
+                                            <option value="filha">Filha</option>
+                                            <option value="esposo">Esposo</option>
+                                            <option value="esposa">Esposa</option>
+                                            <option value="outro">Outro</option>
+                                        </select>
+                                    </div>
+                                </>
+                            )}
                         </div>
                         <div className="flex gap-2 mt-6">
                             <button onClick={() => setShowStudentModal(false)} className="flex-1 py-3 bg-stone-100 rounded-xl font-bold text-stone-600">Cancelar</button>
