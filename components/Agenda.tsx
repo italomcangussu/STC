@@ -1617,6 +1617,47 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                     ? res.nonSocioStudentIds
                     : (res.nonSocioStudentId ? [res.nonSocioStudentId] : [])
             ));
+
+            // --- CONVERSÃO AUTOMÁTICA: Day Card Experimental → Day Card ---
+            // Se o aluno Day Card Experimental está sendo adicionado a uma 2ª aula, converter para Day Card normal
+            for (const studentId of normalizedNonSocioIds) {
+                const student = nonSocioStudents.find(s => s.id === studentId);
+                if (student && student.planType === 'Day Card Experimental' && student.planStatus === 'active') {
+                    // Contar quantos agendamentos o aluno já teve
+                    const { data: existingReservations, error: countError } = await supabase
+                        .from('reservations')
+                        .select('id')
+                        .contains('non_socio_student_ids', [studentId])
+                        .eq('status', 'active');
+
+                    if (countError) {
+                        console.error('Erro ao contar agendamentos:', countError);
+                        continue;
+                    }
+
+                    // Se já tem 1+ agendamento (primeira aula) e está sendo adicionado a outro, converter
+                    if (existingReservations && existingReservations.length >= 1) {
+                        console.log(`Converting ${student.name} from Day Card Experimental to Day Card (2nd class)`);
+                        
+                        const { error: updateError } = await supabase
+                            .from('non_socio_students')
+                            .update({ plan_type: 'Day Card' })
+                            .eq('id', studentId);
+
+                        if (updateError) {
+                            console.error('Erro ao converter aluno:', updateError);
+                        } else {
+                            // Atualizar estado local
+                            setNonSocioStudents(prev => prev.map(s => 
+                                s.id === studentId 
+                                    ? { ...s, planType: 'Day Card' as any }
+                                    : s
+                            ));
+                        }
+                    }
+                }
+            }
+
             const socioCount = res.participantIds?.length || 0;
             const derivedStudentType = res.type === 'Aula'
                 ? (socioCount > 0 && normalizedNonSocioIds.length === 0
