@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "baseUrl": ".",
     "target": "ES2022",
     "experimentalDecorators": true,
     "useDefineForClassFields": false,
@@ -19,9 +20,13 @@
     "allowJs": true,
     "jsx": "react-jsx",
     "paths": {
-      "@/*": [
-        "./*"
-      ]
+      "@/*": ["./*"],
+      "@supabase/auth-js": ["./node_modules/@supabase/auth-js/dist/main/index.d.ts"],
+      "@supabase/auth-js/*": ["./node_modules/@supabase/auth-js/dist/main/*"],
+      "@supabase/functions-js": ["./node_modules/@supabase/functions-js/dist/main/index.d.ts"],
+      "@supabase/functions-js/*": ["./node_modules/@supabase/functions-js/dist/main/*"],
+      "@supabase/realtime-js": ["./node_modules/@supabase/realtime-js/dist/main/index.d.ts"],
+      "@supabase/realtime-js/*": ["./node_modules/@supabase/realtime-js/dist/main/*"]
     },
     "allowImportingTsExtensions": true,
     "noEmit": true

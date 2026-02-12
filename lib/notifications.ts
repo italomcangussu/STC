@@ -10,6 +10,7 @@
  */
 
 import { toast } from 'sonner';
+import type { ReactNode } from 'react';
 import { logger } from './logger';
 
 interface NotificationOptions {
@@ -101,7 +102,7 @@ class NotificationService {
   ): Promise<T> {
     logger.info(`${logEvent}_started`, logContext);
 
-    return toast.promise(promise, {
+    toast.promise(promise, {
       loading: messages.loading,
       success: (data) => {
         logger.info(`${logEvent}_success`, { ...logContext, data });
@@ -112,12 +113,14 @@ class NotificationService {
         return typeof messages.error === 'function' ? messages.error(error) : messages.error;
       },
     });
+
+    return promise;
   }
 
   /**
    * Toast customizado
    */
-  custom(component: React.ReactNode, options?: { duration?: number }): void {
+  custom(component: ReactNode, options?: { duration?: number }): void {
     toast.custom(component, {
       duration: options?.duration || 4000,
     });

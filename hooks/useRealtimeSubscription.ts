@@ -22,6 +22,33 @@ interface UseRealtimeSubscriptionOptions {
   enabled?: boolean;
 }
 
+function attachPostgresChanges(
+  channel: RealtimeChannel,
+  event: RealtimeEvent,
+  table: string,
+  filter: string | undefined,
+  callback: (payload: any) => void
+) {
+  const baseFilter = {
+    schema: 'public',
+    table,
+    ...(filter ? { filter } : {}),
+  };
+
+  switch (event) {
+    case '*':
+      return channel.on('postgres_changes', { ...baseFilter, event: '*' }, callback);
+    case 'INSERT':
+      return channel.on('postgres_changes', { ...baseFilter, event: 'INSERT' }, callback);
+    case 'UPDATE':
+      return channel.on('postgres_changes', { ...baseFilter, event: 'UPDATE' }, callback);
+    case 'DELETE':
+      return channel.on('postgres_changes', { ...baseFilter, event: 'DELETE' }, callback);
+    default:
+      return channel.on('postgres_changes', { ...baseFilter, event: '*' }, callback);
+  }
+}
+
 /**
  * Hook para subscription com cleanup automático
  */
@@ -44,41 +71,23 @@ export function useRealtimeSubscription({
         channel = supabase.channel(channelName);
 
         // Configurar subscription com filtro opcional
-        if (filter) {
-          channel = channel.on(
-            'postgres_changes',
-            {
-              event: event,
-              schema: 'public',
-              table: table,
-              filter: filter,
-            },
-            callback
-          );
-        } else {
-          channel = channel.on(
-            'postgres_changes',
-            {
-              event: event,
-              schema: 'public',
-              table: table,
-            },
-            callback
-          );
-        }
+        channel = attachPostgresChanges(channel, event, table, filter, callback);
 
         // Subscribe
-        const { error } = await channel.subscribe();
+        channel.subscribe((status, err) => {
+          if (status === 'SUBSCRIBED') {
+            logger.debug('realtime_subscription_started', { table, event, filter });
+            return;
+          }
 
-        if (error) {
-          logger.error('realtime_subscription_failed', {
-            table,
-            event,
-            error: error.message,
-          });
-        } else {
-          logger.debug('realtime_subscription_started', { table, event, filter });
-        }
+          if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+            logger.error('realtime_subscription_failed', {
+              table,
+              event,
+              error: err?.message || status,
+            });
+          }
+        });
       } catch (error) {
         logger.error('realtime_subscription_setup_failed', {
           table,
@@ -118,44 +127,26 @@ export function useRealtimeSubscriptions(
           const channelName = `${sub.table}-${sub.event}-${Date.now()}`;
           let channel = supabase.channel(channelName);
 
-          if (sub.filter) {
-            channel = channel.on(
-              'postgres_changes',
-              {
-                event: sub.event,
-                schema: 'public',
-                table: sub.table,
-                filter: sub.filter,
-              },
-              sub.callback
-            );
-          } else {
-            channel = channel.on(
-              'postgres_changes',
-              {
-                event: sub.event,
-                schema: 'public',
-                table: sub.table,
-              },
-              sub.callback
-            );
-          }
+          channel = attachPostgresChanges(channel, sub.event, sub.table, sub.filter, sub.callback);
 
-          const { error } = await channel.subscribe();
+          channel.subscribe((status, err) => {
+            if (status === 'SUBSCRIBED') {
+              channels.push(channel);
+              logger.debug('realtime_subscription_started', {
+                table: sub.table,
+                event: sub.event,
+              });
+              return;
+            }
 
-          if (error) {
-            logger.error('realtime_subscription_failed', {
-              table: sub.table,
-              event: sub.event,
-              error: error.message,
-            });
-          } else {
-            channels.push(channel);
-            logger.debug('realtime_subscription_started', {
-              table: sub.table,
-              event: sub.event,
-            });
-          }
+            if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+              logger.error('realtime_subscription_failed', {
+                table: sub.table,
+                event: sub.event,
+                error: err?.message || status,
+              });
+            }
+          });
         } catch (error) {
           logger.error('realtime_subscription_setup_failed', {
             table: sub.table,

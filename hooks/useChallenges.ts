@@ -231,10 +231,16 @@ export function useChallenges(currentUser: User) {
   };
 
   const calculateEligibleOpponents = () => {
-    const eligible = state.ranking.filter(player => {
-      if (player.id === currentUser.id) return false;
+    const currentPlayer = state.ranking.find(player => player.id === currentUser.id);
+    if (!currentPlayer) {
+      dispatch({ type: 'SET_ELIGIBLE_OPPONENTS', payload: [] });
+      return;
+    }
 
-      const result = canChallenge(currentUser.id, player.id, state.ranking);
+    const eligible = state.ranking.filter(player => {
+      if (player.id === currentPlayer.id) return false;
+
+      const result = canChallenge(currentPlayer, player, state.ranking);
       return result.allowed;
     });
 
