@@ -697,41 +697,46 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
             {/* --- MODAL: STUDENT FORM --- */}
             {showStudentModal && (
                 <div className="fixed inset-0 bg-black/60 z-60 flex items-center justify-center p-4 backdrop-blur-sm">
-                    <div className="bg-white rounded-2xl p-6 w-full max-w-md space-y-4 animate-in zoom-in duration-200 max-h-[90vh] overflow-y-auto">
-                        <h3 className="text-xl font-bold text-saibro-800">{editingStudent ? 'Editar Aluno' : 'Novo Aluno'}</h3>
+                    <div className="bg-white rounded-3xl p-6 w-full max-w-md space-y-5 shadow-2xl shadow-stone-300/50 border-2 border-stone-100 max-h-[90vh] overflow-y-auto">
+                        {/* Header */}
+                        <div className="bg-linear-to-br from-saibro-600 via-saibro-500 to-orange-500 px-6 py-4 -mx-6 -mt-6 mb-6 rounded-t-3xl shadow-xl shadow-saibro-300/30 border-b-2 border-white/10">
+                            <h3 className="text-xl font-black uppercase tracking-tight text-white drop-shadow-lg">
+                                {editingStudent ? '✏️ Editar Aluno' : '➕ Novo Aluno'}
+                            </h3>
+                        </div>
 
-                        <div className="space-y-3">
+                        <div className="space-y-4">
                             <div>
-                                <label className="block text-xs font-bold text-stone-500 uppercase mb-1">Nome Completo</label>
+                                <label className="block text-xs font-black text-stone-500 uppercase mb-2 tracking-wide">Nome Completo</label>
                                 <input
                                     type="text"
                                     value={studentForm.name}
                                     onChange={e => setStudentForm({ ...studentForm, name: e.target.value })}
-                                    className="w-full p-3 bg-stone-50 rounded-xl"
+                                    className="w-full p-3 bg-linear-to-br from-stone-50 to-stone-100 rounded-xl border-2 border-stone-200 focus:border-saibro-500 focus:ring-2 focus:ring-saibro-200 outline-none transition-all"
                                     placeholder="Nome completo"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-xs font-bold text-stone-500 uppercase mb-1">Telefone</label>
+                                <label className="block text-xs font-black text-stone-500 uppercase mb-2 tracking-wide">Telefone</label>
                                 <input
                                     type="text"
                                     value={studentForm.phone}
                                     onChange={e => setStudentForm({ ...studentForm, phone: e.target.value })}
-                                    className="w-full p-3 bg-stone-50 rounded-xl"
+                                    className="w-full p-3 bg-linear-to-br from-stone-50 to-stone-100 rounded-xl border-2 border-stone-200 focus:border-saibro-500 focus:ring-2 focus:ring-saibro-200 outline-none transition-all"
                                     placeholder="(00) 00000-0000"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-xs font-bold text-stone-500 uppercase mb-1">Tipo de Aluno</label>
-                                <div className="grid grid-cols-2 gap-2">
+                                <label className="block text-xs font-black text-stone-500 uppercase mb-2 tracking-wide">Tipo de Aluno</label>
+                                <div className="grid grid-cols-2 gap-3">
                                     <button
                                         type="button"
                                         onClick={() => setStudentForm({ ...studentForm, studentType: 'regular' })}
-                                        className={`py-3 px-4 rounded-xl font-bold text-sm transition-all ${studentForm.studentType === 'regular'
-                                            ? 'bg-orange-500 text-white shadow-lg'
-                                            : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                                        className={`py-3 px-4 rounded-xl font-black text-xs uppercase tracking-tight shadow-lg transition-all duration-200 ${studentForm.studentType === 'regular'
+                                            ? 'bg-linear-to-br from-saibro-600 to-saibro-700 text-white shadow-saibro-200 scale-105'
+                                            : 'bg-linear-to-br from-stone-50 to-stone-100 text-stone-600 hover:shadow-xl hover:scale-105 border-2 border-stone-200'
                                         }`}
                                     >
                                         Regular
@@ -739,9 +744,9 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                                     <button
                                         type="button"
                                         onClick={() => setStudentForm({ ...studentForm, studentType: 'dependent' })}
-                                        className={`py-3 px-4 rounded-xl font-bold text-sm transition-all ${studentForm.studentType === 'dependent'
-                                            ? 'bg-blue-500 text-white shadow-lg'
-                                            : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                                        className={`py-3 px-4 rounded-xl font-black text-xs uppercase tracking-tight shadow-lg transition-all duration-200 ${studentForm.studentType === 'dependent'
+                                            ? 'bg-linear-to-br from-blue-600 to-blue-700 text-white shadow-blue-200 scale-105'
+                                            : 'bg-linear-to-br from-stone-50 to-stone-100 text-stone-600 hover:shadow-xl hover:scale-105 border-2 border-stone-200'
                                         }`}
                                     >
                                         Dependente
@@ -753,14 +758,14 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                             {studentForm.studentType === 'regular' && (
                                 <>
                                     <div>
-                                        <label className="block text-xs font-bold text-stone-500 uppercase mb-1">Tipo de Plano</label>
+                                        <label className="block text-xs font-black text-stone-500 uppercase mb-2 tracking-wide">Tipo de Plano</label>
                                         <div className="grid grid-cols-3 gap-2">
                                             <button
                                                 type="button"
                                                 onClick={() => setStudentForm({ ...studentForm, planType: 'Day Card' })}
-                                                className={`py-3 px-2 rounded-xl font-bold text-xs transition-all ${studentForm.planType === 'Day Card'
-                                                    ? 'bg-saibro-600 text-white shadow-lg'
-                                                    : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                                                className={`py-3 px-2 rounded-xl font-black text-[10px] uppercase tracking-tight shadow-lg transition-all duration-200 ${studentForm.planType === 'Day Card'
+                                                    ? 'bg-linear-to-br from-saibro-600 to-saibro-700 text-white shadow-saibro-200 scale-105'
+                                                    : 'bg-linear-to-br from-stone-50 to-stone-100 text-stone-600 hover:shadow-xl hover:scale-105 border-2 border-stone-200'
                                                 }`}
                                             >
                                                 Day Card
@@ -768,9 +773,9 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                                             <button
                                                 type="button"
                                                 onClick={() => setStudentForm({ ...studentForm, planType: 'Day Card Experimental' })}
-                                                className={`py-3 px-2 rounded-xl font-bold text-xs transition-all ${studentForm.planType === 'Day Card Experimental'
-                                                    ? 'bg-amber-500 text-white shadow-lg'
-                                                    : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                                                className={`py-3 px-2 rounded-xl font-black text-[10px] uppercase tracking-tight shadow-lg transition-all duration-200 ${studentForm.planType === 'Day Card Experimental'
+                                                    ? 'bg-linear-to-br from-amber-600 to-amber-700 text-white shadow-amber-200 scale-105'
+                                                    : 'bg-linear-to-br from-stone-50 to-stone-100 text-stone-600 hover:shadow-xl hover:scale-105 border-2 border-stone-200'
                                                 }`}
                                             >
                                                 Experimental
@@ -778,12 +783,12 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                                             <button
                                                 type="button"
                                                 onClick={() => setStudentForm({ ...studentForm, planType: 'Card Mensal' })}
-                                                className={`py-3 px-2 rounded-xl font-bold text-xs transition-all ${studentForm.planType === 'Card Mensal'
-                                                    ? 'bg-saibro-600 text-white shadow-lg'
-                                                    : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                                                className={`py-3 px-2 rounded-xl font-black text-[10px] uppercase tracking-tight shadow-lg transition-all duration-200 ${studentForm.planType === 'Card Mensal'
+                                                    ? 'bg-linear-to-br from-purple-600 to-purple-700 text-white shadow-purple-200 scale-105'
+                                                    : 'bg-linear-to-br from-stone-50 to-stone-100 text-stone-600 hover:shadow-xl hover:scale-105 border-2 border-stone-200'
                                                 }`}
                                             >
-                                                Card Mensal
+                                                Mensal
                                             </button>
                                         </div>
                                     </div>
@@ -811,11 +816,11 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                             {studentForm.studentType === 'dependent' && (
                                 <>
                                     <div>
-                                        <label className="block text-xs font-bold text-stone-500 uppercase mb-1">Sócio Responsável *</label>
+                                        <label className="block text-xs font-black text-stone-500 uppercase mb-2 tracking-wide">Sócio Responsável</label>
                                         <select
                                             value={studentForm.responsibleSocioId}
                                             onChange={e => setStudentForm({ ...studentForm, responsibleSocioId: e.target.value })}
-                                            className="w-full p-3 bg-stone-50 rounded-xl"
+                                            className="w-full p-3 bg-linear-to-br from-stone-50 to-stone-100 rounded-xl border-2 border-stone-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all font-bold text-sm"
                                         >
                                             <option value="">Selecione...</option>
                                             {socios.map(s => (
@@ -824,11 +829,11 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                                         </select>
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-bold text-stone-500 uppercase mb-1">Tipo de Relacionamento *</label>
+                                        <label className="block text-xs font-black text-stone-500 uppercase mb-2 tracking-wide">Parentesco</label>
                                         <select
                                             value={studentForm.relationshipType}
                                             onChange={e => setStudentForm({ ...studentForm, relationshipType: e.target.value as RelationshipType })}
-                                            className="w-full p-3 bg-stone-50 rounded-xl"
+                                            className="w-full p-3 bg-linear-to-br from-stone-50 to-stone-100 rounded-xl border-2 border-stone-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all font-bold text-sm"
                                         >
                                             <option value="">Selecione...</option>
                                             <option value="filho">Filho</option>
@@ -838,16 +843,28 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                                             <option value="outro">Outro</option>
                                         </select>
                                     </div>
-                                    <div className="bg-blue-50 p-3 rounded-lg border border-blue-100 text-xs text-blue-700">
-                                        Dependentes não possuem cobrança. Vinculados ao sócio responsável.
+                                    <div className="bg-linear-to-br from-blue-50 to-blue-100 p-4 rounded-xl border-2 border-blue-200 shadow-lg shadow-blue-100">
+                                        <p className="text-xs font-bold text-blue-700">
+                                            💡 Dependentes não possuem cobrança. Vinculados ao sócio responsável.
+                                        </p>
                                     </div>
                                 </>
                             )}
                         </div>
 
-                        <div className="flex gap-3 pt-4 border-t border-stone-100">
-                            <button onClick={() => setShowStudentModal(false)} className="flex-1 py-3 text-stone-500 font-bold hover:bg-stone-50 rounded-xl">Cancelar</button>
-                            <button onClick={handleSaveStudent} className="flex-1 py-3 bg-saibro-600 text-white rounded-xl font-bold shadow-md hover:bg-saibro-700">Salvar</button>
+                        <div className="flex gap-3 pt-5 border-t-2 border-stone-100">
+                            <button
+                                onClick={() => setShowStudentModal(false)}
+                                className="flex-1 py-3 bg-linear-to-br from-stone-50 to-stone-100 text-stone-600 font-black text-xs uppercase tracking-tight rounded-xl shadow-lg shadow-stone-200 hover:shadow-xl hover:scale-105 transition-all duration-200 border-2 border-stone-200"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={handleSaveStudent}
+                                className="flex-1 py-3 bg-linear-to-br from-saibro-600 to-saibro-700 text-white font-black text-xs uppercase tracking-tight rounded-xl shadow-lg shadow-saibro-200 hover:shadow-xl hover:scale-105 transition-all duration-200"
+                            >
+                                💾 Salvar
+                            </button>
                         </div>
                     </div>
                 </div>
