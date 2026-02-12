@@ -331,9 +331,9 @@ export const AdminStudents: React.FC = () => {
     };
 
     const canConvertToMensal = (student: NonSocioStudent) => {
-        return (student.planType === 'Day Card' || student.planType === 'Day Card Experimental')
-            && student.planStatus === 'active'
-            && student.studentType !== 'dependent';
+        if (student.studentType === 'dependent') return false;
+        if (student.planType === 'Day Card Experimental') return true; // sempre permitir upgrade + estorno
+        return student.planType === 'Day Card' && student.planStatus === 'active';
     };
 
     return (

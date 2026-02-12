@@ -76,6 +76,7 @@ export interface Reservation {
   professorId?: string;
   studentType?: 'socio' | 'non-socio';
   nonSocioStudentId?: string; // Link if studentType is non-socio
+  nonSocioStudentIds?: string[]; // Multiple non-socio/dependent students
 
   observation?: string;
   status: 'active' | 'cancelled';

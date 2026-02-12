@@ -6,6 +6,24 @@ import { getNowInFortaleza } from '../utils';
 
 type RegularPlanType = 'Day Card' | 'Day Card Experimental' | 'Card Mensal';
 
+const getClassNonSocioIds = (res: Reservation): string[] => {
+    if (res.nonSocioStudentIds && res.nonSocioStudentIds.length > 0) return res.nonSocioStudentIds;
+    if (res.nonSocioStudentId) return [res.nonSocioStudentId];
+    if (res.type === 'Aula' && res.studentType === 'non-socio' && res.participantIds.length > 0) {
+        return res.participantIds;
+    }
+    return [];
+};
+
+const getClassSocioIds = (res: Reservation): string[] => {
+    if (res.type === 'Aula' && res.studentType === 'non-socio') {
+        if ((!res.nonSocioStudentIds || res.nonSocioStudentIds.length === 0) && !res.nonSocioStudentId) {
+            return [];
+        }
+    }
+    return res.participantIds || [];
+};
+
 // --- HELPER: Student Card ---
 const StudentCard: React.FC<{ student: NonSocioStudent, onEdit: (s: NonSocioStudent) => void, onToggleStatus: (id: string) => void }> = ({ student, onEdit, onToggleStatus }) => {
     const isMaster = student.planType === 'Card Mensal';
@@ -160,6 +178,7 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                     professorId: r.professor_id,
                     studentType: r.student_type,
                     nonSocioStudentId: r.non_socio_student_id,
+                    nonSocioStudentIds: r.non_socio_student_ids || [],
                     status: r.status
                 })));
             }
@@ -404,18 +423,17 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                             <div className="space-y-3">
                                 {todaysClasses.map(r => {
                                     const court = courts.find(c => c.id === r.courtId);
-                                    let studentName = 'TBD';
-                                    let studentInfo = '';
-
-                                    if (r.studentType === 'socio' && r.participantIds.length > 0) {
-                                        const s = profiles.find(u => u.id === r.participantIds[0]);
-                                        studentName = s?.name || 'Sócio';
-                                        studentInfo = 'Sócio';
-                                    } else if (r.studentType === 'non-socio' && r.nonSocioStudentId) {
-                                        const s = students.find(ns => ns.id === r.nonSocioStudentId);
-                                        studentName = s?.name || 'Aluno Externo';
-                                        studentInfo = s?.planType || 'Externo';
-                                    }
+                                    const socioIds = getClassSocioIds(r);
+                                    const nonSocioIds = getClassNonSocioIds(r);
+                                    const socioNames = socioIds.map(id => profiles.find(u => u.id === id)?.name).filter(Boolean) as string[];
+                                    const nonSocioNames = nonSocioIds.map(id => students.find(ns => ns.id === id)?.name).filter(Boolean) as string[];
+                                    const combinedNames = [...socioNames, ...nonSocioNames];
+                                    const studentName = combinedNames.length > 0
+                                        ? combinedNames.slice(0, 2).join(', ') + (combinedNames.length > 2 ? ` +${combinedNames.length - 2}` : '')
+                                        : 'TBD';
+                                    const studentInfo = socioNames.length > 0 && nonSocioNames.length > 0
+                                        ? 'Misto'
+                                        : (socioNames.length > 0 ? 'Sócio' : (nonSocioNames.length > 0 ? 'Não sócio' : ''));
 
                                     return (
                                         <div key={r.id} className="bg-white p-4 rounded-xl border-l-4 border-saibro-500 shadow-sm flex justify-between items-center">
@@ -447,9 +465,14 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                             {myClasses.filter(r => !todaysClasses.includes(r)).length === 0 && <p className="text-stone-400 text-sm">Sem aulas futuras.</p>}
                             {myClasses.filter(r => !todaysClasses.includes(r)).map(r => {
                                 const court = courts.find(c => c.id === r.courtId);
-                                let studentName = r.studentType === 'socio'
-                                    ? profiles.find(u => u.id === r.participantIds[0])?.name
-                                    : students.find(s => s.id === r.nonSocioStudentId)?.name;
+                                const socioIds = getClassSocioIds(r);
+                                const nonSocioIds = getClassNonSocioIds(r);
+                                const socioNames = socioIds.map(id => profiles.find(u => u.id === id)?.name).filter(Boolean) as string[];
+                                const nonSocioNames = nonSocioIds.map(id => students.find(s => s.id === id)?.name).filter(Boolean) as string[];
+                                const combinedNames = [...socioNames, ...nonSocioNames];
+                                const studentName = combinedNames.length > 0
+                                    ? combinedNames.slice(0, 2).join(', ') + (combinedNames.length > 2 ? ` +${combinedNames.length - 2}` : '')
+                                    : 'TBD';
 
                                 return (
                                     <div key={r.id} className="bg-white p-3 rounded-lg border border-stone-100 flex justify-between items-center">

@@ -50,13 +50,27 @@ ALTER TABLE public.professors ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.non_socio_students ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.student_payments ENABLE ROW LEVEL SECURITY;
 
+-- 0d.1 Ensure custom roles exist in user_role enum before policies that reference them
+DO $$ BEGIN
+    IF EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role' AND typnamespace = 'auth'::regnamespace) THEN
+        ALTER TYPE auth.user_role ADD VALUE IF NOT EXISTS 'admin';
+        ALTER TYPE auth.user_role ADD VALUE IF NOT EXISTS 'socio';
+        ALTER TYPE auth.user_role ADD VALUE IF NOT EXISTS 'lanchonete';
+    END IF;
+    IF EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role' AND typnamespace = 'public'::regnamespace) THEN
+        ALTER TYPE public.user_role ADD VALUE IF NOT EXISTS 'admin';
+        ALTER TYPE public.user_role ADD VALUE IF NOT EXISTS 'socio';
+        ALTER TYPE public.user_role ADD VALUE IF NOT EXISTS 'lanchonete';
+    END IF;
+END $$;
+
 -- 0e. RLS Policies (idempotent with DROP IF EXISTS)
 DO $$ BEGIN
     -- Professors: admins full access
     DROP POLICY IF EXISTS "Admins can manage professors" ON public.professors;
     CREATE POLICY "Admins can manage professors" ON public.professors
         FOR ALL USING (
-            EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+            EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role::text = 'admin')
         );
 
     -- Professors: professors can view themselves
@@ -68,7 +82,7 @@ DO $$ BEGIN
     DROP POLICY IF EXISTS "Admins can manage students" ON public.non_socio_students;
     CREATE POLICY "Admins can manage students" ON public.non_socio_students
         FOR ALL USING (
-            EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+            EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role::text = 'admin')
         );
 
     -- Non-socio students: professors can manage their own students
@@ -86,14 +100,14 @@ DO $$ BEGIN
     DROP POLICY IF EXISTS "Socios can view students" ON public.non_socio_students;
     CREATE POLICY "Socios can view students" ON public.non_socio_students
         FOR SELECT USING (
-            EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'socio')
+            EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role::text = 'socio')
         );
 
     -- Student payments: admins full access
     DROP POLICY IF EXISTS "Admins can manage payments" ON public.student_payments;
     CREATE POLICY "Admins can manage payments" ON public.student_payments
         FOR ALL USING (
-            EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+            EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role::text = 'admin')
         );
 
     -- Student payments: professors can view own student payments

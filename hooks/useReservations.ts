@@ -146,6 +146,7 @@ export function useReservations(options: UseReservationsOptions = {}): UseReserv
         professorId: r.professor_id,
         studentType: r.student_type,
         nonSocioStudentId: r.non_socio_student_id,
+        nonSocioStudentIds: r.non_socio_student_ids || [],
         observation: r.observation,
         status: r.status,
         matchId: r.match_id,
@@ -190,6 +191,7 @@ export function useReservations(options: UseReservationsOptions = {}): UseReserv
           professor_id: reservation.professorId,
           student_type: reservation.studentType,
           non_socio_student_id: reservation.nonSocioStudentId,
+          non_socio_student_ids: reservation.nonSocioStudentIds || [],
           observation: reservation.observation,
           status: 'active'
         })
@@ -212,6 +214,7 @@ export function useReservations(options: UseReservationsOptions = {}): UseReserv
         professorId: data.professor_id,
         studentType: data.student_type,
         nonSocioStudentId: data.non_socio_student_id,
+        nonSocioStudentIds: data.non_socio_student_ids || [],
         observation: data.observation,
         status: data.status,
         matchId: data.match_id,
@@ -239,6 +242,7 @@ export function useReservations(options: UseReservationsOptions = {}): UseReserv
       const updateData: any = {};
 
       if (updates.participantIds) updateData.participant_ids = updates.participantIds;
+      if (updates.nonSocioStudentIds) updateData.non_socio_student_ids = updates.nonSocioStudentIds;
       if (updates.startTime) updateData.start_time = updates.startTime;
       if (updates.endTime) updateData.end_time = updates.endTime;
       if (updates.observation) updateData.observation = updates.observation;

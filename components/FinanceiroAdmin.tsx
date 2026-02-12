@@ -25,6 +25,19 @@ interface StudentPayment {
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
+type DayUseEntry = {
+    key: string;
+    reservation: Reservation;
+    label: string;
+};
+
+const getReservationNonSocioIds = (r: Reservation): string[] => {
+    if (r.nonSocioStudentIds && r.nonSocioStudentIds.length > 0) return r.nonSocioStudentIds;
+    if (r.nonSocioStudentId) return [r.nonSocioStudentId];
+    if (r.type === 'Aula' && r.studentType === 'non-socio' && r.participantIds.length > 0) return r.participantIds;
+    return [];
+};
+
 export const FinanceiroAdmin: React.FC = () => {
     const [reservations, setReservations] = useState<Reservation[]>([]);
     const [monthlyStudents, setMonthlyStudents] = useState<NonSocioStudent[]>([]);
@@ -57,6 +70,7 @@ export const FinanceiroAdmin: React.FC = () => {
                 guestName: r.guest_name,
                 studentType: r.student_type,
                 nonSocioStudentId: r.non_socio_student_id,
+                nonSocioStudentIds: r.non_socio_student_ids || [],
                 status: r.status,
                 payment_status: r.payment_status
             } as any)));
@@ -154,12 +168,35 @@ export const FinanceiroAdmin: React.FC = () => {
 
         // Group Day Uses
         const friendlyDayUses = monthReservations.filter(r => r.type === 'Play' && r.guestName && (r as any).payment_status !== 'exempt');
-        const studentDayUses = monthReservations.filter(r => r.type === 'Aula' && r.studentType === 'non-socio' && (r as any).payment_status !== 'exempt');
+        const friendlyEntries: DayUseEntry[] = friendlyDayUses.map(r => ({
+            key: r.id,
+            reservation: r,
+            label: r.guestName || 'Convidado'
+        }));
+        const studentEntries: DayUseEntry[] = monthReservations.flatMap(r => {
+            if (r.type !== 'Aula') return [];
+            if ((r as any).payment_status === 'exempt') return [];
+
+            const nonSocioIds = getReservationNonSocioIds(r);
+            const regularIds = nonSocioIds.filter(id => {
+                const s = monthlyStudents.find(st => st.id === id);
+                return s && s.studentType !== 'dependent';
+            });
+
+            return regularIds.map(id => {
+                const s = monthlyStudents.find(st => st.id === id);
+                return {
+                    key: `${r.id}_${id}`,
+                    reservation: r,
+                    label: s?.name || 'Aluno'
+                };
+            });
+        });
 
         const friendlyCount = friendlyDayUses.length;
         const friendlyTotal = friendlyCount * DAY_USE_PRICE;
 
-        const studentCount = studentDayUses.length;
+        const studentCount = studentEntries.length;
         const studentTotal = studentCount * DAY_USE_PRICE;
 
         // Only active payments count toward revenue
@@ -175,13 +212,13 @@ export const FinanceiroAdmin: React.FC = () => {
             cancelledTotal,
             grandTotal: friendlyTotal + studentTotal + activePaymentsTotal,
             details: {
-                friendly: friendlyDayUses,
-                student: studentDayUses,
+                friendly: friendlyEntries,
+                student: studentEntries,
                 activePayments,
                 cancelledPayments
             }
         };
-    }, [reservations, studentPayments, selectedMonth]);
+    }, [reservations, studentPayments, selectedMonth, monthlyStudents]);
 
     if (loading) {
         return (
@@ -305,14 +342,15 @@ export const FinanceiroAdmin: React.FC = () => {
                             </div>
                         )}
                         {[...reportData.details.friendly, ...reportData.details.student]
-                            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-                            .map(r => {
+                            .sort((a, b) => new Date(b.reservation.date).getTime() - new Date(a.reservation.date).getTime())
+                            .map(entry => {
+                                const r = entry.reservation;
                                 const isDeleting = processingPayment === r.id;
                                 const isDeleted = deleteSuccess === r.id;
 
                                 return (
                                     <div
-                                        key={r.id}
+                                        key={entry.key}
                                         className={`group p-4 rounded-xl border-2 transition-all duration-300 ${isDeleted
                                             ? 'bg-red-50 border-red-200 scale-95'
                                             : 'bg-stone-50 border-stone-100 hover:border-blue-200 hover:shadow-sm'
@@ -322,7 +360,7 @@ export const FinanceiroAdmin: React.FC = () => {
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2 mb-1">
                                                     <p className="font-bold text-stone-800 truncate">
-                                                        {r.guestName || (monthlyStudents.find(s => s.id === r.nonSocioStudentId)?.name || 'Aluno')}
+                                                        {entry.label}
                                                     </p>
                                                     <span className={`px-2 py-0.5 text-[10px] font-black rounded-full ${r.type === 'Play'
                                                         ? 'bg-orange-100 text-orange-700'
