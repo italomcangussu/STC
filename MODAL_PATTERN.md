@@ -83,6 +83,7 @@ function MeuComponente() {
 - [x] `MatchScheduleModal` (Agendar partida)
 - [x] `ResultModal` (Lançar resultado)
 - [x] `AddReservationModal` (Nova reserva - Agenda)
+- [x] `ProfessorProfile.tsx` (Modal de Novo Aluno)
 
 ### ⚠️ Pendentes de Migração
 
@@ -106,14 +107,13 @@ function MeuComponente() {
 | `ChampionshipAdmin.tsx`          | z-50          | 🟡 Média   | 1 modal               |
 | `MatchGenerationModal.tsx`       | z-100         | 🟡 Média   | 1 modal               |
 | `ChallengeNotificationPopup.tsx` | z-100         | 🟡 Média   | 2 modais              |
-| `ProfessorProfile.tsx`           | z-60          | 🟡 Média   | 1 modal               |
 | `InstallPrompt.tsx`              | z-100         | 🟢 Baixa   | Prompt de instalação  |
 | `AdminLogin.tsx`                 | z-60          | 🟡 Média   | 1 modal               |
 | `Klanches.tsx`                   | z-60          | 🟡 Média   | 1 modal               |
 | `PublicChampionshipPage.tsx`     | z-100         | 🟡 Média   | 1 modal               |
 | `AdminUserEditor.tsx`            | z-60          | 🟡 Média   | 1 modal               |
 
-**Total:** ~34 modais pendentes de migração
+**Total:** ~33 modais pendentes de migração
 
 ---
 

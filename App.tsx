@@ -25,6 +25,8 @@ import { supabase } from './lib/supabase';
 import { OnboardingModal } from './components/OnboardingModal';
 import { ChallengeNotificationPopup } from './components/ChallengeNotificationPopup';
 import { PublicChampionshipPage } from './components/PublicChampionshipPage';
+import { UpdateNotification } from './components/UpdateNotification';
+import { useVersionCheck } from './hooks/useVersionCheck';
 
 interface Announcement {
   id: string;
@@ -114,6 +116,12 @@ const AppContent: React.FC = () => {
   const [targetAthleteId, setTargetAthleteId] = useState<string | null>(null);
   const [showChallengeNotification, setShowChallengeNotification] = useState(true);
 
+  // 🔄 Version Check - Auto-reload on deploy
+  const { updateAvailable, reloadApp } = useVersionCheck({
+    checkInterval: 5, // Check every 5 minutes
+    enableBroadcast: true // Listen to Supabase broadcasts
+  });
+
   const handleOpenProfile = (userId: string) => {
     setTargetAthleteId(userId);
     setView('atletas');
@@ -183,6 +191,8 @@ const AppContent: React.FC = () => {
           onClose={() => setShowChallengeNotification(false)}
         />
       )}
+      {/* 🔄 Update Notification */}
+      {updateAvailable && <UpdateNotification onUpdate={reloadApp} />}
     </>
   );
 };
