@@ -51,6 +51,7 @@ export interface NonSocioStudent {
   planStatus: 'active' | 'inactive';
   masterExpirationDate?: string; // YYYY-MM-DD, required if Master Card
   professorId: string | null; // The professor who manages this student (null for dependents)
+  isActive?: boolean; // Soft delete flag (default: true)
   
   // Dependent student fields
   studentType?: StudentType; // 'regular' or 'dependent'

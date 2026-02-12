@@ -60,7 +60,11 @@ export const AdminStudents: React.FC = () => {
 
     const fetchData = async () => {
         setLoading(true);
-        const { data: sData } = await supabase.from('non_socio_students').select('*').order('name');
+        const { data: sData } = await supabase
+            .from('non_socio_students')
+            .select('*')
+            .eq('is_active', true)
+            .order('name');
         const { data: pData } = await supabase.from('professors').select('*').eq('is_active', true);
         const { data: sociosData } = await supabase
             .from('profiles')
@@ -80,7 +84,8 @@ export const AdminStudents: React.FC = () => {
                 professorId: s.professor_id,
                 studentType: s.student_type || 'regular',
                 responsibleSocioId: s.responsible_socio_id,
-                relationshipType: s.relationship_type
+                relationshipType: s.relationship_type,
+                isActive: s.is_active ?? true
             })));
         }
         if (pData) {
@@ -159,14 +164,18 @@ export const AdminStudents: React.FC = () => {
     };
 
     const handleDeleteStudent = async (id: string) => {
-        if (!confirm('Tem certeza? Isso apagará histórico e pagamentos.')) return;
+        const student = students.find(s => s.id === id);
+        if (!confirm(`Desativar "${student?.name}"? O histórico de pagamentos será preservado.`)) return;
         setProcessing(true);
         try {
-            const { error } = await supabase.from('non_socio_students').delete().eq('id', id);
+            const { error } = await supabase
+                .from('non_socio_students')
+                .update({ is_active: false })
+                .eq('id', id);
             if (error) throw error;
             await fetchData();
         } catch (error: any) {
-            alert('Erro ao excluir aluno: ' + error.message);
+            alert('Erro ao desativar aluno: ' + error.message);
         } finally {
             setProcessing(false);
         }

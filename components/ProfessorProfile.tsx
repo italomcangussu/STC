@@ -1,10 +1,24 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { User, NonSocioStudent, Reservation, Court, RelationshipType } from '../types';
-import { Calendar, Users, Plus, Edit, CheckCircle, XCircle, Clock, MapPin, DollarSign, Loader2, AlertCircle, UserPlus } from 'lucide-react';
+import { Calendar, Users, Plus, Edit, CheckCircle, XCircle, Clock, MapPin, DollarSign, Loader2, AlertCircle, UserPlus, ArrowUpCircle, X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { getNowInFortaleza } from '../utils';
+import { getNowInFortaleza, formatDate, formatDateBr } from '../utils';
 
 type RegularPlanType = 'Day Card' | 'Day Card Experimental' | 'Card Mensal';
+
+const DAY_CARD_PRICE = 50;
+const CARD_MENSAL_PRICE = 200;
+
+/** Calcula data de expiração: mesmo dia do mês seguinte, limitando ao último dia do mês */
+function addOneMonth(dateStr: string): string {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const nextMonth = m === 12 ? 1 : m + 1;
+    const nextYear = m === 12 ? y + 1 : y;
+    const lastDayOfNextMonth = new Date(nextYear, nextMonth, 0).getDate();
+    const day = Math.min(d, lastDayOfNextMonth);
+    return `${nextYear}-${String(nextMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
 
 const getClassNonSocioIds = (res: Reservation): string[] => {
     if (res.nonSocioStudentIds && res.nonSocioStudentIds.length > 0) return res.nonSocioStudentIds;
@@ -25,7 +39,14 @@ const getClassSocioIds = (res: Reservation): string[] => {
 };
 
 // --- HELPER: Student Card ---
-const StudentCard: React.FC<{ student: NonSocioStudent, onEdit: (s: NonSocioStudent) => void, onToggleStatus: (id: string) => void }> = ({ student, onEdit, onToggleStatus }) => {
+const StudentCard: React.FC<{ 
+    student: NonSocioStudent, 
+    onEdit: (s: NonSocioStudent) => void, 
+    onToggleStatus: (id: string) => void, 
+    onDelete: (id: string) => void,
+    onConvert: (s: NonSocioStudent) => void,
+    canConvert: boolean
+}> = ({ student, onEdit, onToggleStatus, onDelete, onConvert, canConvert }) => {
     const isMaster = student.planType === 'Card Mensal';
     const isDependent = student.studentType === 'dependent';
     const isActive = student.planStatus === 'active';
@@ -78,7 +99,21 @@ const StudentCard: React.FC<{ student: NonSocioStudent, onEdit: (s: NonSocioStud
                 )}
             </div>
 
-            <div className="flex gap-2 mt-4 border-t border-stone-50 pt-3">
+            {/* Botão de Conversão */}
+            {canConvert && (
+                <button 
+                    onClick={() => onConvert(student)} 
+                    className="w-full mb-3 py-2.5 rounded-xl font-bold text-sm flex justify-center items-center gap-2 bg-purple-500 text-white hover:bg-purple-600 shadow-md shadow-purple-100 transition-colors"
+                >
+                    <ArrowUpCircle size={16} />
+                    Converter para Card Mensal
+                    {student.planType === 'Day Card Experimental' && (
+                        <span className="text-[10px] bg-purple-400 px-1.5 py-0.5 rounded ml-1">ESTORNO R$50</span>
+                    )}
+                </button>
+            )}
+
+            <div className="flex gap-2 border-t border-stone-50 pt-3">
                 <button onClick={() => onEdit(student)} className="flex-1 py-1.5 text-xs font-bold text-stone-600 bg-stone-100 hover:bg-stone-200 rounded flex items-center justify-center gap-1">
                     <Edit size={12} /> Editar
                 </button>
@@ -87,6 +122,13 @@ const StudentCard: React.FC<{ student: NonSocioStudent, onEdit: (s: NonSocioStud
                         {isActive ? 'Desativar' : 'Ativar'}
                     </button>
                 )}
+                <button 
+                    onClick={() => onDelete(student.id)} 
+                    className="py-1.5 px-3 text-xs font-bold text-red-600 border border-red-200 hover:bg-red-50 rounded flex items-center justify-center gap-1 transition-colors"
+                    title="Excluir aluno"
+                >
+                    <XCircle size={12} /> Excluir
+                </button>
             </div>
         </div>
     );
@@ -118,6 +160,13 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
         relationshipType: '' as RelationshipType | ''
     });
 
+    // --- CONVERT TO MENSAL MODAL ---
+    const [showConvertModal, setShowConvertModal] = useState(false);
+    const [convertStudent, setConvertStudent] = useState<NonSocioStudent | null>(null);
+    const [convertDate, setConvertDate] = useState(formatDate(getNowInFortaleza()));
+    const [processing, setProcessing] = useState(false);
+
+
     // Fetch data from Supabase
     useEffect(() => {
         const fetchData = async () => {
@@ -138,11 +187,12 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                     bio: profData.bio
                 });
 
-                // Fetch students for this professor
+                // Fetch students for this professor (only active)
                 const { data: studentsData } = await supabase
                     .from('non_socio_students')
                     .select('*')
-                    .eq('professor_id', profData.id);
+                    .eq('professor_id', profData.id)
+                    .eq('is_active', true);
 
                 setStudents((studentsData || []).map(s => ({
                     id: s.id,
@@ -154,7 +204,8 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                     professorId: s.professor_id,
                     studentType: s.student_type || 'regular',
                     responsibleSocioId: s.responsible_socio_id,
-                    relationshipType: s.relationship_type
+                    relationshipType: s.relationship_type,
+                    isActive: s.is_active ?? true
                 })));
 
                 // Fetch reservations for this professor
@@ -353,6 +404,108 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
         setStudents(prev => prev.map(s => s.id === id ? { ...s, planStatus: newStatus } : s));
     };
 
+    const handleDeleteStudent = async (id: string) => {
+        const student = students.find(s => s.id === id);
+        if (!student) return;
+
+        if (confirm(`Tem certeza que deseja desativar o aluno "${student.name}"? O histórico de pagamentos será preservado.`)) {
+            const { error } = await supabase
+                .from('non_socio_students')
+                .update({ is_active: false })
+                .eq('id', id);
+
+            if (error) {
+                alert('Erro ao desativar aluno: ' + error.message);
+                return;
+            }
+
+            // Remove da lista local (soft delete - não mostra mais na interface)
+            setStudents(prev => prev.filter(s => s.id !== id));
+        }
+    };
+
+    // --- Conversão para Card Mensal ---
+    const handleOpenConvert = (student: NonSocioStudent) => {
+        setConvertStudent(student);
+        setConvertDate(formatDate(getNowInFortaleza()));
+        setShowConvertModal(true);
+    };
+
+    const handleConfirmConvert = async () => {
+        if (!convertStudent || !convertDate) return;
+        setProcessing(true);
+
+        try {
+            const isoExp = addOneMonth(convertDate);
+            const isExperimental = convertStudent.planType === 'Day Card Experimental';
+
+            // 1. Se Day Card Experimental: cancelar pagamentos de R$ 50 existentes
+            if (isExperimental) {
+                const { data: existingPayments } = await supabase
+                    .from('student_payments')
+                    .select('id')
+                    .eq('student_id', convertStudent.id)
+                    .eq('status', 'active');
+
+                if (existingPayments && existingPayments.length > 0) {
+                    const paymentIds = existingPayments.map(p => p.id);
+                    await supabase.from('student_payments')
+                        .update({
+                            status: 'cancelled',
+                            cancelled_reason: 'Convertido para Card Mensal'
+                        })
+                        .in('id', paymentIds);
+                }
+            }
+
+            // 2. Criar pagamento Card Mensal (R$ 200)
+            const { error: payError } = await supabase.from('student_payments').insert({
+                student_id: convertStudent.id,
+                amount: CARD_MENSAL_PRICE,
+                payment_date: new Date(convertDate + 'T12:00:00').toISOString(),
+                valid_until: new Date(isoExp + 'T23:59:59').toISOString(),
+                approved_by: (await supabase.auth.getUser()).data.user?.id,
+                status: 'active'
+            });
+            if (payError) throw payError;
+
+            // 3. Atualizar aluno para Card Mensal
+            const { error: upError } = await supabase.from('non_socio_students').update({
+                plan_type: 'Card Mensal',
+                plan_status: 'active',
+                master_expiration_date: isoExp
+            }).eq('id', convertStudent.id);
+            if (upError) throw upError;
+
+            // Atualizar lista local
+            setStudents(prev => prev.map(s => 
+                s.id === convertStudent.id 
+                    ? { ...s, planType: 'Card Mensal' as any, planStatus: 'active', masterExpirationDate: isoExp }
+                    : s
+            ));
+
+            setShowConvertModal(false);
+            setConvertStudent(null);
+
+            if (isExperimental) {
+                alert(`Conversão realizada! Pagamento(s) Day Card Experimental estornado(s). Card Mensal ativado até ${formatDateBr(isoExp)}.`);
+            } else {
+                alert(`Conversão realizada! Card Mensal ativado até ${formatDateBr(isoExp)}. Pagamento(s) Day Card anteriores mantidos.`);
+            }
+        } catch (error: any) {
+            alert('Erro na conversão: ' + error.message);
+        } finally {
+            setProcessing(false);
+        }
+    };
+
+    const canConvertToMensal = (student: NonSocioStudent) => {
+        if (student.studentType === 'dependent') return false;
+        if (student.planType === 'Day Card Experimental') return true; // sempre permitir upgrade + estorno
+        return student.planType === 'Day Card' && student.planStatus === 'active';
+    };
+
+
     const handleDeleteClass = async (id: string) => {
         if (confirm('Cancelar esta aula?')) {
             await supabase
@@ -517,7 +670,7 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                                             const isExpired = isMaster && (!s.masterExpirationDate || new Date(s.masterExpirationDate + 'T00:00:00') < getNowInFortaleza());
                                             return s.planStatus !== 'active' || isExpired;
                                         }).map(student => (
-                                            <StudentCard key={student.id} student={student} onEdit={openStudentModal} onToggleStatus={toggleStudentStatus} />
+                                            <StudentCard key={student.id} student={student} onEdit={openStudentModal} onToggleStatus={toggleStudentStatus} onDelete={handleDeleteStudent} onConvert={handleOpenConvert} canConvert={canConvertToMensal(student)} />
                                         ))}
                                     </div>
                                 </div>
@@ -533,7 +686,7 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                                     const isExpired = isMaster && (!s.masterExpirationDate || new Date(s.masterExpirationDate + 'T00:00:00') < getNowInFortaleza());
                                     return s.planStatus === 'active' && !isExpired;
                                 }).map(student => (
-                                    <StudentCard key={student.id} student={student} onEdit={openStudentModal} onToggleStatus={toggleStudentStatus} />
+                                    <StudentCard key={student.id} student={student} onEdit={openStudentModal} onToggleStatus={toggleStudentStatus} onDelete={handleDeleteStudent} onConvert={handleOpenConvert} canConvert={canConvertToMensal(student)} />
                                 ))}
                                 {myStudents.length === 0 && <p className="text-stone-400 text-sm italic">Nenhum aluno cadastrado.</p>}
                             </div>
@@ -696,6 +849,72 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                             <button onClick={() => setShowStudentModal(false)} className="flex-1 py-3 text-stone-500 font-bold hover:bg-stone-50 rounded-xl">Cancelar</button>
                             <button onClick={handleSaveStudent} className="flex-1 py-3 bg-saibro-600 text-white rounded-xl font-bold shadow-md hover:bg-saibro-700">Salvar</button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* --- Convert to Card Mensal Modal --- */}
+            {showConvertModal && convertStudent && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-xl font-bold text-stone-800">Converter para Card Mensal</h3>
+                            <button onClick={() => setShowConvertModal(false)}><X className="text-stone-400" /></button>
+                        </div>
+
+                        <div className="bg-stone-50 p-4 rounded-xl mb-4">
+                            <p className="text-sm text-stone-500 mb-1">Aluno</p>
+                            <p className="font-bold text-lg text-stone-800">{convertStudent.name}</p>
+                            <p className="text-xs text-stone-400 mt-1">Plano atual: {convertStudent.planType}</p>
+                        </div>
+
+                        {convertStudent.planType === 'Day Card Experimental' && (
+                            <div className="bg-amber-50 border border-amber-200 p-4 rounded-xl mb-4">
+                                <p className="text-sm font-bold text-amber-800 mb-1">Estorno automático</p>
+                                <p className="text-xs text-amber-700">
+                                    Os pagamentos de R$ 50 (Day Card Experimental) serão estornados e substituídos pelo Card Mensal de R$ 200.
+                                </p>
+                            </div>
+                        )}
+
+                        {convertStudent.planType === 'Day Card' && (
+                            <div className="bg-blue-50 border border-blue-200 p-4 rounded-xl mb-4">
+                                <p className="text-sm font-bold text-blue-800 mb-1">Sem estorno</p>
+                                <p className="text-xs text-blue-700">
+                                    Os pagamentos de R$ 50 (Day Card) permanecem no financeiro. O Card Mensal de R$ 200 será adicionado.
+                                </p>
+                            </div>
+                        )}
+
+                        <div className="bg-stone-50 p-4 rounded-xl mb-4">
+                            <div className="flex justify-between items-center">
+                                <span className="text-stone-500 text-sm">Novo valor</span>
+                                <span className="font-bold text-xl text-green-600">R$ {CARD_MENSAL_PRICE},00</span>
+                            </div>
+                        </div>
+
+                        <div className="mb-6">
+                            <label className="block text-xs font-bold text-stone-500 uppercase mb-2">Data do Pagamento</label>
+                            <input
+                                type="date"
+                                value={convertDate}
+                                onChange={e => setConvertDate(e.target.value)}
+                                className="w-full p-3 border-2 border-stone-200 rounded-xl text-lg font-bold text-stone-800 focus:border-saibro-500 outline-none"
+                            />
+                            <p className="text-xs text-stone-400 mt-2">
+                                O vencimento será calculado para <b>1 mês</b> após esta data.
+                            </p>
+                        </div>
+
+                        <button
+                            onClick={handleConfirmConvert}
+                            disabled={processing}
+                            className="w-full py-4 bg-purple-500 hover:bg-purple-600 text-white rounded-xl font-bold shadow-lg shadow-purple-100 flex justify-center items-center gap-2 disabled:opacity-50"
+                        >
+                            {processing ? <Loader2 className="animate-spin" /> : <>
+                                <CheckCircle size={20} /> Confirmar Conversão
+                            </>}
+                        </button>
                     </div>
                 </div>
             )}
