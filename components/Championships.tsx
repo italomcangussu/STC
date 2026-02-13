@@ -1307,6 +1307,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                     <ResultModal
                         match={editingMatch}
                         profiles={profiles}
+                        registrations={registrations}
                         onClose={() => setEditingMatch(null)}
                         onSave={(sA, sB) => handleSaveResult(editingMatch.id, sA, sB)}
                     />
@@ -1346,9 +1347,15 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
     );
 };
 
-export const ResultModal: React.FC<{ match: Match; profiles: User[]; onClose: () => void; onSave: (sA: number[], sB: number[]) => void }> = ({ match, profiles, onClose, onSave }) => {
+export const ResultModal: React.FC<{ match: Match; profiles: User[]; registrations?: Registration[]; onClose: () => void; onSave: (sA: number[], sB: number[]) => void }> = ({ match, profiles, registrations = [], onClose, onSave }) => {
     const pA = profiles.find(u => u.id === match.playerAId);
     const pB = profiles.find(u => u.id === match.playerBId);
+    const regA = registrations.find(r => r.id === match.registration_a_id);
+    const regB = registrations.find(r => r.id === match.registration_b_id);
+    const playerAName = regA?.user?.name || regA?.guest_name || pA?.name || 'Jogador A';
+    const playerBName = regB?.user?.name || regB?.guest_name || pB?.name || 'Jogador B';
+    const playerAAvatar = regA?.user?.avatar_url || pA?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(playerAName)}&background=random`;
+    const playerBAvatar = regB?.user?.avatar_url || pB?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(playerBName)}&background=random`;
 
     // Initialize with 3 sets (we'll show/hide the 3rd based on need)
     const [scoreA, setScoreA] = useState<number[]>(
@@ -1449,10 +1456,10 @@ export const ResultModal: React.FC<{ match: Match; profiles: User[]; onClose: ()
                     <div className="flex items-center justify-between gap-2">
                         <div className="flex flex-col items-center w-24">
                             <div className={`relative mb-2 ${matchWinner === 'A' ? 'scale-110' : 'opacity-80'} transition-all duration-300`}>
-                                <img src={pA?.avatar} className={`w-16 h-16 rounded-full object-cover border-4 ${matchWinner === 'A' ? 'border-saibro-500 shadow-xl shadow-saibro-200' : 'border-stone-100'}`} />
+                                <img src={playerAAvatar} className={`w-16 h-16 rounded-full object-cover border-4 ${matchWinner === 'A' ? 'border-saibro-500 shadow-xl shadow-saibro-200' : 'border-stone-100'}`} />
                                 {matchWinner === 'A' && <div className="absolute -bottom-2 right-0 bg-saibro-500 text-white p-1 rounded-full border-2 border-white"><Trophy size={12} /></div>}
                             </div>
-                            <p className="text-sm font-black text-center leading-tight text-stone-800">{pA?.name}</p>
+                            <p className="text-sm font-black text-center leading-tight text-stone-800">{playerAName}</p>
                         </div>
 
                         <div className="flex flex-col items-center gap-1">
@@ -1461,10 +1468,10 @@ export const ResultModal: React.FC<{ match: Match; profiles: User[]; onClose: ()
 
                         <div className="flex flex-col items-center w-24">
                             <div className={`relative mb-2 ${matchWinner === 'B' ? 'scale-110' : 'opacity-80'} transition-all duration-300`}>
-                                <img src={pB?.avatar} className={`w-16 h-16 rounded-full object-cover border-4 ${matchWinner === 'B' ? 'border-saibro-500 shadow-xl shadow-saibro-200' : 'border-stone-100'}`} />
+                                <img src={playerBAvatar} className={`w-16 h-16 rounded-full object-cover border-4 ${matchWinner === 'B' ? 'border-saibro-500 shadow-xl shadow-saibro-200' : 'border-stone-100'}`} />
                                 {matchWinner === 'B' && <div className="absolute -bottom-2 right-0 bg-saibro-500 text-white p-1 rounded-full border-2 border-white"><Trophy size={12} /></div>}
                             </div>
-                            <p className="text-sm font-black text-center leading-tight text-stone-800">{pB?.name}</p>
+                            <p className="text-sm font-black text-center leading-tight text-stone-800">{playerBName}</p>
                         </div>
                     </div>
 

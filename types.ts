@@ -70,6 +70,8 @@ export interface Reservation {
   courtId: string;
   creatorId: string;
   participantIds: string[];
+  participantNames?: (string | null)[]; // Optional display names when participants are guests/registrations
+  participantAvatars?: (string | null)[]; // Optional avatars for those participants
   guestName?: string;
   guestResponsibleId?: string;
 

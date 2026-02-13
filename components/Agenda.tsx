@@ -2,14 +2,14 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { User, Reservation, ReservationType, NonSocioStudent, PlanType, Professor, Match } from '../types';
-import { Calendar as CalIcon, ChevronLeft, ChevronRight, Plus, X, Calendar, Clock, MapPin, Users, Check, AlertCircle, Search, Filter, Loader2, Save, Trash2, Edit2, Play, Trophy, UserCog, ArrowRight, Info, UserPlus, LogOut, Wallet, Pencil, UserMinus, Share2, ArrowLeft, Minus, CheckCircle } from 'lucide-react';
+import { Calendar as CalIcon, ChevronLeft, ChevronRight, Plus, X, Calendar, Clock, MapPin, Users, Check, AlertCircle, Search, Filter, Loader2, Save, Trash2, Edit2, Play, Trophy, UserCog, ArrowRight, Info, UserPlus, LogOut, Wallet, Pencil, UserMinus, Share2, ArrowLeft, CheckCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { ScoreModal } from './ScoreModal';
 import { LiveScoreboard } from './LiveScoreboard';
 import { StandardModal } from './StandardModal';
 import { TennisCourtAnimation } from './ui/TennisCourtAnimation';
 import { Challenge } from '../types';
-import { getNowInFortaleza, formatDate, addDays, formatDateBr } from '../utils';
+import { getNowInFortaleza, formatDate, addDays, formatDateBr, getSetWinner } from '../utils';
 
 // Court type
 interface Court {
@@ -20,18 +20,6 @@ interface Court {
 }
 
 // --- HELPERS ---
-const getSetWinner = (scoreA: number, scoreB: number, isSuperTiebreak = false): 'A' | 'B' | null => {
-    if (isSuperTiebreak) {
-        if (scoreA >= 10 && scoreA - scoreB >= 2) return 'A';
-        if (scoreB >= 10 && scoreB - scoreA >= 2) return 'B';
-        return null;
-    }
-    if (scoreA === 7) return 'A';
-    if (scoreB === 7) return 'B';
-    if (scoreA === 6 && scoreB <= 4) return 'A';
-    if (scoreB === 6 && scoreA <= 4) return 'B';
-    return null;
-};
 
 // Check if user can launch score (same logic as LiveScoreboard)
 const canLaunchScore = (match: Match, userId?: string, isAdmin?: boolean): boolean => {
@@ -318,127 +306,7 @@ const isMatchLive = (res: Reservation) => {
     return now >= matchStart && now <= matchEnd;
 };
 
-// --- COMPONENT: Live Score HUD ---
-const LiveScoreSection: React.FC<{
-    res: Reservation;
-    profiles: User[];
-    onFinish: (winnerId: string, scoreA: number[], scoreB: number[]) => Promise<void>;
-}> = ({ res, profiles, onFinish }) => {
-    const [scoreA, setScoreA] = useState<number[]>(res.scoreA || [0]);
-    const [scoreB, setScoreB] = useState<number[]>(res.scoreB || [0]);
-    const [saving, setSaving] = useState(false);
-
-    const playerA = profiles.find(p => p.id === res.participantIds[0]);
-    const playerB = profiles.find(p => p.id === res.participantIds[1]);
-
-    const handleUpdate = (player: 'a' | 'b', setIdx: number, delta: number) => {
-        if (player === 'a') {
-            const newScore = [...scoreA];
-            newScore[setIdx] = Math.max(0, (newScore[setIdx] || 0) + delta);
-            setScoreA(newScore);
-        } else {
-            const newScore = [...scoreB];
-            newScore[setIdx] = Math.max(0, (newScore[setIdx] || 0) + delta);
-            setScoreB(newScore);
-        }
-    };
-
-    const addSet = () => {
-        if (scoreA.length < 3) {
-            setScoreA([...scoreA, 0]);
-            setScoreB([...scoreB, 0]);
-        }
-    };
-
-    const removeSet = (idx: number) => {
-        if (scoreA.length <= 1) return;
-        setScoreA(scoreA.filter((_, i) => i !== idx));
-        setScoreB(scoreB.filter((_, i) => i !== idx));
-    };
-
-    const handleConfirm = async () => {
-        if (!res.participantIds[0] || !res.participantIds[1]) return;
-        setSaving(true);
-        try {
-            let winsA = 0;
-            let winsB = 0;
-            scoreA.forEach((s, i) => {
-                if (s > scoreB[i]) winsA++;
-                else if (scoreB[i] > s) winsB++;
-            });
-            const winnerId = winsA > winsB ? res.participantIds[0] : res.participantIds[1];
-            await onFinish(winnerId, scoreA, scoreB);
-        } finally {
-            setSaving(false);
-        }
-    };
-
-    return (
-        <div className="bg-stone-900 rounded-[32px] p-6 shadow-2xl border border-white/10 overflow-hidden relative group">
-            <div className="absolute top-0 right-0 p-4">
-                <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-red-500/20 border border-red-500/40">
-                    <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-                    <span className="text-[10px] font-black text-red-500 uppercase tracking-widest">Live</span>
-                </div>
-            </div>
-
-            <div className="space-y-6">
-                <div className="flex items-center justify-between gap-4">
-                    <div className="flex-1 flex flex-col items-center">
-                        <img src={playerA?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${playerA?.id}`} className="w-14 h-14 rounded-full border-2 border-white/20 mb-2 object-cover" />
-                        <span className="text-white font-black text-[10px] uppercase tracking-tighter truncate w-24 text-center">{playerA?.name.split(' ')[0]}</span>
-                    </div>
-                    <div className="text-stone-600 font-black italic text-xl">VS</div>
-                    <div className="flex-1 flex flex-col items-center">
-                        <img src={playerB?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${playerB?.id}`} className="w-14 h-14 rounded-full border-2 border-white/20 mb-2 object-cover" />
-                        <span className="text-white font-black text-[10px] uppercase tracking-tighter truncate w-24 text-center">{playerB?.name.split(' ')[0]}</span>
-                    </div>
-                </div>
-
-                <div className="space-y-4">
-                    {scoreA.map((_, idx) => (
-                        <div key={idx} className="flex items-center justify-between gap-4 bg-white/5 p-3 rounded-2xl border border-white/5">
-                            <div className="flex items-center gap-2">
-                                <button onClick={() => handleUpdate('a', idx, -1)} className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-white active:scale-90"><Minus size={14} /></button>
-                                <span className="text-3xl font-black text-white w-8 text-center tabular-nums">{scoreA[idx]}</span>
-                                <button onClick={() => handleUpdate('a', idx, 1)} className="w-8 h-8 rounded-lg bg-saibro-500 flex items-center justify-center text-white active:scale-90"><Plus size={14} /></button>
-                            </div>
-
-                            <div className="text-[10px] font-black text-white/30 uppercase tracking-widest">Set {idx + 1}</div>
-
-                            <div className="flex items-center gap-2">
-                                <button onClick={() => handleUpdate('b', idx, 1)} className="w-8 h-8 rounded-lg bg-saibro-500 flex items-center justify-center text-white active:scale-90"><Plus size={14} /></button>
-                                <span className="text-3xl font-black text-white w-8 text-center tabular-nums">{scoreB[idx]}</span>
-                                <button onClick={() => handleUpdate('b', idx, -1)} className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-white active:scale-90"><Minus size={14} /></button>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-
-                <div className="flex gap-2">
-                    {scoreA.length < 3 && (
-                        <button onClick={addSet} className="flex-1 py-3 border border-white/10 rounded-2xl text-[10px] font-black text-white uppercase tracking-widest hover:bg-white/5 transition-colors">
-                            + Set
-                        </button>
-                    )}
-                    {scoreA.length > 1 && (
-                        <button onClick={() => removeSet(scoreA.length - 1)} className="py-3 px-4 border border-white/10 rounded-2xl text-red-500 hover:bg-red-500/10 transition-colors">
-                            <Trash2 size={16} />
-                        </button>
-                    )}
-                </div>
-
-                <button
-                    onClick={handleConfirm}
-                    disabled={saving}
-                    className="w-full py-4 bg-saibro-600 text-white font-black rounded-2xl shadow-xl shadow-saibro-900/40 flex items-center justify-center gap-2 uppercase tracking-widest text-xs hover:bg-saibro-500 transition-all active:scale-[0.98]"
-                >
-                    {saving ? <Loader2 className="animate-spin" /> : <><CheckCircle size={18} /> Confirmar Resultado</>}
-                </button>
-            </div>
-        </div>
-    );
-};
+// LiveScore HUD legacy removed in favor of shared LiveScoreboard
 
 // --- COMPONENT: Reservation Details View ---
 const ReservationDetails: React.FC<{
@@ -463,6 +331,15 @@ const ReservationDetails: React.FC<{
     const professor = professors.find(p => p.id === res.professorId);
     const socioParticipantIds = res.type === 'Aula' ? getClassSocioIds(res) : res.participantIds;
     const participants = socioParticipantIds.map(id => profiles.find(u => u.id === id)).filter(Boolean);
+    const championshipPlayers = [0, 1].map((idx) => {
+        const profile = profiles.find(u => u.id === res.participantIds[idx]);
+        const fallbackName = idx === 0 ? 'Jogador 1' : 'Jogador 2';
+        return {
+            id: res.participantIds[idx] || `player-${idx}`,
+            name: res.participantNames?.[idx] || profile?.name || fallbackName,
+            avatar: res.participantAvatars?.[idx] || profile?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${res.participantIds[idx] || `p${idx + 1}`}`
+        };
+    });
     const creator = profiles.find(u => u.id === res.creatorId);
 
     // Non-Socio Logic (classes can be mixed)
@@ -623,11 +500,40 @@ const ReservationDetails: React.FC<{
                     {/* 3. Live Score Section (Only during match time for championships) */}
                     {isMatchLive(res) && res.matchId && (
                         <div className="animate-in zoom-in-95 duration-500">
-                            <LiveScoreSection
-                                res={res}
+                            <LiveScoreboard
+                                match={{
+                                    id: res.matchId,
+                                    championshipId: undefined,
+                                    type: 'Campeonato',
+                                    playerAId: res.participantIds[0] || null,
+                                    playerBId: res.participantIds[1] || null,
+                                    scoreA: (res.scoreA && res.scoreA.length > 0 ? res.scoreA : [0, 0, 0]).concat(Array(Math.max(0, 3 - (res.scoreA?.length || 0))).fill(0)).slice(0, 3),
+                                    scoreB: (res.scoreB && res.scoreB.length > 0 ? res.scoreB : [0, 0, 0]).concat(Array(Math.max(0, 3 - (res.scoreB?.length || 0))).fill(0)).slice(0, 3),
+                                    phase: undefined,
+                                    slot: undefined,
+                                    winnerId: undefined,
+                                    date: res.date,
+                                    scheduledDate: res.date,
+                                    scheduledTime: res.startTime,
+                                    status: 'pending',
+                                    championship_group_id: undefined,
+                                    round_id: undefined,
+                                    scheduled_date: res.date,
+                                    scheduled_time: res.startTime,
+                                    court_id: res.courtId,
+                                    registration_a_id: undefined,
+                                    registration_b_id: undefined,
+                                    is_walkover: undefined,
+                                    walkover_winner_id: undefined,
+                                }}
                                 profiles={profiles}
-                                onFinish={async (winnerId, sA, sB) => {
-                                    await onFinishMatch(res.matchId!, winnerId, sA, sB);
+                                // Fallback names/avatars for guests (registrations) injected when available
+                                overrideNames={res.participantNames}
+                                overrideAvatars={res.participantAvatars}
+                                currentUser={currentUser}
+                                onScoreSaved={() => {
+                                    onClose();
+                                    onDataRefresh?.();
                                 }}
                             />
                         </div>
@@ -739,11 +645,11 @@ const ReservationDetails: React.FC<{
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-3">
                                                     <div className="relative">
-                                                        <img src={participants[0]?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${participants[0]?.id || 'p1'}`} className={`w-14 h-14 rounded-full border-4 object-cover ${isWinnerA ? 'border-saibro-500 shadow-md ring-2 ring-saibro-100' : 'border-stone-100'}`} alt="" />
+                                                        <img src={championshipPlayers[0].avatar} className={`w-14 h-14 rounded-full border-4 object-cover ${isWinnerA ? 'border-saibro-500 shadow-md ring-2 ring-saibro-100' : 'border-stone-100'}`} alt="" />
                                                         {isWinnerA && <div className="absolute -top-1 -right-1 bg-amber-500 text-white p-0.5 rounded-full shadow-lg"><Trophy size={10} fill="currentColor" /></div>}
                                                     </div>
                                                     <div className="flex flex-col">
-                                                        <span className={`font-black text-lg ${isWinnerA ? 'text-stone-900' : 'text-stone-600'}`}>{participants[0]?.name || 'Jogador 1'}</span>
+                                                        <span className={`font-black text-lg ${isWinnerA ? 'text-stone-900' : 'text-stone-600'}`}>{championshipPlayers[0].name}</span>
                                                         {isWinnerA && <span className="text-[10px] font-black uppercase text-saibro-600 tracking-wider">Vencedor</span>}
                                                     </div>
                                                 </div>
@@ -764,11 +670,11 @@ const ReservationDetails: React.FC<{
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-3">
                                                     <div className="relative">
-                                                        <img src={participants[1]?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${participants[1]?.id || 'p2'}`} className={`w-14 h-14 rounded-full border-4 object-cover ${isWinnerB ? 'border-saibro-500 shadow-md ring-2 ring-saibro-100' : 'border-stone-100'}`} alt="" />
+                                                        <img src={championshipPlayers[1].avatar} className={`w-14 h-14 rounded-full border-4 object-cover ${isWinnerB ? 'border-saibro-500 shadow-md ring-2 ring-saibro-100' : 'border-stone-100'}`} alt="" />
                                                         {isWinnerB && <div className="absolute -top-1 -right-1 bg-amber-500 text-white p-0.5 rounded-full shadow-lg"><Trophy size={10} fill="currentColor" /></div>}
                                                     </div>
                                                     <div className="flex flex-col">
-                                                        <span className={`font-black text-lg ${isWinnerB ? 'text-stone-900' : 'text-stone-600'}`}>{participants[1]?.name || 'Jogador 2'}</span>
+                                                        <span className={`font-black text-lg ${isWinnerB ? 'text-stone-900' : 'text-stone-600'}`}>{championshipPlayers[1].name}</span>
                                                         {isWinnerB && <span className="text-[10px] font-black uppercase text-saibro-600 tracking-wider">Vencedor</span>}
                                                     </div>
                                                 </div>
@@ -801,13 +707,13 @@ const ReservationDetails: React.FC<{
                                     <div className="bg-white rounded-2xl p-6 border border-yellow-200 shadow-sm flex flex-col items-center gap-6">
                                         <div className="flex items-center justify-center w-full gap-8">
                                             <div className="flex flex-col items-center gap-2">
-                                                <img src={participants[0]?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${participants[0]?.id || 'p1'}`} className="w-20 h-20 rounded-full border-4 border-stone-100 shadow-lg object-cover" alt="" />
-                                                <span className="font-black text-stone-800 text-sm">{participants[0]?.name || 'Jogador 1'}</span>
+                                                <img src={championshipPlayers[0].avatar} className="w-20 h-20 rounded-full border-4 border-stone-100 shadow-lg object-cover" alt="" />
+                                                <span className="font-black text-stone-800 text-sm">{championshipPlayers[0].name}</span>
                                             </div>
                                             <div className="text-3xl font-black text-stone-300 italic">VS</div>
                                             <div className="flex flex-col items-center gap-2">
-                                                <img src={participants[1]?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${participants[1]?.id || 'p2'}`} className="w-20 h-20 rounded-full border-4 border-stone-100 shadow-lg object-cover" alt="" />
-                                                <span className="font-black text-stone-800 text-sm">{participants[1]?.name || 'Jogador 2'}</span>
+                                                <img src={championshipPlayers[1].avatar} className="w-20 h-20 rounded-full border-4 border-stone-100 shadow-lg object-cover" alt="" />
+                                                <span className="font-black text-stone-800 text-sm">{championshipPlayers[1].name}</span>
                                             </div>
                                         </div>
                                         <div className="w-full h-px bg-stone-100"></div>
@@ -987,6 +893,10 @@ const ReservationCard: React.FC<{
     const socioParticipantIds = res.type === 'Aula' ? getClassSocioIds(res) : res.participantIds;
     const participants = socioParticipantIds.map(id => profiles.find(u => u.id === id)).filter(Boolean);
     const professor = professors.find(p => p.id === res.professorId);
+    const championshipPlayerAName = res.participantNames?.[0] || participants[0]?.name || 'Jogador 1';
+    const championshipPlayerBName = res.participantNames?.[1] || participants[1]?.name || 'Jogador 2';
+    const championshipPlayerAAvatar = res.participantAvatars?.[0] || participants[0]?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${res.participantIds[0] || 'p1'}`;
+    const championshipPlayerBAvatar = res.participantAvatars?.[1] || participants[1]?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${res.participantIds[1] || 'p2'}`;
 
     // Non-Socio Logic (Multi)
     const nonSocioIds = res.type === 'Aula' ? getClassNonSocioIds(res) : [];
@@ -1090,16 +1000,16 @@ const ReservationCard: React.FC<{
                             <div className="flex items-center justify-between bg-yellow-50/70 rounded-xl p-2 border border-yellow-100 shadow-sm backdrop-blur-sm gap-3">
                                 <div className="flex items-center gap-2">
                                     <div className="w-7 h-7 rounded-full bg-white border border-stone-100 shadow-sm overflow-hidden shrink-0">
-                                        <img src={participants[0]?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${participants[0]?.id}`} className="w-full h-full object-cover" alt="" />
+                                        <img src={championshipPlayerAAvatar} className="w-full h-full object-cover" alt="" />
                                     </div>
-                                    <span className="text-xs font-bold text-stone-700 max-w-[70px] truncate">{participants[0]?.name.split(' ')[0]}</span>
+                                    <span className="text-xs font-bold text-stone-700 max-w-[70px] truncate">{championshipPlayerAName.split(' ')[0]}</span>
                                 </div>
                                 <span className="text-[10px] font-black text-yellow-600 italic px-1">VS</span>
                                 <div className="flex items-center gap-2 flex-row-reverse">
                                     <div className="w-7 h-7 rounded-full bg-white border border-stone-100 shadow-sm overflow-hidden shrink-0">
-                                        <img src={participants[1]?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${participants[1]?.id}`} className="w-full h-full object-cover" alt="" />
+                                        <img src={championshipPlayerBAvatar} className="w-full h-full object-cover" alt="" />
                                     </div>
-                                    <span className="text-xs font-bold text-stone-700 max-w-[70px] truncate">{participants[1]?.name.split(' ')[0]}</span>
+                                    <span className="text-xs font-bold text-stone-700 max-w-[70px] truncate">{championshipPlayerBName.split(' ')[0]}</span>
                                 </div>
                             </div>
                         </div>
@@ -1270,11 +1180,12 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
             // Fetch profiles
             const { data: profilesData, error: profilesError } = await supabase
                 .from('profiles')
-                .select('*')
-                .eq('is_active', true);
+                .select('*');
+                // .eq('is_active', true); // Removed to allow historical data (e.g. championships) to show inactive users
 
             if (profilesError) throw profilesError;
 
+            let profilesForFallback: User[] = [];
             if (profilesData) {
                 const mappedProfiles: User[] = profilesData.map(p => ({
                     id: p.id,
@@ -1287,6 +1198,7 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                     balance: 0,
                     isActive: p.is_active !== false
                 }));
+                profilesForFallback = mappedProfiles;
                 setProfiles(mappedProfiles);
             }
 
@@ -1324,8 +1236,8 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
             // Store all in a temporary array
             let allCombined = [...mappedReservations];
 
-            // Fetch Championship Matches
-            const { data: matchesData } = await supabase
+            // Fetch Championship Matches with a stable query to avoid brittle deep joins.
+            const { data: matchesData, error: matchesError } = await supabase
                 .from('matches')
                 .select(`
                     *,
@@ -1333,14 +1245,49 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                     championship_rounds(name)
                 `)
                 .not('scheduled_date', 'is', null)
-                .not('scheduled_time', 'is', null);
+                .not('scheduled_time', 'is', null)
+                .order('scheduled_date', { ascending: true })
+                .order('scheduled_time', { ascending: true });
 
-            if (matchesData) {
-                const mappedMatches: Reservation[] = matchesData.map(m => {
+            if (matchesError) {
+                console.warn('Error fetching matches for agenda:', matchesError.message);
+            }
+
+            const registrationLookup = new Map<string, { name: string | null; avatar: string | null }>();
+            if (matchesData && matchesData.length > 0) {
+                const registrationIds = Array.from(new Set(
+                    matchesData.flatMap((m: any) => [m.registration_a_id, m.registration_b_id].filter(Boolean))
+                )) as string[];
+
+                if (registrationIds.length > 0) {
+                    const { data: registrationsData, error: registrationsError } = await supabase
+                        .from('championship_registrations')
+                        .select('id, participant_type, guest_name, user_id, user:profiles!user_id(name, avatar_url)')
+                        .in('id', registrationIds);
+
+                    if (registrationsError) {
+                        console.warn('Error fetching championship registrations for agenda:', registrationsError.message);
+                    } else if (registrationsData) {
+                        registrationsData.forEach((reg: any) => {
+                            const isGuest = reg.participant_type === 'guest';
+                            registrationLookup.set(reg.id, {
+                                name: isGuest ? (reg.guest_name || null) : (reg.user?.name || null),
+                                avatar: isGuest ? null : (reg.user?.avatar_url || null)
+                            });
+                        });
+                    }
+                }
+
+                const mappedMatches: Reservation[] = matchesData.map((m: any) => {
                     const [hours, minutes] = (m.scheduled_time || '00:00').split(':').map(Number);
                     const endDate = getNowInFortaleza();
                     endDate.setHours(hours, minutes + 90, 0);
                     const endTime = endDate.toTimeString().slice(0, 5);
+
+                    const profileA = profilesForFallback.find(p => p.id === m.player_a_id);
+                    const profileB = profilesForFallback.find(p => p.id === m.player_b_id);
+                    const regA = m.registration_a_id ? registrationLookup.get(m.registration_a_id) : undefined;
+                    const regB = m.registration_b_id ? registrationLookup.get(m.registration_b_id) : undefined;
 
                     return {
                         id: `match_${m.id}`,
@@ -1352,6 +1299,14 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                         courtId: m.court_id!,
                         creatorId: 'system',
                         participantIds: [m.player_a_id, m.player_b_id].filter(Boolean) as string[],
+                        participantNames: [
+                            regA?.name || profileA?.name || null,
+                            regB?.name || profileB?.name || null
+                        ],
+                        participantAvatars: [
+                            regA?.avatar || profileA?.avatar || null,
+                            regB?.avatar || profileB?.avatar || null
+                        ],
                         scoreA: m.score_a || [0],
                         scoreB: m.score_b || [0],
                         guestName: null,
@@ -2220,7 +2175,7 @@ const AddReservationModal: React.FC<{
     const [error, setError] = useState<string | null>(null);
 
     // Context Data
-    const availablePartners = profiles.filter(u => (u.role === 'socio' || u.role === 'admin') && u.id !== currentUser.id);
+    const availablePartners = profiles.filter(u => (u.role === 'socio' || u.role === 'admin') && u.id !== currentUser.id && u.isActive);
     const availableSocios = profiles.filter(u => (u.role === 'socio' || u.role === 'admin') && u.isActive !== false);
     const professorRecord = professors.find(p => p.userId === currentUser.id);
 

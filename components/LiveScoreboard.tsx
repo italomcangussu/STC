@@ -10,6 +10,8 @@ interface LiveScoreboardProps {
     currentUser: User;
     onScoreSaved?: () => void;
     readOnly?: boolean;
+    overrideNames?: (string | null | undefined)[];
+    overrideAvatars?: (string | null | undefined)[];
 }
 
 // Helpers outside component to avoid recreation
@@ -40,7 +42,9 @@ export const LiveScoreboard: React.FC<LiveScoreboardProps> = ({
     profiles,
     currentUser,
     onScoreSaved,
-    readOnly = false
+    readOnly = false,
+    overrideNames,
+    overrideAvatars
 }) => {
     const [scoreA, setScoreA] = useState<number[]>(
         match.scoreA.length > 0 ? [...match.scoreA] : [0, 0, 0]
@@ -54,6 +58,17 @@ export const LiveScoreboard: React.FC<LiveScoreboardProps> = ({
 
     const playerA = profiles.find(p => p.id === match.playerAId);
     const playerB = profiles.find(p => p.id === match.playerBId);
+
+    const displayPlayerA = {
+        ...playerA,
+        name: overrideNames?.[0] ?? playerA?.name,
+        avatar: overrideAvatars?.[0] ?? playerA?.avatar
+    };
+    const displayPlayerB = {
+        ...playerB,
+        name: overrideNames?.[1] ?? playerB?.name,
+        avatar: overrideAvatars?.[1] ?? playerB?.avatar
+    };
 
     const isFinished = match.status === 'finished';
     // Admin can edit even if finished? Maybe restriction needed. 
@@ -161,7 +176,7 @@ export const LiveScoreboard: React.FC<LiveScoreboardProps> = ({
         return match.scheduledTime;
     };
 
-    const renderPlayerRow = (player: any, isWinner: boolean, score: number[], updateFn: (idx: number, d: number) => void) => (
+    const renderPlayerRow = (player: any, isWinner: boolean, score: number[], updateFn: (idx: number, d: number) => void, isPlayerA: boolean) => (
         <div className={`relative flex items-center justify-between p-3 rounded-xl border transition-all duration-300 ${isWinner ? 'bg-saibro-50 border-saibro-200' : 'bg-white border-stone-100 shadow-sm'}`}>
             <div className="flex items-center gap-3 flex-1 min-w-0 mr-4">
                 <div className="relative">
@@ -187,9 +202,9 @@ export const LiveScoreboard: React.FC<LiveScoreboardProps> = ({
             <div className="flex items-center gap-2 shrink-0">
                 {[0, 1, 2].map(idx => {
                     if (idx === 2 && !showThirdSet) return null;
-                    const isSetWinner = (idx === 0 && set1Winner === (player === playerA ? 'A' : 'B')) ||
-                        (idx === 1 && set2Winner === (player === playerA ? 'A' : 'B')) ||
-                        (idx === 2 && set3Winner === (player === playerA ? 'A' : 'B'));
+                    const isSetWinner = (idx === 0 && set1Winner === (isPlayerA ? 'A' : 'B')) ||
+                        (idx === 1 && set2Winner === (isPlayerA ? 'A' : 'B')) ||
+                        (idx === 2 && set3Winner === (isPlayerA ? 'A' : 'B'));
 
                     return (
                         <div key={idx} className="flex flex-col items-center gap-1">
@@ -258,8 +273,8 @@ export const LiveScoreboard: React.FC<LiveScoreboardProps> = ({
                     {showThirdSet && <span className="w-10 text-[10px] text-saibro-600 text-center font-bold uppercase tracking-wider animate-pulse">Tie</span>}
                 </div>
 
-                {renderPlayerRow(playerA, matchWinner === 'A', scoreA, (idx, d) => updateScore('A', idx, d))}
-                {renderPlayerRow(playerB, matchWinner === 'B', scoreB, (idx, d) => updateScore('B', idx, d))}
+                {renderPlayerRow(displayPlayerA, matchWinner === 'A', scoreA, (idx, d) => updateScore('A', idx, d), true)}
+                {renderPlayerRow(displayPlayerB, matchWinner === 'B', scoreB, (idx, d) => updateScore('B', idx, d), false)}
             </div>
 
             {/* Footer - Only show if editable */}
