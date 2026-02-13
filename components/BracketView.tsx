@@ -1,6 +1,6 @@
 import React from 'react';
 import { Trophy, Medal, Users } from 'lucide-react';
-import { ChampionshipRegistration, ChampionshipGroup, Match } from '../types';
+import { ChampionshipRegistration, Match } from '../types';
 import { calculateGroupStandings } from '../lib/championshipUtils';
 
 interface BracketViewProps {
@@ -13,16 +13,23 @@ interface BracketViewProps {
 interface QualifiedPlayer {
     registrationId: string;
     name: string;
-    groupName: string;
-    position: 1 | 2;
+    groupName?: string;
+    position?: 1 | 2;
     isMathematical: boolean; // Classified mathematically
+    avatar?: string | null;
 }
+
+const isSemifinalPhase = (phase?: string) => (phase || '').toLowerCase().includes('semi');
+const isFinalPhase = (phase?: string) => (phase || '').toLowerCase() === 'final';
 
 export const BracketView: React.FC<BracketViewProps> = ({ groups, registrations, matches, category }) => {
     // Calculate standings for each group in this category
     const categoryGroups = groups.filter(g => g.category === category);
+    const categoryGroupMap = new Map<string, any>(categoryGroups.map(group => [group.id, group]));
+    const registrationMap = new Map<string, ChampionshipRegistration>(registrations.map(reg => [reg.id, reg]));
 
     const qualifiedPlayers: QualifiedPlayer[] = [];
+    const qualifiedByRegistration = new Map<string, QualifiedPlayer>();
 
     categoryGroups.forEach(group => {
         const groupMatches = matches.filter(m => m.championship_group_id === group.id);
@@ -47,13 +54,17 @@ export const BracketView: React.FC<BracketViewProps> = ({ groups, registrations,
             const maxPossibleFor3rd = standings[2] ? standings[2].points + (matchesRemaining * 3) : 0;
             const isMathematical = matchesPlayed > 0 && (s.points > maxPossibleFor3rd || matchesRemaining === 0);
 
-            qualifiedPlayers.push({
+            const qualifiedPlayer: QualifiedPlayer = {
                 registrationId: reg.id,
                 name: reg.participant_type === 'guest' ? (reg.guest_name || 'Convidado') : (reg.user?.name || 'Sócio'),
                 groupName: group.group_name,
                 position: (idx + 1) as 1 | 2,
-                isMathematical
-            });
+                isMathematical,
+                avatar: (reg.user as any)?.avatar_url || (reg.user as any)?.avatar || null
+            };
+
+            qualifiedPlayers.push(qualifiedPlayer);
+            qualifiedByRegistration.set(reg.id, qualifiedPlayer);
         });
     });
 
@@ -66,8 +77,72 @@ export const BracketView: React.FC<BracketViewProps> = ({ groups, registrations,
     const first_B = groupB.find(p => p.position === 1);
     const second_B = groupB.find(p => p.position === 2);
 
-    const semifinal1 = { playerA: first_A, playerB: second_B };
-    const semifinal2 = { playerA: first_B, playerB: second_A };
+    const resolveMatchCategory = (match: Match): string | null => {
+        if (match.championship_group_id && categoryGroupMap.has(match.championship_group_id)) {
+            return categoryGroupMap.get(match.championship_group_id).category;
+        }
+
+        const regA = match.registration_a_id ? registrationMap.get(match.registration_a_id) : undefined;
+        const regB = match.registration_b_id ? registrationMap.get(match.registration_b_id) : undefined;
+        return regA?.class || regB?.class || null;
+    };
+
+    const categoryKnockoutMatches = matches.filter(
+        match =>
+            resolveMatchCategory(match) === category &&
+            (isSemifinalPhase(match.phase) || isFinalPhase(match.phase))
+    );
+    const semifinalMatches = categoryKnockoutMatches.filter(match => isSemifinalPhase(match.phase));
+    const finalMatches = categoryKnockoutMatches.filter(match => isFinalPhase(match.phase));
+
+    const matchHasPair = (match: Match, regA?: string, regB?: string) => {
+        if (!regA || !regB) return false;
+        return (
+            (match.registration_a_id === regA && match.registration_b_id === regB) ||
+            (match.registration_a_id === regB && match.registration_b_id === regA)
+        );
+    };
+
+    let semifinal1Match = semifinalMatches.find(match => matchHasPair(match, first_A?.registrationId, second_B?.registrationId));
+    let semifinal2Match = semifinalMatches.find(match => match.id !== semifinal1Match?.id && matchHasPair(match, first_B?.registrationId, second_A?.registrationId));
+
+    const remainingSemifinals = semifinalMatches.filter(match => match.id !== semifinal1Match?.id && match.id !== semifinal2Match?.id);
+    if (!semifinal1Match) semifinal1Match = remainingSemifinals[0];
+    if (!semifinal2Match) semifinal2Match = remainingSemifinals.find(match => match.id !== semifinal1Match?.id);
+
+    const finalMatch = finalMatches.find(match => match.status === 'finished') || finalMatches[0];
+
+    const getPlayerByRegistration = (registrationId?: string, fallback?: QualifiedPlayer): QualifiedPlayer | undefined => {
+        if (!registrationId) return fallback;
+
+        const reg = registrationMap.get(registrationId);
+        if (!reg) return fallback;
+
+        const qualified = qualifiedByRegistration.get(registrationId);
+        return {
+            registrationId,
+            name: reg.participant_type === 'guest' ? (reg.guest_name || 'Convidado') : (reg.user?.name || 'Sócio'),
+            groupName: qualified?.groupName || fallback?.groupName,
+            position: qualified?.position || fallback?.position,
+            isMathematical: qualified?.isMathematical ?? true,
+            avatar: (reg.user as any)?.avatar_url || (reg.user as any)?.avatar || null
+        };
+    };
+
+    const semifinal1 = {
+        match: semifinal1Match,
+        playerA: semifinal1Match ? getPlayerByRegistration(semifinal1Match.registration_a_id, first_A) : first_A,
+        playerB: semifinal1Match ? getPlayerByRegistration(semifinal1Match.registration_b_id, second_B) : second_B
+    };
+    const semifinal2 = {
+        match: semifinal2Match,
+        playerA: semifinal2Match ? getPlayerByRegistration(semifinal2Match.registration_a_id, first_B) : first_B,
+        playerB: semifinal2Match ? getPlayerByRegistration(semifinal2Match.registration_b_id, second_A) : second_A
+    };
+    const finalPlayers = {
+        playerA: finalMatch ? getPlayerByRegistration(finalMatch.registration_a_id) : undefined,
+        playerB: finalMatch ? getPlayerByRegistration(finalMatch.registration_b_id) : undefined
+    };
 
     const renderPlayer = (player: QualifiedPlayer | undefined, label: string) => {
         // Only show player if mathematically qualified
@@ -86,17 +161,29 @@ export const BracketView: React.FC<BracketViewProps> = ({ groups, registrations,
         // Only mathematically qualified players are shown with their names
         return (
             <div className="flex-1 p-4 rounded-xl border-2 bg-green-50 border-green-500 transition-all">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-3">
                     <div className="flex-1">
                         <p className="font-black text-stone-800 text-sm">{player.name}</p>
-                        <p className="text-[10px] text-stone-500 font-bold mt-0.5">
-                            {player.position === 1 ? '1º' : '2º'} - Grupo {player.groupName}
-                        </p>
+                        {player.position && player.groupName && (
+                            <p className="text-[10px] text-stone-500 font-bold mt-0.5">
+                                {player.position === 1 ? '1º' : '2º'} - Grupo {player.groupName}
+                            </p>
+                        )}
                     </div>
+                    {player.avatar ? (
+                        <img src={player.avatar} alt={player.name} className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm" />
+                    ) : null}
                     <Trophy className="w-5 h-5 text-green-600" />
                 </div>
             </div>
         );
+    };
+
+    const renderMatchStatus = (match?: Match) => {
+        if (!match) return 'Aguardando definição';
+        if (match.status === 'finished') return 'Finalizada';
+        if (match.status === 'pending') return 'Pendente';
+        return 'Aguardando';
     };
 
     return (
@@ -147,6 +234,9 @@ export const BracketView: React.FC<BracketViewProps> = ({ groups, registrations,
                                 </div>
                                 {renderPlayer(semifinal1.playerB, '2º Grupo B')}
                             </div>
+                            <p className="mt-3 text-[10px] font-bold text-stone-500 uppercase tracking-wider">
+                                {renderMatchStatus(semifinal1.match)}
+                            </p>
                         </div>
 
                         {/* Semifinal 2 */}
@@ -161,6 +251,9 @@ export const BracketView: React.FC<BracketViewProps> = ({ groups, registrations,
                                 </div>
                                 {renderPlayer(semifinal2.playerB, '2º Grupo A')}
                             </div>
+                            <p className="mt-3 text-[10px] font-bold text-stone-500 uppercase tracking-wider">
+                                {renderMatchStatus(semifinal2.match)}
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -174,18 +267,17 @@ export const BracketView: React.FC<BracketViewProps> = ({ groups, registrations,
                     <div className="bg-linear-to-br from-yellow-50 to-orange-50 rounded-2xl p-6 border-2 border-yellow-400 shadow-lg">
                         <p className="text-center text-[10px] font-black text-yellow-700 uppercase tracking-widest mb-4">Grande Final</p>
                         <div className="flex gap-3 items-center">
-                            <div className="flex-1 p-4 bg-white/80 backdrop-blur-sm rounded-xl border border-yellow-200 flex items-center justify-center">
-                                <p className="text-xs font-bold text-stone-600 text-center">Vencedor<br/>Semifinal 1</p>
-                            </div>
+                            {renderPlayer(finalPlayers.playerA, 'Vencedor Semi 1')}
                             <div className="text-center px-2">
                                 <div className="w-12 h-12 rounded-full bg-linear-to-br from-yellow-400 to-orange-500 flex items-center justify-center shadow-lg">
                                     <span className="text-sm font-black text-white">VS</span>
                                 </div>
                             </div>
-                            <div className="flex-1 p-4 bg-white/80 backdrop-blur-sm rounded-xl border border-yellow-200 flex items-center justify-center">
-                                <p className="text-xs font-bold text-stone-600 text-center">Vencedor<br/>Semifinal 2</p>
-                            </div>
+                            {renderPlayer(finalPlayers.playerB, 'Vencedor Semi 2')}
                         </div>
+                        <p className="mt-4 text-center text-[10px] font-bold text-yellow-800 uppercase tracking-wider">
+                            {renderMatchStatus(finalMatch)}
+                        </p>
                     </div>
                 </div>
             </div>
