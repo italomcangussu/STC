@@ -9,7 +9,7 @@ import { LiveScoreboard } from './LiveScoreboard';
 import { StandardModal } from './StandardModal';
 import { TennisCourtAnimation } from './ui/TennisCourtAnimation';
 import { Challenge } from '../types';
-import { getNowInFortaleza, formatDate, addDays, formatDateBr, getSetWinner } from '../utils';
+import { getNowInFortaleza, formatDate, addDays, formatDateBr, getSetWinner, getMatchWinner, countSetsWon } from '../utils';
 
 // Court type
 interface Court {
@@ -304,6 +304,40 @@ const isMatchLive = (res: Reservation) => {
     // Allow live HUD until 3 hours after start
     const matchEnd = new Date(matchStart.getTime() + 180 * 60000);
     return now >= matchStart && now <= matchEnd;
+};
+
+const getChampionshipCardResult = (res: Reservation): {
+    isFinished: boolean;
+    winnerSide: 'A' | 'B' | null;
+    setsA: number;
+    setsB: number;
+    showSetScore: boolean;
+} => {
+    const isFinished = res.matchStatus === 'finished';
+    if (!isFinished) {
+        return { isFinished, winnerSide: null, setsA: 0, setsB: 0, showSetScore: false };
+    }
+
+    const scoreA = Array.isArray(res.scoreA) ? res.scoreA : [];
+    const scoreB = Array.isArray(res.scoreB) ? res.scoreB : [];
+    const { setsA: rawSetsA, setsB: rawSetsB } = countSetsWon(scoreA, scoreB);
+    let setsA = rawSetsA;
+    let setsB = rawSetsB;
+    let winnerSide = getMatchWinner(scoreA, scoreB);
+
+    if (!winnerSide && res.matchIsWalkover && res.matchWalkoverWinnerRegistrationId) {
+        if (res.matchWalkoverWinnerRegistrationId === res.matchRegistrationAId) winnerSide = 'A';
+        else if (res.matchWalkoverWinnerRegistrationId === res.matchRegistrationBId) winnerSide = 'B';
+    }
+
+    const hasValidSetScore = setsA > 0 || setsB > 0;
+    if (!hasValidSetScore && winnerSide && res.matchIsWalkover) {
+        setsA = winnerSide === 'A' ? 2 : 0;
+        setsB = winnerSide === 'B' ? 2 : 0;
+    }
+
+    const showSetScore = Boolean(winnerSide) && (hasValidSetScore || res.matchIsWalkover);
+    return { isFinished, winnerSide, setsA, setsB, showSetScore };
 };
 
 // LiveScore HUD legacy removed in favor of shared LiveScoreboard
@@ -897,6 +931,9 @@ const ReservationCard: React.FC<{
     const championshipPlayerBName = res.participantNames?.[1] || participants[1]?.name || 'Jogador 2';
     const championshipPlayerAAvatar = res.participantAvatars?.[0] || participants[0]?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${res.participantIds[0] || 'p1'}`;
     const championshipPlayerBAvatar = res.participantAvatars?.[1] || participants[1]?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${res.participantIds[1] || 'p2'}`;
+    const championshipCardResult = res.type === 'Campeonato' ? getChampionshipCardResult(res) : null;
+    const isChampWinnerA = championshipCardResult?.winnerSide === 'A';
+    const isChampWinnerB = championshipCardResult?.winnerSide === 'B';
 
     // Non-Socio Logic (Multi)
     const nonSocioIds = res.type === 'Aula' ? getClassNonSocioIds(res) : [];
@@ -999,15 +1036,29 @@ const ReservationCard: React.FC<{
                         <div className="flex items-center gap-3 max-w-[65%] mx-auto">
                             <div className="flex items-center justify-between bg-yellow-50/70 rounded-xl p-2 border border-yellow-100 shadow-sm backdrop-blur-sm gap-3">
                                 <div className="flex items-center gap-2">
-                                    <div className="w-7 h-7 rounded-full bg-white border border-stone-100 shadow-sm overflow-hidden shrink-0">
+                                    <div className={`relative w-7 h-7 rounded-full bg-white overflow-hidden shrink-0 ${isChampWinnerA ? 'border border-amber-400 ring-2 ring-amber-200/70 shadow-[0_0_14px_rgba(251,191,36,0.35)]' : 'border border-stone-100 shadow-sm'}`}>
                                         <img src={championshipPlayerAAvatar} className="w-full h-full object-cover" alt="" />
+                                        {isChampWinnerA && (
+                                            <div className="absolute -top-1 -right-1 bg-amber-500 text-white p-0.5 rounded-full shadow-lg">
+                                                <Trophy size={10} fill="currentColor" />
+                                            </div>
+                                        )}
                                     </div>
                                     <span className="text-xs font-bold text-stone-700 max-w-[70px] truncate">{championshipPlayerAName.split(' ')[0]}</span>
                                 </div>
-                                <span className="text-[10px] font-black text-yellow-600 italic px-1">VS</span>
+                                <span className={`px-1 tabular-nums ${championshipCardResult?.showSetScore ? 'text-sm font-black text-saibro-700' : 'text-[10px] font-black text-yellow-600 italic'}`}>
+                                    {championshipCardResult?.showSetScore
+                                        ? `${championshipCardResult.setsA} x ${championshipCardResult.setsB}`
+                                        : 'VS'}
+                                </span>
                                 <div className="flex items-center gap-2 flex-row-reverse">
-                                    <div className="w-7 h-7 rounded-full bg-white border border-stone-100 shadow-sm overflow-hidden shrink-0">
+                                    <div className={`relative w-7 h-7 rounded-full bg-white overflow-hidden shrink-0 ${isChampWinnerB ? 'border border-amber-400 ring-2 ring-amber-200/70 shadow-[0_0_14px_rgba(251,191,36,0.35)]' : 'border border-stone-100 shadow-sm'}`}>
                                         <img src={championshipPlayerBAvatar} className="w-full h-full object-cover" alt="" />
+                                        {isChampWinnerB && (
+                                            <div className="absolute -top-1 -right-1 bg-amber-500 text-white p-0.5 rounded-full shadow-lg">
+                                                <Trophy size={10} fill="currentColor" />
+                                            </div>
+                                        )}
                                     </div>
                                     <span className="text-xs font-bold text-stone-700 max-w-[70px] truncate">{championshipPlayerBName.split(' ')[0]}</span>
                                 </div>
@@ -1064,7 +1115,11 @@ const ReservationCard: React.FC<{
                         let dotColor = 'bg-stone-300';
                         let pulse = false;
 
-                        if (now > end) {
+                        if (res.type === 'Campeonato' && res.matchStatus === 'finished') {
+                            statusText = 'Finalizada';
+                            statusColor = 'text-stone-400';
+                            dotColor = 'bg-stone-300';
+                        } else if (now > end) {
                             statusText = 'Finalizada';
                             statusColor = 'text-stone-400';
                             dotColor = 'bg-stone-300';
@@ -1309,6 +1364,12 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                         ],
                         scoreA: m.score_a || [0],
                         scoreB: m.score_b || [0],
+                        matchStatus: m.status || 'pending',
+                        matchWinnerId: m.winner_id || null,
+                        matchIsWalkover: !!m.is_walkover,
+                        matchRegistrationAId: m.registration_a_id || null,
+                        matchRegistrationBId: m.registration_b_id || null,
+                        matchWalkoverWinnerRegistrationId: m.walkover_winner_registration_id || null,
                         guestName: null,
                         guestResponsibleId: null,
                         professorId: null,

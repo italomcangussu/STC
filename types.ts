@@ -88,6 +88,12 @@ export interface Reservation {
   matchId?: string;
   scoreA?: number[];
   scoreB?: number[];
+  matchStatus?: 'pending' | 'finished' | 'waiting_opponents';
+  matchWinnerId?: string | null;
+  matchIsWalkover?: boolean;
+  matchRegistrationAId?: string | null;
+  matchRegistrationBId?: string | null;
+  matchWalkoverWinnerRegistrationId?: string | null;
 }
 
 export interface Product {
