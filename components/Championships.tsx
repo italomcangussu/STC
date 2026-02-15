@@ -110,8 +110,11 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                 startDate: c.start_date,
                 endDate: c.end_date,
                 ptsVictory: c.pts_victory,
+                ptsDefeat: c.pts_defeat,
+                ptsWoVictory: c.pts_wo_victory,
                 ptsSet: c.pts_set,
                 ptsGame: c.pts_game,
+                ptsTechnicalDraw: c.pts_technical_draw,
                 participantIds: [],
                 registration_open: c.registration_open
             })) || [];
@@ -235,6 +238,10 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                 scoreB: m.score_b || [],
                 winnerId: m.winner_id,
                 is_walkover: m.is_walkover,
+                result_type: m.result_type,
+                admin_notes: m.admin_notes,
+                result_set_by: m.result_set_by,
+                result_set_at: m.result_set_at,
                 walkover_winner_id: m.walkover_winner_id,
                 walkover_winner_registration_id: m.walkover_winner_registration_id,
                 date: m.date,
@@ -454,6 +461,20 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
         if (!winner) return; // Invalid match, don't save
 
         const winnerId = winner === 'A' ? match.playerAId : match.playerBId;
+        const resultTimestamp = getNowInFortaleza().toISOString();
+
+        const logAudit = async (action: string, beforeData: any, afterData: any) => {
+            if (!selectedChamp || !currentUser?.id) return;
+            await supabase.from('championship_admin_audit_logs').insert({
+                championship_id: selectedChamp.id,
+                entity_type: 'match',
+                entity_id: matchId,
+                action,
+                before_data: beforeData,
+                after_data: afterData,
+                actor_user_id: currentUser.id
+            });
+        };
 
         // Update match in Supabase
         const { error } = await supabase
@@ -462,6 +483,12 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                 score_a: scoreA,
                 score_b: scoreB,
                 winner_id: winnerId,
+                is_walkover: false,
+                walkover_winner_id: null,
+                walkover_winner_registration_id: null,
+                result_type: 'played',
+                result_set_by: currentUser.id,
+                result_set_at: resultTimestamp,
                 status: 'finished',
                 date: formatDate(getNowInFortaleza())
             })
@@ -473,10 +500,33 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
             return;
         }
 
+        await logAudit('match_result_played_set', {
+            score_a: match.scoreA,
+            score_b: match.scoreB,
+            winner_id: match.winnerId,
+            result_type: match.result_type
+        }, {
+            score_a: scoreA,
+            score_b: scoreB,
+            winner_id: winnerId,
+            result_type: 'played'
+        });
+
         // Update local state
         setMatches(prev => prev.map(m =>
             m.id === matchId
-                ? { ...m, scoreA, scoreB, winnerId, status: 'finished' as const, date: formatDate(getNowInFortaleza()) }
+                ? {
+                    ...m,
+                    scoreA,
+                    scoreB,
+                    winnerId,
+                    is_walkover: false,
+                    walkover_winner_id: null,
+                    walkover_winner_registration_id: null,
+                    result_type: 'played',
+                    status: 'finished' as const,
+                    date: formatDate(getNowInFortaleza())
+                }
                 : m
         ));
 
@@ -533,6 +583,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
         const scoreA = winnerSide === 'A' ? [6, 6] : [0, 0];
         const scoreB = winnerSide === 'A' ? [0, 0] : [6, 6];
         const nowDate = formatDate(getNowInFortaleza());
+        const resultTimestamp = getNowInFortaleza().toISOString();
 
         const { error } = await supabase
             .from('matches')
@@ -543,6 +594,9 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                 is_walkover: true,
                 walkover_winner_id: winnerUserId,
                 walkover_winner_registration_id: winnerRegId,
+                result_type: 'walkover',
+                result_set_by: currentUser.id,
+                result_set_at: resultTimestamp,
                 status: 'finished',
                 date: nowDate
             })
@@ -555,6 +609,28 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
             return;
         }
 
+        if (selectedChamp && currentUser?.id) {
+            await supabase.from('championship_admin_audit_logs').insert({
+                championship_id: selectedChamp.id,
+                entity_type: 'match',
+                entity_id: match.id,
+                action: 'match_result_walkover_set',
+                before_data: {
+                    score_a: match.scoreA,
+                    score_b: match.scoreB,
+                    winner_id: match.winnerId,
+                    result_type: match.result_type
+                },
+                after_data: {
+                    score_a: scoreA,
+                    score_b: scoreB,
+                    winner_id: winnerUserId,
+                    result_type: 'walkover'
+                },
+                actor_user_id: currentUser.id
+            });
+        }
+
         setMatches(prev => prev.map(m =>
             m.id === match.id
                 ? {
@@ -565,6 +641,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                     is_walkover: true,
                     walkover_winner_id: winnerUserId ?? null,
                     walkover_winner_registration_id: winnerRegId,
+                    result_type: 'walkover',
                     status: 'finished',
                     date: nowDate
                 }
@@ -583,6 +660,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
         const nowDate = formatDate(getNowInFortaleza());
         const scoreA = [0, 0];
         const scoreB = [0, 0];
+        const resultTimestamp = getNowInFortaleza().toISOString();
 
         const { error } = await supabase
             .from('matches')
@@ -593,6 +671,9 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                 is_walkover: false,
                 walkover_winner_id: null,
                 walkover_winner_registration_id: null,
+                result_type: 'technical_draw',
+                result_set_by: currentUser.id,
+                result_set_at: resultTimestamp,
                 status: 'finished',
                 date: nowDate
             })
@@ -605,6 +686,28 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
             return;
         }
 
+        if (selectedChamp && currentUser?.id) {
+            await supabase.from('championship_admin_audit_logs').insert({
+                championship_id: selectedChamp.id,
+                entity_type: 'match',
+                entity_id: match.id,
+                action: 'match_result_technical_draw_set',
+                before_data: {
+                    score_a: match.scoreA,
+                    score_b: match.scoreB,
+                    winner_id: match.winnerId,
+                    result_type: match.result_type
+                },
+                after_data: {
+                    score_a: scoreA,
+                    score_b: scoreB,
+                    winner_id: null,
+                    result_type: 'technical_draw'
+                },
+                actor_user_id: currentUser.id
+            });
+        }
+
         setMatches(prev => prev.map(m =>
             m.id === match.id
                 ? {
@@ -615,6 +718,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                     is_walkover: false,
                     walkover_winner_id: null,
                     walkover_winner_registration_id: null,
+                    result_type: 'technical_draw',
                     status: 'finished',
                     date: nowDate
                 }
@@ -1195,7 +1299,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                                                                     const avatarB = regB?.user?.avatar_url || `https://ui-avatars.com/api/?name=${nameB}&background=random`;
                                                                     const isFinished = match.status === 'finished';
                                                                     const court = courts.find(c => c.id === match.court_id);
-                                                                    const isCancelled = isCancelledMatch(match);
+                                                                    const isTechnicalDraw = isTechnicalDrawMatch(match);
                                                                     const hasScores = hasAnyScore(match);
                                                                     const isPastDeadline = round?.end_date
                                                                         ? formatDate(getNowInFortaleza()) > round.end_date
@@ -1252,7 +1356,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                                                                                 <div className="text-right">
                                                                                     {isFinished ? (
                                                                                         <div className="flex flex-col gap-2.5 items-end">
-                                                                                            {!isCancelled && hasScores && (
+                                                                                            {!isTechnicalDraw && hasScores && (
                                                                                                 <div className="flex gap-2">
                                                                                                     {match.scoreA.map((s, i) => (
                                                                                                         <div key={i} className="flex flex-col items-center gap-1">
@@ -1275,13 +1379,13 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                                                                                                 </div>
                                                                                             )}
                                                                                             <span className={`text-xs font-black uppercase px-3 py-1.5 rounded-xl border-2 ${
-                                                                                                isCancelled
-                                                                                                    ? 'text-red-700 bg-red-50 border-red-200'
+                                                                                                isTechnicalDraw
+                                                                                                    ? 'text-blue-700 bg-blue-50 border-blue-200'
                                                                                                     : match.is_walkover
                                                                                                         ? 'text-amber-700 bg-amber-50 border-amber-200'
                                                                                                         : 'text-emerald-700 bg-linear-to-br from-emerald-50 to-green-50 border-emerald-200'
                                                                                             }`}>
-                                                                                                {isCancelled ? 'Cancelada' : match.is_walkover ? 'W.O.' : 'Disputado'}
+                                                                                                {isTechnicalDraw ? 'Empate técnico' : match.is_walkover ? 'W.O.' : 'Disputado'}
                                                                                             </span>
                                                                                         </div>
                                                                                     ) : (
@@ -1358,7 +1462,14 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                                     const memberRegIds = group.members.map((m: any) => m.registration_id);
                                     const groupRegs = registrations.filter(r => memberRegIds.includes(r.id));
 
-                                    const standings = calculateGroupStandings(groupRegs, groupMatches); // Uses registrations
+                                    const standings = calculateGroupStandings(groupRegs, groupMatches, {
+                                        ptsVictory: selectedChamp?.ptsVictory,
+                                        ptsDefeat: selectedChamp?.ptsDefeat,
+                                        ptsWoVictory: selectedChamp?.ptsWoVictory,
+                                        ptsSet: selectedChamp?.ptsSet,
+                                        ptsGame: selectedChamp?.ptsGame,
+                                        ptsTechnicalDraw: selectedChamp?.ptsTechnicalDraw
+                                    });
 
                                     return (
                                         <GroupStandingsCard
@@ -1864,7 +1975,8 @@ const hasAnyWinner = (match: Match): boolean => {
     return Boolean(match.winnerId || match.walkover_winner_id || match.walkover_winner_registration_id);
 };
 
-const isCancelledMatch = (match: Match): boolean => {
+const isTechnicalDrawMatch = (match: Match): boolean => {
+    if (match.result_type === 'technical_draw') return true;
     return match.status === 'finished' && !match.is_walkover && !hasAnyWinner(match) && !hasAnyScore(match);
 };
 
@@ -1878,7 +1990,7 @@ const MatchCard: React.FC<{ match: Match; profiles: User[]; registrations: Regis
     const avatarB = regB?.user?.avatar_url || `https://ui-avatars.com/api/?name=${nameB}&background=random`;
 
     const isFinished = match.status === 'finished';
-    const isCancelled = isCancelledMatch(match);
+    const isTechnicalDraw = isTechnicalDrawMatch(match);
     const hasScores = hasAnyScore(match);
 
     // Calculate set winners using LiveScore logic
@@ -1993,29 +2105,29 @@ const MatchCard: React.FC<{ match: Match; profiles: User[]; registrations: Regis
                 <div className="w-full md:w-auto flex flex-col items-stretch md:items-end gap-3 shrink-0">
                     {match.status === 'finished' ? (
                         <div className={`px-4 py-2.5 rounded-2xl border-2 shadow-sm text-center md:w-auto ${
-                            isCancelled
-                                ? 'bg-red-50 border-red-200'
+                            isTechnicalDraw
+                                ? 'bg-blue-50 border-blue-200'
                                 : match.is_walkover || !hasScores
                                     ? 'bg-amber-50 border-amber-200'
                                     : 'bg-linear-to-br from-emerald-50 to-green-50 border-emerald-200'
                         }`}>
                             <p className={`text-[9px] font-black uppercase tracking-wider mb-0.5 ${
-                                isCancelled
-                                    ? 'text-red-600'
+                                isTechnicalDraw
+                                    ? 'text-blue-600'
                                     : match.is_walkover || !hasScores
                                         ? 'text-amber-600'
                                         : 'text-emerald-600'
                             }`}>
-                                {isCancelled ? 'Cancelada' : 'Finalizado'}
+                                {isTechnicalDraw ? 'Empate técnico' : 'Finalizado'}
                             </p>
                             <span className={`text-sm font-black ${
-                                isCancelled
-                                    ? 'text-red-700'
+                                isTechnicalDraw
+                                    ? 'text-blue-700'
                                     : match.is_walkover || !hasScores
                                         ? 'text-amber-700'
                                         : 'text-emerald-700'
                             }`}>
-                                {isCancelled ? 'Cancelada' : match.is_walkover || !hasScores ? 'W.O.' : 'FIM'}
+                                {isTechnicalDraw ? '0 pts' : match.is_walkover || !hasScores ? 'W.O.' : 'FIM'}
                             </span>
                         </div>
                     ) : match.scheduledDate ? (

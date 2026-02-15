@@ -129,6 +129,7 @@ export interface Championship {
   ptsVictory?: number;
   ptsDefeat?: number;
   ptsWoVictory?: number;
+  ptsTechnicalDraw?: number;
   ptsSet?: number;
   ptsGame?: number;
   countInGeneralRanking?: boolean;
@@ -206,6 +207,12 @@ export interface Match {
   is_walkover?: boolean;
   walkover_winner_id?: string | null;
   walkover_winner_registration_id?: string | null;
+
+  // Admin result controls
+  result_type?: 'played' | 'walkover' | 'technical_draw';
+  admin_notes?: string | null;
+  result_set_by?: string | null;
+  result_set_at?: string | null;
 }
 
 export interface ChampionshipRound {

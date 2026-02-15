@@ -21,8 +21,8 @@ import { ScoreModal } from './ScoreModal';
 import { FinanceiroAdmin } from './FinanceiroAdmin';
 import { AdminProfessors } from './AdminProfessors';
 import { AdminRules } from './AdminRules';
-import { AdminTournaments } from './AdminTournaments';
 import { AdminStudents } from './AdminStudents';
+import { ChampionshipAdmin } from './ChampionshipAdmin';
 
 // --- Helpers ---
 const addMinutes = (time: string, minutes: number): string => {
@@ -1174,7 +1174,7 @@ export const AdminPanel: React.FC = () => {
             case 'dashboard': return <Dashboard />;
             case 'lancamentos': return <LancamentosTab />;
             case 'superset': return <SuperSet />;
-            case 'torneios': return <AdminTournaments />;
+            case 'torneios': return <ChampionshipAdmin />;
             case 'reservas': return <ReservasTab />;
             case 'desafios': return <DesafiosTab />;
             case 'financeiro': return <FinanceiroAdmin />;

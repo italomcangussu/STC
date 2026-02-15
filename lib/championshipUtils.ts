@@ -1,4 +1,5 @@
 import { Match, InternalStanding, ChampionshipRound, ChampionshipRegistration } from '../types';
+import { calculateGroupStandingsWithRules, ChampionshipScoringConfig } from './championshipStandings';
 
 // Helper to get round dates (mock or computed)
 export const getRoundDates = (roundNumber: number) => {
@@ -107,165 +108,14 @@ function createMatch(
 }
 
 /**
- * Helper: Get Head-to-Head wins between two players
- */
-function getH2HWins(regIdA: string, regIdB: string, matches: Match[]): number {
-    const h2hMatches = matches.filter(m =>
-        m.status === 'finished' &&
-        ((m.registration_a_id === regIdA && m.registration_b_id === regIdB) ||
-         (m.registration_a_id === regIdB && m.registration_b_id === regIdA))
-    );
-
-    return h2hMatches.filter(m => {
-        // Count sets to determine winner
-        let setsA = 0;
-        let setsB = 0;
-
-        m.scoreA.forEach((sA, idx) => {
-            const sB = m.scoreB[idx];
-            if (sA === 0 && sB === 0 && idx > 0) return; // Skip empty sets
-            if (sA > sB) setsA++;
-            else if (sB > sA) setsB++;
-        });
-
-        // Check if player A won this match
-        if (m.registration_a_id === regIdA) {
-            return setsA > setsB;
-        } else {
-            return setsB > setsA;
-        }
-    }).length;
-}
-
-/**
  * Calculate Group Standings with H2H tiebreaker
  */
 export function calculateGroupStandings(
     registrations: ChampionshipRegistration[],
-    matches: Match[]
+    matches: Match[],
+    scoring?: ChampionshipScoringConfig
 ): InternalStanding[] {
-    const standings: Record<string, InternalStanding> = {};
-
-    // Initialize
-    registrations.forEach(reg => {
-        standings[reg.id] = {
-            userId: reg.id, // Using registration ID as key for standings
-            points: 0,
-            matchesPlayed: 0,
-            wins: 0,
-            losses: 0,
-            setsWon: 0,
-            setsLost: 0,
-            gamesWon: 0,
-            gamesLost: 0,
-            groupName: reg.class // Temp placeholder
-        };
-    });
-
-    matches.forEach(match => {
-        if (match.status !== 'finished') return;
-
-        const pA = match.registration_a_id;
-        const pB = match.registration_b_id;
-
-        if (!pA || !pB || !standings[pA] || !standings[pB]) return;
-
-        const statA = standings[pA];
-        const statB = standings[pB];
-
-        statA.matchesPlayed++;
-        statB.matchesPlayed++;
-
-        // Calculate Sets/Games
-        let setsA = 0;
-        let setsB = 0;
-        let gamesA = 0;
-        let gamesB = 0;
-
-        match.scoreA.forEach((sA, idx) => {
-            const sB = match.scoreB[idx];
-            if (sA === 0 && sB === 0 && idx > 0) return; // Skip empty sets
-
-            gamesA += sA;
-            gamesB += sB;
-
-            // Set Logic
-            if (match.is_walkover) {
-                // WO Handling is specific
-            } else {
-                // Determine set winner
-                if (sA > sB) setsA++;
-                else if (sB > sA) setsB++;
-            }
-        });
-
-        // Determine winner registration (align with DB logic)
-        let winnerRegId: string | null = null;
-        if (match.walkover_winner_registration_id) {
-            winnerRegId = match.walkover_winner_registration_id;
-        } else if (match.walkover_winner_id) {
-            if (match.walkover_winner_id === match.playerAId) winnerRegId = pA;
-            else if (match.walkover_winner_id === match.playerBId) winnerRegId = pB;
-        } else if (match.winnerId) {
-            if (match.winnerId === match.playerAId) winnerRegId = pA;
-            else if (match.winnerId === match.playerBId) winnerRegId = pB;
-        }
-        if (!winnerRegId) {
-            if (setsA > setsB) winnerRegId = pA;
-            else if (setsB > setsA) winnerRegId = pB;
-        }
-
-        // WO Logic can override sets for display/standings
-        if (match.is_walkover && winnerRegId) {
-            if (winnerRegId === pA) {
-                setsA = 2;
-                setsB = 0;
-            } else if (winnerRegId === pB) {
-                setsA = 0;
-                setsB = 2;
-            }
-        }
-
-        statA.setsWon += setsA;
-        statA.setsLost += setsB;
-        statA.gamesWon += gamesA;
-        statA.gamesLost += gamesB;
-
-        statB.setsWon += setsB;
-        statB.setsLost += setsA;
-        statB.gamesWon += gamesB;
-        statB.gamesLost += gamesA;
-
-        if (winnerRegId === pA) {
-            statA.points += 3;
-            statA.wins++;
-            statB.losses++;
-        } else if (winnerRegId === pB) {
-            statB.points += 3;
-            statB.wins++;
-            statA.losses++;
-        }
-    });
-
-    return Object.values(standings).sort((a, b) => {
-        // 1º: Pontos
-        if (b.points !== a.points) return b.points - a.points;
-
-        // 2º: Head-to-Head (confronto direto)
-        const h2hA = getH2HWins(a.userId, b.userId, matches);
-        const h2hB = getH2HWins(b.userId, a.userId, matches);
-        if (h2hA !== h2hB) return h2hB - h2hA;
-
-        // 3º: Saldo de Sets
-        const setsDiffA = a.setsWon - a.setsLost;
-        const setsDiffB = b.setsWon - b.setsLost;
-        if (setsDiffB !== setsDiffA) return setsDiffB - setsDiffA;
-
-        // 4º: Saldo de Games
-        const gamesDiffA = a.gamesWon - a.gamesLost;
-        const gamesDiffB = b.gamesWon - b.gamesLost;
-        return gamesDiffB - gamesDiffA;
-    });
+    return calculateGroupStandingsWithRules(registrations, matches, scoring);
 }
 
 export function getClassCourtRestriction(className: string): 'Saibro' | 'Rápida' | null {

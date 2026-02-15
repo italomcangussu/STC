@@ -6,11 +6,13 @@ import { generateRoundRobinMatches, getRoundDates } from '../lib/championshipUti
 import { MatchScheduleModal } from './MatchScheduleModal';
 import { GroupStandingsCard } from './GroupStandingsCard';
 import { calculateGroupStandings } from '../lib/championshipUtils';
+import { isTechnicalDrawAllowed } from '../lib/championshipStandings';
 import { formatDateBr } from '../utils';
 import { MatchGenerationModal } from './MatchGenerationModal';
 import { MatchExportPreview } from './MatchExportPreview';
 import { BracketView } from './BracketView';
 import { StandingsDetailModal } from './StandingsDetailModal';
+import { ResultModal } from './Championships';
 import html2canvas from 'html2canvas';
 import { Share2, Download, X } from 'lucide-react';
 import { getNowInFortaleza } from '../utils';
@@ -20,11 +22,12 @@ interface Props {
     championship: Championship;
     currentUser: any;
     onUpdate?: () => void;
+    initialTab?: 'matches' | 'standings' | 'bracket';
 }
 
 const CLASSES = ['1ª Classe', '2ª Classe', '3ª Classe', '4ª Classe', '5ª Classe', '6ª Classe'];
 
-export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentUser, onUpdate }) => {
+export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentUser, onUpdate, initialTab = 'matches' }) => {
     const [loading, setLoading] = useState(true);
     const [rounds, setRounds] = useState<ChampionshipRound[]>([]);
     const [matches, setMatches] = useState<Match[]>([]);
@@ -34,7 +37,7 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
     const [selectedRoundIndex, setSelectedRoundIndex] = useState(0);
 
     // Tab for navigation
-    const [activeTab, setActiveTab] = useState<'matches' | 'standings' | 'bracket'>('matches');
+    const [activeTab, setActiveTab] = useState<'matches' | 'standings' | 'bracket'>(initialTab);
 
     // Scheduling State
     const [schedulingMatch, setSchedulingMatch] = useState<Match | null>(null);
@@ -55,11 +58,18 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
     // Standings Detail Modal State
     const [showStandingsDetail, setShowStandingsDetail] = useState(false);
     const [selectedGroupForDetail, setSelectedGroupForDetail] = useState<{ group: any, standings: any[] } | null>(null);
+    const [adminResultMatch, setAdminResultMatch] = useState<Match | null>(null);
+    const [scoringMatch, setScoringMatch] = useState<Match | null>(null);
+    const [savingAdminResult, setSavingAdminResult] = useState(false);
 
     useEffect(() => {
         fetchData();
         fetchCourts();
     }, [championship.id]);
+
+    useEffect(() => {
+        setActiveTab(initialTab);
+    }, [initialTab]);
 
     const fetchCourts = async () => {
         const { data } = await supabase.from('courts').select('*');
@@ -102,7 +112,18 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                 .from('matches')
                 .select('*')
                 .in('round_id', rnds.map(r => r.id));
-            setMatches(mtchs || []);
+            setMatches((mtchs || []).map((m: any) => ({
+                ...m,
+                scoreA: m.score_a || [],
+                scoreB: m.score_b || [],
+                winnerId: m.winner_id,
+                playerAId: m.player_a_id,
+                playerBId: m.player_b_id,
+                result_type: m.result_type,
+                admin_notes: m.admin_notes,
+                result_set_by: m.result_set_by,
+                result_set_at: m.result_set_at
+            })));
 
             // Set current round (active or first)
             const activeIdx = (rnds || []).findIndex(r => r.status === 'active');
@@ -201,7 +222,8 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                 registration_b_id: m.registration_b_id,
                 score_a: m.scoreA || [0, 0, 0],
                 score_b: m.scoreB || [0, 0, 0],
-                status: m.status
+                status: m.status,
+                result_type: 'played'
             }));
 
             console.log('💾 Step 3: Inserting matches...', matchesForDB.length, 'matches');
@@ -256,6 +278,190 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
         // Notification logic would go here (Push Notification)
 
         fetchData();
+    };
+
+    const logAudit = async (
+        action: string,
+        entityType: string,
+        entityId: string,
+        beforeData: Record<string, any> | null,
+        afterData: Record<string, any> | null
+    ) => {
+        if (!currentUser?.id) return;
+
+        await supabase.from('championship_admin_audit_logs').insert({
+            championship_id: championship.id,
+            entity_type: entityType,
+            entity_id: entityId,
+            action,
+            before_data: beforeData,
+            after_data: afterData,
+            actor_user_id: currentUser.id
+        });
+    };
+
+    const getRoundByMatch = (match: Match) => rounds.find(r => r.id === match.round_id);
+
+    const setMatchResult = async (match: Match, payload: Record<string, any>, action: string) => {
+        const beforeData = {
+            status: match.status,
+            result_type: match.result_type,
+            winner_id: (match as any).winner_id,
+            walkover_winner_id: (match as any).walkover_winner_id,
+            walkover_winner_registration_id: (match as any).walkover_winner_registration_id,
+            score_a: (match as any).score_a,
+            score_b: (match as any).score_b
+        };
+
+        const nowIso = getNowInFortaleza().toISOString();
+        const updatePayload = {
+            ...payload,
+            result_set_by: currentUser?.id || null,
+            result_set_at: nowIso
+        };
+
+        const { error } = await supabase
+            .from('matches')
+            .update(updatePayload)
+            .eq('id', match.id);
+
+        if (error) {
+            throw error;
+        }
+
+        await logAudit(action, 'match', match.id, beforeData, updatePayload);
+    };
+
+    const handleSavePlayedResult = async (matchId: string, scoreA: number[], scoreB: number[]) => {
+        const match = matches.find(m => m.id === matchId);
+        if (!match) return;
+
+        let winnerRegId: string | null = null;
+        let winnerUserId: string | null = null;
+
+        const setWinsA = scoreA.reduce((acc, a, index) => acc + (a > (scoreB[index] || 0) ? 1 : 0), 0);
+        const setWinsB = scoreB.reduce((acc, b, index) => acc + (b > (scoreA[index] || 0) ? 1 : 0), 0);
+
+        if (setWinsA > setWinsB) {
+            winnerRegId = match.registration_a_id || null;
+            winnerUserId = match.playerAId || null;
+        } else if (setWinsB > setWinsA) {
+            winnerRegId = match.registration_b_id || null;
+            winnerUserId = match.playerBId || null;
+        }
+
+        if (!winnerRegId) {
+            alert('Não foi possível determinar o vencedor.');
+            return;
+        }
+
+        try {
+            await setMatchResult(match, {
+                score_a: scoreA,
+                score_b: scoreB,
+                winner_id: winnerUserId,
+                is_walkover: false,
+                walkover_winner_id: null,
+                walkover_winner_registration_id: null,
+                result_type: 'played',
+                status: 'finished',
+                date: getNowInFortaleza().toISOString().split('T')[0]
+            }, 'match_result_played_set');
+
+            setScoringMatch(null);
+            await fetchData();
+        } catch (error: any) {
+            alert('Erro ao salvar placar: ' + error.message);
+        }
+    };
+
+    const handleSetWalkover = async (match: Match, side: 'A' | 'B') => {
+        if (savingAdminResult) return;
+        setSavingAdminResult(true);
+
+        const winnerReg = side === 'A' ? match.registration_a_id : match.registration_b_id;
+        const winnerUser = side === 'A' ? match.playerAId : match.playerBId;
+        const scoreA = side === 'A' ? [6, 6] : [0, 0];
+        const scoreB = side === 'A' ? [0, 0] : [6, 6];
+
+        try {
+            await setMatchResult(match, {
+                score_a: scoreA,
+                score_b: scoreB,
+                winner_id: winnerUser,
+                is_walkover: true,
+                walkover_winner_id: winnerUser,
+                walkover_winner_registration_id: winnerReg,
+                result_type: 'walkover',
+                status: 'finished',
+                date: getNowInFortaleza().toISOString().split('T')[0]
+            }, 'match_result_walkover_set');
+
+            setAdminResultMatch(null);
+            await fetchData();
+        } catch (error: any) {
+            alert('Erro ao definir W.O.: ' + error.message);
+        } finally {
+            setSavingAdminResult(false);
+        }
+    };
+
+    const handleSetTechnicalDraw = async (match: Match) => {
+        if (savingAdminResult) return;
+
+        const round = getRoundByMatch(match);
+        if (!isTechnicalDrawAllowed(round?.phase, match.phase)) {
+            alert('Empate técnico não é permitido no mata-mata.');
+            return;
+        }
+
+        setSavingAdminResult(true);
+        try {
+            await setMatchResult(match, {
+                score_a: [0, 0],
+                score_b: [0, 0],
+                winner_id: null,
+                is_walkover: false,
+                walkover_winner_id: null,
+                walkover_winner_registration_id: null,
+                result_type: 'technical_draw',
+                status: 'finished',
+                date: getNowInFortaleza().toISOString().split('T')[0]
+            }, 'match_result_technical_draw_set');
+
+            setAdminResultMatch(null);
+            await fetchData();
+        } catch (error: any) {
+            alert('Erro ao definir empate técnico: ' + error.message);
+        } finally {
+            setSavingAdminResult(false);
+        }
+    };
+
+    const handleReopenMatch = async (match: Match) => {
+        if (savingAdminResult) return;
+        setSavingAdminResult(true);
+
+        try {
+            await setMatchResult(match, {
+                score_a: [0, 0, 0],
+                score_b: [0, 0, 0],
+                winner_id: null,
+                is_walkover: false,
+                walkover_winner_id: null,
+                walkover_winner_registration_id: null,
+                result_type: 'played',
+                status: 'pending',
+                date: null
+            }, 'match_result_reopened');
+
+            setAdminResultMatch(null);
+            await fetchData();
+        } catch (error: any) {
+            alert('Erro ao reabrir partida: ' + error.message);
+        } finally {
+            setSavingAdminResult(false);
+        }
     };
 
     const handleResetMatches = async () => {
@@ -520,6 +726,7 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                                         <button
                                             onClick={async () => {
                                                 setProcessing(true);
+                                                const beforeRound = { ...currentRound };
                                                 const { error } = await supabase
                                                     .from('championship_rounds')
                                                     .update({ status: 'active' })
@@ -528,6 +735,13 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                                                 if (error) {
                                                     alert('Erro ao publicar: ' + error.message);
                                                 } else {
+                                                    await logAudit(
+                                                        'round_status_published',
+                                                        'round',
+                                                        currentRound.id,
+                                                        beforeRound,
+                                                        { ...beforeRound, status: 'active' }
+                                                    );
                                                     await fetchData();
                                                 }
                                                 setProcessing(false);
@@ -548,6 +762,10 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                                         const nameA = regA?.user?.name || regA?.guest_name || '...';
                                         const nameB = regB?.user?.name || regB?.guest_name || '...';
                                         const isFinished = match.status === 'finished';
+                                        const resultType = match.result_type || (match.is_walkover ? 'walkover' : 'played');
+                                        const resultLabel = isFinished
+                                            ? (resultType === 'technical_draw' ? 'Empate técnico' : resultType === 'walkover' ? 'W.O.' : 'Disputado')
+                                            : 'Pendente';
 
                                         return (
                                             <div key={match.id} className="bg-white rounded-4xl p-6 shadow-sm border border-stone-100 relative overflow-hidden transition-all hover:border-saibro-200">
@@ -557,6 +775,11 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
 
                                                 <div className="flex items-center gap-6 mt-2">
                                                     <div className="flex-1 space-y-4">
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="text-[9px] uppercase tracking-widest font-black text-stone-400">
+                                                                {resultLabel}
+                                                            </span>
+                                                        </div>
                                                         <div className="flex items-center justify-between">
                                                             <span className={`text-sm font-bold ${match.winner_id === regA?.user_id ? 'text-stone-900' : 'text-stone-500'}`}>{nameA}</span>
                                                             {isFinished && (
@@ -598,6 +821,15 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                                                                 <Calendar size={18} />
                                                             </button>
                                                         )}
+                                                        {currentUser?.role === 'admin' && (
+                                                            <button
+                                                                onClick={() => setAdminResultMatch(match)}
+                                                                className="mt-2 w-10 h-10 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-600 hover:bg-amber-100 transition-colors"
+                                                                title="Definir resultado"
+                                                            >
+                                                                <Target size={16} />
+                                                            </button>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>
@@ -614,7 +846,14 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                         const groupMatches = matches.filter(m => m.championship_group_id === group.id);
                         const groupMemberIds = group.members.map((m: any) => m.registration_id);
                         const groupRegistrations = registrations.filter(r => groupMemberIds.includes(r.id));
-                        const standings = calculateGroupStandings(groupRegistrations, groupMatches);
+                        const standings = calculateGroupStandings(groupRegistrations, groupMatches, {
+                            ptsVictory: championship.ptsVictory,
+                            ptsDefeat: championship.ptsDefeat,
+                            ptsWoVictory: championship.ptsWoVictory,
+                            ptsSet: championship.ptsSet,
+                            ptsGame: championship.ptsGame,
+                            ptsTechnicalDraw: championship.ptsTechnicalDraw
+                        });
 
                         return (
                             <GroupStandingsCard
@@ -680,6 +919,33 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                     isAdmin={currentUser?.role === 'admin'}
                     onSchedule={handleSchedule}
                     onClose={() => setSchedulingMatch(null)}
+                />
+            )}
+
+            {adminResultMatch && (
+                <AdminResultActionsModal
+                    match={adminResultMatch}
+                    roundPhase={rounds.find(r => r.id === adminResultMatch.round_id)?.phase}
+                    registrations={registrations}
+                    saving={savingAdminResult}
+                    onClose={() => setAdminResultMatch(null)}
+                    onOpenScore={() => {
+                        setScoringMatch(adminResultMatch);
+                        setAdminResultMatch(null);
+                    }}
+                    onWalkover={(side) => handleSetWalkover(adminResultMatch, side)}
+                    onTechnicalDraw={() => handleSetTechnicalDraw(adminResultMatch)}
+                    onReopen={() => handleReopenMatch(adminResultMatch)}
+                />
+            )}
+
+            {scoringMatch && (
+                <ResultModal
+                    match={scoringMatch}
+                    profiles={[]}
+                    registrations={registrations as any}
+                    onClose={() => setScoringMatch(null)}
+                    onSave={(scoreA, scoreB) => handleSavePlayedResult(scoringMatch.id, scoreA, scoreB)}
                 />
             )}
 
@@ -794,6 +1060,96 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                     category={selectedGroupForDetail.group.category}
                 />
             )}
+        </div>
+    );
+};
+
+const AdminResultActionsModal: React.FC<{
+    match: Match;
+    roundPhase?: string;
+    registrations: ChampionshipRegistration[];
+    saving?: boolean;
+    onClose: () => void;
+    onOpenScore: () => void;
+    onWalkover: (side: 'A' | 'B') => void;
+    onTechnicalDraw: () => void;
+    onReopen: () => void;
+}> = ({ match, roundPhase, registrations, saving = false, onClose, onOpenScore, onWalkover, onTechnicalDraw, onReopen }) => {
+    const regA = registrations.find(r => r.id === match.registration_a_id);
+    const regB = registrations.find(r => r.id === match.registration_b_id);
+    const nameA = regA?.participant_type === 'guest' ? (regA.guest_name || 'Convidado') : (regA?.user?.name || 'Sócio');
+    const nameB = regB?.participant_type === 'guest' ? (regB.guest_name || 'Convidado') : (regB?.user?.name || 'Sócio');
+    const canTechnicalDraw = isTechnicalDrawAllowed(roundPhase, match.phase);
+    const isFinished = match.status === 'finished';
+
+    return (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="w-full max-w-md bg-white rounded-3xl border border-stone-100 shadow-2xl overflow-hidden">
+                <div className="p-5 border-b border-stone-100">
+                    <h3 className="text-lg font-black text-stone-800">Ações de Resultado</h3>
+                    <p className="text-xs text-stone-500 mt-1">{nameA} x {nameB}</p>
+                </div>
+
+                <div className="p-5 space-y-3">
+                    <button
+                        onClick={onOpenScore}
+                        disabled={saving}
+                        className="w-full py-3 rounded-xl bg-saibro-600 text-white font-bold hover:bg-saibro-700 transition-colors disabled:opacity-50"
+                    >
+                        Registrar placar
+                    </button>
+
+                    <div className="grid grid-cols-2 gap-2">
+                        <button
+                            onClick={() => onWalkover('A')}
+                            disabled={saving}
+                            className="py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-800 font-bold hover:bg-amber-100 transition-colors disabled:opacity-50"
+                        >
+                            W.O. {nameA}
+                        </button>
+                        <button
+                            onClick={() => onWalkover('B')}
+                            disabled={saving}
+                            className="py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-800 font-bold hover:bg-amber-100 transition-colors disabled:opacity-50"
+                        >
+                            W.O. {nameB}
+                        </button>
+                    </div>
+
+                    <button
+                        onClick={onTechnicalDraw}
+                        disabled={saving || !canTechnicalDraw}
+                        className="w-full py-3 rounded-xl border border-blue-200 bg-blue-50 text-blue-800 font-bold hover:bg-blue-100 transition-colors disabled:opacity-50"
+                    >
+                        Empate sem pontos
+                    </button>
+
+                    {!canTechnicalDraw && (
+                        <p className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-xl p-2">
+                            Empate técnico não é permitido em fases mata-mata.
+                        </p>
+                    )}
+
+                    {isFinished && (
+                        <button
+                            onClick={onReopen}
+                            disabled={saving}
+                            className="w-full py-3 rounded-xl border border-stone-200 bg-stone-50 text-stone-700 font-bold hover:bg-stone-100 transition-colors disabled:opacity-50"
+                        >
+                            Reabrir partida
+                        </button>
+                    )}
+                </div>
+
+                <div className="p-4 border-t border-stone-100">
+                    <button
+                        onClick={onClose}
+                        className="w-full py-3 rounded-xl bg-stone-100 text-stone-700 font-bold hover:bg-stone-200 transition-colors"
+                    >
+                        Fechar
+                    </button>
+                </div>
+            </div>
         </div>
     );
 };
