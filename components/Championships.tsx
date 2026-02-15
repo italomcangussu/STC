@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Trophy, Calendar, CalendarCheck, History, ListOrdered, GitMerge, ChevronDown, Loader2, Download, Share2, Users, Shirt, ChevronLeft, ChevronRight, Clock, MapPin, Info, Save, Plus, Minus } from 'lucide-react';
+import { Trophy, Calendar, CalendarCheck, History, ListOrdered, GitMerge, ChevronDown, Loader2, Download, Share2, Users, Shirt, ChevronLeft, ChevronRight, Clock, MapPin, Info, Save, Plus, Minus, X, AlertTriangle } from 'lucide-react';
 import { Championship, Match, User, ChampionshipRound } from '../types';
 import { getMatchWinner, formatDateBr, getNowInFortaleza, formatDate } from '../utils';
 import { supabase } from '../lib/supabase';
@@ -52,6 +52,8 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
     const [activeTab, setActiveTab] = useState<'partidas' | 'classificacao' | 'chaveamento' | 'inscritos'>('partidas');
     const [editingMatch, setEditingMatch] = useState<Match | null>(null);
     const [schedulingMatch, setSchedulingMatch] = useState<Match | null>(null);
+    const [adminResultMatch, setAdminResultMatch] = useState<Match | null>(null);
+    const [savingAdminResult, setSavingAdminResult] = useState(false);
     const [showChampSelector, setShowChampSelector] = useState(false); // Mobile friendly selector
     const [showAllRounds, setShowAllRounds] = useState(false);
     const selectorRef = useRef<HTMLDivElement>(null);
@@ -232,6 +234,9 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                 scoreA: m.score_a || [],
                 scoreB: m.score_b || [],
                 winnerId: m.winner_id,
+                is_walkover: m.is_walkover,
+                walkover_winner_id: m.walkover_winner_id,
+                walkover_winner_registration_id: m.walkover_winner_registration_id,
                 date: m.date,
                 scheduled_time: m.scheduled_time,
                 scheduled_date: m.scheduled_date,
@@ -499,6 +504,125 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
         }
 
         setEditingMatch(null);
+    };
+
+    const getRegistrationDisplayName = (reg?: Registration) => {
+        if (!reg) return 'Atleta';
+        return reg.participant_type === 'guest'
+            ? (reg.guest_name || 'Convidado')
+            : (reg.user?.name || 'Sócio');
+    };
+
+    const handleAdminWalkover = async (match: Match, winnerSide: 'A' | 'B') => {
+        if (savingAdminResult) return;
+
+        const regA = registrations.find(r => r.id === match.registration_a_id);
+        const regB = registrations.find(r => r.id === match.registration_b_id);
+        const winnerRegId = winnerSide === 'A' ? match.registration_a_id : match.registration_b_id;
+        const winnerName = winnerSide === 'A' ? getRegistrationDisplayName(regA) : getRegistrationDisplayName(regB);
+
+        if (!winnerRegId) {
+            alert('Não foi possível identificar o atleta vencedor.');
+            return;
+        }
+
+        if (!confirm(`Confirmar W.O. para ${winnerName}?`)) return;
+
+        setSavingAdminResult(true);
+        const winnerUserId = winnerSide === 'A' ? match.playerAId : match.playerBId;
+        const scoreA = winnerSide === 'A' ? [6, 6] : [0, 0];
+        const scoreB = winnerSide === 'A' ? [0, 0] : [6, 6];
+        const nowDate = formatDate(getNowInFortaleza());
+
+        const { error } = await supabase
+            .from('matches')
+            .update({
+                score_a: scoreA,
+                score_b: scoreB,
+                winner_id: winnerUserId,
+                is_walkover: true,
+                walkover_winner_id: winnerUserId,
+                walkover_winner_registration_id: winnerRegId,
+                status: 'finished',
+                date: nowDate
+            })
+            .eq('id', match.id);
+
+        if (error) {
+            console.error('Error setting walkover:', error);
+            alert('Erro ao definir W.O.: ' + error.message);
+            setSavingAdminResult(false);
+            return;
+        }
+
+        setMatches(prev => prev.map(m =>
+            m.id === match.id
+                ? {
+                    ...m,
+                    scoreA,
+                    scoreB,
+                    winnerId: winnerUserId ?? null,
+                    is_walkover: true,
+                    walkover_winner_id: winnerUserId ?? null,
+                    walkover_winner_registration_id: winnerRegId,
+                    status: 'finished',
+                    date: nowDate
+                }
+                : m
+        ));
+
+        setAdminResultMatch(null);
+        setSavingAdminResult(false);
+    };
+
+    const handleAdminCancel = async (match: Match) => {
+        if (savingAdminResult) return;
+        if (!confirm('Confirmar cancelamento desta partida?')) return;
+
+        setSavingAdminResult(true);
+        const nowDate = formatDate(getNowInFortaleza());
+        const scoreA = [0, 0];
+        const scoreB = [0, 0];
+
+        const { error } = await supabase
+            .from('matches')
+            .update({
+                score_a: scoreA,
+                score_b: scoreB,
+                winner_id: null,
+                is_walkover: false,
+                walkover_winner_id: null,
+                walkover_winner_registration_id: null,
+                status: 'finished',
+                date: nowDate
+            })
+            .eq('id', match.id);
+
+        if (error) {
+            console.error('Error cancelling match:', error);
+            alert('Erro ao cancelar partida: ' + error.message);
+            setSavingAdminResult(false);
+            return;
+        }
+
+        setMatches(prev => prev.map(m =>
+            m.id === match.id
+                ? {
+                    ...m,
+                    scoreA,
+                    scoreB,
+                    winnerId: null,
+                    is_walkover: false,
+                    walkover_winner_id: null,
+                    walkover_winner_registration_id: null,
+                    status: 'finished',
+                    date: nowDate
+                }
+                : m
+        ));
+
+        setAdminResultMatch(null);
+        setSavingAdminResult(false);
     };
 
     const standings = calculateStandings();
@@ -1071,6 +1195,15 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                                                                     const avatarB = regB?.user?.avatar_url || `https://ui-avatars.com/api/?name=${nameB}&background=random`;
                                                                     const isFinished = match.status === 'finished';
                                                                     const court = courts.find(c => c.id === match.court_id);
+                                                                    const isCancelled = isCancelledMatch(match);
+                                                                    const hasScores = hasAnyScore(match);
+                                                                    const isPastDeadline = round?.end_date
+                                                                        ? formatDate(getNowInFortaleza()) > round.end_date
+                                                                        : false;
+                                                                    const canDefineResult = currentUser.role === 'admin'
+                                                                        && !isFinished
+                                                                        && !match.scheduled_date
+                                                                        && isPastDeadline;
 
                                                                     return (
                                                                         <div key={match.id} className="p-5 hover:bg-stone-50 transition-all duration-200 border-b-2 border-stone-100 last:border-b-0">
@@ -1118,29 +1251,37 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                                                                                 {/* Score or Schedule Info */}
                                                                                 <div className="text-right">
                                                                                     {isFinished ? (
-                                                                                        <div className="flex flex-col gap-2.5">
-                                                                                            <div className="flex gap-2">
-                                                                                                {match.scoreA.map((s, i) => (
-                                                                                                    <div key={i} className="flex flex-col items-center gap-1">
-                                                                                                        <span className={`w-9 h-9 flex items-center justify-center rounded-xl text-sm font-black shadow-sm transition-all ${
-                                                                                                            match.scoreA[i] > match.scoreB[i] 
-                                                                                                                ? 'bg-linear-to-br from-saibro-500 to-saibro-600 text-white shadow-saibro-200' 
-                                                                                                                : 'bg-stone-100 text-stone-400'
-                                                                                                        }`}>
-                                                                                                            {s}
-                                                                                                        </span>
-                                                                                                        <span className={`w-9 h-9 flex items-center justify-center rounded-xl text-sm font-black shadow-sm transition-all ${
-                                                                                                            match.scoreB[i] > match.scoreA[i] 
-                                                                                                                ? 'bg-linear-to-br from-saibro-500 to-saibro-600 text-white shadow-saibro-200' 
-                                                                                                                : 'bg-stone-100 text-stone-400'
-                                                                                                        }`}>
-                                                                                                            {match.scoreB[i]}
-                                                                                                        </span>
-                                                                                                    </div>
-                                                                                                ))}
-                                                                                            </div>
-                                                                                            <span className="text-xs font-black uppercase text-emerald-700 bg-linear-to-br from-emerald-50 to-green-50 px-3 py-1.5 rounded-xl border-2 border-emerald-200">
-                                                                                                Disputado
+                                                                                        <div className="flex flex-col gap-2.5 items-end">
+                                                                                            {!isCancelled && hasScores && (
+                                                                                                <div className="flex gap-2">
+                                                                                                    {match.scoreA.map((s, i) => (
+                                                                                                        <div key={i} className="flex flex-col items-center gap-1">
+                                                                                                            <span className={`w-9 h-9 flex items-center justify-center rounded-xl text-sm font-black shadow-sm transition-all ${
+                                                                                                                match.scoreA[i] > match.scoreB[i] 
+                                                                                                                    ? 'bg-linear-to-br from-saibro-500 to-saibro-600 text-white shadow-saibro-200' 
+                                                                                                                    : 'bg-stone-100 text-stone-400'
+                                                                                                            }`}>
+                                                                                                                {s}
+                                                                                                            </span>
+                                                                                                            <span className={`w-9 h-9 flex items-center justify-center rounded-xl text-sm font-black shadow-sm transition-all ${
+                                                                                                                match.scoreB[i] > match.scoreA[i] 
+                                                                                                                    ? 'bg-linear-to-br from-saibro-500 to-saibro-600 text-white shadow-saibro-200' 
+                                                                                                                    : 'bg-stone-100 text-stone-400'
+                                                                                                            }`}>
+                                                                                                                {match.scoreB[i]}
+                                                                                                            </span>
+                                                                                                        </div>
+                                                                                                    ))}
+                                                                                                </div>
+                                                                                            )}
+                                                                                            <span className={`text-xs font-black uppercase px-3 py-1.5 rounded-xl border-2 ${
+                                                                                                isCancelled
+                                                                                                    ? 'text-red-700 bg-red-50 border-red-200'
+                                                                                                    : match.is_walkover
+                                                                                                        ? 'text-amber-700 bg-amber-50 border-amber-200'
+                                                                                                        : 'text-emerald-700 bg-linear-to-br from-emerald-50 to-green-50 border-emerald-200'
+                                                                                            }`}>
+                                                                                                {isCancelled ? 'Cancelada' : match.is_walkover ? 'W.O.' : 'Disputado'}
                                                                                             </span>
                                                                                         </div>
                                                                                     ) : (
@@ -1167,10 +1308,20 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                                                                                                     )}
                                                                                                 </>
                                                                                             ) : (
-                                                                                                <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wide text-stone-500 bg-stone-100 px-3 py-1.5 rounded-lg border border-dashed border-stone-300 whitespace-nowrap">
-                                                                                                    <Calendar size={12} className="text-stone-400" />
-                                                                                                    Sem agendamento
-                                                                                                </span>
+                                                                                                canDefineResult ? (
+                                                                                                    <button
+                                                                                                        onClick={() => setAdminResultMatch(match)}
+                                                                                                        className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wide text-amber-800 bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-200 hover:bg-amber-100 whitespace-nowrap transition-colors"
+                                                                                                    >
+                                                                                                        <AlertTriangle size={12} className="text-amber-600" />
+                                                                                                        Definir Resultado
+                                                                                                    </button>
+                                                                                                ) : (
+                                                                                                    <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wide text-stone-500 bg-stone-100 px-3 py-1.5 rounded-lg border border-dashed border-stone-300 whitespace-nowrap">
+                                                                                                        <Calendar size={12} className="text-stone-400" />
+                                                                                                        Sem agendamento
+                                                                                                    </span>
+                                                                                                )
                                                                                             )}
                                                                                         </div>
                                                                                     )}
@@ -1315,6 +1466,19 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                         registrations={registrations}
                         onClose={() => setEditingMatch(null)}
                         onSave={(sA, sB) => handleSaveResult(editingMatch.id, sA, sB)}
+                    />
+                )
+            }
+
+            {
+                adminResultMatch && (
+                    <AdminMatchResultModal
+                        match={adminResultMatch}
+                        registrations={registrations}
+                        saving={savingAdminResult}
+                        onClose={() => setAdminResultMatch(null)}
+                        onWalkover={(winnerSide) => handleAdminWalkover(adminResultMatch, winnerSide)}
+                        onCancel={() => handleAdminCancel(adminResultMatch)}
                     />
                 )
             }
@@ -1567,6 +1731,86 @@ export const ResultModal: React.FC<{ match: Match; profiles: User[]; registratio
     );
 };
 
+const AdminMatchResultModal: React.FC<{
+    match: Match;
+    registrations: Registration[];
+    saving?: boolean;
+    onClose: () => void;
+    onWalkover: (winnerSide: 'A' | 'B') => void;
+    onCancel: () => void;
+}> = ({ match, registrations, saving = false, onClose, onWalkover, onCancel }) => {
+    const regA = registrations.find(r => r.id === match.registration_a_id);
+    const regB = registrations.find(r => r.id === match.registration_b_id);
+    const nameA = regA?.user?.name || regA?.guest_name || 'Jogador A';
+    const nameB = regB?.user?.name || regB?.guest_name || 'Jogador B';
+    const avatarA = regA?.user?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(nameA)}&background=random`;
+    const avatarB = regB?.user?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(nameB)}&background=random`;
+
+    return createPortal(
+        <div className="fixed inset-0 z-999 bg-stone-900/60 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
+            <div className="bg-white rounded-[2.5rem] w-full max-w-md overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
+                <div className="p-5 border-b border-stone-100 flex items-center justify-between">
+                    <div>
+                        <h3 className="text-lg font-black text-stone-800">Definir Resultado</h3>
+                        <p className="text-[10px] uppercase tracking-widest font-bold text-stone-400">Administração</p>
+                    </div>
+                    <button
+                        onClick={onClose}
+                        className="p-2 rounded-full text-stone-400 hover:text-stone-700 hover:bg-stone-50 transition-colors"
+                    >
+                        <X size={18} />
+                    </button>
+                </div>
+
+                <div className="p-6 space-y-5">
+                    <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                            <img src={avatarA} className="w-12 h-12 rounded-full border-2 border-stone-100 object-cover" />
+                            <p className="text-sm font-black text-stone-800 truncate">{nameA}</p>
+                        </div>
+                        <span className="text-xs font-black text-stone-300">VS</span>
+                        <div className="flex items-center gap-3 min-w-0">
+                            <p className="text-sm font-black text-stone-800 truncate">{nameB}</p>
+                            <img src={avatarB} className="w-12 h-12 rounded-full border-2 border-stone-100 object-cover" />
+                        </div>
+                    </div>
+
+                    <div className="space-y-3">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-amber-600">Marcar W.O.</p>
+                        <button
+                            onClick={() => onWalkover('A')}
+                            disabled={saving}
+                            className="w-full py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-800 font-black text-sm hover:bg-amber-100 transition-all disabled:opacity-50"
+                        >
+                            W.O. para {nameA}
+                        </button>
+                        <button
+                            onClick={() => onWalkover('B')}
+                            disabled={saving}
+                            className="w-full py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-800 font-black text-sm hover:bg-amber-100 transition-all disabled:opacity-50"
+                        >
+                            W.O. para {nameB}
+                        </button>
+                    </div>
+
+                    <div className="pt-4 border-t border-stone-100 space-y-3">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-red-500">Cancelar Partida</p>
+                        <button
+                            onClick={onCancel}
+                            disabled={saving}
+                            className="w-full py-3 rounded-xl border border-red-200 bg-red-50 text-red-700 font-black text-sm hover:bg-red-100 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                        >
+                            <AlertTriangle size={16} />
+                            Marcar como cancelada
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>,
+        document.body
+    );
+};
+
 // ============================================
 // MATCH CARD
 // ============================================
@@ -1610,6 +1854,20 @@ const canLaunchScore = (match: Match, userId?: string): boolean => {
     return now >= scheduledDateTime;
 };
 
+const hasAnyScore = (match: Match): boolean => {
+    const scoreA = match.scoreA || [];
+    const scoreB = match.scoreB || [];
+    return scoreA.some(s => s > 0) || scoreB.some(s => s > 0);
+};
+
+const hasAnyWinner = (match: Match): boolean => {
+    return Boolean(match.winnerId || match.walkover_winner_id || match.walkover_winner_registration_id);
+};
+
+const isCancelledMatch = (match: Match): boolean => {
+    return match.status === 'finished' && !match.is_walkover && !hasAnyWinner(match) && !hasAnyScore(match);
+};
+
 const MatchCard: React.FC<{ match: Match; profiles: User[]; registrations: Registration[]; isAdmin?: boolean; currentUserId?: string; canSchedule?: boolean; onEdit?: () => void; onSchedule?: () => void }> = ({ match, profiles, registrations, isAdmin, currentUserId, canSchedule, onEdit, onSchedule }) => {
     const regA = registrations.find(r => r.id === match.registration_a_id);
     const regB = registrations.find(r => r.id === match.registration_b_id);
@@ -1620,6 +1878,8 @@ const MatchCard: React.FC<{ match: Match; profiles: User[]; registrations: Regis
     const avatarB = regB?.user?.avatar_url || `https://ui-avatars.com/api/?name=${nameB}&background=random`;
 
     const isFinished = match.status === 'finished';
+    const isCancelled = isCancelledMatch(match);
+    const hasScores = hasAnyScore(match);
 
     // Calculate set winners using LiveScore logic
     const set1Winner = match.scoreA[0] !== undefined && match.scoreB[0] !== undefined 
@@ -1732,9 +1992,31 @@ const MatchCard: React.FC<{ match: Match; profiles: User[]; registrations: Regis
                 {/* Status/Scheduling Column */}
                 <div className="w-full md:w-auto flex flex-col items-stretch md:items-end gap-3 shrink-0">
                     {match.status === 'finished' ? (
-                        <div className="bg-linear-to-br from-emerald-50 to-green-50 px-4 py-2.5 rounded-2xl border-2 border-emerald-200 shadow-sm text-center md:w-auto">
-                            <p className="text-[9px] font-black text-emerald-600 uppercase tracking-wider mb-0.5">Finalizado</p>
-                            <span className="text-sm font-black text-emerald-700">{match.scoreA.some(s => s > 0) ? 'FIM' : 'W.O.'}</span>
+                        <div className={`px-4 py-2.5 rounded-2xl border-2 shadow-sm text-center md:w-auto ${
+                            isCancelled
+                                ? 'bg-red-50 border-red-200'
+                                : match.is_walkover || !hasScores
+                                    ? 'bg-amber-50 border-amber-200'
+                                    : 'bg-linear-to-br from-emerald-50 to-green-50 border-emerald-200'
+                        }`}>
+                            <p className={`text-[9px] font-black uppercase tracking-wider mb-0.5 ${
+                                isCancelled
+                                    ? 'text-red-600'
+                                    : match.is_walkover || !hasScores
+                                        ? 'text-amber-600'
+                                        : 'text-emerald-600'
+                            }`}>
+                                {isCancelled ? 'Cancelada' : 'Finalizado'}
+                            </p>
+                            <span className={`text-sm font-black ${
+                                isCancelled
+                                    ? 'text-red-700'
+                                    : match.is_walkover || !hasScores
+                                        ? 'text-amber-700'
+                                        : 'text-emerald-700'
+                            }`}>
+                                {isCancelled ? 'Cancelada' : match.is_walkover || !hasScores ? 'W.O.' : 'FIM'}
+                            </span>
                         </div>
                     ) : match.scheduledDate ? (
                         <div className="bg-linear-to-br from-saibro-50 to-orange-50 px-4 py-2.5 rounded-2xl border-2 border-saibro-200 shadow-md md:w-auto">

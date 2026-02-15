@@ -186,7 +186,7 @@ export interface Match {
   scoreB: number[];
   phase?: string;
   slot?: number; // Added to match with BracketSlot
-  winnerId?: string;
+  winnerId?: string | null;
   date?: string;
   scheduledTime?: string; // HH:mm format for match start time
   status: 'pending' | 'finished' | 'waiting_opponents';
@@ -204,7 +204,8 @@ export interface Match {
 
   // Walkover
   is_walkover?: boolean;
-  walkover_winner_id?: string;
+  walkover_winner_id?: string | null;
+  walkover_winner_registration_id?: string | null;
 }
 
 export interface ChampionshipRound {

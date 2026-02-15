@@ -3,20 +3,20 @@ import { Match, InternalStanding, ChampionshipRound, ChampionshipRegistration } 
 // Helper to get round dates (mock or computed)
 export const getRoundDates = (roundNumber: number) => {
     // Hardcoded for the specific championship rule
-    // Rodada 1 – 05/02 a 14/02
-    // Rodada 2 – 15/02 a 24/02
-    // Rodada 3 – 25/02 a 06/03
-    // Semifinais – 24/03 a 02/04
-    // Final – 04/04
+    // Rodada 1 – 05/02 a 16/02
+    // Rodada 2 – 17/02 a 28/02
+    // Rodada 3 – 01/03 a 12/03
+    // Semifinais – 13/03 a 24/03
+    // Final – 28/03
 
     // We should probably get this from the database rounds, but for generation we might need defaults
     const currentYear = new Date().getFullYear();
     switch (roundNumber) {
-        case 1: return { start: `${currentYear}-02-05`, end: `${currentYear}-02-14` };
-        case 2: return { start: `${currentYear}-02-15`, end: `${currentYear}-02-24` };
-        case 3: return { start: `${currentYear}-02-25`, end: `${currentYear}-03-06` };
-        case 4: return { start: `${currentYear}-03-24`, end: `${currentYear}-04-02` }; // Semis
-        case 5: return { start: `${currentYear}-04-04`, end: `${currentYear}-04-04` }; // Final
+        case 1: return { start: `${currentYear}-02-05`, end: `${currentYear}-02-16` };
+        case 2: return { start: `${currentYear}-02-17`, end: `${currentYear}-02-28` };
+        case 3: return { start: `${currentYear}-03-01`, end: `${currentYear}-03-12` };
+        case 4: return { start: `${currentYear}-03-13`, end: `${currentYear}-03-24` }; // Semis
+        case 5: return { start: `${currentYear}-03-28`, end: `${currentYear}-03-28` }; // Final
         default: return { start: `${currentYear}-01-01`, end: `${currentYear}-12-31` };
     }
 };
@@ -199,12 +199,28 @@ export function calculateGroupStandings(
             }
         });
 
-        // WO Logic overrides scores
-        if (match.is_walkover) {
-            if (match.walkover_winner_id === match.playerAId || match.winnerId === match.playerAId) {
+        // Determine winner registration (align with DB logic)
+        let winnerRegId: string | null = null;
+        if (match.walkover_winner_registration_id) {
+            winnerRegId = match.walkover_winner_registration_id;
+        } else if (match.walkover_winner_id) {
+            if (match.walkover_winner_id === match.playerAId) winnerRegId = pA;
+            else if (match.walkover_winner_id === match.playerBId) winnerRegId = pB;
+        } else if (match.winnerId) {
+            if (match.winnerId === match.playerAId) winnerRegId = pA;
+            else if (match.winnerId === match.playerBId) winnerRegId = pB;
+        }
+        if (!winnerRegId) {
+            if (setsA > setsB) winnerRegId = pA;
+            else if (setsB > setsA) winnerRegId = pB;
+        }
+
+        // WO Logic can override sets for display/standings
+        if (match.is_walkover && winnerRegId) {
+            if (winnerRegId === pA) {
                 setsA = 2;
                 setsB = 0;
-            } else {
+            } else if (winnerRegId === pB) {
                 setsA = 0;
                 setsB = 2;
             }
@@ -220,14 +236,11 @@ export function calculateGroupStandings(
         statB.gamesWon += gamesB;
         statB.gamesLost += gamesA;
 
-        // Deterministic winner from scores/metadata
-        const isWinA = (setsA > setsB) || (match.winnerId && match.playerAId === match.winnerId);
-
-        if (isWinA) {
+        if (winnerRegId === pA) {
             statA.points += 3;
             statA.wins++;
             statB.losses++;
-        } else {
+        } else if (winnerRegId === pB) {
             statB.points += 3;
             statB.wins++;
             statA.losses++;
