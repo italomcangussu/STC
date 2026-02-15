@@ -65,7 +65,7 @@ export const Auth: React.FC = () => {
 
                     <div className="inline-block p-4 bg-white/20 backdrop-blur-md rounded-2xl shadow-lg mb-4">
                         <img
-                            src={`${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/logoapp/SOBRAL.zip%20-%201.png`}
+                            src="https://smztsayzldjmkzmufqcz.supabase.co/storage/v1/object/public/logoapp/SOBRAL.zip%20-%201.png"
                             alt="STC Logo"
                             className="w-20 h-auto object-contain drop-shadow-md"
                         />
