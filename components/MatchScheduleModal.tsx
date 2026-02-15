@@ -13,6 +13,7 @@ interface Props {
     courts: Court[];
     onSchedule: (date: string, time: string, courtId: string) => Promise<void>;
     onClose: () => void;
+    isAdmin?: boolean;
 }
 
 const TIME_SLOTS_MORNING = ['06:00', '06:30', '07:00'];
@@ -26,7 +27,7 @@ const ALL_TIME_SLOTS = [
 ];
 
 export const MatchScheduleModal: React.FC<Props> = ({
-    match, roundName, roundStartDate, roundEndDate, className, courts, onSchedule, onClose
+    match, roundName, roundStartDate, roundEndDate, className, courts, isAdmin, onSchedule, onClose
 }) => {
     const [date, setDate] = useState(match.scheduled_date || '');
     const [time, setTime] = useState(match.scheduled_time ? match.scheduled_time.substring(0, 5) : '');
@@ -77,8 +78,10 @@ export const MatchScheduleModal: React.FC<Props> = ({
 
         // Validate date range
         if (date < roundStartDate || date > roundEndDate) {
-            setError(`A data deve estar dentro do período da rodada: ${formatDateBr(roundStartDate)} a ${formatDateBr(roundEndDate)}`);
-            return;
+            if (!isAdmin) {
+                setError(`A data deve estar dentro do período da rodada: ${formatDateBr(roundStartDate)} a ${formatDateBr(roundEndDate)}`);
+                return;
+            }
         }
 
         setIsSubmitting(true);
@@ -118,8 +121,8 @@ export const MatchScheduleModal: React.FC<Props> = ({
                             <input
                                 type="date"
                                 value={date}
-                                min={roundStartDate}
-                                max={roundEndDate}
+                                min={isAdmin ? undefined : roundStartDate}
+                                max={isAdmin ? undefined : roundEndDate}
                                 onChange={(e) => setDate(e.target.value)}
                                 className="w-full p-4 bg-stone-50 border border-stone-100 rounded-2xl focus:ring-2 focus:ring-saibro-500 outline-none transition-all font-bold text-stone-800"
                             />

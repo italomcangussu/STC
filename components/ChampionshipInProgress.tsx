@@ -677,6 +677,7 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                     roundEndDate={rounds.find(r => r.id === schedulingMatch.round_id)?.end_date || ''}
                     className={registrations.find(r => r.id === schedulingMatch.registration_a_id)?.class || ''}
                     courts={courts}
+                    isAdmin={currentUser?.role === 'admin'}
                     onSchedule={handleSchedule}
                     onClose={() => setSchedulingMatch(null)}
                 />
