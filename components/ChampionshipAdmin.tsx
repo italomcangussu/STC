@@ -23,6 +23,26 @@ interface ChampionshipRow {
     pts_technical_draw?: number;
 }
 
+const normalizeChampionshipRow = (row: any): ChampionshipRow => ({
+    id: row.id,
+    name: row.name,
+    status: row.status,
+    format: row.format,
+    start_date: row.start_date ?? null,
+    end_date: row.end_date ?? null,
+    registration_open: Boolean(row.registration_open),
+    // Some environments don't have registration_closed column yet.
+    registration_closed: typeof row.registration_closed === 'boolean'
+        ? row.registration_closed
+        : !Boolean(row.registration_open),
+    pts_victory: row.pts_victory,
+    pts_defeat: row.pts_defeat,
+    pts_wo_victory: row.pts_wo_victory,
+    pts_set: row.pts_set,
+    pts_game: row.pts_game,
+    pts_technical_draw: row.pts_technical_draw
+});
+
 interface Registration {
     id: string;
     championship_id: string;
@@ -124,7 +144,7 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
         const [championshipRes, profilesRes] = await Promise.all([
             supabase
                 .from('championships')
-                .select('id, name, status, format, start_date, end_date, registration_open, registration_closed, pts_victory, pts_defeat, pts_wo_victory, pts_set, pts_game, pts_technical_draw')
+                .select('id, name, status, format, start_date, end_date, registration_open, pts_victory, pts_defeat, pts_wo_victory, pts_set, pts_game, pts_technical_draw')
                 .order('start_date', { ascending: false, nullsFirst: false }),
             supabase
                 .from('profiles')
@@ -135,10 +155,11 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
         ]);
 
         if (championshipRes.data) {
-            setChampionships(championshipRes.data as ChampionshipRow[]);
+            const normalizedChamps = (championshipRes.data || []).map(normalizeChampionshipRow);
+            setChampionships(normalizedChamps);
 
-            if (championshipRes.data.length > 0) {
-                setSelectedChampionshipId(prev => prev || championshipRes.data[0].id);
+            if (normalizedChamps.length > 0) {
+                setSelectedChampionshipId(prev => prev || normalizedChamps[0].id);
             }
         }
 
@@ -165,7 +186,7 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
         const [champRes, regsRes, roundsRes, groupsCountRes, auditRes] = await Promise.all([
             supabase
                 .from('championships')
-                .select('id, name, status, format, start_date, end_date, registration_open, registration_closed, pts_victory, pts_defeat, pts_wo_victory, pts_set, pts_game, pts_technical_draw')
+                .select('id, name, status, format, start_date, end_date, registration_open, pts_victory, pts_defeat, pts_wo_victory, pts_set, pts_game, pts_technical_draw')
                 .eq('id', championshipId)
                 .single(),
             supabase
@@ -191,7 +212,7 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
         ]);
 
         if (champRes.data) {
-            setSelectedChampionship(champRes.data as ChampionshipRow);
+            setSelectedChampionship(normalizeChampionshipRow(champRes.data));
         }
 
         setRegistrations((regsRes.data || []) as Registration[]);
@@ -307,8 +328,7 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
         };
 
         const patch = {
-            registration_open: open,
-            registration_closed: !open
+            registration_open: open
         };
 
         const { error } = await supabase
@@ -326,7 +346,7 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
             'championship',
             selectedChampionship.id,
             beforeData,
-            patch
+            { registration_open: open, registration_closed: !open }
         );
 
         await fetchInitialData();

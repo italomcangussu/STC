@@ -104,6 +104,24 @@ describe('championshipStandings', () => {
         expect(standings[1].setsWon + standings[1].gamesWon).toBe(0);
     });
 
+    it('falls back to default scoring when config values are null', () => {
+        const match = baseMatch({
+            scoreA: [6, 4, 0],
+            scoreB: [4, 6, 10],
+            winnerId: 'user-b',
+            result_type: 'played'
+        });
+
+        const standings = calculateGroupStandingsWithRules(registrations, [match], {
+            ptsVictory: null as unknown as number,
+            ptsSet: null as unknown as number,
+            ptsGame: null as unknown as number
+        });
+
+        expect(standings[0].userId).toBe('reg-b');
+        expect(standings[0].points).toBe(3);
+    });
+
     it('blocks technical draw for knockout phases', () => {
         expect(isTechnicalDrawAllowed('classificatoria', 'groups')).toBe(true);
         expect(isTechnicalDrawAllowed('mata-mata-semifinal', 'Semi')).toBe(false);

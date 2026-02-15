@@ -18,9 +18,17 @@ const DEFAULT_SCORING: Required<ChampionshipScoringConfig> = {
     ptsTechnicalDraw: 0
 };
 
+const pickNumber = (value: number | null | undefined, fallback: number) => (
+    typeof value === 'number' && Number.isFinite(value) ? value : fallback
+);
+
 const mergeScoring = (config?: ChampionshipScoringConfig): Required<ChampionshipScoringConfig> => ({
-    ...DEFAULT_SCORING,
-    ...config
+    ptsVictory: pickNumber(config?.ptsVictory as number | null | undefined, DEFAULT_SCORING.ptsVictory),
+    ptsDefeat: pickNumber(config?.ptsDefeat as number | null | undefined, DEFAULT_SCORING.ptsDefeat),
+    ptsWoVictory: pickNumber(config?.ptsWoVictory as number | null | undefined, DEFAULT_SCORING.ptsWoVictory),
+    ptsSet: pickNumber(config?.ptsSet as number | null | undefined, DEFAULT_SCORING.ptsSet),
+    ptsGame: pickNumber(config?.ptsGame as number | null | undefined, DEFAULT_SCORING.ptsGame),
+    ptsTechnicalDraw: pickNumber(config?.ptsTechnicalDraw as number | null | undefined, DEFAULT_SCORING.ptsTechnicalDraw)
 });
 
 const sumArray = (values?: number[]) => (values || []).reduce((acc, value) => acc + (value || 0), 0);
