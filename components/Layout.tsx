@@ -148,7 +148,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
             <header className="flex-none md:hidden bg-white border-b border-saibro-200 p-4 flex justify-between items-center z-50 pt-safe">
                 <div className="flex items-center gap-3">
                     <img
-                        src="https://smztsayzldjmkzmufqcz.supabase.co/storage/v1/object/public/logoapp/SOBRAL.zip%20-%201.png"
+                        src={`${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/logoapp/SOBRAL.zip%20-%201.png`}
                         className="w-8 h-8 object-contain active:scale-90 transition-transform"
                         alt="Logo"
                         onClick={handleLogoClick}
@@ -174,7 +174,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
                 <div className="p-6 flex-none flex justify-between items-center">
                     <div className="hidden md:flex items-center gap-2">
                         <img
-                            src="https://smztsayzldjmkzmufqcz.supabase.co/storage/v1/object/public/logoapp/SOBRAL.zip%20-%201.png"
+                            src={`${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/logoapp/SOBRAL.zip%20-%201.png`}
                             className="w-10 h-10 object-contain cursor-pointer active:scale-95 transition-transform"
                             alt="Logo"
                             onClick={handleLogoClick}
