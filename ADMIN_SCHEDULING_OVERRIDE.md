@@ -12,7 +12,7 @@ Administrators must be able to override this restriction and schedule matches fo
 
 ## Implementation Details
 
-### 1. `ChampionshipInProgress.tsx`
+### 1. `ChampionshipInProgress.tsx` & `Championships.tsx`
 - Passed the `isAdmin` boolean prop to the `MatchScheduleModal`.
 - Derived from `currentUser?.role === 'admin'`.
 

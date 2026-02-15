@@ -773,47 +773,51 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
             </div>
 
             {/* 2. TABS */}
-            <div className="flex bg-white p-2 rounded-3xl shadow-lg shadow-stone-200/50 border-2 border-stone-100 overflow-x-auto scrollbar-hide gap-2">
+            <div className="flex bg-white p-1.5 sm:p-2 rounded-3xl shadow-lg shadow-stone-200/50 border-2 border-stone-100 gap-1.5 sm:gap-2 overflow-hidden">
                 <button
                     onClick={() => setActiveTab('partidas')}
-                    className={`flex-1 min-w-[100px] flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl text-xs font-black uppercase tracking-wider transition-all duration-300 ${
+                    className={`flex-1 min-w-0 flex items-center justify-center gap-1 sm:gap-2 py-3 px-2 sm:py-3.5 sm:px-4 rounded-2xl text-[10px] sm:text-xs font-black uppercase tracking-normal sm:tracking-wider transition-all duration-300 ${
                         activeTab === 'partidas' 
-                            ? 'bg-linear-to-br from-saibro-600 to-saibro-700 text-white shadow-lg shadow-saibro-200 scale-105' 
+                            ? 'bg-linear-to-br from-saibro-600 to-saibro-700 text-white shadow-lg shadow-saibro-200 sm:scale-105' 
                             : 'text-stone-500 hover:text-stone-700 hover:bg-stone-50'
                     }`}
                 >
-                    <Trophy size={16} /> Partidas
+                    <Trophy size={16} className="hidden sm:block shrink-0" /> <span className="truncate">Partidas</span>
                 </button>
                 <button
                     onClick={() => setActiveTab('jogos')}
-                    className={`flex-1 min-w-[100px] flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl text-xs font-black uppercase tracking-wider transition-all duration-300 ${
+                    className={`flex-1 min-w-0 flex items-center justify-center gap-1 sm:gap-2 py-3 px-2 sm:py-3.5 sm:px-4 rounded-2xl text-[10px] sm:text-xs font-black uppercase tracking-normal sm:tracking-wider transition-all duration-300 ${
                         activeTab === 'jogos' 
-                            ? 'bg-linear-to-br from-saibro-600 to-saibro-700 text-white shadow-lg shadow-saibro-200 scale-105' 
+                            ? 'bg-linear-to-br from-saibro-600 to-saibro-700 text-white shadow-lg shadow-saibro-200 sm:scale-105' 
                             : 'text-stone-500 hover:text-stone-700 hover:bg-stone-50'
                     }`}
                 >
-                    <CalendarCheck size={16} /> Jogos
+                    <CalendarCheck size={16} className="hidden sm:block shrink-0" /> <span className="truncate">Jogos</span>
                 </button>
                 <button
                     onClick={() => setActiveTab('classificacao')}
-                    className={`flex-1 min-w-[100px] flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl text-xs font-black uppercase tracking-wider transition-all duration-300 ${
+                    className={`flex-1 min-w-0 flex items-center justify-center gap-1 sm:gap-2 py-3 px-2 sm:py-3.5 sm:px-4 rounded-2xl text-[10px] sm:text-xs font-black uppercase tracking-normal sm:tracking-wider transition-all duration-300 ${
                         activeTab === 'classificacao' 
-                            ? 'bg-linear-to-br from-saibro-600 to-saibro-700 text-white shadow-lg shadow-saibro-200 scale-105' 
+                            ? 'bg-linear-to-br from-saibro-600 to-saibro-700 text-white shadow-lg shadow-saibro-200 sm:scale-105' 
                             : 'text-stone-500 hover:text-stone-700 hover:bg-stone-50'
                     }`}
                 >
-                    <ListOrdered size={16} /> Classificação
+                    <ListOrdered size={16} className="hidden sm:block shrink-0" />
+                    <span className="truncate sm:hidden">Classif.</span>
+                    <span className="truncate hidden sm:inline">Classificação</span>
                 </button>
                 {(selectedChamp.format === 'mata-mata' || selectedChamp.format === 'grupo-mata-mata') && (
                     <button
                         onClick={() => setActiveTab('chaveamento')}
-                        className={`flex-1 min-w-[120px] flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl text-xs font-black uppercase tracking-wider transition-all duration-300 ${
+                        className={`flex-1 min-w-0 flex items-center justify-center gap-1 sm:gap-2 py-3 px-2 sm:py-3.5 sm:px-4 rounded-2xl text-[10px] sm:text-xs font-black uppercase tracking-normal sm:tracking-wider transition-all duration-300 ${
                             activeTab === 'chaveamento' 
-                                ? 'bg-linear-to-br from-saibro-600 to-saibro-700 text-white shadow-lg shadow-saibro-200 scale-105' 
+                                ? 'bg-linear-to-br from-saibro-600 to-saibro-700 text-white shadow-lg shadow-saibro-200 sm:scale-105' 
                                 : 'text-stone-500 hover:text-stone-700 hover:bg-stone-50'
                         }`}
                     >
-                        <GitMerge size={16} /> Chaveamento
+                        <GitMerge size={16} className="hidden sm:block shrink-0" />
+                        <span className="truncate sm:hidden">Chave</span>
+                        <span className="truncate hidden sm:inline">Chaveamento</span>
                     </button>
                 )}
             </div>
@@ -1163,8 +1167,9 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                                                                                                     )}
                                                                                                 </>
                                                                                             ) : (
-                                                                                                <span className="text-xs font-black uppercase text-stone-500 bg-stone-100 px-4 py-2 rounded-xl border-2 border-dashed border-stone-300">
-                                                                                                    Aguardando agendamento
+                                                                                                <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wide text-stone-500 bg-stone-100 px-3 py-1.5 rounded-lg border border-dashed border-stone-300 whitespace-nowrap">
+                                                                                                    <Calendar size={12} className="text-stone-400" />
+                                                                                                    Sem agendamento
                                                                                                 </span>
                                                                                             )}
                                                                                         </div>
@@ -1323,6 +1328,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                         roundEndDate={rounds.find(r => r.id === schedulingMatch.round_id)?.end_date || ''}
                         className={registrations.find(r => r.id === schedulingMatch.registration_a_id)?.class || ''}
                         courts={courts}
+                        isAdmin={currentUser.role === 'admin'}
                         onSchedule={handleSchedule}
                         onClose={() => setSchedulingMatch(null)}
                     />
@@ -1637,18 +1643,18 @@ const MatchCard: React.FC<{ match: Match; profiles: User[]; registrations: Regis
     const displayScoresB = showThirdSet ? match.scoreB : match.scoreB.slice(0, 2);
 
     return (
-        <div className="bg-white rounded-3xl p-6 shadow-lg shadow-stone-200/50 border-2 border-stone-100 relative overflow-hidden group transition-all duration-300 hover:shadow-xl hover:shadow-saibro-100/30 hover:border-saibro-300 hover:scale-[1.01]">
+        <div className="bg-white rounded-3xl p-4 sm:p-6 shadow-lg shadow-stone-200/50 border-2 border-stone-100 relative overflow-hidden group transition-all duration-300 hover:shadow-xl hover:shadow-saibro-100/30 hover:border-saibro-300 hover:scale-[1.01]">
             {/* Class Tag */}
             <div className="absolute top-0 left-0 bg-linear-to-br from-stone-800 to-stone-900 px-4 py-1.5 rounded-br-3xl text-[10px] font-black text-white uppercase tracking-wider shadow-md">
                 {regA?.class || 'S/C'}
             </div>
 
-            <div className="flex items-center gap-6 mt-3">
+            <div className="flex flex-col md:flex-row items-stretch md:items-center gap-4 md:gap-6 mt-3">
                 {/* Players Column */}
-                <div className="flex-1 space-y-5">
+                <div className="flex-1 min-w-0 space-y-4 sm:space-y-5">
                     {/* Player A */}
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
                             <div className="relative">
                                 <img src={avatarA} className={`w-12 h-12 rounded-full border-3 object-cover transition-all duration-300 ${match.winnerId === match.playerAId ? 'border-saibro-500 shadow-lg shadow-saibro-200 ring-2 ring-saibro-100' : 'border-stone-200 group-hover:border-stone-300'}`} />
                                 {match.winnerId === match.playerAId && (
@@ -1657,8 +1663,8 @@ const MatchCard: React.FC<{ match: Match; profiles: User[]; registrations: Regis
                                     </div>
                                 )}
                             </div>
-                            <div>
-                                <p className={`text-base font-black transition-colors ${match.winnerId === match.playerAId ? 'text-stone-900' : 'text-stone-600'}`}>
+                            <div className="min-w-0">
+                                <p className={`text-base font-black transition-colors leading-tight break-words ${match.winnerId === match.playerAId ? 'text-stone-900' : 'text-stone-600'}`}>
                                     {nameA}
                                 </p>
                                 <p className="text-[10px] text-stone-500 font-bold uppercase tracking-wide">{regA?.participant_type === 'guest' ? '🎫 Convidado' : '⭐ Sócio'}</p>
@@ -1685,8 +1691,8 @@ const MatchCard: React.FC<{ match: Match; profiles: User[]; registrations: Regis
                     </div>
 
                     {/* Player B */}
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
                             <div className="relative">
                                 <img src={avatarB} className={`w-12 h-12 rounded-full border-3 object-cover transition-all duration-300 ${match.winnerId === match.playerBId ? 'border-saibro-500 shadow-lg shadow-saibro-200 ring-2 ring-saibro-100' : 'border-stone-200 group-hover:border-stone-300'}`} />
                                 {match.winnerId === match.playerBId && (
@@ -1695,8 +1701,8 @@ const MatchCard: React.FC<{ match: Match; profiles: User[]; registrations: Regis
                                     </div>
                                 )}
                             </div>
-                            <div>
-                                <p className={`text-base font-black transition-colors ${match.winnerId === match.playerBId ? 'text-stone-900' : 'text-stone-600'}`}>
+                            <div className="min-w-0">
+                                <p className={`text-base font-black transition-colors leading-tight break-words ${match.winnerId === match.playerBId ? 'text-stone-900' : 'text-stone-600'}`}>
                                     {nameB}
                                 </p>
                                 <p className="text-[10px] text-stone-500 font-bold uppercase tracking-wide">{regB?.participant_type === 'guest' ? '🎫 Convidado' : '⭐ Sócio'}</p>
@@ -1724,14 +1730,14 @@ const MatchCard: React.FC<{ match: Match; profiles: User[]; registrations: Regis
                 </div>
 
                 {/* Status/Scheduling Column */}
-                <div className="flex flex-col items-end gap-3 shrink-0">
+                <div className="w-full md:w-auto flex flex-col items-stretch md:items-end gap-3 shrink-0">
                     {match.status === 'finished' ? (
-                        <div className="bg-linear-to-br from-emerald-50 to-green-50 px-4 py-2.5 rounded-2xl border-2 border-emerald-200 shadow-sm text-center">
+                        <div className="bg-linear-to-br from-emerald-50 to-green-50 px-4 py-2.5 rounded-2xl border-2 border-emerald-200 shadow-sm text-center md:w-auto">
                             <p className="text-[9px] font-black text-emerald-600 uppercase tracking-wider mb-0.5">Finalizado</p>
                             <span className="text-sm font-black text-emerald-700">{match.scoreA.some(s => s > 0) ? 'FIM' : 'W.O.'}</span>
                         </div>
                     ) : match.scheduledDate ? (
-                        <div className="bg-linear-to-br from-saibro-50 to-orange-50 px-4 py-2.5 rounded-2xl border-2 border-saibro-200 shadow-md">
+                        <div className="bg-linear-to-br from-saibro-50 to-orange-50 px-4 py-2.5 rounded-2xl border-2 border-saibro-200 shadow-md md:w-auto">
                             <p className="text-[9px] font-black text-saibro-700 uppercase tracking-wider mb-1.5">Agendado</p>
                             <div className="flex items-center gap-1.5 text-xs font-bold text-saibro-800 mb-0.5">
                                 <Calendar size={12} /> {formatDateBr(match.scheduledDate)}
@@ -1753,7 +1759,7 @@ const MatchCard: React.FC<{ match: Match; profiles: User[]; registrations: Regis
                     {!isFinished && (isAdmin || canLaunchScore(match, currentUserId)) && (
                         <button
                             onClick={onEdit}
-                            className="bg-linear-to-br from-saibro-600 to-saibro-700 text-white text-xs font-black uppercase px-5 py-2.5 rounded-xl shadow-lg shadow-saibro-200 hover:shadow-xl hover:scale-105 transition-all duration-200"
+                            className="w-full md:w-auto bg-linear-to-br from-saibro-600 to-saibro-700 text-white text-xs font-black uppercase px-5 py-2.5 rounded-xl shadow-lg shadow-saibro-200 hover:shadow-xl hover:scale-105 transition-all duration-200"
                         >
                             Lançar
                         </button>
@@ -1763,7 +1769,7 @@ const MatchCard: React.FC<{ match: Match; profiles: User[]; registrations: Regis
                     {!isFinished && !match.scheduledDate && (isAdmin || match.playerAId === currentUserId || match.playerBId === currentUserId) && (
                         <button
                             onClick={onSchedule}
-                            className="bg-linear-to-br from-stone-800 to-stone-900 text-white text-xs font-black uppercase px-5 py-2.5 rounded-xl shadow-lg shadow-stone-300 hover:shadow-xl hover:scale-105 transition-all duration-200 flex items-center gap-2"
+                            className="w-full md:w-auto bg-linear-to-br from-stone-800 to-stone-900 text-white text-xs font-black uppercase px-5 py-2.5 rounded-xl shadow-lg shadow-stone-300 hover:shadow-xl hover:scale-105 transition-all duration-200 flex items-center justify-center gap-2"
                         >
                             <Calendar size={12} />
                             Agendar
@@ -1774,7 +1780,7 @@ const MatchCard: React.FC<{ match: Match; profiles: User[]; registrations: Regis
                     {!isFinished && match.scheduledDate && (isAdmin || match.playerAId === currentUserId || match.playerBId === currentUserId) && (
                         <button
                             onClick={onSchedule}
-                            className="bg-linear-to-br from-blue-600 to-blue-700 text-white text-xs font-black uppercase px-5 py-2.5 rounded-xl shadow-lg shadow-blue-200 hover:shadow-xl hover:scale-105 transition-all duration-200 flex items-center gap-2"
+                            className="w-full md:w-auto bg-linear-to-br from-blue-600 to-blue-700 text-white text-xs font-black uppercase px-5 py-2.5 rounded-xl shadow-lg shadow-blue-200 hover:shadow-xl hover:scale-105 transition-all duration-200 flex items-center justify-center gap-2"
                         >
                             <Clock size={12} />
                             Reagendar
