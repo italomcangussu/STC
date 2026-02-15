@@ -23,6 +23,33 @@ interface ChampionshipRow {
     pts_technical_draw?: number;
 }
 
+const CHAMPIONSHIP_SELECT_COLUMNS = [
+    'id',
+    'name',
+    'status',
+    'format',
+    'start_date',
+    'end_date',
+    'registration_open',
+    'registration_closed',
+    'pts_victory',
+    'pts_defeat',
+    'pts_wo_victory',
+    'pts_set',
+    'pts_game',
+    'pts_technical_draw'
+];
+
+const parseMissingChampionshipColumn = (error: any): string | null => {
+    const message = error?.message || '';
+    const match = message.match(/column championships\.([a-zA-Z0-9_]+) does not exist/i);
+    return match?.[1] || null;
+};
+
+const pickNumeric = (value: any, fallback?: number) => (
+    typeof value === 'number' && Number.isFinite(value) ? value : fallback
+);
+
 const normalizeChampionshipRow = (row: any): ChampionshipRow => ({
     id: row.id,
     name: row.name,
@@ -35,12 +62,12 @@ const normalizeChampionshipRow = (row: any): ChampionshipRow => ({
     registration_closed: typeof row.registration_closed === 'boolean'
         ? row.registration_closed
         : !Boolean(row.registration_open),
-    pts_victory: row.pts_victory,
-    pts_defeat: row.pts_defeat,
-    pts_wo_victory: row.pts_wo_victory,
-    pts_set: row.pts_set,
-    pts_game: row.pts_game,
-    pts_technical_draw: row.pts_technical_draw
+    pts_victory: pickNumeric(row.pts_victory, 3),
+    pts_defeat: pickNumeric(row.pts_defeat, 0),
+    pts_wo_victory: pickNumeric(row.pts_wo_victory, 3),
+    pts_set: pickNumeric(row.pts_set, 0),
+    pts_game: pickNumeric(row.pts_game, 0),
+    pts_technical_draw: pickNumeric(row.pts_technical_draw, 0)
 });
 
 interface Registration {
@@ -138,14 +165,50 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
         fetchSelectedChampionshipData(selectedChampionshipId);
     }, [selectedChampionshipId]);
 
+    const fetchChampionshipRows = async (params?: { championshipId?: string; single?: boolean }) => {
+        let columns = [...CHAMPIONSHIP_SELECT_COLUMNS];
+        let lastError: any = null;
+
+        for (let attempt = 0; attempt < CHAMPIONSHIP_SELECT_COLUMNS.length; attempt += 1) {
+            const selectColumns = columns.join(', ');
+
+            let query = supabase
+                .from('championships')
+                .select(selectColumns);
+
+            if (params?.championshipId) {
+                query = query.eq('id', params.championshipId);
+            }
+
+            const response = params?.single
+                ? await query.maybeSingle()
+                : await query.order('start_date', { ascending: false, nullsFirst: false });
+
+            if (!response.error) {
+                if (params?.single) {
+                    return { data: response.data ? [response.data] : [], error: null };
+                }
+                return { data: response.data || [], error: null };
+            }
+
+            lastError = response.error;
+            const missingColumn = parseMissingChampionshipColumn(response.error);
+
+            if (!missingColumn || !columns.includes(missingColumn)) {
+                break;
+            }
+
+            columns = columns.filter(column => column !== missingColumn);
+        }
+
+        return { data: [], error: lastError };
+    };
+
     const fetchInitialData = async () => {
         setLoading(true);
 
         const [championshipRes, profilesRes] = await Promise.all([
-            supabase
-                .from('championships')
-                .select('id, name, status, format, start_date, end_date, registration_open, pts_victory, pts_defeat, pts_wo_victory, pts_set, pts_game, pts_technical_draw')
-                .order('start_date', { ascending: false, nullsFirst: false }),
+            fetchChampionshipRows(),
             supabase
                 .from('profiles')
                 .select('id, name, avatar_url, category, role')
@@ -153,6 +216,10 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
                 .in('role', ['socio', 'admin'])
                 .order('name')
         ]);
+
+        if (championshipRes.error) {
+            console.error('Erro ao carregar campeonatos no admin:', championshipRes.error);
+        }
 
         if (championshipRes.data) {
             const normalizedChamps = (championshipRes.data || []).map(normalizeChampionshipRow);
@@ -183,12 +250,10 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
     const fetchSelectedChampionshipData = async (championshipId: string) => {
         setLoadingDetails(true);
 
+        const championshipPromise = fetchChampionshipRows({ championshipId, single: true });
+
         const [champRes, regsRes, roundsRes, groupsCountRes, auditRes] = await Promise.all([
-            supabase
-                .from('championships')
-                .select('id, name, status, format, start_date, end_date, registration_open, pts_victory, pts_defeat, pts_wo_victory, pts_set, pts_game, pts_technical_draw')
-                .eq('id', championshipId)
-                .single(),
+            championshipPromise,
             supabase
                 .from('championship_registrations')
                 .select('*, user:profiles!user_id(name, avatar_url)')
@@ -211,8 +276,14 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
                 .limit(100)
         ]);
 
-        if (champRes.data) {
-            setSelectedChampionship(normalizeChampionshipRow(champRes.data));
+        if (champRes.error) {
+            console.error('Erro ao carregar campeonato selecionado no admin:', champRes.error);
+        }
+
+        if (champRes.data?.[0]) {
+            setSelectedChampionship(normalizeChampionshipRow(champRes.data[0]));
+        } else {
+            setSelectedChampionship(null);
         }
 
         setRegistrations((regsRes.data || []) as Registration[]);
@@ -425,6 +496,7 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
         return (
             <GroupDrawPage
                 currentUser={resolvedUser}
+                championshipId={selectedChampionship.id}
                 onBack={async () => {
                     setShowDrawPage(false);
                     await fetchSelectedChampionshipData(selectedChampionship.id);

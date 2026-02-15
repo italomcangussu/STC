@@ -14,7 +14,6 @@ interface Championship {
     id: string;
     name: string;
     registration_open: boolean;
-    registration_closed: boolean;
 }
 
 interface Registration {
@@ -38,6 +37,7 @@ interface DrawnGroup {
 
 interface Props {
     currentUser: User;
+    championshipId?: string;
     onBack: () => void;
 }
 
@@ -53,7 +53,7 @@ const shuffleArray = <T,>(array: T[]): T[] => {
     return shuffled;
 };
 
-export const GroupDrawPage: React.FC<Props> = ({ currentUser, onBack }) => {
+export const GroupDrawPage: React.FC<Props> = ({ currentUser, championshipId, onBack }) => {
     const [championship, setChampionship] = useState<Championship | null>(null);
     const [registrations, setRegistrations] = useState<Registration[]>([]);
     const [loading, setLoading] = useState(true);
@@ -78,22 +78,24 @@ export const GroupDrawPage: React.FC<Props> = ({ currentUser, onBack }) => {
         const fetchData = async () => {
             setLoading(true);
 
-            // Get championship that is closed for registrations (for draw)
-            // This is a championship with registration_open = false and status = ongoing or draft
-            const { data: champData } = await supabase
+            const championshipQuery = supabase
                 .from('championships')
-                .select('id, name, registration_open, status')
-                .eq('registration_open', false)
-                .in('status', ['ongoing', 'draft'])
-                .limit(1)
-                .maybeSingle();
+                .select('id, name, registration_open, status');
+
+            const { data: champData } = championshipId
+                ? await championshipQuery.eq('id', championshipId).maybeSingle()
+                : await championshipQuery
+                    .eq('registration_open', false)
+                    .in('status', ['ongoing', 'draft'])
+                    .order('start_date', { ascending: false, nullsFirst: false })
+                    .limit(1)
+                    .maybeSingle();
 
             if (champData) {
                 setChampionship({
                     id: champData.id,
                     name: champData.name,
-                    registration_open: champData.registration_open,
-                    registration_closed: true
+                    registration_open: champData.registration_open
                 });
 
                 // Fetch registrations for this championship
@@ -198,7 +200,7 @@ export const GroupDrawPage: React.FC<Props> = ({ currentUser, onBack }) => {
         };
 
         fetchData();
-    }, []);
+    }, [championshipId]);
 
     const getRegistrationsByClass = useCallback((cls: string) => {
         return registrations.filter(r => r.class === cls);
