@@ -10,6 +10,7 @@ export function useVersionCheck(config: VersionCheckConfig = {}) {
     const { checkInterval = 5, enableBroadcast = true } = config;
     const [updateAvailable, setUpdateAvailable] = useState(false);
     const [currentVersion, setCurrentVersion] = useState<string | null>(null);
+    const [availableVersion, setAvailableVersion] = useState<string | null>(null);
 
     // Função para buscar versão do servidor
     const checkVersion = async () => {
@@ -53,6 +54,7 @@ export function useVersionCheck(config: VersionCheckConfig = {}) {
                 // Nova versão detectada!
                 console.log('🎉 Nova versão disponível:', serverVersion);
                 setUpdateAvailable(true);
+                setAvailableVersion(serverVersion);
             }
         } catch (error) {
             if (!import.meta.env.DEV) {
@@ -98,6 +100,12 @@ export function useVersionCheck(config: VersionCheckConfig = {}) {
     }, [enableBroadcast]);
 
     const reloadApp = () => {
+        if (availableVersion) {
+            localStorage.setItem('app_version', availableVersion);
+        } else {
+            // Sem versão conhecida (broadcast apenas): força re-sync no próximo load.
+            localStorage.removeItem('app_version');
+        }
         window.location.reload();
     };
 
