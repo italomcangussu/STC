@@ -237,6 +237,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                 scoreA: m.score_a || [],
                 scoreB: m.score_b || [],
                 winnerId: m.winner_id,
+                winner_registration_id: m.winner_registration_id,
                 is_walkover: m.is_walkover,
                 result_type: m.result_type,
                 admin_notes: m.admin_notes,
@@ -461,6 +462,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
         if (!winner) return; // Invalid match, don't save
 
         const winnerId = winner === 'A' ? match.playerAId : match.playerBId;
+        const winnerRegistrationId = winner === 'A' ? match.registration_a_id : match.registration_b_id;
         const resultTimestamp = getNowInFortaleza().toISOString();
 
         const logAudit = async (action: string, beforeData: any, afterData: any) => {
@@ -482,7 +484,8 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
             .update({
                 score_a: scoreA,
                 score_b: scoreB,
-                winner_id: winnerId,
+                winner_id: winnerId || null,
+                winner_registration_id: winnerRegistrationId || null,
                 is_walkover: false,
                 walkover_winner_id: null,
                 walkover_winner_registration_id: null,
@@ -504,11 +507,13 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
             score_a: match.scoreA,
             score_b: match.scoreB,
             winner_id: match.winnerId,
+            winner_registration_id: match.winner_registration_id,
             result_type: match.result_type
         }, {
             score_a: scoreA,
             score_b: scoreB,
             winner_id: winnerId,
+            winner_registration_id: winnerRegistrationId,
             result_type: 'played'
         });
 
@@ -520,6 +525,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                     scoreA,
                     scoreB,
                     winnerId,
+                    winner_registration_id: winnerRegistrationId || null,
                     is_walkover: false,
                     walkover_winner_id: null,
                     walkover_winner_registration_id: null,
@@ -544,11 +550,20 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                 );
 
                 if (nextMatch) {
-                    const updateField = !nextMatch.playerAId ? 'player_a_id' : 'player_b_id';
-                    await supabase
-                        .from('matches')
-                        .update({ [updateField]: winnerId })
-                        .eq('id', nextMatch.id);
+                    const isSlotA = !nextMatch.playerAId && !nextMatch.registration_a_id;
+                    const updateData: Record<string, any> = {};
+                    if (winnerId) {
+                        updateData[isSlotA ? 'player_a_id' : 'player_b_id'] = winnerId;
+                    }
+                    if (winnerRegistrationId) {
+                        updateData[isSlotA ? 'registration_a_id' : 'registration_b_id'] = winnerRegistrationId;
+                    }
+                    if (Object.keys(updateData).length > 0) {
+                        await supabase
+                            .from('matches')
+                            .update(updateData)
+                            .eq('id', nextMatch.id);
+                    }
                 }
             }
         }
@@ -1972,7 +1987,7 @@ const hasAnyScore = (match: Match): boolean => {
 };
 
 const hasAnyWinner = (match: Match): boolean => {
-    return Boolean(match.winnerId || match.walkover_winner_id || match.walkover_winner_registration_id);
+    return Boolean(match.winnerId || match.winner_registration_id || match.walkover_winner_id || match.walkover_winner_registration_id);
 };
 
 const isTechnicalDrawMatch = (match: Match): boolean => {
@@ -2036,7 +2051,7 @@ const MatchCard: React.FC<{ match: Match; profiles: User[]; registrations: Regis
                                 )}
                             </div>
                             <div className="min-w-0">
-                                <p className={`text-base font-black transition-colors leading-tight break-words ${match.winnerId === match.playerAId ? 'text-stone-900' : 'text-stone-600'}`}>
+                                <p className={`text-base font-black transition-colors leading-tight wrap-break-word ${match.winnerId === match.playerAId ? 'text-stone-900' : 'text-stone-600'}`}>
                                     {nameA}
                                 </p>
                                 <p className="text-[10px] text-stone-500 font-bold uppercase tracking-wide">{regA?.participant_type === 'guest' ? '🎫 Convidado' : '⭐ Sócio'}</p>
@@ -2074,7 +2089,7 @@ const MatchCard: React.FC<{ match: Match; profiles: User[]; registrations: Regis
                                 )}
                             </div>
                             <div className="min-w-0">
-                                <p className={`text-base font-black transition-colors leading-tight break-words ${match.winnerId === match.playerBId ? 'text-stone-900' : 'text-stone-600'}`}>
+                                <p className={`text-base font-black transition-colors leading-tight wrap-break-word ${match.winnerId === match.playerBId ? 'text-stone-900' : 'text-stone-600'}`}>
                                     {nameB}
                                 </p>
                                 <p className="text-[10px] text-stone-500 font-bold uppercase tracking-wide">{regB?.participant_type === 'guest' ? '🎫 Convidado' : '⭐ Sócio'}</p>

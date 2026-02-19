@@ -203,6 +203,9 @@ export interface Match {
   registration_a_id?: string;
   registration_b_id?: string;
 
+  // Winner (registration-based for guest players)
+  winner_registration_id?: string | null;
+
   // Walkover
   is_walkover?: boolean;
   walkover_winner_id?: string | null;
