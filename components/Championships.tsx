@@ -606,6 +606,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                 score_a: scoreA,
                 score_b: scoreB,
                 winner_id: winnerUserId,
+                winner_registration_id: winnerRegId,
                 is_walkover: true,
                 walkover_winner_id: winnerUserId,
                 walkover_winner_registration_id: winnerRegId,
