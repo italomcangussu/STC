@@ -141,6 +141,7 @@ export const LiveScoreboard: React.FC<LiveScoreboardProps> = ({
         setError(null);
 
         const winnerId = matchWinner === 'A' ? match.playerAId : match.playerBId;
+        const winnerRegistrationId = matchWinner === 'A' ? match.registration_a_id : match.registration_b_id;
         const finalScoreA = showThirdSet ? scoreA : scoreA.slice(0, 2);
         const finalScoreB = showThirdSet ? scoreB : scoreB.slice(0, 2);
 
@@ -154,6 +155,7 @@ export const LiveScoreboard: React.FC<LiveScoreboardProps> = ({
                 score_a: finalScoreA,
                 score_b: finalScoreB,
                 winner_id: winnerId,
+                winner_registration_id: winnerRegistrationId || null,
                 status: 'finished',
                 date: formatDate(getNowInFortaleza())
             })

@@ -360,6 +360,7 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                 score_a: scoreA,
                 score_b: scoreB,
                 winner_id: winnerUserId,
+                winner_registration_id: winnerRegId,
                 is_walkover: false,
                 walkover_winner_id: null,
                 walkover_winner_registration_id: null,
@@ -781,7 +782,7 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                                                             </span>
                                                         </div>
                                                         <div className="flex items-center justify-between">
-                                                            <span className={`text-sm font-bold ${match.winner_id === regA?.user_id ? 'text-stone-900' : 'text-stone-500'}`}>{nameA}</span>
+                                                            <span className={`text-sm font-bold ${(match.winner_registration_id ? match.winner_registration_id === match.registration_a_id : match.winner_id != null && match.winner_id === regA?.user_id) ? 'text-stone-900' : 'text-stone-500'}`}>{nameA}</span>
                                                             {isFinished && (
                                                                 <div className="flex gap-1">
                                                                     {match.score_a.map((s, i) => (
@@ -791,7 +792,7 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                                                             )}
                                                         </div>
                                                         <div className="flex items-center justify-between">
-                                                            <span className={`text-sm font-bold ${match.winner_id === regB?.user_id ? 'text-stone-900' : 'text-stone-500'}`}>{nameB}</span>
+                                                            <span className={`text-sm font-bold ${(match.winner_registration_id ? match.winner_registration_id === match.registration_b_id : match.winner_id != null && match.winner_id === regB?.user_id) ? 'text-stone-900' : 'text-stone-500'}`}>{nameB}</span>
                                                             {isFinished && (
                                                                 <div className="flex gap-1">
                                                                     {match.score_b.map((s, i) => (

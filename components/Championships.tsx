@@ -1333,16 +1333,16 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                                                                                         <img 
                                                                                             src={avatarA} 
                                                                                             className={`w-10 h-10 rounded-full object-cover border-3 transition-all ${
-                                                                                                match.winnerId === match.playerAId 
+                                                                                                isWinnerSide(match, 'A') 
                                                                                                     ? 'border-saibro-500 shadow-lg shadow-saibro-200 ring-2 ring-saibro-100' 
                                                                                                     : 'border-stone-200'
                                                                                             }`} 
                                                                                         />
                                                                                         <p className={`text-sm font-black transition-colors ${
-                                                                                            match.winnerId === match.playerAId ? 'text-stone-900' : 'text-stone-700'
+                                                                                            isWinnerSide(match, 'A') ? 'text-stone-900' : 'text-stone-700'
                                                                                         }`}>
                                                                                             {nameA}
-                                                                                            {match.winnerId === match.playerAId && (
+                                                                                            {isWinnerSide(match, 'A') && (
                                                                                                 <Trophy className="inline ml-1.5 text-saibro-500 drop-shadow" size={14} />
                                                                                             )}
                                                                                         </p>
@@ -1351,16 +1351,16 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                                                                                         <img 
                                                                                             src={avatarB} 
                                                                                             className={`w-10 h-10 rounded-full object-cover border-3 transition-all ${
-                                                                                                match.winnerId === match.playerBId 
+                                                                                                isWinnerSide(match, 'B') 
                                                                                                     ? 'border-saibro-500 shadow-lg shadow-saibro-200 ring-2 ring-saibro-100' 
                                                                                                     : 'border-stone-200'
                                                                                             }`} 
                                                                                         />
                                                                                         <p className={`text-sm font-black transition-colors ${
-                                                                                            match.winnerId === match.playerBId ? 'text-stone-900' : 'text-stone-700'
+                                                                                            isWinnerSide(match, 'B') ? 'text-stone-900' : 'text-stone-700'
                                                                                         }`}>
                                                                                             {nameB}
-                                                                                            {match.winnerId === match.playerBId && (
+                                                                                            {isWinnerSide(match, 'B') && (
                                                                                                 <Trophy className="inline ml-1.5 text-saibro-500 drop-shadow" size={14} />
                                                                                             )}
                                                                                         </p>
@@ -1990,6 +1990,16 @@ const hasAnyWinner = (match: Match): boolean => {
     return Boolean(match.winnerId || match.winner_registration_id || match.walkover_winner_id || match.walkover_winner_registration_id);
 };
 
+const isWinnerSide = (match: Match, side: 'A' | 'B'): boolean => {
+    if (match.winner_registration_id) {
+        return match.winner_registration_id === (side === 'A' ? match.registration_a_id : match.registration_b_id);
+    }
+    if (match.winnerId) {
+        return match.winnerId === (side === 'A' ? match.playerAId : match.playerBId);
+    }
+    return false;
+};
+
 const isTechnicalDrawMatch = (match: Match): boolean => {
     if (match.result_type === 'technical_draw') return true;
     return match.status === 'finished' && !match.is_walkover && !hasAnyWinner(match) && !hasAnyScore(match);
@@ -2043,15 +2053,15 @@ const MatchCard: React.FC<{ match: Match; profiles: User[]; registrations: Regis
                     <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-3 min-w-0">
                             <div className="relative">
-                                <img src={avatarA} className={`w-12 h-12 rounded-full border-3 object-cover transition-all duration-300 ${match.winnerId === match.playerAId ? 'border-saibro-500 shadow-lg shadow-saibro-200 ring-2 ring-saibro-100' : 'border-stone-200 group-hover:border-stone-300'}`} />
-                                {match.winnerId === match.playerAId && (
+                                <img src={avatarA} className={`w-12 h-12 rounded-full border-3 object-cover transition-all duration-300 ${isWinnerSide(match, 'A') ? 'border-saibro-500 shadow-lg shadow-saibro-200 ring-2 ring-saibro-100' : 'border-stone-200 group-hover:border-stone-300'}`} />
+                                {isWinnerSide(match, 'A') && (
                                     <div className="absolute -top-1 -right-1 bg-linear-to-br from-saibro-500 to-saibro-600 text-white rounded-full p-1 border-2 border-white shadow-lg">
                                         <Trophy size={8} />
                                     </div>
                                 )}
                             </div>
                             <div className="min-w-0">
-                                <p className={`text-base font-black transition-colors leading-tight wrap-break-word ${match.winnerId === match.playerAId ? 'text-stone-900' : 'text-stone-600'}`}>
+                                <p className={`text-base font-black transition-colors leading-tight wrap-break-word ${isWinnerSide(match, 'A') ? 'text-stone-900' : 'text-stone-600'}`}>
                                     {nameA}
                                 </p>
                                 <p className="text-[10px] text-stone-500 font-bold uppercase tracking-wide">{regA?.participant_type === 'guest' ? '🎫 Convidado' : '⭐ Sócio'}</p>
@@ -2081,15 +2091,15 @@ const MatchCard: React.FC<{ match: Match; profiles: User[]; registrations: Regis
                     <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-3 min-w-0">
                             <div className="relative">
-                                <img src={avatarB} className={`w-12 h-12 rounded-full border-3 object-cover transition-all duration-300 ${match.winnerId === match.playerBId ? 'border-saibro-500 shadow-lg shadow-saibro-200 ring-2 ring-saibro-100' : 'border-stone-200 group-hover:border-stone-300'}`} />
-                                {match.winnerId === match.playerBId && (
+                                <img src={avatarB} className={`w-12 h-12 rounded-full border-3 object-cover transition-all duration-300 ${isWinnerSide(match, 'B') ? 'border-saibro-500 shadow-lg shadow-saibro-200 ring-2 ring-saibro-100' : 'border-stone-200 group-hover:border-stone-300'}`} />
+                                {isWinnerSide(match, 'B') && (
                                     <div className="absolute -top-1 -right-1 bg-linear-to-br from-saibro-500 to-saibro-600 text-white rounded-full p-1 border-2 border-white shadow-lg">
                                         <Trophy size={8} />
                                     </div>
                                 )}
                             </div>
                             <div className="min-w-0">
-                                <p className={`text-base font-black transition-colors leading-tight wrap-break-word ${match.winnerId === match.playerBId ? 'text-stone-900' : 'text-stone-600'}`}>
+                                <p className={`text-base font-black transition-colors leading-tight wrap-break-word ${isWinnerSide(match, 'B') ? 'text-stone-900' : 'text-stone-600'}`}>
                                     {nameB}
                                 </p>
                                 <p className="text-[10px] text-stone-500 font-bold uppercase tracking-wide">{regB?.participant_type === 'guest' ? '🎫 Convidado' : '⭐ Sócio'}</p>
@@ -2217,10 +2227,10 @@ const BracketMatchCard: React.FC<{ match: Match; profiles: User[]; isAdmin?: boo
             )}
 
             {/* Player A */}
-            <div className={`flex justify-between items-center px-5 py-4 border-b-2 transition-colors ${match.winnerId === match.playerAId ? 'bg-linear-to-r from-saibro-50/40 to-orange-50/20 border-saibro-200' : 'border-stone-100'}`}>
+            <div className={`flex justify-between items-center px-5 py-4 border-b-2 transition-colors ${isWinnerSide(match, 'A') ? 'bg-linear-to-r from-saibro-50/40 to-orange-50/20 border-saibro-200' : 'border-stone-100'}`}>
                 <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <img src={pA?.avatar || 'https://ui-avatars.com/api/?background=random'} className={`w-10 h-10 rounded-full object-cover border-3 shrink-0 transition-all ${match.winnerId === match.playerAId ? 'border-saibro-500 shadow-lg shadow-saibro-200 ring-2 ring-saibro-100' : 'border-stone-200'}`} />
-                    <span className={`text-sm font-black truncate transition-colors ${match.winnerId === match.playerAId ? 'text-stone-900' : 'text-stone-600'}`}>
+                    <img src={pA?.avatar || 'https://ui-avatars.com/api/?background=random'} className={`w-10 h-10 rounded-full object-cover border-3 shrink-0 transition-all ${isWinnerSide(match, 'A') ? 'border-saibro-500 shadow-lg shadow-saibro-200 ring-2 ring-saibro-100' : 'border-stone-200'}`} />
+                    <span className={`text-sm font-black truncate transition-colors ${isWinnerSide(match, 'A') ? 'text-stone-900' : 'text-stone-600'}`}>
                         {pA?.name || 'Aguardando...'}
                     </span>
                 </div>
@@ -2237,10 +2247,10 @@ const BracketMatchCard: React.FC<{ match: Match; profiles: User[]; isAdmin?: boo
                 </div>
             </div>
             {/* Player B */}
-            <div className={`flex justify-between items-center px-5 py-4 transition-colors ${match.winnerId === match.playerBId ? 'bg-linear-to-r from-saibro-50/40 to-orange-50/20' : ''}`}>
+            <div className={`flex justify-between items-center px-5 py-4 transition-colors ${isWinnerSide(match, 'B') ? 'bg-linear-to-r from-saibro-50/40 to-orange-50/20' : ''}`}>
                 <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <img src={pB?.avatar || 'https://ui-avatars.com/api/?background=random'} className={`w-10 h-10 rounded-full object-cover border-3 shrink-0 transition-all ${match.winnerId === match.playerBId ? 'border-saibro-500 shadow-lg shadow-saibro-200 ring-2 ring-saibro-100' : 'border-stone-200'}`} />
-                    <span className={`text-sm font-black truncate transition-colors ${match.winnerId === match.playerBId ? 'text-stone-900' : 'text-stone-600'}`}>
+                    <img src={pB?.avatar || 'https://ui-avatars.com/api/?background=random'} className={`w-10 h-10 rounded-full object-cover border-3 shrink-0 transition-all ${isWinnerSide(match, 'B') ? 'border-saibro-500 shadow-lg shadow-saibro-200 ring-2 ring-saibro-100' : 'border-stone-200'}`} />
+                    <span className={`text-sm font-black truncate transition-colors ${isWinnerSide(match, 'B') ? 'text-stone-900' : 'text-stone-600'}`}>
                         {pB?.name || 'Aguardando...'}
                     </span>
                 </div>
