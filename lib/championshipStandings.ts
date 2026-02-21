@@ -50,6 +50,10 @@ const getSetWins = (scoreA: number[] = [], scoreB: number[] = []) => {
 };
 
 const getWinnerRegistrationId = (match: Match): string | null => {
+    if (match.winner_registration_id) {
+        return match.winner_registration_id;
+    }
+
     if (match.walkover_winner_registration_id) {
         return match.walkover_winner_registration_id;
     }

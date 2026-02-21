@@ -127,4 +127,55 @@ describe('championshipStandings', () => {
         expect(isTechnicalDrawAllowed('mata-mata-semifinal', 'Semi')).toBe(false);
         expect(isTechnicalDrawAllowed(undefined, 'Final')).toBe(false);
     });
+
+    it('counts wins for guest players using winner_registration_id when winnerId is null', () => {
+        const guestRegistrations: ChampionshipRegistration[] = [
+            {
+                id: 'reg-guest-a',
+                championship_id: 'champ-1',
+                participant_type: 'guest',
+                user_id: null,
+                guest_name: 'Bruninho',
+                class: '6ª Classe',
+                shirt_size: 'M'
+            },
+            {
+                id: 'reg-guest-b',
+                championship_id: 'champ-1',
+                participant_type: 'guest',
+                user_id: null,
+                guest_name: 'Convidado 2',
+                class: '6ª Classe',
+                shirt_size: 'G'
+            }
+        ];
+
+        const match = baseMatch({
+            playerAId: null,
+            playerBId: null,
+            registration_a_id: 'reg-guest-a',
+            registration_b_id: 'reg-guest-b',
+            scoreA: [2, 6, 14],
+            scoreB: [6, 2, 12],
+            winnerId: null,
+            winner_registration_id: 'reg-guest-a',
+            result_type: 'played'
+        });
+
+        const standings = calculateGroupStandingsWithRules(guestRegistrations, [match], {
+            ptsVictory: 3,
+            ptsDefeat: 0,
+            ptsSet: 0,
+            ptsGame: 0
+        });
+
+        const bruninho = standings.find(s => s.userId === 'reg-guest-a')!;
+        const opponent = standings.find(s => s.userId === 'reg-guest-b')!;
+
+        expect(bruninho.wins).toBe(1);
+        expect(bruninho.points).toBe(3);
+        expect(bruninho.matchesPlayed).toBe(1);
+        expect(opponent.losses).toBe(1);
+        expect(opponent.points).toBe(0);
+    });
 });
