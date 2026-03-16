@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, NonSocioStudent, Reservation, Court, RelationshipType } from '../types';
 import { Calendar, Users, Plus, Edit, CheckCircle, XCircle, Clock, MapPin, DollarSign, Loader2, AlertCircle, UserPlus, ArrowUpCircle, X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
@@ -7,7 +7,7 @@ import { StandardModal } from './StandardModal';
 
 type RegularPlanType = 'Day Card' | 'Day Card Experimental' | 'Card Mensal';
 
-const DAY_CARD_PRICE = 50;
+const _DAY_CARD_PRICE = 50;
 const CARD_MENSAL_PRICE = 200;
 
 /** Calcula data de expiração: mesmo dia do mês seguinte, limitando ao último dia do mês */
@@ -282,6 +282,7 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
         };
 
         fetchData();
+// eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentUser.id]);
 
     // --- DERIVED DATA ---
@@ -716,7 +717,7 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                                 type="text"
                                 value={studentForm.name}
                                 onChange={e => setStudentForm({ ...studentForm, name: e.target.value })}
-                                className="w-full p-3 bg-linear-to-br from-stone-50 to-stone-100 rounded-xl border-2 border-stone-200 focus:border-saibro-500 focus:ring-2 focus:ring-saibro-200 outline-none transition-all"
+                                className="w-full p-3 bg-linear-to-br from-stone-50 to-stone-100 rounded-xl border-2 border-stone-200 focus:border-saibro-500 focus:ring-2 focus:ring-saibro-200 outline-hidden transition-all"
                                 placeholder="Nome completo"
                             />
                         </div>
@@ -727,7 +728,7 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                                 type="text"
                                 value={studentForm.phone}
                                 onChange={e => setStudentForm({ ...studentForm, phone: e.target.value })}
-                                className="w-full p-3 bg-linear-to-br from-stone-50 to-stone-100 rounded-xl border-2 border-stone-200 focus:border-saibro-500 focus:ring-2 focus:ring-saibro-200 outline-none transition-all"
+                                className="w-full p-3 bg-linear-to-br from-stone-50 to-stone-100 rounded-xl border-2 border-stone-200 focus:border-saibro-500 focus:ring-2 focus:ring-saibro-200 outline-hidden transition-all"
                                 placeholder="(00) 00000-0000"
                             />
                         </div>
@@ -824,7 +825,7 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                                     <select
                                         value={studentForm.responsibleSocioId}
                                         onChange={e => setStudentForm({ ...studentForm, responsibleSocioId: e.target.value })}
-                                        className="w-full p-3 bg-linear-to-br from-stone-50 to-stone-100 rounded-xl border-2 border-stone-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all font-bold text-sm"
+                                        className="w-full p-3 bg-linear-to-br from-stone-50 to-stone-100 rounded-xl border-2 border-stone-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-hidden transition-all font-bold text-sm"
                                     >
                                         <option value="">Selecione...</option>
                                         {socios.map(s => (
@@ -837,7 +838,7 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                                     <select
                                         value={studentForm.relationshipType}
                                         onChange={e => setStudentForm({ ...studentForm, relationshipType: e.target.value as RelationshipType })}
-                                        className="w-full p-3 bg-linear-to-br from-stone-50 to-stone-100 rounded-xl border-2 border-stone-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all font-bold text-sm"
+                                        className="w-full p-3 bg-linear-to-br from-stone-50 to-stone-100 rounded-xl border-2 border-stone-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-hidden transition-all font-bold text-sm"
                                     >
                                         <option value="">Selecione...</option>
                                         <option value="filho">Filho</option>
@@ -919,7 +920,7 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                                 type="date"
                                 value={convertDate}
                                 onChange={e => setConvertDate(e.target.value)}
-                                className="w-full p-3 border-2 border-stone-200 rounded-xl text-lg font-bold text-stone-800 focus:border-saibro-500 outline-none"
+                                className="w-full p-3 border-2 border-stone-200 rounded-xl text-lg font-bold text-stone-800 focus:border-saibro-500 outline-hidden"
                             />
                             <p className="text-xs text-stone-400 mt-2">
                                 O vencimento será calculado para <b>1 mês</b> após esta data.

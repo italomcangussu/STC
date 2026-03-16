@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Lock, Eye, EyeOff, ShieldAlert } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
 
 interface AdminLoginProps {
     onSuccess: () => void;
@@ -77,7 +76,7 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onSuccess, onClose }) =>
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 placeholder="ID Administrativo"
-                                className="w-full bg-stone-800 border border-stone-700 text-white rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all placeholder:text-stone-600"
+                                className="w-full bg-stone-800 border border-stone-700 text-white rounded-xl py-3 px-4 focus:outline-hidden focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all placeholder:text-stone-600"
                                 required
                             />
                         </div>
@@ -87,7 +86,7 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onSuccess, onClose }) =>
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 placeholder="Chave de Acesso"
-                                className="w-full bg-stone-800 border border-stone-700 text-white rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all placeholder:text-stone-600"
+                                className="w-full bg-stone-800 border border-stone-700 text-white rounded-xl py-3 px-4 focus:outline-hidden focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all placeholder:text-stone-600"
                                 required
                             />
                             <button

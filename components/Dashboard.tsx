@@ -1,22 +1,20 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-  PieChart, Pie, Cell, LineChart, Line, AreaChart, Area
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area
 } from 'recharts';
 import { supabase } from '../lib/supabase';
-import { Loader2, Filter, TrendingUp, TrendingDown, Clock, Calendar, Users, Trophy } from 'lucide-react';
+import { Loader2, TrendingUp, Clock, Calendar, Users, Trophy } from 'lucide-react';
 import { Reservation, Court } from '../types';
-import { formatDateBr } from '../utils';
 
 // --- Types ---
-type TimeFilter = 'all' | 'year' | 'month';
+type _TimeFilter = 'all' | 'year' | 'month';
 
 interface DashboardProps {
   // No props needed as it fetches its own data for now
 }
 
 // --- Colors ---
-const COLORS = ['#ea580c', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899']; // Saibro-like + others
+const _COLORS = ['#ea580c', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899']; // Saibro-like + others
 
 export const Dashboard: React.FC<DashboardProps> = () => {
   const [reservations, setReservations] = useState<Reservation[]>([]);
@@ -83,7 +81,7 @@ export const Dashboard: React.FC<DashboardProps> = () => {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'reservations' },
-        (payload) => {
+        (_payload) => {
           // Simple Strategy: Refetch to keep state clean (or handle partial updates)
           fetchInitialData();
         }
@@ -166,7 +164,7 @@ export const Dashboard: React.FC<DashboardProps> = () => {
   // --- Derived Insights ---
   const mostUsedCourt = courtUsageData[0]?.name || '-';
   const busyDay = [...weekdayData].sort((a, b) => b.count - a.count)[0];
-  const quietDay = [...weekdayData].sort((a, b) => a.count - b.count).find(d => d.count > 0) || weekdayData[0];
+  const _quietDay = [...weekdayData].sort((a, b) => a.count - b.count).find(d => d.count > 0) || weekdayData[0];
 
   // 4. Member Stats
   const memberStats = useMemo(() => {
@@ -235,7 +233,7 @@ export const Dashboard: React.FC<DashboardProps> = () => {
         <select
           value={selectedCourt}
           onChange={(e) => setSelectedCourt(e.target.value)}
-          className="px-3 py-2 rounded-lg border border-stone-200 bg-stone-50 text-stone-700 outline-none focus:ring-2 focus:ring-saibro-500"
+          className="px-3 py-2 rounded-lg border border-stone-200 bg-stone-50 text-stone-700 outline-hidden focus:ring-2 focus:ring-saibro-500"
         >
           <option value="all">Todas as Quadras</option>
           {courts.map(c => (
@@ -247,7 +245,7 @@ export const Dashboard: React.FC<DashboardProps> = () => {
           value={selectedMonth}
           onChange={(e) => setSelectedMonth(e.target.value === 'all' ? 'all' : Number(e.target.value))}
           disabled={selectedYear === 'all'}
-          className={`px-3 py-2 rounded-lg border border-stone-200 text-stone-700 outline-none focus:ring-2 focus:ring-saibro-500 ${selectedYear === 'all' ? 'bg-stone-100 text-stone-400 cursor-not-allowed' : 'bg-stone-50'}`}
+          className={`px-3 py-2 rounded-lg border border-stone-200 text-stone-700 outline-hidden focus:ring-2 focus:ring-saibro-500 ${selectedYear === 'all' ? 'bg-stone-100 text-stone-400 cursor-not-allowed' : 'bg-stone-50'}`}
         >
           <option value="all">Todos os Meses</option>
           {months.map(m => (
@@ -262,7 +260,7 @@ export const Dashboard: React.FC<DashboardProps> = () => {
             setSelectedYear(val);
             if (val === 'all') setSelectedMonth('all');
           }}
-          className="px-3 py-2 rounded-lg border border-stone-200 bg-stone-50 text-stone-700 outline-none focus:ring-2 focus:ring-saibro-500"
+          className="px-3 py-2 rounded-lg border border-stone-200 bg-stone-50 text-stone-700 outline-hidden focus:ring-2 focus:ring-saibro-500"
         >
           <option value="all">Todo o Período</option>
           {years.map(y => (

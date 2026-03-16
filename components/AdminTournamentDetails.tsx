@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { Championship, ChampionshipRegistration, Match, User } from '../types';
-import { ArrowLeft, Users, Trophy, Settings, Loader2, Plus, Trash2, Shuffle, AlertCircle } from 'lucide-react';
+import { Championship, ChampionshipRegistration, Match } from '../types';
+import { ArrowLeft, Trophy, Settings, Loader2, Plus, Trash2, Shuffle } from 'lucide-react';
 import { getNowInFortaleza } from '../utils';
 
 interface TournamentManagerProps {
@@ -19,6 +19,7 @@ export const TournamentManager: React.FC<TournamentManagerProps> = ({ tournament
 
     useEffect(() => {
         fetchDetails();
+// eslint-disable-next-line react-hooks/exhaustive-deps
     }, [tournamentId]);
 
     const fetchDetails = async () => {

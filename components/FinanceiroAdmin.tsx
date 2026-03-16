@@ -1,14 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
-    DollarSign, CheckCircle, AlertCircle, Loader2, TrendingUp, Calendar, Users, ArrowUpRight, Download, PieChart as PieChartIcon, BarChart as BarChartIcon, Trash2, Sparkles, CreditCard, UserCheck, Receipt
+    DollarSign, Loader2, TrendingUp, Calendar, Users, Trash2, Sparkles, CreditCard, UserCheck, Receipt
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Reservation, NonSocioStudent } from '../types';
 import { getNowInFortaleza, formatDateBr } from '../utils';
-import {
-    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-    PieChart, Pie, Cell
-} from 'recharts';
+
 
 // Day Use price constant
 const DAY_USE_PRICE = 50;
@@ -23,7 +20,7 @@ interface StudentPayment {
     cancelledReason?: string;
 }
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+const _COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
 type DayUseEntry = {
     key: string;
@@ -252,7 +249,7 @@ export const FinanceiroAdmin: React.FC = () => {
                             type="month"
                             value={selectedMonth}
                             onChange={e => setSelectedMonth(e.target.value)}
-                            className="bg-transparent font-black text-stone-800 text-lg outline-none cursor-pointer"
+                            className="bg-transparent font-black text-stone-800 text-lg outline-hidden cursor-pointer"
                         />
                     </div>
                 </div>

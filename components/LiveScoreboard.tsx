@@ -15,7 +15,7 @@ interface LiveScoreboardProps {
 }
 
 // Helpers outside component to avoid recreation
-const isValidSet = (scoreA: number, scoreB: number, isSuperTiebreak = false) => {
+const _isValidSet = (scoreA: number, scoreB: number, isSuperTiebreak = false) => {
     if (isSuperTiebreak) {
         return (scoreA >= 10 || scoreB >= 10) && Math.abs(scoreA - scoreB) >= 2;
     }

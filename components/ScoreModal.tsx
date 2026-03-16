@@ -11,7 +11,7 @@ interface ScoreModalProps {
     onSave: (scores: { a: number, b: number }[]) => Promise<void>;
 }
 
-export const ScoreModal: React.FC<ScoreModalProps> = ({ challenge, challengerName, challengedName, onClose, onSave }) => {
+export const ScoreModal: React.FC<ScoreModalProps> = ({ _challenge, challengerName, challengedName, onClose, onSave }) => {
     const [sets, setSets] = useState<{ a: string, b: string }[]>([{ a: '', b: '' }]);
     const [saving, setSaving] = useState(false);
 
@@ -79,7 +79,7 @@ export const ScoreModal: React.FC<ScoreModalProps> = ({ challenge, challengerNam
                                             type="number"
                                             value={set.a}
                                             onChange={(e) => handleSetChange(idx, 'a', e.target.value)}
-                                            className="w-14 h-14 text-center text-3xl font-black rounded-2xl border-2 border-stone-100 bg-white text-stone-800 focus:border-saibro-500 outline-none transition-all"
+                                            className="w-14 h-14 text-center text-3xl font-black rounded-2xl border-2 border-stone-100 bg-white text-stone-800 focus:border-saibro-500 outline-hidden transition-all"
                                             placeholder="0"
                                         />
                                         <button
@@ -104,7 +104,7 @@ export const ScoreModal: React.FC<ScoreModalProps> = ({ challenge, challengerNam
                                             type="number"
                                             value={set.b}
                                             onChange={(e) => handleSetChange(idx, 'b', e.target.value)}
-                                            className="w-14 h-14 text-center text-3xl font-black rounded-2xl border-2 border-stone-100 bg-white text-stone-800 focus:border-saibro-500 outline-none transition-all"
+                                            className="w-14 h-14 text-center text-3xl font-black rounded-2xl border-2 border-stone-100 bg-white text-stone-800 focus:border-saibro-500 outline-hidden transition-all"
                                             placeholder="0"
                                         />
                                         <button

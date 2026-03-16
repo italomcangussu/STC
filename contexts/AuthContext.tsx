@@ -180,7 +180,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             console.error('Phone Login: SignIn error:', error.message);
 
             // User might not exist in auth yet - try to create
-            const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+            const { data: _signUpData, error: signUpError } = await supabase.auth.signUp({
                 email: profile.email,
                 password: generatedPassword,
             });
@@ -284,4 +284,5 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => useContext(AuthContext);

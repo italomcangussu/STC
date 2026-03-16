@@ -8,7 +8,7 @@ interface OnboardingModalProps {
     onComplete: () => void;
 }
 
-export const OnboardingModal: React.FC<OnboardingModalProps> = ({ currentUser, onComplete }) => {
+export const OnboardingModal: React.FC<OnboardingModalProps> = ({ currentUser, _onComplete }) => {
     const [name, setName] = useState(currentUser.name || '');
     const [category, setCategory] = useState(currentUser.category || '5ª Classe'); // Default
     const [avatarUrl, setAvatarUrl] = useState(currentUser.avatar || '');
@@ -122,7 +122,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ currentUser, o
                                 required
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
-                                className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-saibro-500 font-bold text-stone-800"
+                                className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-saibro-500 font-bold text-stone-800"
                                 placeholder="Seu Nome"
                             />
                         </div>
@@ -132,7 +132,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ currentUser, o
                             <select
                                 value={category}
                                 onChange={(e) => setCategory(e.target.value)}
-                                className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-saibro-500 font-bold text-stone-800"
+                                className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-saibro-500 font-bold text-stone-800"
                             >
                                 {['1ª Classe', '2ª Classe', '3ª Classe', '4ª Classe', '5ª Classe', '6ª Classe', 'Iniciante', 'Feminino'].map(c => (
                                     <option key={c} value={c}>{c}</option>

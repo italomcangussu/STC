@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { NonSocioStudent, Professor, User, RelationshipType } from '../types';
 import {
-    Users, Plus, Search, Edit, Trash2, CheckCircle,
-    Calendar, Loader2, DollarSign, X, UserPlus, ArrowUpCircle
+    Users, Plus, Search, Edit, Trash2, CheckCircle, Loader2, DollarSign, X, UserPlus, ArrowUpCircle
 } from 'lucide-react';
 import { getNowInFortaleza, formatDate, formatDateBr } from '../utils';
 import { StandardModal } from './StandardModal';
@@ -375,7 +374,7 @@ export const AdminStudents: React.FC = () => {
                         placeholder="Buscar aluno..."
                         value={filter}
                         onChange={e => setFilter(e.target.value)}
-                        className="flex-1 outline-none text-stone-600"
+                        className="flex-1 outline-hidden text-stone-600"
                     />
                 </div>
                 <div className="flex gap-2">
@@ -737,7 +736,7 @@ export const AdminStudents: React.FC = () => {
                             type="date"
                             value={paymentDate}
                             onChange={e => setPaymentDate(e.target.value)}
-                            className="w-full p-3 border-2 border-stone-200 rounded-xl text-lg font-bold text-stone-800 focus:border-saibro-500 outline-none"
+                            className="w-full p-3 border-2 border-stone-200 rounded-xl text-lg font-bold text-stone-800 focus:border-saibro-500 outline-hidden"
                         />
                         {paymentStudent?.planType === 'Card Mensal' && (
                             <p className="text-xs text-stone-400 mt-2">
@@ -806,7 +805,7 @@ export const AdminStudents: React.FC = () => {
                             type="date"
                             value={convertDate}
                             onChange={e => setConvertDate(e.target.value)}
-                            className="w-full p-3 border-2 border-stone-200 rounded-xl text-lg font-bold text-stone-800 focus:border-saibro-500 outline-none"
+                            className="w-full p-3 border-2 border-stone-200 rounded-xl text-lg font-bold text-stone-800 focus:border-saibro-500 outline-hidden"
                         />
                         <p className="text-xs text-stone-400 mt-2">
                             Vencimento: <b>{formatDateBr(addOneMonth(convertDate))}</b>

@@ -17,12 +17,12 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-const generateEmailFromPhone = (phone) => {
+const _generateEmailFromPhone = (phone) => {
     const cleanPhone = phone.replace(/\D/g, '');
     return `${cleanPhone}@reserva.com`;
 };
 
-const generatePasswordFromPhone = (phone) => {
+const _generatePasswordFromPhone = (phone) => {
     const cleanPhone = phone.replace(/\D/g, '');
     return `sct${cleanPhone}2024`;
 };
@@ -40,7 +40,7 @@ const seedAdmin = async () => {
     let userId = null;
 
     // 1. Try Login First
-    const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({ email, password });
+    const { data: loginData, error: _loginError } = await supabase.auth.signInWithPassword({ email, password });
 
     if (loginData.user) {
         console.log('User already exists in Auth. Logging in...');

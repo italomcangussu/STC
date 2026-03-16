@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Championship } from '../types';
-import { Trophy, Calendar, Plus, ChevronRight, Loader2, Users } from 'lucide-react';
+import { Trophy, Calendar, Plus, ChevronRight, Loader2 } from 'lucide-react';
 import { StandardModal } from './StandardModal';
 // Sub-component for managing specific tournament details
 import { TournamentManager } from './AdminTournamentDetails';
@@ -24,7 +24,7 @@ export const AdminTournaments: React.FC = () => {
 
     const fetchTournaments = async () => {
         setLoading(true);
-        const { data, error } = await supabase
+        const { data, _error } = await supabase
             .from('championships')
             .select('*')
             .order('start_date', { ascending: false });
@@ -156,7 +156,7 @@ export const AdminTournaments: React.FC = () => {
                                     type="text"
                                     value={newName}
                                     onChange={e => setNewName(e.target.value)}
-                                    className="w-full px-5 py-4 bg-stone-50 border-none rounded-2xl text-lg font-bold text-stone-800 focus:ring-2 focus:ring-saibro-500 outline-none transition-all placeholder:text-stone-300"
+                                    className="w-full px-5 py-4 bg-stone-50 border-none rounded-2xl text-lg font-bold text-stone-800 focus:ring-2 focus:ring-saibro-500 outline-hidden transition-all placeholder:text-stone-300"
                                     placeholder="Ex: Aberto de Verão 2026"
                                     autoFocus
                                 />
@@ -170,7 +170,7 @@ export const AdminTournaments: React.FC = () => {
                                         type="date"
                                         value={newStartDate}
                                         onChange={e => setNewStartDate(e.target.value)}
-                                        className="w-full px-4 py-3 bg-stone-50 border-none rounded-2xl text-sm font-bold text-stone-600 focus:ring-2 focus:ring-saibro-500 outline-none"
+                                        className="w-full px-4 py-3 bg-stone-50 border-none rounded-2xl text-sm font-bold text-stone-600 focus:ring-2 focus:ring-saibro-500 outline-hidden"
                                     />
                                 </div>
                                 <div>
@@ -181,7 +181,7 @@ export const AdminTournaments: React.FC = () => {
                                         type="date"
                                         value={newEndDate}
                                         onChange={e => setNewEndDate(e.target.value)}
-                                        className="w-full px-4 py-3 bg-stone-50 border-none rounded-2xl text-sm font-bold text-stone-600 focus:ring-2 focus:ring-saibro-500 outline-none"
+                                        className="w-full px-4 py-3 bg-stone-50 border-none rounded-2xl text-sm font-bold text-stone-600 focus:ring-2 focus:ring-saibro-500 outline-hidden"
                                     />
                                 </div>
                             </div>

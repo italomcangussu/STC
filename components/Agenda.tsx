@@ -1,8 +1,8 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { User, Reservation, ReservationType, NonSocioStudent, PlanType, Professor, Match } from '../types';
-import { Calendar as CalIcon, ChevronLeft, ChevronRight, Plus, X, Calendar, Clock, MapPin, Users, Check, AlertCircle, Search, Filter, Loader2, Save, Trash2, Edit2, Play, Trophy, UserCog, ArrowRight, Info, UserPlus, LogOut, Wallet, Pencil, UserMinus, Share2, ArrowLeft, CheckCircle } from 'lucide-react';
+import { User, Reservation, ReservationType, NonSocioStudent, Professor, Match } from '../types';
+import { ChevronLeft, ChevronRight, Plus, X, Calendar, MapPin, Users, Check, AlertCircle, Search, Loader2, Trash2, Trophy, UserCog, ArrowRight, Info, UserPlus, LogOut, Wallet, Pencil, UserMinus, Share2, ArrowLeft } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { ScoreModal } from './ScoreModal';
 import { LiveScoreboard } from './LiveScoreboard';
@@ -22,7 +22,7 @@ interface Court {
 // --- HELPERS ---
 
 // Check if user can launch score (same logic as LiveScoreboard)
-const canLaunchScore = (match: Match, userId?: string, isAdmin?: boolean): boolean => {
+const _canLaunchScore = (match: Match, userId?: string, isAdmin?: boolean): boolean => {
     if (isAdmin) return true;
     if (!userId) return false;
     
@@ -150,7 +150,7 @@ const ManageParticipantsModal: React.FC<{
                             placeholder="Buscar por nome ou número..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-3 bg-stone-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-saibro-500 text-sm"
+                            className="w-full pl-10 pr-4 py-3 bg-stone-50 border-none rounded-2xl outline-hidden focus:ring-2 focus:ring-saibro-500 text-sm"
                         />
                     </div>
 
@@ -256,7 +256,7 @@ const ManageGuestModal: React.FC<{
                             placeholder="Nome completo"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            className="w-full px-4 py-3 bg-stone-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-saibro-500 text-sm"
+                            className="w-full px-4 py-3 bg-stone-50 border-none rounded-2xl outline-hidden focus:ring-2 focus:ring-saibro-500 text-sm"
                         />
                     </div>
 
@@ -265,7 +265,7 @@ const ManageGuestModal: React.FC<{
                         <select
                             value={responsibleId}
                             onChange={(e) => setResponsibleId(e.target.value)}
-                            className="w-full px-4 py-3 bg-stone-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-saibro-500 text-sm appearance-none"
+                            className="w-full px-4 py-3 bg-stone-50 border-none rounded-2xl outline-hidden focus:ring-2 focus:ring-saibro-500 text-sm appearance-none"
                         >
                             {availablePartners.map(u => (
                                 <option key={u.id} value={u.id}>{u.name} (Sócio)</option>
@@ -358,7 +358,7 @@ const ReservationDetails: React.FC<{
     onUpdate: (res: Reservation) => void;
     onFinishMatch: (matchId: string, winnerId: string, scoreA: number[], scoreB: number[]) => Promise<void>;
     onDataRefresh?: () => void;
-}> = ({ res, currentUser, profiles, courts, professors, nonSocioStudents, onClose, onEdit, onCancel, onJoin, onLeave, onUpdate, onFinishMatch, onDataRefresh }) => {
+}> = ({ res, currentUser, profiles, courts, professors, nonSocioStudents, onClose, onEdit, onCancel, onJoin, onLeave, onUpdate, _onFinishMatch, onDataRefresh }) => {
     const [showManageParticipants, setShowManageParticipants] = useState(false);
     const [showGuestModal, setShowGuestModal] = useState(false);
     const court = courts.find(c => c.id === res.courtId);
@@ -919,7 +919,7 @@ const ReservationCard: React.FC<{
     onSelect: (res: Reservation) => void;
     challenges: Challenge[];
     onLaunchScore: (challenge: Challenge) => void;
-}> = ({ res, currentUser, profiles, courts, professors, nonSocioStudents, onSelect, challenges, onLaunchScore }) => {
+}> = ({ res, _currentUser, profiles, courts, professors, nonSocioStudents, onSelect, challenges, onLaunchScore }) => {
     const court = courts.find(c => c.id === res.courtId);
     const style = TYPE_STYLES[res.type] || TYPE_STYLES['Play'];
 
@@ -1131,7 +1131,7 @@ const ReservationCard: React.FC<{
                         } else {
                             // Future
                             const diffMinutes = (start.getTime() - now.getTime()) / 60000;
-                            const diffHours = diffMinutes / 60;
+                            const _diffHours = diffMinutes / 60;
 
                             const tomorrow = addDays(now, 1);
                             const isTomorrow = res.date === formatDate(tomorrow);
@@ -1488,7 +1488,7 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
     }, [fetchData]);
 
     // Helper to get user by ID from fetched profiles
-    const getUserById = (id: string): User | undefined => {
+    const _getUserById = (id: string): User | undefined => {
         return profiles.find(p => p.id === id);
     };
 
@@ -1879,6 +1879,7 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
             const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
             return sorted.filter(r => r.date >= formatDate(startOfMonth) && r.date <= formatDate(endOfMonth));
         }
+// eslint-disable-next-line react-hooks/exhaustive-deps
     }, [reservations, currentDate, view]);
 
     // --- Renders ---
@@ -2241,7 +2242,7 @@ const AddReservationModal: React.FC<{
     const professorRecord = professors.find(p => p.userId === currentUser.id);
 
     // Use nonSocioStudents from props
-    const [localNonSocioStudents, setLocalNonSocioStudents] = useState(nonSocioStudents);
+    const [localNonSocioStudents, _setLocalNonSocioStudents] = useState(nonSocioStudents);
     const currentProfessorId = currentUser.role === 'admin' ? selectedProfessorId : professorRecord?.id;
     const availableNonSocioStudents = currentUser.role === 'admin'
         ? localNonSocioStudents
@@ -2282,6 +2283,7 @@ const AddReservationModal: React.FC<{
             // We don't verify strict availability here to avoid clearing user selection while browsing, 
             // but we could. For now, let user pick.
         }
+// eslint-disable-next-line react-hooks/exhaustive-deps
     }, [step, type, courts, isEdit, currentUser, professorRecord]);
 
     // Generate Available Times based on rules
@@ -2561,7 +2563,7 @@ const AddReservationModal: React.FC<{
                                             type="date"
                                             value={date}
                                             onChange={e => { setDate(e.target.value); setError(null); }}
-                                            className="w-full pl-3 pr-2 py-3 bg-stone-50 border-none rounded-xl outline-none focus:ring-2 focus:ring-saibro-500 text-sm font-bold text-stone-700"
+                                            className="w-full pl-3 pr-2 py-3 bg-stone-50 border-none rounded-xl outline-hidden focus:ring-2 focus:ring-saibro-500 text-sm font-bold text-stone-700"
                                         />
                                     </div>
                                 </div>
@@ -2573,7 +2575,7 @@ const AddReservationModal: React.FC<{
                                         </div>
                                     ) : (
                                         <select
-                                            className="w-full px-3 py-3 bg-stone-50 border-none rounded-xl outline-none focus:ring-2 focus:ring-saibro-500 text-sm font-bold text-stone-700"
+                                            className="w-full px-3 py-3 bg-stone-50 border-none rounded-xl outline-hidden focus:ring-2 focus:ring-saibro-500 text-sm font-bold text-stone-700"
                                             value={courtId}
                                             onChange={e => { setCourtId(e.target.value); setError(null); }}
                                         >
@@ -2610,7 +2612,7 @@ const AddReservationModal: React.FC<{
                                     <select
                                         value={startTime}
                                         onChange={e => { setStartTime(e.target.value); setError(null); }}
-                                        className="w-full px-3 py-3 bg-stone-50 border-none rounded-xl outline-none focus:ring-2 focus:ring-saibro-500 text-sm font-bold text-stone-700 appearance-none"
+                                        className="w-full px-3 py-3 bg-stone-50 border-none rounded-xl outline-hidden focus:ring-2 focus:ring-saibro-500 text-sm font-bold text-stone-700 appearance-none"
                                     >
                                         <option value="">Selecione...</option>
                                         {availableTimes.map(t => <option key={t} value={t}>{t}</option>)}
@@ -2711,7 +2713,7 @@ const AddReservationModal: React.FC<{
                                         <div>
                                             <label className="block text-[10px] font-bold text-stone-500 uppercase mb-1.5">Professor</label>
                                             <select
-                                                className="w-full px-3 py-3 bg-stone-50 border-none rounded-xl outline-none focus:ring-2 focus:ring-saibro-500 text-sm font-bold text-stone-700"
+                                                className="w-full px-3 py-3 bg-stone-50 border-none rounded-xl outline-hidden focus:ring-2 focus:ring-saibro-500 text-sm font-bold text-stone-700"
                                                 value={selectedProfessorId}
                                                 onChange={(e) => setSelectedProfessorId(e.target.value)}
                                             >
@@ -2726,7 +2728,7 @@ const AddReservationModal: React.FC<{
                                     <div>
                                         <label className="block text-[10px] font-bold text-stone-500 uppercase mb-1.5">Alunos Sócios</label>
                                         <select
-                                            className="w-full px-3 py-3 bg-stone-50 border-none rounded-xl outline-none focus:ring-2 focus:ring-saibro-500 text-sm font-bold text-stone-700 mb-2"
+                                            className="w-full px-3 py-3 bg-stone-50 border-none rounded-xl outline-hidden focus:ring-2 focus:ring-saibro-500 text-sm font-bold text-stone-700 mb-2"
                                             onChange={(e) => { if (e.target.value) toggleSocio(e.target.value); }}
                                             value=""
                                         >
@@ -2751,7 +2753,7 @@ const AddReservationModal: React.FC<{
                                     <div>
                                         <label className="block text-[10px] font-bold text-stone-500 uppercase mb-1.5">Não-sócios e Dependentes</label>
                                         <select
-                                            className="w-full px-3 py-3 bg-stone-50 border-none rounded-xl outline-none focus:ring-2 focus:ring-saibro-500 text-sm font-bold text-stone-700 mb-2"
+                                            className="w-full px-3 py-3 bg-stone-50 border-none rounded-xl outline-hidden focus:ring-2 focus:ring-saibro-500 text-sm font-bold text-stone-700 mb-2"
                                             onChange={(e) => { if (e.target.value) toggleNonSocio(e.target.value); }}
                                             value=""
                                         >
@@ -2795,7 +2797,7 @@ const AddReservationModal: React.FC<{
                                         value={observation}
                                         onChange={e => setObservation(e.target.value)}
                                         placeholder="Detalhes adicionais..."
-                                        className="w-full p-3 bg-stone-50 border-none rounded-xl outline-none focus:ring-2 focus:ring-saibro-500 text-sm"
+                                        className="w-full p-3 bg-stone-50 border-none rounded-xl outline-hidden focus:ring-2 focus:ring-saibro-500 text-sm"
                                     />
                                 </div>
                             )}

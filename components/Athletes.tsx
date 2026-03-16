@@ -1,11 +1,11 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Search, Trophy, Calendar, Mail, User as UserIcon, ArrowLeft, TrendingUp, Activity, MapPin, Clock, History, Crown, AlertCircle, ArrowRight, Edit2, Loader2 } from 'lucide-react';
-import { User, Match, Reservation } from '../types';
+import { Search, Trophy, Mail, ArrowLeft, TrendingUp, Activity, MapPin, Clock, History, ArrowRight, Edit2 } from 'lucide-react';
+import { User, Reservation } from '../types';
 import { supabase } from '../lib/supabase';
 import { getNowInFortaleza, formatDateBr } from '../utils';
 import { EditProfileModal } from './EditProfileModal';
-import { fetchRanking, canChallenge, PlayerStats, CLASS_ORDER } from '../lib/rankingService';
+import { fetchRanking, canChallenge, PlayerStats } from '../lib/rankingService';
 
 
 // --- COMPONENT: Athlete Profile ---
@@ -22,7 +22,7 @@ const AthleteProfile: React.FC<AthleteProfileProps> = ({ userId, currentUser, us
     const [activeTab, setActiveTab] = useState<'stats' | 'history' | 'presence'>('stats');
     const [showEdit, setShowEdit] = useState(false);
     const [ranking, setRanking] = useState<PlayerStats[]>([]);
-    const [loadingRanking, setLoadingRanking] = useState(true);
+    const [_loadingRanking, setLoadingRanking] = useState(true);
     const [matches, setMatches] = useState<any[]>([]);
     const [reservations, setReservations] = useState<Reservation[]>([]);
     const [courts, setCourts] = useState<{ id: string; name: string; type: string }[]>([]);
@@ -570,7 +570,7 @@ export const Athletes: React.FC<AthletesProps> = ({ initialUserId, currentUser, 
                     placeholder="Buscar atleta..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full p-3 pl-10 bg-white border border-stone-200 rounded-xl shadow-sm focus:ring-2 focus:ring-saibro-400 outline-none"
+                    className="w-full p-3 pl-10 bg-white border border-stone-200 rounded-xl shadow-sm focus:ring-2 focus:ring-saibro-400 outline-hidden"
                 />
                 <Search size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
             </div>

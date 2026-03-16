@@ -5,7 +5,7 @@
  * const { reservations, loading, error, createReservation, updateReservation, deleteReservation } = useReservations(date);
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { Reservation, Court, User } from '../types';
 import { logger } from '../lib/logger';
@@ -55,6 +55,7 @@ export function useReservations(options: UseReservationsOptions = {}): UseReserv
     if (autoFetch) {
       fetchReservations();
     }
+// eslint-disable-next-line react-hooks/exhaustive-deps
   }, [date, courtId, userId, autoFetch]);
 
   const fetchCourts = async () => {
@@ -235,6 +236,7 @@ export function useReservations(options: UseReservationsOptions = {}): UseReserv
       notify.error('Erro ao criar reserva', { description: errorMessage });
       return { success: false, error: errorMessage };
     }
+// eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reservations]);
 
   const updateReservation = useCallback(async (id: string, updates: Partial<Reservation>) => {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Trophy, Loader2, X, Megaphone } from 'lucide-react';
+import { Loader2, Megaphone } from 'lucide-react';
 import { Toaster } from 'sonner';
 import { Layout } from './components/Layout';
 import { Dashboard } from './components/Dashboard';
@@ -14,6 +14,7 @@ import { AdminPanel } from './components/AdminPanel';
 import { FinanceiroAdmin } from './components/FinanceiroAdmin';
 import { ChallengesView } from './components/Challenges';
 import { SuperSet } from './components/SuperSet';
+import { TenisProPlayer } from './components/TenisProPlayer';
 import { AdminStudents } from './components/AdminStudents';
 import { ChampionshipAdmin } from './components/ChampionshipAdmin';
 import { AdminProtect } from './components/AdminProtect';
@@ -168,6 +169,7 @@ const AppContent: React.FC = () => {
           {view === 'klanches' && <Klanches currentUser={currentUser} />}
           {view === 'desafios' && <ChallengesView currentUser={currentUser} />}
           {view === 'superset' && <SuperSet />}
+          {view === 'tenisproplayer' && <TenisProPlayer />}
           {view === 'campeonatos' && <Championships currentUser={currentUser} />}
           {view === 'competicao' && <Championships currentUser={currentUser} />}
           {view === 'atletas' && <Athletes initialUserId={targetAthleteId} currentUser={currentUser} onClearRequest={() => setTargetAthleteId(null)} />}

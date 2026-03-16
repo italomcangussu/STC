@@ -31,6 +31,7 @@ export const PublicChampionshipPage: React.FC<Props> = ({ slug }) => {
 
     useEffect(() => {
         fetchData();
+// eslint-disable-next-line react-hooks/exhaustive-deps
     }, [slug]);
 
     const fetchData = async () => {

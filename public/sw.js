@@ -4,7 +4,7 @@
 const CACHE_NAME = 'stc-play-v1';
 
 // Install event - cache essential assets
-self.addEventListener('install', (event) => {
+self.addEventListener('install', (_event) => {
     console.log('[SW] Installing Service Worker...');
     self.skipWaiting();
 });
@@ -41,7 +41,7 @@ self.addEventListener('push', (event) => {
         try {
             const payload = event.data.json();
             data = { ...data, ...payload };
-        } catch (e) {
+        } catch {
             data.body = event.data.text();
         }
     }

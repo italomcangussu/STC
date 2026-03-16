@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Trophy, Calendar, CalendarCheck, History, ListOrdered, GitMerge, ChevronDown, Loader2, Download, Share2, Users, Shirt, ChevronLeft, ChevronRight, Clock, MapPin, Info, Save, Plus, Minus, X, AlertTriangle } from 'lucide-react';
+import { Trophy, Calendar, CalendarCheck, ListOrdered, GitMerge, ChevronDown, Loader2, Download, Share2, Users, Shirt, ChevronLeft, ChevronRight, Clock, MapPin, Info, Save, Plus, Minus, X, AlertTriangle } from 'lucide-react';
 import { Championship, Match, User, ChampionshipRound } from '../types';
 import { getMatchWinner, formatDateBr, getNowInFortaleza, formatDate } from '../utils';
 import { supabase } from '../lib/supabase';
-import { LiveScoreboard } from './LiveScoreboard';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { GroupStandingsCard } from './GroupStandingsCard';
@@ -157,6 +156,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
         };
 
         fetchData();
+// eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // Realtime subscription for registrations
@@ -192,6 +192,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
         return () => {
             supabase.removeChannel(subscription);
         };
+// eslint-disable-next-line react-hooks/exhaustive-deps
     }, [registrationChamp?.id]);
 
     // Fetch matches and rounds when championship changes
@@ -745,7 +746,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
         setSavingAdminResult(false);
     };
 
-    const standings = calculateStandings();
+    const _standings = calculateStandings();
 
     // Helper functions for registrations
     const getRegistrationsByClass = (className: string) => {
@@ -2006,7 +2007,7 @@ const isTechnicalDrawMatch = (match: Match): boolean => {
     return match.status === 'finished' && !match.is_walkover && !hasAnyWinner(match) && !hasAnyScore(match);
 };
 
-const MatchCard: React.FC<{ match: Match; profiles: User[]; registrations: Registration[]; isAdmin?: boolean; currentUserId?: string; canSchedule?: boolean; onEdit?: () => void; onSchedule?: () => void }> = ({ match, profiles, registrations, isAdmin, currentUserId, canSchedule, onEdit, onSchedule }) => {
+const MatchCard: React.FC<{ match: Match; _profiles: User[]; registrations: Registration[]; isAdmin?: boolean; currentUserId?: string; _canSchedule?: boolean; onEdit?: () => void; onSchedule?: () => void }> = ({ match, _profiles, registrations, isAdmin, currentUserId, _canSchedule, onEdit, onSchedule }) => {
     const regA = registrations.find(r => r.id === match.registration_a_id);
     const regB = registrations.find(r => r.id === match.registration_b_id);
 

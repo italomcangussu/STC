@@ -1,8 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { User, Challenge, Match, Court, Reservation } from '../types';
-import { Trophy, Plus, CheckCircle, XCircle, Clock, Calendar, AlertTriangle, ArrowRight, ShieldAlert, PlayCircle, Loader2, Target, Info, MapPin, ChevronRight, ChevronLeft } from 'lucide-react';
-import { fetchRanking, getEligibleOpponents, canChallenge, canChallengeWithLimits, checkMonthlyChallengeLimit, PlayerStats, CLASS_ORDER } from '../lib/rankingService';
+import { Trophy, Plus, CheckCircle, XCircle, Clock, Calendar, AlertTriangle, ShieldAlert, PlayCircle, Loader2, Info, MapPin, ChevronRight, ChevronLeft } from 'lucide-react';
+import { fetchRanking, getEligibleOpponents, checkMonthlyChallengeLimit, PlayerStats } from '../lib/rankingService';
 import { sendPushNotification } from '../lib/notificationService';
 import { supabase } from '../lib/supabase';
 import { LiveScoreboard } from './LiveScoreboard';
@@ -152,6 +152,7 @@ const CreateChallengeModal: React.FC<{
 
             return isSlotAvailable(selectedCourt, time);
         });
+// eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedCourt, selectedDate, existingReservations, today]);
 
     const myStats = ranking.find(p => p.id === currentUser.id);
@@ -314,7 +315,7 @@ const CreateChallengeModal: React.FC<{
                                         setSelectedDate(e.target.value);
                                         setSelectedTime(''); // Reset time when date changes
                                     }}
-                                    className="w-full p-3 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-saibro-500"
+                                    className="w-full p-3 border border-stone-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-saibro-500"
                                 />
                             </div>
 
@@ -492,7 +493,7 @@ export const ChallengesView: React.FC<{ currentUser: User }> = ({ currentUser })
     const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
     const [historyScope, setHistoryScope] = useState<'mine' | 'all'>('all');
     const [loading, setLoading] = useState(true);
-    const [todayMatches, setTodayMatches] = useState<Match[]>([]);
+    const [_todayMatches, setTodayMatches] = useState<Match[]>([]);
 
     // Load data
     useEffect(() => {
@@ -680,7 +681,7 @@ export const ChallengesView: React.FC<{ currentUser: User }> = ({ currentUser })
     const history = challenges.filter(c => {
         const isMine = c.challengerId === currentUser.id || c.challengedId === currentUser.id;
         // For global history, prioritize finished matches
-        const statusList = historyScope === 'mine'
+        const _statusList = historyScope === 'mine'
             ? ['finished', 'declined', 'cancelled', 'expired']
             : ['finished']; // For global view, maybe only show finished/valid games? User said "history". I'll keep it simple and show finished primarily.
 

@@ -1,4 +1,4 @@
-import { User, Match } from './types';
+import { User } from './types';
 
 // NOTE: Ranking calculation has been moved to lib/rankingService.ts
 // which fetches data from Supabase instead of mock data.

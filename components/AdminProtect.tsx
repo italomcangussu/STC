@@ -20,7 +20,7 @@ export const AdminProtect: React.FC<AdminProtectProps> = ({ children, fallback }
             }
 
             // Double-check with database for security (don't trust local storage only)
-            const { data, error } = await supabase
+            const { data, _error } = await supabase
                 .from('profiles')
                 .select('role')
                 .eq('id', currentUser.id)

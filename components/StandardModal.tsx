@@ -87,6 +87,7 @@ export const StandardModal: React.FC<StandardModalProps> = ({
  *   ...
  * </StandardModal>
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export const useStandardModal = (initialState = false) => {
     const [isOpen, setIsOpen] = React.useState(initialState);
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Check, Loader2, Lock, Shuffle, Trophy, UserPlus, Users } from 'lucide-react';
+import { Check, Loader2, Shuffle, Trophy, UserPlus, Users } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { User } from '../types';
 import { GroupDrawPage } from './GroupDrawPage';
@@ -61,7 +61,7 @@ const normalizeChampionshipRow = (row: any): ChampionshipRow => ({
     // Some environments don't have registration_closed column yet.
     registration_closed: typeof row.registration_closed === 'boolean'
         ? row.registration_closed
-        : !Boolean(row.registration_open),
+        : !row.registration_open,
     pts_victory: pickNumeric(row.pts_victory, 3),
     pts_defeat: pickNumeric(row.pts_defeat, 0),
     pts_wo_victory: pickNumeric(row.pts_wo_victory, 3),
@@ -158,11 +158,13 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
 
     useEffect(() => {
         fetchInitialData();
+// eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useEffect(() => {
         if (!selectedChampionshipId) return;
         fetchSelectedChampionshipData(selectedChampionshipId);
+// eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedChampionshipId]);
 
     const fetchChampionshipRows = async (params?: { championshipId?: string; single?: boolean }) => {

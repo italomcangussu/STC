@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import {
     Calendar, Users, Trophy, LayoutDashboard,
-    Sandwich, Menu, X, LogOut, GraduationCap, Briefcase, Swords, Settings, DollarSign, Bell, BellOff
+    Sandwich, Menu, X, LogOut, GraduationCap, Briefcase, Swords, Settings, DollarSign, Bell, Gamepad2
 } from 'lucide-react';
 import { User } from '../types';
 import { supabase } from '../lib/supabase';
 import { isPushSupported, isInstalledPWA, isIOS, getPermissionStatus, subscribeToPush, isSubscribed } from '../lib/pushNotifications';
 import { PushPermissionPrompt } from './PushPermissionPrompt';
-import { InstallPrompt } from './InstallPrompt';
 import { AdminLogin } from './AdminLogin';
 
 interface NavItem {
@@ -27,8 +26,8 @@ interface LayoutProps {
 
 export const Layout: React.FC<LayoutProps> = ({ children, view, setView, currentUser, onLogout }) => {
     const [isSidebarOpen, setSidebarOpen] = useState(false);
-    const [hasActiveChamps, setHasActiveChamps] = useState(false);
-    const [pushEnabled, setPushEnabled] = useState<boolean | null>(null);
+    const [_hasActiveChamps, setHasActiveChamps] = useState(false);
+    const [_pushEnabled, setPushEnabled] = useState<boolean | null>(null);
     const [showPushBanner, setShowPushBanner] = useState(false);
     const [showAdminLogin, setShowAdminLogin] = useState(false);
     const [logoClicks, setLogoClicks] = useState(0);
@@ -121,6 +120,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
         { id: 'ranking', label: 'Ranking', icon: <Trophy size={20} />, roles: ['admin', 'socio'] },
         { id: 'desafios', label: 'Desafios', icon: <Swords size={20} />, roles: ['admin', 'socio'] },
         { id: 'superset', label: 'SuperSet', icon: <Trophy size={20} />, roles: ['admin', 'socio'] },
+        { id: 'tenisproplayer', label: 'TenisProPlayer', icon: <Gamepad2 size={20} />, roles: ['admin', 'socio'] },
         { id: 'campeonatos', label: 'Campeonatos', icon: <Trophy size={20} />, roles: ['admin', 'socio'] },
         { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} />, roles: ['admin', 'socio'] },
         { id: 'klanches', label: 'Klanches', icon: <Sandwich size={20} />, roles: ['admin', 'socio', 'lanchonete'] },

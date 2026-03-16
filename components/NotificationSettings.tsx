@@ -6,7 +6,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { Bell, BellOff, Check, Settings } from 'lucide-react';
-import { supabase } from '../lib/supabase';
 import { User } from '../types';
 import { logger } from '../lib/logger';
 import { notify } from '../lib/notifications';
@@ -29,7 +28,7 @@ interface NotificationSettingsProps {
 export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
   currentUser,
 }) => {
-  const [loading, setLoading] = useState(false);
+  const [_loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [pushEnabled, setPushEnabled] = useState(false);
 
@@ -46,6 +45,7 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
   useEffect(() => {
     loadPreferences();
     checkPushPermission();
+// eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser.id]);
 
   const checkPushPermission = () => {

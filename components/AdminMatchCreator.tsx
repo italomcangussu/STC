@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, Court } from '../types';
 import { supabase } from '../lib/supabase';
-import { X, Save, Trophy, Calendar, Clock, User as UserIcon, CheckCircle, AlertCircle, Loader2, Minus, Plus } from 'lucide-react';
+import { X, Trophy, Calendar, Clock, CheckCircle, Loader2, Minus, Plus } from 'lucide-react';
 import { getNowInFortaleza, formatDate } from '../utils';
 import { StandardModal } from './StandardModal';
 
@@ -220,7 +220,7 @@ export const AdminMatchCreator: React.FC<AdminMatchCreatorProps> = ({ isOpen, on
                                 type="date"
                                 value={date}
                                 onChange={e => setDate(e.target.value)}
-                                className="w-full px-4 py-3 bg-stone-50 border-none rounded-2xl text-sm font-bold text-stone-600 focus:ring-2 focus:ring-saibro-500 outline-none"
+                                className="w-full px-4 py-3 bg-stone-50 border-none rounded-2xl text-sm font-bold text-stone-600 focus:ring-2 focus:ring-saibro-500 outline-hidden"
                             />
                         </div>
                         <div className="space-y-2">
@@ -231,7 +231,7 @@ export const AdminMatchCreator: React.FC<AdminMatchCreatorProps> = ({ isOpen, on
                                 type="time"
                                 value={time}
                                 onChange={e => setTime(e.target.value)}
-                                className="w-full px-4 py-3 bg-stone-50 border-none rounded-2xl text-sm font-bold text-stone-600 focus:ring-2 focus:ring-saibro-500 outline-none"
+                                className="w-full px-4 py-3 bg-stone-50 border-none rounded-2xl text-sm font-bold text-stone-600 focus:ring-2 focus:ring-saibro-500 outline-hidden"
                             />
                         </div>
                     </div>
@@ -244,7 +244,7 @@ export const AdminMatchCreator: React.FC<AdminMatchCreatorProps> = ({ isOpen, on
                         <select
                             value={courtId}
                             onChange={e => setCourtId(e.target.value)}
-                            className="w-full px-4 py-3 bg-white border-none rounded-xl text-sm font-bold text-stone-700 outline-none shadow-sm focus:ring-2 focus:ring-saibro-500"
+                            className="w-full px-4 py-3 bg-white border-none rounded-xl text-sm font-bold text-stone-700 outline-hidden shadow-sm focus:ring-2 focus:ring-saibro-500"
                         >
                             <option value="">Selecione a quadra...</option>
                             {courts.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -260,7 +260,7 @@ export const AdminMatchCreator: React.FC<AdminMatchCreatorProps> = ({ isOpen, on
                                 <select
                                     value={playerAId}
                                     onChange={e => setPlayerAId(e.target.value)}
-                                    className="w-full p-3 bg-white border-none rounded-xl text-sm font-bold text-blue-900 shadow-sm text-center appearance-none focus:ring-2 focus:ring-blue-200 outline-none"
+                                    className="w-full p-3 bg-white border-none rounded-xl text-sm font-bold text-blue-900 shadow-sm text-center appearance-none focus:ring-2 focus:ring-blue-200 outline-hidden"
                                 >
                                     <option value="">Selecionar...</option>
                                     {profiles.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -277,7 +277,7 @@ export const AdminMatchCreator: React.FC<AdminMatchCreatorProps> = ({ isOpen, on
                                 <select
                                     value={playerBId}
                                     onChange={e => setPlayerBId(e.target.value)}
-                                    className="w-full p-3 bg-white border-none rounded-xl text-sm font-bold text-red-900 shadow-sm text-center appearance-none focus:ring-2 focus:ring-red-200 outline-none"
+                                    className="w-full p-3 bg-white border-none rounded-xl text-sm font-bold text-red-900 shadow-sm text-center appearance-none focus:ring-2 focus:ring-red-200 outline-hidden"
                                 >
                                     <option value="">Selecionar...</option>
                                     {profiles.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -302,7 +302,7 @@ export const AdminMatchCreator: React.FC<AdminMatchCreatorProps> = ({ isOpen, on
                                                     type="number"
                                                     value={sets[0].a}
                                                     readOnly
-                                                    className="w-24 h-24 text-center text-6xl font-black text-stone-800 bg-transparent border-none outline-none tabular-nums tracking-tighter [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                    className="w-24 h-24 text-center text-6xl font-black text-stone-800 bg-transparent border-none outline-hidden tabular-nums tracking-tighter [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                                 />
                                                 {getSetWinner(parseInt(sets[0].a), parseInt(sets[0].b)) === 'A' && (
                                                     <div className="absolute -top-2 -right-2 bg-yellow-400 text-yellow-900 p-1.5 rounded-full shadow-lg animate-bounce border-2 border-white">
@@ -332,7 +332,7 @@ export const AdminMatchCreator: React.FC<AdminMatchCreatorProps> = ({ isOpen, on
                                                     type="number"
                                                     value={sets[0].b}
                                                     readOnly
-                                                    className="w-24 h-24 text-center text-6xl font-black text-stone-800 bg-transparent border-none outline-none tabular-nums tracking-tighter [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                    className="w-24 h-24 text-center text-6xl font-black text-stone-800 bg-transparent border-none outline-hidden tabular-nums tracking-tighter [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                                 />
                                                 {getSetWinner(parseInt(sets[0].a), parseInt(sets[0].b)) === 'B' && (
                                                     <div className="absolute -top-2 -right-2 bg-yellow-400 text-yellow-900 p-1.5 rounded-full shadow-lg animate-bounce border-2 border-white">
@@ -356,7 +356,7 @@ export const AdminMatchCreator: React.FC<AdminMatchCreatorProps> = ({ isOpen, on
                                                 value={set.a}
                                                 onChange={e => handleSetChange(idx, 'a', e.target.value)}
                                                 placeholder="0"
-                                                className="w-16 h-16 text-center text-3xl font-black text-blue-600 bg-white rounded-2xl border-none shadow-sm focus:ring-4 focus:ring-blue-100 outline-none placeholder:text-stone-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                className="w-16 h-16 text-center text-3xl font-black text-blue-600 bg-white rounded-2xl border-none shadow-sm focus:ring-4 focus:ring-blue-100 outline-hidden placeholder:text-stone-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                             />
                                             <div className="flex flex-col items-center gap-1">
                                                 <span className="text-[10px] font-black text-stone-300 uppercase tracking-wider">SET {idx + 1}</span>
@@ -367,7 +367,7 @@ export const AdminMatchCreator: React.FC<AdminMatchCreatorProps> = ({ isOpen, on
                                                 value={set.b}
                                                 onChange={e => handleSetChange(idx, 'b', e.target.value)}
                                                 placeholder="0"
-                                                className="w-16 h-16 text-center text-3xl font-black text-red-600 bg-white rounded-2xl border-none shadow-sm focus:ring-4 focus:ring-red-100 outline-none placeholder:text-stone-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                className="w-16 h-16 text-center text-3xl font-black text-red-600 bg-white rounded-2xl border-none shadow-sm focus:ring-4 focus:ring-red-100 outline-hidden placeholder:text-stone-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                             />
                                             {idx > 0 && sets.length > 1 && (
                                                 <button onClick={() => removeSet(idx)} className="absolute right-8 text-red-300 hover:text-red-500 p-2">

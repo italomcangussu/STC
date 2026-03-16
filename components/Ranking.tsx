@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Trophy, Filter, Info, Crown, Loader2, ChevronRight, Award, Target, Zap } from 'lucide-react';
+import { Trophy, Info, Crown, Loader2, ChevronRight, Target } from 'lucide-react';
 import { fetchRanking, fetchRankingByCategory, PlayerStats, CLASS_ORDER } from '../lib/rankingService';
 
 interface RankingProps {
@@ -16,26 +16,26 @@ const PlayerCard: React.FC<{
   showPoints?: boolean;
   onClick: () => void;
 }> = ({ player, rank, showCategory = false, showPoints = true, onClick }) => {
-  const isTop3 = rank <= 3;
+  const _isTop3 = rank <= 3;
 
   // Dynamic Styles based on Rank
-  let cardStyle = "bg-gradient-to-r from-white to-stone-50/50 border-stone-300 hover:border-saibro-300";
+  let cardStyle = "bg-linear-to-r from-white to-stone-50/50 border-stone-300 hover:border-saibro-300";
   let rankColor = "text-stone-400";
   let pointColor = "text-saibro-600";
   let avatarBorder = "border-transparent";
 
   if (rank === 1) {
-    cardStyle = "bg-gradient-to-r from-yellow-50/80 to-amber-50/50 border-yellow-400 hover:border-yellow-500 shadow-yellow-100 animate-shimmer";
+    cardStyle = "bg-linear-to-r from-yellow-50/80 to-amber-50/50 border-yellow-400 hover:border-yellow-500 shadow-yellow-100 animate-shimmer";
     rankColor = "text-yellow-600";
     pointColor = "text-yellow-700";
     avatarBorder = "border-yellow-200";
   } else if (rank === 2) {
-    cardStyle = "bg-gradient-to-r from-stone-100/80 to-stone-50/50 border-stone-400 hover:border-stone-500 shadow-stone-200";
+    cardStyle = "bg-linear-to-r from-stone-100/80 to-stone-50/50 border-stone-400 hover:border-stone-500 shadow-stone-200";
     rankColor = "text-stone-500";
     pointColor = "text-stone-600";
     avatarBorder = "border-stone-300";
   } else if (rank === 3) {
-    cardStyle = "bg-gradient-to-r from-orange-50/80 to-orange-50/30 border-orange-400 hover:border-orange-500 shadow-orange-100";
+    cardStyle = "bg-linear-to-r from-orange-50/80 to-orange-50/30 border-orange-400 hover:border-orange-500 shadow-orange-100";
     rankColor = "text-orange-600";
     pointColor = "text-orange-700";
     avatarBorder = "border-orange-200";

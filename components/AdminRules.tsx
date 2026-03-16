@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import { PointRule } from '../types';
 import { getNowInFortaleza } from '../utils';
-import { Settings, Save, Loader2, Info, Trophy, Target, Award, TrendingUp, CheckCircle2, Sparkles } from 'lucide-react';
+import { Save, Loader2, Info, Trophy, Target, Award, TrendingUp, CheckCircle2, Sparkles } from 'lucide-react';
 
 export const AdminRules: React.FC = () => {
     const [rules, setRules] = useState<PointRule[]>([]);
@@ -142,7 +142,7 @@ export const AdminRules: React.FC = () => {
                                 type="number"
                                 value={edits[rule.id] !== undefined ? edits[rule.id] : rule.points}
                                 onChange={e => handleEditChange(rule.id, e.target.value)}
-                                className={`w-20 px-3 py-2.5 border-2 rounded-xl text-center font-black text-lg transition-all outline-none ${hasChanges
+                                className={`w-20 px-3 py-2.5 border-2 rounded-xl text-center font-black text-lg transition-all outline-hidden ${hasChanges
                                     ? 'border-amber-400 bg-white text-amber-700 ring-4 ring-amber-100'
                                     : 'border-stone-200 bg-stone-50 text-stone-800 focus:border-saibro-500 focus:ring-4 focus:ring-saibro-100'
                                     }`}

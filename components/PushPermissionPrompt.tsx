@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, X } from 'lucide-react';
+import { Bell } from 'lucide-react';
 import { isPushSupported, isInstalledPWA, isSubscribed, subscribeToPush, isIOS } from '../lib/pushNotifications';
 
 export const PushPermissionPrompt: React.FC = () => {

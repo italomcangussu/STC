@@ -1,5 +1,5 @@
 
-interface AccessRequestData {
+interface _AccessRequestData {
     id: string;
     phone: string;
     status: string;

@@ -1,13 +1,13 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Calendar, Trophy, Swords, DollarSign, Users,
-    Search, Filter, CheckCircle, XCircle, Clock,
-    ChevronRight, AlertTriangle, Eye, Trash2, Edit, Plus, AlertCircle, Loader2,
+    Search, XCircle,
+    ChevronRight, Trash2, Edit, Plus, AlertCircle, Loader2,
     LayoutDashboard, Megaphone, Save, PlusSquare, Zap, History, GraduationCap, Settings
 } from 'lucide-react';
 import { Dashboard } from './Dashboard';
-import { Reservation, User, Championship, Challenge, AccessRequest, Match, Consumption, Product, NonSocioStudent } from '../types';
-import { formatDateBr, getDayName } from '../utils';
+import { Reservation, User, Challenge, AccessRequest } from '../types';
+import { formatDateBr } from '../utils';
 import { supabase } from '../lib/supabase';
 import { getNowInFortaleza, formatDate } from '../utils';
 import { AdminUserEditor } from './AdminUserEditor';
@@ -17,7 +17,6 @@ import { StandardModal } from './StandardModal';
 
 import { SuperSet } from './SuperSet';
 
-import { ScoreModal } from './ScoreModal';
 import { FinanceiroAdmin } from './FinanceiroAdmin';
 import { AdminProfessors } from './AdminProfessors';
 import { AdminRules } from './AdminRules';
@@ -210,7 +209,7 @@ const NewChallengeModal: React.FC<NewChallengeModalProps> = ({ onClose, onSave, 
 };
 
 // --- Score Modal Component ---
-interface ScoreModalProps {
+interface _ScoreModalProps {
     challenge: Challenge;
     challengerName: string;
     challengedName: string;
@@ -435,7 +434,7 @@ const DesafiosTab: React.FC = () => {
         ));
     };
 
-    const handleSaveScore = async (scores: { a: number, b: number }[]) => {
+    const _handleSaveScore = async (scores: { a: number, b: number }[]) => {
         if (!selectedChallenge) return;
 
         try {
@@ -880,13 +879,12 @@ const AnunciosTab: React.FC = () => {
 };
 
 // --- Sub-component: Socios Tab ---
-import { generateEmailFromPhone, generatePasswordFromPhone } from '../lib/authHelpers';
 
 const SociosTab: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [requests, setRequests] = useState<AccessRequest[]>([]);
     const [members, setMembers] = useState<User[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [_loading, setLoading] = useState(true);
     const [editingMember, setEditingMember] = useState<User | null>(null);
 
 
@@ -1019,7 +1017,7 @@ const SociosTab: React.FC = () => {
                         placeholder="Buscar sócios..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 bg-white border border-stone-200 rounded-xl outline-none focus:ring-2 focus:ring-saibro-500"
+                        className="w-full pl-10 pr-4 py-3 bg-white border border-stone-200 rounded-xl outline-hidden focus:ring-2 focus:ring-saibro-500"
                     />
                 </div>
 
@@ -1067,7 +1065,7 @@ const SociosTab: React.FC = () => {
 
 // --- Sub-component: Lançamentos Tab (Retroativo & Auditoria) ---
 const LancamentosTab: React.FC = () => {
-    const [loading, setLoading] = useState(false);
+    const [_loading, _setLoading] = useState(false);
     const [auditLogs, setAuditLogs] = useState<any[]>([]);
 
     // Creator State

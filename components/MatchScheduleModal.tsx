@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { StandardModal } from './StandardModal';
-import { Calendar, Clock, MapPin, X, Check, AlertCircle, Loader2 } from 'lucide-react';
+import { Calendar, Clock, MapPin, Check, AlertCircle, Loader2 } from 'lucide-react';
 import { Match, Court } from '../types';
 import { formatDateBr } from '../utils';
 
@@ -17,7 +17,7 @@ interface Props {
 }
 
 const TIME_SLOTS_MORNING = ['06:00', '06:30', '07:00'];
-const TIME_SLOTS_AFTERNOON = ['16:00', '16:30', '17:00'];
+const TIME_SLOTS_AFTERNOON = ['16:00', '16:30', '17:00', '17:30', '18:00', '18:30', '19:00', '19:30'];
 const TIME_SLOTS_NIGHT = ['20:00', '21:00', '22:00'];
 
 const ALL_TIME_SLOTS = [
@@ -124,7 +124,7 @@ export const MatchScheduleModal: React.FC<Props> = ({
                                 min={isAdmin ? undefined : roundStartDate}
                                 max={isAdmin ? undefined : roundEndDate}
                                 onChange={(e) => setDate(e.target.value)}
-                                className="w-full p-4 bg-stone-50 border border-stone-100 rounded-2xl focus:ring-2 focus:ring-saibro-500 outline-none transition-all font-bold text-stone-800"
+                                className="w-full p-4 bg-stone-50 border border-stone-100 rounded-2xl focus:ring-2 focus:ring-saibro-500 outline-hidden transition-all font-bold text-stone-800"
                             />
                             <p className="text-[10px] text-stone-400 mt-2 pl-1 font-medium italic">
                                 Período da rodada: {formatDateBr(roundStartDate)} até {formatDateBr(roundEndDate)}
@@ -143,7 +143,7 @@ export const MatchScheduleModal: React.FC<Props> = ({
                                         type="time"
                                         value={time}
                                         onChange={(e) => setTime(e.target.value)}
-                                        className="w-full p-4 bg-stone-50 border border-stone-100 rounded-2xl focus:ring-2 focus:ring-saibro-500 outline-none transition-all font-bold text-stone-800"
+                                        className="w-full p-4 bg-stone-50 border border-stone-100 rounded-2xl focus:ring-2 focus:ring-saibro-500 outline-hidden transition-all font-bold text-stone-800"
                                     />
                                     <p className="text-[10px] text-green-600 font-black mt-1 pl-1 flex items-center gap-1 uppercase tracking-tighter">
                                         <Check size={10} /> Sexta-feira: Horário livre disponível!
@@ -170,7 +170,7 @@ export const MatchScheduleModal: React.FC<Props> = ({
                                 <div className="mt-3 p-3 bg-stone-50 rounded-xl border border-stone-100">
                                     <p className="text-[9px] text-stone-400 font-black uppercase tracking-widest flex items-center gap-2">
                                         <span className="w-1.5 h-1.5 bg-saibro-500 rounded-full" />
-                                        Manhã (6h-7h) • Tarde (16h-17h) • Noite (20h-22h)
+                                        Manhã (6h-7h) • Tarde (16h-19h30) • Noite (20h-22h)
                                     </p>
                                 </div>
                             )}

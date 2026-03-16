@@ -1,6 +1,6 @@
 import React from 'react';
 import { InternalStanding } from '../types';
-import { Trophy, Medal, AlertCircle } from 'lucide-react';
+import { Trophy } from 'lucide-react';
 
 interface Props {
     standings: InternalStanding[]; // Should be sorted already

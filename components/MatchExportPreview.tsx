@@ -1,7 +1,6 @@
 import React, { forwardRef } from 'react';
 import { Match, User, Championship } from '../types';
 import { Trophy, Calendar, MapPin, Ticket } from 'lucide-react';
-import { getNowInFortaleza } from '../utils';
 
 interface MatchExportPreviewProps {
     championship: Championship;

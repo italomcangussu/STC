@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Professor, NonSocioStudent } from '../types';
-import { Users, GraduationCap, Calendar, DollarSign, Loader2, ChevronRight, ChevronDown, Plus, Edit, Trash2 } from 'lucide-react';
+import { Users, GraduationCap, DollarSign, Loader2, ChevronRight, ChevronDown, Plus, Edit, Trash2 } from 'lucide-react';
 import { StandardModal } from './StandardModal';
 
 // --- Modal Component ---
@@ -42,7 +42,7 @@ const ProfessorModal: React.FC<ProfessorModalProps> = ({ professor, onClose, onS
                         <input
                             value={name}
                             onChange={e => setName(e.target.value)}
-                            className="w-full p-3 border border-stone-200 rounded-xl outline-none focus:ring-2 focus:ring-saibro-500"
+                            className="w-full p-3 border border-stone-200 rounded-xl outline-hidden focus:ring-2 focus:ring-saibro-500"
                             placeholder="Nome do Professor"
                         />
                     </div>
@@ -51,7 +51,7 @@ const ProfessorModal: React.FC<ProfessorModalProps> = ({ professor, onClose, onS
                         <textarea
                             value={bio}
                             onChange={e => setBio(e.target.value)}
-                            className="w-full p-3 border border-stone-200 rounded-xl outline-none focus:ring-2 focus:ring-saibro-500 h-24 resize-none"
+                            className="w-full p-3 border border-stone-200 rounded-xl outline-hidden focus:ring-2 focus:ring-saibro-500 h-24 resize-none"
                             placeholder="Ex: Especialista em Tênis Avançado..."
                         />
                     </div>

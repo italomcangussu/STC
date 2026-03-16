@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
-    ArrowLeft, Trophy, Calendar, CheckCircle2, AlertCircle,
-    Save, Upload, Edit3, Trash2, Loader2
+    ArrowLeft, Trophy, Calendar,
+    Save, Upload, Edit3, Loader2
 } from 'lucide-react';
 import { Championship, Match, User } from '../types';
 import { ResultModal } from './Championships';
@@ -155,7 +155,7 @@ export const AdminChampionshipDetail: React.FC<AdminChampionshipDetailProps> = (
         setLoading(false);
     };
 
-    const handleStatusChange = (newStatus: 'draft' | 'ongoing' | 'finished') => {
+    const _handleStatusChange = (newStatus: 'draft' | 'ongoing' | 'finished') => {
         const updated = { ...data, status: newStatus };
         setData(updated);
         onUpdate(updated);
@@ -375,7 +375,7 @@ export const AdminChampionshipDetail: React.FC<AdminChampionshipDetailProps> = (
                             <textarea
                                 value={rules}
                                 onChange={(e) => setRules(e.target.value)}
-                                className="w-full h-64 p-4 rounded-xl border border-stone-200 focus:ring-2 focus:ring-saibro-500 focus:outline-none text-sm leading-relaxed"
+                                className="w-full h-64 p-4 rounded-xl border border-stone-200 focus:ring-2 focus:ring-saibro-500 focus:outline-hidden text-sm leading-relaxed"
                                 placeholder="Descreva as regras de pontuação, desempate, agendamento..."
                             />
                         </div>
@@ -422,7 +422,7 @@ export const AdminChampionshipDetail: React.FC<AdminChampionshipDetailProps> = (
                                     <select
                                         value={exportDate}
                                         onChange={(e) => setExportDate(e.target.value)}
-                                        className="w-full p-3 rounded-xl border border-stone-200 bg-white font-bold text-stone-700 outline-none focus:border-saibro-500 transition-colors"
+                                        className="w-full p-3 rounded-xl border border-stone-200 bg-white font-bold text-stone-700 outline-hidden focus:border-saibro-500 transition-colors"
                                     >
                                         <option value="">Selecione uma data</option>
                                         {availableDates.map(d => (
@@ -439,7 +439,7 @@ export const AdminChampionshipDetail: React.FC<AdminChampionshipDetailProps> = (
                                         <select
                                             value={exportGroupId}
                                             onChange={(e) => setExportGroupId(e.target.value)}
-                                            className="w-full p-3 rounded-xl border border-stone-200 bg-white font-bold text-stone-700 outline-none focus:border-saibro-500 transition-colors"
+                                            className="w-full p-3 rounded-xl border border-stone-200 bg-white font-bold text-stone-700 outline-hidden focus:border-saibro-500 transition-colors"
                                         >
                                             <option value="">Todas as Classes</option>
                                             {groups.map(g => (

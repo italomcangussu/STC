@@ -6,7 +6,7 @@
  * startAppTour();
  */
 
-import { driver, DriveStep } from 'driver.js';
+import { driver } from 'driver.js';
 import 'driver.js/dist/driver.css';
 import { logger } from './logger';
 

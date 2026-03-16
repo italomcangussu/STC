@@ -126,7 +126,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ currentUser,
                                 type="text"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
-                                className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-saibro-400 outline-none font-semibold text-stone-800"
+                                className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-saibro-400 outline-hidden font-semibold text-stone-800"
                                 placeholder="Seu nome"
                                 required
                             />
@@ -138,7 +138,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ currentUser,
                                 <select
                                     value={category}
                                     onChange={(e) => setCategory(e.target.value)}
-                                    className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-saibro-400 outline-none font-semibold text-stone-800 appearance-none"
+                                    className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-saibro-400 outline-hidden font-semibold text-stone-800 appearance-none"
                                 >
                                     {categories.map(c => (
                                         <option key={c} value={c}>{c}</option>
@@ -151,7 +151,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ currentUser,
                                     type="number"
                                     value={age}
                                     onChange={(e) => setAge(e.target.value)}
-                                    className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-saibro-400 outline-none font-semibold text-stone-800"
+                                    className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-saibro-400 outline-hidden font-semibold text-stone-800"
                                     placeholder="25"
                                     min="5"
                                     max="99"

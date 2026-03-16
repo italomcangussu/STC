@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
     ChevronRight, ChevronLeft, Trophy, Users, Shield,
-    Settings, Play, Save, CheckCircle2, AlertCircle, Info, Plus, Trash2, Search, X, Loader2
+    Settings, Play, Save, CheckCircle2, AlertCircle, Info, Trash2, Search, X
 } from 'lucide-react';
 import { User, Championship, Match, ChampionshipGroup } from '../types';
 import { supabase } from '../lib/supabase';
@@ -36,7 +36,7 @@ export const NewChampionship: React.FC<NewChampionshipProps> = ({ onClose, onSav
     const [groups, setGroups] = useState<ChampionshipGroup[]>([]);
     const [generatedMatches, setGeneratedMatches] = useState<Match[]>([]);
     const [profiles, setProfiles] = useState<User[]>([]);
-    const [loadingProfiles, setLoadingProfiles] = useState(true);
+    const [_loadingProfiles, setLoadingProfiles] = useState(true);
 
     // Fetch profiles from Supabase
     useEffect(() => {
@@ -83,7 +83,7 @@ export const NewChampionship: React.FC<NewChampionshipProps> = ({ onClose, onSav
             // Simple Single Elimination logic
             // Round 1: Pair up players. Handle odd number with a "BYE" or placeholder
             const numParticipants = ids.length;
-            const powerOf2 = Math.pow(2, Math.ceil(Math.log2(numParticipants)));
+            const _powerOf2 = Math.pow(2, Math.ceil(Math.log2(numParticipants)));
 
             // To keep it simple for this mock: generate first round matches
             // If 4 players: 2 matches in Semi, 1 Final (placeholder)
@@ -195,7 +195,7 @@ export const NewChampionship: React.FC<NewChampionshipProps> = ({ onClose, onSav
         }
 
         // If coming from group config (4) or normal flow (3->4 if not groups), proceed to generation preview
-        const next = step + 1;
+        const _next = step + 1;
 
         if (step === 4) {
             if (formData.format === 'grupo-mata-mata') {
@@ -315,7 +315,7 @@ export const NewChampionship: React.FC<NewChampionshipProps> = ({ onClose, onSav
                                 type="text"
                                 value={formData.name}
                                 onChange={e => setFormData({ ...formData, name: e.target.value })}
-                                className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-saibro-500 outline-none"
+                                className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-saibro-500 outline-hidden"
                                 placeholder="Ex: Torneio de Verão"
                             />
                         </div>
@@ -326,7 +326,7 @@ export const NewChampionship: React.FC<NewChampionshipProps> = ({ onClose, onSav
                                     type="text"
                                     value={formData.season}
                                     onChange={e => setFormData({ ...formData, season: e.target.value })}
-                                    className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-saibro-500 outline-none"
+                                    className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-saibro-500 outline-hidden"
                                     placeholder="Ex: 2026.1"
                                 />
                             </div>
@@ -336,7 +336,7 @@ export const NewChampionship: React.FC<NewChampionshipProps> = ({ onClose, onSav
                                     type="date"
                                     value={formData.startDate}
                                     onChange={e => setFormData({ ...formData, startDate: e.target.value })}
-                                    className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-saibro-500 outline-none"
+                                    className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-saibro-500 outline-hidden"
                                 />
                             </div>
                         </div>
@@ -345,7 +345,7 @@ export const NewChampionship: React.FC<NewChampionshipProps> = ({ onClose, onSav
                             <textarea
                                 value={formData.description}
                                 onChange={e => setFormData({ ...formData, description: e.target.value })}
-                                className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-saibro-500 outline-none h-24"
+                                className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-saibro-500 outline-hidden h-24"
                                 placeholder="Breve descrição do campeonato..."
                             />
                         </div>
@@ -386,15 +386,15 @@ export const NewChampionship: React.FC<NewChampionshipProps> = ({ onClose, onSav
                             <div className="grid grid-cols-3 gap-3">
                                 <div className="p-3 bg-stone-50 rounded-xl border border-stone-200">
                                     <p className="text-[10px] font-bold text-stone-400 mb-1">VITÓRIA</p>
-                                    <input type="number" value={formData.ptsVictory} onChange={e => setFormData({ ...formData, ptsVictory: Number(e.target.value) })} className="bg-transparent font-bold w-full outline-none" />
+                                    <input type="number" value={formData.ptsVictory} onChange={e => setFormData({ ...formData, ptsVictory: Number(e.target.value) })} className="bg-transparent font-bold w-full outline-hidden" />
                                 </div>
                                 <div className="p-3 bg-stone-50 rounded-xl border border-stone-200">
                                     <p className="text-[10px] font-bold text-stone-400 mb-1">SET</p>
-                                    <input type="number" value={formData.ptsSet} onChange={e => setFormData({ ...formData, ptsSet: Number(e.target.value) })} className="bg-transparent font-bold w-full outline-none" />
+                                    <input type="number" value={formData.ptsSet} onChange={e => setFormData({ ...formData, ptsSet: Number(e.target.value) })} className="bg-transparent font-bold w-full outline-hidden" />
                                 </div>
                                 <div className="p-3 bg-stone-50 rounded-xl border border-stone-200">
                                     <p className="text-[10px] font-bold text-stone-400 mb-1">GAME</p>
-                                    <input type="number" value={formData.ptsGame} onChange={e => setFormData({ ...formData, ptsGame: Number(e.target.value) })} className="bg-transparent font-bold w-full outline-none" />
+                                    <input type="number" value={formData.ptsGame} onChange={e => setFormData({ ...formData, ptsGame: Number(e.target.value) })} className="bg-transparent font-bold w-full outline-hidden" />
                                 </div>
                             </div>
                         </div>
@@ -411,7 +411,7 @@ export const NewChampionship: React.FC<NewChampionshipProps> = ({ onClose, onSav
                         </div>
                     </div>
                 );
-            case 3:
+            case 3: {
                 const filteredUsers = profiles.filter(u => u.role === 'socio' && u.name.toLowerCase().includes(searchTerm.toLowerCase()));
                 return (
                     <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
@@ -422,7 +422,7 @@ export const NewChampionship: React.FC<NewChampionshipProps> = ({ onClose, onSav
                                 placeholder="Buscar sócios..."
                                 value={searchTerm}
                                 onChange={e => setSearchTerm(e.target.value)}
-                                className="w-full pl-10 pr-4 py-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:ring-2 focus:ring-saibro-500"
+                                className="w-full pl-10 pr-4 py-3 bg-stone-50 border border-stone-200 rounded-xl outline-hidden focus:ring-2 focus:ring-saibro-500"
                             />
                         </div>
 
@@ -458,6 +458,7 @@ export const NewChampionship: React.FC<NewChampionshipProps> = ({ onClose, onSav
                         )}
                     </div>
                 );
+            }
             case 4:
                 // If Group Format -> Show Group Config
                 if (formData.format === 'grupo-mata-mata') {
@@ -615,7 +616,7 @@ export const NewChampionship: React.FC<NewChampionshipProps> = ({ onClose, onSav
                         </button>
                     </div>
                 )}
-            </div>
-        </div>
-    );
+                        </div>
+                    </div>
+                );
 };

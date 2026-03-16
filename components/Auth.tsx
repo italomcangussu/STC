@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { Trophy, Mail, Lock, User, Phone, AlertCircle, Loader2, CheckCircle2, Shield } from 'lucide-react';
+import { Mail, Lock, Phone, AlertCircle, Loader2, CheckCircle2, Shield } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 export const Auth: React.FC = () => {
-    const { signInWithEmail, signInWithPhone, signUpWithEmail } = useAuth();
+    const { signInWithEmail, signInWithPhone, _signUpWithEmail } = useAuth();
 
     // UI State
     const [isAdminMode, setIsAdminMode] = useState(false);
@@ -95,7 +95,7 @@ export const Auth: React.FC = () => {
                                             required
                                             value={phone}
                                             onChange={(e) => setPhone(e.target.value)}
-                                            className="w-full pl-10 pr-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-saibro-500 transition-all text-sm"
+                                            className="w-full pl-10 pr-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-saibro-500 transition-all text-sm"
                                             placeholder="(88) 99999-9999"
                                         />
                                     </div>
@@ -155,7 +155,7 @@ export const Auth: React.FC = () => {
                                             required
                                             value={email}
                                             onChange={(e) => setEmail(e.target.value)}
-                                            className="w-full pl-10 pr-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-saibro-500 transition-all text-sm"
+                                            className="w-full pl-10 pr-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-saibro-500 transition-all text-sm"
                                             placeholder="admin@sct.com"
                                         />
                                     </div>
@@ -170,7 +170,7 @@ export const Auth: React.FC = () => {
                                             required
                                             value={password}
                                             onChange={(e) => setPassword(e.target.value)}
-                                            className="w-full pl-10 pr-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-saibro-500 transition-all text-sm"
+                                            className="w-full pl-10 pr-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-saibro-500 transition-all text-sm"
                                             placeholder="******"
                                         />
                                     </div>

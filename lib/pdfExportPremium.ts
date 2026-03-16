@@ -131,7 +131,7 @@ export const generatePremiumPDF = async (
             backgroundColor: '#ffffff'
         });
 
-        const imgData = canvas.toDataURL('image/png');
+        const _imgData = canvas.toDataURL('image/png');
         const pdf = new jsPDF('p', 'mm', 'a4');
         const pageWidth = pdf.internal.pageSize.getWidth();
         const pageHeight = pdf.internal.pageSize.getHeight();

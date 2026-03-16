@@ -67,8 +67,8 @@ export interface PlayerStats {
 
 // Points formula
 const PTS_WIN = 100;
-const PTS_SET = 10;
-const PTS_GAME = 1;
+const _PTS_SET = 10;
+const _PTS_GAME = 1;
 
 /**
  * Fetch complete ranking from Supabase, combining legacy stats + challenge match stats
@@ -177,10 +177,10 @@ export async function fetchRanking(categoryFilter?: string, forceRefresh = false
             challengeStats[playerB].matchesWithTiebreak++;
         }
 
-        let matchGamesA = 0;
-        let matchGamesB = 0;
-        let matchSetsA = 0;
-        let matchSetsB = 0;
+        let _matchGamesA = 0;
+        let _matchGamesB = 0;
+        let _matchSetsA = 0;
+        let _matchSetsB = 0;
 
         // Count sets and games
         scoreA.forEach((gamesA, i) => {
@@ -192,8 +192,8 @@ export async function fetchRanking(categoryFilter?: string, forceRefresh = false
             challengeStats[playerB].gamesWon += gamesB;
             challengeStats[playerB].gamesLost += gamesA;
 
-            matchGamesA += gamesA;
-            matchGamesB += gamesB;
+            _matchGamesA += gamesA;
+            _matchGamesB += gamesB;
 
             // Sets (who won this set)
             // For tiebreak set (index 2), it's first to 10
@@ -204,24 +204,24 @@ export async function fetchRanking(categoryFilter?: string, forceRefresh = false
                     challengeStats[playerB].setsLost++;
                     challengeStats[playerA].tiebreaksWon++;
                     challengeStats[playerB].tiebreaksLost++;
-                    matchSetsA++;
+                    _matchSetsA++;
                 } else {
                     challengeStats[playerB].setsWon++;
                     challengeStats[playerA].setsLost++;
                     challengeStats[playerB].tiebreaksWon++;
                     challengeStats[playerA].tiebreaksLost++;
-                    matchSetsB++;
+                    _matchSetsB++;
                 }
             } else {
                 // Regular set OR SuperSet (index 0)
                 if (gamesA > gamesB) {
                     challengeStats[playerA].setsWon++;
                     challengeStats[playerB].setsLost++;
-                    matchSetsA++;
+                    _matchSetsA++;
                 } else if (gamesB > gamesA) {
                     challengeStats[playerB].setsWon++;
                     challengeStats[playerA].setsLost++;
-                    matchSetsB++;
+                    _matchSetsB++;
                 }
                 // 7-6 tiebreak
                 if ((gamesA === 7 && gamesB === 6)) {
@@ -448,7 +448,7 @@ export async function fetchRankingByCategory(): Promise<Record<string, PlayerSta
 export function canChallenge(
     challenger: PlayerStats,
     target: PlayerStats,
-    allPlayers: PlayerStats[]
+    _allPlayers: PlayerStats[]
 ): { allowed: boolean; reason?: string } {
     // Cannot challenge self
     if (challenger.id === target.id) {
@@ -567,4 +567,3 @@ export function getEligibleOpponents(
         return result.allowed;
     });
 }
-

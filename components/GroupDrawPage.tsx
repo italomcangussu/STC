@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
     ArrowLeft, Trophy, Shuffle, Crown, Users, Save, Check,
-    Loader2, Sparkles, Star, Dices, PartyPopper, Download, FileImage, ListChecks, X
+    Loader2, Sparkles, Dices, PartyPopper, Download, FileImage, ListChecks, X
 } from 'lucide-react';
 import { User } from '../types';
 import { supabase } from '../lib/supabase';
@@ -53,7 +53,7 @@ const shuffleArray = <T,>(array: T[]): T[] => {
     return shuffled;
 };
 
-export const GroupDrawPage: React.FC<Props> = ({ currentUser, championshipId, onBack }) => {
+export const GroupDrawPage: React.FC<Props> = ({ _currentUser, championshipId, onBack }) => {
     const [championship, setChampionship] = useState<Championship | null>(null);
     const [registrations, setRegistrations] = useState<Registration[]>([]);
     const [loading, setLoading] = useState(true);
@@ -168,7 +168,7 @@ export const GroupDrawPage: React.FC<Props> = ({ currentUser, championshipId, on
                         });
                         setCategoryDraws(draws);
                     }
-                } catch (error) {
+                } catch {
                     // Tables might not exist yet, initialize empty draws
                     console.log('Group tables not found, initializing empty draws');
                     const draws: Record<string, DrawnGroup> = {};
@@ -1064,7 +1064,7 @@ export const GroupDrawPage: React.FC<Props> = ({ currentUser, championshipId, on
                                                         const reg = classRegs.find(r => r.id === e.target.value);
                                                         handleSetSeed(cls, 'A', reg || null);
                                                     }}
-                                                    className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-amber-500/50"
+                                                    className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-hidden focus:border-amber-500/50"
                                                 >
                                                     <option value="">Selecione...</option>
                                                     {classRegs
@@ -1089,7 +1089,7 @@ export const GroupDrawPage: React.FC<Props> = ({ currentUser, championshipId, on
                                                         const reg = classRegs.find(r => r.id === e.target.value);
                                                         handleSetSeed(cls, 'B', reg || null);
                                                     }}
-                                                    className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-orange-500/50"
+                                                    className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-hidden focus:border-orange-500/50"
                                                 >
                                                     <option value="">Selecione...</option>
                                                     {classRegs

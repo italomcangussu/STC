@@ -8,7 +8,7 @@
  * - Análise de receita e consumo
  */
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Download,
   TrendingUp,
@@ -17,10 +17,9 @@ import {
   DollarSign,
   BarChart3,
   PieChart,
-  FileSpreadsheet,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { LoadingOverlay, SkeletonCard } from './ui/LoadingStates';
+import { LoadingOverlay } from './ui/LoadingStates';
 import { logger } from '../lib/logger';
 import { notify } from '../lib/notifications';
 
@@ -65,6 +64,7 @@ export const AdminReports: React.FC = () => {
 
   useEffect(() => {
     fetchMetrics();
+// eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dateRange]);
 
   const fetchMetrics = async () => {
@@ -295,7 +295,7 @@ export const AdminReports: React.FC = () => {
               </div>
               <div className="w-full bg-stone-100 rounded-full h-3 overflow-hidden">
                 <div
-                  className="bg-gradient-to-r from-saibro-500 to-saibro-600 h-full rounded-full transition-all duration-500"
+                  className="bg-linear-to-r from-saibro-500 to-saibro-600 h-full rounded-full transition-all duration-500"
                   style={{ width: `${court.utilizationRate}%` }}
                 />
               </div>

@@ -62,7 +62,7 @@ class Logger {
     }
   }
 
-  private sendToLoggingService(entry: LogEntry): void {
+  private sendToLoggingService(_entry: LogEntry): void {
     // TODO: Integrar com Sentry, LogRocket, ou outro serviço
     // Exemplo com Sentry:
     // if (entry.level === 'error') {

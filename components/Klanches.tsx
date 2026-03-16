@@ -3,7 +3,7 @@ import { User, Product, Consumption, Reservation, Court } from '../types';
 import {
     ShoppingCart, CheckCircle, Plus, Loader2, Package, Droplets,
     Beer, CupSoda, Candy, X, Save, Users, Edit, Trash2, Image,
-    ChevronDown, ChevronUp, DollarSign, AlertCircle, Calendar, Clock, MapPin
+    ChevronDown, ChevronUp, AlertCircle, Calendar, Clock, MapPin
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { getNowInFortaleza, formatDate } from '../utils';
@@ -262,7 +262,7 @@ export const Klanches: React.FC<KlanchesProps> = ({ currentUser }) => {
         }
     };
 
-    const removeFromCart = (productId: string) => {
+    const _removeFromCart = (productId: string) => {
         setCart(cart.filter(c => c.productId !== productId));
     };
 
@@ -456,7 +456,7 @@ export const Klanches: React.FC<KlanchesProps> = ({ currentUser }) => {
                     <div className="bg-white p-4 rounded-xl shadow-sm border border-stone-100">
                         <label className="block text-xs font-bold text-stone-500 uppercase mb-2">Cliente</label>
                         <select
-                            className="w-full p-3 bg-stone-50 border border-stone-200 rounded-lg text-stone-700 focus:outline-none focus:ring-2 focus:ring-saibro-300"
+                            className="w-full p-3 bg-stone-50 border border-stone-200 rounded-lg text-stone-700 focus:outline-hidden focus:ring-2 focus:ring-saibro-300"
                             value={selectedUser}
                             onChange={(e) => { setSelectedUser(e.target.value); setCart([]); }}
                         >
@@ -723,7 +723,7 @@ export const Klanches: React.FC<KlanchesProps> = ({ currentUser }) => {
                                     type="text"
                                     value={productForm.name}
                                     onChange={e => setProductForm({ ...productForm, name: e.target.value })}
-                                    className="w-full p-3 border border-stone-200 rounded-xl focus:ring-2 focus:ring-saibro-300 outline-none"
+                                    className="w-full p-3 border border-stone-200 rounded-xl focus:ring-2 focus:ring-saibro-300 outline-hidden"
                                     placeholder="Ex: Água Mineral"
                                 />
                             </div>
@@ -735,7 +735,7 @@ export const Klanches: React.FC<KlanchesProps> = ({ currentUser }) => {
                                     step="0.01"
                                     value={productForm.price}
                                     onChange={e => setProductForm({ ...productForm, price: e.target.value })}
-                                    className="w-full p-3 border border-stone-200 rounded-xl focus:ring-2 focus:ring-saibro-300 outline-none"
+                                    className="w-full p-3 border border-stone-200 rounded-xl focus:ring-2 focus:ring-saibro-300 outline-hidden"
                                     placeholder="5.00"
                                 />
                             </div>

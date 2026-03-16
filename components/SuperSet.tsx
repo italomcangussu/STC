@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { User } from '../types';
-import { Trophy, CheckCircle, AlertCircle, Save, Search, Users, ArrowRight, History, Zap, TrendingUp, Sparkles, Filter } from 'lucide-react';
+import { Trophy, Search, Users, ArrowRight, History, Zap, TrendingUp, Sparkles } from 'lucide-react';
 import { getNowInFortaleza, formatDate } from '../utils';
 
 interface SuperSetProps {
@@ -10,7 +10,7 @@ interface SuperSetProps {
 
 export const SuperSet: React.FC<SuperSetProps> = () => {
     const [players, setPlayers] = useState<User[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [_loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
 
     // Filter & Search
@@ -78,6 +78,7 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
             setLoading(false);
         };
         fetchData();
+// eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // Winner Detection logic (Standard Set)
@@ -141,7 +142,7 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
     };
 
     // Sorted Players: Put "Today's Players" at top
-    const sortedPlayersList = [...players].sort((a, b) => {
+    const _sortedPlayersList = [...players].sort((a, b) => {
         const aToday = todayPlayers.includes(a.id) ? 1 : 0;
         const bToday = todayPlayers.includes(b.id) ? 1 : 0;
         if (aToday !== bToday) return bToday - aToday; // Today's first
@@ -335,7 +336,7 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
                                     <input
                                         type="text"
                                         placeholder={`Buscar atleta ${!playerAId ? 'A' : 'B'}...`}
-                                        className="w-full pl-10 pr-4 py-3 sm:pl-12 sm:pr-6 sm:py-4 bg-stone-50 border-2 border-stone-100 rounded-2xl outline-none focus:border-saibro-500 transition-all font-bold text-sm sm:text-base text-stone-700 shadow-inner"
+                                        className="w-full pl-10 pr-4 py-3 sm:pl-12 sm:pr-6 sm:py-4 bg-stone-50 border-2 border-stone-100 rounded-2xl outline-hidden focus:border-saibro-500 transition-all font-bold text-sm sm:text-base text-stone-700 shadow-inner"
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
                                     />

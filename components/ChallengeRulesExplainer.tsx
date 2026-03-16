@@ -36,7 +36,7 @@ export const ChallengeRulesExplainer: React.FC<ChallengeRulesExplainerProps> = (
   }
 
   return (
-    <div className="bg-gradient-to-br from-orange-50 to-yellow-50 border border-orange-200 rounded-2xl p-6 space-y-4">
+    <div className="bg-linear-to-br from-orange-50 to-yellow-50 border border-orange-200 rounded-2xl p-6 space-y-4">
       <div className="flex items-center gap-2 text-saibro-800 font-bold text-lg">
         <Info size={20} />
         <span>Como Funcionam os Desafios</span>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { Championship, ChampionshipRound, Match, ChampionshipGroup, ChampionshipRegistration } from '../types';
-import { Play, Calendar, Trophy, AlertTriangle, Loader2, Check, Clock, ChevronLeft, ChevronRight, Info, MapPin, Trash2, Shuffle, Target } from 'lucide-react';
+import { Championship, ChampionshipRound, Match, ChampionshipRegistration } from '../types';
+import { Play, Calendar, AlertTriangle, Loader2, Clock, ChevronLeft, ChevronRight, Trash2, Shuffle, Target } from 'lucide-react';
 import { generateRoundRobinMatches, getRoundDates } from '../lib/championshipUtils';
 import { MatchScheduleModal } from './MatchScheduleModal';
 import { GroupStandingsCard } from './GroupStandingsCard';
@@ -25,7 +25,7 @@ interface Props {
     initialTab?: 'matches' | 'standings' | 'bracket';
 }
 
-const CLASSES = ['1ª Classe', '2ª Classe', '3ª Classe', '4ª Classe', '5ª Classe', '6ª Classe'];
+const _CLASSES = ['1ª Classe', '2ª Classe', '3ª Classe', '4ª Classe', '5ª Classe', '6ª Classe'];
 
 export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentUser, onUpdate, initialTab = 'matches' }) => {
     const [loading, setLoading] = useState(true);
@@ -61,15 +61,32 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
     const [adminResultMatch, setAdminResultMatch] = useState<Match | null>(null);
     const [scoringMatch, setScoringMatch] = useState<Match | null>(null);
     const [savingAdminResult, setSavingAdminResult] = useState(false);
+    const [selectedBracketCategory, setSelectedBracketCategory] = useState('');
+    const bracketCategories = React.useMemo(
+        () => [...new Set(groups.map(g => g.category))],
+        [groups]
+    );
 
     useEffect(() => {
         fetchData();
         fetchCourts();
+// eslint-disable-next-line react-hooks/exhaustive-deps
     }, [championship.id]);
 
     useEffect(() => {
         setActiveTab(initialTab);
     }, [initialTab]);
+
+    useEffect(() => {
+        if (bracketCategories.length === 0) {
+            if (selectedBracketCategory) setSelectedBracketCategory('');
+            return;
+        }
+
+        if (!selectedBracketCategory || !bracketCategories.includes(selectedBracketCategory)) {
+            setSelectedBracketCategory(bracketCategories[0]);
+        }
+    }, [bracketCategories, selectedBracketCategory]);
 
     const fetchCourts = async () => {
         const { data } = await supabase.from('courts').select('*');
@@ -874,38 +891,31 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                 // Bracket Tab - Sub-tabs by class
                 <div className="space-y-6 pb-20">
                     {/* Class Sub-Tabs */}
-                    {(() => {
-                        const categories = [...new Set(groups.map(g => g.category))];
-                        const [selectedCategory, setSelectedCategory] = React.useState(categories[0] || '');
+                    <>
+                        <div className="flex bg-white p-2 rounded-3xl shadow-sm border border-stone-200 gap-2 overflow-x-auto">
+                            {bracketCategories.map(category => (
+                                <button
+                                    key={category}
+                                    onClick={() => setSelectedBracketCategory(category)}
+                                    className={`flex-1 min-w-[100px] py-3 px-4 rounded-2xl text-xs font-black tracking-wider transition-all ${
+                                        selectedBracketCategory === category
+                                            ? 'bg-saibro-600 text-white shadow-md'
+                                            : 'text-stone-400 hover:text-stone-600'
+                                    }`}
+                                >
+                                    {category}
+                                </button>
+                            ))}
+                        </div>
 
-                        return (
-                            <>
-                                <div className="flex bg-white p-2 rounded-3xl shadow-sm border border-stone-200 gap-2 overflow-x-auto">
-                                    {categories.map(category => (
-                                        <button
-                                            key={category}
-                                            onClick={() => setSelectedCategory(category)}
-                                            className={`flex-1 min-w-[100px] py-3 px-4 rounded-2xl text-xs font-black tracking-wider transition-all ${
-                                                selectedCategory === category
-                                                    ? 'bg-saibro-600 text-white shadow-md'
-                                                    : 'text-stone-400 hover:text-stone-600'
-                                            }`}
-                                        >
-                                            {category}
-                                        </button>
-                                    ))}
-                                </div>
-
-                                {/* Bracket View */}
-                                <BracketView
-                                    groups={groups}
-                                    registrations={registrations}
-                                    matches={matches}
-                                    category={selectedCategory}
-                                />
-                            </>
-                        );
-                    })()}
+                        {/* Bracket View */}
+                        <BracketView
+                            groups={groups}
+                            registrations={registrations}
+                            matches={matches}
+                            category={selectedBracketCategory}
+                        />
+                    </>
                 </div>
             )}
             {/* Modals */}
@@ -980,7 +990,7 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                                     <select
                                         value={exportDate}
                                         onChange={(e) => setExportDate(e.target.value)}
-                                        className="w-full p-3 rounded-xl border border-stone-200 bg-white font-bold text-stone-700 outline-none focus:border-saibro-500 transition-colors"
+                                        className="w-full p-3 rounded-xl border border-stone-200 bg-white font-bold text-stone-700 outline-hidden focus:border-saibro-500 transition-colors"
                                     >
                                         <option value="">Selecione uma data</option>
                                         {availableDates.map(d => (
@@ -997,7 +1007,7 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                                         <select
                                             value={exportGroupId}
                                             onChange={(e) => setExportGroupId(e.target.value)}
-                                            className="w-full p-3 rounded-xl border border-stone-200 bg-white font-bold text-stone-700 outline-none focus:border-saibro-500 transition-colors"
+                                            className="w-full p-3 rounded-xl border border-stone-200 bg-white font-bold text-stone-700 outline-hidden focus:border-saibro-500 transition-colors"
                                         >
                                             <option value="">Todos os Grupos</option>
                                             {groups.map(g => (

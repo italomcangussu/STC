@@ -6,7 +6,7 @@ const seedAdmin = async () => {
     const email = generateEmailFromPhone(phone);
     const password = generatePasswordFromPhone(phone);
     const name = 'Ítalo Cangussú';
-    const role = 'admin';
+    const _role = 'admin';
 
     console.log(`Seeding admin: ${name} (${phone})...`);
 

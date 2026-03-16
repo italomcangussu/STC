@@ -152,6 +152,7 @@ export function useChallenges(currentUser: User) {
   // Fetch challenges on mount
   useEffect(() => {
     fetchChallenges();
+// eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser.id]);
 
   // Fetch ranking on mount
@@ -162,6 +163,7 @@ export function useChallenges(currentUser: User) {
   // Fetch monthly limits on mount
   useEffect(() => {
     fetchMonthlyLimits();
+// eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser.id]);
 
   // Calculate eligible opponents when ranking changes
@@ -169,6 +171,7 @@ export function useChallenges(currentUser: User) {
     if (state.ranking.length > 0) {
       calculateEligibleOpponents();
     }
+// eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.ranking, currentUser.id]);
 
   const fetchChallenges = async () => {
@@ -307,6 +310,7 @@ export function useChallenges(currentUser: User) {
       notify.error('Erro ao criar desafio', { description: errorMessage });
       return { success: false, error: errorMessage };
     }
+// eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.selectedOpponent, state.selectedDate, state.selectedTime, state.selectedCourtId, currentUser.id]);
 
   const acceptChallenge = useCallback(async (challengeId: string) => {

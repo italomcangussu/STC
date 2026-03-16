@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { User } from '../types';
 import { supabase } from '../lib/supabase';
-import { X, Save, Camera, Shield, Trophy, Mail, Phone, User as UserIcon, AlertTriangle, Loader2, DollarSign } from 'lucide-react';
+import { X, Save, Camera, Shield, Trophy, Mail, User as UserIcon, Loader2 } from 'lucide-react';
 import { getNowInFortaleza } from '../utils';
 
 interface AdminUserEditorProps {
@@ -121,7 +121,7 @@ export const AdminUserEditor: React.FC<AdminUserEditorProps> = ({ user, onClose,
                                     type="text"
                                     value={name}
                                     onChange={e => setName(e.target.value)}
-                                    className="w-full px-5 py-4 bg-stone-50 border-none rounded-2xl text-lg font-bold text-stone-800 focus:ring-2 focus:ring-saibro-500 outline-none transition-all placeholder:text-stone-300"
+                                    className="w-full px-5 py-4 bg-stone-50 border-none rounded-2xl text-lg font-bold text-stone-800 focus:ring-2 focus:ring-saibro-500 outline-hidden transition-all placeholder:text-stone-300"
                                     placeholder="Nome do usuário"
                                 />
                             </div>
@@ -133,7 +133,7 @@ export const AdminUserEditor: React.FC<AdminUserEditorProps> = ({ user, onClose,
                                     type="text"
                                     value={avatarUrl}
                                     onChange={e => setAvatarUrl(e.target.value)}
-                                    className="w-full px-5 py-3 bg-stone-50 border-none rounded-2xl text-xs font-mono text-stone-500 focus:ring-2 focus:ring-saibro-500 outline-none transition-all"
+                                    className="w-full px-5 py-3 bg-stone-50 border-none rounded-2xl text-xs font-mono text-stone-500 focus:ring-2 focus:ring-saibro-500 outline-hidden transition-all"
                                     placeholder="https://..."
                                 />
                             </div>
@@ -152,7 +152,7 @@ export const AdminUserEditor: React.FC<AdminUserEditorProps> = ({ user, onClose,
                                     type="text"
                                     value={email}
                                     onChange={e => setEmail(e.target.value)}
-                                    className="w-full px-4 py-3 bg-white border-none rounded-2xl text-sm font-medium text-stone-600 focus:ring-2 focus:ring-saibro-500 outline-none shadow-sm"
+                                    className="w-full px-4 py-3 bg-white border-none rounded-2xl text-sm font-medium text-stone-600 focus:ring-2 focus:ring-saibro-500 outline-hidden shadow-sm"
                                 />
                             </div>
                             <div>
@@ -161,7 +161,7 @@ export const AdminUserEditor: React.FC<AdminUserEditorProps> = ({ user, onClose,
                                     type="text"
                                     value={phone}
                                     onChange={e => setPhone(e.target.value)}
-                                    className="w-full px-4 py-3 bg-white border-none rounded-2xl text-sm font-medium text-stone-600 focus:ring-2 focus:ring-saibro-500 outline-none shadow-sm"
+                                    className="w-full px-4 py-3 bg-white border-none rounded-2xl text-sm font-medium text-stone-600 focus:ring-2 focus:ring-saibro-500 outline-hidden shadow-sm"
                                 />
                             </div>
                         </div>
@@ -179,7 +179,7 @@ export const AdminUserEditor: React.FC<AdminUserEditorProps> = ({ user, onClose,
                                     <select
                                         value={role}
                                         onChange={e => setRole(e.target.value as any)}
-                                        className="w-full px-4 py-3 bg-white border-none rounded-2xl text-sm font-bold text-red-700 focus:ring-2 focus:ring-red-500 outline-none shadow-sm appearance-none"
+                                        className="w-full px-4 py-3 bg-white border-none rounded-2xl text-sm font-bold text-red-700 focus:ring-2 focus:ring-red-500 outline-hidden shadow-sm appearance-none"
                                     >
                                         <option value="socio">Sócio</option>
                                         <option value="admin">Administrador</option>
@@ -199,7 +199,7 @@ export const AdminUserEditor: React.FC<AdminUserEditorProps> = ({ user, onClose,
                                 <select
                                     value={category}
                                     onChange={e => setCategory(e.target.value)}
-                                    className="w-full px-4 py-3 bg-white border-none rounded-2xl text-sm font-medium text-stone-700 focus:ring-2 focus:ring-red-500 outline-none shadow-sm appearance-none"
+                                    className="w-full px-4 py-3 bg-white border-none rounded-2xl text-sm font-medium text-stone-700 focus:ring-2 focus:ring-red-500 outline-hidden shadow-sm appearance-none"
                                 >
                                     <option value="">Sem classe</option>
                                     <option value="1ª Classe">1ª Classe</option>
@@ -232,7 +232,7 @@ export const AdminUserEditor: React.FC<AdminUserEditorProps> = ({ user, onClose,
                                     value={pointsAdjustment}
                                     onChange={e => setPointsAdjustment(e.target.value)}
                                     placeholder="+100"
-                                    className="w-full px-4 py-3 bg-white border-none rounded-2xl text-lg font-black text-amber-600 focus:ring-2 focus:ring-amber-500 outline-none shadow-sm placeholder:text-amber-200"
+                                    className="w-full px-4 py-3 bg-white border-none rounded-2xl text-lg font-black text-amber-600 focus:ring-2 focus:ring-amber-500 outline-hidden shadow-sm placeholder:text-amber-200"
                                 />
                             </div>
                             <div className="flex-1">
@@ -243,7 +243,7 @@ export const AdminUserEditor: React.FC<AdminUserEditorProps> = ({ user, onClose,
                                     type="text"
                                     value={adjustmentReason}
                                     onChange={e => setAdjustmentReason(e.target.value)}
-                                    className="w-full px-4 py-3 bg-white border-none rounded-2xl text-sm font-medium text-stone-600 focus:ring-2 focus:ring-amber-500 outline-none shadow-sm"
+                                    className="w-full px-4 py-3 bg-white border-none rounded-2xl text-sm font-medium text-stone-600 focus:ring-2 focus:ring-amber-500 outline-hidden shadow-sm"
                                 />
                             </div>
                         </div>
