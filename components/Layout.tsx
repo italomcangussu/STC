@@ -120,8 +120,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
         { id: 'ranking', label: 'Ranking', icon: <Trophy size={20} />, roles: ['admin', 'socio'] },
         { id: 'desafios', label: 'Desafios', icon: <Swords size={20} />, roles: ['admin', 'socio'] },
         { id: 'superset', label: 'SuperSet', icon: <Trophy size={20} />, roles: ['admin', 'socio'] },
-        { id: 'tenisproplayer', label: 'TenisProPlayer', icon: <Gamepad2 size={20} />, roles: ['admin', 'socio'] },
         { id: 'campeonatos', label: 'Campeonatos', icon: <Trophy size={20} />, roles: ['admin', 'socio'] },
+        { id: 'tenisproplayer', label: 'TenisProPlayer', icon: <Gamepad2 size={20} />, roles: ['admin', 'socio'] },
         { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} />, roles: ['admin', 'socio'] },
         { id: 'klanches', label: 'Klanches', icon: <Sandwich size={20} />, roles: ['admin', 'socio', 'lanchonete'] },
     ];
