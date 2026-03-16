@@ -1,0 +1,7 @@
+node_modules
+dist
+.git
+*.md
+__tests__
+vitest.config.ts
+vitest.setup.ts
