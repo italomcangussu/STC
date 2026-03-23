@@ -11,6 +11,7 @@ import { BracketView } from './BracketView';
 import { StandingsDetailModal } from './StandingsDetailModal';
 
 import { calculateGroupStandings } from '../lib/championshipUtils';
+import { getGroupStageMatches, getRoundMatchesForDisplay } from '../lib/groupKnockout';
 import { MatchScheduleModal } from './MatchScheduleModal';
 
 // Interface for championship with participants
@@ -80,12 +81,6 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
     const [rounds, setRounds] = useState<ChampionshipRound[]>([]);
     const [selectedRoundIndex, setSelectedRoundIndex] = useState(0);
     const [selectedRoundIndexJogos, setSelectedRoundIndexJogos] = useState(0); // For Jogos tab
-
-    // Group matches by Round
-    const matchesByRound = rounds.reduce((acc, round) => {
-        acc[round.id] = matches.filter(m => m.round_id === round.id);
-        return acc;
-    }, {} as Record<string, Match[]>);
 
     // Fetch data from Supabase
     useEffect(() => {
@@ -1080,7 +1075,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                     if (!currentRound) return null;
 
                     // Get matches for this round from the grouped object or filter directly
-                    const roundMatches = matchesByRound[currentRound.id] || [];
+                    const roundMatches = getRoundMatchesForDisplay(currentRound, groupsDetail, registrations as any, matches);
 
                     return (
                         <div className="space-y-6">
@@ -1196,7 +1191,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
 
                     // Filter matches by selected round
                     const filteredMatches = selectedRound
-                        ? matches.filter(m => m.round_id === selectedRound.id)
+                        ? getRoundMatchesForDisplay(selectedRound, groupsDetail, registrations as any, matches)
                         : matches;
 
                     // Group matches by class, then by round
@@ -1473,7 +1468,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {groupsDetail.map(group => {
                                     // Filter matches for this group
-                                    const groupMatches = matches.filter(m => m.championship_group_id === group.id);
+                                    const groupMatches = getGroupStageMatches(matches, group.id);
 
                                     // Get registrations for this group
                                     const memberRegIds = group.members.map((m: any) => m.registration_id);

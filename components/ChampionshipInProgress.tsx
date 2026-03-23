@@ -12,6 +12,7 @@ import { MatchGenerationModal } from './MatchGenerationModal';
 import { MatchExportPreview } from './MatchExportPreview';
 import { BracketView } from './BracketView';
 import { StandingsDetailModal } from './StandingsDetailModal';
+import { getGroupStageMatches, getRoundMatchesForDisplay } from '../lib/groupKnockout';
 import { ResultModal } from './Championships';
 import html2canvas from 'html2canvas';
 import { Share2, Download, X } from 'lucide-react';
@@ -565,12 +566,6 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
 
     const availableDates = Array.from(new Set(matches.map(m => m.scheduled_date).filter(Boolean))).sort();
 
-    // Group matches by Round
-    const matchesByRound = rounds.reduce((acc, round) => {
-        acc[round.id] = matches.filter(m => m.round_id === round.id);
-        return acc;
-    }, {} as Record<string, Match[]>);
-
     if (loading) return <div className="p-12 text-center"><Loader2 className="animate-spin mx-auto text-saibro-600" /></div>;
 
     // View: Start Button (if no rounds)
@@ -774,7 +769,7 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                                 )}
 
                                 <div className="space-y-4">
-                                    {(matchesByRound[currentRound.id] || []).map(match => {
+                                    {getRoundMatchesForDisplay(currentRound, groups, registrations, matches).map(match => {
                                         const regA = registrations.find(r => r.id === match.registration_a_id);
                                         const regB = registrations.find(r => r.id === match.registration_b_id);
                                         const nameA = regA?.user?.name || regA?.guest_name || '...';
@@ -861,7 +856,7 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
             ) : activeTab === 'standings' ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-20">
                     {groups.map(group => {
-                        const groupMatches = matches.filter(m => m.championship_group_id === group.id);
+                        const groupMatches = getGroupStageMatches(matches, group.id);
                         const groupMemberIds = group.members.map((m: any) => m.registration_id);
                         const groupRegistrations = registrations.filter(r => groupMemberIds.includes(r.id));
                         const standings = calculateGroupStandings(groupRegistrations, groupMatches, {

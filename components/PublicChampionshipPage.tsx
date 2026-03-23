@@ -6,6 +6,7 @@ import { GroupStandingsCard } from './GroupStandingsCard';
 import { BracketView } from './BracketView';
 import { StandingsDetailModal } from './StandingsDetailModal';
 import { calculateGroupStandings } from '../lib/championshipUtils';
+import { getGroupStageMatches, getRoundMatchesForDisplay } from '../lib/groupKnockout';
 import { formatDateBr } from '../utils';
 
 interface Props {
@@ -101,12 +102,6 @@ export const PublicChampionshipPage: React.FC<Props> = ({ slug }) => {
             if (cats.length > 0) setSelectedCategory(cats[0]);
         }
     };
-
-    // Group matches by Round
-    const matchesByRound = rounds.reduce((acc, round) => {
-        acc[round.id] = matches.filter(m => m.round_id === round.id);
-        return acc;
-    }, {} as Record<string, Match[]>);
 
     // Winner check helper (guest-aware)
     const isWinnerSide = (match: Match, side: 'A' | 'B'): boolean => {
@@ -232,7 +227,7 @@ export const PublicChampionshipPage: React.FC<Props> = ({ slug }) => {
 
                                     {/* Match Cards */}
                                     <div className="space-y-4 pb-20">
-                                        {(matchesByRound[currentRound.id] || []).map(match => {
+                                        {getRoundMatchesForDisplay(currentRound, groups, registrations, matches).map(match => {
                                             const regA = registrations.find(r => r.id === match.registration_a_id);
                                             const regB = registrations.find(r => r.id === match.registration_b_id);
                                             const nameA = regA?.user?.name || regA?.guest_name || '...';
@@ -293,7 +288,7 @@ export const PublicChampionshipPage: React.FC<Props> = ({ slug }) => {
                 ) : activeTab === 'standings' ? (
                     <div className="grid grid-cols-1 gap-6 pb-20">
                         {groups.map((group: any) => {
-                            const groupMatches = matches.filter(m => m.championship_group_id === group.id);
+                            const groupMatches = getGroupStageMatches(matches, group.id);
                             const groupMemberIds = (group.members || []).map((m: any) => m.registration_id);
                             const groupRegistrations = registrations.filter(r => groupMemberIds.includes(r.id));
                             const standings = calculateGroupStandings(groupRegistrations, groupMatches, {
