@@ -16,8 +16,14 @@ export interface User {
 
 export interface AccessRequest {
   id: string;
+  name: string;
   phone: string;
+  phoneNormalized: string;
+  email?: string | null;
   status: 'pending' | 'approved' | 'rejected';
+  rejectionReason?: string | null;
+  decidedBy?: string | null;
+  decidedAt?: string | null;
   createdAt: string;
 }
 

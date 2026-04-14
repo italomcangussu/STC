@@ -227,6 +227,7 @@ const TABS = [
     { id: 'reservas', label: 'Reservas', icon: <Calendar size={18} /> },
     { id: 'desafios', label: 'Desafios', icon: <Swords size={18} /> },
     { id: 'financeiro', label: 'Financeiro', icon: <DollarSign size={18} /> },
+    { id: 'acessos', label: 'Acessos', icon: <Users size={18} /> },
     { id: 'socios', label: 'Sócios', icon: <Users size={18} /> },
     { id: 'alunos', label: 'Alunos', icon: <Users size={18} /> },
     { id: 'professores', label: 'Professores', icon: <GraduationCap size={18} /> },
@@ -882,7 +883,6 @@ const AnunciosTab: React.FC = () => {
 
 const SociosTab: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
-    const [requests, setRequests] = useState<AccessRequest[]>([]);
     const [members, setMembers] = useState<User[]>([]);
     const [_loading, setLoading] = useState(true);
     const [editingMember, setEditingMember] = useState<User | null>(null);
@@ -895,21 +895,6 @@ const SociosTab: React.FC = () => {
 
     const fetchData = async () => {
         setLoading(true);
-        const { data: reqs } = await supabase
-            .from('access_requests')
-            .select('*')
-            .eq('status', 'pending')
-            .order('created_at', { ascending: false });
-
-        if (reqs) {
-            setRequests(reqs.map(r => ({
-                id: r.id,
-                phone: r.phone,
-                status: r.status,
-                createdAt: r.created_at
-            })));
-        }
-
         const { data: usrs } = await supabase
             .from('profiles')
             .select('*')
@@ -935,39 +920,6 @@ const SociosTab: React.FC = () => {
         setLoading(false);
     };
 
-    const handleApprove = async (req: AccessRequest) => {
-        if (!confirm(`Aprovar acesso para ${req.phone}?`)) return;
-
-        try {
-            const { error: updateError } = await supabase
-                .from('access_requests')
-                .update({ status: 'approved' })
-                .eq('id', req.id);
-
-            if (updateError) throw updateError;
-
-            setRequests(requests.filter(r => r.id !== req.id));
-            alert('Acesso aprovado! O usuário já pode fazer login.');
-
-        } catch (error) {
-            console.error(error);
-            alert('Erro ao aprovar.');
-        }
-    };
-
-    const handleReject = async (req: AccessRequest) => {
-        if (!confirm(`Rejeitar solicitação de ${req.phone}?`)) return;
-
-        const { error } = await supabase
-            .from('access_requests')
-            .update({ status: 'rejected' })
-            .eq('id', req.id);
-
-        if (!error) {
-            setRequests(requests.filter(r => r.id !== req.id));
-        }
-    };
-
     const openEditMember = (member: User) => {
         setEditingMember(member);
     };
@@ -975,40 +927,6 @@ const SociosTab: React.FC = () => {
 
     return (
         <div className="space-y-6">
-            <div className="bg-amber-50 rounded-2xl border border-amber-100 p-4 space-y-3">
-                <h3 className="text-sm font-bold text-amber-800 flex items-center gap-2">
-                    <AlertCircle size={16} /> Solicitações de Acesso ({requests.length})
-                </h3>
-                {requests.length === 0 && (
-                    <p className="text-xs text-stone-500 italic">Nenhuma solicitação pendente.</p>
-                )}
-                <div className="space-y-2">
-                    {requests.map(req => (
-                        <div key={req.id} className="bg-white p-3 rounded-xl border border-amber-200 flex justify-between items-center">
-                            <div>
-                                <p className="text-sm font-bold text-stone-800">+{req.phone}</p>
-                                <p className="text-[10px] text-stone-400">Pendente desde {new Date(req.createdAt).toLocaleDateString('pt-BR', { timeZone: 'America/Fortaleza' })}</p>
-                            </div>
-                            <div className="flex gap-2">
-                                <button
-                                    onClick={() => handleReject(req)}
-                                    className="p-2 text-stone-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
-                                    title="Rejeitar"
-                                >
-                                    <XCircle size={18} />
-                                </button>
-                                <button
-                                    onClick={() => handleApprove(req)}
-                                    className="px-3 py-1 bg-amber-500 text-white text-xs font-bold rounded-lg hover:bg-amber-600 shadow-sm"
-                                >
-                                    Aprovar
-                                </button>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </div>
-
             <div className="space-y-4">
                 <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" size={18} />
@@ -1059,6 +977,268 @@ const SociosTab: React.FC = () => {
                     }}
                 />
             )}
+        </div>
+    );
+};
+
+const AcessosTab: React.FC = () => {
+    const [requests, setRequests] = useState<AccessRequest[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+    const [name, setName] = useState('');
+    const [phone, setPhone] = useState('');
+    const [email, setEmail] = useState('');
+    const [searchTerm, setSearchTerm] = useState('');
+
+    useEffect(() => {
+        fetchRequests();
+    }, []);
+
+    const fetchRequests = async () => {
+        setLoading(true);
+        const { data, error } = await supabase
+            .from('access_requests')
+            .select('id, name, phone, phone_normalized, email, status, rejection_reason, decided_by, decided_at, created_at')
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error('Erro ao carregar solicitações de acesso:', error);
+            setLoading(false);
+            return;
+        }
+
+        const mapped = (data || []).map((r: any) => ({
+            id: r.id,
+            name: r.name || 'Sem nome',
+            phone: r.phone,
+            phoneNormalized: r.phone_normalized,
+            email: r.email,
+            status: r.status,
+            rejectionReason: r.rejection_reason,
+            decidedBy: r.decided_by,
+            decidedAt: r.decided_at,
+            createdAt: r.created_at
+        } as AccessRequest));
+
+        setRequests(mapped);
+        setLoading(false);
+    };
+
+    const invokeAccessAction = async (payload: any) => {
+        const { data, error } = await supabase.functions.invoke('admin-athlete-access', {
+            body: payload
+        });
+
+        if (error) {
+            throw error;
+        }
+
+        if (data?.error) {
+            throw new Error(data.error);
+        }
+
+        return data;
+    };
+
+    const handleApprove = async (req: AccessRequest) => {
+        if (!confirm(`Aprovar solicitação de ${req.name}?`)) return;
+
+        try {
+            setSaving(true);
+            await invokeAccessAction({
+                action: 'approve_request',
+                requestId: req.id
+            });
+            await fetchRequests();
+            alert('Solicitação aprovada e atleta provisionado.');
+        } catch (error: any) {
+            console.error(error);
+            alert(error.message || 'Erro ao aprovar solicitação.');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleReject = async (req: AccessRequest) => {
+        const reason = prompt(`Motivo da rejeição para ${req.name} (opcional):`, '') ?? null;
+        if (reason === null && !confirm(`Rejeitar solicitação de ${req.name} sem motivo?`)) return;
+
+        try {
+            setSaving(true);
+            await invokeAccessAction({
+                action: 'reject_request',
+                requestId: req.id,
+                rejectionReason: reason || null
+            });
+            await fetchRequests();
+            alert('Solicitação rejeitada.');
+        } catch (error: any) {
+            console.error(error);
+            alert(error.message || 'Erro ao rejeitar solicitação.');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleCreateAthlete = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!name.trim() || !phone.trim()) return;
+
+        try {
+            setSaving(true);
+            await invokeAccessAction({
+                action: 'create_athlete',
+                name: name.trim(),
+                phone: phone.trim(),
+                email: email.trim() || null
+            });
+
+            setName('');
+            setPhone('');
+            setEmail('');
+            await fetchRequests();
+            alert('Atleta criado com sucesso.');
+        } catch (error: any) {
+            console.error(error);
+            alert(error.message || 'Erro ao criar atleta.');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const filteredPending = requests
+        .filter(r => r.status === 'pending')
+        .filter(r => {
+            const lookup = `${r.name} ${r.phone} ${r.email || ''}`.toLowerCase();
+            return lookup.includes(searchTerm.toLowerCase());
+        });
+
+    const recentDecisions = requests
+        .filter(r => r.status !== 'pending')
+        .slice(0, 20);
+
+    if (loading) {
+        return (
+            <div className="flex justify-center py-10">
+                <Loader2 className="animate-spin text-saibro-500" size={28} />
+            </div>
+        );
+    }
+
+    return (
+        <div className="space-y-8">
+            <form onSubmit={handleCreateAthlete} className="bg-saibro-50 border border-saibro-100 rounded-2xl p-5 space-y-4">
+                <h3 className="font-bold text-saibro-800">Novo Atleta (Criação Direta)</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <input
+                        type="text"
+                        value={name}
+                        onChange={e => setName(e.target.value)}
+                        placeholder="Nome *"
+                        className="w-full px-3 py-2.5 bg-white border border-stone-200 rounded-xl text-sm"
+                        required
+                    />
+                    <input
+                        type="tel"
+                        value={phone}
+                        onChange={e => setPhone(e.target.value)}
+                        placeholder="Telefone *"
+                        className="w-full px-3 py-2.5 bg-white border border-stone-200 rounded-xl text-sm"
+                        required
+                    />
+                    <input
+                        type="email"
+                        value={email}
+                        onChange={e => setEmail(e.target.value)}
+                        placeholder="Email (opcional)"
+                        className="w-full px-3 py-2.5 bg-white border border-stone-200 rounded-xl text-sm"
+                    />
+                </div>
+                <button
+                    type="submit"
+                    disabled={saving}
+                    className="px-4 py-2 bg-saibro-600 text-white text-sm font-bold rounded-xl hover:bg-saibro-700 disabled:opacity-60 flex items-center gap-2"
+                >
+                    {saving ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
+                    Criar atleta
+                </button>
+            </form>
+
+            <div className="space-y-4">
+                <div className="flex items-center justify-between gap-3">
+                    <h3 className="font-bold text-stone-800">Solicitações Pendentes ({filteredPending.length})</h3>
+                    <div className="relative max-w-xs w-full">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" size={16} />
+                        <input
+                            type="text"
+                            value={searchTerm}
+                            onChange={e => setSearchTerm(e.target.value)}
+                            placeholder="Buscar solicitações..."
+                            className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-stone-200 rounded-xl"
+                        />
+                    </div>
+                </div>
+
+                <div className="space-y-2">
+                    {filteredPending.map(req => (
+                        <div key={req.id} className="bg-white border border-stone-100 rounded-xl p-3 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                            <div>
+                                <p className="text-sm font-bold text-stone-800">{req.name}</p>
+                                <p className="text-xs text-stone-500">Telefone: {req.phone}</p>
+                                <p className="text-xs text-stone-500">Email: {req.email || 'Não informado'}</p>
+                                <p className="text-[11px] text-stone-400">
+                                    Solicitado em {new Date(req.createdAt).toLocaleString('pt-BR', { timeZone: 'America/Fortaleza' })}
+                                </p>
+                            </div>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => handleReject(req)}
+                                    disabled={saving}
+                                    className="px-3 py-1.5 text-xs font-bold text-stone-700 bg-stone-100 rounded-lg hover:bg-stone-200 disabled:opacity-50"
+                                >
+                                    Rejeitar
+                                </button>
+                                <button
+                                    onClick={() => handleApprove(req)}
+                                    disabled={saving}
+                                    className="px-3 py-1.5 text-xs font-bold text-white bg-amber-500 rounded-lg hover:bg-amber-600 disabled:opacity-50"
+                                >
+                                    Aprovar
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+
+                    {filteredPending.length === 0 && (
+                        <p className="text-sm text-stone-500 italic">Nenhuma solicitação pendente.</p>
+                    )}
+                </div>
+            </div>
+
+            <div className="space-y-3">
+                <h3 className="font-bold text-stone-800">Decisões Recentes</h3>
+                <div className="space-y-2">
+                    {recentDecisions.map(req => (
+                        <div key={req.id} className="bg-stone-50 border border-stone-100 rounded-xl p-3">
+                            <p className="text-sm font-bold text-stone-800">{req.name}</p>
+                            <p className="text-xs text-stone-500">
+                                {req.status === 'approved' ? 'Aprovado' : 'Rejeitado'} • {req.phone}
+                            </p>
+                            {req.rejectionReason && (
+                                <p className="text-xs text-red-500 mt-1">Motivo: {req.rejectionReason}</p>
+                            )}
+                            {req.decidedAt && (
+                                <p className="text-[11px] text-stone-400 mt-1">
+                                    Decisão em {new Date(req.decidedAt).toLocaleString('pt-BR', { timeZone: 'America/Fortaleza' })}
+                                </p>
+                            )}
+                        </div>
+                    ))}
+                    {recentDecisions.length === 0 && (
+                        <p className="text-sm text-stone-500 italic">Sem decisões recentes.</p>
+                    )}
+                </div>
+            </div>
         </div>
     );
 };
@@ -1179,6 +1359,7 @@ export const AdminPanel: React.FC = () => {
             case 'professores': return <AdminProfessors />;
             case 'regras': return <AdminRules />;
             case 'avisos': return <AnunciosTab />;
+            case 'acessos': return <AcessosTab />;
             case 'socios': return <SociosTab />;
             case 'alunos': return <AdminStudents />;
             default: return <Dashboard />;

@@ -1,39 +1,161 @@
 import React, { useState } from 'react';
-import { Mail, Lock, Phone, AlertCircle, Loader2, CheckCircle2, Shield } from 'lucide-react';
+import { Mail, Lock, Phone, AlertCircle, Loader2, CheckCircle2, Shield, KeyRound, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 export const Auth: React.FC = () => {
-    const { signInWithEmail, signInWithPhone, _signUpWithEmail } = useAuth();
+    const {
+        signInWithEmail,
+        startPhoneOtp,
+        verifyPhoneOtp,
+        submitAccessRequest,
+        signInWithPhoneLegacy
+    } = useAuth();
 
-    // UI State
     const [isAdminMode, setIsAdminMode] = useState(false);
     const [loading, setLoading] = useState(false);
     const [errorMsg, setErrorMsg] = useState('');
     const [infoMsg, setInfoMsg] = useState('');
 
-    // Form Data
     const [phone, setPhone] = useState('');
+    const [otpCode, setOtpCode] = useState('');
+    const [otpPhone, setOtpPhone] = useState('');
+    const [requestName, setRequestName] = useState('');
+    const [requestEmail, setRequestEmail] = useState('');
+    const [authStep, setAuthStep] = useState<'phone' | 'otp' | 'request'>('phone');
+
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
-    const handlePhoneLogin = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!phone.trim()) return;
-        setLoading(true);
+    const resetMessages = () => {
         setErrorMsg('');
         setInfoMsg('');
+    };
+
+    const resetAthleteFlow = () => {
+        setAuthStep('phone');
+        setOtpCode('');
+        setOtpPhone('');
+        setRequestName('');
+        setRequestEmail('');
+        resetMessages();
+    };
+
+    const handleSendOtp = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!phone.trim()) return;
+
+        setLoading(true);
+        resetMessages();
 
         try {
-            const res = await signInWithPhone(phone);
+            const res = await startPhoneOtp(phone);
+
+            if (!res.success) {
+                if (res.phoneNotFound || res.needsRequest) {
+                    setAuthStep('request');
+                    setInfoMsg('Telefone não encontrado. Envie uma solicitação de acesso.');
+                    return;
+                }
+
+                if (res.needsApproval) {
+                    setInfoMsg(res.error || 'Seu acesso está pendente de aprovação pelo administrador.');
+                    return;
+                }
+
+                setErrorMsg(res.error || 'Erro ao enviar código OTP.');
+                return;
+            }
+
+            setOtpPhone(res.otpPhone || phone);
+            setAuthStep('otp');
+            setInfoMsg(res.message || 'Código OTP enviado.');
+        } catch (err: any) {
+            setErrorMsg(err.message || 'Erro inesperado ao enviar OTP.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleVerifyOtp = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!otpCode.trim()) return;
+
+        setLoading(true);
+        resetMessages();
+
+        try {
+            const res = await verifyPhoneOtp(otpPhone || phone, otpCode);
             if (!res.success) {
                 if (res.needsApproval) {
-                    setInfoMsg('Seu acesso está pendente de aprovação pelo administrador.');
-                } else {
-                    setErrorMsg(res.error || 'Erro ao entrar.');
+                    setInfoMsg(res.error || 'Seu acesso está pendente de aprovação.');
+                    return;
                 }
+                setErrorMsg(res.error || 'Código inválido ou expirado.');
             }
         } catch (err: any) {
-            setErrorMsg(err.message || 'Erro inesperado.');
+            setErrorMsg(err.message || 'Erro inesperado ao validar OTP.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleSubmitAccessRequest = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!requestName.trim() || !phone.trim()) return;
+
+        setLoading(true);
+        resetMessages();
+
+        try {
+            const res = await submitAccessRequest({
+                name: requestName,
+                phone,
+                email: requestEmail || undefined
+            });
+
+            if (!res.success) {
+                setErrorMsg(res.error || 'Erro ao enviar solicitação.');
+                return;
+            }
+
+            setInfoMsg(res.message || 'Solicitação enviada com sucesso.');
+            setAuthStep('phone');
+            setRequestName('');
+            setRequestEmail('');
+        } catch (err: any) {
+            setErrorMsg(err.message || 'Erro inesperado ao enviar solicitação.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleLegacyLogin = async () => {
+        if (!phone.trim()) {
+            setErrorMsg('Digite seu telefone para usar o login legado.');
+            return;
+        }
+
+        setLoading(true);
+        resetMessages();
+
+        try {
+            const res = await signInWithPhoneLegacy(phone);
+            if (!res.success) {
+                if (res.phoneNotFound || res.needsRequest) {
+                    setAuthStep('request');
+                    setInfoMsg('Telefone não encontrado. Envie uma solicitação de acesso.');
+                    return;
+                }
+
+                if (res.needsApproval) {
+                    setInfoMsg(res.error || 'Seu acesso está pendente de aprovação pelo administrador.');
+                    return;
+                }
+
+                setErrorMsg(res.error || 'Erro no login legado.');
+            }
+        } catch (err: any) {
+            setErrorMsg(err.message || 'Erro inesperado no login legado.');
         } finally {
             setLoading(false);
         }
@@ -76,57 +198,199 @@ export const Auth: React.FC = () => {
 
                 <div className="p-8">
                     {!isAdminMode ? (
-                        /* PHONE LOGIN (DEFAULT FOR SÓCIOS) */
                         <>
                             <div className="mb-6 text-center">
-                                <h2 className="text-xl font-bold text-stone-800">Boas-vindas!</h2>
+                                <h2 className="text-xl font-bold text-stone-800">Acesso de Atleta</h2>
                                 <p className="text-stone-500 text-sm mt-1">
-                                    Digite seu telefone cadastrado para entrar.
+                                    {authStep === 'phone' && 'Digite seu telefone para receber o código OTP.'}
+                                    {authStep === 'otp' && 'Digite o código recebido por SMS.'}
+                                    {authStep === 'request' && 'Complete os dados para solicitar acesso ao clube.'}
                                 </p>
                             </div>
 
-                            <form onSubmit={handlePhoneLogin} className="space-y-4">
-                                <div className="space-y-1">
-                                    <label className="text-xs font-bold text-stone-500 uppercase ml-1">Celular</label>
-                                    <div className="relative">
-                                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" size={18} />
+                            {authStep === 'phone' && (
+                                <form onSubmit={handleSendOtp} className="space-y-4">
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-bold text-stone-500 uppercase ml-1">Celular</label>
+                                        <div className="relative">
+                                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" size={18} />
+                                            <input
+                                                type="tel"
+                                                required
+                                                value={phone}
+                                                onChange={(e) => setPhone(e.target.value)}
+                                                className="w-full pl-10 pr-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-saibro-500 transition-all text-sm"
+                                                placeholder="(88) 99999-9999"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {errorMsg && (
+                                        <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-xl text-sm flex items-center gap-2">
+                                            <AlertCircle size={16} />
+                                            {errorMsg}
+                                        </div>
+                                    )}
+
+                                    {infoMsg && (
+                                        <div className="bg-amber-50 border border-amber-200 text-amber-700 p-3 rounded-xl text-sm flex items-center gap-2">
+                                            <CheckCircle2 size={16} />
+                                            {infoMsg}
+                                        </div>
+                                    )}
+
+                                    <button
+                                        type="submit"
+                                        disabled={loading}
+                                        className="w-full py-4 bg-saibro-600 hover:bg-saibro-700 disabled:bg-saibro-400 text-white font-bold rounded-xl shadow-lg shadow-orange-200 transition-all flex items-center justify-center gap-2"
+                                    >
+                                        {loading ? <Loader2 className="animate-spin" size={20} /> : 'Enviar código OTP'}
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={handleLegacyLogin}
+                                        disabled={loading}
+                                        className="w-full py-3 bg-stone-100 hover:bg-stone-200 disabled:opacity-60 text-stone-700 font-bold rounded-xl transition-all flex items-center justify-center gap-2"
+                                    >
+                                        <KeyRound size={16} /> Entrar com login legado
+                                    </button>
+                                </form>
+                            )}
+
+                            {authStep === 'otp' && (
+                                <form onSubmit={handleVerifyOtp} className="space-y-4">
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-bold text-stone-500 uppercase ml-1">Código OTP</label>
                                         <input
-                                            type="tel"
+                                            type="text"
+                                            inputMode="numeric"
                                             required
-                                            value={phone}
-                                            onChange={(e) => setPhone(e.target.value)}
-                                            className="w-full pl-10 pr-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-saibro-500 transition-all text-sm"
-                                            placeholder="(88) 99999-9999"
+                                            value={otpCode}
+                                            onChange={(e) => setOtpCode(e.target.value)}
+                                            className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-saibro-500 transition-all text-sm tracking-[0.3em] text-center"
+                                            placeholder="123456"
                                         />
                                     </div>
-                                </div>
 
-                                {errorMsg && (
-                                    <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-xl text-sm flex items-center gap-2">
-                                        <AlertCircle size={16} />
-                                        {errorMsg}
+                                    {errorMsg && (
+                                        <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-xl text-sm flex items-center gap-2">
+                                            <AlertCircle size={16} />
+                                            {errorMsg}
+                                        </div>
+                                    )}
+
+                                    {infoMsg && (
+                                        <div className="bg-amber-50 border border-amber-200 text-amber-700 p-3 rounded-xl text-sm flex items-center gap-2">
+                                            <CheckCircle2 size={16} />
+                                            {infoMsg}
+                                        </div>
+                                    )}
+
+                                    <button
+                                        type="submit"
+                                        disabled={loading}
+                                        className="w-full py-4 bg-saibro-600 hover:bg-saibro-700 disabled:bg-saibro-400 text-white font-bold rounded-xl shadow-lg shadow-orange-200 transition-all flex items-center justify-center gap-2"
+                                    >
+                                        {loading ? <Loader2 className="animate-spin" size={20} /> : 'Validar código'}
+                                    </button>
+
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={handleSendOtp}
+                                            disabled={loading}
+                                            className="py-2.5 bg-stone-100 text-stone-700 font-medium rounded-xl hover:bg-stone-200"
+                                        >
+                                            Reenviar OTP
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={resetAthleteFlow}
+                                            disabled={loading}
+                                            className="py-2.5 bg-stone-100 text-stone-700 font-medium rounded-xl hover:bg-stone-200"
+                                        >
+                                            Voltar
+                                        </button>
                                     </div>
-                                )}
+                                </form>
+                            )}
 
-                                {infoMsg && (
-                                    <div className="bg-amber-50 border border-amber-200 text-amber-700 p-3 rounded-xl text-sm flex items-center gap-2">
-                                        <CheckCircle2 size={16} />
-                                        {infoMsg}
+                            {authStep === 'request' && (
+                                <form onSubmit={handleSubmitAccessRequest} className="space-y-4">
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-bold text-stone-500 uppercase ml-1">Nome</label>
+                                        <input
+                                            type="text"
+                                            value={requestName}
+                                            onChange={(e) => setRequestName(e.target.value)}
+                                            className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-saibro-500 transition-all text-sm"
+                                            placeholder="Nome completo"
+                                            required
+                                        />
                                     </div>
-                                )}
 
-                                <button
-                                    type="submit"
-                                    disabled={loading}
-                                    className="w-full py-4 bg-saibro-600 hover:bg-saibro-700 disabled:bg-saibro-400 text-white font-bold rounded-xl shadow-lg shadow-orange-200 transition-all flex items-center justify-center gap-2"
-                                >
-                                    {loading ? <Loader2 className="animate-spin" size={20} /> : 'Entrar'}
-                                </button>
-                            </form>
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-bold text-stone-500 uppercase ml-1">Celular</label>
+                                        <input
+                                            type="tel"
+                                            value={phone}
+                                            onChange={(e) => setPhone(e.target.value)}
+                                            className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-saibro-500 transition-all text-sm"
+                                            placeholder="(88) 99999-9999"
+                                            required
+                                        />
+                                    </div>
+
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-bold text-stone-500 uppercase ml-1">Email (opcional)</label>
+                                        <input
+                                            type="email"
+                                            value={requestEmail}
+                                            onChange={(e) => setRequestEmail(e.target.value)}
+                                            className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-saibro-500 transition-all text-sm"
+                                            placeholder="voce@email.com"
+                                        />
+                                    </div>
+
+                                    {errorMsg && (
+                                        <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-xl text-sm flex items-center gap-2">
+                                            <AlertCircle size={16} />
+                                            {errorMsg}
+                                        </div>
+                                    )}
+
+                                    {infoMsg && (
+                                        <div className="bg-amber-50 border border-amber-200 text-amber-700 p-3 rounded-xl text-sm flex items-center gap-2">
+                                            <CheckCircle2 size={16} />
+                                            {infoMsg}
+                                        </div>
+                                    )}
+
+                                    <button
+                                        type="submit"
+                                        disabled={loading}
+                                        className="w-full py-4 bg-saibro-600 hover:bg-saibro-700 disabled:bg-saibro-400 text-white font-bold rounded-xl shadow-lg shadow-orange-200 transition-all flex items-center justify-center gap-2"
+                                    >
+                                        {loading ? <Loader2 className="animate-spin" size={20} /> : 'Enviar solicitação'}
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={resetAthleteFlow}
+                                        className="w-full py-2.5 bg-stone-100 text-stone-700 font-medium rounded-xl hover:bg-stone-200 flex items-center justify-center gap-2"
+                                    >
+                                        <ArrowLeft size={14} /> Voltar para login
+                                    </button>
+                                </form>
+                            )}
 
                             <div className="mt-6 flex flex-col gap-2 text-center">
                                 <button
-                                    onClick={() => setIsAdminMode(true)}
+                                    onClick={() => {
+                                        setIsAdminMode(true);
+                                        resetAthleteFlow();
+                                    }}
                                     className="text-stone-400 hover:text-stone-600 text-xs font-medium flex items-center justify-center gap-1"
                                 >
                                     <Shield size={14} /> Área do Administrador
@@ -134,7 +398,6 @@ export const Auth: React.FC = () => {
                             </div>
                         </>
                     ) : (
-                        /* ADMIN LOGIN (EMAIL + PASSWORD) */
                         <>
                             <div className="mb-6 text-center">
                                 <h2 className="text-xl font-bold text-stone-800 flex items-center justify-center gap-2">
@@ -194,10 +457,13 @@ export const Auth: React.FC = () => {
 
                             <div className="mt-6 text-center">
                                 <button
-                                    onClick={() => { setIsAdminMode(false); setErrorMsg(''); }}
+                                    onClick={() => {
+                                        setIsAdminMode(false);
+                                        setErrorMsg('');
+                                    }}
                                     className="text-saibro-600 hover:text-saibro-700 text-sm font-medium hover:underline"
                                 >
-                                    ← Voltar para login de sócio
+                                    ← Voltar para acesso de atleta
                                 </button>
                             </div>
                         </>
