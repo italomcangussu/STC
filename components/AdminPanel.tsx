@@ -1030,6 +1030,17 @@ const AcessosTab: React.FC = () => {
         });
 
         if (error) {
+            const response = (error as any)?.context;
+            if (response && typeof response.json === 'function') {
+                try {
+                    const body = await response.json();
+                    if (body?.error) {
+                        throw new Error(body.error);
+                    }
+                } catch {
+                    // Ignore parse errors and fallback to default Supabase error
+                }
+            }
             throw error;
         }
 

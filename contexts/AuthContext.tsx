@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { User } from '../types';
-import { buildPhoneCandidates, normalizePhoneBr, normalizePhoneDigits, toE164Phone } from '../lib/phoneAuth';
+import { buildPhoneCandidates, normalizePhoneBr, normalizePhoneDigits } from '../lib/phoneAuth';
 
 interface AuthActionResult {
     success: boolean;
@@ -48,7 +48,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [currentUser, setCurrentUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
 
-    const fetchProfile = async (userId: string) => {
+    const mapProfileToUser = (data: any): User => ({
+        id: data.id,
+        name: data.name,
+        email: data.email || '',
+        phone: data.phone || '',
+        role: data.role,
+        balance: data.balance,
+        avatar: data.avatar_url,
+        category: data.category,
+        isProfessor: data.is_professor,
+        isActive: data.is_active,
+        age: data.age
+    });
+
+    const fetchProfileById = async (userId: string) => {
         try {
             const { data, error } = await supabase
                 .from('profiles')
@@ -57,28 +71,120 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 .single();
 
             if (error) {
-                console.error('Error fetching profile:', error);
                 return null;
             }
 
-            const user: User = {
-                id: data.id,
-                name: data.name,
-                email: data.email,
-                phone: data.phone || '',
-                role: data.role,
-                balance: data.balance,
-                avatar: data.avatar_url,
-                category: data.category,
-                isProfessor: data.is_professor,
-                isActive: data.is_active,
-                age: data.age
-            };
-            return user;
+            return mapProfileToUser(data);
         } catch (err) {
             console.error('Unexpected error fetching profile:', err);
             return null;
         }
+    };
+
+    const fetchProfileByPhone = async (phoneCandidates: string[]) => {
+        if (phoneCandidates.length === 0) return null;
+
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .in('phone', phoneCandidates)
+            .order('is_active', { ascending: false })
+            .limit(5);
+
+        if (error) {
+            return null;
+        }
+
+        const selected = data?.[0];
+        return selected ? mapProfileToUser(selected) : null;
+    };
+
+    const resolveProfileFromAuthUser = async (authUser: any, explicitPhone?: string) => {
+        if (!authUser) return null;
+
+        const byId = await fetchProfileById(authUser.id);
+        if (byId) return byId;
+
+        const phoneSet = new Set<string>();
+        const addPhone = (value?: string | null) => {
+            if (!value) return;
+            buildPhoneCandidates(value).forEach(candidate => phoneSet.add(candidate));
+        };
+
+        addPhone(explicitPhone);
+        addPhone(authUser.phone);
+        addPhone(authUser.user_metadata?.phone);
+
+        const legacyEmail = String(authUser.email || '').trim();
+        const match = legacyEmail.match(/^(\d{10,13})@reserva\.com$/i);
+        if (match?.[1]) {
+            addPhone(match[1]);
+        }
+
+        return fetchProfileByPhone(Array.from(phoneSet));
+    };
+
+    const upsertPendingAccessRequest = async (formData: AccessRequestInput): Promise<AuthActionResult> => {
+        const name = (formData.name || '').trim();
+        const email = (formData.email || '').trim();
+        const normalizedPhone = normalizePhoneBr(formData.phone || '');
+
+        if (!name) {
+            return { success: false, error: 'Nome é obrigatório.' };
+        }
+
+        if (!normalizedPhone) {
+            return { success: false, error: 'Telefone inválido.' };
+        }
+
+        const payload = {
+            name,
+            phone: normalizedPhone,
+            phone_normalized: normalizedPhone,
+            email: email || null,
+            status: 'pending'
+        };
+
+        const { error: insertError } = await supabase
+            .from('access_requests')
+            .insert(payload);
+
+        if (!insertError) {
+            return {
+                success: true,
+                message: 'Solicitação enviada com sucesso. Aguarde aprovação do administrador.'
+            };
+        }
+
+        if (insertError.code === '23505') {
+            const { error: updateError } = await supabase
+                .from('access_requests')
+                .update({
+                    name,
+                    phone: normalizedPhone,
+                    email: email || null,
+                    status: 'pending',
+                    rejection_reason: null,
+                    decided_by: null,
+                    decided_at: null
+                })
+                .eq('phone_normalized', normalizedPhone)
+                .in('status', ['pending', 'rejected']);
+
+            if (!updateError) {
+                return {
+                    success: true,
+                    message: 'Solicitação já existente foi atualizada e está pendente de análise.'
+                };
+            }
+
+            return {
+                success: true,
+                message: 'Já existe uma solicitação para este telefone. Aguarde análise do administrador.'
+            };
+        }
+
+        return { success: false, error: insertError.message || 'Erro ao enviar solicitação.' };
     };
 
     useEffect(() => {
@@ -86,9 +192,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         const handleUserSession = async (session: any) => {
             if (session?.user) {
-                const profile = await fetchProfile(session.user.id);
+                const profile = await resolveProfileFromAuthUser(session.user);
                 if (mounted && profile) {
                     setCurrentUser(profile);
+                } else if (mounted) {
+                    setCurrentUser(null);
                 }
             } else if (mounted) {
                 setCurrentUser(null);
@@ -128,7 +236,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
 
         if (data.user) {
-            const profile = await fetchProfile(data.user.id);
+            const profile = await resolveProfileFromAuthUser(data.user);
             if (profile) {
                 setCurrentUser(profile);
                 return { success: true };
@@ -141,114 +249,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { success: false, error: 'Erro desconhecido.' };
     };
 
-    const startPhoneOtp = async (phone: string): Promise<AuthActionResult> => {
-        const normalizedPhone = normalizePhoneBr(phone);
-        if (!normalizedPhone) {
-            return { success: false, error: 'Telefone inválido.' };
-        }
-
-        const phoneCandidates = buildPhoneCandidates(phone);
-
-        const { data: profiles, error: profileError } = await supabase
-            .from('profiles')
-            .select('id, name, email, phone, role, is_active')
-            .in('phone', phoneCandidates)
-            .limit(1);
-
-        if (profileError) {
-            return { success: false, error: 'Erro ao consultar cadastro. Tente novamente.' };
-        }
-
-        const profile = profiles?.[0];
-
-        if (!profile) {
-            return {
-                success: false,
-                phoneNotFound: true,
-                needsRequest: true,
-                error: 'Telefone não encontrado. Solicite acesso ao administrador.'
-            };
-        }
-
-        if (!profile.is_active) {
-            return {
-                success: false,
-                needsApproval: true,
-                error: 'Acesso pendente de aprovação pelo administrador.'
-            };
-        }
-
-        const otpPhone = toE164Phone(profile.phone || normalizedPhone);
-
-        const { error: otpError } = await supabase.auth.signInWithOtp({
-            phone: otpPhone,
-            options: {
-                shouldCreateUser: false,
-                channel: 'sms'
-            }
-        });
-
-        if (otpError) {
-            const msg = otpError.message?.toLowerCase?.() || '';
-            if (msg.includes('not found') || msg.includes('user_not_found')) {
-                return {
-                    success: false,
-                    error: 'Conta ainda não provisionada para OTP. Use o login legado.'
-                };
-            }
-
-            return {
-                success: false,
-                error: otpError.message || 'Não foi possível enviar o código OTP.'
-            };
-        }
-
+    const startPhoneOtp = async (_phone: string): Promise<AuthActionResult> => {
         return {
-            success: true,
-            message: 'Código OTP enviado por SMS.',
-            otpPhone
+            success: false,
+            error: 'OTP desativado. Use login legado por telefone.'
         };
     };
 
-    const verifyPhoneOtp = async (phone: string, token: string): Promise<AuthActionResult> => {
-        const otpPhone = toE164Phone(phone);
-        if (!otpPhone || !token?.trim()) {
-            return { success: false, error: 'Telefone e código OTP são obrigatórios.' };
-        }
-
-        const { data, error } = await supabase.auth.verifyOtp({
-            phone: otpPhone,
-            token: token.trim(),
-            type: 'sms'
-        });
-
-        if (error) {
-            return { success: false, error: error.message || 'Código inválido ou expirado.' };
-        }
-
-        if (!data.user) {
-            return { success: false, error: 'Sessão não criada após validação do OTP.' };
-        }
-
-        const profile = await fetchProfile(data.user.id);
-        if (!profile) {
-            await supabase.auth.signOut();
-            return { success: false, error: 'Usuário autenticado, mas sem perfil. Contate o administrador.' };
-        }
-
-        if (!profile.isActive) {
-            await supabase.auth.signOut();
-            return { success: false, needsApproval: true, error: 'Acesso pendente de aprovação.' };
-        }
-
-        setCurrentUser(profile);
-        return { success: true };
+    const verifyPhoneOtp = async (_phone: string, _token: string): Promise<AuthActionResult> => {
+        return {
+            success: false,
+            error: 'OTP desativado. Use login legado por telefone.'
+        };
     };
 
     const submitAccessRequest = async (formData: AccessRequestInput): Promise<AuthActionResult> => {
         const name = (formData.name || '').trim();
-        const email = (formData.email || '').trim();
-        const phoneDigits = normalizePhoneDigits(formData.phone || '');
         const normalizedPhone = normalizePhoneBr(formData.phone || '');
 
         if (!name) {
@@ -275,29 +291,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             return { success: false, error: 'Este telefone já está cadastrado no clube.' };
         }
 
-        const payload = {
-            name,
-            phone: phoneDigits,
-            phone_normalized: normalizedPhone,
-            email: email || null,
-            status: 'pending',
-            rejection_reason: null,
-            decided_by: null,
-            decided_at: null
-        };
-
-        const { error } = await supabase
-            .from('access_requests')
-            .upsert(payload, { onConflict: 'phone_normalized' });
-
-        if (error) {
-            return { success: false, error: error.message || 'Erro ao enviar solicitação.' };
-        }
-
-        return {
-            success: true,
-            message: 'Solicitação enviada com sucesso. Aguarde aprovação do administrador.'
-        };
+        return upsertPendingAccessRequest(formData);
     };
 
     const processLegacyPhoneLogin = async (profile: any): Promise<AuthActionResult> => {
@@ -311,7 +305,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const fallbackEmail = `${normalizedPhone}@reserva.com`;
         const loginEmail = profile.email || fallbackEmail;
 
-        if (!profile.email) {
+        if (!profile.email || !String(profile.email).trim()) {
             await supabase.from('profiles').update({ email: loginEmail }).eq('id', profile.id);
         }
 
@@ -321,53 +315,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
 
         if (error) {
-            const { error: signUpError } = await supabase.auth.signUp({
-                email: loginEmail,
-                password: generatedPassword,
-                options: {
-                    data: {
-                        name: profile.name,
-                        phone: normalizedPhone
-                    }
-                }
-            });
-
-            if (signUpError) {
+            if (error.status === 429) {
                 return {
                     success: false,
-                    error: `Login legado falhou: ${error.message}. Cadastro legado falhou: ${signUpError.message}`
+                    error: 'Muitas tentativas seguidas. Aguarde alguns minutos e tente novamente.'
                 };
             }
 
-            const { data: retryData, error: retryError } = await supabase.auth.signInWithPassword({
-                email: loginEmail,
-                password: generatedPassword,
+            const requestResult = await upsertPendingAccessRequest({
+                name: profile.name || 'Atleta',
+                phone: normalizedPhone,
+                email: profile.email || undefined
             });
 
-            if (retryError) {
-                return { success: false, error: 'Erro ao autenticar após cadastro legado.' };
+            if (requestResult.success) {
+                return {
+                    success: false,
+                    needsApproval: true,
+                    error: 'Telefone ainda não habilitado no acesso legado. Pedido enviado para aprovação do administrador.'
+                };
             }
 
-            if (retryData.user) {
-                if (profile.id !== retryData.user.id) {
-                    await supabase.from('profiles').update({ id: retryData.user.id }).eq('id', profile.id);
-                }
-                const freshProfile = await fetchProfile(retryData.user.id);
-                if (freshProfile) {
-                    setCurrentUser(freshProfile);
-                    return { success: true };
-                }
-                return { success: false, error: 'Login legado realizado, mas erro ao carregar perfil.' };
-            }
+            return {
+                success: false,
+                needsApproval: true,
+                error: requestResult.error || 'Acesso não habilitado. Solicite aprovação do administrador.'
+            };
         }
 
         if (data?.user) {
-            const fetchedProfile = await fetchProfile(data.user.id);
+            const fetchedProfile = await resolveProfileFromAuthUser(data.user, normalizedPhone);
             if (fetchedProfile) {
                 setCurrentUser(fetchedProfile);
                 return { success: true };
             }
-            return { success: false, error: 'Login legado realizado, mas erro ao carregar perfil.' };
+
+            await supabase.auth.signOut();
+            return { success: false, error: 'Login realizado, mas perfil não encontrado para este telefone.' };
         }
 
         return { success: false, error: 'Erro desconhecido no login legado.' };
@@ -380,6 +364,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .from('profiles')
             .select('*')
             .in('phone', phoneCandidates)
+            .order('is_active', { ascending: false })
             .limit(1);
 
         if (profileError) {
@@ -432,7 +417,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 console.error('Profile creation error:', profError);
             }
 
-            const profile = await fetchProfile(data.user.id);
+            const profile = await resolveProfileFromAuthUser(data.user, formData.phone);
             setCurrentUser(profile);
             return { success: true };
         }

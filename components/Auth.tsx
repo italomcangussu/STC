@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
-import { Mail, Lock, Phone, AlertCircle, Loader2, CheckCircle2, Shield, KeyRound, ArrowLeft } from 'lucide-react';
+import { Mail, Lock, Phone, AlertCircle, Loader2, CheckCircle2, Shield, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 export const Auth: React.FC = () => {
     const {
         signInWithEmail,
-        startPhoneOtp,
-        verifyPhoneOtp,
         submitAccessRequest,
         signInWithPhoneLegacy
     } = useAuth();
@@ -17,11 +15,9 @@ export const Auth: React.FC = () => {
     const [infoMsg, setInfoMsg] = useState('');
 
     const [phone, setPhone] = useState('');
-    const [otpCode, setOtpCode] = useState('');
-    const [otpPhone, setOtpPhone] = useState('');
     const [requestName, setRequestName] = useState('');
     const [requestEmail, setRequestEmail] = useState('');
-    const [authStep, setAuthStep] = useState<'phone' | 'otp' | 'request'>('phone');
+    const [authStep, setAuthStep] = useState<'phone' | 'request'>('phone');
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -33,23 +29,23 @@ export const Auth: React.FC = () => {
 
     const resetAthleteFlow = () => {
         setAuthStep('phone');
-        setOtpCode('');
-        setOtpPhone('');
         setRequestName('');
         setRequestEmail('');
         resetMessages();
     };
 
-    const handleSendOtp = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!phone.trim()) return;
+    const handleLegacyLogin = async (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
+        if (!phone.trim()) {
+            setErrorMsg('Digite seu telefone para entrar.');
+            return;
+        }
 
         setLoading(true);
         resetMessages();
 
         try {
-            const res = await startPhoneOtp(phone);
-
+            const res = await signInWithPhoneLegacy(phone);
             if (!res.success) {
                 if (res.phoneNotFound || res.needsRequest) {
                     setAuthStep('request');
@@ -62,38 +58,10 @@ export const Auth: React.FC = () => {
                     return;
                 }
 
-                setErrorMsg(res.error || 'Erro ao enviar código OTP.');
-                return;
-            }
-
-            setOtpPhone(res.otpPhone || phone);
-            setAuthStep('otp');
-            setInfoMsg(res.message || 'Código OTP enviado.');
-        } catch (err: any) {
-            setErrorMsg(err.message || 'Erro inesperado ao enviar OTP.');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleVerifyOtp = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!otpCode.trim()) return;
-
-        setLoading(true);
-        resetMessages();
-
-        try {
-            const res = await verifyPhoneOtp(otpPhone || phone, otpCode);
-            if (!res.success) {
-                if (res.needsApproval) {
-                    setInfoMsg(res.error || 'Seu acesso está pendente de aprovação.');
-                    return;
-                }
-                setErrorMsg(res.error || 'Código inválido ou expirado.');
+                setErrorMsg(res.error || 'Erro no login legado.');
             }
         } catch (err: any) {
-            setErrorMsg(err.message || 'Erro inesperado ao validar OTP.');
+            setErrorMsg(err.message || 'Erro inesperado no login legado.');
         } finally {
             setLoading(false);
         }
@@ -124,38 +92,6 @@ export const Auth: React.FC = () => {
             setRequestEmail('');
         } catch (err: any) {
             setErrorMsg(err.message || 'Erro inesperado ao enviar solicitação.');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleLegacyLogin = async () => {
-        if (!phone.trim()) {
-            setErrorMsg('Digite seu telefone para usar o login legado.');
-            return;
-        }
-
-        setLoading(true);
-        resetMessages();
-
-        try {
-            const res = await signInWithPhoneLegacy(phone);
-            if (!res.success) {
-                if (res.phoneNotFound || res.needsRequest) {
-                    setAuthStep('request');
-                    setInfoMsg('Telefone não encontrado. Envie uma solicitação de acesso.');
-                    return;
-                }
-
-                if (res.needsApproval) {
-                    setInfoMsg(res.error || 'Seu acesso está pendente de aprovação pelo administrador.');
-                    return;
-                }
-
-                setErrorMsg(res.error || 'Erro no login legado.');
-            }
-        } catch (err: any) {
-            setErrorMsg(err.message || 'Erro inesperado no login legado.');
         } finally {
             setLoading(false);
         }
@@ -202,14 +138,13 @@ export const Auth: React.FC = () => {
                             <div className="mb-6 text-center">
                                 <h2 className="text-xl font-bold text-stone-800">Acesso de Atleta</h2>
                                 <p className="text-stone-500 text-sm mt-1">
-                                    {authStep === 'phone' && 'Digite seu telefone para receber o código OTP.'}
-                                    {authStep === 'otp' && 'Digite o código recebido por SMS.'}
+                                    {authStep === 'phone' && 'Digite seu telefone para entrar.'}
                                     {authStep === 'request' && 'Complete os dados para solicitar acesso ao clube.'}
                                 </p>
                             </div>
 
                             {authStep === 'phone' && (
-                                <form onSubmit={handleSendOtp} className="space-y-4">
+                                <form onSubmit={handleLegacyLogin} className="space-y-4">
                                     <div className="space-y-1">
                                         <label className="text-xs font-bold text-stone-500 uppercase ml-1">Celular</label>
                                         <div className="relative">
@@ -244,75 +179,8 @@ export const Auth: React.FC = () => {
                                         disabled={loading}
                                         className="w-full py-4 bg-saibro-600 hover:bg-saibro-700 disabled:bg-saibro-400 text-white font-bold rounded-xl shadow-lg shadow-orange-200 transition-all flex items-center justify-center gap-2"
                                     >
-                                        {loading ? <Loader2 className="animate-spin" size={20} /> : 'Enviar código OTP'}
+                                        {loading ? <Loader2 className="animate-spin" size={20} /> : 'Entrar'}
                                     </button>
-
-                                    <button
-                                        type="button"
-                                        onClick={handleLegacyLogin}
-                                        disabled={loading}
-                                        className="w-full py-3 bg-stone-100 hover:bg-stone-200 disabled:opacity-60 text-stone-700 font-bold rounded-xl transition-all flex items-center justify-center gap-2"
-                                    >
-                                        <KeyRound size={16} /> Entrar com login legado
-                                    </button>
-                                </form>
-                            )}
-
-                            {authStep === 'otp' && (
-                                <form onSubmit={handleVerifyOtp} className="space-y-4">
-                                    <div className="space-y-1">
-                                        <label className="text-xs font-bold text-stone-500 uppercase ml-1">Código OTP</label>
-                                        <input
-                                            type="text"
-                                            inputMode="numeric"
-                                            required
-                                            value={otpCode}
-                                            onChange={(e) => setOtpCode(e.target.value)}
-                                            className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-saibro-500 transition-all text-sm tracking-[0.3em] text-center"
-                                            placeholder="123456"
-                                        />
-                                    </div>
-
-                                    {errorMsg && (
-                                        <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-xl text-sm flex items-center gap-2">
-                                            <AlertCircle size={16} />
-                                            {errorMsg}
-                                        </div>
-                                    )}
-
-                                    {infoMsg && (
-                                        <div className="bg-amber-50 border border-amber-200 text-amber-700 p-3 rounded-xl text-sm flex items-center gap-2">
-                                            <CheckCircle2 size={16} />
-                                            {infoMsg}
-                                        </div>
-                                    )}
-
-                                    <button
-                                        type="submit"
-                                        disabled={loading}
-                                        className="w-full py-4 bg-saibro-600 hover:bg-saibro-700 disabled:bg-saibro-400 text-white font-bold rounded-xl shadow-lg shadow-orange-200 transition-all flex items-center justify-center gap-2"
-                                    >
-                                        {loading ? <Loader2 className="animate-spin" size={20} /> : 'Validar código'}
-                                    </button>
-
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <button
-                                            type="button"
-                                            onClick={handleSendOtp}
-                                            disabled={loading}
-                                            className="py-2.5 bg-stone-100 text-stone-700 font-medium rounded-xl hover:bg-stone-200"
-                                        >
-                                            Reenviar OTP
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={resetAthleteFlow}
-                                            disabled={loading}
-                                            className="py-2.5 bg-stone-100 text-stone-700 font-medium rounded-xl hover:bg-stone-200"
-                                        >
-                                            Voltar
-                                        </button>
-                                    </div>
                                 </form>
                             )}
 

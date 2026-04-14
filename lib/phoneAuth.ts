@@ -4,31 +4,31 @@ export const normalizePhoneBr = (phone: string): string => {
     const digits = normalizePhoneDigits(phone);
     if (!digits) return '';
 
-    if (digits.startsWith('55') && digits.length >= 12) {
-        return digits;
+    // Keep storage local (DDD + number), without country code
+    let local = digits;
+
+    if (local.startsWith('55') && local.length >= 12) {
+        local = local.slice(2);
     }
 
-    if (digits.length === 10 || digits.length === 11) {
-        return `55${digits}`;
+    if (local.length > 11) {
+        local = local.slice(-11);
     }
 
-    if (digits.length > 11) {
-        return `55${digits.slice(-11)}`;
-    }
-
-    return digits;
+    return local;
 };
 
 export const toE164Phone = (phone: string): string => {
-    const normalized = normalizePhoneBr(phone);
-    if (!normalized) return '';
-    return `+${normalized}`;
+    const local = normalizePhoneBr(phone);
+    if (!local) return '';
+    return `+55${local}`;
 };
 
 export const buildPhoneCandidates = (phone: string): string[] => {
-    const normalized = normalizePhoneBr(phone);
+    const local = normalizePhoneBr(phone);
     const digits = normalizePhoneDigits(phone);
-    const local = normalized.startsWith('55') ? normalized.slice(2) : normalized;
+    const withCountry = local ? `55${local}` : '';
+    const withPlusCountry = local ? `+55${local}` : '';
 
-    return Array.from(new Set([normalized, digits, local].filter(Boolean)));
+    return Array.from(new Set([local, withCountry, withPlusCountry, digits].filter(Boolean)));
 };
