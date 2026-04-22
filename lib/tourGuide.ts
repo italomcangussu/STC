@@ -172,7 +172,7 @@ export function startRankingTour() {
       {
         popover: {
           title: '💡 Como Subir no Ranking',
-          description: 'Aceite e vença desafios para ganhar 100 pontos por vitória. SuperSets valem 10 pontos!',
+          description: 'Pontos vêm de Campeonato, Desafio (8) e SuperSet (3). Vitórias/sets/games não pontuam.',
         },
       },
     ],

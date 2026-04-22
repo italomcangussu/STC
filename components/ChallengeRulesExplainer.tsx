@@ -26,7 +26,7 @@ export const ChallengeRulesExplainer: React.FC<ChallengeRulesExplainerProps> = (
             <div className="space-y-2 text-left max-w-xs">
               <p><strong>Posição:</strong> Desafie até 3 posições acima/abaixo</p>
               <p><strong>Limite:</strong> 1 desafio/mês (como desafiante e desafiado)</p>
-              <p><strong>Pontuação:</strong> Vitória = 100pts, SuperSet = 10pts</p>
+              <p><strong>Pontuação:</strong> Desafio = 8pts, SuperSet = 3pts</p>
             </div>
           }
           position="bottom"
@@ -108,23 +108,24 @@ export const ChallengeRulesExplainer: React.FC<ChallengeRulesExplainerProps> = (
                   <div className="space-y-1">
                     <p><strong>Desafio (Melhor de 3 sets):</strong></p>
                     <ul className="list-disc list-inside text-xs ml-2 mt-1">
-                      <li>Vitória: 100 pontos</li>
-                      <li>Derrota: 0 pontos</li>
+                      <li>Vencedor: 8 pontos</li>
+                      <li>Perdedor: 0 pontos</li>
                     </ul>
                     <p className="mt-2"><strong>SuperSet (1 set rápido):</strong></p>
                     <ul className="list-disc list-inside text-xs ml-2 mt-1">
-                      <li>Vitória: 10 pontos</li>
+                      <li>Vencedor: 3 pontos</li>
                     </ul>
+                    <p className="text-xs mt-2">Vitórias, sets e games são estatísticas e desempate, não pontuação.</p>
                   </div>
                 }
               />
             </div>
             <div className="text-sm text-stone-600 space-y-1">
               <p>
-                <span className="font-semibold text-green-700">Desafio:</span> 100 pontos para o vencedor
+                <span className="font-semibold text-green-700">Desafio:</span> 8 pontos para o vencedor
               </p>
               <p>
-                <span className="font-semibold text-blue-700">SuperSet:</span> 10 pontos para o vencedor
+                <span className="font-semibold text-blue-700">SuperSet:</span> 3 pontos para o vencedor
               </p>
             </div>
           </div>

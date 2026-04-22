@@ -9,6 +9,7 @@ Esta refatoração introduz:
 - **Divisão por 2** aplicada sempre que pontos forem ganhos em classe **inferior** à classe atual do atleta no ranking — cobrindo tanto promoções retroativas quanto participação voluntária em classe inferior.
 - **Pontuação padronizada** por fase eliminatória (125 / 64 / 35 / 16 / 8 / 5).
 - **Gestão head-to-head** para pontos de Desafio (8) e SUPERSET (3) que se invalidam no próximo confronto entre os mesmos atletas.
+- **Fonte única de pontuação**: apenas Campeonato, Desafio e SUPERSET geram pontos de ranking.
 - **Marco de corte** no "3º CIRCUITO DE INVERNO": ranking zera a partir dele e a nova lógica passa a valer retroativamente para quem mudou de classe desde então.
 
 ## 2. Goals
@@ -17,6 +18,7 @@ Esta refatoração introduz:
 - Padronizar a pontuação por fase em todos os campeonatos eliminatórios.
 - Aplicar automaticamente divisão por 2 aos pontos de atletas promovidos de classe, revertendo à pontuação integral quando o atleta defender ou conquistar novos pontos na classe atual.
 - Rastrear corretamente a validade dos pontos de Desafio e SUPERSET através de histórico head-to-head.
+- Garantir que vitórias, sets e games sejam estatísticas informativas/desempate e **não** componentes de pontuação.
 - Excluir convidados/não-sócios do ranking sem afetar a pontuação recebida pelo sócio adversário.
 - Realizar a virada a partir do "3º CIRCUITO DE INVERNO" com auditoria completa das mudanças.
 
@@ -187,6 +189,8 @@ Esta refatoração introduz:
 - **FR-14:** UI admin deve permitir criar/editar séries, associar campeonatos existentes a séries e visualizar o histórico de edições.
 - **FR-15:** Cancelamento de uma edição após pontos aplicados deve exigir confirmação explícita do admin e, uma vez confirmado, reverter os pontos da edição cancelada e reaplicar os pontos da edição anterior da mesma série.
 - **FR-16:** Dependentes que migram para conta de sócio direto no meio de um ciclo são tratados como sócios normais para fins de ranking, sem reprocessamento retroativo do histórico anterior à migração.
+- **FR-17:** Vitórias, sets e games não podem alterar `legacy_points` nem `point_history.amount`; esses campos são apenas estatísticas auxiliares (display/desempate), sem peso no cálculo de pontos de ranking.
+- **FR-18:** Pontos de ranking só podem vir de três fontes: (a) fases de Campeonato, (b) Desafio (head-to-head), (c) SUPERSET (head-to-head).
 
 ## 5. Non-Goals (Out of Scope)
 
@@ -198,6 +202,7 @@ Esta refatoração introduz:
 - Não haverá exportação em PDF das mudanças do ranking nesta iteração.
 - Não haverá versionamento de escalas de pontos (mudança da tabela de fases é global).
 - SUPERSET não terá variação por classe — sempre vale 3 pts fixos.
+- Não haverá atribuição de pontos por contagem de vitórias, sets ou games.
 
 ## 6. Design Considerations
 
@@ -236,5 +241,6 @@ Todas as perguntas iniciais foram respondidas e incorporadas ao PRD:
 - Painel "Pontos a Defender" é público (FR-13).
 - SUPERSET: 3 pts fixos, sem variação por classe (Non-Goals).
 - Inscrição em classe diferente da de ranking: inferior divide por 2 no momento; superior mantém integral (FR-5, FR-6).
+- Pontuação de ranking vem exclusivamente de Campeonato, Desafio e SUPERSET; vitórias/sets/games não pontuam (FR-17, FR-18).
 
 Nenhuma pergunta pendente — PRD pronto para plano de implementação.

@@ -365,12 +365,12 @@ const AthleteProfile: React.FC<AthleteProfileProps> = ({ userId, currentUser, us
                         </div>
 
                         {/* Legacy vs Challenge Breakdown */}
-                        {userRankStats && (userRankStats.legacyPoints > 0 || userRankStats.challengePoints > 0) && (
+                        {userRankStats && (userRankStats.championshipPoints > 0 || userRankStats.challengePoints > 0 || (userRankStats.superSetPoints || 0) > 0) && (
                             <div className="bg-saibro-50 border border-saibro-100 rounded-xl p-4">
                                 <h4 className="text-xs font-bold text-saibro-700 uppercase mb-3">Composição de Pontos</h4>
                                 <div className="grid grid-cols-3 gap-2">
                                     <div className="text-center">
-                                        <span className="block text-lg font-bold text-saibro-600">{userRankStats.legacyPoints}</span>
+                                        <span className="block text-lg font-bold text-saibro-600">{userRankStats.championshipPoints}</span>
                                         <span className="text-[10px] text-stone-500 leading-none">Campeonatos</span>
                                     </div>
                                     <div className="text-center border-x border-saibro-100">

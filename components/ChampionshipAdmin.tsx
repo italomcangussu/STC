@@ -647,7 +647,7 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
                                             className="py-3 rounded-xl bg-yellow-500 text-white font-bold flex items-center justify-center gap-2 disabled:opacity-60"
                                         >
                                             {applyingPoints ? <Loader2 size={16} className="animate-spin" /> : <Star size={16} />}
-                                            Aplicar Pontos ao Ranking
+                                            Reaplicar Pontos (Fallback Manual)
                                         </button>
                                     )}
 

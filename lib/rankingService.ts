@@ -31,6 +31,7 @@ export interface PlayerStats {
     legacyMatchesPlayed: number;
     legacyMatchesWithTiebreak: number;
     legacyPoints: number;
+    championshipPoints: number;
 
     // Challenge stats (calculated from matches)
     challengeWins: number;
@@ -64,10 +65,6 @@ export interface PlayerStats {
     categoryPosition: number;  // Position within category (1st in 6ª Classe, etc.)
     globalPosition: number;    // Position in global hierarchy (class-sorted then points)
 }
-
-// H2H point values (stored in DB and mirrored here for display)
-const H2H_CHALLENGE_PTS = 8;
-const H2H_SUPERSET_PTS  = 3;
 
 export function clearRankingCache(): void {
     rankingCache = null;
@@ -154,11 +151,8 @@ export async function fetchRanking(categoryFilter?: string, forceRefresh = false
         gamesWon: number; gamesLost: number;
         tiebreaksWon: number; tiebreaksLost: number;
         matchesPlayed: number; matchesWithTiebreak: number;
-        points: number; // Accumulated points (Challenges + SuperSets)
         challengeWins: number; challengeLosses: number;
-        challengePoints: number;
         superSetWins: number; superSetLosses: number;
-        superSetPoints: number;
     }> = {};
 
     // Initialize all players
@@ -169,12 +163,41 @@ export async function fetchRanking(categoryFilter?: string, forceRefresh = false
             gamesWon: 0, gamesLost: 0,
             tiebreaksWon: 0, tiebreaksLost: 0,
             matchesPlayed: 0, matchesWithTiebreak: 0,
-            points: 0,
             challengeWins: 0, challengeLosses: 0,
-            challengePoints: 0,
             superSetWins: 0, superSetLosses: 0,
-            superSetPoints: 0
         };
+    });
+
+    // 3. Fetch active H2H points (source of truth for Desafio/SuperSet points)
+    const { data: h2hPointsData, error: h2hPointsError } = await supabase
+        .from('head_to_head_points')
+        .select('winner_id, match_type, points, created_at')
+        .eq('is_active', true);
+
+    if (h2hPointsError) {
+        logger.warn('fetch_ranking_h2h_points_failed', { error: h2hPointsError.message });
+    }
+
+    const h2hActivePointsByUser: Record<string, { challenge: number; superset: number }> = {};
+    (h2hPointsData || []).forEach((row: any) => {
+        if (!row?.winner_id) return;
+
+        if (cycleStart && row.created_at) {
+            const createdAt = new Date(String(row.created_at));
+            if (!Number.isNaN(createdAt.getTime()) && createdAt < cycleStart) {
+                return;
+            }
+        }
+
+        if (!h2hActivePointsByUser[row.winner_id]) {
+            h2hActivePointsByUser[row.winner_id] = { challenge: 0, superset: 0 };
+        }
+
+        if (row.match_type === 'challenge') {
+            h2hActivePointsByUser[row.winner_id].challenge += Number(row.points || 0);
+        } else if (row.match_type === 'superset') {
+            h2hActivePointsByUser[row.winner_id].superset += Number(row.points || 0);
+        }
     });
 
     // Process matches
@@ -315,12 +338,10 @@ export async function fetchRanking(categoryFilter?: string, forceRefresh = false
             gamesWon: 0, gamesLost: 0,
             tiebreaksWon: 0, tiebreaksLost: 0,
             matchesPlayed: 0, matchesWithTiebreak: 0,
-            points: 0,
             challengeWins: 0, challengeLosses: 0,
-            challengePoints: 0,
             superSetWins: 0, superSetLosses: 0,
-            superSetPoints: 0
         };
+        const h2h = h2hActivePointsByUser[p.id] || { challenge: 0, superset: 0 };
 
         // Combined totals
         // Points come entirely from profiles.legacy_points — maintained by DB triggers
@@ -332,6 +353,9 @@ export async function fetchRanking(categoryFilter?: string, forceRefresh = false
         const totalGamesWon = legacy.gamesWon + challenge.gamesWon;
         const totalGamesLost = legacy.gamesLost + challenge.gamesLost;
         const totalPoints = legacy.points; // championship + H2H, both via triggers
+        const challengePoints = h2h.challenge;
+        const superSetPoints = h2h.superset;
+        const championshipPoints = totalPoints - challengePoints - superSetPoints;
 
         return {
             id: p.id,
@@ -350,6 +374,7 @@ export async function fetchRanking(categoryFilter?: string, forceRefresh = false
             legacyMatchesPlayed: legacy.matchesPlayed,
             legacyMatchesWithTiebreak: legacy.matchesWithTiebreak,
             legacyPoints: legacy.points,
+            championshipPoints,
 
             challengeWins: challenge.wins,
             challengeLosses: challenge.losses,
@@ -361,11 +386,11 @@ export async function fetchRanking(categoryFilter?: string, forceRefresh = false
             challengeTiebreaksLost: challenge.tiebreaksLost,
             challengeMatchesPlayed: challenge.matchesPlayed,
             challengeMatchesWithTiebreak: challenge.matchesWithTiebreak,
-            challengePoints: challenge.challengeWins * H2H_CHALLENGE_PTS,
+            challengePoints,
 
             superSetWins: challenge.superSetWins,
             superSetLosses: challenge.superSetLosses,
-            superSetPoints: challenge.superSetWins * H2H_SUPERSET_PTS,
+            superSetPoints,
             superSetMatchesPlayed: challenge.superSetWins + challenge.superSetLosses,
 
             totalWins,

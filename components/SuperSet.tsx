@@ -127,7 +127,7 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
                 });
             }
 
-            alert('SuperSet Salvo! 10 pontos computados.');
+            alert('SuperSet salvo! Pontuação aplicada conforme regra atual (3 pts para o vencedor).');
             // Reset
             setScoreA(0);
             setScoreB(0);
