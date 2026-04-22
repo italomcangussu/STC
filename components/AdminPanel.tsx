@@ -22,6 +22,7 @@ import { AdminProfessors } from './AdminProfessors';
 import { AdminRules } from './AdminRules';
 import { AdminStudents } from './AdminStudents';
 import { ChampionshipAdmin } from './ChampionshipAdmin';
+import { clearRankingCache } from '../lib/rankingService';
 
 // --- Helpers ---
 const addMinutes = (time: string, minutes: number): string => {
@@ -1258,6 +1259,14 @@ const AcessosTab: React.FC = () => {
 const LancamentosTab: React.FC = () => {
     const [_loading, _setLoading] = useState(false);
     const [auditLogs, setAuditLogs] = useState<any[]>([]);
+    const [resetReason, setResetReason] = useState('');
+    const [resettingRanking, setResettingRanking] = useState(false);
+    const [resetHistory, setResetHistory] = useState<Array<{
+        id: string;
+        executedAt: string;
+        reason: string | null;
+        executedByName: string;
+    }>>([]);
 
     // Creator State
     const [showCreator, setShowCreator] = useState(false);
@@ -1274,9 +1283,47 @@ const LancamentosTab: React.FC = () => {
         if (data) setAuditLogs(data);
     };
 
+    const fetchResetHistory = async () => {
+        const { data, error } = await supabase
+            .from('ranking_reset_events')
+            .select('id, executed_at, executed_by, reason')
+            .order('executed_at', { ascending: false })
+            .limit(10);
+
+        if (error || !data) {
+            setResetHistory([]);
+            return;
+        }
+
+        const actorIds = [...new Set(data.map((row: any) => row.executed_by).filter(Boolean))];
+        let nameById: Record<string, string> = {};
+
+        if (actorIds.length > 0) {
+            const { data: actors } = await supabase
+                .from('profiles')
+                .select('id, name')
+                .in('id', actorIds);
+
+            nameById = (actors || []).reduce((acc: Record<string, string>, actor: any) => {
+                acc[actor.id] = actor.name || 'Admin';
+                return acc;
+            }, {});
+        }
+
+        setResetHistory(
+            data.map((row: any) => ({
+                id: row.id,
+                executedAt: row.executed_at,
+                reason: row.reason,
+                executedByName: nameById[row.executed_by] || 'Admin'
+            }))
+        );
+    };
+
     useEffect(() => {
         fetchAudit();
         fetchDeps();
+        fetchResetHistory();
     }, []);
 
     const fetchDeps = async () => {
@@ -1291,6 +1338,45 @@ const LancamentosTab: React.FC = () => {
     const openCreator = (type: 'Desafio' | 'SuperSet') => {
         setCreatorType(type);
         setShowCreator(true);
+    };
+
+    const handleFullRankingReset = async () => {
+        const typed = prompt(
+            'Esta ação vai zerar completamente o ranking (pontos, vitórias, sets e games) de todos os atletas ativos. Digite ZERAR para continuar:'
+        );
+        if (typed === null) return;
+
+        if (typed.trim().toUpperCase() !== 'ZERAR') {
+            alert('Confirmação inválida. Digite exatamente ZERAR.');
+            return;
+        }
+
+        const secondConfirm = confirm(
+            'Confirma o reset completo do ranking agora? Esta ação inicia um novo ciclo de ranking.'
+        );
+        if (!secondConfirm) return;
+
+        try {
+            setResettingRanking(true);
+            const { data, error } = await supabase.rpc('admin_reset_ranking_full', {
+                p_confirmation: 'ZERAR',
+                p_reason: resetReason.trim() || null
+            });
+
+            if (error) throw error;
+
+            clearRankingCache();
+            await fetchResetHistory();
+
+            const affected = (data as any)?.affected_profiles ?? 'N/A';
+            alert(`Ranking zerado com sucesso. Atletas afetados: ${affected}.`);
+            setResetReason('');
+        } catch (error: any) {
+            console.error('Error resetting ranking:', error);
+            alert(error?.message || 'Erro ao zerar ranking.');
+        } finally {
+            setResettingRanking(false);
+        }
     };
 
     return (
@@ -1314,6 +1400,47 @@ const LancamentosTab: React.FC = () => {
                         <Zap size={32} />
                         Registrar SuperSet (1 Set)
                     </button>
+                </div>
+            </div>
+
+            <div className="bg-red-50 p-6 rounded-[24px] border border-red-200 space-y-4">
+                <div>
+                    <h3 className="text-xl font-black text-red-800 mb-2">Reset Completo do Ranking</h3>
+                    <p className="text-red-700 text-sm">
+                        Zera completamente ranking atual de todos os atletas ativos, incluindo pontos, vitórias, sets e games.
+                    </p>
+                </div>
+
+                <input
+                    type="text"
+                    value={resetReason}
+                    onChange={e => setResetReason(e.target.value)}
+                    placeholder="Motivo do reset (opcional)"
+                    className="w-full px-4 py-3 bg-white border border-red-200 rounded-xl text-sm"
+                />
+
+                <button
+                    onClick={handleFullRankingReset}
+                    disabled={resettingRanking}
+                    className="px-5 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 disabled:opacity-60 flex items-center gap-2"
+                >
+                    {resettingRanking ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
+                    Executar Reset Completo
+                </button>
+
+                <div className="space-y-2">
+                    <h4 className="text-sm font-bold text-red-900">Histórico de Resets</h4>
+                    {resetHistory.length === 0 && (
+                        <p className="text-xs text-red-700">Nenhum reset registrado.</p>
+                    )}
+                    {resetHistory.map(item => (
+                        <div key={item.id} className="bg-white border border-red-100 rounded-lg px-3 py-2">
+                            <p className="text-xs text-stone-700">
+                                {new Date(item.executedAt).toLocaleString('pt-BR', { timeZone: 'America/Fortaleza' })} • {item.executedByName}
+                            </p>
+                            {item.reason && <p className="text-xs text-stone-500 mt-1">{item.reason}</p>}
+                        </div>
+                    ))}
                 </div>
             </div>
 

@@ -9,7 +9,7 @@ export const CLASS_ORDER = ['4ª Classe', '5ª Classe', '6ª Classe'];
 export const CROSS_CLASS_CHALLENGE_LIMIT = 2;
 
 // Cache simples para rankings (TTL: 30 segundos)
-let rankingCache: { data: PlayerStats[]; timestamp: number } | null = null;
+let rankingCache: { data: PlayerStats[]; timestamp: number; cycleKey: string } | null = null;
 const CACHE_TTL = 30000; // 30 segundos
 
 // --- Types ---
@@ -70,17 +70,42 @@ const PTS_WIN = 100;
 const _PTS_SET = 10;
 const _PTS_GAME = 1;
 
+export function clearRankingCache(): void {
+    rankingCache = null;
+}
+
+async function getRankingCycleStart(): Promise<Date | null> {
+    const { data, error } = await supabase.rpc('get_ranking_cycle_start');
+
+    if (error) {
+        logger.warn('fetch_ranking_cycle_start_failed', { error: error.message });
+        return null;
+    }
+
+    if (!data) return null;
+
+    const parsed = new Date(String(data));
+    if (Number.isNaN(parsed.getTime())) {
+        logger.warn('fetch_ranking_cycle_start_invalid', { value: data });
+        return null;
+    }
+
+    return parsed;
+}
+
 /**
  * Fetch complete ranking from Supabase, combining legacy stats + challenge match stats
  * Otimizado com cache e logs estruturados
  */
 export async function fetchRanking(categoryFilter?: string, forceRefresh = false): Promise<PlayerStats[]> {
     const startTime = performance.now();
+    const cycleStart = await getRankingCycleStart();
+    const cycleKey = cycleStart?.toISOString() || 'none';
 
     // Verificar cache (apenas se não houver filtro e não for refresh forçado)
     if (!categoryFilter && !forceRefresh && rankingCache) {
         const age = Date.now() - rankingCache.timestamp;
-        if (age < CACHE_TTL) {
+        if (age < CACHE_TTL && rankingCache.cycleKey === cycleKey) {
             logger.debug('ranking_cache_hit', { age: `${age}ms` });
             return rankingCache.data;
         }
@@ -113,7 +138,7 @@ export async function fetchRanking(categoryFilter?: string, forceRefresh = false
     // 2. Fetch all challenge matches
     const { data: matches, error: matchesError } = await supabase
         .from('matches')
-        .select('player_a_id, player_b_id, score_a, score_b, winner_id, type')
+        .select('player_a_id, player_b_id, score_a, score_b, winner_id, type, date, created_at, updated_at')
         .in('type', ['Desafio', 'Desafio Ranking', 'SuperSet'])
         .eq('status', 'finished');
 
@@ -155,6 +180,16 @@ export async function fetchRanking(categoryFilter?: string, forceRefresh = false
 
     // Process matches
     matches?.forEach(match => {
+        if (cycleStart) {
+            const happenedAt = match.updated_at || match.created_at || (match.date ? `${match.date}T00:00:00Z` : null);
+            if (happenedAt) {
+                const happenedDate = new Date(happenedAt);
+                if (!Number.isNaN(happenedDate.getTime()) && happenedDate < cycleStart) {
+                    return;
+                }
+            }
+        }
+
         const playerA = match.player_a_id;
         const playerB = match.player_b_id;
         const scoreA: number[] = match.score_a || [];
@@ -402,7 +437,7 @@ export async function fetchRanking(categoryFilter?: string, forceRefresh = false
 
     // Atualizar cache (apenas se não houver filtro)
     if (!categoryFilter) {
-        rankingCache = { data: ranking, timestamp: Date.now() };
+        rankingCache = { data: ranking, timestamp: Date.now(), cycleKey };
     }
 
     const duration = performance.now() - startTime;
