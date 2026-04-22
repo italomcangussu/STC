@@ -226,8 +226,14 @@ export function useChallenges(currentUser: User) {
   const fetchMonthlyLimits = async () => {
     try {
       const limits = await checkMonthlyChallengeLimit(currentUser.id);
-      dispatch({ type: 'SET_MONTHLY_LIMITS', payload: limits });
-      logger.debug('fetch_monthly_limits_success', limits);
+      const normalizedLimits = {
+        canChallengeOthers: limits.canChallengeOthers,
+        canBeChallenged: limits.canBeChallenged,
+        sentCount: limits.sentCount ?? limits.challengesMade ?? 0,
+        receivedCount: limits.receivedCount ?? limits.challengesReceived ?? 0,
+      };
+      dispatch({ type: 'SET_MONTHLY_LIMITS', payload: normalizedLimits });
+      logger.debug('fetch_monthly_limits_success', normalizedLimits);
     } catch (err: any) {
       logger.error('fetch_monthly_limits_failed', { error: err.message });
     }

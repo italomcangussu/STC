@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Check, Loader2, Shuffle, Trophy, UserPlus, Users } from 'lucide-react';
+import { Check, Loader2, Shuffle, Trophy, UserPlus, Users, Star, AlertTriangle, X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { User } from '../types';
 import { GroupDrawPage } from './GroupDrawPage';
@@ -13,6 +13,8 @@ interface ChampionshipRow {
     format: 'mata-mata' | 'pontos-corridos' | 'grupo-mata-mata';
     start_date: string | null;
     end_date: string | null;
+    series_id?: string | null;
+    edition_year?: number | null;
     registration_open: boolean;
     registration_closed: boolean;
     pts_victory?: number;
@@ -37,7 +39,9 @@ const CHAMPIONSHIP_SELECT_COLUMNS = [
     'pts_wo_victory',
     'pts_set',
     'pts_game',
-    'pts_technical_draw'
+    'pts_technical_draw',
+    'series_id',
+    'edition_year'
 ];
 
 const parseMissingChampionshipColumn = (error: any): string | null => {
@@ -67,7 +71,9 @@ const normalizeChampionshipRow = (row: any): ChampionshipRow => ({
     pts_wo_victory: pickNumeric(row.pts_wo_victory, 3),
     pts_set: pickNumeric(row.pts_set, 0),
     pts_game: pickNumeric(row.pts_game, 0),
-    pts_technical_draw: pickNumeric(row.pts_technical_draw, 0)
+    pts_technical_draw: pickNumeric(row.pts_technical_draw, 0),
+    series_id: row.series_id ?? null,
+    edition_year: row.edition_year ?? null,
 });
 
 interface Registration {
@@ -108,7 +114,7 @@ interface AuditLog {
     before_data: any;
     after_data: any;
     created_at: string;
-    actor?: { name: string };
+    actor?: { name: string } | { name: string }[];
 }
 
 const CLASSES = ['1ª Classe', '2ª Classe', '3ª Classe', '4ª Classe', '5ª Classe', '6ª Classe'];
@@ -138,6 +144,10 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
 
     const [showDrawPage, setShowDrawPage] = useState(false);
     const [hasGroups, setHasGroups] = useState(false);
+
+    const [applyingPoints, setApplyingPoints] = useState(false);
+    const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+    const [cancellingEdition, setCancellingEdition] = useState(false);
 
     const [statusFilter, setStatusFilter] = useState<'all' | 'draft' | 'ongoing' | 'finished'>('all');
     const [activeTab, setActiveTab] = useState<'overview' | 'rounds' | 'matches' | 'standings' | 'audit'>('overview');
@@ -223,8 +233,8 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
             console.error('Erro ao carregar campeonatos no admin:', championshipRes.error);
         }
 
-        if (championshipRes.data) {
-            const normalizedChamps = (championshipRes.data || []).map(normalizeChampionshipRow);
+        if (Array.isArray(championshipRes.data)) {
+            const normalizedChamps = championshipRes.data.map(normalizeChampionshipRow);
             setChampionships(normalizedChamps);
 
             if (normalizedChamps.length > 0) {
@@ -305,7 +315,7 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
         setRoundConflicts({});
 
         setHasGroups((groupsCountRes.count || 0) > 0);
-        setAuditLogs((auditRes.data || []) as AuditLog[]);
+        setAuditLogs(((auditRes.data || []) as unknown) as AuditLog[]);
 
         setLoadingDetails(false);
     };
@@ -424,6 +434,43 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
 
         await fetchInitialData();
         await fetchSelectedChampionshipData(selectedChampionship.id);
+    };
+
+    const handleApplyChampionshipPoints = async () => {
+        if (!selectedChampionship?.series_id) {
+            alert('Este campeonato não tem série associada. Vincule-o a uma série antes de aplicar pontos.');
+            return;
+        }
+        setApplyingPoints(true);
+        try {
+            const { error } = await supabase.rpc('apply_championship_edition_points', {
+                p_championship_id: selectedChampionship.id
+            });
+            if (error) throw error;
+            alert('Pontos aplicados ao ranking com sucesso!');
+        } catch (err: any) {
+            alert('Erro ao aplicar pontos: ' + err.message);
+        } finally {
+            setApplyingPoints(false);
+        }
+    };
+
+    const handleCancelEdition = async () => {
+        if (!selectedChampionship) return;
+        setCancellingEdition(true);
+        try {
+            const { error } = await supabase.rpc('revert_championship_edition_points', {
+                p_championship_id: selectedChampionship.id
+            });
+            if (error) throw error;
+            setShowCancelConfirm(false);
+            alert('Edição cancelada. Pontos da edição anterior foram restaurados.');
+            await fetchInitialData();
+        } catch (err: any) {
+            alert('Erro ao cancelar edição: ' + err.message);
+        } finally {
+            setCancellingEdition(false);
+        }
     };
 
     const checkRoundConflicts = async (roundId: string, startDate: string, endDate: string) => {
@@ -592,8 +639,61 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
                                             Abrir painel em andamento
                                         </button>
                                     )}
+
+                                    {selectedChampionship.series_id && selectedChampionship.status === 'finished' && (
+                                        <button
+                                            onClick={handleApplyChampionshipPoints}
+                                            disabled={applyingPoints}
+                                            className="py-3 rounded-xl bg-yellow-500 text-white font-bold flex items-center justify-center gap-2 disabled:opacity-60"
+                                        >
+                                            {applyingPoints ? <Loader2 size={16} className="animate-spin" /> : <Star size={16} />}
+                                            Aplicar Pontos ao Ranking
+                                        </button>
+                                    )}
+
+                                    {selectedChampionship.series_id && (
+                                        <button
+                                            onClick={() => setShowCancelConfirm(true)}
+                                            className="py-3 rounded-xl bg-red-600 text-white font-bold flex items-center justify-center gap-2"
+                                        >
+                                            <AlertTriangle size={16} /> Cancelar Edição + Reverter Pontos
+                                        </button>
+                                    )}
                                 </div>
                             </div>
+
+                            {/* Cancel confirmation modal */}
+                            {showCancelConfirm && (
+                                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                                    <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl">
+                                        <div className="flex items-start gap-3 mb-4">
+                                            <AlertTriangle className="text-red-500 shrink-0 mt-0.5" size={24} />
+                                            <div>
+                                                <h3 className="font-black text-stone-900 text-lg">Cancelar edição?</h3>
+                                                <p className="text-sm text-stone-600 mt-1">
+                                                    Isso irá reverter os pontos desta edição e reaplicar os pontos da edição anterior da mesma série. Esta ação altera o ranking.
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-3">
+                                            <button
+                                                onClick={() => setShowCancelConfirm(false)}
+                                                className="flex-1 py-3 rounded-xl border border-stone-200 font-bold text-stone-600 flex items-center justify-center gap-2"
+                                            >
+                                                <X size={16} /> Voltar
+                                            </button>
+                                            <button
+                                                onClick={handleCancelEdition}
+                                                disabled={cancellingEdition}
+                                                className="flex-1 py-3 rounded-xl bg-red-600 text-white font-bold flex items-center justify-center gap-2 disabled:opacity-60"
+                                            >
+                                                {cancellingEdition ? <Loader2 size={16} className="animate-spin" /> : <AlertTriangle size={16} />}
+                                                Confirmar Cancelamento
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
 
                             <div className="bg-white rounded-2xl border border-stone-100 p-5">
                                 <h2 className="text-lg font-black text-stone-800 mb-4">Nova inscrição</h2>
@@ -780,7 +880,7 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
                                     <div key={log.id} className="px-4 py-3 space-y-1">
                                         <div className="text-sm font-black text-stone-800">{log.action}</div>
                                         <div className="text-xs text-stone-500">
-                                            {new Date(log.created_at).toLocaleString('pt-BR')} • {log.actor?.name || 'admin'} • {log.entity_type}
+                                            {new Date(log.created_at).toLocaleString('pt-BR')} • {Array.isArray(log.actor) ? log.actor[0]?.name : log.actor?.name || 'admin'} • {log.entity_type}
                                         </div>
                                     </div>
                                 ))}

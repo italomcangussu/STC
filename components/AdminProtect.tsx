@@ -20,13 +20,13 @@ export const AdminProtect: React.FC<AdminProtectProps> = ({ children, fallback }
             }
 
             // Double-check with database for security (don't trust local storage only)
-            const { data, _error } = await supabase
+            const { data, error } = await supabase
                 .from('profiles')
                 .select('role')
                 .eq('id', currentUser.id)
                 .single();
 
-            if (data && data.role === 'admin') {
+            if (!error && data && data.role === 'admin') {
                 setIsAdmin(true);
             } else {
                 setIsAdmin(false);

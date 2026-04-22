@@ -219,8 +219,14 @@ interface _ScoreModalProps {
 }
 
 
+interface TabItem {
+    id: string;
+    label: string;
+    icon: React.ReactElement<{ size?: number }>;
+}
+
 // Tab configuration
-const TABS = [
+const TABS: TabItem[] = [
     { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={18} /> },
     { id: 'lancamentos', label: 'Lançamentos', icon: <PlusSquare size={18} /> },
     { id: 'superset', label: 'SuperSet', icon: <Trophy size={18} /> },
@@ -239,7 +245,8 @@ const TABS = [
 interface Court {
     id: string;
     name: string;
-    type: string;
+    type?: 'Saibro' | 'Rápida' | string;
+    isActive?: boolean;
 }
 
 // --- Sub-component: Reservas Tab ---
@@ -1529,7 +1536,7 @@ export const AdminPanel: React.FC = () => {
                                 }`}
                         >
                             <div className={`p-2 rounded-xl mb-1 ${activeTab === tab.id ? 'bg-saibro-50 text-saibro-600' : 'bg-stone-50'}`}>
-                                {React.cloneElement(tab.icon as React.ReactElement, { size: 20 })}
+                                {React.cloneElement<{ size?: number }>(tab.icon, { size: 20 })}
                             </div>
                             <span className="text-[9px] uppercase tracking-tighter">{tab.label}</span>
                         </button>

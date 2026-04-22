@@ -223,6 +223,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             mounted = false;
             subscription.unsubscribe();
         };
+// eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const signInWithEmail = async (email: string, password: string): Promise<AuthActionResult> => {

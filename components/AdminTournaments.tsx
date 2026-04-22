@@ -24,12 +24,12 @@ export const AdminTournaments: React.FC = () => {
 
     const fetchTournaments = async () => {
         setLoading(true);
-        const { data, _error } = await supabase
+        const { data, error } = await supabase
             .from('championships')
             .select('*')
             .order('start_date', { ascending: false });
 
-        if (data) setTournaments(data.map((t: any) => ({
+        if (!error && data) setTournaments(data.map((t: any) => ({
             ...t,
             startDate: t.start_date,
             endDate: t.end_date,
@@ -110,7 +110,7 @@ export const AdminTournaments: React.FC = () => {
                             onClick={() => setSelectedTournamentId(t.id)}
                         >
                             <div className="flex items-center gap-4">
-                                <div className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-lg ${t.status === 'active' || t.status === 'ongoing' ? 'bg-green-100 text-green-700' :
+                                <div className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-lg ${t.status === 'ongoing' ? 'bg-green-100 text-green-700' :
                                     t.status === 'finished' ? 'bg-stone-100 text-stone-500' :
                                         'bg-amber-100 text-amber-700'
                                     }`}>

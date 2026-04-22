@@ -11,7 +11,7 @@ interface ScoreModalProps {
     onSave: (scores: { a: number, b: number }[]) => Promise<void>;
 }
 
-export const ScoreModal: React.FC<ScoreModalProps> = ({ _challenge, challengerName, challengedName, onClose, onSave }) => {
+export const ScoreModal: React.FC<ScoreModalProps> = ({ challenge: _challenge, challengerName, challengedName, onClose, onSave }) => {
     const [sets, setSets] = useState<{ a: string, b: string }[]>([{ a: '', b: '' }]);
     const [saving, setSaving] = useState(false);
 

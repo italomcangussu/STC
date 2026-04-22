@@ -49,7 +49,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
 
     const [selectedChampId, setSelectedChampId] = useState<string>('');
     const [selectedCategory, setSelectedCategory] = useState<string>('Todas');
-    const [activeTab, setActiveTab] = useState<'partidas' | 'classificacao' | 'chaveamento' | 'inscritos'>('partidas');
+    const [activeTab, setActiveTab] = useState<'partidas' | 'jogos' | 'classificacao' | 'chaveamento' | 'inscritos'>('partidas');
     const [editingMatch, setEditingMatch] = useState<Match | null>(null);
     const [schedulingMatch, setSchedulingMatch] = useState<Match | null>(null);
     const [adminResultMatch, setAdminResultMatch] = useState<Match | null>(null);
@@ -2002,7 +2002,7 @@ const isTechnicalDrawMatch = (match: Match): boolean => {
     return match.status === 'finished' && !match.is_walkover && !hasAnyWinner(match) && !hasAnyScore(match);
 };
 
-const MatchCard: React.FC<{ match: Match; _profiles: User[]; registrations: Registration[]; isAdmin?: boolean; currentUserId?: string; _canSchedule?: boolean; onEdit?: () => void; onSchedule?: () => void }> = ({ match, _profiles, registrations, isAdmin, currentUserId, _canSchedule, onEdit, onSchedule }) => {
+const MatchCard: React.FC<{ match: Match; profiles: User[]; registrations: Registration[]; isAdmin?: boolean; currentUserId?: string; canSchedule?: boolean; onEdit?: () => void; onSchedule?: () => void }> = ({ match, profiles: _profiles, registrations, isAdmin, currentUserId, canSchedule: _canSchedule, onEdit, onSchedule }) => {
     const regA = registrations.find(r => r.id === match.registration_a_id);
     const regB = registrations.find(r => r.id === match.registration_b_id);
 

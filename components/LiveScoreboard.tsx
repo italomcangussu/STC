@@ -84,7 +84,7 @@ export const LiveScoreboard: React.FC<LiveScoreboardProps> = ({
         if (currentUser.role === 'admin') return true;
 
         // Socio can edit if it's after the scheduled time
-        if (currentUser.role !== 'socio' && currentUser.role !== 'admin') return false;
+        if (currentUser.role !== 'socio') return false;
 
         if (!match.date || !match.scheduledTime) return true; // No time restriction
 

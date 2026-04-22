@@ -372,7 +372,7 @@ export const Klanches: React.FC<KlanchesProps> = ({ currentUser }) => {
 
             setShowAddProduct(false);
             setEditingProduct(null);
-            setProductForm({ name: '', price: '', imageUrl: '', icon: 'package' });
+            setProductForm({ name: '', price: '', imageUrl: '', icon: 'package', stockQuantity: '0' });
         } catch (error: any) {
             console.error('Error saving product:', error);
             alert(`Erro ao salvar produto: ${error.message}`);
@@ -392,7 +392,8 @@ export const Klanches: React.FC<KlanchesProps> = ({ currentUser }) => {
             name: product.name,
             price: product.price.toString(),
             imageUrl: product.imageUrl || '',
-            icon: product.icon || 'package'
+            icon: product.icon || 'package',
+            stockQuantity: String(product.stockQuantity || 0)
         });
         setShowAddProduct(true);
     };
@@ -417,7 +418,7 @@ export const Klanches: React.FC<KlanchesProps> = ({ currentUser }) => {
             <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-bold text-saibro-900">Klanches Admin</h2>
                 <button
-                    onClick={() => { setEditingProduct(null); setProductForm({ name: '', price: '', imageUrl: '', icon: 'package' }); setShowAddProduct(true); }}
+                    onClick={() => { setEditingProduct(null); setProductForm({ name: '', price: '', imageUrl: '', icon: 'package', stockQuantity: '0' }); setShowAddProduct(true); }}
                     className="p-2 bg-saibro-500 text-white rounded-full hover:bg-saibro-600 transition-colors"
                 >
                     <Plus size={20} />

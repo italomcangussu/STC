@@ -10,7 +10,7 @@
  */
 
 import { toast } from 'sonner';
-import type { ReactNode } from 'react';
+import type { ReactElement } from 'react';
 import { logger } from './logger';
 
 interface NotificationOptions {
@@ -22,7 +22,7 @@ interface NotificationOptions {
   };
   cancel?: {
     label: string;
-    onClick?: () => void;
+    onClick: () => void;
   };
 }
 
@@ -120,7 +120,7 @@ class NotificationService {
   /**
    * Toast customizado
    */
-  custom(component: ReactNode, options?: { duration?: number }): void {
+  custom(component: (id: string | number) => ReactElement, options?: { duration?: number }): void {
     toast.custom(component, {
       duration: options?.duration || 4000,
     });
@@ -163,6 +163,7 @@ class NotificationService {
       },
       cancel: {
         label: options?.cancelLabel || 'Cancelar',
+        onClick: () => {},
       },
     });
   }

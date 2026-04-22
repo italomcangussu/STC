@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import {
     ChevronRight, ChevronLeft, Trophy, Users, Shield,
-    Settings, Play, Save, CheckCircle2, AlertCircle, Info, Trash2, Search, X
+    Settings, Play, Save, CheckCircle2, AlertCircle, Info, Trash2, Search, X, Link2
 } from 'lucide-react';
-import { User, Championship, Match, ChampionshipGroup } from '../types';
+import { User, Championship, Match, ChampionshipGroup, ChampionshipSeries } from '../types';
 import { supabase } from '../lib/supabase';
 import { getNowInFortaleza } from '../utils';
 
@@ -37,6 +37,10 @@ export const NewChampionship: React.FC<NewChampionshipProps> = ({ onClose, onSav
     const [generatedMatches, setGeneratedMatches] = useState<Match[]>([]);
     const [profiles, setProfiles] = useState<User[]>([]);
     const [_loadingProfiles, setLoadingProfiles] = useState(true);
+    const [series, setSeries] = useState<ChampionshipSeries[]>([]);
+    const [seriesSearch, setSeriesSearch] = useState('');
+    const [showNewSeries, setShowNewSeries] = useState(false);
+    const [newSeriesName, setNewSeriesName] = useState('');
 
     // Fetch profiles from Supabase
     useEffect(() => {
@@ -61,8 +65,35 @@ export const NewChampionship: React.FC<NewChampionshipProps> = ({ onClose, onSav
             } as User)));
             setLoadingProfiles(false);
         };
+
+        const fetchSeries = async () => {
+            const { data } = await supabase
+                .from('championship_series')
+                .select('id, name, slug')
+                .order('name');
+            setSeries((data || []) as ChampionshipSeries[]);
+        };
+
         fetchProfiles();
+        fetchSeries();
     }, []);
+
+    const handleCreateSeries = async () => {
+        if (!newSeriesName.trim()) return;
+        const slug = newSeriesName.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+        const { data, error } = await supabase
+            .from('championship_series')
+            .insert({ name: newSeriesName.trim(), slug })
+            .select('id, name, slug')
+            .single();
+        if (!error && data) {
+            const newS = data as ChampionshipSeries;
+            setSeries(prev => [...prev, newS]);
+            setFormData(f => ({ ...f, series_id: newS.id, edition_year: new Date(f.startDate || Date.now()).getFullYear() }));
+            setShowNewSeries(false);
+            setNewSeriesName('');
+        }
+    };
 
     const steps = [
         { id: 1, label: 'Básico', icon: <Info size={18} /> },
@@ -306,7 +337,11 @@ export const NewChampionship: React.FC<NewChampionshipProps> = ({ onClose, onSav
 
     const renderStepContent = () => {
         switch (step) {
-            case 1:
+            case 1: {
+                const filteredSeries = series.filter(s =>
+                    s.name.toLowerCase().includes(seriesSearch.toLowerCase())
+                );
+                const selectedSeries = series.find(s => s.id === formData.series_id);
                 return (
                     <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
                         <div className="space-y-1">
@@ -319,6 +354,88 @@ export const NewChampionship: React.FC<NewChampionshipProps> = ({ onClose, onSav
                                 placeholder="Ex: Torneio de Verão"
                             />
                         </div>
+
+                        {/* Series selector */}
+                        <div className="space-y-1">
+                            <div className="flex items-center justify-between">
+                                <label className="text-xs font-bold text-stone-500 uppercase flex items-center gap-1">
+                                    <Link2 size={12} /> Série (defesa de pontos)
+                                </label>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowNewSeries(v => !v)}
+                                    className="text-xs text-saibro-600 font-bold hover:underline"
+                                >
+                                    + Nova série
+                                </button>
+                            </div>
+                            {showNewSeries && (
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        value={newSeriesName}
+                                        onChange={e => setNewSeriesName(e.target.value)}
+                                        placeholder="Nome da nova série"
+                                        className="flex-1 p-2 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-saibro-500 outline-hidden"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={handleCreateSeries}
+                                        className="px-3 py-2 bg-saibro-600 text-white text-sm font-bold rounded-xl"
+                                    >
+                                        Criar
+                                    </button>
+                                </div>
+                            )}
+                            {selectedSeries ? (
+                                <div className="flex items-center justify-between p-3 bg-saibro-50 border border-saibro-200 rounded-xl">
+                                    <span className="text-sm font-bold text-saibro-700">{selectedSeries.name}</span>
+                                    <button
+                                        type="button"
+                                        onClick={() => setFormData(f => ({ ...f, series_id: undefined }))}
+                                        className="text-stone-400 hover:text-red-500"
+                                    >
+                                        <X size={14} />
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="border border-stone-200 rounded-xl overflow-hidden">
+                                    <div className="relative">
+                                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+                                        <input
+                                            type="text"
+                                            value={seriesSearch}
+                                            onChange={e => setSeriesSearch(e.target.value)}
+                                            placeholder="Buscar série..."
+                                            className="w-full pl-8 pr-3 py-2 text-sm bg-stone-50 outline-hidden"
+                                        />
+                                    </div>
+                                    <div className="max-h-32 overflow-y-auto divide-y divide-stone-100">
+                                        {filteredSeries.map(s => (
+                                            <button
+                                                key={s.id}
+                                                type="button"
+                                                onClick={() => {
+                                                    setFormData(f => ({
+                                                        ...f,
+                                                        series_id: s.id,
+                                                        edition_year: new Date(f.startDate || Date.now()).getFullYear()
+                                                    }));
+                                                    setSeriesSearch('');
+                                                }}
+                                                className="w-full text-left px-3 py-2 text-sm hover:bg-saibro-50 text-stone-700"
+                                            >
+                                                {s.name}
+                                            </button>
+                                        ))}
+                                        {filteredSeries.length === 0 && (
+                                            <p className="px-3 py-2 text-xs text-stone-400">Nenhuma série encontrada</p>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-1">
                                 <label className="text-xs font-bold text-stone-500 uppercase">Temporada/Edição</label>
@@ -335,7 +452,10 @@ export const NewChampionship: React.FC<NewChampionshipProps> = ({ onClose, onSav
                                 <input
                                     type="date"
                                     value={formData.startDate}
-                                    onChange={e => setFormData({ ...formData, startDate: e.target.value })}
+                                    onChange={e => {
+                                        const year = new Date(e.target.value).getFullYear();
+                                        setFormData({ ...formData, startDate: e.target.value, edition_year: year });
+                                    }}
                                     className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-saibro-500 outline-hidden"
                                 />
                             </div>
@@ -351,6 +471,7 @@ export const NewChampionship: React.FC<NewChampionshipProps> = ({ onClose, onSav
                         </div>
                     </div>
                 );
+            }
             case 2:
                 return (
                     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">

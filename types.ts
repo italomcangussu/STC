@@ -2,16 +2,18 @@ export type Role = 'admin' | 'socio' | 'lanchonete';
 
 export interface User {
   id: string;
-  name: string;
-  email: string;
-  phone: string; // E.g., '5588999999999'
-  role: Role;
-  balance: number;
+  name?: string;
+  email?: string;
+  phone?: string; // E.g., '5588999999999'
+  role?: Role;
+  balance?: number;
   avatar?: string;
+  avatar_url?: string;
   category?: string;
   isProfessor?: boolean;
-  isActive: boolean; // For gateway authorization
+  isActive?: boolean; // For gateway authorization
   age?: number;
+  [key: string]: any;
 }
 
 export interface AccessRequest {
@@ -31,9 +33,10 @@ export type CourtType = 'Saibro' | 'Rápida';
 
 export interface Court {
   id: string;
-  name: string;
-  type: CourtType;
-  isActive: boolean;
+  name?: string;
+  type?: CourtType | string;
+  isActive?: boolean;
+  [key: string]: any;
 }
 
 export interface Professor {
@@ -69,7 +72,7 @@ export type ReservationType = 'Play' | 'Aula' | 'Campeonato' | 'Desafio';
 
 export interface Reservation {
   id: string;
-  type: ReservationType;
+  type?: ReservationType;
   date: string; // ISO Date string YYYY-MM-DD
   startTime: string; // HH:mm
   endTime: string; // HH:mm
@@ -88,7 +91,7 @@ export interface Reservation {
   nonSocioStudentIds?: string[]; // Multiple non-socio/dependent students
 
   observation?: string;
-  status: 'active' | 'cancelled';
+  status: 'active' | 'cancelled' | 'finished';
 
   // Match/Live Score specific
   matchId?: string;
@@ -100,6 +103,7 @@ export interface Reservation {
   matchRegistrationAId?: string | null;
   matchRegistrationBId?: string | null;
   matchWalkoverWinnerRegistrationId?: string | null;
+  [key: string]: any;
 }
 
 export interface Product {
@@ -119,13 +123,25 @@ export interface Consumption {
   status: 'open' | 'paid';
 }
 
+export type ChampionshipPhase = 'champion' | 'finalist' | 'semifinal' | 'quarterfinal' | 'round_of_16' | 'participation';
+
+export interface ChampionshipSeries {
+  id: string;
+  name: string;
+  slug: string;
+  created_at?: string;
+  created_by?: string;
+}
+
 export interface Championship {
   id: string;
   name: string;
   season?: string;
   description?: string;
-  status: 'draft' | 'ongoing' | 'finished';
+  status: 'draft' | 'ongoing' | 'finished' | 'active';
   format: 'mata-mata' | 'pontos-corridos' | 'grupo-mata-mata';
+  series_id?: string;
+  edition_year?: number;
   startDate?: string;
   endDate?: string;
   rules?: string;
@@ -154,6 +170,7 @@ export interface Championship {
 
   // Group Stage Config
   groups?: ChampionshipGroup[];
+  [key: string]: any;
 }
 
 export interface ChampionshipGroup {
@@ -187,18 +204,23 @@ export interface Match {
   id: string;
   championshipId?: string;
   type?: 'Desafio Ranking' | 'Campeonato';
-  playerAId: string | null; // Nullable for guest players
-  playerBId: string | null; // Nullable for guest players
-  scoreA: number[];
-  scoreB: number[];
+  playerAId?: string | null; // Nullable for guest players
+  playerBId?: string | null; // Nullable for guest players
+  scoreA?: number[];
+  scoreB?: number[];
   phase?: string;
   slot?: number; // Added to match with BracketSlot
   winnerId?: string | null;
+  winner_id?: string | null;
   date?: string;
   scheduledTime?: string; // HH:mm format for match start time
-  status: 'pending' | 'finished' | 'waiting_opponents';
+  scheduledDate?: string;
+  score_a?: number[];
+  score_b?: number[];
+  status?: 'pending' | 'finished' | 'waiting_opponents';
 
   // Championship context
+  championshipGroupId?: string;
   championship_group_id?: string;
   round_id?: string;
   scheduled_date?: string;
@@ -222,6 +244,7 @@ export interface Match {
   admin_notes?: string | null;
   result_set_by?: string | null;
   result_set_at?: string | null;
+  [key: string]: any;
 }
 
 export interface ChampionshipRound {
@@ -243,7 +266,21 @@ export interface ChampionshipRegistration {
   guest_name: string | null;
   class: string;
   shirt_size: string;
-  user?: User;
+  final_phase?: ChampionshipPhase;
+  user?: Partial<User>;
+  [key: string]: any;
+}
+
+export interface HeadToHeadPoint {
+  id: string;
+  winner_id: string;
+  loser_id: string;
+  match_type: 'challenge' | 'superset';
+  points: number;
+  match_id?: string;
+  is_active: boolean;
+  created_at: string;
+  opponent_name?: string;
 }
 
 export type ChallengeStatus = 'proposed' | 'accepted' | 'declined' | 'scheduled' | 'finished' | 'cancelled' | 'expired';

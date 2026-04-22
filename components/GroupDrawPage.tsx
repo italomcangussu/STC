@@ -53,7 +53,7 @@ const shuffleArray = <T,>(array: T[]): T[] => {
     return shuffled;
 };
 
-export const GroupDrawPage: React.FC<Props> = ({ _currentUser, championshipId, onBack }) => {
+export const GroupDrawPage: React.FC<Props> = ({ currentUser: _currentUser, championshipId, onBack }) => {
     const [championship, setChampionship] = useState<Championship | null>(null);
     const [registrations, setRegistrations] = useState<Registration[]>([]);
     const [loading, setLoading] = useState(true);

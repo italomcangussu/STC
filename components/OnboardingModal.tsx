@@ -8,7 +8,7 @@ interface OnboardingModalProps {
     onComplete: () => void;
 }
 
-export const OnboardingModal: React.FC<OnboardingModalProps> = ({ currentUser, _onComplete }) => {
+export const OnboardingModal: React.FC<OnboardingModalProps> = ({ currentUser, onComplete: _onComplete }) => {
     const [name, setName] = useState(currentUser.name || '');
     const [category, setCategory] = useState(currentUser.category || '5ª Classe'); // Default
     const [avatarUrl, setAvatarUrl] = useState(currentUser.avatar || '');

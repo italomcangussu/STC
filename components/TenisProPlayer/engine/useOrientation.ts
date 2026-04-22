@@ -66,7 +66,10 @@ export function useOrientation() {
       }
       // Try to lock orientation to landscape
       try {
-        await screen.orientation.lock('landscape');
+        const orientation = screen.orientation as ScreenOrientation & { lock?: (orientation: string) => Promise<void> };
+        if (orientation.lock) {
+          await orientation.lock('landscape');
+        }
       } catch {
         // Not all browsers support orientation lock
       }
@@ -81,7 +84,10 @@ export function useOrientation() {
         await document.exitFullscreen();
       }
       try {
-        screen.orientation.unlock();
+        const orientation = screen.orientation as ScreenOrientation & { unlock?: () => void };
+        if (orientation.unlock) {
+          orientation.unlock();
+        }
       } catch {
         // ignore
       }

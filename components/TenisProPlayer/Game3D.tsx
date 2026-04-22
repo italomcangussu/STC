@@ -61,7 +61,7 @@ const GameScene: React.FC<{
   sounds: ReturnType<typeof useSounds>;
   onPointResult: (msg: string) => void;
 }> = ({
-  _difficulty, isLandscape, gameStateRef, p1PosRef, p1SwingRef, p2PosRef, p2SwingRef,
+  difficulty: _difficulty, isLandscape, gameStateRef, p1PosRef, p1SwingRef, p2PosRef, p2SwingRef,
   getInput, ballPhysics, scoring, ai, sounds, onPointResult,
 }) => {
   const servingRef = useRef(true);

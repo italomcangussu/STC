@@ -65,10 +65,9 @@ export interface PlayerStats {
     globalPosition: number;    // Position in global hierarchy (class-sorted then points)
 }
 
-// Points formula
-const PTS_WIN = 100;
-const _PTS_SET = 10;
-const _PTS_GAME = 1;
+// H2H point values (stored in DB and mirrored here for display)
+const H2H_CHALLENGE_PTS = 8;
+const H2H_SUPERSET_PTS  = 3;
 
 export function clearRankingCache(): void {
     rankingCache = null;
@@ -269,45 +268,29 @@ export async function fetchRanking(categoryFilter?: string, forceRefresh = false
             }
         });
 
-        // Wins/Losses & Points
+        // Wins/Losses — stats only, no point accumulation here.
+        // Points come from profiles.legacy_points (maintained by DB triggers).
         if (match.winner_id === playerA) {
             challengeStats[playerA].wins++;
             challengeStats[playerB].losses++;
-
             if (type === 'SuperSet') {
                 challengeStats[playerA].superSetWins++;
                 challengeStats[playerB].superSetLosses++;
-                challengeStats[playerA].superSetPoints += 10;
-                challengeStats[playerA].points += 10;
             } else {
                 challengeStats[playerA].challengeWins++;
                 challengeStats[playerB].challengeLosses++;
-                challengeStats[playerA].challengePoints += PTS_WIN;
-                challengeStats[playerA].points += PTS_WIN;
             }
-
         } else if (match.winner_id === playerB) {
             challengeStats[playerB].wins++;
             challengeStats[playerA].losses++;
-
             if (type === 'SuperSet') {
                 challengeStats[playerB].superSetWins++;
                 challengeStats[playerA].superSetLosses++;
-                challengeStats[playerB].superSetPoints += 10;
-                challengeStats[playerB].points += 10;
             } else {
                 challengeStats[playerB].challengeWins++;
                 challengeStats[playerA].challengeLosses++;
-                challengeStats[playerB].challengePoints += PTS_WIN;
-                challengeStats[playerB].points += PTS_WIN;
             }
         }
-
-        // Apply Loser Points?
-        // User said: "desafio não da pontos de games e sets"
-        // If we remove sets/games points, loser gets 0.
-        // So we remove the block that gave loser points.
-
     });
 
     // 4. Combine legacy + challenge stats
@@ -339,17 +322,16 @@ export async function fetchRanking(categoryFilter?: string, forceRefresh = false
             superSetPoints: 0
         };
 
-        // Calculate challenge points - ALREADY CALCULATED IN LOOP
-        const challengePoints = challenge.points;
-
         // Combined totals
+        // Points come entirely from profiles.legacy_points — maintained by DB triggers
+        // (championship_earn, head_to_head_earn, defense_removal, etc.)
         const totalWins = legacy.wins + challenge.wins;
         const totalLosses = legacy.losses + challenge.losses;
         const totalSetsWon = legacy.setsWon + challenge.setsWon;
         const totalSetsLost = legacy.setsLost + challenge.setsLost;
         const totalGamesWon = legacy.gamesWon + challenge.gamesWon;
         const totalGamesLost = legacy.gamesLost + challenge.gamesLost;
-        const totalPoints = legacy.points + challengePoints;
+        const totalPoints = legacy.points; // championship + H2H, both via triggers
 
         return {
             id: p.id,
@@ -379,11 +361,11 @@ export async function fetchRanking(categoryFilter?: string, forceRefresh = false
             challengeTiebreaksLost: challenge.tiebreaksLost,
             challengeMatchesPlayed: challenge.matchesPlayed,
             challengeMatchesWithTiebreak: challenge.matchesWithTiebreak,
-            challengePoints: challenge.challengePoints,
+            challengePoints: challenge.challengeWins * H2H_CHALLENGE_PTS,
 
             superSetWins: challenge.superSetWins,
             superSetLosses: challenge.superSetLosses,
-            superSetPoints: challenge.superSetPoints,
+            superSetPoints: challenge.superSetWins * H2H_SUPERSET_PTS,
             superSetMatchesPlayed: challenge.superSetWins + challenge.superSetLosses,
 
             totalWins,
@@ -515,7 +497,14 @@ export function canChallenge(
  */
 export async function checkMonthlyChallengeLimit(
     playerId: string
-): Promise<{ canChallengeOthers: boolean; canBeChallenged: boolean; challengesMade: number; challengesReceived: number }> {
+): Promise<{
+    canChallengeOthers: boolean;
+    canBeChallenged: boolean;
+    challengesMade: number;
+    challengesReceived: number;
+    sentCount: number;
+    receivedCount: number;
+}> {
     const now = new Date();
     const monthRef = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
@@ -537,7 +526,14 @@ export async function checkMonthlyChallengeLimit(
 
     if (sentError || receivedError) {
         logger.error('check_monthly_limit_failed', { error: (sentError || receivedError)?.message });
-        return { canChallengeOthers: false, canBeChallenged: false, challengesMade: 0, challengesReceived: 0 };
+        return {
+            canChallengeOthers: false,
+            canBeChallenged: false,
+            challengesMade: 0,
+            challengesReceived: 0,
+            sentCount: 0,
+            receivedCount: 0
+        };
     }
 
     const challengesMade = sentChallenges?.length || 0;
@@ -547,7 +543,9 @@ export async function checkMonthlyChallengeLimit(
         canChallengeOthers: challengesMade < 1,  // Can challenge if made 0 challenges this month
         canBeChallenged: challengesReceived < 1, // Can be challenged if received 0 challenges this month
         challengesMade,
-        challengesReceived
+        challengesReceived,
+        sentCount: challengesMade,
+        receivedCount: challengesReceived
     };
 }
 

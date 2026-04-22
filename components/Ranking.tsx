@@ -182,7 +182,7 @@ export const Ranking: React.FC<RankingProps> = ({ onSelectProfile }) => {
           {activeTab === 'Geral' ? (
             <>Ordenado por classe (4ª → 5ª → 6ª), depois por pontos. O 1º da classe pode desafiar os últimos 2 da classe acima.</>
           ) : (
-            <>Vitória: <span className="font-bold">+100</span> • Set: <span className="font-bold">+10</span> • Game: <span className="font-bold">+1</span></>
+            <>Campeonato: até <span className="font-bold">125</span> pts • Desafio: <span className="font-bold">8</span> pts • SUPERSET: <span className="font-bold">3</span> pts</>
           )}
         </div>
       </div>

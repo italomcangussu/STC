@@ -358,7 +358,7 @@ const ReservationDetails: React.FC<{
     onUpdate: (res: Reservation) => void;
     onFinishMatch: (matchId: string, winnerId: string, scoreA: number[], scoreB: number[]) => Promise<void>;
     onDataRefresh?: () => void;
-}> = ({ res, currentUser, profiles, courts, professors, nonSocioStudents, onClose, onEdit, onCancel, onJoin, onLeave, onUpdate, _onFinishMatch, onDataRefresh }) => {
+}> = ({ res, currentUser, profiles, courts, professors, nonSocioStudents, onClose, onEdit, onCancel, onJoin, onLeave, onUpdate, onFinishMatch: _onFinishMatch, onDataRefresh }) => {
     const [showManageParticipants, setShowManageParticipants] = useState(false);
     const [showGuestModal, setShowGuestModal] = useState(false);
     const court = courts.find(c => c.id === res.courtId);
@@ -919,7 +919,7 @@ const ReservationCard: React.FC<{
     onSelect: (res: Reservation) => void;
     challenges: Challenge[];
     onLaunchScore: (challenge: Challenge) => void;
-}> = ({ res, _currentUser, profiles, courts, professors, nonSocioStudents, onSelect, challenges, onLaunchScore }) => {
+}> = ({ res, currentUser: _currentUser, profiles, courts, professors, nonSocioStudents, onSelect, challenges, onLaunchScore }) => {
     const court = courts.find(c => c.id === res.courtId);
     const style = TYPE_STYLES[res.type] || TYPE_STYLES['Play'];
 

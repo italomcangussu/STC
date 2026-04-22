@@ -85,6 +85,7 @@ interface InfoTooltipProps {
   position?: 'top' | 'bottom' | 'left' | 'right';
   iconSize?: number;
   className?: string;
+  children?: React.ReactNode;
 }
 
 export const InfoTooltip: React.FC<InfoTooltipProps> = ({
@@ -92,10 +93,13 @@ export const InfoTooltip: React.FC<InfoTooltipProps> = ({
   position = 'top',
   iconSize = 16,
   className = '',
+  children,
 }) => {
   return (
     <Tooltip content={content} position={position} className={className}>
-      <Info size={iconSize} className="text-stone-400 hover:text-stone-600 cursor-help transition-colors" />
+      {children ?? (
+        <Info size={iconSize} className="text-stone-400 hover:text-stone-600 cursor-help transition-colors" />
+      )}
     </Tooltip>
   );
 };

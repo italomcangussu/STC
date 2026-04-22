@@ -1,11 +1,35 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Search, Trophy, Mail, ArrowLeft, TrendingUp, Activity, MapPin, Clock, History, ArrowRight, Edit2 } from 'lucide-react';
+import { Search, Trophy, Mail, ArrowLeft, TrendingUp, Activity, MapPin, Clock, History, ArrowRight, Edit2, Shield, Swords } from 'lucide-react';
 import { User, Reservation } from '../types';
 import { supabase } from '../lib/supabase';
 import { getNowInFortaleza, formatDateBr } from '../utils';
 import { EditProfileModal } from './EditProfileModal';
 import { fetchRanking, canChallenge, PlayerStats } from '../lib/rankingService';
+
+interface ChampionshipDefensePoint {
+    series_name: string;
+    phase: string;
+    points: number;
+    edition_year: number;
+}
+
+interface H2HPoint {
+    opponent_id: string;
+    opponent_name: string;
+    match_type: 'challenge' | 'superset';
+    points: number;
+    since: string;
+}
+
+const PHASE_LABELS: Record<string, string> = {
+    champion: 'Campeão',
+    finalist: 'Finalista',
+    semifinal: 'Semifinal',
+    quarterfinal: 'Quartas',
+    round_of_16: 'Oitavas',
+    participation: 'Participação',
+};
 
 
 // --- COMPONENT: Athlete Profile ---
@@ -19,13 +43,15 @@ interface AthleteProfileProps {
 
 const AthleteProfile: React.FC<AthleteProfileProps> = ({ userId, currentUser, users, onBack, onProfileUpdate }) => {
     const user = users.find(u => u.id === userId);
-    const [activeTab, setActiveTab] = useState<'stats' | 'history' | 'presence'>('stats');
+    const [activeTab, setActiveTab] = useState<'stats' | 'history' | 'presence' | 'points'>('stats');
     const [showEdit, setShowEdit] = useState(false);
     const [ranking, setRanking] = useState<PlayerStats[]>([]);
     const [_loadingRanking, setLoadingRanking] = useState(true);
     const [matches, setMatches] = useState<any[]>([]);
     const [reservations, setReservations] = useState<Reservation[]>([]);
     const [courts, setCourts] = useState<{ id: string; name: string; type: string }[]>([]);
+    const [championshipDefensePoints, setChampionshipDefensePoints] = useState<ChampionshipDefensePoint[]>([]);
+    const [h2hPoints, setH2hPoints] = useState<H2HPoint[]>([]);
 
     // 1. Fetch Ranking from service
     useEffect(() => {
@@ -71,6 +97,29 @@ const AthleteProfile: React.FC<AthleteProfileProps> = ({ userId, currentUser, us
                     .select('id, name, type');
 
                 setCourts(courtsData || []);
+
+                // Fetch "Pontos a Defender": active championship points with series
+                const { data: defenseData } = await supabase
+                    .from('point_history')
+                    .select('phase, amount, edition_year, championship_series!inner(name)')
+                    .eq('user_id', userId)
+                    .in('reason', ['championship_earn', 'championship_earn_lower_class'])
+                    .eq('status', 'active');
+
+                setChampionshipDefensePoints(
+                    (defenseData || []).map((row: any) => ({
+                        series_name: row.championship_series?.name ?? '',
+                        phase: row.phase ?? '',
+                        points: row.amount ?? 0,
+                        edition_year: row.edition_year ?? 0,
+                    }))
+                );
+
+                // Fetch active H2H points via RPC
+                const { data: h2hData } = await supabase
+                    .rpc('get_user_h2h_points', { p_user_id: userId });
+                setH2hPoints((h2hData || []) as H2HPoint[]);
+
             } catch (err) {
                 console.error('Error loading profile data:', err);
             } finally {
@@ -242,6 +291,7 @@ const AthleteProfile: React.FC<AthleteProfileProps> = ({ userId, currentUser, us
                         { id: 'stats', label: 'Estatísticas', icon: TrendingUp },
                         { id: 'history', label: 'Jogos', icon: History },
                         { id: 'presence', label: 'Presença', icon: MapPin },
+                        { id: 'points', label: 'Pontos', icon: Shield },
                     ].map(tab => {
                         const active = activeTab === tab.id;
                         return (
@@ -459,7 +509,93 @@ const AthleteProfile: React.FC<AthleteProfileProps> = ({ userId, currentUser, us
                         </div>
                     )
                 }
-            </div >
+
+                {/* TAB CONTENT: PONTOS A DEFENDER */}
+                {activeTab === 'points' && (
+                    <div className="space-y-5 animate-in fade-in duration-300">
+                        <div className="bg-amber-50 border border-amber-100 p-4 rounded-xl flex items-start gap-3">
+                            <Shield size={18} className="text-amber-500 shrink-0 mt-0.5" />
+                            <div>
+                                <p className="text-sm font-bold text-amber-900">Pontos em Defesa</p>
+                                <p className="text-xs text-amber-700 mt-0.5">
+                                    Pontos de campeonato são substituídos na próxima edição da mesma série.
+                                    Pontos de Desafio/SUPERSET são invalidados no próximo confronto com o mesmo adversário.
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Championship defense */}
+                        <div>
+                            <h3 className="text-xs font-bold text-stone-400 uppercase mb-2 flex items-center gap-1">
+                                <Trophy size={12} /> Campeonatos
+                            </h3>
+                            {championshipDefensePoints.length === 0 ? (
+                                <p className="text-sm text-stone-400 text-center py-4">Sem pontos de campeonato ativos.</p>
+                            ) : (
+                                <div className="space-y-2">
+                                    {[...championshipDefensePoints]
+                                        .sort((a, b) => b.points - a.points)
+                                        .map((item, idx) => (
+                                            <div key={idx} className="flex items-center justify-between p-3 bg-white border border-stone-100 rounded-xl shadow-sm">
+                                                <div>
+                                                    <p className="text-sm font-bold text-stone-800">{item.series_name}</p>
+                                                    <p className="text-xs text-stone-500">
+                                                        {PHASE_LABELS[item.phase] ?? item.phase} · edição {item.edition_year}
+                                                    </p>
+                                                </div>
+                                                <div className="text-right">
+                                                    <span className="text-lg font-black text-saibro-700">{item.points}</span>
+                                                    <p className="text-[10px] text-stone-400 uppercase font-bold">pts</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* H2H defense */}
+                        <div>
+                            <h3 className="text-xs font-bold text-stone-400 uppercase mb-2 flex items-center gap-1">
+                                <Swords size={12} /> Head-to-Head (Desafio / SUPERSET)
+                            </h3>
+                            {h2hPoints.filter(h => h.points > 0).length === 0 ? (
+                                <p className="text-sm text-stone-400 text-center py-4">Sem pontos H2H ativos.</p>
+                            ) : (
+                                <div className="space-y-2">
+                                    {h2hPoints
+                                        .filter(h => h.points > 0)
+                                        .sort((a, b) => b.points - a.points)
+                                        .map((h, idx) => (
+                                            <div key={idx} className="flex items-center justify-between p-3 bg-white border border-stone-100 rounded-xl shadow-sm">
+                                                <div>
+                                                    <p className="text-sm font-bold text-stone-800">vs {h.opponent_name}</p>
+                                                    <p className="text-xs text-stone-500 capitalize">
+                                                        {h.match_type === 'challenge' ? 'Desafio' : 'SUPERSET'} · válido até próximo confronto
+                                                    </p>
+                                                </div>
+                                                <div className="text-right">
+                                                    <span className="text-lg font-black text-saibro-700">{h.points}</span>
+                                                    <p className="text-[10px] text-stone-400 uppercase font-bold">pts</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Total at risk */}
+                        {(championshipDefensePoints.length > 0 || h2hPoints.filter(h => h.points > 0).length > 0) && (
+                            <div className="p-4 bg-stone-50 border border-stone-200 rounded-xl flex justify-between items-center">
+                                <span className="text-sm font-bold text-stone-600">Total em defesa</span>
+                                <span className="text-xl font-black text-stone-800">
+                                    {championshipDefensePoints.reduce((s, i) => s + i.points, 0) +
+                                        h2hPoints.filter(h => h.points > 0).reduce((s, h) => s + h.points, 0)} pts
+                                </span>
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
 
             {/* EDIT MODAL */}
             {
