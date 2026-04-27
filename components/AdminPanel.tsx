@@ -23,6 +23,7 @@ import { AdminRules } from './AdminRules';
 import { AdminStudents } from './AdminStudents';
 import { ChampionshipAdmin } from './ChampionshipAdmin';
 import { clearRankingCache } from '../lib/rankingService';
+import { buildAdminAuditQueryParams, describeAuditLog, type AdminAuditLog } from '../lib/adminAudit';
 
 // --- Helpers ---
 const addMinutes = (time: string, minutes: number): string => {
@@ -992,15 +993,25 @@ const SociosTab: React.FC = () => {
 const AcessosTab: React.FC = () => {
     const [requests, setRequests] = useState<AccessRequest[]>([]);
     const [loading, setLoading] = useState(true);
+    const [auditLoading, setAuditLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [name, setName] = useState('');
     const [phone, setPhone] = useState('');
     const [email, setEmail] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
+    const [athletes, setAthletes] = useState<User[]>([]);
+    const [selectedAthleteId, setSelectedAthleteId] = useState('all');
+    const [auditLogs, setAuditLogs] = useState<AdminAuditLog[]>([]);
 
     useEffect(() => {
         fetchRequests();
+        fetchAthletes();
     }, []);
+
+    useEffect(() => {
+        fetchAuditLogs();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedAthleteId]);
 
     const fetchRequests = async () => {
         setLoading(true);
@@ -1030,6 +1041,67 @@ const AcessosTab: React.FC = () => {
 
         setRequests(mapped);
         setLoading(false);
+    };
+
+    const fetchAthletes = async () => {
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('id, name, phone, role, is_active')
+            .in('role', ['socio', 'admin'])
+            .eq('is_active', true)
+            .order('name');
+
+        if (error) {
+            console.error('Erro ao carregar atletas para auditoria:', error);
+            setAthletes([]);
+            return;
+        }
+
+        setAthletes((data || []).map((p: any) => ({
+            id: p.id,
+            name: p.name || 'Sem nome',
+            phone: p.phone,
+            role: p.role,
+            isActive: p.is_active
+        })));
+    };
+
+    const fetchAuditLogs = async () => {
+        setAuditLoading(true);
+        const params = buildAdminAuditQueryParams(selectedAthleteId);
+        let query = supabase
+            .from('admin_audit_logs')
+            .select('id, action, table_name, record_id, occurred_at, actor_user_id, actor_name_snapshot, target_user_id, target_name_snapshot, related_user_ids, changed_fields, metadata, source')
+            .order(params.orderBy, { ascending: params.ascending })
+            .limit(params.limit);
+
+        if (params.or) {
+            query = query.or(params.or);
+        }
+
+        const { data, error } = await query;
+
+        if (error) {
+            console.error('Erro ao carregar logs administrativos:', error);
+            setAuditLogs([]);
+            setAuditLoading(false);
+            return;
+        }
+
+        setAuditLogs((data || []).map((row: any) => ({
+            id: row.id,
+            action: row.action,
+            table_name: row.table_name,
+            record_id: row.record_id,
+            occurred_at: row.occurred_at,
+            actor_user_id: row.actor_user_id,
+            actor_name: row.actor_name_snapshot,
+            target_user_id: row.target_user_id,
+            target_user_name: row.target_name_snapshot,
+            changed_fields: row.changed_fields,
+            metadata: row.metadata
+        })));
+        setAuditLoading(false);
     };
 
     const invokeAccessAction = async (payload: any) => {
@@ -1257,6 +1329,61 @@ const AcessosTab: React.FC = () => {
                         <p className="text-sm text-stone-500 italic">Sem decisões recentes.</p>
                     )}
                 </div>
+            </div>
+
+            <div className="space-y-4">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                    <div>
+                        <h3 className="font-bold text-stone-800 flex items-center gap-2">
+                            <History size={18} className="text-stone-400" /> Logs de Entrada e Alterações
+                        </h3>
+                        <p className="text-xs text-stone-500">Últimos registros de login e mudanças feitas no sistema.</p>
+                    </div>
+                    <select
+                        value={selectedAthleteId}
+                        onChange={e => setSelectedAthleteId(e.target.value)}
+                        className="w-full md:w-72 px-3 py-2.5 bg-white border border-stone-200 rounded-xl text-sm"
+                    >
+                        <option value="all">Todos os atletas</option>
+                        {athletes.map(athlete => (
+                            <option key={athlete.id} value={athlete.id}>
+                                {athlete.name}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                {auditLoading ? (
+                    <div className="flex justify-center py-8">
+                        <Loader2 className="animate-spin text-saibro-500" size={24} />
+                    </div>
+                ) : (
+                    <div className="space-y-2">
+                        {auditLogs.map(log => (
+                            <div key={log.id} className="bg-stone-50 border border-stone-100 rounded-xl p-3">
+                                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-2">
+                                    <div>
+                                        <p className="text-sm font-bold text-stone-800">{describeAuditLog(log)}</p>
+                                        <p className="text-xs text-stone-500 mt-1">
+                                            {new Date(log.occurred_at).toLocaleString('pt-BR', { timeZone: 'America/Fortaleza' })}
+                                        </p>
+                                    </div>
+                                    <span className="self-start px-2 py-1 rounded-lg bg-white border border-stone-200 text-[10px] uppercase font-black text-stone-500">
+                                        {log.action}
+                                    </span>
+                                </div>
+                                {log.table_name && (
+                                    <p className="text-[11px] text-stone-400 mt-2">
+                                        Tabela: {log.table_name}{log.record_id ? ` • Registro: ${log.record_id}` : ''}
+                                    </p>
+                                )}
+                            </div>
+                        ))}
+                        {auditLogs.length === 0 && (
+                            <p className="text-sm text-stone-500 italic">Nenhum log encontrado para o filtro selecionado.</p>
+                        )}
+                    </div>
+                )}
             </div>
         </div>
     );

@@ -124,6 +124,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return fetchProfileByPhone(Array.from(phoneSet));
     };
 
+    const recordLoginAudit = async (method: 'email' | 'phone_legacy') => {
+        const { error } = await supabase.rpc('admin_record_user_login', {
+            p_metadata: {
+                method,
+                userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : null
+            }
+        });
+
+        if (error) {
+            console.warn('Falha ao registrar log de entrada:', error.message);
+        }
+    };
+
     const upsertPendingAccessRequest = async (formData: AccessRequestInput): Promise<AuthActionResult> => {
         const name = (formData.name || '').trim();
         const email = (formData.email || '').trim();
@@ -240,6 +253,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const profile = await resolveProfileFromAuthUser(data.user);
             if (profile) {
                 setCurrentUser(profile);
+                await recordLoginAudit('email');
                 return { success: true };
             }
 
@@ -348,6 +362,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const fetchedProfile = await resolveProfileFromAuthUser(data.user, normalizedPhone);
             if (fetchedProfile) {
                 setCurrentUser(fetchedProfile);
+                await recordLoginAudit('phone_legacy');
                 return { success: true };
             }
 
