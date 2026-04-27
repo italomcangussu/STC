@@ -48,6 +48,10 @@ export const describeAuditLog = (log: AdminAuditLog): string => {
     return `${actor} entrou no sistema`;
   }
 
+  if (log.action === 'app_open') {
+    return `${actor} acessou o app`;
+  }
+
   const action = actionLabels[log.action] || log.action;
   const tableName = log.table_name || 'registro';
   const target = log.target_user_name ? ` de ${log.target_user_name}` : '';

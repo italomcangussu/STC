@@ -44,4 +44,15 @@ describe('admin audit helpers', () => {
     expect(describeAuditLog(loginLog)).toBe('Carlos entrou no sistema');
     expect(describeAuditLog(updateLog)).toBe('Admin alterou profiles de Carlos: category, balance');
   });
+
+  it('describes app access rows separately from login rows', () => {
+    const accessLog: AdminAuditLog = {
+      id: '3',
+      action: 'app_open',
+      occurred_at: '2026-04-27T12:00:00Z',
+      actor_name: 'Carlos'
+    };
+
+    expect(describeAuditLog(accessLog)).toBe('Carlos acessou o app');
+  });
 });

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { User } from '../types';
 import { buildPhoneCandidates, normalizePhoneBr, normalizePhoneDigits } from '../lib/phoneAuth';
@@ -47,6 +47,7 @@ const AuthContext = createContext<AuthContextType>({
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [currentUser, setCurrentUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
+    const appOpenAuditLoggedRef = useRef(false);
 
     const mapProfileToUser = (data: any): User => ({
         id: data.id,
@@ -124,8 +125,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return fetchProfileByPhone(Array.from(phoneSet));
     };
 
-    const recordLoginAudit = async (method: 'email' | 'phone_legacy') => {
-        const { error } = await supabase.rpc('admin_record_user_login', {
+    const recordUserAccessAudit = async (event: 'login' | 'app_open', method: 'email' | 'phone_legacy' | 'session_resume') => {
+        const { error } = await supabase.rpc('admin_record_user_access', {
+            p_event: event,
             p_metadata: {
                 method,
                 userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : null
@@ -133,7 +135,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
 
         if (error) {
-            console.warn('Falha ao registrar log de entrada:', error.message);
+            console.warn('Falha ao registrar auditoria de acesso:', error.message);
         }
     };
 
@@ -203,11 +205,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     useEffect(() => {
         let mounted = true;
 
-        const handleUserSession = async (session: any) => {
+        const handleUserSession = async (session: any, recordAppOpen = false) => {
             if (session?.user) {
                 const profile = await resolveProfileFromAuthUser(session.user);
                 if (mounted && profile) {
                     setCurrentUser(profile);
+                    if (recordAppOpen && !appOpenAuditLoggedRef.current) {
+                        appOpenAuditLoggedRef.current = true;
+                        await recordUserAccessAudit('app_open', 'session_resume');
+                    }
                 } else if (mounted) {
                     setCurrentUser(null);
                 }
@@ -218,7 +224,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
 
         supabase.auth.getSession().then(({ data: { session } }) => {
-            handleUserSession(session);
+            handleUserSession(session, true);
         });
 
         const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -253,7 +259,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const profile = await resolveProfileFromAuthUser(data.user);
             if (profile) {
                 setCurrentUser(profile);
-                await recordLoginAudit('email');
+                await recordUserAccessAudit('login', 'email');
                 return { success: true };
             }
 
@@ -362,7 +368,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const fetchedProfile = await resolveProfileFromAuthUser(data.user, normalizedPhone);
             if (fetchedProfile) {
                 setCurrentUser(fetchedProfile);
-                await recordLoginAudit('phone_legacy');
+                await recordUserAccessAudit('login', 'phone_legacy');
                 return { success: true };
             }
 
