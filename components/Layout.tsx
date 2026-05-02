@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
     Calendar, Users, Trophy, LayoutDashboard,
-    Sandwich, Menu, X, LogOut, GraduationCap, Briefcase, Swords, Settings, DollarSign, Bell, Gamepad2
+    Sandwich, Menu, X, LogOut, GraduationCap, Briefcase, Swords, Settings, DollarSign, Bell, Gamepad2, Shuffle
 } from 'lucide-react';
 import { User } from '../types';
 import { supabase } from '../lib/supabase';
@@ -134,6 +134,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
     // Add Admin-Specific Links
     if (currentUser.role === 'admin') {
         navItems.push({ id: 'championship-admin', label: 'Campeonato Admin', icon: <Trophy size={20} />, roles: ['admin'] });
+        navItems.push({ id: 'resenha-open-admin', label: 'Sorteador Resenha Open', icon: <Shuffle size={20} />, roles: ['admin'] });
         navItems.push({ id: 'financeiro-admin', label: 'Financeiro', icon: <DollarSign size={20} />, roles: ['admin'] });
         navItems.push({ id: 'admin-students', label: 'Alunos', icon: <Users size={20} />, roles: ['admin'] });
         navItems.push({ id: 'admin-professors', label: 'Gerenciar Pro.', icon: <Briefcase size={20} />, roles: ['admin'] });

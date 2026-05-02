@@ -271,6 +271,12 @@ export interface ChampionshipRegistration {
   [key: string]: any;
 }
 
+export interface ResenhaOpenRegistration extends ChampionshipRegistration {
+  cabeca_de_chave: boolean;
+  guest_cidade: string | null;
+  guest_idade: number | null;
+}
+
 export interface HeadToHeadPoint {
   id: string;
   winner_id: string;

@@ -18,6 +18,7 @@ import { TenisProPlayer } from './components/TenisProPlayer';
 import { AdminStudents } from './components/AdminStudents';
 import { ChampionshipAdmin } from './components/ChampionshipAdmin';
 import { AdminProtect } from './components/AdminProtect';
+import { AdminResenhaOpen } from './components/AdminResenhaOpen';
 import { Auth } from './components/Auth';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { User } from './types';
@@ -181,6 +182,7 @@ const AppContent: React.FC = () => {
           {view === 'admin-panel' && <AdminProtect><AdminPanel /></AdminProtect>}
           {view === 'financeiro-admin' && <AdminProtect><FinanceiroAdmin /></AdminProtect>}
           {view === 'championship-admin' && <AdminProtect><ChampionshipAdmin currentUser={currentUser} /></AdminProtect>}
+          {view === 'resenha-open-admin' && <AdminProtect><AdminResenhaOpen /></AdminProtect>}
         </div>
       </Layout>
       {showAnnouncement && !needsOnboarding && (
