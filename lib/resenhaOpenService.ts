@@ -34,6 +34,7 @@ export interface RegisterGuestParams {
     classe: ResenhaClass;
     guestCidade?: string;
     guestIdade?: number;
+    cabecaDeChave?: boolean;
 }
 
 export interface BracketMatchWithPhase extends BracketMatch {
@@ -178,7 +179,7 @@ export async function registerGuest(params: RegisterGuestParams): Promise<string
             guest_cidade: params.guestCidade ?? null,
             guest_idade: params.guestIdade ?? null,
             class: params.classe,
-            cabeca_de_chave: false,
+            cabeca_de_chave: params.cabecaDeChave ?? false,
         })
         .select('id')
         .single();

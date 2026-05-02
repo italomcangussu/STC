@@ -87,6 +87,7 @@ export const AdminResenhaOpen: React.FC = () => {
     const [profiles, setProfiles] = useState<Profile[]>([]);
     const [profileSearch, setProfileSearch] = useState('');
     const [isCabeca, setIsCabeca] = useState(false);
+    const [isGuestCabeca, setIsGuestCabeca] = useState(false);
     const [guestName, setGuestName] = useState('');
     const [guestCidade, setGuestCidade] = useState('');
     const [guestIdade, setGuestIdade] = useState('');
@@ -113,7 +114,7 @@ export const AdminResenhaOpen: React.FC = () => {
         const { data } = await supabase
             .from('championships')
             .select('id, name, status')
-            .in('status', ['draft', 'active'])
+            .in('status', ['active', 'finished'])
             .order('created_at', { ascending: false });
         setChampionships((data ?? []) as ChampionshipRow[]);
     }
@@ -177,29 +178,9 @@ export const AdminResenhaOpen: React.FC = () => {
         if (!selectedChampId) return;
         setSaving(true);
         try {
-            // Load rounds to rebuild phaseToRoundId
-            const { data: rounds } = await supabase
-                .from('championship_rounds')
-                .select('id, phase')
-                .eq('championship_id', selectedChampId);
-            const map = new Map<string, string>((rounds ?? []).map((r: any) => [r.phase, r.id]));
-            setPhaseToRoundId(map);
             await loadAthletesFromDb();
-
-            // Check if bracket already exists
-            const { data: matches } = await supabase
-                .from('matches')
-                .select('id', { count: 'exact', head: true })
-                .eq('championship_id', selectedChampId);
-            const hasMatches = (matches as any)?.length > 0 ||
-                (await supabase.from('matches').select('id').eq('championship_id', selectedChampId).limit(1)).data?.length;
-
-            if (hasMatches) {
-                await loadBracket();
-                setStep('bracket');
-            } else {
-                setStep('registering');
-            }
+            await loadBracket();
+            setStep('bracket');
         } catch (e: any) {
             toast.error(e.message);
         } finally {
@@ -215,6 +196,7 @@ export const AdminResenhaOpen: React.FC = () => {
     );
 
     async function handleAddSocio(profile: Profile) {
+        if (!selectedChampId) { toast.error('Nenhum campeonato selecionado.'); return; }
         setSaving(true);
         try {
             const regId = await registerSocio({
@@ -239,6 +221,7 @@ export const AdminResenhaOpen: React.FC = () => {
 
     async function handleAddGuest() {
         if (!guestName.trim()) return;
+        if (!selectedChampId) { toast.error('Nenhum campeonato selecionado.'); return; }
         setSaving(true);
         try {
             const regId = await registerGuest({
@@ -247,14 +230,16 @@ export const AdminResenhaOpen: React.FC = () => {
                 classe,
                 guestCidade: guestCidade.trim() || undefined,
                 guestIdade: guestIdade ? parseInt(guestIdade) : undefined,
+                cabecaDeChave: isGuestCabeca,
             });
             setAthletes(prev => [...prev, {
                 id: regId,
                 name: guestName.trim(),
                 participant_type: 'guest',
                 guest_cidade: guestCidade.trim() || null,
-                cabeca_de_chave: false,
+                cabeca_de_chave: isGuestCabeca,
             }]);
+            setIsGuestCabeca(false);
             setGuestName(''); setGuestCidade(''); setGuestIdade('');
         } catch (e: any) {
             toast.error(e.message);
@@ -652,12 +637,22 @@ export const AdminResenhaOpen: React.FC = () => {
                     {/* Add guest */}
                     <div className="bg-white rounded-2xl border border-stone-100 p-5 space-y-3">
                         <h2 className="font-black text-stone-800 text-sm uppercase tracking-wide">Adicionar Convidado</h2>
-                        <input
-                            value={guestName}
-                            onChange={e => setGuestName(e.target.value)}
-                            placeholder="Nome completo"
-                            className="w-full p-3 border border-stone-200 rounded-xl text-sm"
-                        />
+                        <div className="flex items-center gap-2">
+                            {classe === '4ª Classe' && (
+                                <button
+                                    onClick={() => setIsGuestCabeca(v => !v)}
+                                    className={`px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1 shrink-0 transition-colors ${isGuestCabeca ? 'bg-yellow-400 text-yellow-900' : 'border border-stone-200 text-stone-500 hover:bg-stone-50'}`}
+                                >
+                                    <Star size={12} /> CC
+                                </button>
+                            )}
+                            <input
+                                value={guestName}
+                                onChange={e => setGuestName(e.target.value)}
+                                placeholder="Nome completo"
+                                className="flex-1 p-3 border border-stone-200 rounded-xl text-sm"
+                            />
+                        </div>
                         <div className="flex gap-3">
                             <input
                                 value={guestCidade}
@@ -665,13 +660,16 @@ export const AdminResenhaOpen: React.FC = () => {
                                 placeholder="Cidade"
                                 className="flex-1 p-3 border border-stone-200 rounded-xl text-sm"
                             />
-                            <input
-                                value={guestIdade}
-                                onChange={e => setGuestIdade(e.target.value)}
-                                placeholder="Idade"
-                                type="number"
-                                className="w-24 p-3 border border-stone-200 rounded-xl text-sm"
-                            />
+                            <div className="flex flex-col gap-1">
+                                <input
+                                    value={guestIdade}
+                                    onChange={e => setGuestIdade(e.target.value)}
+                                    placeholder="Idade"
+                                    type="number"
+                                    className="w-24 p-3 border border-stone-200 rounded-xl text-sm"
+                                />
+                                <span className="text-xs text-stone-400 text-center">opcional</span>
+                            </div>
                         </div>
                         <button
                             disabled={!guestName.trim() || saving}
