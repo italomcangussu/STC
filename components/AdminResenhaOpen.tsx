@@ -123,7 +123,7 @@ export const AdminResenhaOpen: React.FC = () => {
         const { data } = await supabase
             .from('profiles')
             .select('id, name, category')
-            .eq('role', 'socio')
+            .in('role', ['socio', 'admin'])
             .order('name');
         setProfiles((data ?? []) as Profile[]);
     }
