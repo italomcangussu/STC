@@ -281,13 +281,19 @@ export const AdminResenhaOpen: React.FC = () => {
     const anim5Ref = useRef<ReturnType<typeof setInterval> | null>(null);
 
     function runDraw5() {
+        // Calculate result BEFORE touching animation state — if it throws, nothing gets stuck
+        let result: DrawMatch[];
+        try {
+            result = drawClasse5(athletes);
+        } catch (e: any) {
+            toast.error(e.message);
+            return;
+        }
+        if (anim5Ref.current) clearInterval(anim5Ref.current);
         setAnimating5(true);
-        const result = drawClasse5(athletes);
         let ticks = 0;
-        const total = 30;
         anim5Ref.current = setInterval(() => {
             ticks++;
-            // Shuffle athletes for visual effect
             const shuffled = [...athletes].sort(() => Math.random() - 0.5);
             setDisplay5(Array.from({ length: 8 }, (_, i) => ({
                 match_number: i + 1,
@@ -296,7 +302,7 @@ export const AdminResenhaOpen: React.FC = () => {
                 player_a_label: shuffled[i * 2]?.name ?? '',
                 player_b_label: shuffled[i * 2 + 1]?.name ?? '',
             })));
-            if (ticks >= total) {
+            if (ticks >= 30) {
                 clearInterval(anim5Ref.current!);
                 setDisplay5(result);
                 setDrawMatches(buildClasse5Bracket(result));
@@ -311,16 +317,25 @@ export const AdminResenhaOpen: React.FC = () => {
     const [displayQualify, setDisplayQualify] = useState<DrawMatch[]>([]);
     const [displayPrimeira, setDisplayPrimeira] = useState<DrawMatch[]>([]);
     const [displayCabecas, setDisplayCabecas] = useState<{ quartas1: DrawAthlete; quartas2: DrawAthlete; quartas3: DrawAthlete } | null>(null);
+    const [remainingPool4, setRemainingPool4] = useState<DrawAthlete[]>([]);
     const anim4Ref = useRef<ReturnType<typeof setInterval> | null>(null);
 
     function runDrawQualify() {
-        setAnimating4(true);
-        const { qualifyMatches: qm, remainingPool } = drawClasse4Qualify(athletes);
-        let ticks = 0;
+        let qm: DrawMatch[];
+        let remainingPool: DrawAthlete[];
+        try {
+            ({ qualifyMatches: qm, remainingPool } = drawClasse4Qualify(athletes));
+        } catch (e: any) {
+            toast.error(e.message);
+            return;
+        }
         const eligible = athletes.filter(a =>
             !a.cabeca_de_chave &&
             (a.participant_type === 'socio' || (a.guest_cidade?.trim().toLowerCase() === 'sobral'))
         );
+        if (anim4Ref.current) clearInterval(anim4Ref.current);
+        setAnimating4(true);
+        let ticks = 0;
         anim4Ref.current = setInterval(() => {
             ticks++;
             const shuffled = [...eligible].sort(() => Math.random() - 0.5).slice(0, 6);
@@ -335,17 +350,23 @@ export const AdminResenhaOpen: React.FC = () => {
                 clearInterval(anim4Ref.current!);
                 setDisplayQualify(qm);
                 setQualifyMatches(qm);
-                // Store remaining pool for next step
-                (window as any).__resenhaPool = remainingPool;
+                setRemainingPool4(remainingPool);
                 setAnimating4(false);
             }
         }, 60);
     }
 
     function runDrawPrimeiraFase() {
-        const pool: DrawAthlete[] = (window as any).__resenhaPool ?? [];
+        const pool = remainingPool4;
+        let pm: DrawMatch[];
+        try {
+            pm = drawClasse4PrimeiraFase(pool);
+        } catch (e: any) {
+            toast.error(e.message);
+            return;
+        }
+        if (anim4Ref.current) clearInterval(anim4Ref.current);
         setAnimating4(true);
-        const pm = drawClasse4PrimeiraFase(pool);
         let ticks = 0;
         anim4Ref.current = setInterval(() => {
             ticks++;
@@ -368,8 +389,15 @@ export const AdminResenhaOpen: React.FC = () => {
 
     function runDrawCabecas() {
         const ccs = athletes.filter(a => a.cabeca_de_chave);
+        let seeds: { quartas1: DrawAthlete; quartas2: DrawAthlete; quartas3: DrawAthlete };
+        try {
+            seeds = drawClasse4CabecasDeChave(ccs);
+        } catch (e: any) {
+            toast.error(e.message);
+            return;
+        }
+        if (anim4Ref.current) clearInterval(anim4Ref.current);
         setAnimating4(true);
-        const seeds = drawClasse4CabecasDeChave(ccs);
         let ticks = 0;
         anim4Ref.current = setInterval(() => {
             ticks++;
