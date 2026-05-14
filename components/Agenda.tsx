@@ -1456,7 +1456,6 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
             })));
         } catch (err) {
             console.error('Error fetching data:', err);
-            setReservations([]);
         } finally {
             if (showLoading) setLoading(false);
         }
@@ -2183,7 +2182,7 @@ const CalendarIcon: React.FC<{ date: Date }> = ({ date }) => (
 // --- SUB-COMPONENT: Add/Edit Reservation Modal ---
 const AddReservationModal: React.FC<{
     onClose: () => void;
-    onSave: (res: Reservation) => void;
+    onSave: (res: Reservation) => void | Promise<void>;
     currentUser: User;
     profiles: User[];
     courts: Court[];
@@ -2235,6 +2234,7 @@ const AddReservationModal: React.FC<{
     const [selectedProfessorId, setSelectedProfessorId] = useState(initialData?.professorId || '');
 
     const [error, setError] = useState<string | null>(null);
+    const [saving, setSaving] = useState(false);
 
     // Context Data
     const availablePartners = profiles.filter(u => (u.role === 'socio' || u.role === 'admin') && u.id !== currentUser.id && u.isActive);
@@ -2417,7 +2417,9 @@ const AddReservationModal: React.FC<{
         setStep(s => Math.max(1, s - 1));
     };
 
-    const handleConfirm = () => {
+    const handleConfirm = async () => {
+        if (saving) return;
+
         const err = validateStep3();
         if (err) { setError(err); return; }
 
@@ -2467,7 +2469,12 @@ const AddReservationModal: React.FC<{
             observation: observation || undefined,
             status: initialData?.status || 'active'
         };
-        onSave(newRes);
+        setSaving(true);
+        try {
+            await onSave(newRes);
+        } finally {
+            setSaving(false);
+        }
     };
 
     return createPortal(
@@ -2822,8 +2829,13 @@ const AddReservationModal: React.FC<{
                             Próximo <ArrowRight size={18} />
                         </button>
                     ) : (
-                        <button onClick={handleConfirm} className="flex-1 py-3 bg-saibro-600 text-white rounded-xl font-bold hover:bg-saibro-700 transition-colors shadow-lg shadow-orange-200 active:scale-95 flex items-center justify-center gap-2">
-                            <Check size={18} /> Confirmar Reserva
+                        <button
+                            onClick={handleConfirm}
+                            disabled={saving}
+                            className={`flex-1 py-3 rounded-xl font-bold transition-colors shadow-lg shadow-orange-200 active:scale-95 flex items-center justify-center gap-2 ${saving ? 'bg-stone-300 text-stone-500 cursor-not-allowed shadow-none' : 'bg-saibro-600 text-white hover:bg-saibro-700'}`}
+                        >
+                            {saving ? <Loader2 className="animate-spin" size={18} /> : <Check size={18} />}
+                            {saving ? 'Salvando...' : 'Confirmar Reserva'}
                         </button>
                     )}
                 </div>
