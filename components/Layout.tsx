@@ -144,7 +144,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
     const filteredNav = navItems.filter(item => (!item.roles || item.roles.includes(currentUser.role)));
 
     return (
-        <div className="h-dvh flex flex-col md:flex-row overflow-hidden bg-clay-pattern">
+        <div className="relative h-full flex flex-col md:flex-row overflow-hidden bg-clay-pattern">
             {/* Mobile Header */}
             <header className="flex-none md:hidden bg-white border-b border-saibro-200 p-4 flex justify-between items-center z-50 pt-safe">
                 <div className="flex items-center gap-3">
@@ -250,13 +250,13 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
 
             {/* Main Content Area */}
             <main className="flex-1 overflow-y-auto overscroll-contain relative custom-scrollbar">
-                <div className={`mx-auto ${view === 'admin-panel' ? 'w-full px-2 md:px-0 pb-32 md:pb-4' : 'max-w-4xl p-4 md:p-6 pb-32 md:pb-12'}`}>
+                <div className={`mx-auto ${view === 'admin-panel' ? 'w-full px-2 md:px-0 pb-[calc(88px+env(safe-area-inset-bottom,0px))] md:pb-4' : 'max-w-4xl p-4 md:p-6 pb-[calc(88px+env(safe-area-inset-bottom,0px))] md:pb-12'}`}>
                     {children}
                 </div>
             </main>
 
             {/* Bottom Nav (Mobile Only) */}
-            <div className="flex-none md:hidden bg-white/95 backdrop-blur-md border-t border-saibro-200 flex justify-around px-6 pt-3 pb-[calc(35px+env(safe-area-inset-bottom,20px))] z-40 shadow-[0_-8px_20px_rgba(0,0,0,0.08)]">
+            <div className="absolute bottom-0 left-0 right-0 md:hidden bg-white/95 backdrop-blur-md border-t border-saibro-200 flex justify-around px-6 pt-3 pb-[env(safe-area-inset-bottom,0px)] z-40 shadow-[0_-8px_20px_rgba(0,0,0,0.08)]">
                 {filteredNav.slice(0, 5).map(item => (
                     <button
                         key={item.id}

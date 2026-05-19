@@ -2,9 +2,12 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
+import { installViewportHeightSync } from './lib/viewportHeightSync';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) throw new Error('Failed to find the root element');
+
+installViewportHeightSync();
 
 const root = ReactDOM.createRoot(rootElement);
 root.render(
