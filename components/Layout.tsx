@@ -250,13 +250,13 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
 
             {/* Main Content Area */}
             <main className="flex-1 overflow-y-auto overscroll-contain relative custom-scrollbar">
-                <div className={`mx-auto ${view === 'admin-panel' ? 'w-full px-2 md:px-0 pb-[calc(76px+max(1rem,env(safe-area-inset-bottom,0px)))] md:pb-4' : 'max-w-4xl p-4 md:p-6 pb-[calc(76px+max(1rem,env(safe-area-inset-bottom,0px)))] md:pb-12'}`}>
+                <div className={`mx-auto ${view === 'admin-panel' ? 'w-full px-2 md:px-0 pb-main-content md:pb-4' : 'max-w-4xl p-4 md:p-6 pb-main-content md:pb-12'}`}>
                     {children}
                 </div>
             </main>
 
             {/* Bottom Nav (Mobile Only) */}
-            <div className="absolute bottom-0 left-0 right-0 md:hidden bg-white/95 backdrop-blur-md border-t border-saibro-200 flex justify-around px-6 pt-3 pb-[max(1rem,env(safe-area-inset-bottom,0px))] z-40 shadow-[0_-8px_20px_rgba(0,0,0,0.08)]">
+            <div className="absolute bottom-0 left-0 right-0 md:hidden bg-white/95 backdrop-blur-md border-t border-saibro-200 flex justify-around px-6 pt-3 pb-navbottom z-40 shadow-[0_-8px_20px_rgba(0,0,0,0.08)]">
                 {filteredNav.slice(0, 5).map(item => (
                     <button
                         key={item.id}
