@@ -23,6 +23,7 @@ import { Auth } from './components/Auth';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { User } from './types';
 import { supabase } from './lib/supabase';
+import { getPublicChampionshipRoute, PublicChampionshipRoute } from './lib/publicRoutes';
 
 import { OnboardingModal } from './components/OnboardingModal';
 import { ChallengeNotificationPopup } from './components/ChallengeNotificationPopup';
@@ -37,6 +38,55 @@ interface Announcement {
   imageUrl: string | null;
   showOnce: boolean;
 }
+
+const PublicChampionshipEntry: React.FC<{ route: PublicChampionshipRoute }> = ({ route }) => {
+  const [publicSlug, setPublicSlug] = useState<string | null>(route.type === 'slug' ? route.slug : null);
+  const [loadingPublic, setLoadingPublic] = useState(route.type === 'list');
+
+  useEffect(() => {
+    const fetchActiveChampionship = async () => {
+      if (route.type !== 'list') return;
+
+      try {
+        const { data: champs, error } = await supabase
+          .from('championships')
+          .select('slug, status, registration_open, created_at')
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          throw error;
+        }
+
+        if (champs && champs.length > 0) {
+          // Auto-select priority: 1. Ongoing, 2. Registration Open, 3. Most recent
+          const ongoing = champs.find(c => c.status === 'ongoing');
+          const regOpen = champs.find(c => c.registration_open === true);
+          const selected = ongoing || regOpen || champs[0];
+          setPublicSlug(selected.slug);
+        } else {
+          setPublicSlug('nenhum-campeonato');
+        }
+      } catch (err) {
+        console.error('Error fetching active public championship:', err);
+        setPublicSlug('erro-campeonato');
+      } finally {
+        setLoadingPublic(false);
+      }
+    };
+
+    fetchActiveChampionship();
+  }, [route]);
+
+  if (loadingPublic) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-stone-900">
+        <Loader2 className="animate-spin text-saibro-500" size={48} />
+      </div>
+    );
+  }
+
+  return <PublicChampionshipPage slug={publicSlug || 'nenhum-campeonato'} />;
+};
 
 // -- COMPONENT: Announcement Popup --
 const AnnouncementPopup: React.FC<{ user: User, onClose: () => void }> = ({ user, onClose }) => {
@@ -129,57 +179,6 @@ const AppContent: React.FC = () => {
     setView('atletas');
   };
 
-  /* Routing for Public Championship Pages */
-  // Simple router based on pathname for Public Slug
-  const pathname = window.location.pathname;
-  const isPublicList = pathname === '/campeonatos-publico';
-  const isPublicSlug = !isPublicList && pathname !== '/' && pathname !== '' && !pathname.includes('.');
-
-  const [publicSlug, setPublicSlug] = useState<string | null>(isPublicSlug ? pathname.substring(1) : null);
-  const [loadingPublic, setLoadingPublic] = useState(isPublicList);
-
-  useEffect(() => {
-    const handleRouting = async () => {
-      if (isPublicList) {
-        try {
-          const { data: champs } = await supabase
-            .from('championships')
-            .select('slug, status, registration_open, created_at')
-            .order('created_at', { ascending: false });
-
-          if (champs && champs.length > 0) {
-            // Auto-select priority: 1. Ongoing, 2. Registration Open, 3. Most recent
-            const ongoing = champs.find(c => c.status === 'ongoing');
-            const regOpen = champs.find(c => c.registration_open === true);
-            const selected = ongoing || regOpen || champs[0];
-            setPublicSlug(selected.slug);
-          } else {
-            setPublicSlug('nenhum-campeonato');
-          }
-        } catch (err) {
-          console.error('Error fetching active public championship:', err);
-          setPublicSlug('erro-campeonato');
-        } finally {
-          setLoadingPublic(false);
-        }
-      }
-    };
-
-    handleRouting();
-  }, [isPublicList]);
-
-  if (loadingPublic) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-stone-900">
-        <Loader2 className="animate-spin text-saibro-500" size={48} />
-      </div>
-    );
-  }
-
-  if (publicSlug) {
-    return <PublicChampionshipPage slug={publicSlug} />;
-  }
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-saibro-50">
@@ -237,6 +236,30 @@ const AppContent: React.FC = () => {
 
 // -- MAIN APP --
 export default function App() {
+  const publicRoute = typeof window !== 'undefined'
+    ? getPublicChampionshipRoute(window.location.pathname)
+    : { type: 'none' as const };
+
+  if (publicRoute.type !== 'none') {
+    return (
+      <>
+        <Toaster
+          position="top-center"
+          richColors
+          expand={false}
+          closeButton
+          toastOptions={{
+            style: {
+              fontFamily: 'inherit',
+            },
+            className: 'toast-custom',
+          }}
+        />
+        <PublicChampionshipEntry route={publicRoute} />
+      </>
+    );
+  }
+
   return (
     <AuthProvider>
       <Toaster
