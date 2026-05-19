@@ -4,6 +4,7 @@
 import { supabase } from './supabase';
 import type { DrawAthlete, DrawMatch } from './resenhaOpenDraw';
 import type { BracketMatch } from './resenhaOpenAdvance';
+import { getOfficialResenhaOpenBracket } from './resenhaOpenOfficialBracket';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -42,6 +43,8 @@ export interface BracketMatchWithPhase extends BracketMatch {
     bracket_class?: ResenhaClass | string;
     scheduled_date?: string | null;
     scheduled_time?: string | null;
+    score_a?: number[];
+    score_b?: number[];
 }
 
 // ── Phase definitions ─────────────────────────────────────────────────────────
@@ -340,7 +343,7 @@ export async function fetchBracket(
             .order('match_number', { ascending: true }),
         supabase
             .from('championship_registrations')
-            .select('id, participant_type, guest_name, class, user:profiles(name)')
+            .select('id, participant_type, guest_name, class, user:profiles!user_id(name)')
             .eq('championship_id', championshipId),
     ]);
 
@@ -349,6 +352,10 @@ export async function fetchBracket(
 
     const dbMatches: any[] = matchRes.data ?? [];
     const regs: any[] = regRes.data ?? [];
+
+    if (dbMatches.length === 0) {
+        return getOfficialResenhaOpenBracket();
+    }
 
     // registrationId → display name
     const nameMap = new Map<string, string>();
@@ -404,6 +411,8 @@ export async function fetchBracket(
             bracket_class: getMatchClass(m),
             scheduled_date: m.scheduled_date ?? null,
             scheduled_time: m.scheduled_time ?? null,
+            score_a: m.score_a ?? [],
+            score_b: m.score_b ?? [],
         };
     });
 }

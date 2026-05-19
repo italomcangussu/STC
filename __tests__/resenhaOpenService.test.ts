@@ -13,6 +13,7 @@ vi.mock('../lib/supabase', () => ({
 import {
     createResenhaOpenChampionship,
     createResenhaOpenRounds,
+    fetchBracket,
 } from '../lib/resenhaOpenService';
 
 function makeChain(resultByTerminal: Record<string, any> = {}) {
@@ -96,5 +97,35 @@ describe('resenhaOpenService', () => {
         expect(phaseMap.get('preliminar')).toBe('r1');
         expect(phaseMap.get('final')).toBe('r5');
         expect(insertRoundsChain.insert).not.toHaveBeenCalled();
+    });
+
+    it('usa o chaveamento oficial do app quando Resenha Open ainda não tem partidas no backend', async () => {
+        const matchesChain: Record<string, any> = {};
+        matchesChain.select = vi.fn(() => matchesChain);
+        matchesChain.eq = vi.fn(() => matchesChain);
+        matchesChain.order = vi.fn(() => Promise.resolve({ data: [], error: null }));
+
+        const registrationsChain: Record<string, any> = {};
+        registrationsChain.select = vi.fn(() => registrationsChain);
+        registrationsChain.eq = vi.fn(() => Promise.resolve({ data: [], error: null }));
+
+        supabaseMock.from.mockImplementation((table: string) => {
+            if (table === 'matches') return matchesChain;
+            if (table === 'championship_registrations') return registrationsChain;
+            throw new Error(`Unexpected table ${table}`);
+        });
+
+        const bracket = await fetchBracket('resenha-open-2026');
+
+        expect(registrationsChain.select).toHaveBeenCalledWith('id, participant_type, guest_name, class, user:profiles!user_id(name)');
+        expect(bracket).toHaveLength(34);
+        expect(bracket[0]).toMatchObject({
+            bracket_class: '5ª Classe',
+            round_phase: 'oitavas',
+            match_number: 1,
+            player_a_label: 'Davi Arcelino',
+            player_b_label: 'Williams Santos',
+        });
+        expect(bracket.some(match => match.player_a_label === 'Vencedor Jogo 1')).toBe(true);
     });
 });
