@@ -11,6 +11,7 @@ export interface PublicChampionshipSummary {
 }
 
 const PUBLIC_CHAMPIONSHIPS_PATH = 'campeonatos-publico';
+const PUBLIC_CHAMPIONSHIPS_HOST = 'camp.stcplay.com.br';
 
 const APP_PATHS = new Set([
   'agenda',
@@ -33,9 +34,14 @@ const APP_PATHS = new Set([
   'resenha-open-admin',
 ]);
 
-export function getPublicChampionshipRoute(pathname: string): PublicChampionshipRoute {
+export function getPublicChampionshipRoute(pathname: string, hostname = ''): PublicChampionshipRoute {
   const [pathWithoutQuery] = pathname.split(/[?#]/);
   const normalized = pathWithoutQuery.replace(/^\/+|\/+$/g, '');
+  const normalizedHost = hostname.toLowerCase();
+
+  if (!normalized && normalizedHost === PUBLIC_CHAMPIONSHIPS_HOST) {
+    return { type: 'list' };
+  }
 
   if (!normalized || normalized.includes('.') || normalized.includes('/')) {
     return { type: 'none' };

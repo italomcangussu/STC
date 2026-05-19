@@ -240,7 +240,7 @@ const AppContent: React.FC = () => {
 // -- MAIN APP --
 export default function App() {
   const publicRoute = typeof window !== 'undefined'
-    ? getPublicChampionshipRoute(window.location.pathname)
+    ? getPublicChampionshipRoute(window.location.pathname, window.location.hostname)
     : { type: 'none' as const };
 
   if (publicRoute.type !== 'none') {

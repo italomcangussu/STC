@@ -16,5 +16,6 @@
     "theme_color": "#f97316",
     "background_color": "#fff7ed",
     "display": "standalone",
-    "start_url": "/"
+    "scope": "/",
+    "start_url": "/campeonatos-publico"
 }

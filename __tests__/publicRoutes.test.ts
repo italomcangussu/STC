@@ -7,6 +7,10 @@ describe('public championship routing', () => {
     expect(getPublicChampionshipRoute('/campeonatos-publico/')).toEqual({ type: 'list' });
   });
 
+  it('uses the championship subdomain root as the public championship list route', () => {
+    expect(getPublicChampionshipRoute('/', 'camp.stcplay.com.br')).toEqual({ type: 'list' });
+  });
+
   it('detects public championship slugs without treating app routes or assets as public pages', () => {
     expect(getPublicChampionshipRoute('/resenha-open-2026')).toEqual({
       type: 'slug',

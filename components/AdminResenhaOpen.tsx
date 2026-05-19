@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
     Shuffle, Trophy, UserPlus, Loader2, Check, ChevronRight,
-    Trash2, User, MapPin, Hash, Star, X, Play, Save, RefreshCw,
+    Trash2, User, MapPin, Star, X, Play, Save, RefreshCw,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import {
     drawClasse5, buildClasse5Bracket,
-    drawClasse4Qualify, drawClasse4PrimeiraFase,
+    drawClasse4PrimeiraFase,
     drawClasse4CabecasDeChave, buildClasse4Bracket,
     buildClasse4OfficialBracket,
     type DrawAthlete, type DrawMatch,
@@ -30,43 +30,6 @@ type DrawSubStep4 = 'qualify' | 'primeira-fase' | 'cabecas-de-chave' | 'done';
 interface Profile { id: string; name: string; category: string | null; }
 
 interface ChampionshipRow { id: string; name: string; status: string; }
-
-// ── Draw animation hook ───────────────────────────────────────────────────────
-
-function useDrawAnimation(
-    eligible: DrawAthlete[],
-    count: number,
-    durationMs = 1800
-): { animating: boolean; display: DrawAthlete[]; trigger: (rngResult: DrawAthlete[]) => void } {
-    const [animating, setAnimating] = useState(false);
-    const [display, setDisplay] = useState<DrawAthlete[]>([]);
-    const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-    const finalRef = useRef<DrawAthlete[]>([]);
-
-    const trigger = (rngResult: DrawAthlete[]) => {
-        finalRef.current = rngResult;
-        setAnimating(true);
-        let ticks = 0;
-        const totalTicks = Math.floor(durationMs / 60);
-
-        timerRef.current = setInterval(() => {
-            ticks++;
-            // Random-looking shuffle of the eligible list for display
-            const shuffled = [...eligible].sort(() => Math.random() - 0.5).slice(0, count);
-            setDisplay(shuffled);
-
-            if (ticks >= totalTicks) {
-                clearInterval(timerRef.current!);
-                setDisplay(finalRef.current);
-                setAnimating(false);
-            }
-        }, 60);
-    };
-
-    useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
-
-    return { animating, display, trigger };
-}
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
@@ -98,7 +61,6 @@ export const AdminResenhaOpen: React.FC = () => {
     const [drawSubStep, setDrawSubStep] = useState<DrawSubStep4>('qualify');
     const [qualifyMatches, setQualifyMatches] = useState<DrawMatch[]>([]);
     const [primeiraFaseMatches, setPrimeiraFaseMatches] = useState<DrawMatch[]>([]);
-    const [quartasSeeds, setQuartasSeeds] = useState<{ quartas1: DrawAthlete; quartas2: DrawAthlete; quartas3: DrawAthlete } | null>(null);
 
     // Bracket
     const [bracket, setBracket] = useState<BracketMatchWithPhase[]>([]);
@@ -272,7 +234,6 @@ export const AdminResenhaOpen: React.FC = () => {
         setDrawMatches([]);
         setQualifyMatches([]);
         setPrimeiraFaseMatches([]);
-        setQuartasSeeds(null);
     }
 
     // ── Draw — 5ª Classe ──────────────────────────────────────────────────────
@@ -318,7 +279,7 @@ export const AdminResenhaOpen: React.FC = () => {
     const [displayQualify, setDisplayQualify] = useState<DrawMatch[]>([]);
     const [displayPrimeira, setDisplayPrimeira] = useState<DrawMatch[]>([]);
     const [displayCabecas, setDisplayCabecas] = useState<{ quartas1: DrawAthlete; quartas2: DrawAthlete; quartas3: DrawAthlete } | null>(null);
-    const [remainingPool4, setRemainingPool4] = useState<DrawAthlete[]>([]);
+    const [remainingPool4] = useState<DrawAthlete[]>([]);
     const anim4Ref = useRef<ReturnType<typeof setInterval> | null>(null);
 
     function runDrawQualify() {
@@ -402,7 +363,6 @@ export const AdminResenhaOpen: React.FC = () => {
             if (ticks >= 30) {
                 clearInterval(anim4Ref.current!);
                 setDisplayCabecas(seeds);
-                setQuartasSeeds(seeds);
                 const full = buildClasse4Bracket(qualifyMatches, primeiraFaseMatches, seeds);
                 setDrawMatches(full);
                 setAnimating4(false);
@@ -461,11 +421,6 @@ export const AdminResenhaOpen: React.FC = () => {
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
-
-    function athleteName(regId: string | null): string {
-        if (!regId) return '?';
-        return athletes.find(a => a.id === regId)?.name ?? '?';
-    }
 
     const ccCount = athletes.filter(a => a.cabeca_de_chave).length;
     const bracketPhases = [...new Set(bracket.map(m => m.round_phase))];
