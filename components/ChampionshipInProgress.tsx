@@ -11,6 +11,7 @@ import { formatDateBr } from '../utils';
 import { MatchGenerationModal } from './MatchGenerationModal';
 import { MatchExportPreview } from './MatchExportPreview';
 import { BracketView } from './BracketView';
+import { ResenhaOpenBracketView } from './ResenhaOpenBracketView';
 import { StandingsDetailModal } from './StandingsDetailModal';
 import { getGroupStageMatches, getRoundMatchesForDisplay } from '../lib/groupKnockout';
 import { ResultModal } from './Championships';
@@ -27,6 +28,12 @@ interface Props {
 }
 
 const _CLASSES = ['1ª Classe', '2ª Classe', '3ª Classe', '4ª Classe', '5ª Classe', '6ª Classe'];
+
+const isResenhaOpenChampionship = (championship?: Pick<Championship, 'name' | 'slug'> | null): boolean => {
+    const name = championship?.name?.toLowerCase() ?? '';
+    const slug = championship?.slug?.toLowerCase() ?? '';
+    return name.includes('resenha open') || slug.includes('resenha-open');
+};
 
 export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentUser, onUpdate, initialTab = 'matches' }) => {
     const [loading, setLoading] = useState(true);
@@ -63,6 +70,7 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
     const [scoringMatch, setScoringMatch] = useState<Match | null>(null);
     const [savingAdminResult, setSavingAdminResult] = useState(false);
     const [selectedBracketCategory, setSelectedBracketCategory] = useState('');
+    const isResenhaOpen = isResenhaOpenChampionship(championship);
     const bracketCategories = React.useMemo(
         () => [...new Set(groups.map(g => g.category))],
         [groups]
@@ -75,8 +83,8 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
     }, [championship.id]);
 
     useEffect(() => {
-        setActiveTab(initialTab);
-    }, [initialTab]);
+        setActiveTab(isResenhaOpen ? 'bracket' : initialTab);
+    }, [initialTab, isResenhaOpen]);
 
     useEffect(() => {
         if (bracketCategories.length === 0) {
@@ -278,18 +286,22 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
     const handleSchedule = async (date: string, time: string, courtId: string) => {
         if (!schedulingMatch) return;
 
+        const updatePayload: Record<string, any> = {
+            scheduled_date: date,
+            scheduled_time: time,
+            status: 'pending'
+        };
+        if (!isResenhaOpen) {
+            updatePayload.court_id = courtId;
+        }
+
         const { error } = await supabase
             .from('matches')
-            .update({
-                scheduled_date: date,
-                scheduled_time: time,
-                court_id: courtId,
-                status: 'pending' // Ensure status is pending (not waiting)
-            })
+            .update(updatePayload)
             .eq('id', schedulingMatch.id);
 
         if (error) {
-            alert('Erro ao agendar: ' + error.message);
+            alert((isResenhaOpen ? 'Erro ao salvar horário sugerido: ' : 'Erro ao agendar: ') + error.message);
             throw error;
         }
 
@@ -685,12 +697,14 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                 >
                     RODADAS
                 </button>
-                <button
-                    onClick={() => setActiveTab('standings')}
-                    className={`flex-1 py-3 rounded-2xl text-[10px] font-black tracking-widest transition-all ${activeTab === 'standings' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-400'}`}
-                >
-                    CLASSIFICAÇÃO
-                </button>
+                {!isResenhaOpen && (
+                    <button
+                        onClick={() => setActiveTab('standings')}
+                        className={`flex-1 py-3 rounded-2xl text-[10px] font-black tracking-widest transition-all ${activeTab === 'standings' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-400'}`}
+                    >
+                        CLASSIFICAÇÃO
+                    </button>
+                )}
                 <button
                     onClick={() => setActiveTab('bracket')}
                     className={`flex-1 py-3 rounded-2xl text-[10px] font-black tracking-widest transition-all ${activeTab === 'bracket' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-400'}`}
@@ -885,8 +899,10 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
             ) : (
                 // Bracket Tab - Sub-tabs by class
                 <div className="space-y-6 pb-20">
-                    {/* Class Sub-Tabs */}
-                    <>
+                    {isResenhaOpen ? (
+                        <ResenhaOpenBracketView championshipId={championship.id} />
+                    ) : (
+                        <>
                         <div className="flex bg-white p-2 rounded-3xl shadow-sm border border-stone-200 gap-2 overflow-x-auto">
                             {bracketCategories.map(category => (
                                 <button
@@ -911,6 +927,7 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                             category={selectedBracketCategory}
                         />
                     </>
+                    )}
                 </div>
             )}
             {/* Modals */}
@@ -923,6 +940,7 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                     className={registrations.find(r => r.id === schedulingMatch.registration_a_id)?.class || ''}
                     courts={courts}
                     isAdmin={currentUser?.role === 'admin'}
+                    mode={isResenhaOpen ? 'suggested-time' : 'schedule'}
                     onSchedule={handleSchedule}
                     onClose={() => setSchedulingMatch(null)}
                 />

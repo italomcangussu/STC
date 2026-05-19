@@ -4,6 +4,7 @@ import { Championship, ChampionshipRound, Match, ChampionshipRegistration } from
 import { Trophy, Loader2, ChevronLeft, ChevronRight, Clock, ListOrdered } from 'lucide-react';
 import { GroupStandingsCard } from './GroupStandingsCard';
 import { BracketView } from './BracketView';
+import { ResenhaOpenBracketView } from './ResenhaOpenBracketView';
 import { StandingsDetailModal } from './StandingsDetailModal';
 import { calculateGroupStandings } from '../lib/championshipUtils';
 import { getGroupStageMatches, getRoundMatchesForDisplay } from '../lib/groupKnockout';
@@ -50,6 +51,10 @@ export const PublicChampionshipPage: React.FC<Props> = ({ slug }) => {
             return;
         }
         setChampionship(champ);
+        const isResenhaOpen = isResenhaOpenChampionship(champ);
+        if (isResenhaOpen) {
+            setActiveTab('bracket');
+        }
 
         // 2. Fetch Rounds
         const { data: rnds } = await supabase
@@ -133,6 +138,8 @@ export const PublicChampionshipPage: React.FC<Props> = ({ slug }) => {
         );
     }
 
+    const isResenhaOpen = isResenhaOpenChampionship(championship);
+
     return (
         <div className="h-screen overflow-y-auto">
         <div className="min-h-screen bg-stone-50 pb-20 font-sans selection:bg-saibro-100">
@@ -160,9 +167,13 @@ export const PublicChampionshipPage: React.FC<Props> = ({ slug }) => {
                         <Clock size={24} />
                     </div>
                     <div className="flex-1 min-w-0">
-                        <h3 className="text-sm font-black text-stone-900 uppercase tracking-tighter">Painel de Agendamento</h3>
+                        <h3 className="text-sm font-black text-stone-900 uppercase tracking-tighter">
+                            {isResenhaOpen ? 'Horários sugeridos' : 'Painel de Agendamento'}
+                        </h3>
                         <p className="text-[11px] text-stone-500 mt-1 leading-relaxed font-medium">
-                            Marque seu jogo via WhatsApp e reserve sua quadra. Fique atento às regras de piso por categoria.
+                            {isResenhaOpen
+                                ? 'Os horários exibidos no chaveamento são previsões informativas dentro do prazo de cada fase.'
+                                : 'Marque seu jogo via WhatsApp e reserve sua quadra. Fique atento às regras de piso por categoria.'}
                         </p>
                         <div className="flex gap-2 mt-4 text-[9px] font-black uppercase tracking-widest">
                             <span className="bg-saibro-50 text-saibro-600 px-3 py-1.5 rounded-full border border-saibro-100">Saibro (4-5ª)</span>
@@ -179,12 +190,14 @@ export const PublicChampionshipPage: React.FC<Props> = ({ slug }) => {
                     >
                         RODADAS
                     </button>
-                    <button
-                        onClick={() => setActiveTab('standings')}
-                        className={`flex-1 py-3.5 rounded-2xl text-[10px] font-black tracking-widest transition-all duration-500 ${activeTab === 'standings' ? 'bg-white text-stone-900 shadow-lg' : 'text-stone-400'}`}
-                    >
-                        CLASSIFICAÇÃO
-                    </button>
+                    {!isResenhaOpen && (
+                        <button
+                            onClick={() => setActiveTab('standings')}
+                            className={`flex-1 py-3.5 rounded-2xl text-[10px] font-black tracking-widest transition-all duration-500 ${activeTab === 'standings' ? 'bg-white text-stone-900 shadow-lg' : 'text-stone-400'}`}
+                        >
+                            CLASSIFICAÇÃO
+                        </button>
+                    )}
                     <button
                         onClick={() => setActiveTab('bracket')}
                         className={`flex-1 py-3.5 rounded-2xl text-[10px] font-black tracking-widest transition-all duration-500 ${activeTab === 'bracket' ? 'bg-white text-stone-900 shadow-lg' : 'text-stone-400'}`}
@@ -237,7 +250,7 @@ export const PublicChampionshipPage: React.FC<Props> = ({ slug }) => {
                                             const resultLabel = isFinished
                                                 ? (resultType === 'technical_draw' ? 'Empate técnico' : resultType === 'walkover' ? 'W.O.' : 'Disputado')
                                                 : match.scheduled_date
-                                                    ? `${formatDateBr(match.scheduled_date)} ${match.scheduled_time?.substring(0, 5) || ''}`
+                                                    ? `${isResenhaOpen ? 'Sugerido: ' : ''}${formatDateBr(match.scheduled_date)} ${match.scheduled_time?.substring(0, 5) || ''}`
                                                     : 'Pendente';
 
                                             return (
@@ -326,7 +339,9 @@ export const PublicChampionshipPage: React.FC<Props> = ({ slug }) => {
                 ) : (
                     // Bracket Tab
                     <div className="space-y-6 pb-20">
-                        {(() => {
+                        {isResenhaOpen ? (
+                            <ResenhaOpenBracketView championshipId={championship.id} />
+                        ) : (() => {
                             const categories = [...new Set(groups.map((g: any) => g.category))];
 
                             return (
@@ -377,4 +392,10 @@ export const PublicChampionshipPage: React.FC<Props> = ({ slug }) => {
         </div>
         </div>
     );
+};
+
+const isResenhaOpenChampionship = (championship?: Pick<Championship, 'name' | 'slug'> | null): boolean => {
+    const name = championship?.name?.toLowerCase() ?? '';
+    const slug = championship?.slug?.toLowerCase() ?? '';
+    return name.includes('resenha open') || slug.includes('resenha-open');
 };

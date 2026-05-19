@@ -14,6 +14,7 @@ interface Props {
     onSchedule: (date: string, time: string, courtId: string) => Promise<void>;
     onClose: () => void;
     isAdmin?: boolean;
+    mode?: 'schedule' | 'suggested-time';
 }
 
 const TIME_SLOTS_MORNING = ['06:00', '06:30', '07:00'];
@@ -27,13 +28,14 @@ const ALL_TIME_SLOTS = [
 ];
 
 export const MatchScheduleModal: React.FC<Props> = ({
-    match, roundName, roundStartDate, roundEndDate, className, courts, isAdmin, onSchedule, onClose
+    match, roundName, roundStartDate, roundEndDate, className, courts, isAdmin, mode = 'schedule', onSchedule, onClose
 }) => {
     const [date, setDate] = useState(match.scheduled_date || '');
     const [time, setTime] = useState(match.scheduled_time ? match.scheduled_time.substring(0, 5) : '');
     const [selectedCourtId, setSelectedCourtId] = useState(match.court_id || '');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const isSuggestedTimeMode = mode === 'suggested-time';
 
     // Filter courts based on class (robust check)
     const availableCourts = courts.filter(court => {
@@ -71,7 +73,7 @@ export const MatchScheduleModal: React.FC<Props> = ({
         e.preventDefault();
         setError(null);
 
-        if (!date || !time || !selectedCourtId) {
+        if (!date || !time || (!isSuggestedTimeMode && !selectedCourtId)) {
             setError('Preencha todos os campos.');
             return;
         }
@@ -89,7 +91,7 @@ export const MatchScheduleModal: React.FC<Props> = ({
             await onSchedule(date, time, selectedCourtId);
             onClose();
         } catch (err: any) {
-            setError(err.message || 'Erro ao agendar partida.');
+            setError(err.message || (isSuggestedTimeMode ? 'Erro ao salvar horário sugerido.' : 'Erro ao agendar partida.'));
             setIsSubmitting(false);
         }
     };
@@ -104,7 +106,9 @@ export const MatchScheduleModal: React.FC<Props> = ({
                             <Calendar size={20} />
                         </div>
                         <div>
-                            <h3 className="text-lg font-black text-stone-800">Agendar Partida</h3>
+                            <h3 className="text-lg font-black text-stone-800">
+                                {isSuggestedTimeMode ? 'Editar horário sugerido' : 'Agendar Partida'}
+                            </h3>
                             <p className="text-[10px] font-bold text-saibro-600 uppercase tracking-widest">{roundName}</p>
                         </div>
                     </div>
@@ -116,7 +120,7 @@ export const MatchScheduleModal: React.FC<Props> = ({
                         {/* Date Selection */}
                         <div>
                             <label className="text-xs font-black text-stone-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                                <Calendar size={14} className="text-saibro-500" /> Data do Confronto
+                                <Calendar size={14} className="text-saibro-500" /> {isSuggestedTimeMode ? 'Data sugerida' : 'Data do Confronto'}
                             </label>
                             <input
                                 type="date"
@@ -127,14 +131,14 @@ export const MatchScheduleModal: React.FC<Props> = ({
                                 className="w-full p-4 bg-stone-50 border border-stone-100 rounded-2xl focus:ring-2 focus:ring-saibro-500 outline-hidden transition-all font-bold text-stone-800"
                             />
                             <p className="text-[10px] text-stone-400 mt-2 pl-1 font-medium italic">
-                                Período da rodada: {formatDateBr(roundStartDate)} até {formatDateBr(roundEndDate)}
+                                {isSuggestedTimeMode ? 'Período previsto da fase' : 'Período da rodada'}: {formatDateBr(roundStartDate)} até {formatDateBr(roundEndDate)}
                             </p>
                         </div>
 
                         {/* Time Selection */}
                         <div>
                             <label className="text-xs font-black text-stone-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                                <Clock size={14} className="text-saibro-500" /> Horários Sugeridos
+                                <Clock size={14} className="text-saibro-500" /> {isSuggestedTimeMode ? 'Horário informativo' : 'Horários Sugeridos'}
                             </label>
 
                             {isFriday(date) ? (
@@ -170,47 +174,48 @@ export const MatchScheduleModal: React.FC<Props> = ({
                                 <div className="mt-3 p-3 bg-stone-50 rounded-xl border border-stone-100">
                                     <p className="text-[9px] text-stone-400 font-black uppercase tracking-widest flex items-center gap-2">
                                         <span className="w-1.5 h-1.5 bg-saibro-500 rounded-full" />
-                                        Manhã (6h-7h) • Tarde (16h-19h30) • Noite (20h-22h)
+                                        {isSuggestedTimeMode ? 'Este horário é apenas ilustrativo dentro do prazo da fase' : 'Manhã (6h-7h) • Tarde (16h-19h30) • Noite (20h-22h)'}
                                     </p>
                                 </div>
                             )}
                         </div>
 
-                        {/* Court Selection */}
-                        <div>
-                            <label className="text-xs font-black text-stone-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                                <MapPin size={14} className="text-saibro-500" /> Quadras Disponíveis ({className})
-                            </label>
-                            {availableCourts.length === 0 ? (
-                                <div className="p-4 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-3">
-                                    <AlertCircle className="text-red-500 shrink-0" size={18} />
-                                    <p className="text-red-600 text-xs font-bold">Não há quadras configuradas para esta categoria.</p>
-                                </div>
-                            ) : (
-                                <div className="grid grid-cols-1 gap-2">
-                                    {availableCourts.map(court => (
-                                        <button
-                                            key={court.id}
-                                            type="button"
-                                            onClick={() => setSelectedCourtId(court.id)}
-                                            className={`p-4 rounded-2xl border text-left transition-all flex items-center justify-between ${selectedCourtId === court.id
-                                                ? 'bg-saibro-50 border-saibro-500 ring-1 ring-saibro-500 shadow-inner'
-                                                : 'bg-white border-stone-100 hover:border-saibro-200'
-                                                }`}
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                <div className={`w-2 h-2 rounded-full ${selectedCourtId === court.id ? 'bg-saibro-600' : 'bg-stone-200'}`} />
-                                                <div>
-                                                    <div className="font-black text-stone-800 text-sm tracking-tight">{court.name}</div>
-                                                    <div className="text-[10px] font-bold text-stone-400 uppercase tracking-tighter">{court.type}</div>
+                        {!isSuggestedTimeMode && (
+                            <div>
+                                <label className="text-xs font-black text-stone-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                    <MapPin size={14} className="text-saibro-500" /> Quadras Disponíveis ({className})
+                                </label>
+                                {availableCourts.length === 0 ? (
+                                    <div className="p-4 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-3">
+                                        <AlertCircle className="text-red-500 shrink-0" size={18} />
+                                        <p className="text-red-600 text-xs font-bold">Não há quadras configuradas para esta categoria.</p>
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-1 gap-2">
+                                        {availableCourts.map(court => (
+                                            <button
+                                                key={court.id}
+                                                type="button"
+                                                onClick={() => setSelectedCourtId(court.id)}
+                                                className={`p-4 rounded-2xl border text-left transition-all flex items-center justify-between ${selectedCourtId === court.id
+                                                    ? 'bg-saibro-50 border-saibro-500 ring-1 ring-saibro-500 shadow-inner'
+                                                    : 'bg-white border-stone-100 hover:border-saibro-200'
+                                                    }`}
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`w-2 h-2 rounded-full ${selectedCourtId === court.id ? 'bg-saibro-600' : 'bg-stone-200'}`} />
+                                                    <div>
+                                                        <div className="font-black text-stone-800 text-sm tracking-tight">{court.name}</div>
+                                                        <div className="text-[10px] font-bold text-stone-400 uppercase tracking-tighter">{court.type}</div>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            {selectedCourtId === court.id && <Check size={16} className="text-saibro-600" />}
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
+                                                {selectedCourtId === court.id && <Check size={16} className="text-saibro-600" />}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
 
                         {error && (
                             <div className="p-4 bg-red-50 border border-red-100 rounded-2xl text-red-600 text-xs font-black flex items-center gap-3 animate-in fade-in zoom-in-95">
@@ -236,7 +241,7 @@ export const MatchScheduleModal: React.FC<Props> = ({
                         ) : (
                             <>
                                 <Check size={18} />
-                                Confirmar e Agendar
+                                {isSuggestedTimeMode ? 'Salvar horário sugerido' : 'Confirmar e Agendar'}
                             </>
                         )}
                     </button>

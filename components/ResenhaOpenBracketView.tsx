@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Trophy, Loader2, Star } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { fetchBracket, type BracketMatchWithPhase } from '../lib/resenhaOpenService';
+import { formatDateBr } from '../utils';
 
 interface Props {
     championshipId: string;
@@ -136,18 +137,28 @@ const BracketMatchRow: React.FC<{ match: BracketMatchWithPhase }> = ({ match }) 
 
     return (
         <div className="p-4">
-            <div className="flex items-center gap-2 mb-3">
-                <span className="bg-stone-800 text-white text-xs font-black px-2 py-1 rounded-lg">
-                    J{match.match_number}
-                </span>
-                {match.is_walkover && (
-                    <span className="text-xs font-bold text-red-600 bg-red-50 px-2 py-1 rounded-lg">W.O.</span>
-                )}
-                {isFinished && (
-                    <span className="text-xs font-bold text-green-700 bg-green-50 px-2 py-1 rounded-lg">Encerrado</span>
-                )}
-                {pending && !isFinished && (
-                    <span className="text-xs font-bold text-stone-500 bg-stone-50 px-2 py-1 rounded-lg">Aguardando</span>
+            <div className="flex items-start justify-between gap-3 mb-3">
+                <div className="flex items-center gap-2 flex-wrap">
+                    <span className="bg-stone-800 text-white text-xs font-black px-2 py-1 rounded-lg">
+                        J{match.match_number}
+                    </span>
+                    {match.is_walkover && (
+                        <span className="text-xs font-bold text-red-600 bg-red-50 px-2 py-1 rounded-lg">W.O.</span>
+                    )}
+                    {isFinished && (
+                        <span className="text-xs font-bold text-green-700 bg-green-50 px-2 py-1 rounded-lg">Encerrado</span>
+                    )}
+                    {pending && !isFinished && (
+                        <span className="text-xs font-bold text-stone-500 bg-stone-50 px-2 py-1 rounded-lg">Aguardando</span>
+                    )}
+                </div>
+                {match.scheduled_date && (
+                    <div className="text-right shrink-0">
+                        <p className="text-[9px] font-black uppercase tracking-widest text-stone-400">Horário sugerido</p>
+                        <p className="text-xs font-black text-saibro-700">
+                            {formatDateBr(match.scheduled_date)} {match.scheduled_time?.substring(0, 5) || ''}
+                        </p>
+                    </div>
                 )}
             </div>
 

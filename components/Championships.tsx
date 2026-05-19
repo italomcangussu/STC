@@ -8,6 +8,7 @@ import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { GroupStandingsCard } from './GroupStandingsCard';
 import { BracketView } from './BracketView';
+import { ResenhaOpenBracketView } from './ResenhaOpenBracketView';
 import { StandingsDetailModal } from './StandingsDetailModal';
 
 import { calculateGroupStandings } from '../lib/championshipUtils';
@@ -34,6 +35,12 @@ interface Registration {
 }
 
 const CLASSES = ['1ª Classe', '2ª Classe', '3ª Classe', '4ª Classe', '5ª Classe', '6ª Classe'];
+
+const isResenhaOpenChampionship = (championship?: Pick<ChampionshipWithParticipants, 'name' | 'slug'> | null): boolean => {
+    const name = championship?.name?.toLowerCase() ?? '';
+    const slug = championship?.slug?.toLowerCase() ?? '';
+    return name.includes('resenha open') || slug.includes('resenha-open');
+};
 
 export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) => {
     // Supabase States
@@ -281,16 +288,27 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
 
     const ongoingChamps = championships.filter(c => c.status === 'ongoing');
     const selectedChamp = championships.find(c => c.id === selectedChampId);
+    const selectedChampIsResenhaOpen = isResenhaOpenChampionship(selectedChamp);
 
     // Automatic tab selection based on format if current tab isn't applicable
     // This must be before early returns to maintain consistent hook order
     useEffect(() => {
+        if (selectedChampIsResenhaOpen && activeTab === 'classificacao') {
+            setActiveTab('chaveamento');
+            return;
+        }
         if (selectedChamp?.format === 'pontos-corridos' && activeTab === 'chaveamento') {
             setActiveTab('classificacao');
         }
         // Don't auto-switch for mata-mata or grupo-mata-mata formats
         // grupo-mata-mata supports both classificacao and chaveamento
-    }, [selectedChamp?.format, activeTab]);
+    }, [selectedChamp?.format, selectedChampIsResenhaOpen, activeTab]);
+
+    useEffect(() => {
+        if (selectedChampIsResenhaOpen) {
+            setActiveTab('chaveamento');
+        }
+    }, [selectedChampId, selectedChampIsResenhaOpen]);
 
     // Initialize bracket category when groups change
     useEffect(() => {
@@ -418,18 +436,22 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
     const handleSchedule = async (date: string, time: string, courtId: string) => {
         if (!schedulingMatch) return;
 
+        const updatePayload: Record<string, any> = {
+            scheduled_date: date,
+            scheduled_time: time,
+            status: 'pending'
+        };
+        if (!selectedChampIsResenhaOpen) {
+            updatePayload.court_id = courtId;
+        }
+
         const { error } = await supabase
             .from('matches')
-            .update({
-                scheduled_date: date,
-                scheduled_time: time,
-                court_id: courtId,
-                status: 'pending' // Ensure status is pending
-            })
+            .update(updatePayload)
             .eq('id', schedulingMatch.id);
 
         if (error) {
-            alert('Erro ao agendar: ' + error.message);
+            alert((selectedChampIsResenhaOpen ? 'Erro ao salvar horário sugerido: ' : 'Erro ao agendar: ') + error.message);
             throw error;
         }
 
@@ -442,6 +464,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                     scheduledTime: time,
                     scheduled_date: date,
                     scheduled_time: time,
+                    court_id: selectedChampIsResenhaOpen ? m.court_id : courtId,
                     status: 'pending'
                 }
                 : m
@@ -996,8 +1019,14 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                     <Clock size={28} strokeWidth={2.5} />
                 </div>
                 <div className="flex-1 relative z-10">
-                    <h3 className="text-base font-black text-stone-900 uppercase tracking-tight">Painel de Agendamento</h3>
-                    <p className="text-xs text-stone-500 mt-1.5 font-bold">Agende e acompanhe suas partidas</p>
+                    <h3 className="text-base font-black text-stone-900 uppercase tracking-tight">
+                        {selectedChampIsResenhaOpen ? 'Horários sugeridos' : 'Painel de Agendamento'}
+                    </h3>
+                    <p className="text-xs text-stone-500 mt-1.5 font-bold">
+                        {selectedChampIsResenhaOpen
+                            ? 'Acompanhe as previsões informativas de cada fase'
+                            : 'Agende e acompanhe suas partidas'}
+                    </p>
                     <div className="flex gap-2 mt-4 text-[10px] flex-wrap">
                         <span className="text-xs font-black bg-linear-to-br from-blue-50 to-blue-100 text-blue-700 px-3 py-1.5 rounded-xl flex items-center gap-1.5 border-2 border-blue-200">
                             <Info size={12} /> 1-3 Classe: Rápida
@@ -1034,18 +1063,20 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                 >
                     <CalendarCheck size={16} className="hidden sm:block shrink-0" /> <span className="truncate">Jogos</span>
                 </button>
-                <button
-                    onClick={() => setActiveTab('classificacao')}
-                    className={`flex-1 min-w-0 flex items-center justify-center gap-1 sm:gap-2 py-3 px-2 sm:py-3.5 sm:px-4 rounded-2xl text-[10px] sm:text-xs font-black uppercase tracking-normal sm:tracking-wider transition-all duration-300 ${
-                        activeTab === 'classificacao' 
-                            ? 'bg-linear-to-br from-saibro-600 to-saibro-700 text-white shadow-lg shadow-saibro-200 sm:scale-105' 
-                            : 'text-stone-500 hover:text-stone-700 hover:bg-stone-50'
-                    }`}
-                >
-                    <ListOrdered size={16} className="hidden sm:block shrink-0" />
-                    <span className="truncate sm:hidden">Classif.</span>
-                    <span className="truncate hidden sm:inline">Classificação</span>
-                </button>
+                {!selectedChampIsResenhaOpen && (
+                    <button
+                        onClick={() => setActiveTab('classificacao')}
+                        className={`flex-1 min-w-0 flex items-center justify-center gap-1 sm:gap-2 py-3 px-2 sm:py-3.5 sm:px-4 rounded-2xl text-[10px] sm:text-xs font-black uppercase tracking-normal sm:tracking-wider transition-all duration-300 ${
+                            activeTab === 'classificacao'
+                                ? 'bg-linear-to-br from-saibro-600 to-saibro-700 text-white shadow-lg shadow-saibro-200 sm:scale-105'
+                                : 'text-stone-500 hover:text-stone-700 hover:bg-stone-50'
+                        }`}
+                    >
+                        <ListOrdered size={16} className="hidden sm:block shrink-0" />
+                        <span className="truncate sm:hidden">Classif.</span>
+                        <span className="truncate hidden sm:inline">Classificação</span>
+                    </button>
+                )}
                 {(selectedChamp.format === 'mata-mata' || selectedChamp.format === 'grupo-mata-mata') && (
                     <button
                         onClick={() => setActiveTab('chaveamento')}
@@ -1169,6 +1200,12 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                                                 isAdmin={currentUser.role === 'admin'}
                                                 currentUserId={currentUser.id}
                                                 canSchedule={canScheduleMatch(match, currentUser.id)}
+                                                scheduleMode={selectedChampIsResenhaOpen ? 'suggested' : 'schedule'}
+                                                canManageSchedule={
+                                                    selectedChampIsResenhaOpen
+                                                        ? currentUser.role === 'admin'
+                                                        : (currentUser.role === 'admin' || match.playerAId === currentUser.id || match.playerBId === currentUser.id)
+                                                }
                                             />
                                         ))}
                                 </div>
@@ -1404,6 +1441,9 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                                                                                         <div className="flex flex-col items-end gap-2">
                                                                                             {match.scheduled_date ? (
                                                                                                 <>
+                                                                                                    <span className="text-[9px] font-black uppercase tracking-widest text-stone-400">
+                                                                                                        {selectedChampIsResenhaOpen ? 'Sugerido' : 'Agendado'}
+                                                                                                    </span>
                                                                                                     <div className="flex items-center gap-2 text-sm bg-saibro-50 px-3 py-1.5 rounded-xl border-2 border-saibro-200">
                                                                                                         <Calendar size={14} className="text-saibro-600" strokeWidth={2.5} />
                                                                                                         <span className="font-black text-saibro-700">
@@ -1416,7 +1456,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                                                                                                             <span className="font-black text-blue-700">{match.scheduled_time}</span>
                                                                                                         </div>
                                                                                                     )}
-                                                                                                    {court && (
+                                                                                                    {court && !selectedChampIsResenhaOpen && (
                                                                                                         <div className="flex items-center gap-2 text-sm bg-stone-800 px-3 py-1.5 rounded-xl shadow-md">
                                                                                                             <MapPin size={14} className="text-white" strokeWidth={2.5} />
                                                                                                             <span className="font-black text-white">{court.name}</span>
@@ -1435,7 +1475,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                                                                                                 ) : (
                                                                                                     <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wide text-stone-500 bg-stone-100 px-3 py-1.5 rounded-lg border border-dashed border-stone-300 whitespace-nowrap">
                                                                                                         <Calendar size={12} className="text-stone-400" />
-                                                                                                        Sem agendamento
+                                                                                                        {selectedChampIsResenhaOpen ? 'Sem horário sugerido' : 'Sem agendamento'}
                                                                                                     </span>
                                                                                                 )
                                                                                             )}
@@ -1510,7 +1550,9 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                 {activeTab === 'chaveamento' && (
                     <div className="space-y-6 pb-10">
                         {/* Only show bracket for grupo-mata-mata format */}
-                        {selectedChamp?.format === 'grupo-mata-mata' && groupsDetail.length > 0 ? (
+                        {selectedChampIsResenhaOpen ? (
+                            <ResenhaOpenBracketView championshipId={selectedChamp.id} />
+                        ) : selectedChamp?.format === 'grupo-mata-mata' && groupsDetail.length > 0 ? (
                             <>
                                 {/* Class Sub-Tabs */}
                                 {(() => {
@@ -1616,6 +1658,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                         className={registrations.find(r => r.id === schedulingMatch.registration_a_id)?.class || ''}
                         courts={courts}
                         isAdmin={currentUser.role === 'admin'}
+                        mode={selectedChampIsResenhaOpen ? 'suggested-time' : 'schedule'}
                         onSchedule={handleSchedule}
                         onClose={() => setSchedulingMatch(null)}
                     />
@@ -2002,7 +2045,29 @@ const isTechnicalDrawMatch = (match: Match): boolean => {
     return match.status === 'finished' && !match.is_walkover && !hasAnyWinner(match) && !hasAnyScore(match);
 };
 
-const MatchCard: React.FC<{ match: Match; profiles: User[]; registrations: Registration[]; isAdmin?: boolean; currentUserId?: string; canSchedule?: boolean; onEdit?: () => void; onSchedule?: () => void }> = ({ match, profiles: _profiles, registrations, isAdmin, currentUserId, canSchedule: _canSchedule, onEdit, onSchedule }) => {
+const MatchCard: React.FC<{
+    match: Match;
+    profiles: User[];
+    registrations: Registration[];
+    isAdmin?: boolean;
+    currentUserId?: string;
+    canSchedule?: boolean;
+    scheduleMode?: 'schedule' | 'suggested';
+    canManageSchedule?: boolean;
+    onEdit?: () => void;
+    onSchedule?: () => void;
+}> = ({
+    match,
+    profiles: _profiles,
+    registrations,
+    isAdmin,
+    currentUserId,
+    canSchedule: _canSchedule,
+    scheduleMode = 'schedule',
+    canManageSchedule,
+    onEdit,
+    onSchedule
+}) => {
     const regA = registrations.find(r => r.id === match.registration_a_id);
     const regB = registrations.find(r => r.id === match.registration_b_id);
 
@@ -2014,6 +2079,8 @@ const MatchCard: React.FC<{ match: Match; profiles: User[]; registrations: Regis
     const isFinished = match.status === 'finished';
     const isTechnicalDraw = isTechnicalDrawMatch(match);
     const hasScores = hasAnyScore(match);
+    const isSuggestedSchedule = scheduleMode === 'suggested';
+    const canEditSchedule = canManageSchedule ?? (isAdmin || match.playerAId === currentUserId || match.playerBId === currentUserId);
 
     // Calculate set winners using LiveScore logic
     const set1Winner = match.scoreA[0] !== undefined && match.scoreB[0] !== undefined 
@@ -2154,7 +2221,9 @@ const MatchCard: React.FC<{ match: Match; profiles: User[]; registrations: Regis
                         </div>
                     ) : match.scheduledDate ? (
                         <div className="bg-linear-to-br from-saibro-50 to-orange-50 px-4 py-2.5 rounded-2xl border-2 border-saibro-200 shadow-md md:w-auto">
-                            <p className="text-[9px] font-black text-saibro-700 uppercase tracking-wider mb-1.5">Agendado</p>
+                            <p className="text-[9px] font-black text-saibro-700 uppercase tracking-wider mb-1.5">
+                                {isSuggestedSchedule ? 'Horário sugerido' : 'Agendado'}
+                            </p>
                             <div className="flex items-center gap-1.5 text-xs font-bold text-saibro-800 mb-0.5">
                                 <Calendar size={12} /> {formatDateBr(match.scheduledDate)}
                             </div>
@@ -2167,7 +2236,9 @@ const MatchCard: React.FC<{ match: Match; profiles: User[]; registrations: Regis
                             <div className="w-10 h-10 bg-stone-100 rounded-full flex items-center justify-center text-stone-300 mb-2 mx-auto">
                                 <Calendar size={18} />
                             </div>
-                            <p className="text-[10px] font-black text-stone-400 uppercase tracking-wider">Pendente</p>
+                            <p className="text-[10px] font-black text-stone-400 uppercase tracking-wider">
+                                {isSuggestedSchedule ? 'Sem horário sugerido' : 'Pendente'}
+                            </p>
                         </div>
                     )}
 
@@ -2182,24 +2253,24 @@ const MatchCard: React.FC<{ match: Match; profiles: User[]; registrations: Regis
                     )}
 
                     {/* Botão Agendar - para partidas sem agendamento */}
-                    {!isFinished && !match.scheduledDate && (isAdmin || match.playerAId === currentUserId || match.playerBId === currentUserId) && (
+                    {!isFinished && !match.scheduledDate && canEditSchedule && (
                         <button
                             onClick={onSchedule}
                             className="w-full md:w-auto bg-linear-to-br from-stone-800 to-stone-900 text-white text-xs font-black uppercase px-5 py-2.5 rounded-xl shadow-lg shadow-stone-300 hover:shadow-xl hover:scale-105 transition-all duration-200 flex items-center justify-center gap-2"
                         >
                             <Calendar size={12} />
-                            Agendar
+                            {isSuggestedSchedule ? 'Editar horário' : 'Agendar'}
                         </button>
                     )}
 
                     {/* Botão Reagendar - para partidas já agendadas */}
-                    {!isFinished && match.scheduledDate && (isAdmin || match.playerAId === currentUserId || match.playerBId === currentUserId) && (
+                    {!isFinished && match.scheduledDate && canEditSchedule && (
                         <button
                             onClick={onSchedule}
                             className="w-full md:w-auto bg-linear-to-br from-blue-600 to-blue-700 text-white text-xs font-black uppercase px-5 py-2.5 rounded-xl shadow-lg shadow-blue-200 hover:shadow-xl hover:scale-105 transition-all duration-200 flex items-center justify-center gap-2"
                         >
                             <Clock size={12} />
-                            Reagendar
+                            {isSuggestedSchedule ? 'Editar horário' : 'Reagendar'}
                         </button>
                     )}
                 </div>

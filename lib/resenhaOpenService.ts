@@ -40,6 +40,8 @@ export interface RegisterGuestParams {
 export interface BracketMatchWithPhase extends BracketMatch {
     round_phase: string;
     bracket_class?: ResenhaClass | string;
+    scheduled_date?: string | null;
+    scheduled_time?: string | null;
 }
 
 // ── Phase definitions ─────────────────────────────────────────────────────────
@@ -400,6 +402,8 @@ export async function fetchBracket(
             is_walkover: m.is_walkover ?? false,
             round_phase: (m.round as any)?.phase ?? '',
             bracket_class: getMatchClass(m),
+            scheduled_date: m.scheduled_date ?? null,
+            scheduled_time: m.scheduled_time ?? null,
         };
     });
 }
