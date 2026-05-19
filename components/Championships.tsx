@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Trophy, Calendar, CalendarCheck, ListOrdered, GitMerge, ChevronDown, Loader2, Download, Share2, Users, Shirt, ChevronLeft, ChevronRight, Clock, MapPin, Info, Save, Plus, Minus, X, AlertTriangle } from 'lucide-react';
+import { Trophy, Calendar, CalendarCheck, ListOrdered, GitMerge, ChevronDown, Loader2, Download, Share2, Users, Shirt, ChevronLeft, ChevronRight, Clock, MapPin, Save, Plus, Minus, X, AlertTriangle } from 'lucide-react';
 import { Championship, Match, User, ChampionshipRound } from '../types';
 import { getMatchWinner, formatDateBr, getNowInFortaleza, formatDate } from '../utils';
 import { supabase } from '../lib/supabase';
@@ -1008,36 +1008,6 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                         <Calendar size={16} className="drop-shadow" />
                         {selectedChamp.endDate ? `Finais em ${formatDateBr(selectedChamp.endDate)}` : 'Finais em breve'}
                     </p>
-                </div>
-            </div>
-
-            {/* 1.5 SCHEDULING DASHBOARD (Static Top) */}
-            <div className="bg-white rounded-3xl p-6 shadow-lg shadow-stone-200/50 border-2 border-stone-100 flex items-start gap-5 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-40 h-40 bg-saibro-500/5 rounded-full -mr-20 -mt-20" />
-                <div className="absolute bottom-0 left-0 w-28 h-28 bg-blue-500/5 rounded-full -ml-14 -mb-14" />
-                <div className="bg-linear-to-br from-saibro-500 to-saibro-600 p-4 rounded-2xl text-white shadow-lg shadow-saibro-200">
-                    <Clock size={28} strokeWidth={2.5} />
-                </div>
-                <div className="flex-1 relative z-10">
-                    <h3 className="text-base font-black text-stone-900 uppercase tracking-tight">
-                        {selectedChampIsResenhaOpen ? 'Horários sugeridos' : 'Painel de Agendamento'}
-                    </h3>
-                    <p className="text-xs text-stone-500 mt-1.5 font-bold">
-                        {selectedChampIsResenhaOpen
-                            ? 'Acompanhe as previsões informativas de cada fase'
-                            : 'Agende e acompanhe suas partidas'}
-                    </p>
-                    <div className="flex gap-2 mt-4 text-[10px] flex-wrap">
-                        <span className="text-xs font-black bg-linear-to-br from-blue-50 to-blue-100 text-blue-700 px-3 py-1.5 rounded-xl flex items-center gap-1.5 border-2 border-blue-200">
-                            <Info size={12} /> 1-3 Classe: Rápida
-                        </span>
-                        <span className="text-xs font-black bg-linear-to-br from-saibro-50 to-orange-50 text-saibro-700 px-3 py-1.5 rounded-xl flex items-center gap-1.5 border-2 border-saibro-200">
-                            <Info size={12} /> 4-5 Classe: Saibro
-                        </span>
-                        <span className="text-xs font-black bg-linear-to-br from-stone-800 to-stone-900 text-white px-3 py-1.5 rounded-xl flex items-center gap-1.5 shadow-md">
-                            <Info size={12} /> 6 Classe: Rápida
-                        </span>
-                    </div>
                 </div>
             </div>
 

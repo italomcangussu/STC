@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Championship, ChampionshipRound, Match, ChampionshipRegistration } from '../types';
-import { Trophy, Loader2, ChevronLeft, ChevronRight, Clock, ListOrdered } from 'lucide-react';
+import { Trophy, Loader2, ChevronLeft, ChevronRight, ListOrdered } from 'lucide-react';
 import { GroupStandingsCard } from './GroupStandingsCard';
 import { BracketView } from './BracketView';
 import { ResenhaOpenBracketView } from './ResenhaOpenBracketView';
@@ -177,27 +177,6 @@ export const PublicChampionshipPage: React.FC<Props> = ({ slug, championshipId }
             </div>
 
             <div className="max-w-md mx-auto px-4 -mt-8 relative z-20 space-y-6">
-
-                {/* Scheduling Info Card */}
-                <div className="rounded-[2.5rem] p-6 shadow-xl shadow-stone-200/50 border border-stone-100 flex items-start gap-5 backdrop-blur-sm bg-white/90">
-                    <div className="bg-saibro-100 p-4 rounded-3xl text-saibro-600 shadow-inner">
-                        <Clock size={24} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                        <h3 className="text-sm font-black text-stone-900 uppercase tracking-tighter">
-                            {isResenhaOpen ? 'Horários sugeridos' : 'Painel de Agendamento'}
-                        </h3>
-                        <p className="text-[11px] text-stone-500 mt-1 leading-relaxed font-medium">
-                            {isResenhaOpen
-                                ? 'Os horários exibidos no chaveamento são previsões informativas dentro do prazo de cada fase.'
-                                : 'Marque seu jogo via WhatsApp e reserve sua quadra. Fique atento às regras de piso por categoria.'}
-                        </p>
-                        <div className="flex gap-2 mt-4 text-[9px] font-black uppercase tracking-widest">
-                            <span className="bg-saibro-50 text-saibro-600 px-3 py-1.5 rounded-full border border-saibro-100">Saibro (4-5ª)</span>
-                            <span className="bg-stone-900 text-white px-3 py-1.5 rounded-full shadow-lg">Rápida (6ª)</span>
-                        </div>
-                    </div>
-                </div>
 
                 {/* Main Tabs: RODADAS / CLASSIFICAÇÃO / CHAVEAMENTO */}
                 <div className="flex bg-stone-200/50 p-1.5 rounded-3xl backdrop-blur-md">
