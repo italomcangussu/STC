@@ -96,6 +96,20 @@ export async function createResenhaOpenChampionship(
 ): Promise<string> {
     const seriesId = await fetchResenhaOpenSeriesId();
 
+    const { data: existing, error: existingError } = await supabase
+        .from('championships')
+        .select('id, status')
+        .eq('series_id', seriesId)
+        .eq('name', params.name)
+        .eq('start_date', params.startDate)
+        .eq('end_date', params.endDate)
+        .in('status', ['draft', 'active', 'ongoing'])
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+    if (existingError) throw new Error(`Erro ao verificar campeonato existente: ${existingError.message}`);
+    if (existing && existing.length > 0) return existing[0].id;
+
     const { data, error } = await supabase
         .from('championships')
         .insert({
@@ -122,8 +136,31 @@ export async function createResenhaOpenRounds(
     dateFn: (roundDef: RoundDef) => RoundDateRange
 ): Promise<Map<string, string>> {
     const roundDefs = roundDefsForClass(classe);
+    const expectedRoundNumbers = roundDefs.map(rd => rd.roundNumber);
 
-    const rows = roundDefs.map(rd => {
+    const { data: existingRounds, error: existingError } = await supabase
+        .from('championship_rounds')
+        .select('id, phase, round_number')
+        .eq('championship_id', championshipId)
+        .in('round_number', expectedRoundNumbers)
+        .limit(expectedRoundNumbers.length);
+
+    if (existingError) throw new Error(`Erro ao verificar rodadas existentes: ${existingError.message}`);
+
+    const existingByRoundNumber = new Map<number, { id: string; phase: string }>(
+        (existingRounds ?? []).map((round: any) => [round.round_number, { id: round.id, phase: round.phase }])
+    );
+
+    if (existingByRoundNumber.size === roundDefs.length) {
+        return new Map(
+            roundDefs.map(rd => {
+                const existingRound = existingByRoundNumber.get(rd.roundNumber)!;
+                return [existingRound.phase, existingRound.id];
+            })
+        );
+    }
+
+    const rows = roundDefs.filter(rd => !existingByRoundNumber.has(rd.roundNumber)).map(rd => {
         const { startDate, endDate } = dateFn(rd);
         return {
             championship_id: championshipId,
@@ -145,6 +182,10 @@ export async function createResenhaOpenRounds(
 
     // phase → round_id map
     const phaseToId = new Map<string, string>();
+    for (const rd of roundDefs) {
+        const existingRound = existingByRoundNumber.get(rd.roundNumber);
+        if (existingRound) phaseToId.set(existingRound.phase, existingRound.id);
+    }
     for (const row of data) phaseToId.set(row.phase, row.id);
     return phaseToId;
 }

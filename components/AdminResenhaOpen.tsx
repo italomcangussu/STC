@@ -114,7 +114,7 @@ export const AdminResenhaOpen: React.FC = () => {
         const { data } = await supabase
             .from('championships')
             .select('id, name, status')
-            .in('status', ['active', 'finished'])
+            .in('status', ['draft', 'active', 'finished'])
             .order('created_at', { ascending: false });
         setChampionships((data ?? []) as ChampionshipRow[]);
     }
