@@ -3,6 +3,13 @@ export type PublicChampionshipRoute =
   | { type: 'slug'; slug: string }
   | { type: 'none' };
 
+export interface PublicChampionshipSummary {
+  id: string;
+  slug: string | null;
+  status: string | null;
+  registration_open: boolean | null;
+}
+
 const PUBLIC_CHAMPIONSHIPS_PATH = 'campeonatos-publico';
 
 const APP_PATHS = new Set([
@@ -43,4 +50,17 @@ export function getPublicChampionshipRoute(pathname: string): PublicChampionship
   }
 
   return { type: 'slug', slug: normalized };
+}
+
+export function selectPublicChampionship(championships: PublicChampionshipSummary[]) {
+  const active = championships.find(c => c.status === 'active' || c.status === 'ongoing');
+  const registrationOpen = championships.find(c => c.registration_open === true);
+  const selected = active || registrationOpen || championships[0] || null;
+
+  if (!selected) return null;
+
+  return {
+    id: selected.id,
+    slug: selected.slug,
+  };
 }

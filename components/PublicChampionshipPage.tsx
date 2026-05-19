@@ -11,10 +11,11 @@ import { getGroupStageMatches, getRoundMatchesForDisplay } from '../lib/groupKno
 import { formatDateBr } from '../utils';
 
 interface Props {
-    slug: string;
+    slug?: string;
+    championshipId?: string;
 }
 
-export const PublicChampionshipPage: React.FC<Props> = ({ slug }) => {
+export const PublicChampionshipPage: React.FC<Props> = ({ slug, championshipId }) => {
     const [championship, setChampionship] = useState<Championship | null>(null);
     const [rounds, setRounds] = useState<ChampionshipRound[]>([]);
     const [matches, setMatches] = useState<Match[]>([]);
@@ -47,16 +48,19 @@ export const PublicChampionshipPage: React.FC<Props> = ({ slug }) => {
     useEffect(() => {
         fetchData();
 // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [slug]);
+    }, [slug, championshipId]);
 
     const fetchData = async () => {
         setLoading(true);
 
         // 1. Get Championship by Slug
-        const { data: champ, error } = await supabase
+        const query = supabase
             .from('championships')
-            .select('*')
-            .eq('slug', slug)
+            .select('*');
+
+        const { data: champ, error } = await (championshipId
+            ? query.eq('id', championshipId)
+            : query.eq('slug', slug || ''))
             .maybeSingle();
 
         if (error || !champ) {

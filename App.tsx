@@ -23,7 +23,7 @@ import { Auth } from './components/Auth';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { User } from './types';
 import { supabase } from './lib/supabase';
-import { getPublicChampionshipRoute, PublicChampionshipRoute } from './lib/publicRoutes';
+import { getPublicChampionshipRoute, PublicChampionshipRoute, selectPublicChampionship } from './lib/publicRoutes';
 
 import { OnboardingModal } from './components/OnboardingModal';
 import { ChallengeNotificationPopup } from './components/ChallengeNotificationPopup';
@@ -40,7 +40,9 @@ interface Announcement {
 }
 
 const PublicChampionshipEntry: React.FC<{ route: PublicChampionshipRoute }> = ({ route }) => {
-  const [publicSlug, setPublicSlug] = useState<string | null>(route.type === 'slug' ? route.slug : null);
+  const [publicTarget, setPublicTarget] = useState<{ slug?: string; championshipId?: string } | null>(
+    route.type === 'slug' ? { slug: route.slug } : null
+  );
   const [loadingPublic, setLoadingPublic] = useState(route.type === 'list');
 
   useEffect(() => {
@@ -50,25 +52,26 @@ const PublicChampionshipEntry: React.FC<{ route: PublicChampionshipRoute }> = ({
       try {
         const { data: champs, error } = await supabase
           .from('championships')
-          .select('slug, status, registration_open, created_at')
+          .select('id, slug, status, registration_open, created_at')
           .order('created_at', { ascending: false });
 
         if (error) {
           throw error;
         }
 
-        if (champs && champs.length > 0) {
-          // Auto-select priority: 1. Ongoing, 2. Registration Open, 3. Most recent
-          const ongoing = champs.find(c => c.status === 'ongoing');
-          const regOpen = champs.find(c => c.registration_open === true);
-          const selected = ongoing || regOpen || champs[0];
-          setPublicSlug(selected.slug);
+        const selected = selectPublicChampionship(champs || []);
+
+        if (selected) {
+          setPublicTarget(selected.slug
+            ? { slug: selected.slug }
+            : { championshipId: selected.id }
+          );
         } else {
-          setPublicSlug('nenhum-campeonato');
+          setPublicTarget({ slug: 'nenhum-campeonato' });
         }
       } catch (err) {
         console.error('Error fetching active public championship:', err);
-        setPublicSlug('erro-campeonato');
+        setPublicTarget({ slug: 'erro-campeonato' });
       } finally {
         setLoadingPublic(false);
       }
@@ -85,7 +88,7 @@ const PublicChampionshipEntry: React.FC<{ route: PublicChampionshipRoute }> = ({
     );
   }
 
-  return <PublicChampionshipPage slug={publicSlug || 'nenhum-campeonato'} />;
+  return <PublicChampionshipPage {...(publicTarget || { slug: 'nenhum-campeonato' })} />;
 };
 
 // -- COMPONENT: Announcement Popup --
