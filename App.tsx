@@ -131,14 +131,16 @@ const AppContent: React.FC = () => {
 
   /* Routing for Public Championship Pages */
   // Simple router based on pathname for Public Slug
-  const [publicSlug, setPublicSlug] = useState<string | null>(null);
-  const [loadingPublic, setLoadingPublic] = useState(false);
+  const pathname = window.location.pathname;
+  const isPublicList = pathname === '/campeonatos-publico';
+  const isPublicSlug = !isPublicList && pathname !== '/' && pathname !== '' && !pathname.includes('.');
+
+  const [publicSlug, setPublicSlug] = useState<string | null>(isPublicSlug ? pathname.substring(1) : null);
+  const [loadingPublic, setLoadingPublic] = useState(isPublicList);
 
   useEffect(() => {
     const handleRouting = async () => {
-      const path = window.location.pathname;
-      if (path === '/campeonatos-publico') {
-        setLoadingPublic(true);
+      if (isPublicList) {
         try {
           const { data: champs } = await supabase
             .from('championships')
@@ -160,15 +162,11 @@ const AppContent: React.FC = () => {
         } finally {
           setLoadingPublic(false);
         }
-      } else if (path !== '/' && path !== '' && !path.includes('.')) {
-        // Assume it is a slug
-        const slug = path.substring(1);
-        setPublicSlug(slug);
       }
     };
 
     handleRouting();
-  }, []);
+  }, [isPublicList]);
 
   if (loadingPublic) {
     return (
