@@ -132,15 +132,51 @@ const AppContent: React.FC = () => {
   /* Routing for Public Championship Pages */
   // Simple router based on pathname for Public Slug
   const [publicSlug, setPublicSlug] = useState<string | null>(null);
+  const [loadingPublic, setLoadingPublic] = useState(false);
 
   useEffect(() => {
-    const path = window.location.pathname;
-    if (path !== '/' && path !== '' && !path.includes('.')) {
-      // Assume it is a slug
-      const slug = path.substring(1);
-      setPublicSlug(slug);
-    }
+    const handleRouting = async () => {
+      const path = window.location.pathname;
+      if (path === '/campeonatos-publico') {
+        setLoadingPublic(true);
+        try {
+          const { data: champs } = await supabase
+            .from('championships')
+            .select('slug, status, registration_open, created_at')
+            .order('created_at', { ascending: false });
+
+          if (champs && champs.length > 0) {
+            // Auto-select priority: 1. Ongoing, 2. Registration Open, 3. Most recent
+            const ongoing = champs.find(c => c.status === 'ongoing');
+            const regOpen = champs.find(c => c.registration_open === true);
+            const selected = ongoing || regOpen || champs[0];
+            setPublicSlug(selected.slug);
+          } else {
+            setPublicSlug('nenhum-campeonato');
+          }
+        } catch (err) {
+          console.error('Error fetching active public championship:', err);
+          setPublicSlug('erro-campeonato');
+        } finally {
+          setLoadingPublic(false);
+        }
+      } else if (path !== '/' && path !== '' && !path.includes('.')) {
+        // Assume it is a slug
+        const slug = path.substring(1);
+        setPublicSlug(slug);
+      }
+    };
+
+    handleRouting();
   }, []);
+
+  if (loadingPublic) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-stone-900">
+        <Loader2 className="animate-spin text-saibro-500" size={48} />
+      </div>
+    );
+  }
 
   if (publicSlug) {
     return <PublicChampionshipPage slug={publicSlug} />;
