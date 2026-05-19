@@ -7,7 +7,7 @@ describe('installViewportHeightSync', () => {
         document.documentElement.style.removeProperty('--app-viewport-height');
     });
 
-    it('uses full iOS standalone screen height when visualViewport is shorter', () => {
+    it('uses stable iOS standalone innerHeight to avoid status bar mismatch', () => {
         Object.defineProperty(window.navigator, 'userAgent', {
             configurable: true,
             value: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15',
@@ -29,7 +29,7 @@ describe('installViewportHeightSync', () => {
 
         const cleanup = installViewportHeightSync();
 
-        expect(document.documentElement.style.getPropertyValue('--app-viewport-height')).toBe('956px');
+        expect(document.documentElement.style.getPropertyValue('--app-viewport-height')).toBe('895px');
 
         cleanup();
     });

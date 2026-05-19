@@ -12,15 +12,25 @@ function isIosStandalonePwa() {
     return isIos && isStandalone;
 }
 
+let maxIosHeight = 0;
+let lastWidth = 0;
+
 function getViewportHeight() {
     const measuredHeight = window.visualViewport?.height ?? window.innerHeight;
 
     if (!isIosStandalonePwa()) return measuredHeight;
 
-    const screenHeight = window.screen?.height;
-    if (!Number.isFinite(screenHeight) || screenHeight <= 0) return measuredHeight;
+    const currentWidth = window.innerWidth;
+    if (currentWidth !== lastWidth) {
+        maxIosHeight = 0;
+        lastWidth = currentWidth;
+    }
 
-    return Math.max(measuredHeight, screenHeight);
+    if (window.innerHeight > maxIosHeight) {
+        maxIosHeight = window.innerHeight;
+    }
+
+    return maxIosHeight || window.innerHeight;
 }
 
 function publish() {
