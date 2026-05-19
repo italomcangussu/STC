@@ -31,6 +31,19 @@ export const PublicChampionshipPage: React.FC<Props> = ({ slug }) => {
     // Bracket tab category
     const [selectedCategory, setSelectedCategory] = useState<string>('');
 
+    // Match filtering by class
+    const [selectedMatchClass, setSelectedMatchClass] = useState<string>('Todas');
+
+    const availableClasses = React.useMemo(() => {
+        const classes = new Set<string>();
+        registrations.forEach(r => {
+            if (r.class) {
+                classes.add(r.class);
+            }
+        });
+        return Array.from(classes).sort((a, b) => a.localeCompare(b, 'pt-BR', { numeric: true }));
+    }, [registrations]);
+
     useEffect(() => {
         fetchData();
 // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -238,61 +251,107 @@ export const PublicChampionshipPage: React.FC<Props> = ({ slug }) => {
                                         </button>
                                     </div>
 
+                                    {/* Class Switcher */}
+                                    {availableClasses.length > 1 && (
+                                        <div className="flex bg-stone-200/50 p-1.5 rounded-3xl backdrop-blur-md gap-1">
+                                            <button
+                                                onClick={() => setSelectedMatchClass('Todas')}
+                                                className={`flex-1 py-3 rounded-2xl text-[10px] font-black tracking-widest transition-all ${
+                                                    selectedMatchClass === 'Todas'
+                                                        ? 'bg-white text-stone-900 shadow-sm'
+                                                        : 'text-stone-400 hover:text-stone-600'
+                                                }`}
+                                            >
+                                                TODAS
+                                            </button>
+                                            {availableClasses.map(cls => (
+                                                <button
+                                                    key={cls}
+                                                    onClick={() => setSelectedMatchClass(cls)}
+                                                    className={`flex-1 py-3 rounded-2xl text-[10px] font-black tracking-widest transition-all ${
+                                                        selectedMatchClass === cls
+                                                            ? 'bg-white text-stone-900 shadow-sm'
+                                                            : 'text-stone-400 hover:text-stone-600'
+                                                    }`}
+                                                >
+                                                    {cls.toUpperCase()}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+
                                     {/* Match Cards */}
                                     <div className="space-y-4 pb-20">
-                                        {getRoundMatchesForDisplay(currentRound, groups, registrations, matches).map(match => {
-                                            const regA = registrations.find(r => r.id === match.registration_a_id);
-                                            const regB = registrations.find(r => r.id === match.registration_b_id);
-                                            const nameA = regA?.user?.name || regA?.guest_name || '...';
-                                            const nameB = regB?.user?.name || regB?.guest_name || '...';
-                                            const isFinished = match.status === 'finished';
-                                            const resultType = match.result_type || (match.is_walkover ? 'walkover' : 'played');
-                                            const resultLabel = isFinished
-                                                ? (resultType === 'technical_draw' ? 'Empate técnico' : resultType === 'walkover' ? 'W.O.' : 'Disputado')
-                                                : match.scheduled_date
-                                                    ? `${isResenhaOpen ? 'Sugerido: ' : ''}${formatDateBr(match.scheduled_date)} ${match.scheduled_time?.substring(0, 5) || ''}`
-                                                    : 'Pendente';
+                                        {(() => {
+                                            const roundMatches = getRoundMatchesForDisplay(currentRound, groups, registrations, matches);
+                                            const filtered = roundMatches.filter(match => {
+                                                if (selectedMatchClass === 'Todas') return true;
+                                                const regA = registrations.find(r => r.id === match.registration_a_id);
+                                                return regA?.class === selectedMatchClass;
+                                            });
 
-                                            return (
-                                                <div key={match.id} className="bg-white rounded-4xl p-6 shadow-sm border border-stone-100 relative overflow-hidden transition-all hover:border-saibro-200 group">
-                                                    <div className="absolute top-0 left-0 bg-stone-50 px-3 py-1 rounded-br-2xl text-[9px] font-black text-stone-400 uppercase tracking-tighter">
-                                                        {regA?.class || 'N/A'}
+                                            if (filtered.length === 0) {
+                                                return (
+                                                    <div className="p-8 text-center text-stone-400 text-xs font-bold bg-white rounded-3xl border border-stone-100 shadow-xs">
+                                                        Nenhum jogo nesta classe para esta rodada.
                                                     </div>
+                                                );
+                                            }
 
-                                                    <div className="flex items-center gap-6 mt-2">
-                                                        <div className="flex-1 space-y-4">
-                                                            <div className="flex items-center justify-between">
-                                                                <span className={`text-[9px] uppercase tracking-widest font-black ${isFinished ? 'text-stone-400' : 'text-saibro-500'}`}>
-                                                                    {resultLabel}
-                                                                </span>
-                                                            </div>
-                                                            {/* Player A */}
-                                                            <div className="flex items-center justify-between">
-                                                                <span className={`text-sm font-bold ${isWinnerSide(match, 'A') ? 'text-stone-900' : 'text-stone-500'}`}>{nameA}</span>
-                                                                {isFinished && (
-                                                                    <div className="flex gap-1">
-                                                                        {match.score_a.map((s: number, i: number) => (
-                                                                            <span key={i} className={`w-7 h-7 flex items-center justify-center rounded-lg text-xs font-black ${match.score_a[i] > match.score_b[i] ? 'bg-saibro-600 text-white shadow-sm' : 'bg-stone-50 text-stone-300'}`}>{s}</span>
-                                                                        ))}
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                            {/* Player B */}
-                                                            <div className="flex items-center justify-between">
-                                                                <span className={`text-sm font-bold ${isWinnerSide(match, 'B') ? 'text-stone-900' : 'text-stone-500'}`}>{nameB}</span>
-                                                                {isFinished && (
-                                                                    <div className="flex gap-1">
-                                                                        {match.score_b.map((s: number, i: number) => (
-                                                                            <span key={i} className={`w-7 h-7 flex items-center justify-center rounded-lg text-xs font-black ${match.score_b[i] > match.score_a[i] ? 'bg-saibro-600 text-white shadow-sm' : 'bg-stone-50 text-stone-300'}`}>{s}</span>
-                                                                        ))}
-                                                                    </div>
-                                                                )}
+                                            return filtered.map(match => {
+                                                const regA = registrations.find(r => r.id === match.registration_a_id);
+                                                const regB = registrations.find(r => r.id === match.registration_b_id);
+                                                const nameA = regA?.user?.name || regA?.guest_name || '...';
+                                                const nameB = regB?.user?.name || regB?.guest_name || '...';
+                                                const isFinished = match.status === 'finished';
+                                                const resultType = match.result_type || (match.is_walkover ? 'walkover' : 'played');
+                                                const resultLabel = isFinished
+                                                    ? (resultType === 'technical_draw' ? 'Empate técnico' : resultType === 'walkover' ? 'W.O.' : 'Disputado')
+                                                    : match.scheduled_date
+                                                        ? `${isResenhaOpen ? 'Sugerido: ' : ''}${formatDateBr(match.scheduled_date)} ${match.scheduled_time?.substring(0, 5) || ''}`
+                                                        : 'Pendente';
+
+                                                return (
+                                                    <div key={match.id} className="bg-white rounded-4xl p-6 shadow-sm border border-stone-100 relative overflow-hidden transition-all hover:border-saibro-200 group">
+                                                        <div className="absolute top-0 left-0 bg-stone-50 px-3 py-1 rounded-br-2xl text-[9px] font-black text-stone-400 uppercase tracking-tighter">
+                                                            {regA?.class || 'N/A'}
+                                                        </div>
+
+                                                        <div className="flex items-center gap-6 mt-2">
+                                                            <div className="flex-1 space-y-4">
+                                                                <div className="flex items-center justify-between">
+                                                                    <span className={`text-[9px] uppercase tracking-widest font-black ${isFinished ? 'text-stone-400' : 'text-saibro-500'}`}>
+                                                                        {resultLabel}
+                                                                    </span>
+                                                                </div>
+                                                                {/* Player A */}
+                                                                <div className="flex items-center justify-between">
+                                                                    <span className={`text-sm font-bold ${isWinnerSide(match, 'A') ? 'text-stone-900' : 'text-stone-500'}`}>{nameA}</span>
+                                                                    {isFinished && (
+                                                                        <div className="flex gap-1">
+                                                                            {match.score_a.map((s: number, i: number) => (
+                                                                                <span key={i} className={`w-7 h-7 flex items-center justify-center rounded-lg text-xs font-black ${match.score_a[i] > match.score_b[i] ? 'bg-saibro-600 text-white shadow-sm' : 'bg-stone-50 text-stone-300'}`}>{s}</span>
+                                                                            ))}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                                {/* Player B */}
+                                                                <div className="flex items-center justify-between">
+                                                                    <span className={`text-sm font-bold ${isWinnerSide(match, 'B') ? 'text-stone-900' : 'text-stone-500'}`}>{nameB}</span>
+                                                                    {isFinished && (
+                                                                        <div className="flex gap-1">
+                                                                            {match.score_b.map((s: number, i: number) => (
+                                                                                <span key={i} className={`w-7 h-7 flex items-center justify-center rounded-lg text-xs font-black ${match.score_b[i] > match.score_a[i] ? 'bg-saibro-600 text-white shadow-sm' : 'bg-stone-50 text-stone-300'}`}>{s}</span>
+                                                                            ))}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                </div>
-                                            );
-                                        })}
+                                                );
+                                            });
+                                        })()}
                                     </div>
                                 </div>
                             );
