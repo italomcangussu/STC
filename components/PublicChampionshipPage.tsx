@@ -179,24 +179,24 @@ export const PublicChampionshipPage: React.FC<Props> = ({ slug, championshipId }
             <div className="max-w-md mx-auto px-4 -mt-8 relative z-20 space-y-6">
 
                 {/* Main Tabs: RODADAS / CLASSIFICAÇÃO / CHAVEAMENTO */}
-                <div className="flex bg-stone-200/50 p-1.5 rounded-3xl backdrop-blur-md">
+                <div className="flex bg-white/65 p-1.5 rounded-3xl backdrop-blur-md shadow-sm">
                     <button
                         onClick={() => setActiveTab('matches')}
-                        className={`flex-1 py-3.5 rounded-2xl text-[10px] font-black tracking-widest transition-all duration-500 ${activeTab === 'matches' ? 'bg-white text-stone-900 shadow-lg' : 'text-stone-400'}`}
+                        className={`flex-1 py-3.5 rounded-2xl text-[10px] font-black tracking-widest transition-all duration-500 ${activeTab === 'matches' ? 'bg-white text-stone-900 shadow-lg' : 'bg-white/25 text-stone-800 hover:bg-white/50 hover:text-stone-950'}`}
                     >
                         RODADAS
                     </button>
                     {!isResenhaOpen && (
                         <button
                             onClick={() => setActiveTab('standings')}
-                            className={`flex-1 py-3.5 rounded-2xl text-[10px] font-black tracking-widest transition-all duration-500 ${activeTab === 'standings' ? 'bg-white text-stone-900 shadow-lg' : 'text-stone-400'}`}
+                            className={`flex-1 py-3.5 rounded-2xl text-[10px] font-black tracking-widest transition-all duration-500 ${activeTab === 'standings' ? 'bg-white text-stone-900 shadow-lg' : 'bg-white/25 text-stone-800 hover:bg-white/50 hover:text-stone-950'}`}
                         >
                             CLASSIFICAÇÃO
                         </button>
                     )}
                     <button
                         onClick={() => setActiveTab('bracket')}
-                        className={`flex-1 py-3.5 rounded-2xl text-[10px] font-black tracking-widest transition-all duration-500 ${activeTab === 'bracket' ? 'bg-white text-stone-900 shadow-lg' : 'text-stone-400'}`}
+                        className={`flex-1 py-3.5 rounded-2xl text-[10px] font-black tracking-widest transition-all duration-500 ${activeTab === 'bracket' ? 'bg-white text-stone-900 shadow-lg' : 'bg-white/25 text-stone-800 hover:bg-white/50 hover:text-stone-950'}`}
                     >
                         CHAVEAMENTO
                     </button>

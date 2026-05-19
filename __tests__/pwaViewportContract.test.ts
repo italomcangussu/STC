@@ -18,10 +18,11 @@ describe('PWA viewport shell contract', () => {
         expect(indexCss).toContain('min-height: var(--app-viewport-height, 100%);');
     });
 
-    it('anchors mobile bottom navigation to the app shell without extra safe-area padding', () => {
+    it('anchors mobile bottom navigation to the app shell with rounded-corner safe padding', () => {
         expect(layoutTsx).toContain('relative h-full flex flex-col');
         expect(layoutTsx).toContain('absolute bottom-0 left-0 right-0');
-        expect(layoutTsx).toContain('pb-[env(safe-area-inset-bottom,0px)]');
+        expect(layoutTsx).toContain('pb-[max(1rem,env(safe-area-inset-bottom,0px))]');
+        expect(layoutTsx).toContain('pb-[calc(76px+max(1rem,env(safe-area-inset-bottom,0px)))]');
         expect(layoutTsx).not.toContain('h-dvh flex flex-col');
         expect(layoutTsx).not.toContain('pb-[calc(35px+env(safe-area-inset-bottom,20px))]');
     });
