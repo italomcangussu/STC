@@ -213,11 +213,11 @@
     }
 
     .pb-navbottom {
-        padding-bottom: max(1.75rem, calc(env(safe-area-inset-bottom, 0px) + 0.5rem));
+        padding-bottom: max(34px, calc(env(safe-area-inset-bottom, 0px) + 12px));
     }
 
     .pb-main-content {
-        padding-bottom: calc(76px + max(1.75rem, calc(env(safe-area-inset-bottom, 0px) + 0.5rem)));
+        padding-bottom: calc(76px + max(34px, calc(env(safe-area-inset-bottom, 0px) + 12px)));
     }
 
     /* Custom Scrollbar */
