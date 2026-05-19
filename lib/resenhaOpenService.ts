@@ -39,6 +39,7 @@ export interface RegisterGuestParams {
 
 export interface BracketMatchWithPhase extends BracketMatch {
     round_phase: string;
+    bracket_class?: ResenhaClass | string;
 }
 
 // ── Phase definitions ─────────────────────────────────────────────────────────
@@ -58,12 +59,11 @@ const CLASSE5_ROUNDS: RoundDef[] = [
 ];
 
 const CLASSE4_ROUNDS: RoundDef[] = [
-    { phase: 'qualify',       roundNumber: 1, name: 'Qualify',         matchNumbers: [1,2,3] },
-    { phase: 'primeira_fase', roundNumber: 2, name: '1ª Fase',         matchNumbers: [4,5,6,7,8,9] },
-    { phase: 'segunda_fase',  roundNumber: 3, name: '2ª Fase',         matchNumbers: [10,11] },
-    { phase: 'quartas',       roundNumber: 4, name: 'Quartas de Final', matchNumbers: [12,13,14,15] },
-    { phase: 'semifinal',     roundNumber: 5, name: 'Semifinais',      matchNumbers: [16,17] },
-    { phase: 'final',         roundNumber: 6, name: 'Final',           matchNumbers: [18] },
+    { phase: 'preliminar', roundNumber: 1, name: 'Preliminar',       matchNumbers: [1,2,3,4] },
+    { phase: 'oitavas',    roundNumber: 2, name: 'Oitavas de Final', matchNumbers: [5,6,7,8,9,10,11,12] },
+    { phase: 'quartas',    roundNumber: 3, name: 'Quartas de Final', matchNumbers: [13,14,15,16] },
+    { phase: 'semifinal',  roundNumber: 4, name: 'Semifinais',       matchNumbers: [17,18] },
+    { phase: 'final',      roundNumber: 5, name: 'Final',            matchNumbers: [19] },
 ];
 
 function roundDefsForClass(classe: ResenhaClass): RoundDef[] {
@@ -338,7 +338,7 @@ export async function fetchBracket(
             .order('match_number', { ascending: true }),
         supabase
             .from('championship_registrations')
-            .select('id, participant_type, guest_name, user:profiles(name)')
+            .select('id, participant_type, guest_name, class, user:profiles(name)')
             .eq('championship_id', championshipId),
     ]);
 
@@ -350,12 +350,33 @@ export async function fetchBracket(
 
     // registrationId → display name
     const nameMap = new Map<string, string>();
+    const classMap = new Map<string, string>();
     for (const r of regs) {
         nameMap.set(r.id, r.participant_type === 'socio' ? (r.user?.name ?? '?') : (r.guest_name ?? 'Convidado'));
+        classMap.set(r.id, r.class ?? '');
     }
 
     // id → match_number (for resolving source references)
     const idToNum = new Map<string, number>(dbMatches.map((m: any) => [m.id, m.match_number]));
+    const matchById = new Map<string, any>(dbMatches.map((m: any) => [m.id, m]));
+    const matchClassCache = new Map<string, string | undefined>();
+    const getMatchClass = (match: any): string | undefined => {
+        if (matchClassCache.has(match.id)) return matchClassCache.get(match.id);
+
+        const directClass =
+            classMap.get(match.registration_a_id) ??
+            classMap.get(match.registration_b_id);
+        if (directClass) {
+            matchClassCache.set(match.id, directClass);
+            return directClass;
+        }
+
+        const sourceA = match.player_a_source_match_id ? matchById.get(match.player_a_source_match_id) : null;
+        const sourceB = match.player_b_source_match_id ? matchById.get(match.player_b_source_match_id) : null;
+        const sourceClass = (sourceA ? getMatchClass(sourceA) : undefined) ?? (sourceB ? getMatchClass(sourceB) : undefined);
+        matchClassCache.set(match.id, sourceClass);
+        return sourceClass;
+    };
 
     return dbMatches.map((m: any): BracketMatchWithPhase => {
         const srcANum = m.player_a_source_match_id ? idToNum.get(m.player_a_source_match_id) : undefined;
@@ -378,6 +399,7 @@ export async function fetchBracket(
             winner_registration_id: m.winner_registration_id ?? null,
             is_walkover: m.is_walkover ?? false,
             round_phase: (m.round as any)?.phase ?? '',
+            bracket_class: getMatchClass(m),
         };
     });
 }

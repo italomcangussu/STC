@@ -67,12 +67,11 @@ describe('resenhaOpenService', () => {
 
     it('reutiliza rodadas existentes antes de inserir novas rodadas', async () => {
         const existingRounds = [
-            { id: 'r1', phase: 'qualify', round_number: 1 },
-            { id: 'r2', phase: 'primeira_fase', round_number: 2 },
-            { id: 'r3', phase: 'segunda_fase', round_number: 3 },
-            { id: 'r4', phase: 'quartas', round_number: 4 },
-            { id: 'r5', phase: 'semifinal', round_number: 5 },
-            { id: 'r6', phase: 'final', round_number: 6 },
+            { id: 'r1', phase: 'preliminar', round_number: 1 },
+            { id: 'r2', phase: 'oitavas', round_number: 2 },
+            { id: 'r3', phase: 'quartas', round_number: 3 },
+            { id: 'r4', phase: 'semifinal', round_number: 4 },
+            { id: 'r5', phase: 'final', round_number: 5 },
         ];
         const existingRoundsChain = makeChain({
             limit: { data: existingRounds, error: null },
@@ -94,8 +93,8 @@ describe('resenhaOpenService', () => {
             () => ({ startDate: '2026-05-20', endDate: '2026-05-23' }),
         );
 
-        expect(phaseMap.get('qualify')).toBe('r1');
-        expect(phaseMap.get('final')).toBe('r6');
+        expect(phaseMap.get('preliminar')).toBe('r1');
+        expect(phaseMap.get('final')).toBe('r5');
         expect(insertRoundsChain.insert).not.toHaveBeenCalled();
     });
 });

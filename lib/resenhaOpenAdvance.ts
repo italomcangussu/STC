@@ -106,6 +106,8 @@ export function mapPhaseToCanonical(roundPhase: string): CanonicalPhase {
         case 'final':        return 'champion';  // loser corrected by caller to 'finalist'
         case 'semifinal':    return 'semifinal';
         case 'quartas':      return 'quarterfinal';
+        case 'preliminar':
+        case 'oitavas':
         case 'segunda_fase':
         case 'classifica_a':
         case 'classifica_b':

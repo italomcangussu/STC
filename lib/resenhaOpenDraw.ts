@@ -65,18 +65,25 @@ export function buildClasse5Bracket(oitavasMatches: DrawMatch[]): DrawMatch[] {
     }
     const all = [...oitavasMatches];
 
-    // Quartas: Oitava n winner × Oitava n+4 winner (pairs: 1v5, 2v6, 3v7, 4v8)
-    for (let i = 0; i < 4; i++) {
+    // Quartas: adjacent first-round winners (1v2, 3v4, 5v6, 7v8)
+    const quarterSources: [number, number][] = [
+        [1, 2],
+        [3, 4],
+        [5, 6],
+        [7, 8],
+    ];
+
+    quarterSources.forEach(([sourceA, sourceB], i) => {
         all.push({
             match_number: 9 + i, // 9, 10, 11, 12
             registration_a_id: null,
             registration_b_id: null,
-            player_a_label: `Vencedor Jogo ${i + 1}`,
-            player_b_label: `Vencedor Jogo ${i + 5}`,
-            player_a_source_match_number: i + 1,
-            player_b_source_match_number: i + 5,
+            player_a_label: `Vencedor Jogo ${sourceA}`,
+            player_b_label: `Vencedor Jogo ${sourceB}`,
+            player_a_source_match_number: sourceA,
+            player_b_source_match_number: sourceB,
         });
-    }
+    });
 
     // Semis
     all.push({
@@ -307,4 +314,87 @@ export function buildClasse4Bracket(
     });
 
     return all;
+}
+
+// ── 4ª Classe: official 20-player bracket ────────────────────────────────────
+
+export function buildClasse4OfficialBracket(
+    athletes: DrawAthlete[],
+    rng?: () => number
+): DrawMatch[] {
+    if (athletes.length !== 20) {
+        throw new Error(`buildClasse4OfficialBracket: esperado 20 atletas, recebido ${athletes.length}`);
+    }
+    const ids = athletes.map(a => a.id);
+    if (new Set(ids).size !== ids.length) {
+        throw new Error('buildClasse4OfficialBracket: atletas duplicados na entrada');
+    }
+
+    const shuffled = shuffle(athletes, rng);
+    const direct = (matchNumber: number, a: DrawAthlete, b: DrawAthlete): DrawMatch => ({
+        match_number: matchNumber,
+        registration_a_id: a.id,
+        registration_b_id: b.id,
+        player_a_label: a.name,
+        player_b_label: b.name,
+    });
+    const source = (matchNumber: number, sourceA: number, sourceB: number): DrawMatch => ({
+        match_number: matchNumber,
+        registration_a_id: null,
+        registration_b_id: null,
+        player_a_label: `Vencedor Jogo ${sourceA}`,
+        player_b_label: `Vencedor Jogo ${sourceB}`,
+        player_a_source_match_number: sourceA,
+        player_b_source_match_number: sourceB,
+    });
+
+    return [
+        direct(1, shuffled[0], shuffled[1]),
+        direct(2, shuffled[2], shuffled[3]),
+        direct(3, shuffled[4], shuffled[5]),
+        direct(4, shuffled[6], shuffled[7]),
+        {
+            match_number: 5,
+            registration_a_id: shuffled[8].id,
+            registration_b_id: null,
+            player_a_label: shuffled[8].name,
+            player_b_label: 'Vencedor Jogo 1',
+            player_b_source_match_number: 1,
+        },
+        direct(6, shuffled[9], shuffled[10]),
+        direct(7, shuffled[11], shuffled[12]),
+        {
+            match_number: 8,
+            registration_a_id: shuffled[13].id,
+            registration_b_id: null,
+            player_a_label: shuffled[13].name,
+            player_b_label: 'Vencedor Jogo 2',
+            player_b_source_match_number: 2,
+        },
+        {
+            match_number: 9,
+            registration_a_id: shuffled[14].id,
+            registration_b_id: null,
+            player_a_label: shuffled[14].name,
+            player_b_label: 'Vencedor Jogo 3',
+            player_b_source_match_number: 3,
+        },
+        direct(10, shuffled[15], shuffled[16]),
+        direct(11, shuffled[17], shuffled[18]),
+        {
+            match_number: 12,
+            registration_a_id: shuffled[19].id,
+            registration_b_id: null,
+            player_a_label: shuffled[19].name,
+            player_b_label: 'Vencedor Jogo 4',
+            player_b_source_match_number: 4,
+        },
+        source(13, 5, 6),
+        source(14, 7, 8),
+        source(15, 9, 10),
+        source(16, 11, 12),
+        source(17, 13, 14),
+        source(18, 15, 16),
+        source(19, 17, 18),
+    ];
 }

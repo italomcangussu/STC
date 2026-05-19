@@ -8,6 +8,7 @@ import {
     drawClasse5, buildClasse5Bracket,
     drawClasse4Qualify, drawClasse4PrimeiraFase,
     drawClasse4CabecasDeChave, buildClasse4Bracket,
+    buildClasse4OfficialBracket,
     type DrawAthlete, type DrawMatch,
 } from '../lib/resenhaOpenDraw';
 import {
@@ -262,7 +263,7 @@ export const AdminResenhaOpen: React.FC = () => {
 
     // ── Draw ──────────────────────────────────────────────────────────────────
 
-    const expectedCount = classe === '5ª Classe' ? 16 : 19;
+    const expectedCount = classe === '5ª Classe' ? 16 : 20;
     const canDraw = athletes.length === expectedCount;
 
     function goToDraw() {
@@ -321,25 +322,20 @@ export const AdminResenhaOpen: React.FC = () => {
     const anim4Ref = useRef<ReturnType<typeof setInterval> | null>(null);
 
     function runDrawQualify() {
-        let qm: DrawMatch[];
-        let remainingPool: DrawAthlete[];
+        let fullBracket: DrawMatch[];
         try {
-            ({ qualifyMatches: qm, remainingPool } = drawClasse4Qualify(athletes));
+            fullBracket = buildClasse4OfficialBracket(athletes);
         } catch (e: any) {
             toast.error(e.message);
             return;
         }
-        const eligible = athletes.filter(a =>
-            !a.cabeca_de_chave &&
-            (a.participant_type === 'socio' || (a.guest_cidade?.trim().toLowerCase() === 'sobral'))
-        );
         if (anim4Ref.current) clearInterval(anim4Ref.current);
         setAnimating4(true);
         let ticks = 0;
         anim4Ref.current = setInterval(() => {
             ticks++;
-            const shuffled = [...eligible].sort(() => Math.random() - 0.5).slice(0, 6);
-            setDisplayQualify(Array.from({ length: 3 }, (_, i) => ({
+            const shuffled = [...athletes].sort(() => Math.random() - 0.5).slice(0, 8);
+            setDisplayQualify(Array.from({ length: 4 }, (_, i) => ({
                 match_number: i + 1,
                 registration_a_id: shuffled[i * 2]?.id ?? null,
                 registration_b_id: shuffled[i * 2 + 1]?.id ?? null,
@@ -348,9 +344,9 @@ export const AdminResenhaOpen: React.FC = () => {
             })));
             if (ticks >= 30) {
                 clearInterval(anim4Ref.current!);
-                setDisplayQualify(qm);
-                setQualifyMatches(qm);
-                setRemainingPool4(remainingPool);
+                setDisplayQualify(fullBracket.filter(m => m.match_number <= 4));
+                setDrawMatches(fullBracket);
+                setDrawSubStep('done');
                 setAnimating4(false);
             }
         }, 60);
@@ -475,7 +471,7 @@ export const AdminResenhaOpen: React.FC = () => {
     const bracketPhases = [...new Set(bracket.map(m => m.round_phase))];
 
     const PHASE_LABELS: Record<string, string> = {
-        qualify: 'Qualify', primeira_fase: '1ª Fase', segunda_fase: '2ª Fase',
+        preliminar: 'Preliminar', qualify: 'Qualify', primeira_fase: '1ª Fase', segunda_fase: '2ª Fase',
         quartas: 'Quartas de Final', semifinal: 'Semifinais', final: 'Final',
         oitavas: 'Oitavas de Final',
     };
@@ -923,7 +919,7 @@ export const AdminResenhaOpen: React.FC = () => {
                             </button>
                             <button
                                 onClick={handleFinish}
-                                disabled={saving || bracket.some(m => m.match_number === (classe === '5ª Classe' ? 15 : 18) && m.status !== 'finished')}
+                                disabled={saving || bracket.some(m => m.match_number === (classe === '5ª Classe' ? 15 : 19) && m.status !== 'finished')}
                                 className="px-4 py-2 bg-green-600 text-white rounded-xl text-sm font-bold disabled:opacity-40 hover:bg-green-700 flex items-center gap-2"
                             >
                                 <Trophy size={14} /> Encerrar
