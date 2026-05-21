@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Minus, Plus, RotateCcw, Trophy } from 'lucide-react';
+import { Clock, Minus, Plus, RotateCcw, Trophy } from 'lucide-react';
 import {
     buildResenhaBracketLayout,
     getClassMatches,
@@ -9,6 +9,14 @@ import {
     type LayoutMatch,
 } from '../lib/resenhaOpenBracketLayout';
 import type { BracketMatchWithPhase, ResenhaClass } from '../lib/resenhaOpenService';
+import { getOfficialMatchTime } from '../lib/resenhaOpenOfficialBracket';
+
+function formatMatchTime(raw: string): string {
+    const parts = raw.split(':');
+    const h = parts[0] ?? '00';
+    const m = parts[1] ?? '00';
+    return `${h}h${m}`;
+}
 
 interface Props {
     bracket: BracketMatchWithPhase[];
@@ -237,6 +245,11 @@ const BracketMatchCard: React.FC<{
     const pendingB = !match.registration_b_id;
     const accessibleName = `Jogo ${match.match_number}, ${match.player_a_label} contra ${match.player_b_label}`;
 
+    const officialTime = getOfficialMatchTime(match.bracket_class ?? '', match.match_number);
+    const realTime = match.scheduled_time ?? null;
+    const isScheduled = Boolean(realTime && realTime !== (officialTime ? `${officialTime}:00` : null));
+    const displayTime = realTime ? formatMatchTime(realTime) : (officialTime ? formatMatchTime(officialTime) : null);
+
     return (
         <button
             ref={refCallback}
@@ -249,6 +262,18 @@ const BracketMatchCard: React.FC<{
             }`}
             style={{ left: x, top: y, width: 280, height: 84 }}
         >
+            {displayTime && (
+                <span
+                    className={`absolute left-1/2 -translate-x-1/2 -top-5 flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-black whitespace-nowrap shadow ${
+                        isScheduled
+                            ? 'bg-orange-500 text-white'
+                            : 'bg-slate-700/80 text-slate-200'
+                    }`}
+                >
+                    {isScheduled && <Clock size={9} className="shrink-0" />}
+                    {displayTime}
+                </span>
+            )}
             <div className="h-full overflow-hidden rounded-2xl border border-white/70 bg-slate-50 text-slate-900 shadow-xl shadow-black/25">
                 <div className="h-1 bg-saibro-600" />
                 <div className="grid h-[80px] grid-cols-[1fr_92px]">
