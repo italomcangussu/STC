@@ -375,8 +375,12 @@ export const AdminResenhaOpen: React.FC = () => {
     async function handleSaveBracket() {
         setSaving(true);
         try {
+            const courtName = classe === '5ª Classe' ? 'Quadra Rápida' : 'Quadra Saibro';
+            const { data: courtsData } = await supabase.from('courts').select('id, name');
+            const courtId = (courtsData ?? []).find((c: any) => c.name === courtName)?.id ?? null;
+
             const userMap = await fetchRegistrationUserMap(selectedChampId, classe);
-            await saveBracket(selectedChampId, classe, drawMatches, phaseToRoundId, userMap);
+            await saveBracket(selectedChampId, classe, drawMatches, phaseToRoundId, userMap, courtId);
             await activateChampionship(selectedChampId);
             await loadBracket();
             setStep('bracket');

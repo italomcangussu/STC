@@ -273,7 +273,8 @@ export async function saveBracket(
     classe: ResenhaClass,
     matches: DrawMatch[],
     phaseToRoundId: Map<string, string>,
-    registrationUserMap: Map<string, string | null> // registrationId → userId
+    registrationUserMap: Map<string, string | null>, // registrationId → userId
+    courtId?: string | null
 ): Promise<void> {
     const phaseMap = buildPhaseMap(classe);
 
@@ -293,6 +294,7 @@ export async function saveBracket(
             player_b_id: m.registration_b_id ? (registrationUserMap.get(m.registration_b_id) ?? null) : null,
             registration_a_id: m.registration_a_id,
             registration_b_id: m.registration_b_id,
+            court_id: courtId ?? null,
         };
     });
 
