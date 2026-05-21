@@ -573,7 +573,21 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
         if (!winner) return; // Invalid match, don't save
 
         const winnerId = winner === 'A' ? match.playerAId : match.playerBId;
-        const winnerRegistrationId = winner === 'A' ? match.registration_a_id : match.registration_b_id;
+        let winnerRegistrationId = winner === 'A' ? match.registration_a_id : match.registration_b_id;
+
+        // Local state may be stale (e.g. bracket drawn after initial fetch).
+        // Fetch fresh registration IDs from DB to guarantee correct propagation.
+        if (!winnerRegistrationId) {
+            const { data: freshData } = await supabase
+                .from('matches')
+                .select('registration_a_id, registration_b_id')
+                .eq('id', matchId)
+                .single();
+            if (freshData) {
+                winnerRegistrationId = winner === 'A' ? freshData.registration_a_id : freshData.registration_b_id;
+            }
+        }
+
         const resultTimestamp = getNowInFortaleza().toISOString();
 
         const logAudit = async (action: string, beforeData: any, afterData: any) => {
