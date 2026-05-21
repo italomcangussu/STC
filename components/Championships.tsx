@@ -270,6 +270,98 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
         fetchData();
     }, [selectedChampId]);
 
+    // Realtime subscriptions for matches and rounds when championship changes
+    useEffect(() => {
+        if (!selectedChampId) return;
+
+        let active = true;
+
+        const refetchMatchesAndRounds = async () => {
+            const [roundsRes, matchesRes] = await Promise.all([
+                supabase
+                    .from('championship_rounds')
+                    .select('*')
+                    .eq('championship_id', selectedChampId)
+                    .order('round_number', { ascending: true }),
+                supabase
+                    .from('matches')
+                    .select('*')
+                    .eq('championship_id', selectedChampId),
+            ]);
+
+            if (!active) return;
+
+            const mappedRounds = roundsRes.data || [];
+            setRounds(mappedRounds);
+            setSelectedRoundIndex(prev => {
+                const activeIdx = mappedRounds.findIndex(r => r.status === 'active');
+                return activeIdx !== -1 ? activeIdx : prev;
+            });
+
+            if (!matchesRes.error && matchesRes.data) {
+                setMatches(matchesRes.data.map(m => ({
+                    id: m.id,
+                    championshipId: m.championship_id,
+                    type: m.type || 'Campeonato',
+                    phase: m.phase,
+                    playerAId: m.player_a_id,
+                    playerBId: m.player_b_id,
+                    registration_a_id: m.registration_a_id,
+                    registration_b_id: m.registration_b_id,
+                    scoreA: m.score_a || [],
+                    scoreB: m.score_b || [],
+                    winnerId: m.winner_id,
+                    winner_registration_id: m.winner_registration_id,
+                    is_walkover: m.is_walkover,
+                    result_type: m.result_type,
+                    admin_notes: m.admin_notes,
+                    result_set_by: m.result_set_by,
+                    result_set_at: m.result_set_at,
+                    walkover_winner_id: m.walkover_winner_id,
+                    walkover_winner_registration_id: m.walkover_winner_registration_id,
+                    date: m.date,
+                    scheduled_time: m.scheduled_time,
+                    scheduled_date: m.scheduled_date,
+                    scheduledTime: m.scheduled_time,
+                    scheduledDate: m.scheduled_date,
+                    court_id: m.court_id,
+                    status: m.status || 'pending',
+                    championship_group_id: m.championship_group_id,
+                    round_id: m.round_id,
+                })));
+            }
+        };
+
+        const channel = supabase
+            .channel(`championship-live-${selectedChampId}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'matches',
+                    filter: `championship_id=eq.${selectedChampId}`,
+                },
+                () => { refetchMatchesAndRounds(); },
+            )
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'championship_rounds',
+                    filter: `championship_id=eq.${selectedChampId}`,
+                },
+                () => { refetchMatchesAndRounds(); },
+            )
+            .subscribe();
+
+        return () => {
+            active = false;
+            supabase.removeChannel(channel);
+        };
+    }, [selectedChampId]);
+
     // Fetch Groups if needed (for Group Stage)
     const [groupsDetail, setGroupsDetail] = useState<any[]>([]);
 
