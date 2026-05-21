@@ -66,7 +66,7 @@ const CARD_HEIGHT = 84;
 const COLUMN_GAP = 180;
 const ROW_GAP = 30;
 const BOARD_PADDING_X = 32;
-const BOARD_PADDING_Y = 64;
+const BOARD_PADDING_Y = 76;
 
 export function normalizeScoreSlots(scoreA: number[] = [], scoreB: number[] = []): ScoreSlot[] {
     return Array.from({ length: 3 }, (_, index) => {

@@ -56,6 +56,14 @@ const officialMatches: OfficialMatchInput[] = [
     { className: '4ª Classe', matchNumber: 19, phase: 'final', sourceA: 17, sourceB: 18, time: '20:00' },
 ];
 
+const officialTimeMap = new Map(
+    officialMatches.map(m => [`${m.className}:${m.matchNumber}`, m.time ?? null])
+);
+
+export function getOfficialMatchTime(className: string, matchNumber: number): string | null {
+    return officialTimeMap.get(`${className}:${matchNumber}`) ?? null;
+}
+
 const registrationId = (match: OfficialMatchInput, side: 'a' | 'b') => (
     match[side === 'a' ? 'playerA' : 'playerB']
         ? `official-${match.className}-${match.matchNumber}-${side}`
