@@ -31,4 +31,6 @@ dist-ssr
 # MCP config (contains secrets)
 .mcp.json
 
+# Local brainstorming companion output
+.superpowers/
 
