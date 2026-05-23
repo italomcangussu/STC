@@ -12,6 +12,7 @@ import { ResenhaOpenBracketView } from './ResenhaOpenBracketView';
 import { StandingsDetailModal } from './StandingsDetailModal';
 import { ChampionshipMatchActionModal } from './ChampionshipMatchActionModal';
 import { ChampionshipStatistics } from './ChampionshipStatistics';
+import { ChampionshipOddsSimulator } from './ChampionshipOddsSimulator';
 
 import { calculateGroupStandings } from '../lib/championshipUtils';
 import { getGroupStageMatches, getRoundMatchesForDisplay } from '../lib/groupKnockout';
@@ -58,7 +59,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
 
     const [selectedChampId, setSelectedChampId] = useState<string>('');
     const [selectedCategory, setSelectedCategory] = useState<string>('Todas');
-    const [activeTab, setActiveTab] = useState<'partidas' | 'jogos' | 'classificacao' | 'chaveamento' | 'inscritos' | 'estatisticas'>('chaveamento');
+    const [activeTab, setActiveTab] = useState<'partidas' | 'jogos' | 'classificacao' | 'chaveamento' | 'inscritos' | 'estatisticas' | 'odds'>('chaveamento');
     const [editingMatch, setEditingMatch] = useState<Match | null>(null);
     const [schedulingMatch, setSchedulingMatch] = useState<Match | null>(null);
     const [selectedBracketMatch, setSelectedBracketMatch] = useState<Match | null>(null);
@@ -396,6 +397,10 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
         }
         if (selectedChampIsResenhaOpen && activeTab === 'classificacao') {
             setActiveTab('chaveamento');
+            return;
+        }
+        if (!isOperationalBracketChampionship && (activeTab === 'estatisticas' || activeTab === 'odds')) {
+            setActiveTab('classificacao');
             return;
         }
         if (selectedChamp?.format === 'pontos-corridos' && activeTab === 'chaveamento') {
@@ -964,7 +969,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
             <div className="p-4 space-y-6 pb-24">
                 {/* Header */}
                 <div className="bg-linear-to-br from-saibro-600 to-saibro-500 p-6 rounded-3xl shadow-xl text-white relative overflow-hidden">
-                    <div className="absolute right-[-10px] top-[-10px] opacity-10 rotate-12">
+                    <div className="absolute -right-2.5 -top-2.5 opacity-10 rotate-12">
                         <Trophy size={160} />
                     </div>
                     <div className="relative z-10">
@@ -1052,7 +1057,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
             {/* 1. HEADER PREMIUM */}
             <div className="bg-linear-to-br from-saibro-600 via-saibro-500 to-orange-500 p-8 rounded-4xl shadow-2xl shadow-saibro-300/30 text-white relative overflow-hidden border-2 border-white/10">
                 {/* Decorative Trophy Icon */}
-                <div className="absolute right-[-20px] top-[-20px] opacity-[0.08] rotate-12">
+                <div className="absolute -right-5 -top-5 opacity-[0.08] rotate-12">
                     <Trophy size={200} strokeWidth={1.5} />
                 </div>
                 {/* Decorative Circles */}
@@ -1178,6 +1183,18 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                         <BarChart3 size={16} className="hidden sm:block shrink-0" />
                         <span className="truncate sm:hidden">Stats</span>
                         <span className="truncate hidden sm:inline">Estatísticas</span>
+                    </button>
+                )}
+                {isOperationalBracketChampionship && (
+                    <button
+                        onClick={() => setActiveTab('odds')}
+                        className={`flex-1 min-w-0 flex items-center justify-center gap-1 sm:gap-2 py-3 px-2 sm:py-3.5 sm:px-4 rounded-2xl text-[10px] sm:text-xs font-black uppercase tracking-normal sm:tracking-wider transition-all duration-300 ${
+                            activeTab === 'odds'
+                                ? 'bg-linear-to-br from-saibro-600 to-saibro-700 text-white shadow-lg shadow-saibro-200 sm:scale-105'
+                                : 'text-stone-500 hover:text-stone-700 hover:bg-stone-50'
+                        }`}
+                    >
+                        <span className="truncate">Odds</span>
                     </button>
                 )}
             </div>
@@ -1676,7 +1693,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                                                     <button
                                                         key={category}
                                                         onClick={() => setSelectedBracketCategory(category)}
-                                                        className={`flex-1 min-w-[100px] py-3 px-4 rounded-2xl text-xs font-black tracking-wider transition-all ${
+                                                        className={`flex-1 min-w-25 py-3 px-4 rounded-2xl text-xs font-black tracking-wider transition-all ${
                                                             selectedBracketCategory === category
                                                                 ? 'bg-saibro-600 text-white shadow-md'
                                                                 : 'text-stone-400 hover:text-stone-600'
@@ -1732,6 +1749,12 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                 {activeTab === 'estatisticas' && (
                     <div className="pb-10">
                         <ChampionshipStatistics matches={matches} registrations={registrations} />
+                    </div>
+                )}
+
+                {activeTab === 'odds' && (
+                    <div className="pb-10">
+                        <ChampionshipOddsSimulator matches={matches} registrations={registrations} />
                     </div>
                 )}
             </div>

@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { Championship, ChampionshipRound, Match, ChampionshipRegistration } from '../types';
-import { Trophy, Loader2, ChevronLeft, ChevronRight, ListOrdered } from 'lucide-react';
+import { Championship, Match, ChampionshipRegistration } from '../types';
+import { Trophy, Loader2, ListOrdered } from 'lucide-react';
 import { GroupStandingsCard } from './GroupStandingsCard';
 import { BracketView } from './BracketView';
 import { ResenhaOpenBracketView } from './ResenhaOpenBracketView';
 import { StandingsDetailModal } from './StandingsDetailModal';
+import { ChampionshipStatistics } from './ChampionshipStatistics';
+import { ChampionshipOddsSimulator } from './ChampionshipOddsSimulator';
 import { calculateGroupStandings } from '../lib/championshipUtils';
-import { getGroupStageMatches, getRoundMatchesForDisplay } from '../lib/groupKnockout';
-import { formatDateBr } from '../utils';
+import { getGroupStageMatches } from '../lib/groupKnockout';
 
 interface Props {
     slug?: string;
@@ -17,13 +18,11 @@ interface Props {
 
 export const PublicChampionshipPage: React.FC<Props> = ({ slug, championshipId }) => {
     const [championship, setChampionship] = useState<Championship | null>(null);
-    const [rounds, setRounds] = useState<ChampionshipRound[]>([]);
     const [matches, setMatches] = useState<Match[]>([]);
     const [registrations, setRegistrations] = useState<ChampionshipRegistration[]>([]);
     const [groups, setGroups] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [selectedRoundIndex, setSelectedRoundIndex] = useState(0);
-    const [activeTab, setActiveTab] = useState<'matches' | 'standings' | 'bracket'>('matches');
+    const [activeTab, setActiveTab] = useState<'standings' | 'bracket' | 'stats' | 'odds'>('standings');
 
     // Standings Detail Modal
     const [showStandingsDetail, setShowStandingsDetail] = useState(false);
@@ -31,19 +30,6 @@ export const PublicChampionshipPage: React.FC<Props> = ({ slug, championshipId }
 
     // Bracket tab category
     const [selectedCategory, setSelectedCategory] = useState<string>('');
-
-    // Match filtering by class
-    const [selectedMatchClass, setSelectedMatchClass] = useState<string>('Todas');
-
-    const availableClasses = React.useMemo(() => {
-        const classes = new Set<string>();
-        registrations.forEach(r => {
-            if (r.class) {
-                classes.add(r.class);
-            }
-        });
-        return Array.from(classes).sort((a, b) => a.localeCompare(b, 'pt-BR', { numeric: true }));
-    }, [registrations]);
 
     useEffect(() => {
         fetchData();
@@ -79,8 +65,6 @@ export const PublicChampionshipPage: React.FC<Props> = ({ slug, championshipId }
             .select('*')
             .eq('championship_id', champ.id)
             .order('round_number');
-        setRounds(rnds || []);
-
         // 3. Fetch Groups & Members
         const { data: grps } = await supabase
             .from('championship_groups')
@@ -111,9 +95,6 @@ export const PublicChampionshipPage: React.FC<Props> = ({ slug, championshipId }
                 result_type: m.result_type,
             })));
 
-            // Set current round (active or first)
-            const activeIdx = (rnds || []).findIndex(r => r.status === 'active');
-            setSelectedRoundIndex(activeIdx !== -1 ? activeIdx : 0);
         }
 
         setLoading(false);
@@ -123,17 +104,6 @@ export const PublicChampionshipPage: React.FC<Props> = ({ slug, championshipId }
             const cats = [...new Set(grps.map((g: any) => g.category))];
             if (cats.length > 0) setSelectedCategory(cats[0]);
         }
-    };
-
-    // Winner check helper (guest-aware)
-    const isWinnerSide = (match: Match, side: 'A' | 'B'): boolean => {
-        if (match.winner_registration_id) {
-            return match.winner_registration_id === (side === 'A' ? match.registration_a_id : match.registration_b_id);
-        }
-        if (match.winnerId) {
-            return match.winnerId === (side === 'A' ? match.playerAId : match.playerBId);
-        }
-        return false;
     };
 
     if (loading) {
@@ -178,14 +148,8 @@ export const PublicChampionshipPage: React.FC<Props> = ({ slug, championshipId }
 
             <div className="max-w-md mx-auto px-4 -mt-8 relative z-20 space-y-6">
 
-                {/* Main Tabs: RODADAS / CLASSIFICAÇÃO / CHAVEAMENTO */}
+                {/* Main Tabs: CLASSIFICAÇÃO / CHAVEAMENTO / STATS / ODDS */}
                 <div className="flex bg-white/65 p-1.5 rounded-3xl backdrop-blur-md shadow-sm">
-                    <button
-                        onClick={() => setActiveTab('matches')}
-                        className={`flex-1 py-3.5 rounded-2xl text-[10px] font-black tracking-widest transition-all duration-500 ${activeTab === 'matches' ? 'bg-white text-stone-900 shadow-lg' : 'bg-white/25 text-stone-800 hover:bg-white/50 hover:text-stone-950'}`}
-                    >
-                        RODADAS
-                    </button>
                     {!isResenhaOpen && (
                         <button
                             onClick={() => setActiveTab('standings')}
@@ -200,147 +164,21 @@ export const PublicChampionshipPage: React.FC<Props> = ({ slug, championshipId }
                     >
                         CHAVEAMENTO
                     </button>
+                    <button
+                        onClick={() => setActiveTab('stats')}
+                        className={`flex-1 py-3.5 rounded-2xl text-[10px] font-black tracking-widest transition-all duration-500 ${activeTab === 'stats' ? 'bg-white text-stone-900 shadow-lg' : 'bg-white/25 text-stone-800 hover:bg-white/50 hover:text-stone-950'}`}
+                    >
+                        STATS
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('odds')}
+                        className={`flex-1 py-3.5 rounded-2xl text-[10px] font-black tracking-widest transition-all duration-500 ${activeTab === 'odds' ? 'bg-white text-stone-900 shadow-lg' : 'bg-white/25 text-stone-800 hover:bg-white/50 hover:text-stone-950'}`}
+                    >
+                        ODDS
+                    </button>
                 </div>
 
-                {activeTab === 'matches' ? (
-                    <div className="space-y-6">
-                        {/* Round Navigator */}
-                        {rounds.length > 0 && (() => {
-                            const currentRound = rounds[selectedRoundIndex];
-                            return (
-                                <div className="space-y-6">
-                                    <div className="flex items-center justify-between bg-white p-4 rounded-[2.5rem] border border-stone-100 shadow-lg shadow-stone-200/40">
-                                        <button
-                                            onClick={() => setSelectedRoundIndex(prev => Math.max(0, prev - 1))}
-                                            className={`p-3 rounded-2xl transition-all ${selectedRoundIndex > 0 ? 'text-saibro-600 bg-saibro-50 active:scale-90 hover:bg-saibro-100 shadow-sm' : 'text-stone-200'}`}
-                                            disabled={selectedRoundIndex === 0}
-                                        >
-                                            <ChevronLeft size={24} />
-                                        </button>
-                                        <div className="text-center">
-                                            <h3 className="font-black text-stone-900 text-sm tracking-tight">{currentRound.name}</h3>
-                                            <p className="text-[9px] font-black text-saibro-600 uppercase tracking-[0.2em] mt-1 space-x-1">
-                                                <span>{formatDateBr(currentRound.start_date)}</span>
-                                                <span className="text-stone-300">/</span>
-                                                <span>{formatDateBr(currentRound.end_date)}</span>
-                                            </p>
-                                        </div>
-                                        <button
-                                            onClick={() => setSelectedRoundIndex(prev => Math.min(rounds.length - 1, prev + 1))}
-                                            className={`p-3 rounded-2xl transition-all ${selectedRoundIndex < rounds.length - 1 ? 'text-saibro-600 bg-saibro-50 active:scale-90 hover:bg-saibro-100 shadow-sm' : 'text-stone-200'}`}
-                                            disabled={selectedRoundIndex === rounds.length - 1}
-                                        >
-                                            <ChevronRight size={24} />
-                                        </button>
-                                    </div>
-
-                                    {/* Class Switcher */}
-                                    {availableClasses.length > 1 && (
-                                        <div className="flex bg-stone-200/50 p-1.5 rounded-3xl backdrop-blur-md gap-1">
-                                            <button
-                                                onClick={() => setSelectedMatchClass('Todas')}
-                                                className={`flex-1 py-3 rounded-2xl text-[10px] font-black tracking-widest transition-all ${
-                                                    selectedMatchClass === 'Todas'
-                                                        ? 'bg-white text-stone-900 shadow-sm'
-                                                        : 'text-stone-400 hover:text-stone-600'
-                                                }`}
-                                            >
-                                                TODAS
-                                            </button>
-                                            {availableClasses.map(cls => (
-                                                <button
-                                                    key={cls}
-                                                    onClick={() => setSelectedMatchClass(cls)}
-                                                    className={`flex-1 py-3 rounded-2xl text-[10px] font-black tracking-widest transition-all ${
-                                                        selectedMatchClass === cls
-                                                            ? 'bg-white text-stone-900 shadow-sm'
-                                                            : 'text-stone-400 hover:text-stone-600'
-                                                    }`}
-                                                >
-                                                    {cls.toUpperCase()}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    )}
-
-                                    {/* Match Cards */}
-                                    <div className="space-y-4 pb-20">
-                                        {(() => {
-                                            const roundMatches = getRoundMatchesForDisplay(currentRound, groups, registrations, matches);
-                                            const filtered = roundMatches.filter(match => {
-                                                if (selectedMatchClass === 'Todas') return true;
-                                                const regA = registrations.find(r => r.id === match.registration_a_id);
-                                                return regA?.class === selectedMatchClass;
-                                            });
-
-                                            if (filtered.length === 0) {
-                                                return (
-                                                    <div className="p-8 text-center text-stone-400 text-xs font-bold bg-white rounded-3xl border border-stone-100 shadow-xs">
-                                                        Nenhum jogo nesta classe para esta rodada.
-                                                    </div>
-                                                );
-                                            }
-
-                                            return filtered.map(match => {
-                                                const regA = registrations.find(r => r.id === match.registration_a_id);
-                                                const regB = registrations.find(r => r.id === match.registration_b_id);
-                                                const nameA = regA?.user?.name || regA?.guest_name || '...';
-                                                const nameB = regB?.user?.name || regB?.guest_name || '...';
-                                                const isFinished = match.status === 'finished';
-                                                const resultType = match.result_type || (match.is_walkover ? 'walkover' : 'played');
-                                                const resultLabel = isFinished
-                                                    ? (resultType === 'technical_draw' ? 'Empate técnico' : resultType === 'walkover' ? 'W.O.' : 'Disputado')
-                                                    : match.scheduled_date
-                                                        ? `${isResenhaOpen ? 'Sugerido: ' : ''}${formatDateBr(match.scheduled_date)} ${match.scheduled_time?.substring(0, 5) || ''}`
-                                                        : 'Pendente';
-
-                                                return (
-                                                    <div key={match.id} className="bg-white rounded-4xl p-6 shadow-sm border border-stone-100 relative overflow-hidden transition-all hover:border-saibro-200 group">
-                                                        <div className="absolute top-0 left-0 bg-stone-50 px-3 py-1 rounded-br-2xl text-[9px] font-black text-stone-400 uppercase tracking-tighter">
-                                                            {regA?.class || 'N/A'}
-                                                        </div>
-
-                                                        <div className="flex items-center gap-6 mt-2">
-                                                            <div className="flex-1 space-y-4">
-                                                                <div className="flex items-center justify-between">
-                                                                    <span className={`text-[9px] uppercase tracking-widest font-black ${isFinished ? 'text-stone-400' : 'text-saibro-500'}`}>
-                                                                        {resultLabel}
-                                                                    </span>
-                                                                </div>
-                                                                {/* Player A */}
-                                                                <div className="flex items-center justify-between">
-                                                                    <span className={`text-sm font-bold ${isWinnerSide(match, 'A') ? 'text-stone-900' : 'text-stone-500'}`}>{nameA}</span>
-                                                                    {isFinished && (
-                                                                        <div className="flex gap-1">
-                                                                            {match.score_a.map((s: number, i: number) => (
-                                                                                <span key={i} className={`w-7 h-7 flex items-center justify-center rounded-lg text-xs font-black ${match.score_a[i] > match.score_b[i] ? 'bg-saibro-600 text-white shadow-sm' : 'bg-stone-50 text-stone-300'}`}>{s}</span>
-                                                                            ))}
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                                {/* Player B */}
-                                                                <div className="flex items-center justify-between">
-                                                                    <span className={`text-sm font-bold ${isWinnerSide(match, 'B') ? 'text-stone-900' : 'text-stone-500'}`}>{nameB}</span>
-                                                                    {isFinished && (
-                                                                        <div className="flex gap-1">
-                                                                            {match.score_b.map((s: number, i: number) => (
-                                                                                <span key={i} className={`w-7 h-7 flex items-center justify-center rounded-lg text-xs font-black ${match.score_b[i] > match.score_a[i] ? 'bg-saibro-600 text-white shadow-sm' : 'bg-stone-50 text-stone-300'}`}>{s}</span>
-                                                                            ))}
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                );
-                                            });
-                                        })()}
-                                    </div>
-                                </div>
-                            );
-                        })()}
-                    </div>
-                ) : activeTab === 'standings' ? (
+                {activeTab === 'standings' ? (
                     <div className="grid grid-cols-1 gap-6 pb-20">
                         {groups.map((group: any) => {
                             const groupMatches = getGroupStageMatches(matches, group.id);
@@ -378,8 +216,7 @@ export const PublicChampionshipPage: React.FC<Props> = ({ slug, championshipId }
                             </div>
                         )}
                     </div>
-                ) : (
-                    // Bracket Tab
+                ) : activeTab === 'bracket' ? (
                     <div className="space-y-6 pb-20">
                         {isResenhaOpen ? (
                             <ResenhaOpenBracketView championshipId={championship.id} />
@@ -393,7 +230,7 @@ export const PublicChampionshipPage: React.FC<Props> = ({ slug, championshipId }
                                             <button
                                                 key={category}
                                                 onClick={() => setSelectedCategory(category)}
-                                                className={`flex-1 min-w-[100px] py-3 px-4 rounded-2xl text-xs font-black tracking-wider transition-all ${
+                                                className={`flex-1 min-w-25 py-3 px-4 rounded-2xl text-xs font-black tracking-wider transition-all ${
                                                     selectedCategory === category
                                                         ? 'bg-saibro-600 text-white shadow-md'
                                                         : 'text-stone-400 hover:text-stone-600'
@@ -413,6 +250,14 @@ export const PublicChampionshipPage: React.FC<Props> = ({ slug, championshipId }
                                 </>
                             );
                         })()}
+                    </div>
+                ) : activeTab === 'stats' ? (
+                    <div className="pb-20">
+                        <ChampionshipStatistics matches={matches} registrations={registrations} />
+                    </div>
+                ) : (
+                    <div className="pb-20">
+                        <ChampionshipOddsSimulator matches={matches} registrations={registrations} />
                     </div>
                 )}
             </div>
