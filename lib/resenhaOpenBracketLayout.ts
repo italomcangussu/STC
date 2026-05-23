@@ -92,6 +92,33 @@ export function getClassMatches(
         .sort((a, b) => a.match_number - b.match_number);
 }
 
+export function getCurrentPhaseForClass(
+    matches: BracketMatchWithPhase[],
+    className: ResenhaClass,
+): string {
+    const phaseOrder = PHASES_BY_CLASS[className];
+    const classMatches = getClassMatches(matches, className);
+    if (classMatches.length === 0) return phaseOrder[0];
+
+    const hasPlayableParticipants = (match: BracketMatchWithPhase) =>
+        Boolean(match.registration_a_id || match.player_a_source_match_number) &&
+        Boolean(match.registration_b_id || match.player_b_source_match_number);
+
+    const pendingPlayable = classMatches.filter(match =>
+        match.status !== 'finished' && hasPlayableParticipants(match),
+    );
+
+    for (const phase of phaseOrder) {
+        if (pendingPlayable.some(match => match.round_phase === phase)) return phase;
+    }
+
+    if (classMatches.every(match => match.status === 'finished')) {
+        return phaseOrder[phaseOrder.length - 1];
+    }
+
+    return phaseOrder[0];
+}
+
 export function buildResenhaBracketLayout(
     matches: BracketMatchWithPhase[],
     className: ResenhaClass,

@@ -6,9 +6,10 @@ import { ResenhaOpenTournamentBoard } from './ResenhaOpenTournamentBoard';
 
 interface Props {
     championshipId: string;
+    onMatchSelect?: (match: BracketMatchWithPhase) => void;
 }
 
-export const ResenhaOpenBracketView: React.FC<Props> = ({ championshipId }) => {
+export const ResenhaOpenBracketView: React.FC<Props> = ({ championshipId, onMatchSelect }) => {
     const [bracket, setBracket] = useState<BracketMatchWithPhase[]>([]);
     const [champName, setChampName] = useState('Resenha Open');
     const [loading, setLoading] = useState(true);
@@ -76,5 +77,5 @@ export const ResenhaOpenBracketView: React.FC<Props> = ({ championshipId }) => {
         );
     }
 
-    return <ResenhaOpenTournamentBoard bracket={bracket} championshipName={champName} />;
+    return <ResenhaOpenTournamentBoard bracket={bracket} championshipName={champName} onMatchSelect={onMatchSelect} />;
 };

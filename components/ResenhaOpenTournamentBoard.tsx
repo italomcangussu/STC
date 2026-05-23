@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Clock, Minus, Plus, RotateCcw, Trophy } from 'lucide-react';
 import {
     buildResenhaBracketLayout,
+    getCurrentPhaseForClass,
     getClassMatches,
     getMatchWinnerSide,
     normalizeScoreSlots,
@@ -21,13 +22,14 @@ function formatMatchTime(raw: string): string {
 interface Props {
     bracket: BracketMatchWithPhase[];
     championshipName: string;
+    onMatchSelect?: (match: BracketMatchWithPhase) => void;
 }
 
 const MIN_ZOOM = 0.65;
 const MAX_ZOOM = 1.2;
 const ZOOM_STEP = 0.1;
 
-export const ResenhaOpenTournamentBoard: React.FC<Props> = ({ bracket, championshipName }) => {
+export const ResenhaOpenTournamentBoard: React.FC<Props> = ({ bracket, championshipName, onMatchSelect }) => {
     const availableClasses = useMemo(
         () => (['4ª Classe', '5ª Classe'] as ResenhaClass[]).filter(
             className => bracket.some(match => match.bracket_class === className),
@@ -54,12 +56,31 @@ export const ResenhaOpenTournamentBoard: React.FC<Props> = ({ bracket, champions
         () => buildResenhaBracketLayout(classMatches, selectedClass),
         [classMatches, selectedClass],
     );
+    const currentPhase = useMemo(
+        () => getCurrentPhaseForClass(bracket, selectedClass),
+        [bracket, selectedClass],
+    );
+
+    const centerPhase = (phase: string, behavior: ScrollBehavior = 'smooth') => {
+        const phaseLayout = layout.phases.find(item => item.phase === phase);
+        if (!viewportRef.current || !phaseLayout) return;
+        viewportRef.current.scrollTo({
+            left: Math.max(0, phaseLayout.x * zoom - viewportRef.current.clientWidth / 3),
+            top: 0,
+            behavior,
+        });
+    };
+
+    useEffect(() => {
+        requestAnimationFrame(() => centerPhase(currentPhase, 'auto'));
+    }, [currentPhase, layout, zoom]);
 
     const handleClassChange = (className: ResenhaClass) => {
         setSelectedClass(className);
         setSelectedMatchId(null);
         requestAnimationFrame(() => {
-            if (viewportRef.current) viewportRef.current.scrollLeft = 0;
+            const nextPhase = getCurrentPhaseForClass(bracket, className);
+            centerPhase(nextPhase);
         });
     };
 
@@ -67,6 +88,9 @@ export const ResenhaOpenTournamentBoard: React.FC<Props> = ({ bracket, champions
         const nextMatchId = selectedMatchId === matchId ? null : matchId;
         setSelectedMatchId(nextMatchId);
         if (!nextMatchId) return;
+
+        const selected = classMatches.find(match => match.id === nextMatchId);
+        if (selected) onMatchSelect?.(selected);
 
         requestAnimationFrame(() => {
             matchRefs.current[nextMatchId]?.scrollIntoView({
@@ -100,7 +124,15 @@ export const ResenhaOpenTournamentBoard: React.FC<Props> = ({ bracket, champions
                             selectedClass={selectedClass}
                             onChange={handleClassChange}
                         />
-                        <ZoomControls zoom={zoom} onZoomIn={() => updateZoom(ZOOM_STEP)} onZoomOut={() => updateZoom(-ZOOM_STEP)} onReset={() => setZoom(0.85)} />
+                        <ZoomControls
+                            zoom={zoom}
+                            onZoomIn={() => updateZoom(ZOOM_STEP)}
+                            onZoomOut={() => updateZoom(-ZOOM_STEP)}
+                            onReset={() => {
+                                setZoom(0.85);
+                                requestAnimationFrame(() => centerPhase(currentPhase));
+                            }}
+                        />
                     </div>
                 </div>
 

@@ -162,7 +162,7 @@ describe('Agenda reservation persistence', () => {
 
   it('keeps already loaded reservations visible when a refetch fails because of an unstable connection', async () => {
     const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
-    tableData.reservations = [reservationRow];
+    tableData.reservations = [{ ...reservationRow, date: new Date().toISOString().slice(0, 10) }];
     render(<Agenda currentUser={currentUser} />);
 
     expect(await screen.findByText(/Italo/)).toBeInTheDocument();

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Trophy, Calendar, CalendarCheck, ListOrdered, GitMerge, ChevronDown, Loader2, Download, Share2, Users, Shirt, ChevronLeft, ChevronRight, Clock, MapPin, Save, Plus, Minus, X, AlertTriangle } from 'lucide-react';
+import { Trophy, Calendar, CalendarCheck, ListOrdered, GitMerge, ChevronDown, Loader2, Download, Share2, Users, Shirt, ChevronLeft, ChevronRight, Clock, MapPin, Save, Plus, Minus, X, AlertTriangle, BarChart3 } from 'lucide-react';
 import { Championship, Match, User, ChampionshipRound } from '../types';
 import { getMatchWinner, formatDateBr, getNowInFortaleza, formatDate } from '../utils';
 import { supabase } from '../lib/supabase';
@@ -10,6 +10,8 @@ import { GroupStandingsCard } from './GroupStandingsCard';
 import { BracketView } from './BracketView';
 import { ResenhaOpenBracketView } from './ResenhaOpenBracketView';
 import { StandingsDetailModal } from './StandingsDetailModal';
+import { ChampionshipMatchActionModal } from './ChampionshipMatchActionModal';
+import { ChampionshipStatistics } from './ChampionshipStatistics';
 
 import { calculateGroupStandings } from '../lib/championshipUtils';
 import { getGroupStageMatches, getRoundMatchesForDisplay } from '../lib/groupKnockout';
@@ -56,9 +58,10 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
 
     const [selectedChampId, setSelectedChampId] = useState<string>('');
     const [selectedCategory, setSelectedCategory] = useState<string>('Todas');
-    const [activeTab, setActiveTab] = useState<'partidas' | 'jogos' | 'classificacao' | 'chaveamento' | 'inscritos'>('partidas');
+    const [activeTab, setActiveTab] = useState<'partidas' | 'jogos' | 'classificacao' | 'chaveamento' | 'inscritos' | 'estatisticas'>('chaveamento');
     const [editingMatch, setEditingMatch] = useState<Match | null>(null);
     const [schedulingMatch, setSchedulingMatch] = useState<Match | null>(null);
+    const [selectedBracketMatch, setSelectedBracketMatch] = useState<Match | null>(null);
     const [adminResultMatch, setAdminResultMatch] = useState<Match | null>(null);
     const [savingAdminResult, setSavingAdminResult] = useState(false);
     const [showChampSelector, setShowChampSelector] = useState(false); // Mobile friendly selector
@@ -237,6 +240,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                 playerBId: m.player_b_id,
                 registration_a_id: m.registration_a_id,
                 registration_b_id: m.registration_b_id,
+                match_number: m.match_number,
                 scoreA: m.score_a || [],
                 scoreB: m.score_b || [],
                 winnerId: m.winner_id,
@@ -381,10 +385,15 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
     const ongoingChamps = championships.filter(c => c.status === 'ongoing');
     const selectedChamp = championships.find(c => c.id === selectedChampId);
     const selectedChampIsResenhaOpen = isResenhaOpenChampionship(selectedChamp);
+    const isOperationalBracketChampionship = selectedChamp?.format === 'mata-mata' || selectedChamp?.format === 'grupo-mata-mata';
 
     // Automatic tab selection based on format if current tab isn't applicable
     // This must be before early returns to maintain consistent hook order
     useEffect(() => {
+        if (isOperationalBracketChampionship && (activeTab === 'partidas' || activeTab === 'jogos')) {
+            setActiveTab('chaveamento');
+            return;
+        }
         if (selectedChampIsResenhaOpen && activeTab === 'classificacao') {
             setActiveTab('chaveamento');
             return;
@@ -394,13 +403,13 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
         }
         // Don't auto-switch for mata-mata or grupo-mata-mata formats
         // grupo-mata-mata supports both classificacao and chaveamento
-    }, [selectedChamp?.format, selectedChampIsResenhaOpen, activeTab]);
+    }, [selectedChamp?.format, selectedChampIsResenhaOpen, isOperationalBracketChampionship, activeTab]);
 
     useEffect(() => {
-        if (selectedChampIsResenhaOpen) {
+        if (isOperationalBracketChampionship) {
             setActiveTab('chaveamento');
         }
-    }, [selectedChampId, selectedChampIsResenhaOpen]);
+    }, [selectedChampId, isOperationalBracketChampionship]);
 
     // Initialize bracket category when groups change
     useEffect(() => {
@@ -1105,26 +1114,30 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
 
             {/* 2. TABS */}
             <div className="flex bg-white p-1.5 sm:p-2 rounded-3xl shadow-lg shadow-stone-200/50 border-2 border-stone-100 gap-1.5 sm:gap-2 overflow-hidden">
-                <button
-                    onClick={() => setActiveTab('partidas')}
-                    className={`flex-1 min-w-0 flex items-center justify-center gap-1 sm:gap-2 py-3 px-2 sm:py-3.5 sm:px-4 rounded-2xl text-[10px] sm:text-xs font-black uppercase tracking-normal sm:tracking-wider transition-all duration-300 ${
-                        activeTab === 'partidas' 
-                            ? 'bg-linear-to-br from-saibro-600 to-saibro-700 text-white shadow-lg shadow-saibro-200 sm:scale-105' 
-                            : 'text-stone-500 hover:text-stone-700 hover:bg-stone-50'
-                    }`}
-                >
-                    <Trophy size={16} className="hidden sm:block shrink-0" /> <span className="truncate">Partidas</span>
-                </button>
-                <button
-                    onClick={() => setActiveTab('jogos')}
-                    className={`flex-1 min-w-0 flex items-center justify-center gap-1 sm:gap-2 py-3 px-2 sm:py-3.5 sm:px-4 rounded-2xl text-[10px] sm:text-xs font-black uppercase tracking-normal sm:tracking-wider transition-all duration-300 ${
-                        activeTab === 'jogos' 
-                            ? 'bg-linear-to-br from-saibro-600 to-saibro-700 text-white shadow-lg shadow-saibro-200 sm:scale-105' 
-                            : 'text-stone-500 hover:text-stone-700 hover:bg-stone-50'
-                    }`}
-                >
-                    <CalendarCheck size={16} className="hidden sm:block shrink-0" /> <span className="truncate">Jogos</span>
-                </button>
+                {!isOperationalBracketChampionship && (
+                    <>
+                        <button
+                            onClick={() => setActiveTab('partidas')}
+                            className={`flex-1 min-w-0 flex items-center justify-center gap-1 sm:gap-2 py-3 px-2 sm:py-3.5 sm:px-4 rounded-2xl text-[10px] sm:text-xs font-black uppercase tracking-normal sm:tracking-wider transition-all duration-300 ${
+                                activeTab === 'partidas' 
+                                    ? 'bg-linear-to-br from-saibro-600 to-saibro-700 text-white shadow-lg shadow-saibro-200 sm:scale-105' 
+                                    : 'text-stone-500 hover:text-stone-700 hover:bg-stone-50'
+                            }`}
+                        >
+                            <Trophy size={16} className="hidden sm:block shrink-0" /> <span className="truncate">Partidas</span>
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('jogos')}
+                            className={`flex-1 min-w-0 flex items-center justify-center gap-1 sm:gap-2 py-3 px-2 sm:py-3.5 sm:px-4 rounded-2xl text-[10px] sm:text-xs font-black uppercase tracking-normal sm:tracking-wider transition-all duration-300 ${
+                                activeTab === 'jogos' 
+                                    ? 'bg-linear-to-br from-saibro-600 to-saibro-700 text-white shadow-lg shadow-saibro-200 sm:scale-105' 
+                                    : 'text-stone-500 hover:text-stone-700 hover:bg-stone-50'
+                            }`}
+                        >
+                            <CalendarCheck size={16} className="hidden sm:block shrink-0" /> <span className="truncate">Jogos</span>
+                        </button>
+                    </>
+                )}
                 {!selectedChampIsResenhaOpen && (
                     <button
                         onClick={() => setActiveTab('classificacao')}
@@ -1151,6 +1164,20 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                         <GitMerge size={16} className="hidden sm:block shrink-0" />
                         <span className="truncate sm:hidden">Chave</span>
                         <span className="truncate hidden sm:inline">Chaveamento</span>
+                    </button>
+                )}
+                {isOperationalBracketChampionship && (
+                    <button
+                        onClick={() => setActiveTab('estatisticas')}
+                        className={`flex-1 min-w-0 flex items-center justify-center gap-1 sm:gap-2 py-3 px-2 sm:py-3.5 sm:px-4 rounded-2xl text-[10px] sm:text-xs font-black uppercase tracking-normal sm:tracking-wider transition-all duration-300 ${
+                            activeTab === 'estatisticas'
+                                ? 'bg-linear-to-br from-saibro-600 to-saibro-700 text-white shadow-lg shadow-saibro-200 sm:scale-105'
+                                : 'text-stone-500 hover:text-stone-700 hover:bg-stone-50'
+                        }`}
+                    >
+                        <BarChart3 size={16} className="hidden sm:block shrink-0" />
+                        <span className="truncate sm:hidden">Stats</span>
+                        <span className="truncate hidden sm:inline">Estatísticas</span>
                     </button>
                 )}
             </div>
@@ -1613,7 +1640,29 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                     <div className="space-y-6 pb-10">
                         {/* Only show bracket for grupo-mata-mata format */}
                         {selectedChampIsResenhaOpen ? (
-                            <ResenhaOpenBracketView championshipId={selectedChamp.id} />
+                            <ResenhaOpenBracketView
+                                championshipId={selectedChamp.id}
+                                onMatchSelect={(bracketMatch) => {
+                                    const localMatch = matches.find(match => match.id === bracketMatch.id);
+                                    setSelectedBracketMatch(localMatch || {
+                                        id: bracketMatch.id,
+                                        championshipId: selectedChamp.id,
+                                        type: 'Campeonato',
+                                        registration_a_id: bracketMatch.registration_a_id ?? undefined,
+                                        registration_b_id: bracketMatch.registration_b_id ?? undefined,
+                                        scoreA: bracketMatch.score_a ?? [],
+                                        scoreB: bracketMatch.score_b ?? [],
+                                        status: bracketMatch.status as Match['status'],
+                                        winner_registration_id: bracketMatch.winner_registration_id,
+                                        is_walkover: bracketMatch.is_walkover,
+                                        scheduled_date: bracketMatch.scheduled_date ?? undefined,
+                                        scheduled_time: bracketMatch.scheduled_time ?? undefined,
+                                        scheduledDate: bracketMatch.scheduled_date ?? undefined,
+                                        scheduledTime: bracketMatch.scheduled_time ?? undefined,
+                                        match_number: bracketMatch.match_number,
+                                    });
+                                }}
+                            />
                         ) : selectedChamp?.format === 'grupo-mata-mata' && groupsDetail.length > 0 ? (
                             <>
                                 {/* Class Sub-Tabs */}
@@ -1679,12 +1728,53 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                         )}
                     </div>
                 )}
+
+                {activeTab === 'estatisticas' && (
+                    <div className="pb-10">
+                        <ChampionshipStatistics matches={matches} registrations={registrations} />
+                    </div>
+                )}
             </div>
 
             {/* 4. MODAL EDIT RESULT */}
         </div>
 
             {/* Modals rendered outside main container for full-screen overlay */}
+            {
+                selectedBracketMatch && (
+                    <ChampionshipMatchActionModal
+                        match={selectedBracketMatch}
+                        registrations={registrations}
+                        roundName={rounds.find(r => r.id === selectedBracketMatch.round_id)?.name || selectedBracketMatch.round_phase || selectedBracketMatch.phase || 'Rodada'}
+                        className={registrations.find(r => r.id === selectedBracketMatch.registration_a_id)?.class || registrations.find(r => r.id === selectedBracketMatch.registration_b_id)?.class || ''}
+                        isAdmin={currentUser.role === 'admin'}
+                        currentUserId={currentUser.id}
+                        scheduleMode={selectedChampIsResenhaOpen ? 'suggested' : 'schedule'}
+                        onClose={() => setSelectedBracketMatch(null)}
+                        onLaunch={
+                            matches.some(match => match.id === selectedBracketMatch.id) &&
+                            (currentUser.role === 'admin' || canLaunchScore(selectedBracketMatch, currentUser.id))
+                                ? () => {
+                                    setEditingMatch(selectedBracketMatch);
+                                    setSelectedBracketMatch(null);
+                                }
+                                : undefined
+                        }
+                        onSchedule={
+                            matches.some(match => match.id === selectedBracketMatch.id) &&
+                            (selectedChampIsResenhaOpen
+                                ? currentUser.role === 'admin'
+                                : (currentUser.role === 'admin' || selectedBracketMatch.playerAId === currentUser.id || selectedBracketMatch.playerBId === currentUser.id))
+                                ? () => {
+                                    setSchedulingMatch(selectedBracketMatch);
+                                    setSelectedBracketMatch(null);
+                                }
+                                : undefined
+                        }
+                    />
+                )
+            }
+
             {
                 editingMatch && (
                     <ResultModal

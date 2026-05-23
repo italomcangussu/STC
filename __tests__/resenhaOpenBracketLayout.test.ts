@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { BracketMatchWithPhase } from '../lib/resenhaOpenService';
 import {
     buildResenhaBracketLayout,
+    getCurrentPhaseForClass,
     getMatchWinnerSide,
     normalizeScoreSlots,
 } from '../lib/resenhaOpenBracketLayout';
@@ -75,5 +76,57 @@ describe('resenhaOpenBracketLayout', () => {
         ], '4ª Classe');
 
         expect(layout.phases.map(phase => phase.phase)).toEqual(['preliminar', 'oitavas', 'quartas', 'semifinal', 'final']);
+    });
+
+    it('selects the earliest pending playable phase', () => {
+        const matches = [
+            match({
+                id: 'j13',
+                match_number: 13,
+                round_phase: 'quartas',
+                bracket_class: '4ª Classe',
+                registration_a_id: 'a',
+                registration_b_id: 'b',
+                status: 'pending',
+            }),
+            match({
+                id: 'j17',
+                match_number: 17,
+                round_phase: 'semifinal',
+                bracket_class: '4ª Classe',
+                registration_a_id: null,
+                registration_b_id: null,
+                player_a_source_match_number: 13,
+                player_b_source_match_number: 14,
+                status: 'pending',
+            }),
+        ];
+
+        expect(getCurrentPhaseForClass(matches, '4ª Classe')).toBe('quartas');
+    });
+
+    it('selects the final when all class matches are finished', () => {
+        const matches = [
+            match({
+                id: 'j13',
+                match_number: 13,
+                round_phase: 'quartas',
+                bracket_class: '4ª Classe',
+                registration_a_id: 'a',
+                registration_b_id: 'b',
+                status: 'finished',
+            }),
+            match({
+                id: 'j19',
+                match_number: 19,
+                round_phase: 'final',
+                bracket_class: '4ª Classe',
+                registration_a_id: 'c',
+                registration_b_id: 'd',
+                status: 'finished',
+            }),
+        ];
+
+        expect(getCurrentPhaseForClass(matches, '4ª Classe')).toBe('final');
     });
 });
