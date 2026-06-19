@@ -10,8 +10,6 @@ export interface PublicChampionshipSummary {
   registration_open: boolean | null;
 }
 
-const PUBLIC_CHAMPIONSHIPS_HOST = 'camp.stcplay.com.br';
-
 const APP_PATHS = new Set([
   'agenda',
   'dashboard',
@@ -39,8 +37,8 @@ export function getPublicChampionshipRoute(pathname: string, hostname = ''): Pub
   const normalized = pathWithoutQuery.replace(/^\/+|\/+$/g, '');
   const normalizedHost = hostname.toLowerCase();
 
-  if (!normalized && normalizedHost === PUBLIC_CHAMPIONSHIPS_HOST) {
-    return { type: 'list' };
+  if (normalizedHost === 'camp.stcplay.com.br') {
+    return { type: 'none' };
   }
 
   if (!normalized || normalized.includes('.') || normalized.includes('/')) {
@@ -51,7 +49,7 @@ export function getPublicChampionshipRoute(pathname: string, hostname = ''): Pub
     return { type: 'none' };
   }
 
-  return { type: 'slug', slug: normalized };
+  return { type: 'none' };
 }
 
 export function selectPublicChampionship(championships: PublicChampionshipSummary[]) {
