@@ -34,8 +34,22 @@
 <body>
   <div id="root"></div>
   <script>
-    // Register Service Worker for Push Notifications
-    if ('serviceWorker' in navigator) {
+    // The public championship host (camp.stcplay.com.br) must NOT be installable
+    // as a PWA — otherwise installing from the championship page captures it as
+    // the app start URL and every launch opens the championship view. That view
+    // is reachable via the in-app "Campeonatos" tab instead. Keep this host in
+    // sync with PUBLIC_CHAMPIONSHIPS_HOST in lib/publicRoutes.ts.
+    var PUBLIC_CHAMPIONSHIPS_HOST = 'camp.stcplay.com.br';
+    var isPublicChampionshipHost =
+      window.location.hostname.toLowerCase() === PUBLIC_CHAMPIONSHIPS_HOST;
+
+    if (isPublicChampionshipHost) {
+      // Strip the manifest + web-app meta tags so the page is not installable.
+      document.querySelectorAll(
+        'link[rel="manifest"], meta[name="apple-mobile-web-app-capable"], meta[name="mobile-web-app-capable"]'
+      ).forEach(function (el) { el.remove(); });
+    } else if ('serviceWorker' in navigator) {
+      // Register Service Worker for Push Notifications (main app only)
       window.addEventListener('load', async () => {
         try {
           const registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
