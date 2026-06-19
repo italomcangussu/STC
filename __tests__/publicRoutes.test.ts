@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { getPublicChampionshipRoute, selectPublicChampionship } from '../lib/publicRoutes';
 
 describe('public championship routing', () => {
-  it('detects the public championship list route with or without a trailing slash', () => {
-    expect(getPublicChampionshipRoute('/campeonatos-publico')).toEqual({ type: 'list' });
-    expect(getPublicChampionshipRoute('/campeonatos-publico/')).toEqual({ type: 'list' });
+  it('does not route the retired public championship list path inside the main app', () => {
+    expect(getPublicChampionshipRoute('/campeonatos-publico')).toEqual({ type: 'none' });
+    expect(getPublicChampionshipRoute('/campeonatos-publico/')).toEqual({ type: 'none' });
   });
 
   it('uses the championship subdomain root as the public championship list route', () => {

@@ -17,5 +17,5 @@
     "background_color": "#fff7ed",
     "display": "standalone",
     "scope": "/",
-    "start_url": "/campeonatos-publico"
+    "start_url": "/"
 }
