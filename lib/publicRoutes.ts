@@ -20,6 +20,7 @@ const APP_PATHS = new Set([
   'superset',
   'tenisproplayer',
   'campeonatos',
+  'campeonatos-publico',
   'competicao',
   'atletas',
   'perfil',
