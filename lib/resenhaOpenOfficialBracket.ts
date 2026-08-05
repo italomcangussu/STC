@@ -1,4 +1,4 @@
-import type { BracketMatchWithPhase } from './resenhaOpenService';
+import type { BracketMatchWithPhase } from './resenhaOpenAdvance';
 
 type OfficialMatchInput = {
     className: '4ª Classe' | '5ª Classe';

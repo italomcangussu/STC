@@ -1,28 +1,30 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { Loader2, Megaphone } from 'lucide-react';
 import { Toaster } from 'sonner';
 import { Layout } from './components/Layout';
 import { Dashboard } from './components/Dashboard';
-import { Klanches } from './components/Klanches';
 import { Championships } from './components/Championships';
 import { Athletes } from './components/Athletes';
 import { Ranking } from './components/Ranking';
 import { Agenda } from './components/Agenda';
-import { ProfessorProfile } from './components/ProfessorProfile';
-import { AdminProfessors } from './components/AdminProfessors';
-import { AdminPanel } from './components/AdminPanel';
-import { FinanceiroAdmin } from './components/FinanceiroAdmin';
 import { ChallengesView } from './components/Challenges';
 import { SuperSet } from './components/SuperSet';
-import { TenisProPlayer } from './components/TenisProPlayer';
-import { AdminStudents } from './components/AdminStudents';
-import { ChampionshipAdmin } from './components/ChampionshipAdmin';
 import { AdminProtect } from './components/AdminProtect';
-import { AdminResenhaOpen } from './components/AdminResenhaOpen';
 import { Auth } from './components/Auth';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { User } from './types';
 import { supabase } from './lib/supabase';
+
+// 🚀 Code Splitting via React.lazy (Uncle Bob Performance Optimization)
+const Klanches = lazy(() => import('./components/Klanches').then(m => ({ default: m.Klanches })));
+const TenisProPlayer = lazy(() => import('./components/TenisProPlayer').then(m => ({ default: m.TenisProPlayer })));
+const ProfessorProfile = lazy(() => import('./components/ProfessorProfile').then(m => ({ default: m.ProfessorProfile })));
+const AdminProfessors = lazy(() => import('./components/AdminProfessors').then(m => ({ default: m.AdminProfessors })));
+const AdminPanel = lazy(() => import('./components/AdminPanel').then(m => ({ default: m.AdminPanel })));
+const FinanceiroAdmin = lazy(() => import('./components/FinanceiroAdmin').then(m => ({ default: m.FinanceiroAdmin })));
+const AdminStudents = lazy(() => import('./components/AdminStudents').then(m => ({ default: m.AdminStudents })));
+const ChampionshipAdmin = lazy(() => import('./components/ChampionshipAdmin').then(m => ({ default: m.ChampionshipAdmin })));
+const AdminResenhaOpen = lazy(() => import('./components/AdminResenhaOpen').then(m => ({ default: m.AdminResenhaOpen })));
 import { getPublicChampionshipRoute, PublicChampionshipRoute, selectPublicChampionship } from './lib/publicRoutes';
 
 import { OnboardingModal } from './components/OnboardingModal';
@@ -200,26 +202,33 @@ const AppContent: React.FC = () => {
   return (
     <>
       <Layout view={view} setView={setView} currentUser={currentUser} onLogout={signOut}>
-        <div key={view} className="animate-page-enter">
-          {view === 'agenda' && <Agenda currentUser={currentUser} />}
-          {view === 'dashboard' && <Dashboard />}
-          {view === 'klanches' && <Klanches currentUser={currentUser} />}
-          {view === 'desafios' && <ChallengesView currentUser={currentUser} />}
-          {view === 'superset' && <SuperSet />}
-          {view === 'tenisproplayer' && <TenisProPlayer />}
-          {view === 'campeonatos' && <Championships currentUser={currentUser} />}
-          {view === 'competicao' && <Championships currentUser={currentUser} />}
-          {view === 'atletas' && <Athletes initialUserId={targetAthleteId} currentUser={currentUser} onClearRequest={() => setTargetAthleteId(null)} />}
-          {view === 'perfil' && <Athletes initialUserId={currentUser.id} currentUser={currentUser} onClearRequest={() => setView('dashboard')} />}
-          {view === 'ranking' && <Ranking onSelectProfile={handleOpenProfile} />}
-          {view === 'professor' && <ProfessorProfile currentUser={currentUser} />}
-          {view === 'admin-students' && <AdminProtect><AdminStudents /></AdminProtect>}
-          {view === 'admin-professors' && <AdminProtect><AdminProfessors /></AdminProtect>}
-          {view === 'admin-panel' && <AdminProtect><AdminPanel /></AdminProtect>}
-          {view === 'financeiro-admin' && <AdminProtect><FinanceiroAdmin /></AdminProtect>}
-          {view === 'championship-admin' && <AdminProtect><ChampionshipAdmin currentUser={currentUser} /></AdminProtect>}
-          {view === 'resenha-open-admin' && <AdminProtect><AdminResenhaOpen /></AdminProtect>}
-        </div>
+        <Suspense fallback={
+          <div className="min-h-[50vh] flex flex-col items-center justify-center gap-3">
+            <Loader2 className="animate-spin text-saibro-600" size={36} />
+            <span className="text-xs font-bold text-saibro-700 uppercase tracking-wider">Carregando módulo...</span>
+          </div>
+        }>
+          <div key={view} className="animate-page-enter">
+            {view === 'agenda' && <Agenda currentUser={currentUser} />}
+            {view === 'dashboard' && <Dashboard />}
+            {view === 'klanches' && <Klanches currentUser={currentUser} />}
+            {view === 'desafios' && <ChallengesView currentUser={currentUser} />}
+            {view === 'superset' && <SuperSet />}
+            {view === 'tenisproplayer' && <TenisProPlayer />}
+            {view === 'campeonatos' && <Championships currentUser={currentUser} />}
+            {view === 'competicao' && <Championships currentUser={currentUser} />}
+            {view === 'atletas' && <Athletes initialUserId={targetAthleteId} currentUser={currentUser} onClearRequest={() => setTargetAthleteId(null)} />}
+            {view === 'perfil' && <Athletes initialUserId={currentUser.id} currentUser={currentUser} onClearRequest={() => setView('dashboard')} />}
+            {view === 'ranking' && <Ranking onSelectProfile={handleOpenProfile} />}
+            {view === 'professor' && <ProfessorProfile currentUser={currentUser} />}
+            {view === 'admin-students' && <AdminProtect><AdminStudents /></AdminProtect>}
+            {view === 'admin-professors' && <AdminProtect><AdminProfessors /></AdminProtect>}
+            {view === 'admin-panel' && <AdminProtect><AdminPanel /></AdminProtect>}
+            {view === 'financeiro-admin' && <AdminProtect><FinanceiroAdmin /></AdminProtect>}
+            {view === 'championship-admin' && <AdminProtect><ChampionshipAdmin currentUser={currentUser} /></AdminProtect>}
+            {view === 'resenha-open-admin' && <AdminProtect><AdminResenhaOpen /></AdminProtect>}
+          </div>
+        </Suspense>
       </Layout>
       {showAnnouncement && !needsOnboarding && (
         <AnnouncementPopup user={currentUser} onClose={() => setShowAnnouncement(false)} />

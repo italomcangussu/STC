@@ -11,6 +11,15 @@ export interface BracketMatch extends DrawMatch {
     is_walkover?: boolean;
 }
 
+export interface BracketMatchWithPhase extends BracketMatch {
+    round_phase: string;
+    bracket_class?: string;
+    scheduled_date?: string | null;
+    scheduled_time?: string | null;
+    score_a?: number[];
+    score_b?: number[];
+}
+
 // ── Apply a result (regular or WO) ───────────────────────────────────────────
 
 export function applyMatchResult(

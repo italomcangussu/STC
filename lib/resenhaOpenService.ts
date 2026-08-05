@@ -3,7 +3,7 @@
 
 import { supabase } from './supabase';
 import type { DrawAthlete, DrawMatch } from './resenhaOpenDraw';
-import type { BracketMatch } from './resenhaOpenAdvance';
+export type { BracketMatch, BracketMatchWithPhase } from './resenhaOpenAdvance';
 import { getOfficialResenhaOpenBracket } from './resenhaOpenOfficialBracket';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -38,14 +38,6 @@ export interface RegisterGuestParams {
     cabecaDeChave?: boolean;
 }
 
-export interface BracketMatchWithPhase extends BracketMatch {
-    round_phase: string;
-    bracket_class?: ResenhaClass | string;
-    scheduled_date?: string | null;
-    scheduled_time?: string | null;
-    score_a?: number[];
-    score_b?: number[];
-}
 
 // ── Phase definitions ─────────────────────────────────────────────────────────
 

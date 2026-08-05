@@ -8,20 +8,12 @@
 |------|:------:|--------|
 | Cobertura de testes | · | **não medido** — rode com `--run` ou gere coverage |
 | Teste de mutação | · | **não medido** — configure Stryker (JS) ou mutmut (Py) |
-| Estrutura de dependências | 🔴 | 1 ciclo(s) de dependência; 100 arquivos com imports internos |
+| Estrutura de dependências | 🟢 | 0 ciclo(s) de dependência; 100 arquivos com imports internos |
 | Complexidade ciclomática | 🔴 | 105/405 funções acima de 5 |
 | Tamanho de módulos/funções | 🔴 | 45 arquivos > 200 linhas; 114 funções > 20 linhas |
 | Duplicação | 🟢 | ~2.4% de blocos repetidos (heurístico) |
 
 _Escopo: 118 arquivos-fonte, 405 funções analisadas._
-
-## 🔴 Ciclos de dependência (viola ADP — prioridade ALTA)
-
-Ciclos impedem evoluir/testar/deployar componentes isoladamente. Quebre invertendo uma seta via DIP (interface no lado estável) ou extraindo um módulo comum. Ver `references/clean-architecture.md`.
-
-1. ciclo entre 2 módulos:
-   - `lib/resenhaOpenService.ts`
-   - `lib/resenhaOpenOfficialBracket.ts`
 
 ## Funções mais complexas (complexidade > 5)
 
@@ -34,8 +26,8 @@ Ciclos impedem evoluir/testar/deployar componentes isoladamente. Quebre inverten
 | 🔴 | `AdminStudents` | `components/AdminStudents.tsx:25` | **127** | 804 | 0 | 6 |
 | 🔴 | `GroupDrawPage` | `components/GroupDrawPage.tsx:56` | **124** | 1243 | 1 | 1 |
 | 🔴 | `AdminResenhaOpen` | `components/AdminResenhaOpen.tsx:36` | **122** | 880 | 0 | 7 |
+| 🔴 | `ChampionshipAdmin` | `components/ChampionshipAdmin.tsx:128` | **115** | 834 | 1 | 7 |
 | 🔴 | `ProfessorProfile` | `components/ProfessorProfile.tsx:142` | **115** | 804 | 1 | 5 |
-| 🔴 | `ChampionshipAdmin` | `components/ChampionshipAdmin.tsx:127` | **106** | 789 | 1 | 7 |
 | 🔴 | `NewChampionship` | `components/NewChampionship.tsx:15` | **93** | 729 | 1 | 8 |
 | 🔴 | `Klanches` | `components/Klanches.tsx:36` | **85** | 785 | 1 | 3 |
 | 🔴 | `LiveScoreboard` | `components/LiveScoreboard.tsx:40` | **81** | 288 | 1 | 1 |
@@ -59,9 +51,9 @@ Ciclos impedem evoluir/testar/deployar componentes isoladamente. Quebre inverten
 | 🔴 | `ChampionshipInProgress` | `components/ChampionshipInProgress.tsx:38` | **1202** | 167 | 1 |
 | 🔴 | `Agenda` | `components/Agenda.tsx:1208` | **1080** | 222 | 1 |
 | 🔴 | `AdminResenhaOpen` | `components/AdminResenhaOpen.tsx:36` | **880** | 122 | 0 |
+| 🔴 | `ChampionshipAdmin` | `components/ChampionshipAdmin.tsx:128` | **834** | 115 | 1 |
 | 🔴 | `AdminStudents` | `components/AdminStudents.tsx:25` | **804** | 127 | 0 |
 | 🔴 | `ProfessorProfile` | `components/ProfessorProfile.tsx:142` | **804** | 115 | 1 |
-| 🔴 | `ChampionshipAdmin` | `components/ChampionshipAdmin.tsx:127` | **789** | 106 | 1 |
 | 🔴 | `Klanches` | `components/Klanches.tsx:36` | **785** | 85 | 1 |
 | 🔴 | `NewChampionship` | `components/NewChampionship.tsx:15` | **729** | 93 | 1 |
 | 🔴 | `AthleteProfile` | `components/Athletes.tsx:44` | **569** | 76 | 1 |
@@ -72,21 +64,21 @@ Ciclos impedem evoluir/testar/deployar componentes isoladamente. Quebre inverten
 | 🔴 | `FinanceiroAdmin` | `components/FinanceiroAdmin.tsx:38` | **472** | 47 | 0 |
 | 🔴 | `AuthProvider` | `contexts/AuthContext.tsx:47` | **426** | 73 | 1 |
 | 🔴 | `AdminMatchCreator` | `components/AdminMatchCreator.tsx:17` | **401** | 52 | 1 |
+| 🔴 | `Layout` | `components/Layout.tsx:27` | **399** | 49 | 1 |
 | 🔴 | `Dashboard` | `components/Dashboard.tsx:19` | **393** | 50 | 0 |
-| 🔴 | `Championships` | `components/Championships.tsx:48` | **364** | 56 | 1 |
 
 > Função faz UMA coisa, em UM nível de abstração (Código Limpo cap. 3).
 
 ## Funções com excesso de argumentos (> 3)
 
-- 🔴 `saveBracket` (`lib/resenhaOpenService.ts:271`) — **7 args**. Considere objeto-parâmetro ou quebrar a função (F1).
+- 🔴 `saveBracket` (`lib/resenhaOpenService.ts:263`) — **7 args**. Considere objeto-parâmetro ou quebrar a função (F1).
 - 🔴 `attachPostgresChanges` (`hooks/useRealtimeSubscription.ts:25`) — **5 args**. Considere objeto-parâmetro ou quebrar a função (F1).
 - 🔴 `checkOverlap` (`components/AdminPanel.tsx:36`) — **4 args**. Considere objeto-parâmetro ou quebrar a função (F1).
 - 🔴 `checkOverlap` (`components/Agenda.tsx:77`) — **4 args**. Considere objeto-parâmetro ou quebrar a função (F1).
 - 🔴 `onFinishMatch` (`components/Agenda.tsx:359`) — **4 args**. Considere objeto-parâmetro ou quebrar a função (F1).
 - 🔴 `createMatch` (`lib/championshipUtils.ts:90`) — **4 args**. Considere objeto-parâmetro ou quebrar a função (F1).
-- 🔴 `applyWalkover` (`lib/resenhaOpenAdvance.ts:45`) — **4 args**. Considere objeto-parâmetro ou quebrar a função (F1).
-- 🔴 `replaceAthleteInMatch` (`lib/resenhaOpenAdvance.ts:75`) — **4 args**. Considere objeto-parâmetro ou quebrar a função (F1).
+- 🔴 `applyWalkover` (`lib/resenhaOpenAdvance.ts:54`) — **4 args**. Considere objeto-parâmetro ou quebrar a função (F1).
+- 🔴 `replaceAthleteInMatch` (`lib/resenhaOpenAdvance.ts:84`) — **4 args**. Considere objeto-parâmetro ou quebrar a função (F1).
 
 ## Arquivos mais longos (> 200 linhas)
 
@@ -98,9 +90,9 @@ Ciclos impedem evoluir/testar/deployar componentes isoladamente. Quebre inverten
 | 🔴 | `components/GroupDrawPage.tsx` | **1110** | 0.75 |
 | 🔴 | `components/ChampionshipInProgress.tsx` | **1078** | 0.93 |
 | 🔴 | `components/AdminResenhaOpen.tsx` | **923** | 0.75 |
+| 🔴 | `components/ChampionshipAdmin.tsx` | **850** | 0.71 |
 | 🔴 | `components/Challenges.tsx` | **847** | 0.86 |
 | 🔴 | `components/ProfessorProfile.tsx` | **832** | 0.80 |
-| 🔴 | `components/ChampionshipAdmin.tsx` | **811** | 0.71 |
 | 🔴 | `components/AdminStudents.tsx` | **756** | 0.67 |
 | 🔴 | `components/Klanches.tsx` | **729** | 0.75 |
 | 🔴 | `components/NewChampionship.tsx` | **677** | 1.00 |
@@ -109,9 +101,9 @@ Ciclos impedem evoluir/testar/deployar componentes isoladamente. Quebre inverten
 | 🔴 | `lib/rankingService.ts` | **469** | 0.25 |
 | 🔴 | `components/FinanceiroAdmin.tsx` | **451** | 0.60 |
 | 🔴 | `components/AdminChampionshipDetail.tsx` | **438** | 1.00 |
-| 🔴 | `lib/resenhaOpenService.ts` | **404** | 0.33 |
 | 🟡 | `contexts/AuthContext.tsx` | **397** | 0.43 |
-| 🟡 | `components/ResenhaOpenTournamentBoard.tsx` | **363** | 0.60 |
+| 🟡 | `lib/resenhaOpenService.ts` | **396** | 0.30 |
+| 🟡 | `components/Layout.tsx` | **381** | 0.83 |
 
 ## Módulos muito dependidos (cuidado ao mudar)
 
@@ -123,9 +115,9 @@ Ciclos impedem evoluir/testar/deployar componentes isoladamente. Quebre inverten
 | `components/TenisProPlayer/constants.ts` | **11** | 0 | 0.00 |
 | `components/StandardModal.tsx` | **10** | 0 | 0.00 |
 | `lib/logger.ts` | **9** | 0 | 0.00 |
-| `lib/resenhaOpenService.ts` | **8** | 4 | 0.33 |
+| `lib/resenhaOpenService.ts` | **7** | 3 | 0.30 |
 | `lib/rankingService.ts` | **6** | 2 | 0.25 |
-| `lib/championshipUtils.ts` | **5** | 2 | 0.29 |
+| `lib/resenhaOpenDraw.ts` | **5** | 0 | 0.00 |
 | `lib/groupKnockout.ts` | **5** | 2 | 0.29 |
 
 > Ca alto + I baixo = muitos dependem dele e ele é concreto. Mudanças se propagam; proteja com testes fortes e considere extrair uma abstração estável (DIP). Ver Zona da Dor em `clean-architecture.md`.
