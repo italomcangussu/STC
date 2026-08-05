@@ -146,8 +146,9 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
     const [hasGroups, setHasGroups] = useState(false);
 
     const [applyingPoints, setApplyingPoints] = useState(false);
-    const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+    const [finishingChampionship, setFinishingChampionship] = useState(false);
     const [cancellingEdition, setCancellingEdition] = useState(false);
+    const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
     const [statusFilter, setStatusFilter] = useState<'all' | 'draft' | 'ongoing' | 'finished'>('all');
     const [activeTab, setActiveTab] = useState<'overview' | 'rounds' | 'matches' | 'standings' | 'audit'>('overview');
@@ -436,6 +437,55 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
         await fetchSelectedChampionshipData(selectedChampionship.id);
     };
 
+    const handleFinishChampionship = async () => {
+        if (!selectedChampionship) return;
+        if (!confirm(`Deseja realmente encerrar o campeonato "${selectedChampionship.name}" e apurar os pontos para o ranking?`)) return;
+
+        setFinishingChampionship(true);
+        try {
+            try {
+                await supabase.rpc('resolve_championship_final_phases', {
+                    p_championship_id: selectedChampionship.id
+                });
+            } catch (resolveErr) {
+                console.warn('Erro ao resolver fases finais:', resolveErr);
+            }
+
+            const { error } = await supabase
+                .from('championships')
+                .update({ status: 'finished' })
+                .eq('id', selectedChampionship.id);
+
+            if (error) throw error;
+
+            if (selectedChampionship.series_id) {
+                try {
+                    await supabase.rpc('apply_championship_edition_points', {
+                        p_championship_id: selectedChampionship.id
+                    });
+                } catch (ptsErr) {
+                    console.warn('Pontos aplicados via trigger (RPC fallback reportou):', ptsErr);
+                }
+            }
+
+            await createAuditLog(
+                'championship_finished',
+                'championship',
+                selectedChampionship.id,
+                { status: selectedChampionship.status },
+                { status: 'finished' }
+            );
+
+            alert('Campeonato encerrado e pontos aplicados ao ranking com sucesso!');
+            await fetchInitialData();
+            await fetchSelectedChampionshipData(selectedChampionship.id);
+        } catch (err: any) {
+            alert('Erro ao finalizar campeonato: ' + err.message);
+        } finally {
+            setFinishingChampionship(false);
+        }
+    };
+
     const handleApplyChampionshipPoints = async () => {
         if (!selectedChampionship?.series_id) {
             alert('Este campeonato não tem série associada. Vincule-o a uma série antes de aplicar pontos.');
@@ -637,6 +687,17 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
                                             className="py-3 rounded-xl bg-green-600 text-white font-bold"
                                         >
                                             Abrir painel em andamento
+                                        </button>
+                                    )}
+
+                                    {selectedChampionship.status !== 'finished' && (
+                                        <button
+                                            onClick={handleFinishChampionship}
+                                            disabled={finishingChampionship}
+                                            className="py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center justify-center gap-2 disabled:opacity-60 transition-colors shadow-sm"
+                                        >
+                                            {finishingChampionship ? <Loader2 size={16} className="animate-spin" /> : <Trophy size={16} />}
+                                            Finalizar Campeonato (Apurar Pontos)
                                         </button>
                                     )}
 

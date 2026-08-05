@@ -39,7 +39,7 @@ interface Registration {
 
 const CLASSES = ['1ª Classe', '2ª Classe', '3ª Classe', '4ª Classe', '5ª Classe', '6ª Classe'];
 
-const isResenhaOpenChampionship = (championship?: Pick<ChampionshipWithParticipants, 'name' | 'slug'> | null): boolean => {
+const isResenhaOpenChampionship = (championship?: any): boolean => {
     const name = championship?.name?.toLowerCase() ?? '';
     const slug = championship?.slug?.toLowerCase() ?? '';
     return name.includes('resenha open') || slug.includes('resenha-open');
