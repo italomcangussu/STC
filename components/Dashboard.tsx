@@ -229,11 +229,11 @@ export const Dashboard: React.FC<DashboardProps> = () => {
           <p className="text-stone-500 text-sm">Visão geral em tempo real</p>
         </div>
 
-        {/* Court Filter */}
+        {/* Court Filter Selects */}
         <select
           value={selectedCourt}
           onChange={(e) => setSelectedCourt(e.target.value)}
-          className="px-3 py-2 rounded-lg border border-stone-200 bg-stone-50 text-stone-700 outline-hidden focus:ring-2 focus:ring-saibro-500"
+          className="hit-target-44 px-3.5 py-2.5 rounded-xl border border-saibro-200/80 bg-white/90 text-stone-800 text-sm font-semibold outline-hidden focus:ring-2 focus:ring-saibro-500 shadow-xs btn-tactile"
         >
           <option value="all">Todas as Quadras</option>
           {courts.map(c => (
@@ -245,7 +245,7 @@ export const Dashboard: React.FC<DashboardProps> = () => {
           value={selectedMonth}
           onChange={(e) => setSelectedMonth(e.target.value === 'all' ? 'all' : Number(e.target.value))}
           disabled={selectedYear === 'all'}
-          className={`px-3 py-2 rounded-lg border border-stone-200 text-stone-700 outline-hidden focus:ring-2 focus:ring-saibro-500 ${selectedYear === 'all' ? 'bg-stone-100 text-stone-400 cursor-not-allowed' : 'bg-stone-50'}`}
+          className={`hit-target-44 px-3.5 py-2.5 rounded-xl border border-saibro-200/80 text-stone-800 text-sm font-semibold outline-hidden focus:ring-2 focus:ring-saibro-500 shadow-xs btn-tactile ${selectedYear === 'all' ? 'bg-stone-100/80 text-stone-400 cursor-not-allowed border-stone-200' : 'bg-white/90'}`}
         >
           <option value="all">Todos os Meses</option>
           {months.map(m => (
@@ -260,7 +260,7 @@ export const Dashboard: React.FC<DashboardProps> = () => {
             setSelectedYear(val);
             if (val === 'all') setSelectedMonth('all');
           }}
-          className="px-3 py-2 rounded-lg border border-stone-200 bg-stone-50 text-stone-700 outline-hidden focus:ring-2 focus:ring-saibro-500"
+          className="hit-target-44 px-3.5 py-2.5 rounded-xl border border-saibro-200/80 bg-white/90 text-stone-800 text-sm font-semibold outline-hidden focus:ring-2 focus:ring-saibro-500 shadow-xs btn-tactile"
         >
           <option value="all">Todo o Período</option>
           {years.map(y => (
@@ -272,35 +272,35 @@ export const Dashboard: React.FC<DashboardProps> = () => {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-linear-to-br from-white to-stone-50/50 border-l-[6px] border-saibro-500 p-4 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 animate-scale-in">
-          <p className="text-xs text-stone-500 uppercase font-bold tracking-wider">Total Reservas</p>
-          <p className="text-3xl font-black text-stone-800 mt-1">{filteredReservations.length}</p>
-          <p className="text-[10px] text-stone-400 font-bold uppercase mt-1">
+        <div className="bg-white/85 backdrop-blur-xl border-l-[6px] border-saibro-500 p-4 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-200 hover:-translate-y-1 active:scale-[0.98] animate-scale-in border border-stone-200/60">
+          <p className="text-[11px] text-stone-500 uppercase font-extrabold tracking-wider">Total Reservas</p>
+          <p className="text-3xl font-black text-stone-900 mt-1">{filteredReservations.length}</p>
+          <p className="text-[10px] text-saibro-600 font-bold uppercase mt-1">
             {selectedYear === 'all' ? 'Todo o período' : selectedMonth === 'all' ? `Em ${selectedYear}` : `Em ${months.find(m => m.val === selectedMonth)?.label}/${selectedYear}`}
           </p>
         </div>
-        <div className="bg-linear-to-br from-white to-stone-50/50 border-l-[6px] border-blue-500 p-4 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 animate-scale-in delay-75">
-          <p className="text-xs text-stone-500 uppercase font-bold tracking-wider">Quadra Favorita</p>
-          <p className="text-lg font-black text-stone-800 truncate mt-2 leading-tight" title={mostUsedCourt}>{mostUsedCourt}</p>
-          <p className="text-[10px] text-stone-400 font-bold uppercase mt-1">Mais utilizada</p>
+        <div className="bg-white/85 backdrop-blur-xl border-l-[6px] border-blue-500 p-4 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-200 hover:-translate-y-1 active:scale-[0.98] animate-scale-in delay-75 border border-stone-200/60">
+          <p className="text-[11px] text-stone-500 uppercase font-extrabold tracking-wider">Quadra Favorita</p>
+          <p className="text-lg font-black text-stone-900 truncate mt-2 leading-tight" title={mostUsedCourt}>{mostUsedCourt}</p>
+          <p className="text-[10px] text-blue-600 font-bold uppercase mt-1">Mais utilizada</p>
         </div>
-        <div className="bg-linear-to-br from-white to-stone-50/50 border-l-[6px] border-green-500 p-4 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 animate-scale-in delay-150">
-          <p className="text-xs text-stone-500 uppercase font-bold tracking-wider">Dia de Pico</p>
+        <div className="bg-white/85 backdrop-blur-xl border-l-[6px] border-green-500 p-4 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-200 hover:-translate-y-1 active:scale-[0.98] animate-scale-in delay-150 border border-stone-200/60">
+          <p className="text-[11px] text-stone-500 uppercase font-extrabold tracking-wider">Dia de Pico</p>
           <div className="flex items-center gap-2 mt-2">
-            <Calendar className="text-green-600 animate-float" size={24} />
-            <div>
-              <p className="text-lg font-black text-stone-800 leading-none">{busyDay?.day || '-'}</p>
-              <span className="text-[10px] text-stone-400 font-bold uppercase">{busyDay?.count || 0} reservas</span>
+            <Calendar className="text-green-600 animate-float shrink-0" size={24} />
+            <div className="overflow-hidden">
+              <p className="text-lg font-black text-stone-900 leading-none">{busyDay?.day || '-'}</p>
+              <span className="text-[10px] text-green-700 font-bold uppercase">{busyDay?.count || 0} reservas</span>
             </div>
           </div>
         </div>
-        <div className="bg-linear-to-br from-white to-stone-50/50 border-l-[6px] border-orange-500 p-4 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 animate-scale-in delay-200">
-          <p className="text-xs text-stone-500 uppercase font-bold tracking-wider">Hora de Pico</p>
+        <div className="bg-white/85 backdrop-blur-xl border-l-[6px] border-orange-500 p-4 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-200 hover:-translate-y-1 active:scale-[0.98] animate-scale-in delay-200 border border-stone-200/60">
+          <p className="text-[11px] text-stone-500 uppercase font-extrabold tracking-wider">Hora de Pico</p>
           <div className="flex items-center gap-2 mt-2">
-            <Clock className="text-orange-600 animate-float" size={24} />
-            <div>
-              <p className="text-lg font-black text-stone-800 leading-none">{busyHour?.hour || '-'}</p>
-              <span className="text-[10px] text-stone-400 font-bold uppercase">{busyHour?.count || 0} reservas</span>
+            <Clock className="text-orange-600 animate-float shrink-0" size={24} />
+            <div className="overflow-hidden">
+              <p className="text-lg font-black text-stone-900 leading-none">{busyHour?.hour || '-'}</p>
+              <span className="text-[10px] text-orange-700 font-bold uppercase">{busyHour?.count || 0} reservas</span>
             </div>
           </div>
         </div>

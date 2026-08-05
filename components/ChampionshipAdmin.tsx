@@ -15,6 +15,7 @@ interface ChampionshipRow {
     end_date: string | null;
     series_id?: string | null;
     edition_year?: number | null;
+    slug?: string | null;
     registration_open: boolean;
     registration_closed: boolean;
     pts_victory?: number;
@@ -443,30 +444,11 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
 
         setFinishingChampionship(true);
         try {
-            try {
-                await supabase.rpc('resolve_championship_final_phases', {
-                    p_championship_id: selectedChampionship.id
-                });
-            } catch (resolveErr) {
-                console.warn('Erro ao resolver fases finais:', resolveErr);
-            }
+            const { data: rpcRes, error: rpcErr } = await supabase.rpc('finish_championship', {
+                p_championship_id: selectedChampionship.id
+            });
 
-            const { error } = await supabase
-                .from('championships')
-                .update({ status: 'finished' })
-                .eq('id', selectedChampionship.id);
-
-            if (error) throw error;
-
-            if (selectedChampionship.series_id) {
-                try {
-                    await supabase.rpc('apply_championship_edition_points', {
-                        p_championship_id: selectedChampionship.id
-                    });
-                } catch (ptsErr) {
-                    console.warn('Pontos aplicados via trigger (RPC fallback reportou):', ptsErr);
-                }
-            }
+            if (rpcErr) throw rpcErr;
 
             await createAuditLog(
                 'championship_finished',
@@ -476,7 +458,10 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
                 { status: 'finished' }
             );
 
-            alert('Campeonato encerrado e pontos aplicados ao ranking com sucesso!');
+            const pointsApplied = rpcRes?.applied_points_count ?? 0;
+            alert(`Campeonato encerrado com sucesso! ${pointsApplied > 0 ? `${pointsApplied} registros de pontuação foram aplicados ao ranking.` : 'Pontos apurados.'}`);
+            
+            setStatusFilter('all');
             await fetchInitialData();
             await fetchSelectedChampionshipData(selectedChampionship.id);
         } catch (err: any) {
