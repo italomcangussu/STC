@@ -3,7 +3,8 @@
 
 import { supabase } from './supabase';
 import type { DrawAthlete, DrawMatch } from './resenhaOpenDraw';
-export type { BracketMatch, BracketMatchWithPhase } from './resenhaOpenAdvance';
+import type { BracketMatch, BracketMatchWithPhase } from './resenhaOpenAdvance';
+export type { BracketMatch, BracketMatchWithPhase };
 import { getOfficialResenhaOpenBracket } from './resenhaOpenOfficialBracket';
 
 // ── Types ─────────────────────────────────────────────────────────────────────

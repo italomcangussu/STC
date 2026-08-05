@@ -236,6 +236,76 @@
         letter-spacing: -0.05em;
     }
 
+    /* Premium Component Design Tokens (Emil Kowalski Framework) */
+    .btn-saibro-primary {
+        background-image: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+        color: #ffffff;
+        font-size: 0.75rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 0.625rem 1.25rem;
+        border-radius: 0.875rem;
+        box-shadow: 0 4px 14px rgba(234, 88, 12, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        cursor: pointer;
+        transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1), box-shadow 160ms ease-out;
+    }
+    .btn-saibro-primary:active {
+        transform: scale(0.97);
+    }
+
+    .btn-saibro-secondary {
+        background-image: linear-gradient(135deg, #292524 0%, #1c1917 100%);
+        color: #ffffff;
+        font-size: 0.75rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 0.625rem 1.25rem;
+        border-radius: 0.875rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        cursor: pointer;
+        transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1), box-shadow 160ms ease-out;
+    }
+    .btn-saibro-secondary:active {
+        transform: scale(0.97);
+    }
+
+    .banner-hero-clay {
+        background-image: linear-gradient(135deg, #ea580c 0%, #f97316 50%, #c2410c 100%);
+        border-radius: 2rem;
+        padding: 1.75rem;
+        color: #ffffff;
+        box-shadow: 0 20px 40px rgba(234, 88, 12, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .card-kpi {
+        background: rgba(255, 255, 255, 0.88);
+        backdrop-filter: blur(20px) saturate(180%);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
+        border-radius: 1.25rem;
+        padding: 1.25rem;
+        border: 1.5px solid rgba(255, 255, 255, 0.8);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+        transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1), box-shadow 160ms ease-out;
+    }
+    .card-kpi:active {
+        transform: scale(0.98);
+    }
+
     /* Text Readable - For texts outside cards */
     .text-readable {
         text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 0 10px rgba(0, 0, 0, 0.2);
