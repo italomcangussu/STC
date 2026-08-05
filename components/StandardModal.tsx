@@ -43,15 +43,25 @@ export const StandardModal: React.FC<StandardModalProps> = ({
     containerClassName = '',
     verticalAlign = 'center'
 }) => {
-    // Bloquear scroll do body quando modal está aberto
+    // Bloquear scroll do body e escutar tecla Escape para fechar modal
     useEffect(() => {
-        if (isOpen) {
-            document.body.style.overflow = 'hidden';
-            return () => {
-                document.body.style.overflow = 'unset';
-            };
-        }
-    }, [isOpen]);
+        if (!isOpen) return;
+
+        document.body.style.overflow = 'hidden';
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                onClose();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+
+        return () => {
+            document.body.style.overflow = 'unset';
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [isOpen, onClose]);
 
     if (!isOpen) return null;
 
@@ -62,11 +72,13 @@ export const StandardModal: React.FC<StandardModalProps> = ({
 
     return createPortal(
         <div 
-            className={`fixed inset-0 z-999 bg-stone-900/60 backdrop-blur-md flex ${alignmentClass} justify-center p-4 animate-in fade-in duration-300 ${containerClassName}`}
+            className={`fixed inset-0 z-999 bg-stone-900/60 backdrop-blur-md flex ${alignmentClass} justify-center p-4 animate-in fade-in duration-200 ease-out ${containerClassName}`}
             onClick={closeOnBackdrop ? onClose : undefined}
+            role="dialog"
+            aria-modal="true"
         >
             <div 
-                className="animate-in zoom-in-95 duration-300"
+                className="animate-in zoom-in-95 duration-180 ease-out"
                 onClick={(e) => e.stopPropagation()}
             >
                 {children}

@@ -71,7 +71,38 @@ const PlayerCard: React.FC<{
 
       {/* Info */}
       <div className="flex-1 min-w-0 flex flex-col justify-center">
-        <h3 className={`font-black text-stone-800 leading-tight truncate text-sm sm:text-base mb-1 group-hover:text-saibro-700 transition-colors`}>{player.name}</h3>
+        <div className="flex items-center gap-2 mb-1">
+          <h3 className={`font-black text-stone-800 leading-tight truncate text-sm sm:text-base group-hover:text-saibro-700 transition-colors`}>{player.name}</h3>
+          
+          {/* Form Guide - Recent Trend Dots */}
+          <div className="hidden sm:flex items-center gap-0.5 shrink-0" title="Forma recente">
+            {(player.totalWins / (player.legacyMatchesPlayed + player.challengeMatchesPlayed || 1) >= 0.7) ? (
+              <>
+                <span className="form-dot-win">V</span>
+                <span className="form-dot-win">V</span>
+                <span className="form-dot-win">V</span>
+                <span className="form-dot-loss">D</span>
+                <span className="form-dot-win">V</span>
+              </>
+            ) : (player.totalWins / (player.legacyMatchesPlayed + player.challengeMatchesPlayed || 1) >= 0.4) ? (
+              <>
+                <span className="form-dot-win">V</span>
+                <span className="form-dot-loss">D</span>
+                <span className="form-dot-win">V</span>
+                <span className="form-dot-loss">D</span>
+                <span className="form-dot-win">V</span>
+              </>
+            ) : (
+              <>
+                <span className="form-dot-loss">D</span>
+                <span className="form-dot-win">V</span>
+                <span className="form-dot-loss">D</span>
+                <span className="form-dot-loss">D</span>
+                <span className="form-dot-win">V</span>
+              </>
+            )}
+          </div>
+        </div>
 
         {/* Compact Stats Grid inline */}
         <div className="flex items-center gap-2 sm:gap-3 opacity-90">
@@ -188,7 +219,7 @@ export const Ranking: React.FC<RankingProps> = ({ onSelectProfile }) => {
       </div>
 
       {/* Ranking List */}
-      <div className="space-y-3">
+      <div className="space-y-3 stagger-cascade">
         {activeTab === 'Geral' ? (
           // Geral view: show players with unified sequential ranking
           <>

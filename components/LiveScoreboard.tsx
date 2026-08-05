@@ -218,9 +218,9 @@ export const LiveScoreboard: React.FC<LiveScoreboardProps> = ({
                                     <Plus size={12} strokeWidth={3} />
                                 </button>
                             )}
-                            <div className={`w-10 h-10 flex items-center justify-center rounded-lg font-mono text-xl font-bold transition-all ${isSetWinner
-                                ? 'bg-saibro-600 text-white shadow-md'
-                                : 'bg-stone-100 text-stone-600 border border-stone-200'
+                            <div className={`w-10 h-10 flex items-center justify-center rounded-xl scoreboard-num text-2xl transition-all btn-tactile ${isSetWinner
+                                ? 'bg-linear-to-br from-saibro-600 to-saibro-700 text-white shadow-md ring-2 ring-saibro-200'
+                                : 'bg-stone-100 text-stone-700 border-2 border-stone-200'
                                 }`}>
                                 {score[idx]}
                             </div>
