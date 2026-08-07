@@ -27,6 +27,7 @@
 | `supabase/migrations/20260807140000_championship_creator_schema.sql` | M1–M4 da spec numa migration coesa |
 | `lib/championship/formatConfig.ts` | Tipos das 3 configurações + validação estrutural e contra inscritos |
 | `lib/championship/creation.ts` | `slugify`, `ensureSeries`, `createChampionship` (idempotente) |
+| `lib/championship/setupValues.ts` | `CHAMPIONSHIP_CLASSES`, `SetupValues`, `emptySetup` — fora do componente para não disparar `react-refresh/only-export-components` |
 | `components/creator/CreatorSetup.tsx` | Passo 1 — nome, série, formato, datas, classes, pontuação avançada |
 | `components/creator/CreatorFormat.tsx` | Passo 2 — opções específicas do formato escolhido |
 | `components/ChampionshipCreator.tsx` | Renomeado de `AdminResenhaOpen.tsx`; orquestra os passos |
@@ -1375,7 +1376,8 @@ export const ChampionshipCreator: React.FC = () => {
 Adicionar os imports no topo do arquivo:
 
 ```tsx
-import { CreatorSetup, emptySetup, type SetupValues } from './creator/CreatorSetup';
+import { CreatorSetup } from './creator/CreatorSetup';
+import { emptySetup, type SetupValues } from '../lib/championship/setupValues';
 import { CreatorFormat } from './creator/CreatorFormat';
 import { createChampionship } from '../lib/championship/creation';
 import { defaultConfigFor, type FormatConfig } from '../lib/championship/formatConfig';
