@@ -23,6 +23,7 @@ import type { BracketMatchWithPhase } from '../lib/resenhaOpenService';
 import { CreatorSetup } from './creator/CreatorSetup';
 import { CreatorFormat } from './creator/CreatorFormat';
 import { CreatorRegistration } from './creator/CreatorRegistration';
+import { BracketEditor, type BracketAthlete } from './creator/BracketEditor';
 import { createChampionship } from '../lib/championship/creation';
 import { defaultConfigFor, type FormatConfig } from '../lib/championship/formatConfig';
 import { emptySetup, type SetupValues } from '../lib/championship/setupValues';
@@ -48,6 +49,7 @@ export const ChampionshipCreator: React.FC = () => {
     const [selectedChampId, setSelectedChampId] = useState<string>('');
     const [setupValues, setSetupValues] = useState<SetupValues>(emptySetup());
     const [formatConfig, setFormatConfig] = useState<FormatConfig>(defaultConfigFor('mata-mata'));
+    const [bracketAthletes, setBracketAthletes] = useState<BracketAthlete[]>([]);
     const [phaseToRoundId, setPhaseToRoundId] = useState<Map<string, string>>(new Map());
     const [saving, setSaving] = useState(false);
 
@@ -530,9 +532,15 @@ export const ChampionshipCreator: React.FC = () => {
                     config={formatConfig}
                     startDate={setupValues.startDate}
                     endDate={setupValues.endDate || setupValues.startDate}
-                    onRoundsCreated={(classeGerada, phaseMap) => {
+                    onRoundsCreated={(classeGerada, phaseMap, inscritos, seeds) => {
                         setPhaseToRoundId(phaseMap);
                         setClasse(classeGerada as ResenhaClass);
+                        setBracketAthletes(inscritos.map(r => ({
+                            registrationId: r.registrationId,
+                            name: r.name,
+                            userId: r.userId,
+                            isSeed: seeds.includes(r.registrationId),
+                        })));
                         setStep('drawing');
                     }}
                 />
@@ -684,7 +692,22 @@ export const ChampionshipCreator: React.FC = () => {
             )}
 
             {/* Step 3: Draw */}
-            {step === 'drawing' && (
+            {/* Passo 4 genérico: editor visual de chave, com sorteio ou montagem manual. */}
+            {step === 'drawing' && bracketAthletes.length > 0 && (
+                <BracketEditor
+                    championshipId={selectedChampId}
+                    config={formatConfig}
+                    athletes={bracketAthletes}
+                    phaseToRoundId={phaseToRoundId}
+                    onSaved={async () => {
+                        await loadBracket();
+                        setStep('bracket');
+                        toast.success('Chave salva!');
+                    }}
+                />
+            )}
+
+            {step === 'drawing' && bracketAthletes.length === 0 && (
                 <div className="space-y-4">
                     {/* 5ª Classe — simple draw */}
                     {classe === '5ª Classe' && (

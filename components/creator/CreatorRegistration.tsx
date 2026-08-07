@@ -27,7 +27,12 @@ interface Props {
     config: FormatConfig;
     startDate: string;
     endDate: string;
-    onRoundsCreated: (classe: string, phaseToRoundId: Map<string, string>) => void;
+    onRoundsCreated: (
+        classe: string,
+        phaseToRoundId: Map<string, string>,
+        inscritos: ClassRegistration[],
+        seedIds: string[]
+    ) => void;
 }
 
 export const CreatorRegistration: React.FC<Props> = ({
@@ -195,7 +200,7 @@ export const CreatorRegistration: React.FC<Props> = ({
                 startDate,
                 endDate,
             });
-            onRoundsCreated(classe, phaseToRoundId);
+            onRoundsCreated(classe, phaseToRoundId, registrations, seedIds);
         } catch (e: any) {
             setError([e.message]);
         } finally {

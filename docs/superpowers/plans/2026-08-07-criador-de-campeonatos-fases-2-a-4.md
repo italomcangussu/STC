@@ -855,10 +855,13 @@ export function seedSlots(bracketSize: number): number[] {
     while (slots.length < bracketSize) {
         const sum = slots.length * 2 + 1;
         const next: number[] = [];
-        for (const s of slots) {
-            next.push(s);
-            next.push(sum - s);
-        }
+        // O espelhamento nas posições ímpares é o que mantém o cabeça 2 na base
+        // do quadro. A duplicação simples (sempre push(p, sum-p)) o joga para o
+        // meio, quebrando a convenção do tênis.
+        slots.forEach((seed, index) => {
+            if (index % 2 === 0) next.push(seed, sum - seed);
+            else next.push(sum - seed, seed);
+        });
         slots = next;
     }
     return slots;
