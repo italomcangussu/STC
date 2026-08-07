@@ -1,4 +1,5 @@
 import { supabase } from '../supabase';
+import { assertRoundsHaveNoMatches } from './bracket';
 import { buildRoundRobinPairings, type DrawnGroup } from './roundRobin';
 
 /** Confronto de fase de todos-contra-todos, antes de virar linha em `matches`. */
@@ -124,6 +125,11 @@ export async function saveLeagueMatches(params: {
 }): Promise<void> {
     const { championshipId, rows, phaseToRoundId, registrationUserMap } = params;
     if (rows.length === 0) return;
+
+    await assertRoundsHaveNoMatches(
+        championshipId,
+        rows.map(r => phaseToRoundId.get(r.phase)).filter((id): id is string => !!id)
+    );
 
     const payload = rows.map(row => {
         const roundId = phaseToRoundId.get(row.phase);

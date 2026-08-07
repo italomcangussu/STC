@@ -195,16 +195,25 @@ describe('championship/bracket', () => {
 
         beforeEach(() => vi.clearAllMocks());
 
-        function mockMatches(insertResult: any, updateError: any = null) {
+        /** existentes: o que a checagem de idempotencia encontra antes de inserir. */
+        function mockMatches(insertResult: any, updateError: any = null, existentes: any[] = []) {
             const updateChain: Record<string, any> = {
                 update: vi.fn(() => updateChain),
                 eq: vi.fn(() => Promise.resolve({ error: updateError })),
             };
+            let selectCall = 0;
             const insertChain: Record<string, any> = {
                 insert: vi.fn(() => insertChain),
-                select: vi.fn(() => Promise.resolve(insertResult)),
+                // 1a chamada: checagem de existencia (.select().eq().in().limit())
+                // 2a em diante: o select do insert
+                select: vi.fn(() => (selectCall++ === 0 ? guardChain : Promise.resolve(insertResult))),
                 update: updateChain.update,
                 eq: updateChain.eq,
+            };
+            const guardChain: Record<string, any> = {
+                eq: vi.fn(() => guardChain),
+                in: vi.fn(() => guardChain),
+                limit: vi.fn(() => Promise.resolve({ data: existentes, error: null })),
             };
             supabaseMock.from.mockReturnValue(insertChain);
             return insertChain;
@@ -254,6 +263,14 @@ describe('championship/bracket', () => {
                     registrationUserMap,
                 })
             ).rejects.toThrow(/fase "final"/);
+        });
+
+        it('recusa gravar quando as rodadas já têm partidas', async () => {
+            mockMatches({ data: [], error: null }, null, [{ id: 'ja-existe' }]);
+
+            await expect(
+                saveGenericBracket({ championshipId: 'c1', slots, phaseToRoundId, registrationUserMap })
+            ).rejects.toThrow(/já têm partidas/);
         });
 
         it('propaga erro de inserção', async () => {

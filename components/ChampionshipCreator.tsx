@@ -29,6 +29,7 @@ import { KnockoutFromGroups } from './creator/KnockoutFromGroups';
 import { createChampionship } from '../lib/championship/creation';
 import { defaultConfigFor, type ClassFormats } from '../lib/championship/formatConfig';
 import { emptySetup, type SetupValues } from '../lib/championship/setupValues';
+import { fetchClassRegistrations } from '../lib/championship/registration';
 import { toast } from 'sonner';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -52,6 +53,8 @@ export const ChampionshipCreator: React.FC = () => {
     const [setupValues, setSetupValues] = useState<SetupValues>(emptySetup());
     const [classFormats, setClassFormats] = useState<ClassFormats>({});
     const [classeCorrente, setClasseCorrente] = useState('');
+    const [classeRetomada, setClasseRetomada] = useState('');
+    const [classesDoSelecionado, setClassesDoSelecionado] = useState<string[]>([]);
     const [bracketAthletes, setBracketAthletes] = useState<BracketAthlete[]>([]);
     const [phaseToRoundId, setPhaseToRoundId] = useState<Map<string, string>>(new Map());
     const [saving, setSaving] = useState(false);
@@ -122,11 +125,70 @@ export const ChampionshipCreator: React.FC = () => {
 
     // ── Championship selection ────────────────────────────────────────────────
 
+    /**
+     * Restaura o contexto de um campeonato do modelo novo: configuração por
+     * classe, inscritos e rodadas. Sem isso, retomar um campeonato dias depois
+     * caía no fluxo antigo e o mata-mata pós-grupos ficava inalcançável — que é
+     * justamente quando ele é necessário.
+     */
+    async function restoreCreatorContext(championshipId: string): Promise<string[]> {
+        const { data: champ, error } = await supabase
+            .from('championships')
+            .select('format_config, start_date, end_date')
+            .eq('id', championshipId)
+            .maybeSingle();
+
+        if (error) throw new Error(`Erro ao carregar campeonato: ${error.message}`);
+
+        const mapa = (champ?.format_config ?? null) as ClassFormats | null;
+        const classes = mapa ? Object.keys(mapa) : [];
+        if (classes.length === 0) return [];
+
+        setClassFormats(mapa!);
+        setSetupValues(prev => ({
+            ...prev,
+            classes,
+            startDate: champ?.start_date ?? prev.startDate,
+            endDate: champ?.end_date ?? prev.endDate,
+        }));
+        return classes;
+    }
+
+    /** Carrega inscritos e rodadas de uma classe já configurada. */
+    async function loadClassContext(championshipId: string, classeAlvo: string) {
+        const inscritos = await fetchClassRegistrations(championshipId, classeAlvo);
+        setBracketAthletes(inscritos.map(r => ({
+            registrationId: r.registrationId,
+            name: r.name,
+            userId: r.userId,
+            isSeed: r.isSeed,
+        })));
+
+        const { data: rounds, error } = await supabase
+            .from('championship_rounds')
+            .select('id, phase')
+            .eq('championship_id', championshipId)
+            .eq('class', classeAlvo);
+
+        if (error) throw new Error(`Erro ao carregar rodadas: ${error.message}`);
+        setPhaseToRoundId(new Map((rounds ?? []).map((r: any) => [r.phase, r.id])));
+        setClasseCorrente(classeAlvo);
+    }
+
     async function handleSelectChampionship() {
         if (!selectedChampId) return;
         setSaving(true);
         try {
-            await loadAthletesFromDb();
+            const classes = await restoreCreatorContext(selectedChampId);
+
+            if (classes.length > 0) {
+                // Campeonato do Criador: retoma na classe escolhida.
+                await loadClassContext(selectedChampId, classeRetomada || classes[0]);
+            } else {
+                // Modelo antigo (Resenha): mantém o caminho de sempre.
+                await loadAthletesFromDb();
+            }
+
             await loadBracket();
             setStep('bracket');
         } catch (e: any) {
@@ -458,7 +520,22 @@ export const ChampionshipCreator: React.FC = () => {
                             <h2 className="font-black text-stone-800">Campeonato existente</h2>
                             <select
                                 value={selectedChampId}
-                                onChange={e => setSelectedChampId(e.target.value)}
+                                onChange={async e => {
+                                    const id = e.target.value;
+                                    setSelectedChampId(id);
+                                    setClasseRetomada('');
+                                    setClassesDoSelecionado([]);
+                                    if (!id) return;
+                                    const { data } = await supabase
+                                        .from('championships')
+                                        .select('format_config')
+                                        .eq('id', id)
+                                        .maybeSingle();
+                                    const mapa = (data?.format_config ?? null) as ClassFormats | null;
+                                    const classes = mapa ? Object.keys(mapa) : [];
+                                    setClassesDoSelecionado(classes);
+                                    setClasseRetomada(classes[0] ?? '');
+                                }}
                                 className="w-full p-3 border border-stone-200 rounded-xl text-stone-800 font-medium"
                             >
                                 <option value="">Selecionar...</option>
@@ -466,6 +543,30 @@ export const ChampionshipCreator: React.FC = () => {
                                     <option key={c.id} value={c.id}>{c.name} ({c.status})</option>
                                 ))}
                             </select>
+                            {classesDoSelecionado.length > 0 && (
+                                <div className="space-y-2">
+                                    <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest">
+                                        Retomar em qual classe
+                                    </p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {classesDoSelecionado.map(c => (
+                                            <button
+                                                key={c}
+                                                type="button"
+                                                onClick={() => setClasseRetomada(c)}
+                                                aria-pressed={classeRetomada === c}
+                                                className={`px-3 py-2 rounded-xl text-xs font-bold transition-colors ${
+                                                    classeRetomada === c
+                                                        ? 'bg-saibro-600 text-white'
+                                                        : 'border border-stone-200 text-stone-600'
+                                                }`}
+                                            >
+                                                {c}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                             <button
                                 disabled={!selectedChampId || saving}
                                 onClick={handleSelectChampionship}

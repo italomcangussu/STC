@@ -152,6 +152,33 @@ export function validateBracket(
     return { ok: errors.length === 0, errors, warnings };
 }
 
+/**
+ * Recusa gravar quando as rodadas de destino já têm partidas. Sem isso, um
+ * segundo clique duplica a chave inteira — as rodadas são idempotentes, as
+ * partidas não eram. Falha alto em vez de ignorar em silêncio: partida
+ * duplicada distorce classificação e pontuação sem dar sinal.
+ */
+export async function assertRoundsHaveNoMatches(
+    championshipId: string,
+    roundIds: string[]
+): Promise<void> {
+    if (roundIds.length === 0) return;
+
+    const { data, error } = await supabase
+        .from('matches')
+        .select('id')
+        .eq('championship_id', championshipId)
+        .in('round_id', [...new Set(roundIds)])
+        .limit(1);
+
+    if (error) throw new Error(`Erro ao verificar partidas existentes: ${error.message}`);
+    if (data && data.length > 0) {
+        throw new Error(
+            'Estas fases já têm partidas geradas. Apague as partidas existentes antes de gerar de novo.'
+        );
+    }
+}
+
 export interface SaveBracketParams {
     championshipId: string;
     slots: BracketSlot[];
@@ -168,6 +195,11 @@ export interface SaveBracketParams {
  */
 export async function saveGenericBracket(params: SaveBracketParams): Promise<void> {
     const { championshipId, slots, phaseToRoundId, registrationUserMap } = params;
+
+    await assertRoundsHaveNoMatches(
+        championshipId,
+        slots.map(s => phaseToRoundId.get(s.phase)).filter((id): id is string => !!id)
+    );
 
     const rows = slots.map(slot => {
         const roundId = phaseToRoundId.get(slot.phase);
