@@ -56,7 +56,27 @@ interface Props {
 
 export const CreatorFormat: React.FC<Props> = ({ classes, classFormats, onChange, onBack, onConfirm, saving }) => {
     const [classeAtiva, setClasseAtiva] = useState(classes[0] ?? '');
+    const [confirmarRepetir, setConfirmarRepetir] = useState(false);
+    const [tocadas, setTocadas] = useState<string[]>([classes[0] ?? '']);
     const config = classFormats[classeAtiva] ?? defaultConfigFor('mata-mata');
+
+    /** Classes que o admin ainda não abriu para configurar. */
+    const naoPersonalizadas = classes.filter(c => !tocadas.includes(c));
+
+    const abrirClasse = (classe: string) => {
+        setClasseAtiva(classe);
+        setTocadas(prev => (prev.includes(classe) ? prev : [...prev, classe]));
+    };
+
+    /** Copia a configuração da classe ativa para as que ficaram no padrão. */
+    const repetirNasDemais = () => {
+        const copia = { ...classFormats };
+        for (const c of naoPersonalizadas) copia[c] = { ...config };
+        onChange(copia);
+        setTocadas(classes);
+        setConfirmarRepetir(false);
+        onConfirm();
+    };
 
     const setConfig = (next: FormatConfig) => onChange({ ...classFormats, [classeAtiva]: next });
 
@@ -171,7 +191,7 @@ export const CreatorFormat: React.FC<Props> = ({ classes, classFormats, onChange
                             <button
                                 key={classe}
                                 type="button"
-                                onClick={() => setClasseAtiva(classe)}
+                                onClick={() => abrirClasse(classe)}
                                 aria-pressed={classeAtiva === classe}
                                 className={`px-4 py-2 rounded-xl font-bold text-sm transition-colors flex items-center gap-1 ${
                                     classeAtiva === classe
@@ -234,6 +254,39 @@ export const CreatorFormat: React.FC<Props> = ({ classes, classFormats, onChange
                 </div>
             )}
 
+            {confirmarRepetir && (
+                <div className="bg-white rounded-2xl border-2 border-saibro-200 p-5 space-y-3">
+                    <h3 className="font-black text-stone-800">
+                        {naoPersonalizadas.length === 1 ? 'Uma classe' : `${naoPersonalizadas.length} classes`} sem
+                        configuração própria
+                    </h3>
+                    <p className="text-sm text-stone-600">
+                        Você configurou a <strong>{classeAtiva}</strong>, mas não abriu{' '}
+                        <strong>{naoPersonalizadas.join(', ')}</strong>. Quer repetir as mesmas regras nelas,
+                        ou voltar para ajustar cada uma?
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-2">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setConfirmarRepetir(false);
+                                abrirClasse(naoPersonalizadas[0]);
+                            }}
+                            className="flex-1 py-3 border border-stone-200 rounded-xl font-bold text-stone-600"
+                        >
+                            Ajustar {naoPersonalizadas[0]}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={repetirNasDemais}
+                            className="flex-1 py-3 bg-saibro-600 text-white rounded-xl font-bold"
+                        >
+                            Repetir as regras da {classeAtiva}
+                        </button>
+                    </div>
+                </div>
+            )}
+
             <div className="flex gap-3">
                 <button type="button" onClick={onBack}
                     className="px-5 py-3 rounded-xl border border-stone-200 text-stone-600 font-bold flex items-center gap-1">
@@ -241,7 +294,7 @@ export const CreatorFormat: React.FC<Props> = ({ classes, classFormats, onChange
                 </button>
                 <button
                     type="button"
-                    onClick={onConfirm}
+                    onClick={() => (naoPersonalizadas.length > 0 ? setConfirmarRepetir(true) : onConfirm())}
                     disabled={!tudoValido || saving}
                     className="flex-1 py-3 bg-saibro-600 text-white rounded-xl font-bold disabled:opacity-50 flex justify-center items-center gap-2"
                 >
