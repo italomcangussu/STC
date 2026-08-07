@@ -3,6 +3,13 @@ import { createPortal } from 'react-dom';
 import { Trophy, Calendar, CalendarCheck, ListOrdered, GitMerge, ChevronDown, Loader2, Download, Share2, Users, Shirt, ChevronLeft, ChevronRight, Clock, MapPin, Save, Plus, Minus, X, AlertTriangle, BarChart3 } from 'lucide-react';
 import { Championship, Match, User, ChampionshipRound } from '../types';
 import { getMatchWinner, formatDateBr, getNowInFortaleza, formatDate, MEMBER_ROLES } from '../utils';
+import { classesWithFormat, hasMixedFormats, resolveClassFormat } from '../lib/championship/effectiveFormat';
+
+const FORMAT_LABELS: Record<string, string> = {
+    'mata-mata': 'mata-mata',
+    'pontos-corridos': 'pontos corridos',
+    'grupo-mata-mata': 'grupos + mata-mata',
+};
 import { supabase } from '../lib/supabase';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
@@ -386,7 +393,11 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
     const ongoingChamps = championships.filter(c => c.status === 'ongoing');
     const selectedChamp = championships.find(c => c.id === selectedChampId);
     const selectedChampIsResenhaOpen = isResenhaOpenChampionship(selectedChamp);
-    const isOperationalBracketChampionship = selectedChamp?.format === 'mata-mata' || selectedChamp?.format === 'grupo-mata-mata';
+    // Formato vigente para a classe em foco. Cada classe pode ter o seu; em
+    // campeonatos do modelo antigo isso cai na coluna única championships.format.
+    const effectiveFormat = resolveClassFormat(selectedChamp, selectedCategory);
+    const formatoPorClasse = hasMixedFormats(selectedChamp);
+    const isOperationalBracketChampionship = effectiveFormat === 'mata-mata' || effectiveFormat === 'grupo-mata-mata';
 
     // Automatic tab selection based on format if current tab isn't applicable
     // This must be before early returns to maintain consistent hook order
@@ -403,12 +414,12 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
             setActiveTab('classificacao');
             return;
         }
-        if (selectedChamp?.format === 'pontos-corridos' && activeTab === 'chaveamento') {
+        if (effectiveFormat === 'pontos-corridos' && activeTab === 'chaveamento') {
             setActiveTab('classificacao');
         }
         // Don't auto-switch for mata-mata or grupo-mata-mata formats
         // grupo-mata-mata supports both classificacao and chaveamento
-    }, [selectedChamp?.format, selectedChampIsResenhaOpen, isOperationalBracketChampionship, activeTab]);
+    }, [effectiveFormat, selectedChampIsResenhaOpen, isOperationalBracketChampionship, activeTab]);
 
     useEffect(() => {
         if (isOperationalBracketChampionship) {
@@ -662,7 +673,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
         ));
 
         // If it's mata-mata, we might need to update the next round
-        if (selectedChamp.format === 'mata-mata' && match.phase) {
+        if (effectiveFormat === 'mata-mata' && match.phase) {
             const currentPhase = match.phase;
             const nextPhase = currentPhase === 'Oitavas' ? 'Quartas' : currentPhase === 'Quartas' ? 'Semi' : currentPhase === 'Semi' ? 'Final' : null;
 
@@ -1117,6 +1128,32 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                 </div>
             </div>
 
+            {/* 1b. CLASSE — precede as abas porque o formato de cada classe decide
+                 quais abas existem. Só aparece quando as classes divergem. */}
+            {formatoPorClasse && (
+                <div className="bg-white rounded-3xl shadow-lg shadow-stone-200/50 border-2 border-stone-100 p-3 space-y-2">
+                    <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest">
+                        Classe — formatos diferentes neste campeonato
+                    </p>
+                    <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+                        {classesWithFormat(selectedChamp).map(cls => (
+                            <button
+                                key={cls}
+                                onClick={() => setSelectedCategory(cls)}
+                                aria-pressed={selectedCategory === cls}
+                                className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                                    selectedCategory === cls
+                                        ? 'bg-saibro-600 text-white shadow-md'
+                                        : 'text-stone-500 hover:bg-stone-50 border border-stone-200'
+                                }`}
+                            >
+                                {cls} · {FORMAT_LABELS[resolveClassFormat(selectedChamp, cls)]}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
+
             {/* 2. TABS */}
             <div className="flex bg-white p-1.5 sm:p-2 rounded-3xl shadow-lg shadow-stone-200/50 border-2 border-stone-100 gap-1.5 sm:gap-2 overflow-hidden">
                 {!isOperationalBracketChampionship && (
@@ -1157,7 +1194,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                         <span className="truncate hidden sm:inline">Classificação</span>
                     </button>
                 )}
-                {(selectedChamp.format === 'mata-mata' || selectedChamp.format === 'grupo-mata-mata') && (
+                {(effectiveFormat === 'mata-mata' || effectiveFormat === 'grupo-mata-mata') && (
                     <button
                         onClick={() => setActiveTab('chaveamento')}
                         className={`flex-1 min-w-0 flex items-center justify-center gap-1 sm:gap-2 py-3 px-2 sm:py-3.5 sm:px-4 rounded-2xl text-[10px] sm:text-xs font-black uppercase tracking-normal sm:tracking-wider transition-all duration-300 ${
@@ -1256,6 +1293,13 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                             )}
 
                             {/* Category Filter */}
+                            {formatoPorClasse && (
+                                <p className="text-xs text-stone-500 px-1">
+                                    Este campeonato tem formatos diferentes por classe
+                                    {selectedCategory !== 'Todas' && ` — a ${selectedCategory} é ${FORMAT_LABELS[effectiveFormat]}`}.
+                                </p>
+                            )}
+
                             {!showAllRounds && (
                                 <div className="flex bg-white rounded-2xl p-1.5 shadow-sm border border-stone-100 overflow-x-auto scrollbar-hide">
                                     <button
@@ -1680,7 +1724,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                                     });
                                 }}
                             />
-                        ) : selectedChamp?.format === 'grupo-mata-mata' && groupsDetail.length > 0 ? (
+                        ) : effectiveFormat === 'grupo-mata-mata' && groupsDetail.length > 0 ? (
                             <>
                                 {/* Class Sub-Tabs */}
                                 {(() => {
@@ -1715,7 +1759,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                                     );
                                 })()}
                             </>
-                        ) : selectedChamp?.format === 'mata-mata' ? (
+                        ) : effectiveFormat === 'mata-mata' ? (
                             // For pure knockout format, show traditional bracket
                             <div className="space-y-8">
                                 {['Oitavas', 'Quartas', 'Semi', 'Final'].map(phase => {

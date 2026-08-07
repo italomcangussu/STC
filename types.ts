@@ -139,7 +139,13 @@ export interface Championship {
   season?: string;
   description?: string;
   status: 'draft' | 'ongoing' | 'finished' | 'active';
+  /**
+   * Coluna única, anterior ao suporte multi-classe. Guarda o formato da
+   * primeira classe; a verdade por classe está em format_config.
+   */
   format: 'mata-mata' | 'pontos-corridos' | 'grupo-mata-mata';
+  /** Mapa classe → configuração de formato. Null em campeonatos antigos. */
+  format_config?: Record<string, unknown> | null;
   series_id?: string;
   edition_year?: number;
   startDate?: string;
