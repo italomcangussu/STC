@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Loader2, Search, Star, Trash2, UserPlus, Users } from 'lucide-react';
+import { ChevronLeft, Loader2, Search, Star, Trash2, UserPlus, Users } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { MEMBER_ROLES } from '../../utils';
 import { Toggle } from './Toggle';
@@ -27,6 +27,7 @@ interface Props {
     classFormats: ClassFormats;
     startDate: string;
     endDate: string;
+    onBack: () => void;
     onRoundsCreated: (
         classe: string,
         phaseToRoundId: Map<string, string>,
@@ -36,7 +37,7 @@ interface Props {
 }
 
 export const CreatorRegistration: React.FC<Props> = ({
-    championshipId, classes, classFormats, startDate, endDate, onRoundsCreated,
+    championshipId, classes, classFormats, startDate, endDate, onBack, onRoundsCreated,
 }) => {
     const [classe, setClasse] = useState(classes[0] ?? '');
     const [registrations, setRegistrations] = useState<ClassRegistration[]>([]);
@@ -383,15 +384,21 @@ export const CreatorRegistration: React.FC<Props> = ({
                 </div>
             )}
 
-            <button
-                type="button"
-                onClick={fecharInscricoes}
-                disabled={saving || registrations.length === 0}
-                className="w-full py-3 bg-saibro-600 text-white rounded-xl font-bold disabled:opacity-50 flex justify-center items-center gap-2"
-            >
-                {saving ? <Loader2 size={18} className="animate-spin" /> : null}
-                Fechar inscrições e gerar rodadas
-            </button>
+            <div className="flex gap-3">
+                <button type="button" onClick={onBack}
+                    className="px-5 py-3 rounded-xl border border-stone-200 text-stone-600 font-bold flex items-center gap-1">
+                    <ChevronLeft size={18} /> Voltar
+                </button>
+                <button
+                    type="button"
+                    onClick={fecharInscricoes}
+                    disabled={saving || registrations.length === 0}
+                    className="flex-1 py-3 bg-saibro-600 text-white rounded-xl font-bold disabled:opacity-50 flex justify-center items-center gap-2"
+                >
+                    {saving ? <Loader2 size={18} className="animate-spin" /> : null}
+                    Fechar inscrições e gerar rodadas
+                </button>
+            </div>
         </div>
     );
 };

@@ -96,6 +96,8 @@ interface RoundRow {
     round_number: number;
     name: string;
     phase: string;
+    /** Null nos campeonatos do modelo antigo, em que as classes compartilham rodadas. */
+    class: string | null;
     start_date: string;
     end_date: string;
     status: 'pending' | 'active' | 'finished';
@@ -277,8 +279,9 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
                 .order('class', { ascending: true }),
             supabase
                 .from('championship_rounds')
-                .select('id, round_number, name, phase, start_date, end_date, status')
+                .select('id, class, round_number, name, phase, start_date, end_date, status')
                 .eq('championship_id', championshipId)
+                .order('class', { ascending: true, nullsFirst: true })
                 .order('round_number', { ascending: true }),
             supabase
                 .from('championship_groups')
@@ -854,9 +857,16 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
 
                                 return (
                                     <div key={round.id} className="bg-white rounded-2xl border border-stone-100 p-4 space-y-3">
-                                        <div className="flex items-center justify-between">
-                                            <h3 className="font-black text-stone-800">{round.name}</h3>
-                                            <span className="text-xs font-bold text-stone-500 uppercase">{round.phase}</span>
+                                        <div className="flex items-center justify-between gap-2">
+                                            <h3 className="font-black text-stone-800 flex items-center gap-2 min-w-0">
+                                                <span className="truncate">{round.name}</span>
+                                                {round.class && (
+                                                    <span className="shrink-0 px-2 py-0.5 rounded-full bg-saibro-50 text-saibro-700 text-[10px] font-black uppercase tracking-wide">
+                                                        {round.class}
+                                                    </span>
+                                                )}
+                                            </h3>
+                                            <span className="text-xs font-bold text-stone-500 uppercase shrink-0">{round.phase}</span>
                                         </div>
 
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">

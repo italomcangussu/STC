@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Loader2, Shuffle, Star } from 'lucide-react';
+import { ChevronLeft, Loader2, Shuffle, Star } from 'lucide-react';
 import { distributeIntoGroups, type DrawnGroup } from '../../lib/championship/roundRobin';
 import {
     buildGroupStageMatches,
@@ -17,12 +17,13 @@ interface Props {
     athletes: BracketAthlete[];
     phaseToRoundId: Map<string, string>;
     restantes: string[];
+    onBack: () => void;
     onSaved: () => void;
     onProximaClasse: () => void;
 }
 
 export const GroupDrawEditor: React.FC<Props> = ({
-    championshipId, classe, config, athletes, phaseToRoundId, restantes, onSaved, onProximaClasse,
+    championshipId, classe, config, athletes, phaseToRoundId, restantes, onBack, onSaved, onProximaClasse,
 }) => {
     const ehGrupos = config.format === 'grupo-mata-mata';
     const groupCount = ehGrupos ? config.groupCount : 0;
@@ -169,6 +170,14 @@ export const GroupDrawEditor: React.FC<Props> = ({
             >
                 {saving ? <Loader2 size={18} className="animate-spin" /> : null}
                 Gerar confrontos
+            </button>
+
+            <button
+                type="button"
+                onClick={onBack}
+                className="w-full py-3 border border-stone-200 rounded-xl font-bold text-stone-600 flex justify-center items-center gap-1"
+            >
+                <ChevronLeft size={18} /> Voltar para inscrições
             </button>
 
             {restantes.length > 0 && (

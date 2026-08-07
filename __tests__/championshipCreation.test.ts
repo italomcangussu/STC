@@ -11,7 +11,7 @@ import { defaultConfigFor } from '../lib/championship/formatConfig';
 
 function makeChain(resultByTerminal: Record<string, any> = {}) {
     const chain: Record<string, any> = {};
-    for (const method of ['select', 'eq', 'is', 'in', 'order', 'insert']) {
+    for (const method of ['select', 'eq', 'is', 'in', 'order', 'insert', 'update']) {
         chain[method] = vi.fn(() => chain);
     }
     chain.limit = vi.fn(() => Promise.resolve(resultByTerminal.limit ?? { data: [], error: null }));
@@ -68,12 +68,46 @@ describe('championship/creation', () => {
             seriesId: 's1',
         };
 
+        /**
+         * Reuso: 1a chamada procura o campeonato, 2a procura rodadas,
+         * 3a faz o update da configuracao.
+         */
+        function mockReuse(existente: any[], rodadas: any[]) {
+            const lookup = makeChain({ limit: { data: existente, error: null } });
+            const roundsChain = makeChain({ limit: { data: rodadas, error: null } });
+            const updateChain = makeChain();
+            updateChain.eq = vi.fn(() => Promise.resolve({ error: null }));
+            let call = 0;
+            supabaseMock.from.mockImplementation(() => {
+                call += 1;
+                if (call === 1) return lookup;
+                if (call === 2) return roundsChain;
+                return updateChain;
+            });
+            return { lookup, updateChain };
+        }
+
         it('reutiliza campeonato equivalente em vez de duplicar', async () => {
-            const existing = makeChain({ limit: { data: [{ id: 'champ-1' }], error: null } });
-            supabaseMock.from.mockReturnValue(existing);
+            const { lookup } = mockReuse([{ id: 'champ-1' }], []);
 
             await expect(createChampionship(params)).resolves.toBe('champ-1');
-            expect(existing.insert).not.toHaveBeenCalled();
+            expect(lookup.insert).not.toHaveBeenCalled();
+        });
+
+        it('sincroniza a configuracao ao recriar o mesmo campeonato', async () => {
+            const { updateChain } = mockReuse([{ id: 'champ-1' }], []);
+
+            await createChampionship(params);
+
+            expect(updateChain.update).toHaveBeenCalledWith(
+                expect.objectContaining({ format_config: classFormats, format: 'mata-mata' })
+            );
+        });
+
+        it('recusa mudar o formato depois que as rodadas existem', async () => {
+            mockReuse([{ id: 'champ-1' }], [{ id: 'round-1' }]);
+
+            await expect(createChampionship(params)).rejects.toThrow(/rodadas geradas/);
         });
 
         it('insere com edition_year derivado da data de início e pontuação padrão', async () => {

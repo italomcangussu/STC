@@ -94,9 +94,49 @@ export async function createChampionship(params: CreateChampionshipParams): Prom
         .limit(1);
 
     if (lookupError) throw new Error(`Erro ao verificar campeonato existente: ${lookupError.message}`);
-    if (existing && existing.length > 0) return existing[0].id;
 
     const scoring: ScoringRules = { ...DEFAULT_SCORING, ...params.scoring };
+
+    // Recriar o mesmo campeonato é a rota do "voltar e ajustar": sincroniza a
+    // configuração em vez de devolver a antiga em silêncio. Depois que as
+    // rodadas existem, elas foram derivadas do formato antigo — aí mudar a
+    // configuração dessincronizaria as duas coisas, e é melhor recusar.
+    if (existing && existing.length > 0) {
+        const id = existing[0].id;
+
+        const { data: rodadas, error: roundsError } = await supabase
+            .from('championship_rounds')
+            .select('id')
+            .eq('championship_id', id)
+            .limit(1);
+
+        if (roundsError) throw new Error(`Erro ao verificar rodadas: ${roundsError.message}`);
+        if (rodadas && rodadas.length > 0) {
+            throw new Error(
+                'Este campeonato já tem rodadas geradas; o formato não pode mais mudar. ' +
+                'Apague as rodadas para reconfigurar, ou crie um campeonato novo.'
+            );
+        }
+
+        const { error: updateError } = await supabase
+            .from('championships')
+            .update({
+                format: primaryFormat(params.classFormats, params.classes),
+                format_config: params.classFormats,
+                end_date: params.endDate,
+                pts_victory: scoring.ptsVictory,
+                pts_defeat: scoring.ptsDefeat,
+                pts_wo_victory: scoring.ptsWoVictory,
+                pts_set: scoring.ptsSet,
+                pts_game: scoring.ptsGame,
+                pts_technical_draw: scoring.ptsTechnicalDraw,
+                final_ranking_pts: scoring.finalRankingPts,
+            })
+            .eq('id', id);
+
+        if (updateError) throw new Error(`Erro ao atualizar campeonato: ${updateError.message}`);
+        return id;
+    }
 
     // edition_year só faz sentido com série: o índice único
     // uidx_championship_series_edition_year é (series_id, edition_year).

@@ -641,6 +641,7 @@ export const ChampionshipCreator: React.FC = () => {
                     classFormats={classFormats}
                     startDate={setupValues.startDate}
                     endDate={setupValues.endDate || setupValues.startDate}
+                    onBack={() => setStep('format')}
                     onRoundsCreated={(classeGerada, phaseMap, inscritos, seeds) => {
                         setPhaseToRoundId(phaseMap);
                         setClasse(classeGerada as ResenhaClass);
@@ -813,6 +814,7 @@ export const ChampionshipCreator: React.FC = () => {
                     athletes={bracketAthletes}
                     phaseToRoundId={phaseToRoundId}
                     restantes={setupValues.classes.filter(c => c !== classeCorrente)}
+                    onBack={() => setStep('registering')}
                     onSaved={async () => {
                         await loadBracket();
                         setStep('bracket');
@@ -834,6 +836,7 @@ export const ChampionshipCreator: React.FC = () => {
                     athletes={bracketAthletes}
                     phaseToRoundId={phaseToRoundId}
                     restantes={setupValues.classes.filter(c => c !== classeCorrente)}
+                    onBack={() => setStep('registering')}
                     onSaved={async () => {
                         await loadBracket();
                         setStep('bracket');

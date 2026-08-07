@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Loader2, Shuffle, Star, Trash2 } from 'lucide-react';
+import { ChevronLeft, Loader2, Shuffle, Star, Trash2 } from 'lucide-react';
 import {
     assignToSlot,
     buildEmptyBracket,
@@ -25,6 +25,7 @@ interface Props {
     phaseToRoundId: Map<string, string>;
     /** Classes do campeonato que ainda não passaram por inscrição e chave. */
     restantes: string[];
+    onBack: () => void;
     onSaved: () => void;
     onProximaClasse: () => void;
 }
@@ -39,7 +40,7 @@ const PHASE_LABELS: Record<string, string> = {
 };
 
 export const BracketEditor: React.FC<Props> = ({
-    championshipId, classe, config, athletes, phaseToRoundId, restantes, onSaved, onProximaClasse,
+    championshipId, classe, config, athletes, phaseToRoundId, restantes, onBack, onSaved, onProximaClasse,
 }) => {
     const [slots, setSlots] = useState<BracketSlot[]>(() => buildEmptyBracket(config, athletes.length));
     const [picking, setPicking] = useState<{ matchNumber: number; side: 'a' | 'b' } | null>(null);
@@ -270,6 +271,14 @@ export const BracketEditor: React.FC<Props> = ({
             >
                 {saving ? <Loader2 size={18} className="animate-spin" /> : null}
                 Salvar chave
+            </button>
+
+            <button
+                type="button"
+                onClick={onBack}
+                className="w-full py-3 border border-stone-200 rounded-xl font-bold text-stone-600 flex justify-center items-center gap-1"
+            >
+                <ChevronLeft size={18} /> Voltar para inscrições
             </button>
 
             {restantes.length > 0 && (
