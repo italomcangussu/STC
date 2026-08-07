@@ -13,7 +13,7 @@ import {
     type DrawAthlete, type DrawMatch,
 } from '../lib/resenhaOpenDraw';
 import {
-    createResenhaOpenChampionship, createResenhaOpenRounds,
+    createResenhaOpenRounds,
     registerSocio, registerGuest, removeRegistration,
     fetchRegistrations, fetchRegistrationUserMap,
     saveBracket, fetchBracket, activateChampionship,
@@ -21,11 +21,16 @@ import {
     type ResenhaClass,
 } from '../lib/resenhaOpenService';
 import type { BracketMatchWithPhase } from '../lib/resenhaOpenService';
+import { CreatorSetup } from './creator/CreatorSetup';
+import { CreatorFormat } from './creator/CreatorFormat';
+import { createChampionship } from '../lib/championship/creation';
+import { defaultConfigFor, type FormatConfig } from '../lib/championship/formatConfig';
+import { emptySetup, type SetupValues } from '../lib/championship/setupValues';
 import { toast } from 'sonner';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type AdminStep = 'setup' | 'registering' | 'drawing' | 'bracket';
+type AdminStep = 'setup' | 'format' | 'created' | 'registering' | 'drawing' | 'bracket';
 type DrawSubStep4 = 'qualify' | 'primeira-fase' | 'cabecas-de-chave' | 'done';
 
 interface Profile { id: string; name: string; category: string | null; }
@@ -34,16 +39,15 @@ interface ChampionshipRow { id: string; name: string; status: string; }
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export const AdminResenhaOpen: React.FC = () => {
+export const ChampionshipCreator: React.FC = () => {
     const [classe, setClasse] = useState<ResenhaClass>('4ª Classe');
     const [step, setStep] = useState<AdminStep>('setup');
 
     // Championship
     const [championships, setChampionships] = useState<ChampionshipRow[]>([]);
     const [selectedChampId, setSelectedChampId] = useState<string>('');
-    const [newChampName, setNewChampName] = useState('Resenha Open 2026');
-    const [newChampStart, setNewChampStart] = useState('2026-05-20');
-    const [newChampEnd, setNewChampEnd] = useState('2026-05-23');
+    const [setupValues, setSetupValues] = useState<SetupValues>(emptySetup());
+    const [formatConfig, setFormatConfig] = useState<FormatConfig>(defaultConfigFor('mata-mata'));
     const [phaseToRoundId, setPhaseToRoundId] = useState<Map<string, string>>(new Map());
     const [saving, setSaving] = useState(false);
 
@@ -111,32 +115,7 @@ export const AdminResenhaOpen: React.FC = () => {
         }
     }
 
-    // ── Championship creation ─────────────────────────────────────────────────
-
-    async function handleCreateChampionship() {
-        setSaving(true);
-        try {
-            const id = await createResenhaOpenChampionship({
-                name: newChampName,
-                classe,
-                startDate: newChampStart,
-                endDate: newChampEnd,
-            });
-            const phasMap = await createResenhaOpenRounds(id, classe, () => ({
-                startDate: newChampStart,
-                endDate: newChampEnd,
-            }));
-            setSelectedChampId(id);
-            setPhaseToRoundId(phasMap);
-            await loadChampionships();
-            setStep('registering');
-            toast.success('Campeonato criado!');
-        } catch (e: any) {
-            toast.error(e.message);
-        } finally {
-            setSaving(false);
-        }
-    }
+    // ── Championship selection ────────────────────────────────────────────────
 
     async function handleSelectChampionship() {
         if (!selectedChampId) return;
@@ -441,7 +420,7 @@ export const AdminResenhaOpen: React.FC = () => {
                 <div className="flex items-center gap-3">
                     <Shuffle size={28} />
                     <div>
-                        <h1 className="text-2xl font-black">Sorteador Resenha Open</h1>
+                        <h1 className="text-2xl font-black">Criador de Campeonatos</h1>
                         <p className="text-saibro-100 text-sm">Painel exclusivo de administração</p>
                     </div>
                 </div>
@@ -494,35 +473,83 @@ export const AdminResenhaOpen: React.FC = () => {
                     )}
 
                     {/* Create new */}
-                    <div className="bg-white rounded-2xl border border-stone-100 p-5 space-y-3">
-                        <h2 className="font-black text-stone-800">Criar novo campeonato</h2>
-                        <input
-                            value={newChampName}
-                            onChange={e => setNewChampName(e.target.value)}
-                            className="w-full p-3 border border-stone-200 rounded-xl text-stone-800"
-                            placeholder="Nome do campeonato"
-                        />
-                        <div className="flex gap-3">
-                            <div className="flex-1">
-                                <label className="block text-xs font-bold text-stone-500 uppercase mb-1">Início</label>
-                                <input type="date" value={newChampStart} onChange={e => setNewChampStart(e.target.value)}
-                                    className="w-full p-3 border border-stone-200 rounded-xl" />
-                            </div>
-                            <div className="flex-1">
-                                <label className="block text-xs font-bold text-stone-500 uppercase mb-1">Fim</label>
-                                <input type="date" value={newChampEnd} onChange={e => setNewChampEnd(e.target.value)}
-                                    className="w-full p-3 border border-stone-200 rounded-xl" />
-                            </div>
-                        </div>
-                        <button
-                            disabled={!newChampName.trim() || saving}
-                            onClick={handleCreateChampionship}
-                            className="w-full py-3 bg-saibro-600 text-white rounded-xl font-bold disabled:opacity-50 flex justify-center items-center gap-2"
-                        >
-                            {saving ? <Loader2 className="animate-spin" size={18} /> : <Trophy size={18} />}
-                            Criar Campeonato
-                        </button>
-                    </div>
+                    <CreatorSetup
+                        value={setupValues}
+                        onChange={setSetupValues}
+                        onNext={() => {
+                            setFormatConfig(defaultConfigFor(setupValues.format));
+                            setStep('format');
+                        }}
+                    />
+                </div>
+            )}
+
+            {/* Step 1b: Format */}
+            {step === 'format' && (
+                <CreatorFormat
+                    config={formatConfig}
+                    onChange={setFormatConfig}
+                    onBack={() => setStep('setup')}
+                    saving={saving}
+                    onConfirm={async () => {
+                        setSaving(true);
+                        try {
+                            const id = await createChampionship({
+                                name: setupValues.name,
+                                format: setupValues.format,
+                                formatConfig,
+                                startDate: setupValues.startDate,
+                                endDate: setupValues.endDate || null,
+                                seriesId: setupValues.seriesId,
+                                scoring: setupValues.scoring,
+                            });
+                            setSelectedChampId(id);
+                            await loadChampionships();
+
+                            // O caminho Resenha (mata-mata numa única classe 4ª ou 5ª) precisa das
+                            // rodadas criadas agora, porque phaseToRoundId alimenta saveBracket no
+                            // passo de sorteio. Os demais formatos só ganham rodadas na Fase 2.
+                            const unicaClasse = setupValues.classes.length === 1 ? setupValues.classes[0] : null;
+                            const ehCaminhoResenha =
+                                setupValues.format === 'mata-mata' &&
+                                (unicaClasse === '4ª Classe' || unicaClasse === '5ª Classe');
+
+                            if (ehCaminhoResenha) {
+                                setClasse(unicaClasse as ResenhaClass);
+                                const phaseMap = await createResenhaOpenRounds(id, unicaClasse as ResenhaClass, () => ({
+                                    startDate: setupValues.startDate,
+                                    endDate: setupValues.endDate || setupValues.startDate,
+                                }));
+                                setPhaseToRoundId(phaseMap);
+                                setStep('registering');
+                            } else {
+                                setStep('created');
+                            }
+                            toast.success('Campeonato criado!');
+                        } catch (e: any) {
+                            toast.error(e.message);
+                        } finally {
+                            setSaving(false);
+                        }
+                    }}
+                />
+            )}
+
+            {/* Step 1c: Created (formatos ainda sem geração de rodadas) */}
+            {step === 'created' && (
+                <div className="bg-white rounded-2xl border border-stone-100 p-6 space-y-3 text-center">
+                    <h2 className="font-black text-stone-800">Campeonato criado como rascunho</h2>
+                    <p className="text-sm text-stone-600">
+                        A geração de rodadas e o chaveamento para este formato chegam na próxima fase do Criador.
+                        Por enquanto, gerencie as inscrições pelo Campeonato Admin.
+                    </p>
+                    <button
+                        type="button"
+                        onClick={() => { setSetupValues(emptySetup()); setStep('setup'); }}
+                        className="w-full py-3 bg-stone-900 text-white rounded-xl font-bold"
+                    >
+                        Criar outro campeonato
+                    </button>
                 </div>
             )}
 

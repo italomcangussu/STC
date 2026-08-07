@@ -29,7 +29,7 @@ const APP_PATHS = new Set([
   'admin-panel',
   'financeiro-admin',
   'championship-admin',
-  'resenha-open-admin',
+  'championship-creator',
 ]);
 
 export function getPublicChampionshipRoute(pathname: string, hostname = ''): PublicChampionshipRoute {

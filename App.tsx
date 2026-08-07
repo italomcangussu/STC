@@ -24,7 +24,7 @@ const AdminPanel = lazy(() => import('./components/AdminPanel').then(m => ({ def
 const FinanceiroAdmin = lazy(() => import('./components/FinanceiroAdmin').then(m => ({ default: m.FinanceiroAdmin })));
 const AdminStudents = lazy(() => import('./components/AdminStudents').then(m => ({ default: m.AdminStudents })));
 const ChampionshipAdmin = lazy(() => import('./components/ChampionshipAdmin').then(m => ({ default: m.ChampionshipAdmin })));
-const AdminResenhaOpen = lazy(() => import('./components/AdminResenhaOpen').then(m => ({ default: m.AdminResenhaOpen })));
+const ChampionshipCreator = lazy(() => import('./components/ChampionshipCreator').then(m => ({ default: m.ChampionshipCreator })));
 import { getPublicChampionshipRoute, PublicChampionshipRoute, selectPublicChampionship } from './lib/publicRoutes';
 
 import { OnboardingModal } from './components/OnboardingModal';
@@ -226,7 +226,7 @@ const AppContent: React.FC = () => {
             {view === 'admin-panel' && <AdminProtect><AdminPanel /></AdminProtect>}
             {view === 'financeiro-admin' && <AdminProtect><FinanceiroAdmin /></AdminProtect>}
             {view === 'championship-admin' && <AdminProtect><ChampionshipAdmin currentUser={currentUser} /></AdminProtect>}
-            {view === 'resenha-open-admin' && <AdminProtect><AdminResenhaOpen /></AdminProtect>}
+            {view === 'championship-creator' && <AdminProtect><ChampionshipCreator /></AdminProtect>}
           </div>
         </Suspense>
       </Layout>

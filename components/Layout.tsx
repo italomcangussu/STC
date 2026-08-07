@@ -125,7 +125,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
 
     if (currentUser.role === 'admin') {
         navItems.push({ id: 'championship-admin', label: 'Campeonato Admin', icon: <Trophy size={20} />, roles: ['admin'] });
-        navItems.push({ id: 'resenha-open-admin', label: 'Sorteador Resenha Open', icon: <Shuffle size={20} />, roles: ['admin'] });
+        navItems.push({ id: 'championship-creator', label: 'Criador de Campeonatos', icon: <Shuffle size={20} />, roles: ['admin'] });
         navItems.push({ id: 'financeiro-admin', label: 'Financeiro', icon: <DollarSign size={20} />, roles: ['admin'] });
         navItems.push({ id: 'admin-students', label: 'Alunos', icon: <Users size={20} />, roles: ['admin'] });
         navItems.push({ id: 'admin-professors', label: 'Gerenciar Pro.', icon: <Briefcase size={20} />, roles: ['admin'] });
@@ -253,7 +253,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
                             {/* Regular Navigation Items */}
                             <div className="space-y-1">
                                 <p className="text-[10px] font-extrabold tracking-wider uppercase text-stone-400 px-3 mb-1">Menu Principal</p>
-                                {filteredNav.filter(item => !item.id.startsWith('admin-') && item.id !== 'championship-admin' && item.id !== 'resenha-open-admin' && item.id !== 'financeiro-admin').map(item => (
+                                {filteredNav.filter(item => !item.id.startsWith('admin-') && item.id !== 'championship-admin' && item.id !== 'championship-creator' && item.id !== 'financeiro-admin').map(item => (
                                     <button
                                         key={item.id}
                                         onClick={() => { setView(item.id); setIsMenuOpen(false); }}
@@ -278,7 +278,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
                                         <p className="text-[10px] font-extrabold tracking-wider uppercase text-saibro-700">Administração</p>
                                         <span className="text-[9px] font-bold bg-saibro-100 text-saibro-800 px-1.5 py-0.5 rounded">PAINEL</span>
                                     </div>
-                                    {filteredNav.filter(item => item.id.startsWith('admin-') || item.id === 'championship-admin' || item.id === 'resenha-open-admin' || item.id === 'financeiro-admin').map(item => (
+                                    {filteredNav.filter(item => item.id.startsWith('admin-') || item.id === 'championship-admin' || item.id === 'championship-creator' || item.id === 'financeiro-admin').map(item => (
                                         <button
                                             key={item.id}
                                             onClick={() => { setView(item.id); setIsMenuOpen(false); }}
