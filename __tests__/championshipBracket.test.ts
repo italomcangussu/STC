@@ -7,7 +7,7 @@ import {
     assignToSlot, buildEmptyBracket, saveGenericBracket, seedPositionFor, seedSlots, validateBracket,
     type BracketSlot,
 } from '../lib/championship/bracket';
-import type { KnockoutConfig } from '../lib/championship/formatConfig';
+import type { GroupKnockoutConfig, KnockoutConfig, RoundRobinConfig } from '../lib/championship/formatConfig';
 
 const mataMata = (over: Partial<KnockoutConfig> = {}): KnockoutConfig => ({
     format: 'mata-mata', seeded: true, qualifying: null, mainDrawStartPhase: 'round_of_16', ...over,
@@ -67,6 +67,40 @@ describe('championship/bracket', () => {
             expect(final.phase).toBe('final');
             expect(final.aSourceMatch).toBe(13);
             expect(final.bSourceMatch).toBe(14);
+        });
+
+        it('não trata a fase de grupos como rodada de chave', () => {
+            const config: GroupKnockoutConfig = {
+                format: 'grupo-mata-mata', homeAndAway: false, groupCount: 4, membersPerGroup: 4,
+                qualifiersPerGroup: 2, bestThirdPlaces: 0, seeded: true,
+            };
+            const bracket = buildEmptyBracket(config, 16);
+
+            // A chave começa nas quartas (8 classificados); os 24 jogos de grupo
+            // não são vagas de chaveamento.
+            expect(bracket.some(s => s.phase === 'grupos')).toBe(false);
+            expect(bracket.filter(s => s.phase === 'quartas')).toHaveLength(4);
+
+            // As quartas recebem classificados dos grupos, não vencedores de jogos.
+            const quartas = bracket.filter(s => s.phase === 'quartas');
+            expect(quartas.every(s => s.aSourceMatch === undefined && s.bSourceMatch === undefined)).toBe(true);
+
+            // A partir das semis, a progressão volta a ser por vencedor.
+            const semi = bracket.find(s => s.phase === 'semifinal')!;
+            expect(semi.aSourceMatch).toBe(quartas[0].matchNumber);
+        });
+
+        it('não trata a fase classificatória de pontos corridos como rodada de chave', () => {
+            const config: RoundRobinConfig = {
+                format: 'pontos-corridos', homeAndAway: false,
+                finalPhase: { startPhase: 'quarterfinal' },
+            };
+            const bracket = buildEmptyBracket(config, 8);
+
+            expect(bracket.some(s => s.phase === 'classificatoria')).toBe(false);
+            const quartas = bracket.filter(s => s.phase === 'quartas');
+            expect(quartas).toHaveLength(4);
+            expect(quartas.every(s => s.aSourceMatch === undefined)).toBe(true);
         });
 
         it('liga vencedores das qualificatórias às vagas configuradas', () => {

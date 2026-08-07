@@ -41,10 +41,17 @@ export function seedPositionFor(bracketSize: number, seedNumber: number): number
     return seedSlots(bracketSize).indexOf(seedNumber) + 1;
 }
 
+/**
+ * Fases de todos-contra-todos. Não formam chave: os confrontos saem das
+ * combinações de participantes, e quem avança sai da classificação, não do
+ * vencedor de um jogo específico.
+ */
+const LEAGUE_PHASES = new Set(['grupos', 'grupos-volta', 'classificatoria', 'classificatoria-volta']);
+
 export function buildEmptyBracket(config: FormatConfig, participantCount: number): BracketSlot[] {
     const rounds = deriveRounds(config, participantCount);
     const qualifyRound = rounds.find(r => r.phase === 'qualify');
-    const knockoutRounds = rounds.filter(r => r.phase !== 'qualify');
+    const knockoutRounds = rounds.filter(r => r.phase !== 'qualify' && !LEAGUE_PHASES.has(r.phase));
 
     const slots: BracketSlot[] = [];
 
