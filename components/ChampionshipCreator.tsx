@@ -23,6 +23,7 @@ import {
 import type { BracketMatchWithPhase } from '../lib/resenhaOpenService';
 import { CreatorSetup } from './creator/CreatorSetup';
 import { CreatorFormat } from './creator/CreatorFormat';
+import { CreatorRegistration } from './creator/CreatorRegistration';
 import { createChampionship } from '../lib/championship/creation';
 import { defaultConfigFor, type FormatConfig } from '../lib/championship/formatConfig';
 import { emptySetup, type SetupValues } from '../lib/championship/setupValues';
@@ -554,7 +555,25 @@ export const ChampionshipCreator: React.FC = () => {
             )}
 
             {/* Step 2: Registration */}
-            {step === 'registering' && (
+            {/* Passo 3 genérico: campeonatos vindos do fluxo novo (têm classes escolhidas
+                no passo 1). Campeonatos retomados pelo seletor de existentes seguem no
+                fluxo do Resenha logo abaixo. */}
+            {step === 'registering' && setupValues.classes.length > 0 && (
+                <CreatorRegistration
+                    championshipId={selectedChampId}
+                    classes={setupValues.classes}
+                    config={formatConfig}
+                    startDate={setupValues.startDate}
+                    endDate={setupValues.endDate || setupValues.startDate}
+                    onRoundsCreated={(classeGerada, phaseMap) => {
+                        setPhaseToRoundId(phaseMap);
+                        setClasse(classeGerada as ResenhaClass);
+                        setStep('drawing');
+                    }}
+                />
+            )}
+
+            {step === 'registering' && setupValues.classes.length === 0 && (
                 <div className="space-y-4">
                     {/* Athlete list */}
                     <div className="bg-white rounded-2xl border border-stone-100 p-5 space-y-3">

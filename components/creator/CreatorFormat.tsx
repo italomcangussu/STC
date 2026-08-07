@@ -9,6 +9,7 @@ import {
     type KnockoutConfig,
     type RoundRobinConfig,
 } from '../../lib/championship/formatConfig';
+import { Toggle } from './Toggle';
 
 const BRACKET_LABELS: Record<BracketSize, string> = {
     round_of_32: '16 avos (32 vagas)',
@@ -16,13 +17,6 @@ const BRACKET_LABELS: Record<BracketSize, string> = {
     quarterfinal: 'Quartas (8 vagas)',
     semifinal: 'Semifinal (4 vagas)',
 };
-
-const Toggle: React.FC<{ id: string; label: string; checked: boolean; onChange: (v: boolean) => void }> = ({ id, label, checked, onChange }) => (
-    <label htmlFor={id} className="flex items-center gap-3 p-3 bg-stone-50 rounded-xl cursor-pointer">
-        <input id={id} type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)} className="w-5 h-5 accent-saibro-500" />
-        <span className="text-sm font-medium text-stone-700">{label}</span>
-    </label>
-);
 
 const NumberField: React.FC<{ id: string; label: string; value: number; min: number; onChange: (v: number) => void }> = ({ id, label, value, min, onChange }) => (
     <div>
