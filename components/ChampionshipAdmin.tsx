@@ -166,6 +166,9 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
 
     const [roundDrafts, setRoundDrafts] = useState<Record<string, Pick<RoundRow, 'start_date' | 'end_date' | 'status'>>>({});
     const [roundConflicts, setRoundConflicts] = useState<Record<string, RoundConflict[]>>({});
+    const [selectedRoundIds, setSelectedRoundIds] = useState<string[]>([]);
+    const [bulkRoundStatus, setBulkRoundStatus] = useState<RoundRow['status']>('active');
+    const [savingBulkRounds, setSavingBulkRounds] = useState(false);
 
     const visibleChampionships = useMemo(() => {
         if (statusFilter === 'all') return championships;
@@ -320,6 +323,7 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
         });
         setRoundDrafts(drafts);
         setRoundConflicts({});
+        setSelectedRoundIds(prev => prev.filter(id => roundRows.some(round => round.id === id)));
 
         setHasGroups((groupsCountRes.count || 0) > 0);
         setAuditLogs(((auditRes.data || []) as unknown) as AuditLog[]);
@@ -556,6 +560,59 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
 
         setRounds(prev => prev.map(round => (round.id === roundId ? { ...round, ...patch } : round)));
         setSavingRoundById(prev => ({ ...prev, [roundId]: false }));
+    };
+
+    const toggleRoundSelection = (roundId: string) => {
+        setSelectedRoundIds(prev => (
+            prev.includes(roundId)
+                ? prev.filter(id => id !== roundId)
+                : [...prev, roundId]
+        ));
+    };
+
+    const saveSelectedRoundsStatus = async () => {
+        if (!selectedChampionship || selectedRoundIds.length === 0) return;
+
+        const targetRounds = rounds.filter(round => selectedRoundIds.includes(round.id));
+        if (targetRounds.length === 0) return;
+
+        setSavingBulkRounds(true);
+
+        const targetIds = targetRounds.map(round => round.id);
+        const beforeData = targetRounds.map(round => ({ id: round.id, name: round.name, status: round.status }));
+
+        const { error } = await supabase
+            .from('championship_rounds')
+            .update({ status: bulkRoundStatus })
+            .in('id', targetIds);
+
+        if (error) {
+            alert('Erro ao atualizar rodadas: ' + error.message);
+            setSavingBulkRounds(false);
+            return;
+        }
+
+        setRounds(prev => prev.map(round => (
+            targetIds.includes(round.id) ? { ...round, status: bulkRoundStatus } : round
+        )));
+        setRoundDrafts(prev => {
+            const next = { ...prev };
+            targetIds.forEach(id => {
+                if (next[id]) next[id] = { ...next[id], status: bulkRoundStatus };
+            });
+            return next;
+        });
+        setSelectedRoundIds([]);
+
+        await createAuditLog(
+            'rounds_bulk_updated',
+            'round',
+            null,
+            { rounds: beforeData },
+            { rounds: targetIds, status: bulkRoundStatus }
+        );
+
+        setSavingBulkRounds(false);
     };
 
     const getRegistrationNameById = (registrationId: string | null) => {
@@ -847,7 +904,51 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
                                 <div className="bg-white rounded-2xl border border-stone-100 p-8 text-center text-stone-500">
                                     Nenhuma rodada criada ainda.
                                 </div>
-                            ) : rounds.map(round => {
+                            ) : (
+                                <>
+                                <div className="bg-white rounded-2xl border border-stone-100 p-4 space-y-3">
+                                    <div className="flex items-center justify-between gap-2">
+                                        <label className="flex items-center gap-2 text-sm font-bold text-stone-700 cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedRoundIds.length === rounds.length}
+                                                onChange={e => setSelectedRoundIds(e.target.checked ? rounds.map(r => r.id) : [])}
+                                                className="w-4 h-4 accent-saibro-600"
+                                            />
+                                            Selecionar todas
+                                        </label>
+                                        <span className="text-xs font-bold text-stone-500 uppercase">
+                                            {selectedRoundIds.length} selecionada{selectedRoundIds.length === 1 ? '' : 's'}
+                                        </span>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                        <select
+                                            value={bulkRoundStatus}
+                                            onChange={e => setBulkRoundStatus(e.target.value as RoundRow['status'])}
+                                            className="p-3 rounded-xl border border-stone-200"
+                                        >
+                                            <option value="pending">Pendente</option>
+                                            <option value="active">Ativa</option>
+                                            <option value="finished">Finalizada</option>
+                                        </select>
+                                        <button
+                                            onClick={saveSelectedRoundsStatus}
+                                            disabled={savingBulkRounds || selectedRoundIds.length === 0}
+                                            className="px-4 py-3 rounded-xl bg-saibro-600 text-white font-bold disabled:opacity-50"
+                                        >
+                                            {savingBulkRounds
+                                                ? 'Salvando...'
+                                                : `Aplicar a ${selectedRoundIds.length} rodada${selectedRoundIds.length === 1 ? '' : 's'}`}
+                                        </button>
+                                    </div>
+
+                                    <p className="text-xs text-stone-500">
+                                        A ação em lote altera apenas o status. As datas continuam sendo salvas por rodada.
+                                    </p>
+                                </div>
+
+                                {rounds.map(round => {
                                 const draft = roundDrafts[round.id] || {
                                     start_date: round.start_date,
                                     end_date: round.end_date,
@@ -859,6 +960,13 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
                                     <div key={round.id} className="bg-white rounded-2xl border border-stone-100 p-4 space-y-3">
                                         <div className="flex items-center justify-between gap-2">
                                             <h3 className="font-black text-stone-800 flex items-center gap-2 min-w-0">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedRoundIds.includes(round.id)}
+                                                    onChange={() => toggleRoundSelection(round.id)}
+                                                    aria-label={`Selecionar ${round.name}`}
+                                                    className="w-4 h-4 shrink-0 accent-saibro-600"
+                                                />
                                                 <span className="truncate">{round.name}</span>
                                                 {round.class && (
                                                     <span className="shrink-0 px-2 py-0.5 rounded-full bg-saibro-50 text-saibro-700 text-[10px] font-black uppercase tracking-wide">
@@ -927,7 +1035,9 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
                                         )}
                                     </div>
                                 );
-                            })}
+                                })}
+                                </>
+                            )}
                         </div>
                     ) : activeTab === 'points' ? (
                         <PhasePointsEditor />
