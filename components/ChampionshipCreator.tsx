@@ -24,6 +24,7 @@ import { CreatorSetup } from './creator/CreatorSetup';
 import { CreatorFormat } from './creator/CreatorFormat';
 import { CreatorRegistration } from './creator/CreatorRegistration';
 import { BracketEditor, type BracketAthlete } from './creator/BracketEditor';
+import { GroupDrawEditor } from './creator/GroupDrawEditor';
 import { createChampionship } from '../lib/championship/creation';
 import { defaultConfigFor, type ClassFormats } from '../lib/championship/formatConfig';
 import { emptySetup, type SetupValues } from '../lib/championship/setupValues';
@@ -699,8 +700,31 @@ export const ChampionshipCreator: React.FC = () => {
             )}
 
             {/* Step 3: Draw */}
-            {/* Passo 4 genérico: editor visual de chave, com sorteio ou montagem manual. */}
-            {step === 'drawing' && bracketAthletes.length > 0 && (
+            {/* Passo 4 genérico, roteado pelo formato da classe corrente: mata-mata usa o
+                editor de chave; grupos e pontos corridos usam o sorteio de grupos. */}
+            {step === 'drawing' && bracketAthletes.length > 0
+                && (classFormats[classeCorrente]?.format ?? 'mata-mata') !== 'mata-mata' && (
+                <GroupDrawEditor
+                    championshipId={selectedChampId}
+                    classe={classeCorrente}
+                    config={classFormats[classeCorrente] ?? defaultConfigFor('mata-mata')}
+                    athletes={bracketAthletes}
+                    phaseToRoundId={phaseToRoundId}
+                    restantes={setupValues.classes.filter(c => c !== classeCorrente)}
+                    onSaved={async () => {
+                        await loadBracket();
+                        setStep('bracket');
+                        toast.success(`Confrontos da ${classeCorrente} gerados!`);
+                    }}
+                    onProximaClasse={() => {
+                        setBracketAthletes([]);
+                        setStep('registering');
+                    }}
+                />
+            )}
+
+            {step === 'drawing' && bracketAthletes.length > 0
+                && (classFormats[classeCorrente]?.format ?? 'mata-mata') === 'mata-mata' && (
                 <BracketEditor
                     championshipId={selectedChampId}
                     classe={classeCorrente}
