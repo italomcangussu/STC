@@ -846,7 +846,7 @@ export async function createChampionship(params: CreateChampionshipParams): Prom
 - [ ] **Step 4: Rodar o teste para ver passar**
 
 Run: `npx vitest run __tests__/championshipCreation.test.ts`
-Expected: PASS — 8 testes.
+Expected: PASS — 7 testes.
 
 - [ ] **Step 5: Verificar tipos e lint, depois commitar**
 
@@ -1527,7 +1527,7 @@ Expected: nenhuma saída.
 npx tsc --noEmit && npm run lint && npx vitest run
 ```
 
-Expected: tsc limpo; lint com apenas o warning pré-existente; 155 testes passando (126 anteriores + 29 novos).
+Expected: tsc limpo; lint com apenas o warning pré-existente; 154 testes passando (126 anteriores + 28 novos: 21 de formatConfig e 7 de creation).
 
 - [ ] **Step 7: Verificar no navegador**
 
