@@ -243,7 +243,9 @@ export async function fetchRegistrations(
 ): Promise<DrawAthlete[]> {
     const { data, error } = await supabase
         .from('championship_registrations')
-        .select('id, participant_type, user_id, guest_name, cabeca_de_chave, guest_cidade, user:profiles(name)')
+        // profiles precisa da dica de FK: championship_registrations tem duas
+        // referências para profiles (user_id e registered_by).
+        .select('id, participant_type, user_id, guest_name, cabeca_de_chave, guest_cidade, user:profiles!user_id(name)')
         .eq('championship_id', championshipId)
         .eq('class', classe);
 

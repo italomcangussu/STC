@@ -13,7 +13,6 @@ import {
     type DrawAthlete, type DrawMatch,
 } from '../lib/resenhaOpenDraw';
 import {
-    createResenhaOpenRounds,
     registerSocio, registerGuest, removeRegistration,
     fetchRegistrations, fetchRegistrationUserMap,
     saveBracket, fetchBracket, activateChampionship,
@@ -31,7 +30,7 @@ import { toast } from 'sonner';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type AdminStep = 'setup' | 'format' | 'created' | 'registering' | 'drawing' | 'bracket';
+type AdminStep = 'setup' | 'format' | 'registering' | 'drawing' | 'bracket';
 type DrawSubStep4 = 'qualify' | 'primeira-fase' | 'cabecas-de-chave' | 'done';
 
 interface Profile { id: string; name: string; category: string | null; }
@@ -506,26 +505,9 @@ export const ChampionshipCreator: React.FC = () => {
                             });
                             setSelectedChampId(id);
                             await loadChampionships();
-
-                            // O caminho Resenha (mata-mata numa única classe 4ª ou 5ª) precisa das
-                            // rodadas criadas agora, porque phaseToRoundId alimenta saveBracket no
-                            // passo de sorteio. Os demais formatos só ganham rodadas na Fase 2.
-                            const unicaClasse = setupValues.classes.length === 1 ? setupValues.classes[0] : null;
-                            const ehCaminhoResenha =
-                                setupValues.format === 'mata-mata' &&
-                                (unicaClasse === '4ª Classe' || unicaClasse === '5ª Classe');
-
-                            if (ehCaminhoResenha) {
-                                setClasse(unicaClasse as ResenhaClass);
-                                const phaseMap = await createResenhaOpenRounds(id, unicaClasse as ResenhaClass, () => ({
-                                    startDate: setupValues.startDate,
-                                    endDate: setupValues.endDate || setupValues.startDate,
-                                }));
-                                setPhaseToRoundId(phaseMap);
-                                setStep('registering');
-                            } else {
-                                setStep('created');
-                            }
+                            // Rodadas não nascem aqui: são derivadas do formato e do número real
+                            // de inscritos ao fechar as inscrições (decisão D2 da spec).
+                            setStep('registering');
                             toast.success('Campeonato criado!');
                         } catch (e: any) {
                             toast.error(e.message);
@@ -536,23 +518,6 @@ export const ChampionshipCreator: React.FC = () => {
                 />
             )}
 
-            {/* Step 1c: Created (formatos ainda sem geração de rodadas) */}
-            {step === 'created' && (
-                <div className="bg-white rounded-2xl border border-stone-100 p-6 space-y-3 text-center">
-                    <h2 className="font-black text-stone-800">Campeonato criado como rascunho</h2>
-                    <p className="text-sm text-stone-600">
-                        A geração de rodadas e o chaveamento para este formato chegam na próxima fase do Criador.
-                        Por enquanto, gerencie as inscrições pelo Campeonato Admin.
-                    </p>
-                    <button
-                        type="button"
-                        onClick={() => { setSetupValues(emptySetup()); setStep('setup'); }}
-                        className="w-full py-3 bg-stone-900 text-white rounded-xl font-bold"
-                    >
-                        Criar outro campeonato
-                    </button>
-                </div>
-            )}
 
             {/* Step 2: Registration */}
             {/* Passo 3 genérico: campeonatos vindos do fluxo novo (têm classes escolhidas

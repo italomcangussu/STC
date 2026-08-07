@@ -35,7 +35,9 @@ export async function fetchClassRegistrations(
 ): Promise<ClassRegistration[]> {
     const { data, error } = await supabase
         .from('championship_registrations')
-        .select('id, participant_type, user_id, guest_name, cabeca_de_chave, user:profiles(name), student:non_socio_students(name)')
+        // profiles precisa da dica de FK: championship_registrations tem duas
+        // referências para profiles (user_id e registered_by).
+        .select('id, participant_type, user_id, guest_name, cabeca_de_chave, user:profiles!user_id(name), student:non_socio_students(name)')
         .eq('championship_id', championshipId)
         .eq('class', classe);
 

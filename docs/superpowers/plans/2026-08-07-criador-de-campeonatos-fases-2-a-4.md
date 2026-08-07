@@ -638,6 +638,8 @@ export async function registerAluno(params: {
 
 O passo `registering` passa a renderizar `CreatorRegistration` quando o campeonato veio do fluxo novo (há `setupValues.classes`), e mantém o bloco atual do Resenha quando o campeonato foi retomado pelo seletor de existentes. A distinção é o estado `setupValues.classes.length > 0`.
 
+**Remover o desvio Resenha da criação.** A Fase 1 fazia o passo `format` chamar `createResenhaOpenRounds` quando o formato era mata-mata numa única classe 4ª/5ª, porque não havia geração genérica. Com `createRounds` disponível isso vira um bug: aquela função gera as rodadas fixas da classe (16 ou 20 atletas) e **ignora o `format_config`**, além de deixar `class` nulo. O `onConfirm` passa a apenas criar o campeonato e ir para `registering`; as rodadas nascem ao fechar as inscrições, como manda a decisão D2. O passo `created` fica órfão e sai junto.
+
 - [ ] **Step 5: Verificar**
 
 ```bash
