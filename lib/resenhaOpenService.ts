@@ -6,6 +6,7 @@ import type { DrawAthlete, DrawMatch } from './resenhaOpenDraw';
 import type { BracketMatch, BracketMatchWithPhase } from './resenhaOpenAdvance';
 export type { BracketMatch, BracketMatchWithPhase };
 import { getOfficialResenhaOpenBracket } from './resenhaOpenOfficialBracket';
+import { saveGenericBracket, type BracketSlot } from './championship/bracket';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -270,59 +271,20 @@ export async function saveBracket(
     phaseToRoundId: Map<string, string>,
     registrationUserMap: Map<string, string | null> // registrationId → userId
 ): Promise<void> {
+    // A gravação em si é genérica (lib/championship/bracket.ts). O que é específico
+    // do Resenha é derivar a fase de cada jogo a partir da classe.
     const phaseMap = buildPhaseMap(classe);
 
-    // First pass: insert without source FKs
-    const rows = matches.map(m => {
-        const phase = phaseMap.get(m.match_number) ?? 'oitavas';
-        const roundId = phaseToRoundId.get(phase);
-        if (!roundId) throw new Error(`Round não encontrado para fase "${phase}" (jogo ${m.match_number})`);
+    const slots: BracketSlot[] = matches.map(m => ({
+        matchNumber: m.match_number,
+        phase: phaseMap.get(m.match_number) ?? 'oitavas',
+        a: m.registration_a_id,
+        b: m.registration_b_id,
+        aSourceMatch: m.player_a_source_match_number,
+        bSourceMatch: m.player_b_source_match_number,
+    }));
 
-        return {
-            championship_id: championshipId,
-            round_id: roundId,
-            type: 'Campeonato',
-            status: 'pending',
-            match_number: m.match_number,
-            player_a_id: m.registration_a_id ? (registrationUserMap.get(m.registration_a_id) ?? null) : null,
-            player_b_id: m.registration_b_id ? (registrationUserMap.get(m.registration_b_id) ?? null) : null,
-            registration_a_id: m.registration_a_id,
-            registration_b_id: m.registration_b_id,
-        };
-    });
-
-    const { data: inserted, error: insertError } = await supabase
-        .from('matches')
-        .insert(rows)
-        .select('id, match_number');
-
-    if (insertError || !inserted) {
-        throw new Error(`Erro ao inserir partidas: ${insertError?.message}`);
-    }
-
-    // Build match_number → DB id map
-    const numToId = new Map<number, string>(inserted.map((r: any) => [r.match_number, r.id]));
-
-    // Second pass: patch source FKs for dependent matches
-    const dependents = matches.filter(
-        m => m.player_a_source_match_number != null || m.player_b_source_match_number != null
-    );
-
-    for (const m of dependents) {
-        const matchId = numToId.get(m.match_number);
-        if (!matchId) continue;
-
-        const patch: Record<string, string | null> = {};
-        if (m.player_a_source_match_number != null) {
-            patch.player_a_source_match_id = numToId.get(m.player_a_source_match_number) ?? null;
-        }
-        if (m.player_b_source_match_number != null) {
-            patch.player_b_source_match_id = numToId.get(m.player_b_source_match_number) ?? null;
-        }
-
-        const { error } = await supabase.from('matches').update(patch).eq('id', matchId);
-        if (error) throw new Error(`Erro ao vincular jogo ${m.match_number}: ${error.message}`);
-    }
+    await saveGenericBracket({ championshipId, slots, phaseToRoundId, registrationUserMap });
 }
 
 // ── 6. Fetch bracket ───────────────────────────────────────────────────────────

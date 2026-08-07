@@ -1,3 +1,4 @@
+import { supabase } from '../supabase';
 import { type FormatConfig } from './formatConfig';
 import { deriveRounds } from './rounds';
 
@@ -142,4 +143,70 @@ export function validateBracket(
     }
 
     return { ok: errors.length === 0, errors, warnings };
+}
+
+export interface SaveBracketParams {
+    championshipId: string;
+    slots: BracketSlot[];
+    /** phase → championship_rounds.id */
+    phaseToRoundId: Map<string, string>;
+    /** registrationId → userId (null para convidados e alunos) */
+    registrationUserMap: Map<string, string | null>;
+}
+
+/**
+ * Grava a chave em dois passes: insere todas as partidas com as FKs de origem
+ * nulas, depois liga player_a_source_match_id / player_b_source_match_id, que
+ * só podem ser resolvidas depois de conhecer os ids gerados.
+ */
+export async function saveGenericBracket(params: SaveBracketParams): Promise<void> {
+    const { championshipId, slots, phaseToRoundId, registrationUserMap } = params;
+
+    const rows = slots.map(slot => {
+        const roundId = phaseToRoundId.get(slot.phase);
+        if (!roundId) {
+            throw new Error(`Rodada não encontrada para a fase "${slot.phase}" (jogo ${slot.matchNumber}).`);
+        }
+
+        return {
+            championship_id: championshipId,
+            round_id: roundId,
+            type: 'Campeonato',
+            status: 'pending',
+            match_number: slot.matchNumber,
+            player_a_id: slot.a ? (registrationUserMap.get(slot.a) ?? null) : null,
+            player_b_id: slot.b ? (registrationUserMap.get(slot.b) ?? null) : null,
+            registration_a_id: slot.a,
+            registration_b_id: slot.b,
+        };
+    });
+
+    const { data: inserted, error: insertError } = await supabase
+        .from('matches')
+        .insert(rows)
+        .select('id, match_number');
+
+    if (insertError || !inserted) {
+        throw new Error(`Erro ao inserir partidas: ${insertError?.message}`);
+    }
+
+    const numToId = new Map<number, string>(inserted.map((r: any) => [r.match_number, r.id]));
+
+    const dependentes = slots.filter(s => s.aSourceMatch != null || s.bSourceMatch != null);
+
+    for (const slot of dependentes) {
+        const matchId = numToId.get(slot.matchNumber);
+        if (!matchId) continue;
+
+        const patch: Record<string, string | null> = {};
+        if (slot.aSourceMatch != null) {
+            patch.player_a_source_match_id = numToId.get(slot.aSourceMatch) ?? null;
+        }
+        if (slot.bSourceMatch != null) {
+            patch.player_b_source_match_id = numToId.get(slot.bSourceMatch) ?? null;
+        }
+
+        const { error } = await supabase.from('matches').update(patch).eq('id', matchId);
+        if (error) throw new Error(`Erro ao vincular jogo ${slot.matchNumber}: ${error.message}`);
+    }
 }

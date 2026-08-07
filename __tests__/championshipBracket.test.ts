@@ -1,6 +1,11 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+const { supabaseMock } = vi.hoisted(() => ({ supabaseMock: { from: vi.fn() } }));
+vi.mock('../lib/supabase', () => ({ supabase: supabaseMock }));
+
 import {
-    assignToSlot, buildEmptyBracket, seedPositionFor, seedSlots, validateBracket,
+    assignToSlot, buildEmptyBracket, saveGenericBracket, seedPositionFor, seedSlots, validateBracket,
+    type BracketSlot,
 } from '../lib/championship/bracket';
 import type { KnockoutConfig } from '../lib/championship/formatConfig';
 
@@ -140,6 +145,89 @@ describe('championship/bracket', () => {
             const r = validateBracket(cheia(), ['r1', 'r3']);
             expect(r.ok).toBe(true);
             expect(r.warnings).toEqual([]);
+        });
+    });
+
+    describe('saveGenericBracket', () => {
+        const slots: BracketSlot[] = [
+            { matchNumber: 1, phase: 'semifinal', a: 'r1', b: 'r2' },
+            { matchNumber: 2, phase: 'semifinal', a: 'r3', b: 'r4' },
+            { matchNumber: 3, phase: 'final', a: null, b: null, aSourceMatch: 1, bSourceMatch: 2 },
+        ];
+        const phaseToRoundId = new Map([['semifinal', 'round-semi'], ['final', 'round-final']]);
+        const registrationUserMap = new Map<string, string | null>([
+            ['r1', 'u1'], ['r2', null], ['r3', 'u3'], ['r4', 'u4'],
+        ]);
+
+        beforeEach(() => vi.clearAllMocks());
+
+        function mockMatches(insertResult: any, updateError: any = null) {
+            const updateChain: Record<string, any> = {
+                update: vi.fn(() => updateChain),
+                eq: vi.fn(() => Promise.resolve({ error: updateError })),
+            };
+            const insertChain: Record<string, any> = {
+                insert: vi.fn(() => insertChain),
+                select: vi.fn(() => Promise.resolve(insertResult)),
+                update: updateChain.update,
+                eq: updateChain.eq,
+            };
+            supabaseMock.from.mockReturnValue(insertChain);
+            return insertChain;
+        }
+
+        it('insere todas as vagas numa chamada e resolve o usuário de cada inscrição', async () => {
+            const chain = mockMatches({
+                data: [{ id: 'm1', match_number: 1 }, { id: 'm2', match_number: 2 }, { id: 'm3', match_number: 3 }],
+                error: null,
+            });
+
+            await saveGenericBracket({ championshipId: 'c1', slots, phaseToRoundId, registrationUserMap });
+
+            const rows = chain.insert.mock.calls[0][0];
+            expect(rows).toHaveLength(3);
+            expect(rows[0]).toMatchObject({
+                championship_id: 'c1', round_id: 'round-semi', match_number: 1,
+                registration_a_id: 'r1', player_a_id: 'u1',
+                registration_b_id: 'r2', player_b_id: null,
+            });
+            expect(rows[2]).toMatchObject({ round_id: 'round-final', registration_a_id: null });
+        });
+
+        it('liga as FKs de origem só das vagas dependentes', async () => {
+            const chain = mockMatches({
+                data: [{ id: 'm1', match_number: 1 }, { id: 'm2', match_number: 2 }, { id: 'm3', match_number: 3 }],
+                error: null,
+            });
+
+            await saveGenericBracket({ championshipId: 'c1', slots, phaseToRoundId, registrationUserMap });
+
+            expect(chain.update).toHaveBeenCalledTimes(1);
+            expect(chain.update).toHaveBeenCalledWith({
+                player_a_source_match_id: 'm1',
+                player_b_source_match_id: 'm2',
+            });
+        });
+
+        it('recusa fase sem rodada correspondente com mensagem legível', async () => {
+            mockMatches({ data: [], error: null });
+
+            await expect(
+                saveGenericBracket({
+                    championshipId: 'c1',
+                    slots,
+                    phaseToRoundId: new Map([['semifinal', 'round-semi']]),
+                    registrationUserMap,
+                })
+            ).rejects.toThrow(/fase "final"/);
+        });
+
+        it('propaga erro de inserção', async () => {
+            mockMatches({ data: null, error: { message: 'violates foreign key' } });
+
+            await expect(
+                saveGenericBracket({ championshipId: 'c1', slots, phaseToRoundId, registrationUserMap })
+            ).rejects.toThrow('violates foreign key');
         });
     });
 });
