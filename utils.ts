@@ -14,6 +14,29 @@ export interface RankedPlayer {
   position: number;
 }
 
+// --- Membership Helpers ---
+
+/**
+ * A coluna profiles.role é um ENUM exclusivo ('admin' | 'socio' | 'lanchonete'),
+ * então quem vira admin deixa de ser 'socio' no banco. Mas no clube um admin
+ * continua sendo sócio: joga, reserva quadra, pontua no ranking e consome.
+ *
+ * Toda consulta ou filtro que quiser dizer "sócio do clube" deve usar
+ * MEMBER_ROLES / isMember em vez de comparar com 'socio' na mão.
+ */
+export const MEMBER_ROLES = ['socio', 'admin'] as const;
+
+/** Perfil vinculado ao clube como sócio (inclui admins). */
+export function isMember(user?: { role?: string | null } | null): boolean {
+  const role = user?.role;
+  return !!role && (MEMBER_ROLES as readonly string[]).includes(role);
+}
+
+/** Perfil com privilégios administrativos. */
+export function isAdminRole(user?: { role?: string | null } | null): boolean {
+  return user?.role === 'admin';
+}
+
 // --- Date Helpers (Timezone: America/Fortaleza) ---
 
 /**

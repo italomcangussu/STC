@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { User, NonSocioStudent, Reservation, Court, RelationshipType } from '../types';
 import { Calendar, Users, Plus, Edit, CheckCircle, XCircle, Clock, MapPin, DollarSign, Loader2, AlertCircle, UserPlus, ArrowUpCircle, X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { getNowInFortaleza, formatDate, formatDateBr } from '../utils';
+import { getNowInFortaleza, formatDate, formatDateBr, MEMBER_ROLES } from '../utils';
 import { StandardModal } from './StandardModal';
 
 type RegularPlanType = 'Day Card' | 'Day Card Experimental' | 'Card Mensal';
@@ -262,7 +262,7 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
             const { data: sociosData } = await supabase
                 .from('profiles')
                 .select('id, name, email, phone, role')
-                .eq('role', 'socio')
+                .in('role', [...MEMBER_ROLES])
                 .eq('is_active', true)
                 .order('name');
 

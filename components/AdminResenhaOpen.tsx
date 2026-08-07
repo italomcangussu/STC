@@ -4,6 +4,7 @@ import {
     Trash2, User, MapPin, Star, X, Play, Save, RefreshCw,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { MEMBER_ROLES } from '../utils';
 import {
     drawClasse5, buildClasse5Bracket,
     drawClasse4PrimeiraFase,
@@ -86,7 +87,7 @@ export const AdminResenhaOpen: React.FC = () => {
         const { data } = await supabase
             .from('profiles')
             .select('id, name, category')
-            .in('role', ['socio', 'admin'])
+            .in('role', [...MEMBER_ROLES])
             .order('name');
         setProfiles((data ?? []) as Profile[]);
     }

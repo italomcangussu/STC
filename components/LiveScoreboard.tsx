@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import { Match, User } from '../types';
 import { Clock, Save, Trophy, Loader2, AlertCircle, CheckCircle, Plus, Minus } from 'lucide-react';
-import { getNowInFortaleza, formatDate } from '../utils';
+import { getNowInFortaleza, formatDate, isMember, isAdminRole } from '../utils';
 
 interface LiveScoreboardProps {
     match: Match;
@@ -74,17 +74,17 @@ export const LiveScoreboard: React.FC<LiveScoreboardProps> = ({
     // Admin can edit even if finished? Maybe restriction needed. 
     // For now, if passed readOnly=true, strictly read only.
     // If not readOnly, respect normal rules + status check.
-    const effectiveReadOnly = readOnly || (isFinished && currentUser.role !== 'admin');
+    const effectiveReadOnly = readOnly || (isFinished && !isAdminRole(currentUser));
 
     // Check if editing is allowed
     const canEdit = useMemo(() => {
         if (effectiveReadOnly) return false;
 
         // Admin can always edit (unless forcefully readOnly passed which we handled)
-        if (currentUser.role === 'admin') return true;
+        if (isAdminRole(currentUser)) return true;
 
         // Socio can edit if it's after the scheduled time
-        if (currentUser.role !== 'socio') return false;
+        if (!isMember(currentUser)) return false;
 
         if (!match.date || !match.scheduledTime) return true; // No time restriction
 
@@ -101,7 +101,7 @@ export const LiveScoreboard: React.FC<LiveScoreboardProps> = ({
         scheduledDateTime.setHours(hours, minutes, 0, 0);
 
         return now >= scheduledDateTime;
-    }, [match.date, match.scheduledTime, currentUser.role, effectiveReadOnly]);
+    }, [match.date, match.scheduledTime, currentUser, effectiveReadOnly]);
 
     // Calculate set winners and match state
     const set1Winner = getSetWinner(scoreA[0], scoreB[0]);

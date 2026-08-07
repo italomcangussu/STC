@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
 import { logger } from './logger';
+import { MEMBER_ROLES } from '../utils';
 
 // --- Class Hierarchy ---
 // Classes ordenadas do mais alto (melhor) para o mais baixo
@@ -116,7 +117,7 @@ export async function fetchRanking(categoryFilter?: string, forceRefresh = false
             legacy_games_won, legacy_games_lost, legacy_tiebreaks_won, legacy_tiebreaks_lost,
             legacy_matches_played, legacy_matches_with_tiebreak, legacy_points
         `)
-        .in('role', ['socio', 'admin'])
+        .in('role', [...MEMBER_ROLES])
         .eq('is_active', true);
 
     if (categoryFilter) {

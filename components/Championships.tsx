@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Trophy, Calendar, CalendarCheck, ListOrdered, GitMerge, ChevronDown, Loader2, Download, Share2, Users, Shirt, ChevronLeft, ChevronRight, Clock, MapPin, Save, Plus, Minus, X, AlertTriangle, BarChart3 } from 'lucide-react';
 import { Championship, Match, User, ChampionshipRound } from '../types';
-import { getMatchWinner, formatDateBr, getNowInFortaleza, formatDate } from '../utils';
+import { getMatchWinner, formatDateBr, getNowInFortaleza, formatDate, MEMBER_ROLES } from '../utils';
 import { supabase } from '../lib/supabase';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
@@ -143,7 +143,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
             const { data: profilesData } = await supabase
                 .from('profiles')
                 .select('id, name, avatar_url, category, role')
-                .in('role', ['socio', 'admin'])
+                .in('role', [...MEMBER_ROLES])
                 .eq('is_active', true);
 
             const { data: courtsData } = await supabase.from('courts').select('*');

@@ -4,7 +4,7 @@ import { NonSocioStudent, Professor, User, RelationshipType } from '../types';
 import {
     Users, Plus, Search, Edit, Trash2, CheckCircle, Loader2, DollarSign, X, UserPlus, ArrowUpCircle
 } from 'lucide-react';
-import { getNowInFortaleza, formatDate, formatDateBr } from '../utils';
+import { getNowInFortaleza, formatDate, formatDateBr, MEMBER_ROLES } from '../utils';
 import { StandardModal } from './StandardModal';
 
 const DAY_CARD_PRICE = 50;
@@ -68,7 +68,7 @@ export const AdminStudents: React.FC = () => {
         const { data: sociosData } = await supabase
             .from('profiles')
             .select('id, name, email, phone, role')
-            .in('role', ['socio', 'admin'])
+            .in('role', [...MEMBER_ROLES])
             .eq('is_active', true)
             .order('name');
 

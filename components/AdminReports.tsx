@@ -9,6 +9,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { MEMBER_ROLES } from '../utils';
 import {
   Download,
   TrendingUp,
@@ -86,7 +87,7 @@ export const AdminReports: React.FC = () => {
         .from('profiles')
         .select('id', { count: 'exact', head: true })
         .eq('is_active', true)
-        .in('role', ['socio', 'admin']);
+        .in('role', [...MEMBER_ROLES]);
 
       if (memberError) throw memberError;
 

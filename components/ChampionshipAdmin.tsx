@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Check, Loader2, Shuffle, Trophy, UserPlus, Users, Star, AlertTriangle, X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { User } from '../types';
+import { MEMBER_ROLES } from '../utils';
 import { GroupDrawPage } from './GroupDrawPage';
 import { ChampionshipInProgress } from './ChampionshipInProgress';
 import { useAuth } from '../contexts/AuthContext';
@@ -227,7 +228,7 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
                 .from('profiles')
                 .select('id, name, avatar_url, category, role')
                 .eq('is_active', true)
-                .in('role', ['socio', 'admin'])
+                .in('role', [...MEMBER_ROLES])
                 .order('name')
         ]);
 

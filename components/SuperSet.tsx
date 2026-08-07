@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { User } from '../types';
 import { Trophy, Search, Users, ArrowRight, History, Zap, TrendingUp, Sparkles } from 'lucide-react';
-import { getNowInFortaleza, formatDate } from '../utils';
+import { getNowInFortaleza, formatDate, MEMBER_ROLES } from '../utils';
 
 interface SuperSetProps {
     // No props needed
@@ -35,7 +35,7 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
             const { data: profilesData } = await supabase
                 .from('profiles')
                 .select('id, name, avatar_url, role')
-                .in('role', ['socio', 'admin'])
+                .in('role', [...MEMBER_ROLES])
                 .eq('is_active', true)
                 .order('name');
 

@@ -9,7 +9,47 @@ import {
   getMatchWinner,
   countSetsWon,
   needsThirdSet,
+  isMember,
+  isAdminRole,
+  MEMBER_ROLES,
 } from '../utils';
+
+describe('Membership Utils', () => {
+  describe('isMember', () => {
+    it('trata sócio como sócio', () => {
+      expect(isMember({ role: 'socio' })).toBe(true);
+    });
+
+    it('trata admin como sócio (admin também joga, reserva e pontua)', () => {
+      expect(isMember({ role: 'admin' })).toBe(true);
+    });
+
+    it('não trata lanchonete como sócio', () => {
+      expect(isMember({ role: 'lanchonete' })).toBe(false);
+    });
+
+    it('lida com perfil ausente ou sem role', () => {
+      expect(isMember(null)).toBe(false);
+      expect(isMember(undefined)).toBe(false);
+      expect(isMember({})).toBe(false);
+      expect(isMember({ role: null })).toBe(false);
+    });
+  });
+
+  describe('isAdminRole', () => {
+    it('distingue admin de sócio comum', () => {
+      expect(isAdminRole({ role: 'admin' })).toBe(true);
+      expect(isAdminRole({ role: 'socio' })).toBe(false);
+      expect(isAdminRole(null)).toBe(false);
+    });
+  });
+
+  describe('MEMBER_ROLES', () => {
+    it('cobre exatamente os papéis com vínculo de sócio', () => {
+      expect([...MEMBER_ROLES].sort()).toEqual(['admin', 'socio']);
+    });
+  });
+});
 
 describe('Tennis Scoring Utils', () => {
   describe('isValidSet', () => {

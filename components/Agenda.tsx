@@ -9,7 +9,7 @@ import { LiveScoreboard } from './LiveScoreboard';
 import { StandardModal } from './StandardModal';
 import { TennisCourtAnimation } from './ui/TennisCourtAnimation';
 import { Challenge } from '../types';
-import { getNowInFortaleza, formatDate, addDays, formatDateBr, getSetWinner, getMatchWinner, countSetsWon } from '../utils';
+import { getNowInFortaleza, formatDate, addDays, formatDateBr, getSetWinner, getMatchWinner, countSetsWon, isMember } from '../utils';
 
 // Court type
 interface Court {
@@ -117,7 +117,7 @@ const ManageParticipantsModal: React.FC<{
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedIds, setSelectedIds] = useState<string[]>(currentParticipants);
 
-    const availableSocios = profiles.filter(u => (u.role === 'socio' || u.role === 'admin') && u.isActive !== false);
+    const availableSocios = profiles.filter(u => isMember(u) && u.isActive !== false);
 
     const filteredSocios = availableSocios.filter(u =>
         u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -216,7 +216,7 @@ const ManageGuestModal: React.FC<{
     const [name, setName] = useState(res.guestName || '');
     const [responsibleId, setResponsibleId] = useState(res.guestResponsibleId || currentUser.id);
 
-    const availablePartners = profiles.filter(u => (u.role === 'socio' || u.role === 'admin') && (u.id === currentUser.id || res.participantIds.includes(u.id)));
+    const availablePartners = profiles.filter(u => isMember(u) && (u.id === currentUser.id || res.participantIds.includes(u.id)));
 
     const handleSave = () => {
         if (!name.trim()) return;
@@ -392,10 +392,10 @@ const ReservationDetails: React.FC<{
     const isFuture = new Date(res.date + 'T' + res.startTime) > getNowInFortaleza();
     const isNotFinished = new Date(res.date + 'T' + res.endTime) > getNowInFortaleza();
 
-    const canManageParticipants = isActive && (isAdmin || currentUser.role === 'socio' || currentUser.role === 'admin') && isFuture && res.type === 'Play';
+    const canManageParticipants = isActive && isMember(currentUser) && isFuture && res.type === 'Play';
     const canEdit = isActive && (isAdmin || (isFuture && isCreator)) && res.type !== 'Campeonato';
     const canCancel = isActive && isFuture && (isAdmin || isCreator) && res.type !== 'Campeonato';
-    const canJoin = res.type === 'Play' && isActive && isNotFinished && !isParticipant && (currentUser.role === 'socio' || isAdmin) && res.participantIds.length < 8;
+    const canJoin = res.type === 'Play' && isActive && isNotFinished && !isParticipant && isMember(currentUser) && res.participantIds.length < 8;
     const canLeave = res.type === 'Play' && isActive && isNotFinished && isParticipant;
     const canShare = isActive;
 
@@ -2237,8 +2237,8 @@ const AddReservationModal: React.FC<{
     const [saving, setSaving] = useState(false);
 
     // Context Data
-    const availablePartners = profiles.filter(u => (u.role === 'socio' || u.role === 'admin') && u.id !== currentUser.id && u.isActive);
-    const availableSocios = profiles.filter(u => (u.role === 'socio' || u.role === 'admin') && u.isActive !== false);
+    const availablePartners = profiles.filter(u => isMember(u) && u.id !== currentUser.id && u.isActive);
+    const availableSocios = profiles.filter(u => isMember(u) && u.isActive !== false);
     const professorRecord = professors.find(p => p.userId === currentUser.id);
 
     // Use nonSocioStudents from props

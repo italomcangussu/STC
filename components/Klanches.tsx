@@ -6,7 +6,7 @@ import {
     ChevronDown, ChevronUp, AlertCircle, Calendar, Clock, MapPin
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { getNowInFortaleza, formatDate } from '../utils';
+import { getNowInFortaleza, formatDate, isMember, MEMBER_ROLES } from '../utils';
 
 interface KlanchesProps {
     currentUser: User;
@@ -125,7 +125,7 @@ export const Klanches: React.FC<KlanchesProps> = ({ currentUser }) => {
             const { data: profilesData } = await supabase
                 .from('profiles')
                 .select('id, name, avatar_url, role')
-                .in('role', ['socio', 'admin'])
+                .in('role', [...MEMBER_ROLES])
                 .eq('is_active', true);
 
             setProfiles((profilesData || []).map(p => ({
@@ -190,7 +190,7 @@ export const Klanches: React.FC<KlanchesProps> = ({ currentUser }) => {
     }
 
     // ========== SOCIO/ADMIN VIEW (Consumer View) ==========
-    if (currentUser.role === 'socio' || currentUser.role === 'admin') {
+    if (isMember(currentUser)) {
         const myConsumptions = consumptions.filter(c => c.userId === currentUser.id && c.status === 'open');
         const totalDue = myConsumptions.reduce((acc, curr) => acc + curr.totalPrice, 0);
 

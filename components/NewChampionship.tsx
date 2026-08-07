@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import { User, Championship, Match, ChampionshipGroup, ChampionshipSeries } from '../types';
 import { supabase } from '../lib/supabase';
-import { getNowInFortaleza } from '../utils';
+import { getNowInFortaleza, isMember, MEMBER_ROLES } from '../utils';
 
 interface NewChampionshipProps {
     onClose: () => void;
@@ -49,7 +49,7 @@ export const NewChampionship: React.FC<NewChampionshipProps> = ({ onClose, onSav
             const { data } = await supabase
                 .from('profiles')
                 .select('id, name, avatar_url, category, role')
-                .in('role', ['socio', 'admin'])
+                .in('role', [...MEMBER_ROLES])
                 .eq('is_active', true);
 
             setProfiles((data || []).map(p => ({
@@ -533,7 +533,7 @@ export const NewChampionship: React.FC<NewChampionshipProps> = ({ onClose, onSav
                     </div>
                 );
             case 3: {
-                const filteredUsers = profiles.filter(u => u.role === 'socio' && u.name.toLowerCase().includes(searchTerm.toLowerCase()));
+                const filteredUsers = profiles.filter(u => isMember(u) && u.name.toLowerCase().includes(searchTerm.toLowerCase()));
                 return (
                     <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
                         <div className="relative">

@@ -9,7 +9,7 @@ import { Dashboard } from './Dashboard';
 import { Reservation, User, Challenge, AccessRequest } from '../types';
 import { formatDateBr } from '../utils';
 import { supabase } from '../lib/supabase';
-import { getNowInFortaleza, formatDate } from '../utils';
+import { getNowInFortaleza, formatDate, MEMBER_ROLES } from '../utils';
 import { AdminUserEditor } from './AdminUserEditor';
 import { AdminMatchCreator } from './AdminMatchCreator';
 import { StandardModal } from './StandardModal';
@@ -907,7 +907,7 @@ const SociosTab: React.FC = () => {
         const { data: usrs } = await supabase
             .from('profiles')
             .select('*')
-            .eq('role', 'socio')
+            .in('role', [...MEMBER_ROLES])
             .eq('is_active', true)
             .order('name');
 
@@ -1047,7 +1047,7 @@ const AcessosTab: React.FC = () => {
         const { data, error } = await supabase
             .from('profiles')
             .select('id, name, phone, role, is_active')
-            .in('role', ['socio', 'admin'])
+            .in('role', [...MEMBER_ROLES])
             .eq('is_active', true)
             .order('name');
 

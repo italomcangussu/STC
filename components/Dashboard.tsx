@@ -5,6 +5,7 @@ import {
 import { supabase } from '../lib/supabase';
 import { Loader2, TrendingUp, Clock, Calendar, Users, Trophy } from 'lucide-react';
 import { Reservation, Court } from '../types';
+import { isMember } from '../utils';
 
 // --- Types ---
 type _TimeFilter = 'all' | 'year' | 'month';
@@ -44,7 +45,7 @@ export const Dashboard: React.FC<DashboardProps> = () => {
         let socioCount = 0;
         profilesData.forEach(p => {
           profMap[p.id] = { name: p.name, avatar: p.avatar_url, role: p.role };
-          if (p.role === 'socio') socioCount++;
+          if (isMember(p)) socioCount++;
         });
         setProfiles(profMap);
         setTotalSocios(socioCount);
@@ -168,7 +169,7 @@ export const Dashboard: React.FC<DashboardProps> = () => {
 
   // 4. Member Stats
   const memberStats = useMemo(() => {
-    // Logic: Count unique creatorIds who are 'socio'
+    // Logic: Count unique creatorIds who are members (socios + admins)
     const uniqueActive = new Set<string>();
     const creatorCounts: Record<string, number> = {};
 
