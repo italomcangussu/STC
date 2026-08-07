@@ -262,8 +262,9 @@ export const CreatorFormat: React.FC<Props> = ({ classes, classFormats, onChange
                     </h3>
                     <p className="text-sm text-stone-600">
                         Você configurou a <strong>{classeAtiva}</strong>, mas não abriu{' '}
-                        <strong>{naoPersonalizadas.join(', ')}</strong>. Quer repetir as mesmas regras nelas,
-                        ou voltar para ajustar cada uma?
+                        <strong>{naoPersonalizadas.join(', ')}</strong>. Quer repetir as mesmas regras{' '}
+                        {naoPersonalizadas.length === 1 ? 'nela' : 'nelas'}, ou voltar para ajustar
+                        {naoPersonalizadas.length === 1 ? '' : ' cada uma'}?
                     </p>
                     <div className="flex flex-col sm:flex-row gap-2">
                         <button
