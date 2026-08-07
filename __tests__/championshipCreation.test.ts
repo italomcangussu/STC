@@ -55,10 +55,14 @@ describe('championship/creation', () => {
     });
 
     describe('createChampionship', () => {
+        const classFormats = {
+            '4ª Classe': defaultConfigFor('mata-mata'),
+            '5ª Classe': defaultConfigFor('grupo-mata-mata'),
+        };
         const params = {
             name: 'Copa Nova 2026',
-            format: 'mata-mata' as const,
-            formatConfig: defaultConfigFor('mata-mata'),
+            classFormats,
+            classes: ['4ª Classe', '5ª Classe'],
             startDate: '2026-09-01',
             endDate: '2026-09-05',
             seriesId: 's1',
@@ -83,16 +87,31 @@ describe('championship/creation', () => {
             expect(insert.insert).toHaveBeenCalledWith(
                 expect.objectContaining({
                     name: 'Copa Nova 2026',
-                    format: 'mata-mata',
                     status: 'draft',
                     start_date: '2026-09-01',
                     end_date: '2026-09-05',
                     series_id: 's1',
                     edition_year: 2026,
-                    format_config: params.formatConfig,
+                    format_config: classFormats,
                     pts_victory: DEFAULT_SCORING.ptsVictory,
                 })
             );
+        });
+
+        it('guarda a configuração de cada classe e usa a primeira na coluna format', async () => {
+            const lookup = makeChain({ limit: { data: [], error: null } });
+            const insert = makeChain({ single: { data: { id: 'champ-4' }, error: null } });
+            let call = 0;
+            supabaseMock.from.mockImplementation(() => (call++ === 0 ? lookup : insert));
+
+            await createChampionship(params);
+
+            const row = insert.insert.mock.calls[0][0];
+            // coluna única: formato da primeira classe
+            expect(row.format).toBe('mata-mata');
+            // verdade por classe
+            expect(row.format_config['4ª Classe'].format).toBe('mata-mata');
+            expect(row.format_config['5ª Classe'].format).toBe('grupo-mata-mata');
         });
 
         it('usa .is para série nula em vez de .eq', async () => {

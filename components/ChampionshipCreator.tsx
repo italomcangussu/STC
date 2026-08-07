@@ -25,7 +25,7 @@ import { CreatorFormat } from './creator/CreatorFormat';
 import { CreatorRegistration } from './creator/CreatorRegistration';
 import { BracketEditor, type BracketAthlete } from './creator/BracketEditor';
 import { createChampionship } from '../lib/championship/creation';
-import { defaultConfigFor, type FormatConfig } from '../lib/championship/formatConfig';
+import { defaultConfigFor, type ClassFormats } from '../lib/championship/formatConfig';
 import { emptySetup, type SetupValues } from '../lib/championship/setupValues';
 import { toast } from 'sonner';
 
@@ -48,7 +48,8 @@ export const ChampionshipCreator: React.FC = () => {
     const [championships, setChampionships] = useState<ChampionshipRow[]>([]);
     const [selectedChampId, setSelectedChampId] = useState<string>('');
     const [setupValues, setSetupValues] = useState<SetupValues>(emptySetup());
-    const [formatConfig, setFormatConfig] = useState<FormatConfig>(defaultConfigFor('mata-mata'));
+    const [classFormats, setClassFormats] = useState<ClassFormats>({});
+    const [classeCorrente, setClasseCorrente] = useState('');
     const [bracketAthletes, setBracketAthletes] = useState<BracketAthlete[]>([]);
     const [phaseToRoundId, setPhaseToRoundId] = useState<Map<string, string>>(new Map());
     const [saving, setSaving] = useState(false);
@@ -479,7 +480,11 @@ export const ChampionshipCreator: React.FC = () => {
                         value={setupValues}
                         onChange={setSetupValues}
                         onNext={() => {
-                            setFormatConfig(defaultConfigFor(setupValues.format));
+                            // Cada classe começa com mata-mata; o admin muda o formato
+                            // de cada uma no passo seguinte.
+                            setClassFormats(prev => Object.fromEntries(
+                                setupValues.classes.map(c => [c, prev[c] ?? defaultConfigFor('mata-mata')])
+                            ));
                             setStep('format');
                         }}
                     />
@@ -489,8 +494,9 @@ export const ChampionshipCreator: React.FC = () => {
             {/* Step 1b: Format */}
             {step === 'format' && (
                 <CreatorFormat
-                    config={formatConfig}
-                    onChange={setFormatConfig}
+                    classes={setupValues.classes}
+                    classFormats={classFormats}
+                    onChange={setClassFormats}
                     onBack={() => setStep('setup')}
                     saving={saving}
                     onConfirm={async () => {
@@ -498,8 +504,8 @@ export const ChampionshipCreator: React.FC = () => {
                         try {
                             const id = await createChampionship({
                                 name: setupValues.name,
-                                format: setupValues.format,
-                                formatConfig,
+                                classFormats,
+                                classes: setupValues.classes,
                                 startDate: setupValues.startDate,
                                 endDate: setupValues.endDate || null,
                                 seriesId: setupValues.seriesId,
@@ -529,12 +535,13 @@ export const ChampionshipCreator: React.FC = () => {
                 <CreatorRegistration
                     championshipId={selectedChampId}
                     classes={setupValues.classes}
-                    config={formatConfig}
+                    classFormats={classFormats}
                     startDate={setupValues.startDate}
                     endDate={setupValues.endDate || setupValues.startDate}
                     onRoundsCreated={(classeGerada, phaseMap, inscritos, seeds) => {
                         setPhaseToRoundId(phaseMap);
                         setClasse(classeGerada as ResenhaClass);
+                        setClasseCorrente(classeGerada);
                         setBracketAthletes(inscritos.map(r => ({
                             registrationId: r.registrationId,
                             name: r.name,
@@ -696,13 +703,19 @@ export const ChampionshipCreator: React.FC = () => {
             {step === 'drawing' && bracketAthletes.length > 0 && (
                 <BracketEditor
                     championshipId={selectedChampId}
-                    config={formatConfig}
+                    classe={classeCorrente}
+                    config={classFormats[classeCorrente] ?? defaultConfigFor('mata-mata')}
                     athletes={bracketAthletes}
                     phaseToRoundId={phaseToRoundId}
+                    restantes={setupValues.classes.filter(c => c !== classeCorrente)}
                     onSaved={async () => {
                         await loadBracket();
                         setStep('bracket');
-                        toast.success('Chave salva!');
+                        toast.success(`Chave da ${classeCorrente} salva!`);
+                    }}
+                    onProximaClasse={() => {
+                        setBracketAthletes([]);
+                        setStep('registering');
                     }}
                 />
             )}

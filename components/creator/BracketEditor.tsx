@@ -19,10 +19,14 @@ export interface BracketAthlete {
 
 interface Props {
     championshipId: string;
+    classe: string;
     config: FormatConfig;
     athletes: BracketAthlete[];
     phaseToRoundId: Map<string, string>;
+    /** Classes do campeonato que ainda não passaram por inscrição e chave. */
+    restantes: string[];
     onSaved: () => void;
+    onProximaClasse: () => void;
 }
 
 const PHASE_LABELS: Record<string, string> = {
@@ -34,7 +38,9 @@ const PHASE_LABELS: Record<string, string> = {
     final: 'Final',
 };
 
-export const BracketEditor: React.FC<Props> = ({ championshipId, config, athletes, phaseToRoundId, onSaved }) => {
+export const BracketEditor: React.FC<Props> = ({
+    championshipId, classe, config, athletes, phaseToRoundId, restantes, onSaved, onProximaClasse,
+}) => {
     const [slots, setSlots] = useState<BracketSlot[]>(() => buildEmptyBracket(config, athletes.length));
     const [picking, setPicking] = useState<{ matchNumber: number; side: 'a' | 'b' } | null>(null);
     const [saving, setSaving] = useState(false);
@@ -175,7 +181,7 @@ export const BracketEditor: React.FC<Props> = ({ championshipId, config, athlete
         <div className="space-y-4">
             <div className="bg-white rounded-2xl border border-stone-100 p-5 space-y-3">
                 <div className="flex items-center justify-between">
-                    <h2 className="font-black text-stone-800">Chave</h2>
+                    <h2 className="font-black text-stone-800">Chave{classe ? ` — ${classe}` : ''}</h2>
                     <span className="text-xs font-bold text-stone-400">
                         {alocados.size}/{athletes.length} alocados
                     </span>
@@ -265,6 +271,16 @@ export const BracketEditor: React.FC<Props> = ({ championshipId, config, athlete
                 {saving ? <Loader2 size={18} className="animate-spin" /> : null}
                 Salvar chave
             </button>
+
+            {restantes.length > 0 && (
+                <button
+                    type="button"
+                    onClick={onProximaClasse}
+                    className="w-full py-3 border border-stone-200 rounded-xl font-bold text-stone-600"
+                >
+                    Ir para outra classe ({restantes.join(', ')})
+                </button>
+            )}
         </div>
     );
 };

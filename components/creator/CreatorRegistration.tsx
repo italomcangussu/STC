@@ -12,7 +12,7 @@ import {
 } from '../../lib/championship/registration';
 import { applySeeds, suggestSeedsFromRanking } from '../../lib/championship/seeding';
 import { createRounds } from '../../lib/championship/rounds';
-import { validateAgainstParticipants, type FormatConfig } from '../../lib/championship/formatConfig';
+import { validateAgainstParticipants, type ClassFormats } from '../../lib/championship/formatConfig';
 
 type Origem = 'socio' | 'guest' | 'aluno';
 
@@ -24,7 +24,7 @@ interface Profile {
 interface Props {
     championshipId: string;
     classes: string[];
-    config: FormatConfig;
+    classFormats: ClassFormats;
     startDate: string;
     endDate: string;
     onRoundsCreated: (
@@ -36,7 +36,7 @@ interface Props {
 }
 
 export const CreatorRegistration: React.FC<Props> = ({
-    championshipId, classes, config, startDate, endDate, onRoundsCreated,
+    championshipId, classes, classFormats, startDate, endDate, onRoundsCreated,
 }) => {
     const [classe, setClasse] = useState(classes[0] ?? '');
     const [registrations, setRegistrations] = useState<ClassRegistration[]>([]);
@@ -182,6 +182,12 @@ export const CreatorRegistration: React.FC<Props> = ({
     };
 
     const fecharInscricoes = async () => {
+        const config = classFormats[classe];
+        if (!config) {
+            setError([`Nenhum formato configurado para ${classe}.`]);
+            return;
+        }
+
         const check = validateAgainstParticipants(config, registrations.length);
         if (!check.ok) {
             setError(check.errors);

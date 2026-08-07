@@ -1,5 +1,5 @@
 import { supabase } from '../supabase';
-import type { ChampionshipFormat, FormatConfig } from './formatConfig';
+import { primaryFormat, type ClassFormats } from './formatConfig';
 
 export interface ScoringRules {
     ptsVictory: number;
@@ -64,8 +64,9 @@ export async function ensureSeries(name: string): Promise<ChampionshipSeriesRow>
 
 export interface CreateChampionshipParams {
     name: string;
-    format: ChampionshipFormat;
-    formatConfig: FormatConfig;
+    /** Configuração por classe: cada uma pode ter formato e fases próprios. */
+    classFormats: ClassFormats;
+    classes: string[];
     startDate: string;
     endDate: string | null;
     seriesId: string | null;
@@ -105,8 +106,11 @@ export async function createChampionship(params: CreateChampionshipParams): Prom
         .from('championships')
         .insert({
             name: params.name,
-            format: params.format,
-            format_config: params.formatConfig,
+            // A coluna `format` é única e anterior ao multi-classe; guarda o
+            // formato da primeira classe para os leitores antigos. A verdade
+            // por classe vive em format_config.
+            format: primaryFormat(params.classFormats, params.classes),
+            format_config: params.classFormats,
             status: 'draft',
             start_date: params.startDate,
             end_date: params.endDate,

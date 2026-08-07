@@ -2,14 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ChevronRight, Loader2, Plus, Settings, Trophy } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { ensureSeries, type ChampionshipSeriesRow, type ScoringRules } from '../../lib/championship/creation';
-import type { ChampionshipFormat } from '../../lib/championship/formatConfig';
 import { CHAMPIONSHIP_CLASSES, type SetupValues } from '../../lib/championship/setupValues';
-
-const FORMAT_LABELS: Record<ChampionshipFormat, string> = {
-    'mata-mata': 'Mata-mata',
-    'pontos-corridos': 'Pontos corridos',
-    'grupo-mata-mata': 'Grupos + mata-mata',
-};
 
 interface Props {
     value: SetupValues;
@@ -109,25 +102,6 @@ export const CreatorSetup: React.FC<Props> = ({ value, onChange, onNext }) => {
                         >
                             {creatingSeries ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />} Criar
                         </button>
-                    </div>
-                </div>
-
-                <div>
-                    <span className="block text-xs font-bold text-stone-500 uppercase mb-1">Formato</span>
-                    <div className="grid grid-cols-3 gap-2">
-                        {(Object.keys(FORMAT_LABELS) as ChampionshipFormat[]).map(f => (
-                            <button
-                                key={f}
-                                type="button"
-                                onClick={() => set('format', f)}
-                                aria-pressed={value.format === f}
-                                className={`p-3 rounded-xl border-2 text-sm font-bold transition-colors ${
-                                    value.format === f ? 'border-saibro-500 bg-saibro-50 text-saibro-700' : 'border-stone-100 text-stone-600'
-                                }`}
-                            >
-                                {FORMAT_LABELS[f]}
-                            </button>
-                        ))}
                     </div>
                 </div>
 

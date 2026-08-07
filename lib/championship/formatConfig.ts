@@ -41,6 +41,27 @@ export interface KnockoutConfig {
 
 export type FormatConfig = GroupKnockoutConfig | RoundRobinConfig | KnockoutConfig;
 
+/**
+ * Configuração por classe. Cada classe do campeonato tem formato, número de
+ * inscritos e fases próprios — a 4ª pode ser mata-mata de 16 enquanto a 5ª é
+ * grupos com 12. É o conteúdo de championships.format_config.
+ */
+export type ClassFormats = Record<string, FormatConfig>;
+
+/**
+ * Formato guardado na coluna `championships.format`, que é única e anterior ao
+ * suporte multi-classe. Vale o da primeira classe; a verdade por classe está em
+ * format_config.
+ */
+export function primaryFormat(classFormats: ClassFormats, classes: string[]): ChampionshipFormat {
+    for (const classe of classes) {
+        const config = classFormats[classe];
+        if (config) return config.format;
+    }
+    const first = Object.values(classFormats)[0];
+    return first ? first.format : 'mata-mata';
+}
+
 export interface ValidationResult {
     ok: boolean;
     errors: string[];
