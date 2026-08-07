@@ -166,3 +166,42 @@ export async function createRounds(params: CreateRoundsParams): Promise<Map<stri
     if (error || !data) throw new Error(`Erro ao criar rodadas: ${error?.message}`);
     return new Map(data.map((r: any) => [r.phase, r.id]));
 }
+
+/**
+ * Publica a fase inicial da classe e tira o campeonato do rascunho.
+ *
+ * Chamado logo depois de gravar a chave — sorteada ou montada à mão. Só a
+ * primeira rodada sai de 'pending': as seguintes ainda são placeholders
+ * (registration_a_id/registration_b_id nulos, ligados por
+ * player_a_source_match_id), então publicá-las mostraria "a definir" aos
+ * sócios. Idempotente: as condições de status fazem a chamada repetida não
+ * reabrir uma rodada já finalizada nem reverter um campeonato encerrado.
+ */
+export async function activateFirstRound(championshipId: string, classe: string): Promise<void> {
+    const { data: primeira, error: fetchError } = await supabase
+        .from('championship_rounds')
+        .select('id')
+        .eq('championship_id', championshipId)
+        .eq('class', classe)
+        .order('round_number', { ascending: true })
+        .limit(1);
+
+    if (fetchError) throw new Error(`Erro ao buscar a primeira rodada: ${fetchError.message}`);
+    if (!primeira || primeira.length === 0) return;
+
+    const { error: roundError } = await supabase
+        .from('championship_rounds')
+        .update({ status: 'active' })
+        .eq('id', primeira[0].id)
+        .eq('status', 'pending');
+
+    if (roundError) throw new Error(`Erro ao publicar a primeira rodada: ${roundError.message}`);
+
+    const { error: champError } = await supabase
+        .from('championships')
+        .update({ status: 'ongoing' })
+        .eq('id', championshipId)
+        .eq('status', 'draft');
+
+    if (champError) throw new Error(`Erro ao colocar o campeonato em andamento: ${champError.message}`);
+}
