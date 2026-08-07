@@ -25,6 +25,8 @@ interface Props {
     championshipId: string;
     classes: string[];
     classFormats: ClassFormats;
+    /** Classe em que o admin pediu para retomar; sem ela, começa na primeira. */
+    classeInicial?: string;
     startDate: string;
     endDate: string;
     onBack: () => void;
@@ -37,9 +39,11 @@ interface Props {
 }
 
 export const CreatorRegistration: React.FC<Props> = ({
-    championshipId, classes, classFormats, startDate, endDate, onBack, onRoundsCreated,
+    championshipId, classes, classFormats, classeInicial, startDate, endDate, onBack, onRoundsCreated,
 }) => {
-    const [classe, setClasse] = useState(classes[0] ?? '');
+    const [classe, setClasse] = useState(
+        classeInicial && classes.includes(classeInicial) ? classeInicial : (classes[0] ?? '')
+    );
     const [registrations, setRegistrations] = useState<ClassRegistration[]>([]);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);

@@ -154,8 +154,11 @@ export const ChampionshipCreator: React.FC = () => {
         return classes;
     }
 
-    /** Carrega inscritos e rodadas de uma classe já configurada. */
-    async function loadClassContext(championshipId: string, classeAlvo: string) {
+    /**
+     * Carrega inscritos e rodadas de uma classe já configurada.
+     * Devolve os ids das rodadas, que dizem em que passo a classe parou.
+     */
+    async function loadClassContext(championshipId: string, classeAlvo: string): Promise<string[]> {
         const inscritos = await fetchClassRegistrations(championshipId, classeAlvo);
         setBracketAthletes(inscritos.map(r => ({
             registrationId: r.registrationId,
@@ -173,6 +176,7 @@ export const ChampionshipCreator: React.FC = () => {
         if (error) throw new Error(`Erro ao carregar rodadas: ${error.message}`);
         setPhaseToRoundId(new Map((rounds ?? []).map((r: any) => [r.phase, r.id])));
         setClasseCorrente(classeAlvo);
+        return (rounds ?? []).map((r: any) => r.id as string);
     }
 
     async function handleSelectChampionship() {
@@ -182,8 +186,28 @@ export const ChampionshipCreator: React.FC = () => {
             const classes = await restoreCreatorContext(selectedChampId);
 
             if (classes.length > 0) {
-                // Campeonato do Criador: retoma na classe escolhida.
-                await loadClassContext(selectedChampId, classeRetomada || classes[0]);
+                // Campeonato do Criador: retoma na classe escolhida, no passo em
+                // que ela parou. Cada classe anda no seu ritmo — a 4ª pode já ter
+                // chave enquanto a 5ª nem abriu inscrições.
+                const classeAlvo = classeRetomada || classes[0];
+                const roundIds = await loadClassContext(selectedChampId, classeAlvo);
+
+                if (roundIds.length === 0) {
+                    setStep('registering');
+                    return;
+                }
+
+                const { count, error: matchError } = await supabase
+                    .from('matches')
+                    .select('id', { count: 'exact', head: true })
+                    .in('round_id', roundIds);
+
+                if (matchError) throw new Error(`Erro ao verificar confrontos: ${matchError.message}`);
+
+                if ((count ?? 0) === 0) {
+                    setStep('drawing');
+                    return;
+                }
             } else {
                 // Modelo antigo (Resenha): mantém o caminho de sempre.
                 await loadAthletesFromDb();
@@ -639,6 +663,7 @@ export const ChampionshipCreator: React.FC = () => {
                     championshipId={selectedChampId}
                     classes={setupValues.classes}
                     classFormats={classFormats}
+                    classeInicial={classeCorrente}
                     startDate={setupValues.startDate}
                     endDate={setupValues.endDate || setupValues.startDate}
                     onBack={() => setStep('format')}
