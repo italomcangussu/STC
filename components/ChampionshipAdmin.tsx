@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import { User } from '../types';
 import { MEMBER_ROLES } from '../utils';
 import { GroupDrawPage } from './GroupDrawPage';
+import { PhasePointsEditor } from './admin/PhasePointsEditor';
 import { ChampionshipInProgress } from './ChampionshipInProgress';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -153,7 +154,7 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
     const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
     const [statusFilter, setStatusFilter] = useState<'all' | 'draft' | 'ongoing' | 'finished'>('all');
-    const [activeTab, setActiveTab] = useState<'overview' | 'rounds' | 'matches' | 'standings' | 'audit'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'rounds' | 'matches' | 'standings' | 'audit' | 'points'>('overview');
 
     const [participantType, setParticipantType] = useState<'socio' | 'guest'>('socio');
     const [selectedUserId, setSelectedUserId] = useState('');
@@ -643,6 +644,7 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
                         <TabButton active={activeTab === 'matches'} label="Partidas" onClick={() => setActiveTab('matches')} />
                         <TabButton active={activeTab === 'standings'} label="Classificação" onClick={() => setActiveTab('standings')} />
                         <TabButton active={activeTab === 'audit'} label="Auditoria" onClick={() => setActiveTab('audit')} />
+                        <TabButton active={activeTab === 'points'} label="Pontuação" onClick={() => setActiveTab('points')} />
                     </div>
 
                     {loadingDetails ? (
@@ -917,6 +919,8 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
                                 );
                             })}
                         </div>
+                    ) : activeTab === 'points' ? (
+                        <PhasePointsEditor />
                     ) : activeTab === 'audit' ? (
                         <div className="bg-white rounded-2xl border border-stone-100 overflow-hidden">
                             <div className="px-4 py-3 border-b border-stone-100 font-black text-stone-700">Auditoria</div>
