@@ -25,6 +25,7 @@ import { CreatorFormat } from './creator/CreatorFormat';
 import { CreatorRegistration } from './creator/CreatorRegistration';
 import { BracketEditor, type BracketAthlete } from './creator/BracketEditor';
 import { GroupDrawEditor } from './creator/GroupDrawEditor';
+import { KnockoutFromGroups } from './creator/KnockoutFromGroups';
 import { createChampionship } from '../lib/championship/creation';
 import { defaultConfigFor, type ClassFormats } from '../lib/championship/formatConfig';
 import { emptySetup, type SetupValues } from '../lib/championship/setupValues';
@@ -936,6 +937,23 @@ export const ChampionshipCreator: React.FC = () => {
             )}
 
             {/* Step 4: Bracket management */}
+            {/* Fechamento do ciclo de grupos: com a fase de grupos jogada, monta o
+                mata-mata a partir da classificação. */}
+            {step === 'bracket' && bracketAthletes.length > 0
+                && classFormats[classeCorrente]?.format === 'grupo-mata-mata' && (
+                <KnockoutFromGroups
+                    championshipId={selectedChampId}
+                    classe={classeCorrente}
+                    config={classFormats[classeCorrente]}
+                    athletes={bracketAthletes}
+                    phaseToRoundId={phaseToRoundId}
+                    onSaved={async () => {
+                        await loadBracket();
+                        toast.success('Mata-mata gerado!');
+                    }}
+                />
+            )}
+
             {step === 'bracket' && (
                 <div className="space-y-4">
                     <div className="flex items-center justify-between">
