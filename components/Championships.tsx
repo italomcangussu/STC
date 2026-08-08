@@ -15,6 +15,7 @@ import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { GroupStandingsCard } from './GroupStandingsCard';
 import { BracketView } from './BracketView';
+import { TournamentBracketView } from './TournamentBracketView';
 import { ResenhaOpenBracketView } from './ResenhaOpenBracketView';
 import { StandingsDetailModal } from './StandingsDetailModal';
 import { ChampionshipMatchActionModal } from './ChampionshipMatchActionModal';
@@ -1809,6 +1810,17 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                                     );
                                 })()}
                             </>
+                        ) : effectiveFormat === 'mata-mata' && rounds.some(r => matches.some(m => m.round_id === r.id)) ? (
+                            // Quadro completo: todas as fases lado a lado, ligadas pelos
+                            // vencedores, até a final — o mesmo do Resenha Open.
+                            <TournamentBracketView
+                                championshipId={selectedChamp.id}
+                                championshipName={selectedChamp.name}
+                                onMatchSelect={bracketMatch => {
+                                    const local = matches.find(m => m.id === bracketMatch.id);
+                                    if (local) setSelectedBracketMatch(local);
+                                }}
+                            />
                         ) : effectiveFormat === 'mata-mata' ? (
                             // A chave sai das rodadas, não de matches.phase: o Criador liga cada
                             // partida à rodada por round_id e deixa phase nulo, e o vocabulário

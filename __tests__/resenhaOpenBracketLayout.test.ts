@@ -2,9 +2,11 @@ import { describe, expect, it } from 'vitest';
 import type { BracketMatchWithPhase } from '../lib/resenhaOpenService';
 import {
     buildResenhaBracketLayout,
+    derivePhaseOrder,
     getCurrentPhaseForClass,
     getMatchWinnerSide,
     normalizeScoreSlots,
+    phaseOrderFor,
 } from '../lib/resenhaOpenBracketLayout';
 
 const match = (overrides: Partial<BracketMatchWithPhase>): BracketMatchWithPhase => ({
@@ -128,5 +130,47 @@ describe('resenhaOpenBracketLayout', () => {
         ];
 
         expect(getCurrentPhaseForClass(matches, '4ª Classe')).toBe('final');
+    });
+});
+
+/**
+ * As classes do Resenha têm sequência fixa; as do Criador não têm lista alguma,
+ * e a ordem das colunas precisa sair dos dados.
+ */
+describe('ordem das fases fora do Resenha', () => {
+    const quadroDoCriador = [
+        match({ match_number: 5, round_phase: 'quartas', bracket_class: '3ª Classe' }),
+        match({ match_number: 1, round_phase: 'qualify', bracket_class: '3ª Classe' }),
+        match({ match_number: 9, round_phase: 'final', bracket_class: '3ª Classe' }),
+        match({ match_number: 7, round_phase: 'semifinal', bracket_class: '3ª Classe' }),
+        match({ match_number: 6, round_phase: 'quartas', bracket_class: '3ª Classe' }),
+    ];
+
+    it('ordena as fases pelo primeiro jogo de cada uma', () => {
+        expect(derivePhaseOrder(quadroDoCriador)).toEqual(['qualify', 'quartas', 'semifinal', 'final']);
+    });
+
+    it('ignora partidas sem fase', () => {
+        expect(derivePhaseOrder([
+            match({ match_number: 1, round_phase: '' }),
+            match({ match_number: 2, round_phase: 'final' }),
+        ])).toEqual(['final']);
+    });
+
+    it('mantém a sequência fixa das classes do Resenha, mesmo sem jogos em uma fase', () => {
+        expect(phaseOrderFor([match({ match_number: 1, round_phase: 'final' })], '4ª Classe'))
+            .toEqual(['preliminar', 'oitavas', 'quartas', 'semifinal', 'final']);
+    });
+
+    it('deriva dos dados quando a classe não é do Resenha', () => {
+        expect(phaseOrderFor(quadroDoCriador, '3ª Classe'))
+            .toEqual(['qualify', 'quartas', 'semifinal', 'final']);
+    });
+
+    it('desenha uma coluna por fase presente, na ordem derivada', () => {
+        const layout = buildResenhaBracketLayout(quadroDoCriador, '3ª Classe');
+        expect(layout.phases.map(p => p.phase)).toEqual(['qualify', 'quartas', 'semifinal', 'final']);
+        expect(layout.phases.find(p => p.phase === 'quartas')?.matches).toHaveLength(2);
+        expect(layout.phases[0].label).toBe('Qualificatórias');
     });
 });

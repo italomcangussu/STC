@@ -6,38 +6,40 @@ import { ResenhaOpenTournamentBoard } from './ResenhaOpenTournamentBoard';
 
 interface Props {
     championshipId: string;
+    championshipName: string;
     onMatchSelect?: (match: BracketMatchWithPhase) => void;
 }
 
-export const ResenhaOpenBracketView: React.FC<Props> = ({ championshipId, onMatchSelect }) => {
+/**
+ * Quadro de confrontos de um campeonato qualquer: todas as fases lado a lado,
+ * ligadas pelos vencedores, até a final.
+ *
+ * É o mesmo tabuleiro do Resenha Open, sem as duas coisas que só valem para
+ * ele: o quadro oficial impresso como fallback e os horários oficiais por
+ * número de jogo. As fases e as classes saem dos próprios dados.
+ */
+export const TournamentBracketView: React.FC<Props> = ({ championshipId, championshipName, onMatchSelect }) => {
     const [bracket, setBracket] = useState<BracketMatchWithPhase[]>([]);
-    const [champName, setChampName] = useState('Resenha Open');
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         let active = true;
 
-        const loadBracket = async (showLoading: boolean) => {
-            if (showLoading) setLoading(true);
+        const carregar = async (comLoading: boolean) => {
+            if (comLoading) setLoading(true);
 
             try {
-                const [bData, champData] = await Promise.all([
-                    fetchBracket(championshipId),
-                    supabase.from('championships').select('name').eq('id', championshipId).single(),
-                ]);
-
-                if (!active) return;
-                setBracket(bData);
-                setChampName(champData.data?.name ?? 'Resenha Open');
+                const dados = await fetchBracket(championshipId, { officialFallback: false });
+                if (active) setBracket(dados);
             } finally {
-                if (showLoading && active) setLoading(false);
+                if (comLoading && active) setLoading(false);
             }
         };
 
-        loadBracket(true);
+        carregar(true);
 
         const channel = supabase
-            .channel(`resenha-open-bracket-${championshipId}`)
+            .channel(`tournament-bracket-${championshipId}`)
             .on(
                 'postgres_changes',
                 {
@@ -47,7 +49,7 @@ export const ResenhaOpenBracketView: React.FC<Props> = ({ championshipId, onMatc
                     filter: `championship_id=eq.${championshipId}`,
                 },
                 () => {
-                    loadBracket(false);
+                    carregar(false);
                 },
             )
             .subscribe();
@@ -71,7 +73,7 @@ export const ResenhaOpenBracketView: React.FC<Props> = ({ championshipId, onMatc
             <div className="p-4">
                 <div className="mx-auto max-w-2xl rounded-3xl border border-white/10 bg-[#061320]/90 px-6 py-12 text-center text-slate-300 shadow-xl">
                     <Trophy size={32} className="mx-auto mb-3 text-orange-300/50" />
-                    <p className="font-bold">Sorteio ainda não realizado.</p>
+                    <p className="font-bold">Chave ainda não definida.</p>
                 </div>
             </div>
         );
@@ -80,9 +82,8 @@ export const ResenhaOpenBracketView: React.FC<Props> = ({ championshipId, onMatc
     return (
         <ResenhaOpenTournamentBoard
             bracket={bracket}
-            championshipName={champName}
+            championshipName={championshipName}
             onMatchSelect={onMatchSelect}
-            showOfficialTimes
         />
     );
 };
