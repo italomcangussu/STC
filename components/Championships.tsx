@@ -1760,26 +1760,93 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                                 })()}
                             </>
                         ) : effectiveFormat === 'mata-mata' ? (
-                            // For pure knockout format, show traditional bracket
-                            <div className="space-y-8">
-                                {['Oitavas', 'Quartas', 'Semi', 'Final'].map(phase => {
-                                    const phaseMatches = matches.filter(m => m.phase === phase);
-                                    if (phaseMatches.length === 0) return null;
+                            // A chave sai das rodadas, não de matches.phase: o Criador liga cada
+                            // partida à rodada por round_id e deixa phase nulo, e o vocabulário
+                            // dele ('oitavas', 'semifinal', 'qualify', '16avos') não bate com os
+                            // rótulos fixos do modelo antigo. Percorrer as rodadas cobre os dois
+                            // e ainda mostra fases que a lista fixa nem previa.
+                            (() => {
+                                const classesDasRodadas = [...new Set(
+                                    rounds.map(r => r.class).filter((c): c is string => !!c)
+                                )];
+                                const classeAtiva = classesDasRodadas.includes(selectedBracketCategory)
+                                    ? selectedBracketCategory
+                                    : classesDasRodadas[0];
 
+                                // rounds já vem ordenado por round_number.
+                                const rodadasComJogos = rounds
+                                    .filter(r => classesDasRodadas.length === 0 || r.class === classeAtiva)
+                                    .map(r => ({
+                                        round: r,
+                                        partidas: matches
+                                            .filter(m => m.round_id === r.id)
+                                            .sort((a, b) => (a.match_number ?? 0) - (b.match_number ?? 0)),
+                                    }))
+                                    .filter(r => r.partidas.length > 0);
+
+                                // Campeonatos antigos podem ter partidas sem round_id, só com
+                                // phase preenchido — para esses, o caminho de sempre.
+                                if (rodadasComJogos.length === 0) {
                                     return (
-                                        <div key={phase} className="space-y-4">
-                                            <h4 className="text-[10px] font-black text-saibro-600 uppercase tracking-widest ml-1 border-l-2 border-saibro-500 pl-2">
-                                                {phase}
-                                            </h4>
-                                            <div className="space-y-3">
-                                                {phaseMatches.map(match => (
-                                                    <BracketMatchCard key={match.id} match={match} profiles={profiles} onEdit={() => setEditingMatch(match)} isAdmin={currentUser.role === 'admin'} />
-                                                ))}
-                                            </div>
+                                        <div className="space-y-8">
+                                            {['Oitavas', 'Quartas', 'Semi', 'Final'].map(phase => {
+                                                const phaseMatches = matches.filter(m => m.phase === phase);
+                                                if (phaseMatches.length === 0) return null;
+
+                                                return (
+                                                    <div key={phase} className="space-y-4">
+                                                        <h4 className="text-[10px] font-black text-saibro-600 uppercase tracking-widest ml-1 border-l-2 border-saibro-500 pl-2">
+                                                            {phase}
+                                                        </h4>
+                                                        <div className="space-y-3">
+                                                            {phaseMatches.map(match => (
+                                                                <BracketMatchCard key={match.id} match={match} profiles={profiles} onEdit={() => setEditingMatch(match)} isAdmin={currentUser.role === 'admin'} />
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
                                         </div>
                                     );
-                                })}
-                            </div>
+                                }
+
+                                return (
+                                    <div className="space-y-6">
+                                        {classesDasRodadas.length > 1 && (
+                                            <div className="flex bg-white p-2 rounded-3xl shadow-sm border border-stone-200 gap-2 overflow-x-auto">
+                                                {classesDasRodadas.map(classe => (
+                                                    <button
+                                                        key={classe}
+                                                        onClick={() => setSelectedBracketCategory(classe)}
+                                                        className={`flex-1 min-w-25 py-3 px-4 rounded-2xl text-xs font-black tracking-wider transition-all ${
+                                                            classeAtiva === classe
+                                                                ? 'bg-saibro-600 text-white shadow-md'
+                                                                : 'text-stone-400 hover:text-stone-600'
+                                                        }`}
+                                                    >
+                                                        {classe}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        <div className="space-y-8">
+                                            {rodadasComJogos.map(({ round, partidas }) => (
+                                                <div key={round.id} className="space-y-4">
+                                                    <h4 className="text-[10px] font-black text-saibro-600 uppercase tracking-widest ml-1 border-l-2 border-saibro-500 pl-2">
+                                                        {round.name}
+                                                    </h4>
+                                                    <div className="space-y-3">
+                                                        {partidas.map(match => (
+                                                            <BracketMatchCard key={match.id} match={match} profiles={profiles} onEdit={() => setEditingMatch(match)} isAdmin={currentUser.role === 'admin'} />
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                );
+                            })()
                         ) : (
                             <div className="bg-white rounded-3xl shadow-sm border border-stone-100 overflow-hidden">
                                 <div className="p-8 text-center text-stone-400">

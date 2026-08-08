@@ -256,6 +256,8 @@ export interface Match {
 export interface ChampionshipRound {
   id: string;
   championship_id: string;
+  /** Null nos campeonatos do modelo antigo, em que as classes compartilham rodadas. */
+  class?: string | null;
   round_number: number;
   name: string;
   phase: string;
