@@ -24,19 +24,19 @@ interface Props {
     championshipName: string;
     onMatchSelect?: (match: BracketMatchWithPhase) => void;
     /**
-     * Horários oficiais do Resenha Open, exibidos quando o jogo ainda não tem
-     * agendamento. O mapa é indexado por classe e número do jogo — nomes que
-     * outros campeonatos também usam — então só o Resenha pode ativá-lo, sob
-     * pena de mostrar horário alheio.
+     * Marca o quadro como sendo do Resenha Open. Governa as duas coisas que
+     * dependem de ser ele e não do nome da classe — que '4ª Classe' e
+     * '5ª Classe' não distinguem, porque qualquer campeonato as usa:
+     * a sequência fixa de fases e os horários oficiais impressos.
      */
-    showOfficialTimes?: boolean;
+    isResenhaOpen?: boolean;
 }
 
 const MIN_ZOOM = 0.65;
 const MAX_ZOOM = 1.2;
 const ZOOM_STEP = 0.1;
 
-export const ResenhaOpenTournamentBoard: React.FC<Props> = ({ bracket, championshipName, onMatchSelect, showOfficialTimes = false }) => {
+export const ResenhaOpenTournamentBoard: React.FC<Props> = ({ bracket, championshipName, onMatchSelect, isResenhaOpen = false }) => {
     // As classes saem do próprio quadro: as duas do Resenha primeiro, para
     // preservar a ordem de sempre, e depois as demais, que só existem em
     // campeonatos criados pelo Criador.
@@ -65,12 +65,12 @@ export const ResenhaOpenTournamentBoard: React.FC<Props> = ({ bracket, champions
         [bracket, selectedClass],
     );
     const layout = useMemo(
-        () => buildResenhaBracketLayout(classMatches, selectedClass),
-        [classMatches, selectedClass],
+        () => buildResenhaBracketLayout(classMatches, selectedClass, isResenhaOpen),
+        [classMatches, selectedClass, isResenhaOpen],
     );
     const currentPhase = useMemo(
-        () => getCurrentPhaseForClass(bracket, selectedClass),
-        [bracket, selectedClass],
+        () => getCurrentPhaseForClass(bracket, selectedClass, isResenhaOpen),
+        [bracket, selectedClass, isResenhaOpen],
     );
 
     const centerPhase = (phase: string, behavior: ScrollBehavior = 'smooth') => {
@@ -91,7 +91,7 @@ export const ResenhaOpenTournamentBoard: React.FC<Props> = ({ bracket, champions
         setSelectedClass(className);
         setSelectedMatchId(null);
         requestAnimationFrame(() => {
-            const nextPhase = getCurrentPhaseForClass(bracket, className);
+            const nextPhase = getCurrentPhaseForClass(bracket, className, isResenhaOpen);
             centerPhase(nextPhase);
         });
     };
@@ -122,9 +122,11 @@ export const ResenhaOpenTournamentBoard: React.FC<Props> = ({ bracket, champions
     }
 
     return (
-        <div className="w-full max-w-7xl mx-auto px-[max(0.75rem,env(safe-area-inset-left))] py-3">
-            <section className="rounded-[1.75rem] bg-[#061320] text-white shadow-2xl shadow-slate-950/30 overflow-hidden border border-white/10">
-                <div className="px-4 sm:px-6 pt-5 pb-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        // No celular o quadro sangra até as bordas: o padding do contêiner da
+        // página custava mais largura útil do que a moldura valia.
+        <div className="w-auto -mx-4 px-0 py-3 sm:w-full sm:max-w-7xl sm:mx-auto sm:px-[max(0.75rem,env(safe-area-inset-left))]">
+            <section className="rounded-none border-x-0 sm:rounded-[1.75rem] sm:border-x bg-[#061320] text-white shadow-2xl shadow-slate-950/30 overflow-hidden border border-white/10">
+                <div className="px-3 sm:px-6 pt-5 pb-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                     <div>
                         <p className="text-[10px] font-black uppercase tracking-[0.22em] text-orange-300">Tabela de Confrontos</p>
                         <h2 className="text-xl sm:text-2xl font-black tracking-tight">{championshipName}</h2>
@@ -150,7 +152,7 @@ export const ResenhaOpenTournamentBoard: React.FC<Props> = ({ bracket, champions
 
                 <div
                     ref={viewportRef}
-                    className="relative overflow-auto overscroll-contain px-4 sm:px-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] cursor-grab active:cursor-grabbing"
+                    className="relative overflow-auto overscroll-contain px-2 sm:px-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] cursor-grab active:cursor-grabbing"
                     style={{ WebkitOverflowScrolling: 'touch' }}
                 >
                     <div
@@ -180,13 +182,13 @@ export const ResenhaOpenTournamentBoard: React.FC<Props> = ({ bracket, champions
                                         matchRefs.current[layoutMatch.match.id] = node;
                                     }}
                                     onSelect={() => handleSelectMatch(layoutMatch.match.id)}
-                                    showOfficialTimes={showOfficialTimes}
+                                    showOfficialTimes={isResenhaOpen}
                                 />
                             ))}
                         </div>
                     </div>
 
-                    <div className="sticky left-4 bottom-3 mt-3 inline-flex rounded-full border border-white/10 bg-[#061320]/85 px-3 py-2 text-[11px] font-bold text-slate-300 backdrop-blur-md">
+                    <div className="sticky left-2 sm:left-4 bottom-3 mt-3 inline-flex rounded-full border border-white/10 bg-[#061320]/85 px-3 py-2 text-[11px] font-bold text-slate-300 backdrop-blur-md">
                         Arraste para navegar • Use zoom para ajustar • Toque em um jogo para destacar
                     </div>
                 </div>

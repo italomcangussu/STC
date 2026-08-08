@@ -88,9 +88,20 @@ export function derivePhaseOrder(matches: BracketMatchWithPhase[]): string[] {
 const isResenhaClass = (className: string): className is ResenhaClass =>
     className in PHASES_BY_CLASS;
 
-/** Sequência de fases da classe: fixa no Resenha, derivada dos dados no resto. */
-export function phaseOrderFor(matches: BracketMatchWithPhase[], className: string): string[] {
-    if (isResenhaClass(className)) return PHASES_BY_CLASS[className];
+/**
+ * Sequência de fases da classe.
+ *
+ * A lista fixa do Resenha depende de ser o Resenha, não do nome da classe:
+ * '4ª Classe' e '5ª Classe' são nomes que qualquer campeonato usa, e aplicá-la
+ * a um campeonato do Criador desenhava uma coluna 'preliminar' vazia e engolia
+ * a fase 'qualify', que não está na lista.
+ */
+export function phaseOrderFor(
+    matches: BracketMatchWithPhase[],
+    className: string,
+    resenhaOpen = false,
+): string[] {
+    if (resenhaOpen && isResenhaClass(className)) return PHASES_BY_CLASS[className];
     return derivePhaseOrder(matches);
 }
 
@@ -128,9 +139,10 @@ export function getClassMatches(
 export function getCurrentPhaseForClass(
     matches: BracketMatchWithPhase[],
     className: string,
+    resenhaOpen = false,
 ): string {
     const classMatches = getClassMatches(matches, className);
-    const phaseOrder = phaseOrderFor(classMatches, className);
+    const phaseOrder = phaseOrderFor(classMatches, className, resenhaOpen);
     if (classMatches.length === 0 || phaseOrder.length === 0) return phaseOrder[0] ?? '';
 
     const hasPlayableParticipants = (match: BracketMatchWithPhase) =>
@@ -155,8 +167,9 @@ export function getCurrentPhaseForClass(
 export function buildResenhaBracketLayout(
     matches: BracketMatchWithPhase[],
     className: string,
+    resenhaOpen = false,
 ): BracketLayout {
-    const phaseOrder = phaseOrderFor(matches, className);
+    const phaseOrder = phaseOrderFor(matches, className, resenhaOpen);
     const phases: BracketPhaseLayout[] = [];
     const matchesByNumber = new Map<number, LayoutMatch>();
 

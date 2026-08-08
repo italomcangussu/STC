@@ -54,7 +54,7 @@ describe('resenhaOpenBracketLayout', () => {
                 player_a_source_match_number: 1,
                 player_b_source_match_number: 2,
             }),
-        ], '5ª Classe');
+        ], '5ª Classe', true);
 
         expect(layout.phases.map(phase => phase.phase)).toEqual(['oitavas', 'quartas', 'semifinal', 'final']);
         expect(layout.matchesByNumber.get(1)?.centerY).toBe(layout.matchesByNumber.get(1)!.y + layout.cardHeight / 2);
@@ -75,7 +75,7 @@ describe('resenhaOpenBracketLayout', () => {
             match({ bracket_class: '4ª Classe', match_number: 13, round_phase: 'quartas', player_a_source_match_number: 5 }),
             match({ bracket_class: '4ª Classe', match_number: 17, round_phase: 'semifinal', player_a_source_match_number: 13 }),
             match({ bracket_class: '4ª Classe', match_number: 19, round_phase: 'final', player_a_source_match_number: 17 }),
-        ], '4ª Classe');
+        ], '4ª Classe', true);
 
         expect(layout.phases.map(phase => phase.phase)).toEqual(['preliminar', 'oitavas', 'quartas', 'semifinal', 'final']);
     });
@@ -158,8 +158,27 @@ describe('ordem das fases fora do Resenha', () => {
     });
 
     it('mantém a sequência fixa das classes do Resenha, mesmo sem jogos em uma fase', () => {
-        expect(phaseOrderFor([match({ match_number: 1, round_phase: 'final' })], '4ª Classe'))
+        expect(phaseOrderFor([match({ match_number: 1, round_phase: 'final' })], '4ª Classe', true))
             .toEqual(['preliminar', 'oitavas', 'quartas', 'semifinal', 'final']);
+    });
+
+    it('não aplica a lista do Resenha a outro campeonato com o mesmo nome de classe', () => {
+        // '4ª Classe' existe nos dois. Aplicar a lista fixa aqui desenhava uma
+        // coluna 'preliminar' vazia e engolia a fase 'qualify', que não está nela.
+        const quadroDoCriador4a = [
+            match({ match_number: 1, round_phase: 'qualify', bracket_class: '4ª Classe' }),
+            match({ match_number: 2, round_phase: 'quartas', bracket_class: '4ª Classe' }),
+            match({ match_number: 6, round_phase: 'semifinal', bracket_class: '4ª Classe' }),
+            match({ match_number: 8, round_phase: 'final', bracket_class: '4ª Classe' }),
+        ];
+
+        expect(phaseOrderFor(quadroDoCriador4a, '4ª Classe'))
+            .toEqual(['qualify', 'quartas', 'semifinal', 'final']);
+
+        const layout = buildResenhaBracketLayout(quadroDoCriador4a, '4ª Classe');
+        expect(layout.phases.map(p => p.phase)).toEqual(['qualify', 'quartas', 'semifinal', 'final']);
+        expect(layout.phases.every(p => p.matches.length > 0)).toBe(true);
+        expect(layout.matchesByNumber.get(1)).toBeDefined();
     });
 
     it('deriva dos dados quando a classe não é do Resenha', () => {
