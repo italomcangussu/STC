@@ -5,6 +5,7 @@ import { Trophy, Loader2, ListOrdered } from 'lucide-react';
 import { GroupStandingsCard } from './GroupStandingsCard';
 import { BracketView } from './BracketView';
 import { ResenhaOpenBracketView } from './ResenhaOpenBracketView';
+import { TournamentBracketView } from './TournamentBracketView';
 import { StandingsDetailModal } from './StandingsDetailModal';
 import { ChampionshipStatistics } from './ChampionshipStatistics';
 import { ChampionshipOddsSimulator } from './ChampionshipOddsSimulator';
@@ -222,6 +223,13 @@ export const PublicChampionshipPage: React.FC<Props> = ({ slug, championshipId }
                     <div className="space-y-6 pb-20">
                         {isResenhaOpen ? (
                             <ResenhaOpenBracketView championshipId={championship.id} />
+                        ) : groups.length === 0 ? (
+                            // Sem grupos o campeonato é mata-mata puro: a projeção do
+                            // BracketView parte dos grupos e não teria o que desenhar.
+                            <TournamentBracketView
+                                championshipId={championship.id}
+                                championshipName={championship.name}
+                            />
                         ) : (() => {
                             const categories = [...new Set(groups.map((g: any) => g.category))];
 

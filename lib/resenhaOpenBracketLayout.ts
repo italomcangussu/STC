@@ -38,7 +38,7 @@ export interface BracketPhaseLayout {
 }
 
 export interface BracketLayout {
-    className: ResenhaClass;
+    className: string;
     width: number;
     height: number;
     cardWidth: number;
@@ -50,6 +50,8 @@ export interface BracketLayout {
 
 export const PHASE_LABELS: Record<string, string> = {
     preliminar: 'Preliminar',
+    qualify: 'Qualificatórias',
+    '16avos': '16 avos',
     oitavas: 'Oitavas',
     quartas: 'Quartas',
     semifinal: 'Semifinal',
@@ -60,6 +62,37 @@ export const PHASES_BY_CLASS: Record<ResenhaClass, string[]> = {
     '4ª Classe': ['preliminar', 'oitavas', 'quartas', 'semifinal', 'final'],
     '5ª Classe': ['oitavas', 'quartas', 'semifinal', 'final'],
 };
+
+/**
+ * Ordem das colunas quando o quadro não é do Resenha, cujas classes têm
+ * sequência fixa. Sai da numeração dos jogos, que é atribuída fase a fase na
+ * ordem em que elas acontecem — assim vale para qualquer vocabulário de fase,
+ * inclusive os do Criador ('qualify', '16avos'), sem lista para manter.
+ */
+export function derivePhaseOrder(matches: BracketMatchWithPhase[]): string[] {
+    const primeiroJogoDaFase = new Map<string, number>();
+
+    for (const match of matches) {
+        if (!match.round_phase) continue;
+        const atual = primeiroJogoDaFase.get(match.round_phase);
+        if (atual == null || match.match_number < atual) {
+            primeiroJogoDaFase.set(match.round_phase, match.match_number);
+        }
+    }
+
+    return [...primeiroJogoDaFase.entries()]
+        .sort((a, b) => a[1] - b[1])
+        .map(([phase]) => phase);
+}
+
+const isResenhaClass = (className: string): className is ResenhaClass =>
+    className in PHASES_BY_CLASS;
+
+/** Sequência de fases da classe: fixa no Resenha, derivada dos dados no resto. */
+export function phaseOrderFor(matches: BracketMatchWithPhase[], className: string): string[] {
+    if (isResenhaClass(className)) return PHASES_BY_CLASS[className];
+    return derivePhaseOrder(matches);
+}
 
 const CARD_WIDTH = 280;
 const CARD_HEIGHT = 84;
@@ -85,7 +118,7 @@ export function getMatchWinnerSide(match: BracketMatchWithPhase): WinnerSide {
 
 export function getClassMatches(
     bracket: BracketMatchWithPhase[],
-    className: ResenhaClass,
+    className: string,
 ): BracketMatchWithPhase[] {
     return bracket
         .filter(match => match.bracket_class === className)
@@ -94,11 +127,11 @@ export function getClassMatches(
 
 export function getCurrentPhaseForClass(
     matches: BracketMatchWithPhase[],
-    className: ResenhaClass,
+    className: string,
 ): string {
-    const phaseOrder = PHASES_BY_CLASS[className];
     const classMatches = getClassMatches(matches, className);
-    if (classMatches.length === 0) return phaseOrder[0];
+    const phaseOrder = phaseOrderFor(classMatches, className);
+    if (classMatches.length === 0 || phaseOrder.length === 0) return phaseOrder[0] ?? '';
 
     const hasPlayableParticipants = (match: BracketMatchWithPhase) =>
         Boolean(match.registration_a_id || match.player_a_source_match_number) &&
@@ -121,9 +154,9 @@ export function getCurrentPhaseForClass(
 
 export function buildResenhaBracketLayout(
     matches: BracketMatchWithPhase[],
-    className: ResenhaClass,
+    className: string,
 ): BracketLayout {
-    const phaseOrder = PHASES_BY_CLASS[className];
+    const phaseOrder = phaseOrderFor(matches, className);
     const phases: BracketPhaseLayout[] = [];
     const matchesByNumber = new Map<number, LayoutMatch>();
 

@@ -9,7 +9,7 @@ import {
     type LayoutConnector,
     type LayoutMatch,
 } from '../lib/resenhaOpenBracketLayout';
-import type { BracketMatchWithPhase, ResenhaClass } from '../lib/resenhaOpenService';
+import type { BracketMatchWithPhase } from '../lib/resenhaOpenService';
 import { getOfficialMatchTime } from '../lib/resenhaOpenOfficialBracket';
 
 function formatMatchTime(raw: string): string {
@@ -23,20 +23,32 @@ interface Props {
     bracket: BracketMatchWithPhase[];
     championshipName: string;
     onMatchSelect?: (match: BracketMatchWithPhase) => void;
+    /**
+     * Horários oficiais do Resenha Open, exibidos quando o jogo ainda não tem
+     * agendamento. O mapa é indexado por classe e número do jogo — nomes que
+     * outros campeonatos também usam — então só o Resenha pode ativá-lo, sob
+     * pena de mostrar horário alheio.
+     */
+    showOfficialTimes?: boolean;
 }
 
 const MIN_ZOOM = 0.65;
 const MAX_ZOOM = 1.2;
 const ZOOM_STEP = 0.1;
 
-export const ResenhaOpenTournamentBoard: React.FC<Props> = ({ bracket, championshipName, onMatchSelect }) => {
-    const availableClasses = useMemo(
-        () => (['4ª Classe', '5ª Classe'] as ResenhaClass[]).filter(
-            className => bracket.some(match => match.bracket_class === className),
-        ),
-        [bracket],
-    );
-    const [selectedClass, setSelectedClass] = useState<ResenhaClass>(availableClasses[0] ?? '4ª Classe');
+export const ResenhaOpenTournamentBoard: React.FC<Props> = ({ bracket, championshipName, onMatchSelect, showOfficialTimes = false }) => {
+    // As classes saem do próprio quadro: as duas do Resenha primeiro, para
+    // preservar a ordem de sempre, e depois as demais, que só existem em
+    // campeonatos criados pelo Criador.
+    const availableClasses = useMemo(() => {
+        const noQuadro = [...new Set(
+            bracket.map(match => match.bracket_class).filter((c): c is string => !!c)
+        )];
+        const conhecidas = (['4ª Classe', '5ª Classe'] as string[]).filter(c => noQuadro.includes(c));
+        return [...conhecidas, ...noQuadro.filter(c => !conhecidas.includes(c)).sort()];
+    }, [bracket]);
+
+    const [selectedClass, setSelectedClass] = useState<string>(availableClasses[0] ?? '4ª Classe');
     const [zoom, setZoom] = useState(0.85);
     const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
     const viewportRef = useRef<HTMLDivElement>(null);
@@ -75,7 +87,7 @@ export const ResenhaOpenTournamentBoard: React.FC<Props> = ({ bracket, champions
         requestAnimationFrame(() => centerPhase(currentPhase, 'auto'));
     }, [currentPhase, layout, zoom]);
 
-    const handleClassChange = (className: ResenhaClass) => {
+    const handleClassChange = (className: string) => {
         setSelectedClass(className);
         setSelectedMatchId(null);
         requestAnimationFrame(() => {
@@ -168,6 +180,7 @@ export const ResenhaOpenTournamentBoard: React.FC<Props> = ({ bracket, champions
                                         matchRefs.current[layoutMatch.match.id] = node;
                                     }}
                                     onSelect={() => handleSelectMatch(layoutMatch.match.id)}
+                                    showOfficialTimes={showOfficialTimes}
                                 />
                             ))}
                         </div>
@@ -183,9 +196,9 @@ export const ResenhaOpenTournamentBoard: React.FC<Props> = ({ bracket, champions
 };
 
 const BracketClassSwitch: React.FC<{
-    availableClasses: ResenhaClass[];
-    selectedClass: ResenhaClass;
-    onChange: (className: ResenhaClass) => void;
+    availableClasses: string[];
+    selectedClass: string;
+    onChange: (className: string) => void;
 }> = ({ availableClasses, selectedClass, onChange }) => (
     <div className="inline-flex rounded-full border border-white/10 bg-[#0d2338] p-1 shadow-inner" aria-label="Selecionar classe do chaveamento">
         {availableClasses.map(className => (
@@ -269,7 +282,8 @@ const BracketMatchCard: React.FC<{
     selected: boolean;
     onSelect: () => void;
     refCallback: (node: HTMLButtonElement | null) => void;
-}> = ({ layoutMatch, selected, onSelect, refCallback }) => {
+    showOfficialTimes: boolean;
+}> = ({ layoutMatch, selected, onSelect, refCallback, showOfficialTimes }) => {
     const { match, x, y } = layoutMatch;
     const winnerSide = getMatchWinnerSide(match);
     const scoreSlots = normalizeScoreSlots(match.score_a, match.score_b);
@@ -277,7 +291,9 @@ const BracketMatchCard: React.FC<{
     const pendingB = !match.registration_b_id;
     const accessibleName = `Jogo ${match.match_number}, ${match.player_a_label} contra ${match.player_b_label}`;
 
-    const officialTime = getOfficialMatchTime(match.bracket_class ?? '', match.match_number);
+    const officialTime = showOfficialTimes
+        ? getOfficialMatchTime(match.bracket_class ?? '', match.match_number)
+        : null;
     const realTime = match.scheduled_time ?? null;
     const isScheduled = Boolean(realTime && realTime !== (officialTime ? `${officialTime}:00` : null));
     const displayTime = realTime ? formatMatchTime(realTime) : (officialTime ? formatMatchTime(officialTime) : null);

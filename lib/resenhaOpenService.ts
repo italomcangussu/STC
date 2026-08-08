@@ -290,8 +290,15 @@ export async function saveBracket(
 // ── 6. Fetch bracket ───────────────────────────────────────────────────────────
 
 export async function fetchBracket(
-    championshipId: string
+    championshipId: string,
+    /**
+     * Sem partidas gravadas, devolve o quadro oficial impresso do Resenha Open.
+     * Só faz sentido para ele — em qualquer outro campeonato o certo é o quadro
+     * vazio, não a chave de outra competição.
+     */
+    options: { officialFallback?: boolean } = {}
 ): Promise<BracketMatchWithPhase[]> {
+    const { officialFallback = true } = options;
     const [matchRes, regRes] = await Promise.all([
         supabase
             .from('matches')
@@ -311,7 +318,7 @@ export async function fetchBracket(
     const regs: any[] = regRes.data ?? [];
 
     if (dbMatches.length === 0) {
-        return getOfficialResenhaOpenBracket();
+        return officialFallback ? getOfficialResenhaOpenBracket() : [];
     }
 
     // registrationId → display name
