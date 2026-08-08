@@ -10,7 +10,6 @@
  */
 
 import { toast } from 'sonner';
-import type { ReactElement } from 'react';
 import { errorMessage, logger } from './logger';
 import { humanizeError } from './humanErrors';
 
@@ -117,51 +116,6 @@ class NotificationService {
     });
   }
 
-  /**
-   * Toast de loading com promise
-   */
-  async promise<T>(
-    promise: Promise<T>,
-    messages: {
-      loading: string;
-      success: string | ((data: T) => string);
-      error: string | ((error: any) => string);
-    },
-    logEvent: string,
-    logContext?: NotificationContext
-  ): Promise<T> {
-    logger.info(`${logEvent}_started`, logContext);
-
-    toast.promise(promise, {
-      loading: messages.loading,
-      success: (data) => {
-        logger.info(`${logEvent}_success`, { ...logContext, data });
-        return typeof messages.success === 'function' ? messages.success(data) : messages.success;
-      },
-      error: (error) => {
-        logger.error(`${logEvent}_failed`, { ...logContext, error: error.message || String(error) });
-        return typeof messages.error === 'function' ? messages.error(error) : messages.error;
-      },
-    });
-
-    return promise;
-  }
-
-  /**
-   * Toast customizado
-   */
-  custom(component: (id: string | number) => ReactElement, options?: { duration?: number }): void {
-    toast.custom(component, {
-      duration: options?.duration || 4000,
-    });
-  }
-
-  /**
-   * Fechar todos os toasts
-   */
-  dismiss(id?: string | number): void {
-    toast.dismiss(id);
-  }
 }
 
 // Singleton instance

@@ -42,6 +42,69 @@ export function buildRoundRobinPairings(
     return pares;
 }
 
+/**
+ * Distribui os confrontos de um grupo entre rodadas — quem joga contra quem,
+ * **e em qual rodada**.
+ *
+ * `buildRoundRobinPairings` responde só a primeira metade da pergunta. Esta
+ * responde as duas, que é o que a geração de confrontos precisa.
+ *
+ * Usa o método do círculo: o primeiro atleta fica parado e os outros giram uma
+ * casa por rodada, de modo que cada dupla se encontra exatamente uma vez. A
+ * indexação foi escolhida para reproduzir a escalação que o clube já usava:
+ *
+ *   Rodada 1: 1º vs 2º · 3º vs 4º
+ *   Rodada 2: 1º vs 3º · 2º vs 4º
+ *   Rodada 3: 1º vs 4º · 2º vs 3º
+ *
+ * @param ids Inscrições **já em ordem de sorteio** — o 1º é o cabeça.
+ * @returns Uma lista por rodada; cada par sai em ordem de sorteio (menor primeiro).
+ */
+export function buildRoundRobinSchedule(ids: string[]): [string, string][][] {
+    const n = ids.length;
+    if (n < 2) return [];
+
+    // Exceção do clube: com 3 atletas são duas rodadas, e o 3º joga duas vezes
+    // na segunda. Não é o método do círculo — é uma compressão deliberada, para
+    // não estender o grupo por três rodadas com um atleta de folga em cada.
+    if (n === 3) {
+        return [
+            [[ids[0], ids[1]]],
+            [[ids[0], ids[2]], [ids[1], ids[2]]],
+        ];
+    }
+
+    // Grupo ímpar ganha uma folga: quem cair contra ela descansa na rodada.
+    const jogadores: (string | null)[] = n % 2 === 0 ? [...ids] : [...ids, null];
+    const total = jogadores.length;
+    const giradores = total - 1;
+    const posicao = new Map(ids.map((id, i) => [id, i]));
+
+    /** Cada par sai na ordem do sorteio, como o clube escreve a tabela. */
+    const emOrdem = (a: string, b: string): [string, string] =>
+        posicao.get(a)! <= posicao.get(b)! ? [a, b] : [b, a];
+
+    const rodadas: [string, string][][] = [];
+
+    for (let r = 0; r < giradores; r++) {
+        const rodada: [string, string][] = [];
+
+        const parado = jogadores[0];
+        const adversario = jogadores[1 + r];
+        if (parado && adversario) rodada.push(emOrdem(parado, adversario));
+
+        for (let i = 1; i < total / 2; i++) {
+            const a = jogadores[1 + ((r + i) % giradores)];
+            const b = jogadores[1 + ((r - i + giradores) % giradores)];
+            if (a && b) rodada.push(emOrdem(a, b));
+        }
+
+        rodadas.push(rodada);
+    }
+
+    return rodadas;
+}
+
 function shuffle<T>(items: T[], rng: () => number): T[] {
     const result = [...items];
     for (let i = result.length - 1; i > 0; i--) {

@@ -26,6 +26,7 @@ import { calculateGroupStandings } from '../lib/championshipUtils';
 import { getGroupStageMatches, getRoundMatchesForDisplay } from '../lib/groupKnockout';
 import { MatchScheduleModal } from './MatchScheduleModal';
 import { useConfirm } from '../hooks/useConfirm';
+import { canScheduleMatch } from '../lib/championship/scheduling';
 import { loadExportTools } from '../lib/exportTools';
 import { StandardModal } from './StandardModal';
 
@@ -534,40 +535,6 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
 
     // SCHEDULING LOGIC
     // Check if a user can schedule a specific match
-    const canScheduleMatch = (match: Match, userId: string) => {
-        if (!userId) return false;
-        
-        // 1. Must be a participant
-        if (match.playerAId !== userId && match.playerBId !== userId) return false;
-
-        // 2. Find current round number
-        const currentRound = rounds.find(r => r.id === match.round_id);
-        if (!currentRound) return false; // Should not happen
-        
-        const roundNumber = currentRound.round_number;
-
-        // 3. If Round 1, always allow
-        if (roundNumber === 1) return true;
-
-        // 4. If Round > 1, check previous round match
-        const prevRound = rounds.find(r => r.round_number === roundNumber - 1);
-        if (!prevRound) return true; // Fallback if no prev round found? Or false? Assuming true to avoid blocking if data issue.
-
-        // Find user's match in previous round
-        const prevMatch = matches.find(m => 
-            m.round_id === prevRound.id && 
-            (m.playerAId === userId || m.playerBId === userId)
-        );
-
-        // If no previous match found (e.g. bye, or late entry), allow? 
-        // Let's assume strict: need to have finished previous match if one exists.
-        // If one doesn't exist, maybe they are new? Let's say yes.
-        if (!prevMatch) return true;
-
-        // 5. Allow ONLY if previous match is finished
-        return prevMatch.status === 'finished';
-    };
-
     // RANKING CALCULATION (For Pontos Corridos)
     const handleSchedule = async (date: string, time: string, courtId: string) => {
         if (!schedulingMatch) return;
@@ -1370,7 +1337,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                                                 onSchedule={() => setSchedulingMatch(match)}
                                                 isAdmin={currentUser.role === 'admin'}
                                                 currentUserId={currentUser.id}
-                                                canSchedule={canScheduleMatch(match, currentUser.id)}
+                                                canSchedule={canScheduleMatch({ match, userId: currentUser.id, rounds, matches })}
                                                 scheduleMode={selectedChampIsResenhaOpen ? 'suggested' : 'schedule'}
                                                 canManageSchedule={
                                                     selectedChampIsResenhaOpen

@@ -1,5 +1,6 @@
 import { Match, InternalStanding, ChampionshipRound, ChampionshipRegistration } from '../types';
 import { calculateGroupStandingsWithRules, ChampionshipScoringConfig } from './championshipStandings';
+import { buildRoundRobinSchedule } from './championship/roundRobin';
 
 // Helper to get round dates (mock or computed)
 export const getRoundDates = (roundNumber: number) => {
@@ -23,68 +24,33 @@ export const getRoundDates = (roundNumber: number) => {
 };
 
 /**
- * Generate Round Robin Matches based on group members
- * members must have { id, drawOrder }
- * drawOrder: 0 for seed, 1, 2, 3...
+ * Gera os confrontos de um grupo, distribuídos entre as rodadas informadas.
+ *
+ * A escalação vem de `buildRoundRobinSchedule` — antes, a tabela estava escrita
+ * à mão aqui, e só para grupos de 3 e 4: qualquer outro tamanho devolvia lista
+ * vazia **sem avisar ninguém**. Um grupo de 5 saía do sorteio sem um único
+ * confronto, e a tela não tinha como saber a diferença entre "não gerou" e
+ * "não havia o que gerar".
+ *
+ * Só entram as rodadas que o chamador passou: a tela gera uma de cada vez.
+ *
+ * @param members Precisam ter `drawOrder`; a ordem de chegada é ignorada.
  */
 export function generateRoundRobinMatches(
     members: { id: string; drawOrder: number; registrationId: string }[],
     groupId: string,
     rounds: ChampionshipRound[]
 ): Partial<Match>[] {
-    const sortedMembers = [...members].sort((a, b) => a.drawOrder - b.drawOrder);
-    const n = sortedMembers.length;
-    const matches: Partial<Match>[] = [];
+    const ordenados = [...members].sort((a, b) => a.drawOrder - b.drawOrder);
+    const porInscricao = new Map(ordenados.map(m => [m.registrationId, m]));
+    const agenda = buildRoundRobinSchedule(ordenados.map(m => m.registrationId));
 
-    // Map drawOrder to member (0=1st, 1=2nd, 2=3rd, 3=4th in user terms)
-    // User rules:
-    // Rodada 1: 1º vs 2º, 3º vs 4º
-    // Rodada 2: 1º vs 3º, 2º vs 4º
-    // Rodada 3: 1º vs 4º, 2º vs 3º
-
-    // Array indices: 0 (1º/Seed), 1 (2º), 2 (3º), 3 (4º)
-
-    if (n === 4) {
-        // Round 1
-        const r1 = rounds.find(r => r.round_number === 1);
-        if (r1) {
-            matches.push(createMatch(sortedMembers[0], sortedMembers[1], groupId, r1.id)); // 1 vs 2
-            matches.push(createMatch(sortedMembers[2], sortedMembers[3], groupId, r1.id)); // 3 vs 4
-        }
-
-        // Round 2
-        const r2 = rounds.find(r => r.round_number === 2);
-        if (r2) {
-            matches.push(createMatch(sortedMembers[0], sortedMembers[2], groupId, r2.id)); // 1 vs 3
-            matches.push(createMatch(sortedMembers[1], sortedMembers[3], groupId, r2.id)); // 2 vs 4
-        }
-
-        // Round 3
-        const r3 = rounds.find(r => r.round_number === 3);
-        if (r3) {
-            matches.push(createMatch(sortedMembers[0], sortedMembers[3], groupId, r3.id)); // 1 vs 4
-            matches.push(createMatch(sortedMembers[1], sortedMembers[2], groupId, r3.id)); // 2 vs 3
-        }
-    } else if (n === 3) {
-        // 3 Players: 0, 1, 2
-        // "Se algum grupo tiver apenas 3 atletas, serão apenas duas rodadas."
-        // Strategy:
-        // R1: 1 vs 2 (0 vs 1)
-        // R2: 1 vs 3 (0 vs 2) AND 2 vs 3 (1 vs 2)
-
-        const r1 = rounds.find(r => r.round_number === 1);
-        if (r1) {
-            matches.push(createMatch(sortedMembers[0], sortedMembers[1], groupId, r1.id)); // 1 vs 2
-        }
-
-        const r2 = rounds.find(r => r.round_number === 2);
-        if (r2) {
-            matches.push(createMatch(sortedMembers[0], sortedMembers[2], groupId, r2.id)); // 1 vs 3
-            matches.push(createMatch(sortedMembers[1], sortedMembers[2], groupId, r2.id)); // 2 vs 3
-        }
-    }
-
-    return matches;
+    return agenda.flatMap((pares, indice) => {
+        const rodada = rounds.find(r => r.round_number === indice + 1);
+        if (!rodada) return [];
+        return pares.map(([a, b]) =>
+            createMatch(porInscricao.get(a)!, porInscricao.get(b)!, groupId, rodada.id));
+    });
 }
 
 function createMatch(
