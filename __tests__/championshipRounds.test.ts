@@ -1,5 +1,9 @@
-import { describe, expect, it } from 'vitest';
-import { ROUND_PHASES, deriveRounds } from '../lib/championship/rounds';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+const { supabaseMock } = vi.hoisted(() => ({ supabaseMock: { from: vi.fn() } }));
+vi.mock('../lib/supabase', () => ({ supabase: supabaseMock }));
+
+import { ROUND_PHASES, activateFirstRound, activateRoundByPhase, deriveRounds } from '../lib/championship/rounds';
 import type { GroupKnockoutConfig, KnockoutConfig, RoundRobinConfig } from '../lib/championship/formatConfig';
 
 const mataMata = (over: Partial<KnockoutConfig> = {}): KnockoutConfig => ({
@@ -108,6 +112,144 @@ describe('championship/rounds', () => {
     describe('deriveRounds — validação', () => {
         it('recusa configuração incompatível com o número de inscritos', () => {
             expect(() => deriveRounds(mataMata(), 13)).toThrow(/13/);
+        });
+    });
+});
+
+/**
+ * Mock encadeável do supabase-js: cada `from()` devolve um builder que registra
+ * verbo, payload e filtros, e resolve o próximo resultado da fila. Os builders
+ * são thenable porque os updates são aguardados direto no fim da cadeia, sem
+ * `.limit()`.
+ */
+interface Registro {
+    tabela: string;
+    verbo: 'select' | 'update';
+    payload?: Record<string, unknown>;
+    filtros: [string, unknown][];
+    ordem?: string;
+    limite?: number;
+}
+
+const prepararSupabase = (resultados: { data?: unknown; error?: { message: string } | null }[]) => {
+    const registros: Registro[] = [];
+    let proximo = 0;
+
+    supabaseMock.from.mockImplementation((tabela: string) => {
+        const registro: Registro = { tabela, verbo: 'select', filtros: [] };
+        registros.push(registro);
+        const resultado = resultados[proximo++] ?? { data: null, error: null };
+
+        const cadeia: any = {
+            select: () => cadeia,
+            update: (payload: Record<string, unknown>) => {
+                registro.verbo = 'update';
+                registro.payload = payload;
+                return cadeia;
+            },
+            eq: (coluna: string, valor: unknown) => {
+                registro.filtros.push([coluna, valor]);
+                return cadeia;
+            },
+            order: (coluna: string) => {
+                registro.ordem = coluna;
+                return cadeia;
+            },
+            limit: (n: number) => {
+                registro.limite = n;
+                return Promise.resolve(resultado);
+            },
+            then: (ok: any, falha: any) => Promise.resolve(resultado).then(ok, falha),
+        };
+
+        return cadeia;
+    });
+
+    return registros;
+};
+
+describe('championship/rounds — publicação', () => {
+    beforeEach(() => vi.clearAllMocks());
+
+    describe('activateFirstRound', () => {
+        it('publica a rodada de menor round_number e tira o campeonato do rascunho', async () => {
+            const registros = prepararSupabase([
+                { data: [{ id: 'rodada-1' }], error: null },
+                { error: null },
+                { error: null },
+            ]);
+
+            await activateFirstRound('camp-1', '4ª Classe');
+
+            expect(registros).toHaveLength(3);
+
+            const busca = registros[0];
+            expect(busca.tabela).toBe('championship_rounds');
+            expect(busca.filtros).toEqual([['championship_id', 'camp-1'], ['class', '4ª Classe']]);
+            expect(busca.ordem).toBe('round_number');
+            expect(busca.limite).toBe(1);
+
+            const rodada = registros[1];
+            expect(rodada.tabela).toBe('championship_rounds');
+            expect(rodada.verbo).toBe('update');
+            expect(rodada.payload).toEqual({ status: 'active' });
+            // A condição de status é o que torna a chamada repetida inofensiva:
+            // uma rodada já finalizada não volta a ficar ativa.
+            expect(rodada.filtros).toEqual([['id', 'rodada-1'], ['status', 'pending']]);
+
+            const campeonato = registros[2];
+            expect(campeonato.tabela).toBe('championships');
+            expect(campeonato.verbo).toBe('update');
+            expect(campeonato.payload).toEqual({ status: 'ongoing' });
+            expect(campeonato.filtros).toEqual([['id', 'camp-1'], ['status', 'draft']]);
+        });
+
+        it('não escreve nada quando a classe ainda não tem rodadas', async () => {
+            const registros = prepararSupabase([{ data: [], error: null }]);
+
+            await activateFirstRound('camp-1', '4ª Classe');
+
+            expect(registros).toHaveLength(1);
+            expect(registros[0].verbo).toBe('select');
+        });
+
+        it('propaga erro da publicação sem seguir para o campeonato', async () => {
+            const registros = prepararSupabase([
+                { data: [{ id: 'rodada-1' }], error: null },
+                { error: { message: 'permissão negada' } },
+            ]);
+
+            await expect(activateFirstRound('camp-1', '4ª Classe')).rejects.toThrow(/permissão negada/);
+            expect(registros).toHaveLength(2);
+        });
+    });
+
+    describe('activateRoundByPhase', () => {
+        it('publica a rodada da fase pedida', async () => {
+            const registros = prepararSupabase([
+                { data: [{ id: 'rodada-semi' }], error: null },
+                { error: null },
+                { error: null },
+            ]);
+
+            await activateRoundByPhase('camp-1', '4ª Classe', 'semifinal');
+
+            expect(registros[0].filtros).toEqual([
+                ['championship_id', 'camp-1'],
+                ['class', '4ª Classe'],
+                ['phase', 'semifinal'],
+            ]);
+            expect(registros[1].payload).toEqual({ status: 'active' });
+            expect(registros[1].filtros).toEqual([['id', 'rodada-semi'], ['status', 'pending']]);
+            expect(registros[2].tabela).toBe('championships');
+        });
+
+        it('não escreve nada quando a fase não existe na classe', async () => {
+            const registros = prepararSupabase([{ data: [], error: null }]);
+
+            await activateRoundByPhase('camp-1', '4ª Classe', 'quartas');
+
+            expect(registros).toHaveLength(1);
         });
     });
 });
