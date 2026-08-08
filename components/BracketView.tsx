@@ -1,17 +1,65 @@
 import React from 'react';
 import { Trophy, Medal, Users } from 'lucide-react';
-import { ChampionshipRegistration, Match } from '../types';
-import { buildGroupKnockoutBracketData, QualifiedKnockoutPlayer } from '../lib/groupKnockout';
+import { ChampionshipRegistration, ChampionshipRound, Match } from '../types';
+import { buildGroupKnockoutBracketData, getRegistrationName, QualifiedKnockoutPlayer } from '../lib/groupKnockout';
 
 interface BracketViewProps {
     groups: any[];
     registrations: ChampionshipRegistration[];
     matches: Match[];
     category: string;
+    /**
+     * Rodadas do campeonato. Quando a classe tem rodadas eliminatórias com
+     * confrontos gravados, a chave sai delas — é o que permite começar em
+     * oitavas ou quartas. Sem elas, cai na projeção a partir dos grupos, que
+     * modela só duas semifinais e a final.
+     */
+    rounds?: ChampionshipRound[];
 }
 
-export const BracketView: React.FC<BracketViewProps> = ({ groups, registrations, matches, category }) => {
+/** Fases de todos-contra-todos: alimentam a classificação, não a chave. */
+const FASES_DE_LIGA = new Set(['grupos', 'grupos-volta', 'classificatoria', 'classificatoria-volta']);
+
+export const BracketView: React.FC<BracketViewProps> = ({ groups, registrations, matches, category, rounds }) => {
     const bracket = buildGroupKnockoutBracketData(groups, registrations, matches, category);
+
+    const rodadasEliminatorias = (rounds ?? [])
+        .filter(round => !FASES_DE_LIGA.has(round.phase))
+        .filter(round => !round.class || round.class === category)
+        .map(round => ({
+            round,
+            partidas: matches
+                .filter(m => m.round_id === round.id)
+                .sort((a, b) => (a.match_number ?? 0) - (b.match_number ?? 0)),
+        }))
+        .filter(item => item.partidas.length > 0);
+
+    const nomeDaInscricao = (registrationId?: string | null) => {
+        if (!registrationId) return null;
+        return getRegistrationName(registrations.find(r => r.id === registrationId));
+    };
+
+    const renderVaga = (registrationId: string | null | undefined, rotulo: string) => {
+        const nome = nomeDaInscricao(registrationId);
+
+        if (!nome) {
+            return (
+                <div className="flex-1 p-4 bg-stone-100 rounded-xl border-2 border-dashed border-stone-300 flex items-center justify-center">
+                    <div className="text-center">
+                        <Users className="w-8 h-8 mx-auto text-stone-400 mb-2" />
+                        <p className="text-xs font-bold text-stone-500 uppercase tracking-wider">{rotulo}</p>
+                        <p className="text-[10px] text-stone-400 mt-1">Aguardando definição</p>
+                    </div>
+                </div>
+            );
+        }
+
+        return (
+            <div className="flex-1 p-4 rounded-xl border-2 bg-green-50 border-green-500 transition-all">
+                <p className="font-black text-stone-800 text-sm">{nome}</p>
+            </div>
+        );
+    };
 
     const renderPlayer = (player: QualifiedKnockoutPlayer | undefined, label: string) => {
         if (!player || !player.isMathematical) {
@@ -52,6 +100,51 @@ export const BracketView: React.FC<BracketViewProps> = ({ groups, registrations,
         if (match.status === 'pending') return 'Pendente';
         return 'Aguardando';
     };
+
+    if (rodadasEliminatorias.length > 0) {
+        return (
+            <div className="space-y-6">
+                {rodadasEliminatorias.map(({ round, partidas }) => {
+                    const ehFinal = round.phase === 'final';
+
+                    return (
+                        <div key={round.id}>
+                            <h3 className="text-xs font-black text-stone-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                {ehFinal ? <Trophy className="w-4 h-4" /> : <Medal className="w-4 h-4" />}
+                                {round.name}
+                            </h3>
+                            <div className="space-y-4">
+                                {partidas.map((partida, indice) => (
+                                    <div
+                                        key={partida.id}
+                                        className={ehFinal
+                                            ? 'bg-linear-to-br from-yellow-50 to-orange-50 rounded-2xl p-6 border-2 border-yellow-400 shadow-lg'
+                                            : 'bg-white rounded-2xl p-4 border border-stone-200 shadow-sm'}
+                                    >
+                                        <p className={`text-[10px] font-black uppercase tracking-widest mb-3 ${ehFinal ? 'text-center text-yellow-700' : 'text-saibro-600'}`}>
+                                            {ehFinal ? 'Grande Final' : `Jogo ${partida.match_number ?? indice + 1}`}
+                                        </p>
+                                        <div className="flex gap-3 items-center">
+                                            {renderVaga(partida.registration_a_id, 'Vaga A')}
+                                            <div className="text-center px-2">
+                                                <div className={`rounded-full flex items-center justify-center ${ehFinal ? 'w-12 h-12 bg-linear-to-br from-yellow-400 to-orange-500 shadow-lg' : 'w-10 h-10 bg-saibro-100'}`}>
+                                                    <span className={`font-black ${ehFinal ? 'text-sm text-white' : 'text-xs text-saibro-600'}`}>VS</span>
+                                                </div>
+                                            </div>
+                                            {renderVaga(partida.registration_b_id, 'Vaga B')}
+                                        </div>
+                                        <p className={`mt-3 text-[10px] font-bold uppercase tracking-wider ${ehFinal ? 'text-center text-yellow-800' : 'text-stone-500'}`}>
+                                            {renderMatchStatus(partida)}
+                                        </p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-8">

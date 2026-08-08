@@ -1,9 +1,19 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+const { saveGenericBracketMock } = vi.hoisted(() => ({ saveGenericBracketMock: vi.fn() }));
+vi.mock('../lib/supabase', () => ({ supabase: { from: vi.fn() } }));
+vi.mock('../lib/championship/bracket', async () => ({
+    ...(await vi.importActual<typeof import('../lib/championship/bracket')>('../lib/championship/bracket')),
+    saveGenericBracket: saveGenericBracketMock,
+}));
+
 import {
     countSameGroupPairs,
     pairQualifiersForKnockout,
+    saveKnockoutFromGroups,
     toGroupStandings,
 } from '../lib/championship/knockoutFromGroups';
+import type { GroupKnockoutConfig } from '../lib/championship/formatConfig';
 import type { GroupStanding } from '../lib/championship/groupStage';
 
 const q = (id: string, group: string, position: number, points = 10 - position): GroupStanding => ({
@@ -111,5 +121,58 @@ describe('championship/knockoutFromGroups', () => {
             expect(pairQualifiersForKnockout([q('a1', 'A', 1)])).toEqual([]);
             expect(pairQualifiersForKnockout([])).toEqual([]);
         });
+    });
+});
+
+/**
+ * A fase devolvida é o que o Criador usa para publicar a rodada certa: só a
+ * primeira eliminatória tem confrontos definidos ao sair dos grupos.
+ */
+describe('saveKnockoutFromGroups — fase publicável', () => {
+    beforeEach(() => vi.clearAllMocks());
+
+    const config =(over: Partial<GroupKnockoutConfig> = {}): GroupKnockoutConfig => ({
+        format: 'grupo-mata-mata', homeAndAway: false, groupCount: 4, membersPerGroup: 4,
+        qualifiersPerGroup: 2, bestThirdPlaces: 0, seeded: true, ...over,
+    });
+
+    const salvar = (over: Partial<GroupKnockoutConfig>, participantes: number, pares: [string, string][]) =>
+        saveKnockoutFromGroups({
+            championshipId: 'camp-1',
+            config: config(over),
+            participantCount: participantes,
+            pairs: pares,
+            phaseToRoundId: new Map(),
+            registrationUserMap: new Map(),
+        });
+
+    it('devolve a primeira fase eliminatória, não a final', async () => {
+        saveGenericBracketMock.mockResolvedValue(undefined);
+
+        const fase = await salvar({}, 16, [['a', 'b'], ['c', 'd'], ['e', 'f'], ['g', 'h']]);
+
+        expect(fase).toBe('quartas');
+        expect(saveGenericBracketMock).toHaveBeenCalledOnce();
+    });
+
+    it('devolve a final quando só dois classificam', async () => {
+        saveGenericBracketMock.mockResolvedValue(undefined);
+
+        const fase = await salvar(
+            { groupCount: 2, membersPerGroup: 4, qualifiersPerGroup: 1 },
+            8,
+            [['a', 'b']],
+        );
+
+        expect(fase).toBe('final');
+    });
+
+    it('não devolve fase alguma quando a chave não comporta os pares', async () => {
+        saveGenericBracketMock.mockResolvedValue(undefined);
+
+        await expect(
+            salvar({}, 16, [['a', 'b'], ['c', 'd'], ['e', 'f'], ['g', 'h'], ['i', 'j']]),
+        ).rejects.toThrow(/comporta/);
+        expect(saveGenericBracketMock).not.toHaveBeenCalled();
     });
 });

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { Championship, Match, ChampionshipRegistration } from '../types';
+import { Championship, ChampionshipRound, Match, ChampionshipRegistration } from '../types';
 import { Trophy, Loader2, ListOrdered } from 'lucide-react';
 import { GroupStandingsCard } from './GroupStandingsCard';
 import { BracketView } from './BracketView';
@@ -21,6 +21,7 @@ export const PublicChampionshipPage: React.FC<Props> = ({ slug, championshipId }
     const [matches, setMatches] = useState<Match[]>([]);
     const [registrations, setRegistrations] = useState<ChampionshipRegistration[]>([]);
     const [groups, setGroups] = useState<any[]>([]);
+    const [rounds, setRounds] = useState<ChampionshipRound[]>([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<'standings' | 'bracket' | 'stats' | 'odds'>('standings');
 
@@ -65,6 +66,7 @@ export const PublicChampionshipPage: React.FC<Props> = ({ slug, championshipId }
             .select('*')
             .eq('championship_id', champ.id)
             .order('round_number');
+        setRounds((rnds || []) as ChampionshipRound[]);
         // 3. Fetch Groups & Members
         const { data: grps } = await supabase
             .from('championship_groups')
@@ -246,6 +248,7 @@ export const PublicChampionshipPage: React.FC<Props> = ({ slug, championshipId }
                                         registrations={registrations}
                                         matches={matches}
                                         category={selectedCategory}
+                                        rounds={rounds}
                                     />
                                 </>
                             );

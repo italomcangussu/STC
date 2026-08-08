@@ -47,7 +47,7 @@ export const getGroupStageMatches = (matches: Match[], groupId?: string) => (
     })
 );
 
-const getRegistrationName = (registration?: ChampionshipRegistration) => {
+export const getRegistrationName = (registration?: ChampionshipRegistration) => {
     if (!registration) return 'Sócio';
     return registration.participant_type === 'guest'
         ? (registration.guest_name || 'Convidado')
