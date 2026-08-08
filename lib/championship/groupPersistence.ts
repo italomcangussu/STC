@@ -58,17 +58,12 @@ export function buildLeagueMatches(params: {
     return rows;
 }
 
-/**
- * Grava os grupos e seus membros, devolvendo group_name → id.
- * Idempotente: se a classe já tem grupos, devolve os existentes sem inserir.
- */
-export async function saveGroups(params: {
-    championshipId: string;
-    classe: string;
-    groups: DrawnGroup[];
-}): Promise<Map<string, string>> {
-    const { championshipId, classe, groups } = params;
-
+/** Cria os grupos da classe, ou devolve os que já existem. */
+async function ensureGroups(
+    championshipId: string,
+    classe: string,
+    groups: DrawnGroup[]
+): Promise<Map<string, string>> {
     const { data: existing, error: existingError } = await supabase
         .from('championship_groups')
         .select('id, group_name')
@@ -91,25 +86,66 @@ export async function saveGroups(params: {
         .select('id, group_name');
 
     if (error || !data) throw new Error(`Erro ao criar grupos: ${error?.message}`);
+    return new Map<string, string>(data.map((g: any) => [g.group_name, g.id]));
+}
 
-    const ids = new Map<string, string>(data.map((g: any) => [g.group_name, g.id]));
+/** Insere só os membros que ainda não estão gravados. */
+async function ensureGroupMembers(
+    ids: Map<string, string>,
+    groups: DrawnGroup[]
+): Promise<void> {
+    const groupIds = [...ids.values()];
+    if (groupIds.length === 0) return;
 
-    const members = groups.flatMap(group => {
+    const { data: existing, error: existingError } = await supabase
+        .from('championship_group_members')
+        .select('group_id, registration_id')
+        .in('group_id', groupIds);
+
+    if (existingError) throw new Error(`Erro ao verificar membros dos grupos: ${existingError.message}`);
+
+    const jaGravado = new Set((existing ?? []).map((m: any) => `${m.group_id}|${m.registration_id}`));
+
+    const faltando = groups.flatMap(group => {
         const groupId = ids.get(group.name);
         if (!groupId) return [];
-        return group.members.map(member => ({
-            group_id: groupId,
-            registration_id: member.registrationId,
-            is_seed: member.isSeed,
-            draw_order: member.drawOrder,
-        }));
+        return group.members
+            .filter(member => !jaGravado.has(`${groupId}|${member.registrationId}`))
+            .map(member => ({
+                group_id: groupId,
+                registration_id: member.registrationId,
+                is_seed: member.isSeed,
+                draw_order: member.drawOrder,
+            }));
     });
 
-    const { error: membersError } = await supabase
-        .from('championship_group_members')
-        .insert(members);
+    if (faltando.length === 0) return;
 
-    if (membersError) throw new Error(`Erro ao gravar membros dos grupos: ${membersError.message}`);
+    const { error } = await supabase.from('championship_group_members').insert(faltando);
+    if (error) throw new Error(`Erro ao gravar membros dos grupos: ${error.message}`);
+}
+
+/**
+ * Grava os grupos e seus membros, devolvendo group_name → id.
+ *
+ * São dois inserts em tabelas diferentes, e o PostgREST não abre transação
+ * entre eles: se o segundo falha, os grupos já estão gravados e nada os desfaz.
+ *
+ * A resposta aqui não é fingir que isso não acontece — é **convergir**. Cada
+ * passo pergunta o que já existe e grava só o que falta, então repetir a ação
+ * termina o serviço de onde ele parou. A versão anterior fazia o oposto: via os
+ * grupos órfãos, concluía "já está feito" e devolvia sucesso sem nenhum membro.
+ * A classe ficava presa em grupos vazios e clicar de novo não consertava.
+ */
+export async function saveGroups(params: {
+    championshipId: string;
+    classe: string;
+    groups: DrawnGroup[];
+}): Promise<Map<string, string>> {
+    const { championshipId, classe, groups } = params;
+
+    const ids = await ensureGroups(championshipId, classe, groups);
+    await ensureGroupMembers(ids, groups);
 
     return ids;
 }

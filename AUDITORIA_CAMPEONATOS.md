@@ -645,6 +645,76 @@ prioridade da auditoria (6)** e continua na fila, agora com escopo honesto.
 
 ---
 
+## Fase 3 — em andamento
+
+### Migration aplicada ✅
+
+`20260808120000_championship_participant_sources` está no banco e registrada em
+`supabase_migrations.schema_migrations`. Backfill conferido contra as inscrições: dos 4
+campeonatos, os 3 que têm convidado inscrito ficaram com `allow_guests = true`; o que não tem,
+`false`. O cache do PostgREST foi recarregado e as colunas já respondem pelo caminho exato que o
+app usa.
+
+### Item 7 — classificação: era menos do que a auditoria dizia, e pior
+
+`calculateGroupStandings` já era única, em `championshipStandings.ts`, usada por 5 telas. O que
+sobrava em `Championships.tsx` era uma `calculateStandings()` de 55 linhas com regra de desempate
+própria, cujo único consumidor era:
+
+```tsx
+const _standings = calculateStandings();   // nunca lido
+```
+
+Rodava a cada render de um componente de 2.667 linhas, e o resultado ia para o lixo. **60 linhas
+removidas**, nada mais a unificar.
+
+### Item 6 — a escrita que deixava o campeonato pela metade
+
+`GroupDrawEditor.salvar()` faz três inserts em três tabelas, e o PostgREST não abre transação
+entre eles. Dos três pontos de falha, só um corrompia — e corrompia de forma permanente:
+
+1. `championship_groups` grava, `championship_group_members` falha → grupos sem nenhum membro.
+2. O usuário vê o erro e clica de novo.
+3. `saveGroups` via os grupos órfãos, concluía **"já está feito"** e devolvia sucesso sem gravar
+   membro nenhum.
+
+A classe ficava presa em grupos vazios, e repetir a ação não consertava — o caminho de
+recuperação escondia a corrupção em vez de desfazê-la.
+
+**A correção não é uma transação, é convergência.** Cada passo pergunta o que já existe e grava
+só o que falta, então repetir termina o serviço de onde ele parou. O insert de `matches` é uma
+única instrução (atômica no Postgres) e já tinha guarda contra duplicação, e o índice único
+`(group_id, registration_id)` que já existia no banco é a rede embaixo de tudo.
+
+Antes disso, **15 testes de caracterização** em [`championshipGroupWrites.test.ts`](__tests__/championshipGroupWrites.test.ts)
+travaram o comportamento — os dois que documentavam o defeito viraram os dois que provam a
+convergência. `groupPersistence.ts` saiu de **42,85% para 100%** de cobertura de linhas.
+
+Verifiquei no banco que não há grupo órfão nem membro duplicado hoje: nenhum reparo de dado é
+necessário.
+
+### Antes → depois
+
+| Métrica | Fase 2 | Fase 3 | |
+|---|:--:|:--:|:--:|
+| Cobertura de linhas | 56,60% | **57,81%** | ⬆ |
+| Cobertura de ramos | 39,36% | **40,29%** | ⬆ |
+| Testes | 349 | **364** | ⬆ |
+| `groupPersistence.ts` | 42,85% | **100%** | ⬆ |
+| Funções acima de CC 5 | 110 | **109** | ⬇ |
+
+### O que falta na Fase 3
+
+- **Item 14 — cobertura dos componentes-monstro.** `ChampionshipInProgress` (CC 162),
+  `ChampionshipCreator` (132) e `ChampionshipAdmin` (131) seguem em 0%. É o pré-requisito de
+  qualquer quebra desses arquivos.
+- **Item 15 — unificar os dois sistemas de grupos** (`groupKnockout.ts` e
+  `championship/knockoutFromGroups.ts`).
+- **Item 13 — 83 `any` e lint permissivo** (`@typescript-eslint/no-explicit-any` está `off`).
+- **Dark mode**, com o escopo honesto descrito na Fase 2.
+
+---
+
 ## O que verifiquei e estava errado
 
 Antes do pull, o achado nº 1 era **"a aba Chaveamento renderiza vazio para todo campeonato

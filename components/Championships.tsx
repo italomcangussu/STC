@@ -570,64 +570,6 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
     };
 
     // RANKING CALCULATION (For Pontos Corridos)
-    const calculateStandings = () => {
-        const stats: Record<string, {
-            id: string;
-            name: string;
-            pts: number;
-            v: number;
-            sets: number;
-            games: number;
-            avatar?: string;
-            groupName?: string;
-        }> = {};
-
-        selectedChamp.participantIds.forEach(pId => {
-            const u = profiles.find(user => user.id === pId);
-            let gName = 'Geral';
-            if (selectedChamp.groups) {
-                const g = selectedChamp.groups.find(grp => grp.participantIds.includes(pId));
-                if (g) gName = g.name;
-            }
-            stats[pId] = { id: pId, name: u?.name || 'TBD', pts: 0, v: 0, sets: 0, games: 0, avatar: u?.avatar, groupName: gName };
-        });
-
-        matches.filter(m => m.status === 'finished').forEach(m => {
-            const sA = m.scoreA.reduce((a, b) => a + b, 0);
-            const sB = m.scoreB.reduce((a, b) => a + b, 0);
-            const setsA = m.scoreA.filter((s, i) => s > m.scoreB[i]).length;
-            const setsB = m.scoreB.filter((s, i) => s > m.scoreA[i]).length;
-
-            if (stats[m.playerAId]) {
-                stats[m.playerAId].games += sA;
-                stats[m.playerAId].sets += setsA;
-                if (m.winnerId === m.playerAId) {
-                    stats[m.playerAId].v += 1;
-                    stats[m.playerAId].pts += (selectedChamp.ptsVictory || 0);
-                }
-                stats[m.playerAId].pts += (setsA * (selectedChamp.ptsSet || 0)) + (sA * (selectedChamp.ptsGame || 0));
-            }
-
-            if (stats[m.playerBId]) {
-                stats[m.playerBId].games += sB;
-                stats[m.playerBId].sets += setsB;
-                if (m.winnerId === m.playerBId) {
-                    stats[m.playerBId].v += 1;
-                    stats[m.playerBId].pts += (selectedChamp.ptsVictory || 0);
-                }
-                stats[m.playerBId].pts += (setsB * (selectedChamp.ptsSet || 0)) + (sB * (selectedChamp.ptsGame || 0));
-            }
-        });
-
-        return Object.values(stats).sort((a, b) => {
-            if (b.pts !== a.pts) return b.pts - a.pts;
-            // Simplified Tiebreaker: Head-to-head would go here
-            if (b.v !== a.v) return b.v - a.v; // Number of wins (often proxy for H2H in round robin if unique winners)
-            if (b.sets !== a.sets) return b.sets - a.sets;
-            return b.games - a.games;
-        });
-    };
-
     const handleSchedule = async (date: string, time: string, courtId: string) => {
         if (!schedulingMatch) return;
 
@@ -985,8 +927,6 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
         setAdminResultMatch(null);
         setSavingAdminResult(false);
     };
-
-    const _standings = calculateStandings();
 
     // Helper functions for registrations
     const getRegistrationsByClass = (className: string) => {
