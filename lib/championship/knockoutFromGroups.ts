@@ -204,7 +204,11 @@ export async function previewKnockoutFromGroups(params: {
     };
 }
 
-/** Grava as partidas do mata-mata a partir dos pares confirmados. */
+/**
+ * Grava as partidas do mata-mata a partir dos pares confirmados.
+ * Devolve a fase da primeira rodada eliminatória — a única cujos confrontos
+ * já estão definidos, e portanto a única publicável agora.
+ */
 export async function saveKnockoutFromGroups(params: {
     championshipId: string;
     config: FormatConfig;
@@ -212,7 +216,7 @@ export async function saveKnockoutFromGroups(params: {
     pairs: [string, string][];
     phaseToRoundId: Map<string, string>;
     registrationUserMap: Map<string, string | null>;
-}): Promise<void> {
+}): Promise<string> {
     const { championshipId, config, participantCount, pairs, phaseToRoundId, registrationUserMap } = params;
 
     // A chave vazia já traz as fases eliminatórias e as ligações de vencedor;
@@ -240,4 +244,6 @@ export async function saveKnockoutFromGroups(params: {
         phaseToRoundId,
         registrationUserMap,
     });
+
+    return primeiraFase[0].phase;
 }

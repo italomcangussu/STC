@@ -27,6 +27,7 @@ import { BracketEditor, type BracketAthlete } from './creator/BracketEditor';
 import { GroupDrawEditor } from './creator/GroupDrawEditor';
 import { KnockoutFromGroups } from './creator/KnockoutFromGroups';
 import { createChampionship } from '../lib/championship/creation';
+import { activateFirstRound, activateRoundByPhase } from '../lib/championship/rounds';
 import { defaultConfigFor, type ClassFormats } from '../lib/championship/formatConfig';
 import { emptySetup, type SetupValues } from '../lib/championship/setupValues';
 import { fetchClassRegistrations } from '../lib/championship/registration';
@@ -841,9 +842,10 @@ export const ChampionshipCreator: React.FC = () => {
                     restantes={setupValues.classes.filter(c => c !== classeCorrente)}
                     onBack={() => setStep('registering')}
                     onSaved={async () => {
+                        await activateFirstRound(selectedChampId, classeCorrente);
                         await loadBracket();
                         setStep('bracket');
-                        toast.success(`Confrontos da ${classeCorrente} gerados!`);
+                        toast.success(`Confrontos da ${classeCorrente} gerados e primeira fase publicada!`);
                     }}
                     onProximaClasse={() => {
                         setBracketAthletes([]);
@@ -863,9 +865,10 @@ export const ChampionshipCreator: React.FC = () => {
                     restantes={setupValues.classes.filter(c => c !== classeCorrente)}
                     onBack={() => setStep('registering')}
                     onSaved={async () => {
+                        await activateFirstRound(selectedChampId, classeCorrente);
                         await loadBracket();
                         setStep('bracket');
-                        toast.success(`Chave da ${classeCorrente} salva!`);
+                        toast.success(`Chave da ${classeCorrente} salva e primeira fase publicada!`);
                     }}
                     onProximaClasse={() => {
                         setBracketAthletes([]);
@@ -1076,9 +1079,10 @@ export const ChampionshipCreator: React.FC = () => {
                     config={classFormats[classeCorrente]}
                     athletes={bracketAthletes}
                     phaseToRoundId={phaseToRoundId}
-                    onSaved={async () => {
+                    onSaved={async (faseInicial: string) => {
+                        await activateRoundByPhase(selectedChampId, classeCorrente, faseInicial);
                         await loadBracket();
-                        toast.success('Mata-mata gerado!');
+                        toast.success('Mata-mata gerado e primeira fase publicada!');
                     }}
                 />
             )}

@@ -18,7 +18,7 @@ interface Props {
     phaseToRoundId: Map<string, string>;
     restantes: string[];
     onBack: () => void;
-    onSaved: () => void;
+    onSaved: () => void | Promise<void>;
     onProximaClasse: () => void;
 }
 
@@ -81,7 +81,7 @@ export const GroupDrawEditor: React.FC<Props> = ({
                     registrationUserMap,
                 });
             }
-            onSaved();
+            await onSaved();
         } catch (e: any) {
             setErro(e.message);
         } finally {

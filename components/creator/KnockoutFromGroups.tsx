@@ -14,7 +14,8 @@ interface Props {
     config: FormatConfig;
     athletes: BracketAthlete[];
     phaseToRoundId: Map<string, string>;
-    onSaved: () => void;
+    /** Recebe a fase da primeira rodada eliminatória gravada, para publicá-la. */
+    onSaved: (faseInicial: string) => void | Promise<void>;
 }
 
 export const KnockoutFromGroups: React.FC<Props> = ({
@@ -45,7 +46,7 @@ export const KnockoutFromGroups: React.FC<Props> = ({
         setSaving(true);
         setErro('');
         try {
-            await saveKnockoutFromGroups({
+            const faseInicial = await saveKnockoutFromGroups({
                 championshipId,
                 config,
                 participantCount: athletes.length,
@@ -53,7 +54,7 @@ export const KnockoutFromGroups: React.FC<Props> = ({
                 phaseToRoundId,
                 registrationUserMap: new Map(athletes.map(a => [a.registrationId, a.userId])),
             });
-            onSaved();
+            await onSaved(faseInicial);
         } catch (e: any) {
             setErro(e.message);
         } finally {
