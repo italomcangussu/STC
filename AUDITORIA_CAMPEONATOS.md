@@ -703,11 +703,186 @@ necessário.
 | `groupPersistence.ts` | 42,85% | **100%** | ⬆ |
 | Funções acima de CC 5 | 110 | **109** | ⬇ |
 
+### Performance — 68% do carregamento inicial era desperdício
+
+Antes de escrever a rede de teste dos componentes-monstro, medi o bundle. O achado não estava em
+nenhum componente: estava no `manualChunks` do `vite.config.ts`.
+
+**Linha de base (medida com `vite build`, o mesmo comando antes e depois):**
+
+| Carga inicial | raw | gzip |
+|---|--:|--:|
+| `index.js` | 441,68 kB | 108,75 kB |
+| `ui-vendor` (lucide + recharts) | 421,74 kB | 122,69 kB |
+| **`three-vendor`** | **1.064,79 kB** | **295,25 kB** |
+| `utils-vendor` (jspdf + html2canvas) | 594,21 kB | 177,10 kB |
+| `supabase-vendor` | 173,26 kB | 45,69 kB |
+| `index.css` | 190,12 kB | 25,32 kB |
+| **Total** | **2.885,80 kB** | **774,80 kB** |
+
+**Três causas, cada uma corrigida e medida em separado:**
+
+**1. O React morava dentro do Three.js.** O `react-vendor` tinha **1 byte**. A forma de objeto do
+`manualChunks` casa por substring, e `@react-three/fiber` contém `react` — então o React foi
+absorvido pelo `three-vendor`, e o entry o importava de lá:
+
+```
+import{j as e,R as In}from"./three-vendor-DPesCo…"
+```
+
+Resultado: **todo sócio baixava 1 MB de Three.js para abrir a Agenda**, num app onde o jogo 3D é
+uma aba que quase ninguém abre. Trocado pela forma de função, que casa por caminho exato.
+**−236,81 kB gzip.**
+
+**2. Um helper de 300 bytes arrastava 777 kB.** Corrigido o item 1, o `export-vendor` continuava
+no `modulepreload`. Instrumentei o build em vez de supor: os módulos virtuais
+`\0vite/preload-helper.js` e `\0commonjsHelpers.js` não têm `node_modules` no id, caíam no
+`return` sem destino, e o Rollup os colocava dentro do `export-vendor` — que assim virava
+dependência estática do entry. Ganharam destino explícito.
+
+**3. `jspdf` e `html2canvas` importados no topo.** São ~239 kB comprimidos para uma ação que só
+o admin executa, e só ao clicar em "Exportar". Viraram `import()` dinâmico via
+[`lib/exportTools.ts`](lib/exportTools.ts). O mesmo para o `recharts`, que só o Dashboard usa:
+o Dashboard virou `lazy()`, como as outras 9 telas já eram.
+
+De quebra, `date-fns` estava listado no `manualChunks` sem ser importado em lugar nenhum.
+
+**Depois:**
+
+| Carga inicial | raw | gzip |
+|---|--:|--:|
+| `index.js` | 430,53 kB | 105,88 kB |
+| `react-vendor` | 196,35 kB | 61,58 kB |
+| `supabase-vendor` | 173,26 kB | 45,69 kB |
+| `icons-vendor` | 42,57 kB | 9,24 kB |
+| `index.css` | 190,12 kB | 25,32 kB |
+| **Total** | **1.032,83 kB** | **247,71 kB** |
+
+**−1.852,97 kB raw · −527,09 kB gzip · −68,0%**
+
+Verificado no navegador contra o build de produção, não só no relatório do bundler: **241,9 kB
+transferidos** em 5 arquivos, zero erro no console, tela renderizando. E a prova de que o
+carregamento sob demanda funciona, medida na própria página:
+
+```json
+{"carregado_no_load_inicial": false, "carregado_sob_demanda_agora": true,
+ "kb": 233.2, "simbolos_exportados": 2}
+```
+
+Nada disso mudou comportamento: 364 testes verdes, `tsc` exit 0, mesma warning pré-existente.
+
+> `lib/pdfExportPremium.ts` (190 linhas) não é importado por ninguém — código morto encontrado
+> ao mapear os importadores. Não apaguei; fica registrado.
+
+### Item 14 — a rede do `ChampionshipInProgress`, e o que ela revelou sobre a régua
+
+19 testes de caracterização em
+[`championshipInProgress.test.tsx`](__tests__/championshipInProgress.test.tsx), no mesmo formato
+que o repo já usava para a Agenda: Supabase mockado por tabela, componente renderizado de
+verdade. Travam o estado vazio ("Pronto para Iniciar!"), a abertura na **rodada ativa** e não na
+primeira, a navegação entre rodadas com os extremos travados, as abas (e a ausência de
+CLASSIFICAÇÃO no Resenha Open), o aviso de rodada em rascunho só para admin, o painel de
+gerenciamento só para admin, o fluxo completo de "Limpar Confrontos" — contagens, palavra
+digitada, e o filtro exato do `delete` — e a ordenação das classes por número (4ª, 5ª, 10ª) em
+vez de alfabeto.
+
+**Um defeito de acessibilidade apareceu ao escrever o teste:** as setas de navegação de rodada
+eram botões só com ícone, sem nome acessível. Não dava para alcançá-las por papel nem por nome —
+nem no teste, nem num leitor de tela. Ganharam `aria-label` e alvo de 44px. Quando um teste é
+difícil de escrever, em geral o código está dizendo alguma coisa.
+
+#### A cobertura "caiu" 12 pontos — e isso era o instrumento, não o trabalho
+
+Depois dos 19 testes, o relatório mostrou **57,81% → 45,10%**. Pela regra do modo IMPROVE, queda
+de cobertura é regressão e o passo deveria ser revertido. Apurei antes de aceitar:
+
+| | Antes | Depois | Δ |
+|---|--:|--:|--:|
+| **Linhas cobertas (absoluto)** | 1.543 | **1.755** | **+212** |
+| **Ramos cobertos (absoluto)** | 1.159 | **1.310** | **+151** |
+| Arquivos no relatório | 41 | 55 | +14 |
+| % de linhas | 57,81% | 45,10% | −12,71 pp |
+
+Renderizar o componente puxou 14 arquivos que **nunca tinham sido instrumentados** —
+`Championships.tsx` a 2,41%, `BracketView`, `MatchScheduleModal`, `TournamentBracketView`… — para
+dentro do denominador. Mais código real ficou coberto; o percentual caiu porque o relatório
+finalmente enxergou uma superfície maior.
+
+A causa é o padrão do v8: por omissão ele só instrumenta o que algum teste importa. Isso torna o
+percentual **incomparável entre execuções** — ele sobe quando você testa, e desce quando você
+testa algo que importa muita coisa nova. Como régua de regressão, não serve.
+
+`vitest.config.ts` passou a declarar `coverage.include` sobre `components/`, `lib/`, `hooks/`,
+`contexts/`, `utils.ts` e `App.tsx`. A base honesta:
+
+| | Valor |
+|---|--:|
+| Linhas | **1.755 / 9.394 — 18,68%** |
+| Ramos | **1.310 / 8.905 — 14,71%** |
+| Arquivos medidos | 126 |
+
+> ⚠️ **Todos os percentuais de cobertura das fases anteriores neste documento foram medidos com
+> o denominador móvel** e não são comparáveis a este. Os números absolutos (linhas e ramos
+> cobertos) continuam válidos e sempre subiram.
+
+Com a régua consertada, a matriz de risco mudou de dono — e apontou um arquivo que estava
+invisível:
+
+| Arquivo | Complexidade máx. | Cobertura |
+|---|:--:|:--:|
+| `components/AdminPanel.tsx` | **184** | 0% |
+| `components/ChampionshipCreator.tsx` | 132 | 0% |
+| `components/ChampionshipAdmin.tsx` | 131 | 0% |
+| `components/ChampionshipInProgress.tsx` | 162 | **41,23%** |
+
+O `AdminPanel` é mais complexo que qualquer componente de campeonato e nunca apareceu nos
+relatórios anteriores, porque nenhum teste o importava.
+
+### Item 14, continuação — `ChampionshipAdmin` e a última warning
+
+**16 testes** em [`championshipAdmin.test.tsx`](__tests__/championshipAdmin.test.tsx). O alvo foi
+o que ninguém ousaria tocar sem rede:
+
+- **O fallback de coluna.** `fetchChampionshipRows` refaz o `SELECT` até 16 vezes, descartando a
+  cada volta a coluna que o banco disse não existir — uma defesa contra ambientes onde alguma
+  migration não rodou. Três testes travam isso: descarta uma coluna e volta a funcionar, descarta
+  várias em sequência, e **desiste na primeira tentativa** quando o erro é outro (RLS, por
+  exemplo) em vez de girar 16 vezes.
+- **Os diálogos que mexem em ranking de gente real.** Encerrar campeonato só chama
+  `finish_championship` depois do aceite; cancelar edição é `danger` e diz que a edição anterior
+  volta a valer; remover inscrição nomeia quem sai na pergunta e apaga o id certo.
+- Sócio aparece pelo nome do perfil, convidado pelo nome digitado; "Finalizar" some em campeonato
+  encerrado; "Cancelar Edição" some fora de uma série; seleção de rodadas em lote com a contagem
+  concordando.
+
+**A última warning do eslint foi embora.** `ResenhaOpenTournamentBoard` tinha um `useEffect` sem
+`centerPhase` nas dependências. Adicioná-la sem mais nada faria o quadro rolar a cada render, já
+que a função nascia nova toda vez — então ela virou `useCallback([layout, zoom])`, e o efeito
+passou a depender dela. **`npx eslint .` agora sai limpo.**
+
+| | Antes | Depois |
+|---|--:|--:|
+| Testes | 383 | **399** |
+| Linhas cobertas | 1.755 / 9.394 (18,68%) | **1.920 / 9.394 (20,43%)** |
+| Ramos cobertos | 1.310 / 8.905 (14,71%) | **1.426 / 8.905 (16,01%)** |
+| `ChampionshipAdmin` | 0% | **55,78%** |
+| Warnings do eslint | 1 | **0** |
+
+A matriz de risco não tem mais nenhum componente de campeonato no topo — o que sobrou é fora do
+escopo desta auditoria:
+
+| Arquivo | Complexidade máx. | Cobertura |
+|---|:--:|:--:|
+| `components/AdminPanel.tsx` | **184** | 0% |
+| `components/ChampionshipCreator.tsx` | 132 | 0% |
+| `components/AdminStudents.tsx` | 123 | 0% |
+| `components/ProfessorProfile.tsx` | 112 | 0% |
+
 ### O que falta na Fase 3
 
-- **Item 14 — cobertura dos componentes-monstro.** `ChampionshipInProgress` (CC 162),
-  `ChampionshipCreator` (132) e `ChampionshipAdmin` (131) seguem em 0%. É o pré-requisito de
-  qualquer quebra desses arquivos.
+- **Item 14 — cobertura dos componentes-monstro.** Dentro do escopo, resta o
+  `ChampionshipCreator` (CC 132, 0%). Fora dele, `AdminPanel` (CC 184) é hoje o arquivo mais
+  perigoso do repositório e nunca apareceu em relatório nenhum.
 - **Item 15 — unificar os dois sistemas de grupos** (`groupKnockout.ts` e
   `championship/knockoutFromGroups.ts`).
 - **Item 13 — 83 `any` e lint permissivo** (`@typescript-eslint/no-explicit-any` está `off`).

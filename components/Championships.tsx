@@ -13,8 +13,6 @@ import { supabase } from '../lib/supabase';
 import { logger } from '../lib/logger';
 import { notify } from '../lib/notifications';
 import { CHAMPIONSHIP_ERRORS } from '../lib/humanErrors';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
 import { GroupStandingsCard } from './GroupStandingsCard';
 import { BracketView } from './BracketView';
 import { TournamentBracketView } from './TournamentBracketView';
@@ -28,6 +26,7 @@ import { calculateGroupStandings } from '../lib/championshipUtils';
 import { getGroupStageMatches, getRoundMatchesForDisplay } from '../lib/groupKnockout';
 import { MatchScheduleModal } from './MatchScheduleModal';
 import { useConfirm } from '../hooks/useConfirm';
+import { loadExportTools } from '../lib/exportTools';
 import { StandardModal } from './StandardModal';
 
 // Interface for championship with participants
@@ -942,6 +941,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
     const handleExportPDF = async () => {
         if (!tableRef.current || !registrationChamp) return;
 
+        const { html2canvas, jsPDF } = await loadExportTools();
         const canvas = await html2canvas(tableRef.current, { scale: 2 });
         const imgData = canvas.toDataURL('image/png');
 

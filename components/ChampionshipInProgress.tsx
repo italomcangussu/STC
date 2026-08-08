@@ -20,8 +20,8 @@ import { CHAMPIONSHIP_ERRORS } from '../lib/humanErrors';
 import { useConfirm } from '../hooks/useConfirm';
 import { StandardModal } from './StandardModal';
 import { deleteChampionshipMatches } from '../lib/championship/matches';
+import { loadHtml2Canvas } from '../lib/exportTools';
 import { ResultModal } from './Championships';
-import html2canvas from 'html2canvas';
 import { Share2, Download, X } from 'lucide-react';
 import { getNowInFortaleza } from '../utils';
 
@@ -563,6 +563,7 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
         if (!exportRef.current) return;
         setExporting(true);
         try {
+            const html2canvas = await loadHtml2Canvas();
             const canvas = await html2canvas(exportRef.current, {
                 scale: 2,
                 useCORS: true,
@@ -727,7 +728,8 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                                 <div className="flex items-center justify-between bg-white p-4 rounded-[2.5rem] border border-stone-100 shadow-sm">
                                     <button
                                         onClick={() => setSelectedRoundIndex(prev => Math.max(0, prev - 1))}
-                                        className={`p-3 rounded-2xl transition-colors ${selectedRoundIndex > 0 ? 'text-saibro-600 bg-saibro-50' : 'text-stone-200 cursor-not-allowed'}`}
+                                        aria-label="Rodada anterior"
+                                        className={`hit-44 rounded-2xl transition-colors ${selectedRoundIndex > 0 ? 'text-saibro-600 bg-saibro-50' : 'text-stone-200 cursor-not-allowed'}`}
                                         disabled={selectedRoundIndex === 0}
                                     >
                                         <ChevronLeft size={24} />
@@ -740,7 +742,8 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                                     </div>
                                     <button
                                         onClick={() => setSelectedRoundIndex(prev => Math.min(rounds.length - 1, prev + 1))}
-                                        className={`p-3 rounded-2xl transition-colors ${selectedRoundIndex < rounds.length - 1 ? 'text-saibro-600 bg-saibro-50' : 'text-stone-200 cursor-not-allowed'}`}
+                                        aria-label="Próxima rodada"
+                                        className={`hit-44 rounded-2xl transition-colors ${selectedRoundIndex < rounds.length - 1 ? 'text-saibro-600 bg-saibro-50' : 'text-stone-200 cursor-not-allowed'}`}
                                         disabled={selectedRoundIndex === rounds.length - 1}
                                     >
                                         <ChevronRight size={24} />

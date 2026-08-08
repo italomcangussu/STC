@@ -8,10 +8,9 @@ import { supabase } from '../lib/supabase';
 import { logger } from '../lib/logger';
 import { notify } from '../lib/notifications';
 import { StandardModal } from './StandardModal';
+import { loadHtml2Canvas, loadExportTools } from '../lib/exportTools';
 import { CHAMPIONSHIP_ERRORS } from '../lib/humanErrors';
 import { getNowInFortaleza } from '../utils';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
 
 // Types
 interface Championship {
@@ -529,6 +528,7 @@ export const GroupDrawPage: React.FC<Props> = ({ currentUser: _currentUser, cham
 
     // Export group as PNG
     const handleExportPNG = async (cls: string) => {
+        const html2canvas = await loadHtml2Canvas();
         const categoryDraw = categoryDraws[cls];
         if (!categoryDraw || !championship) return;
 
@@ -596,6 +596,7 @@ export const GroupDrawPage: React.FC<Props> = ({ currentUser: _currentUser, cham
 
     // Export group as PDF
     const handleExportPDF = async (cls: string) => {
+        const { html2canvas, jsPDF } = await loadExportTools();
         const categoryDraw = categoryDraws[cls];
         if (!categoryDraw || !championship) return;
 

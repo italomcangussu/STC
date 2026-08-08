@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Clock, Minus, Plus, RotateCcw, Trophy } from 'lucide-react';
 import {
     buildResenhaBracketLayout,
@@ -73,7 +73,11 @@ export const ResenhaOpenTournamentBoard: React.FC<Props> = ({ bracket, champions
         [bracket, selectedClass, isResenhaOpen],
     );
 
-    const centerPhase = (phase: string, behavior: ScrollBehavior = 'smooth') => {
+    // `useCallback` aqui não é enfeite: sem ele a função nasce nova a cada
+    // render, e o efeito abaixo — que precisa dela nas dependências — passaria
+    // a rolar o quadro em **todo** render. Presa a `layout` e `zoom`, ela só
+    // muda quando a posição de destino realmente muda.
+    const centerPhase = useCallback((phase: string, behavior: ScrollBehavior = 'smooth') => {
         const phaseLayout = layout.phases.find(item => item.phase === phase);
         if (!viewportRef.current || !phaseLayout) return;
         viewportRef.current.scrollTo({
@@ -81,11 +85,11 @@ export const ResenhaOpenTournamentBoard: React.FC<Props> = ({ bracket, champions
             top: 0,
             behavior,
         });
-    };
+    }, [layout, zoom]);
 
     useEffect(() => {
         requestAnimationFrame(() => centerPhase(currentPhase, 'auto'));
-    }, [currentPhase, layout, zoom]);
+    }, [currentPhase, centerPhase]);
 
     const handleClassChange = (className: string) => {
         setSelectedClass(className);

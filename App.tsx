@@ -2,7 +2,6 @@ import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { Loader2, Megaphone } from 'lucide-react';
 import { Toaster } from 'sonner';
 import { Layout } from './components/Layout';
-import { Dashboard } from './components/Dashboard';
 import { Championships } from './components/Championships';
 import { Athletes } from './components/Athletes';
 import { Ranking } from './components/Ranking';
@@ -17,6 +16,10 @@ import { User } from './types';
 import { supabase } from './lib/supabase';
 
 // 🚀 Code Splitting via React.lazy (Uncle Bob Performance Optimization)
+// O Dashboard é a única tela que usa `recharts` (~109 kB comprimidos). Estático,
+// ele cobrava esse peso de todo sócio que abre o app na Agenda e nunca clica em
+// Dashboard.
+const Dashboard = lazy(() => import('./components/Dashboard').then(m => ({ default: m.Dashboard })));
 const Klanches = lazy(() => import('./components/Klanches').then(m => ({ default: m.Klanches })));
 const TenisProPlayer = lazy(() => import('./components/TenisProPlayer').then(m => ({ default: m.TenisProPlayer })));
 const ProfessorProfile = lazy(() => import('./components/ProfessorProfile').then(m => ({ default: m.ProfessorProfile })));

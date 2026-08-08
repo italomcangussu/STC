@@ -1,6 +1,5 @@
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
 import { notify } from './notifications';
+import { loadExportTools } from './exportTools';
 
 interface Registration {
     id: string;
@@ -125,6 +124,7 @@ export const generatePremiumPDF = async (
     await new Promise(resolve => setTimeout(resolve, 200));
 
     try {
+        const { html2canvas, jsPDF } = await loadExportTools();
         const canvas = await html2canvas(container, {
             scale: 2,
             useCORS: true,
