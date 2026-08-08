@@ -141,7 +141,7 @@ export const BracketEditor: React.FC<Props> = ({
         if (sourceMatch) {
             return (
                 <div
-                    className="px-3 py-2 rounded-lg border border-stone-100 bg-stone-50 text-[11px] text-stone-400"
+                    className="px-3 py-2 rounded-lg border border-stone-100 bg-stone-50 text-xs text-stone-400"
                     aria-label={`${faseLabel}, jogo ${slot.matchNumber}, vaga ${side.toUpperCase()}, recebe o vencedor do jogo ${sourceMatch}`}
                 >
                     vencedor do jogo {sourceMatch}
@@ -204,12 +204,12 @@ export const BracketEditor: React.FC<Props> = ({
                     <div className="flex gap-4 min-w-max">
                         {fases.map(({ phase, slots: fasesSlots }) => (
                             <div key={phase} className="w-44 shrink-0 space-y-3">
-                                <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest">
+                                <p className="text-xs font-black text-stone-400 uppercase tracking-widest">
                                     {PHASE_LABELS[phase] ?? phase}
                                 </p>
                                 {fasesSlots.map(slot => (
                                     <div key={slot.matchNumber} className="space-y-1 p-2 rounded-xl bg-stone-50/60">
-                                        <p className="text-[9px] font-bold text-stone-400">Jogo {slot.matchNumber}</p>
+                                        <p className="text-xs font-bold text-stone-400">Jogo {slot.matchNumber}</p>
                                         {renderVaga(slot, 'a')}
                                         {renderVaga(slot, 'b')}
                                     </div>

@@ -168,26 +168,26 @@ export const PublicChampionshipPage: React.FC<Props> = ({ slug, championshipId }
                     {!isResenhaOpen && temClassificacao && (
                         <button
                             onClick={() => setActiveTab('standings')}
-                            className={`flex-1 py-3.5 rounded-2xl text-[10px] font-black tracking-widest transition-all duration-500 ${activeTab === 'standings' ? 'bg-white text-stone-900 shadow-lg' : 'bg-white/25 text-stone-800 hover:bg-white/50 hover:text-stone-950'}`}
+                            className={`flex-1 py-3.5 rounded-2xl text-xs font-black tracking-widest transition-all duration-500 ${activeTab === 'standings' ? 'bg-white text-stone-900 shadow-lg' : 'bg-white/25 text-stone-800 hover:bg-white/50 hover:text-stone-950'}`}
                         >
                             CLASSIFICAÇÃO
                         </button>
                     )}
                     <button
                         onClick={() => setActiveTab('bracket')}
-                        className={`flex-1 py-3.5 rounded-2xl text-[10px] font-black tracking-widest transition-all duration-500 ${activeTab === 'bracket' ? 'bg-white text-stone-900 shadow-lg' : 'bg-white/25 text-stone-800 hover:bg-white/50 hover:text-stone-950'}`}
+                        className={`flex-1 py-3.5 rounded-2xl text-xs font-black tracking-widest transition-all duration-500 ${activeTab === 'bracket' ? 'bg-white text-stone-900 shadow-lg' : 'bg-white/25 text-stone-800 hover:bg-white/50 hover:text-stone-950'}`}
                     >
                         CHAVEAMENTO
                     </button>
                     <button
                         onClick={() => setActiveTab('stats')}
-                        className={`flex-1 py-3.5 rounded-2xl text-[10px] font-black tracking-widest transition-all duration-500 ${activeTab === 'stats' ? 'bg-white text-stone-900 shadow-lg' : 'bg-white/25 text-stone-800 hover:bg-white/50 hover:text-stone-950'}`}
+                        className={`flex-1 py-3.5 rounded-2xl text-xs font-black tracking-widest transition-all duration-500 ${activeTab === 'stats' ? 'bg-white text-stone-900 shadow-lg' : 'bg-white/25 text-stone-800 hover:bg-white/50 hover:text-stone-950'}`}
                     >
                         STATS
                     </button>
                     <button
                         onClick={() => setActiveTab('odds')}
-                        className={`flex-1 py-3.5 rounded-2xl text-[10px] font-black tracking-widest transition-all duration-500 ${activeTab === 'odds' ? 'bg-white text-stone-900 shadow-lg' : 'bg-white/25 text-stone-800 hover:bg-white/50 hover:text-stone-950'}`}
+                        className={`flex-1 py-3.5 rounded-2xl text-xs font-black tracking-widest transition-all duration-500 ${activeTab === 'odds' ? 'bg-white text-stone-900 shadow-lg' : 'bg-white/25 text-stone-800 hover:bg-white/50 hover:text-stone-950'}`}
                     >
                         ODDS
                     </button>

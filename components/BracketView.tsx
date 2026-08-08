@@ -48,7 +48,7 @@ export const BracketView: React.FC<BracketViewProps> = ({ groups, registrations,
                     <div className="text-center">
                         <Users className="w-8 h-8 mx-auto text-stone-400 mb-2" />
                         <p className="text-xs font-bold text-stone-500 uppercase tracking-wider">{rotulo}</p>
-                        <p className="text-[10px] text-stone-400 mt-1">Aguardando definição</p>
+                        <p className="text-xs text-stone-400 mt-1">Aguardando definição</p>
                     </div>
                 </div>
             );
@@ -68,7 +68,7 @@ export const BracketView: React.FC<BracketViewProps> = ({ groups, registrations,
                     <div className="text-center">
                         <Users className="w-8 h-8 mx-auto text-stone-400 mb-2" />
                         <p className="text-xs font-bold text-stone-500 uppercase tracking-wider">{label}</p>
-                        <p className="text-[10px] text-stone-400 mt-1">Aguardando definição</p>
+                        <p className="text-xs text-stone-400 mt-1">Aguardando definição</p>
                     </div>
                 </div>
             );
@@ -80,7 +80,7 @@ export const BracketView: React.FC<BracketViewProps> = ({ groups, registrations,
                     <div className="flex-1">
                         <p className="font-black text-stone-800 text-sm">{player.name}</p>
                         {player.position && player.groupName && (
-                            <p className="text-[10px] text-stone-500 font-bold mt-0.5">
+                            <p className="text-xs text-stone-500 font-bold mt-0.5">
                                 {player.position === 1 ? '1º' : '2º'} - Grupo {player.groupName}
                             </p>
                         )}
@@ -121,7 +121,7 @@ export const BracketView: React.FC<BracketViewProps> = ({ groups, registrations,
                                             ? 'bg-linear-to-br from-yellow-50 to-orange-50 rounded-2xl p-6 border-2 border-yellow-400 shadow-lg'
                                             : 'bg-white rounded-2xl p-4 border border-stone-200 shadow-sm'}
                                     >
-                                        <p className={`text-[10px] font-black uppercase tracking-widest mb-3 ${ehFinal ? 'text-center text-yellow-700' : 'text-saibro-600'}`}>
+                                        <p className={`text-xs font-black uppercase tracking-widest mb-3 ${ehFinal ? 'text-center text-yellow-700' : 'text-saibro-600'}`}>
                                             {ehFinal ? 'Grande Final' : `Jogo ${partida.match_number ?? indice + 1}`}
                                         </p>
                                         <div className="flex gap-3 items-center">
@@ -133,7 +133,7 @@ export const BracketView: React.FC<BracketViewProps> = ({ groups, registrations,
                                             </div>
                                             {renderVaga(partida.registration_b_id, 'Vaga B')}
                                         </div>
-                                        <p className={`mt-3 text-[10px] font-bold uppercase tracking-wider ${ehFinal ? 'text-center text-yellow-800' : 'text-stone-500'}`}>
+                                        <p className={`mt-3 text-xs font-bold uppercase tracking-wider ${ehFinal ? 'text-center text-yellow-800' : 'text-stone-500'}`}>
                                             {renderMatchStatus(partida)}
                                         </p>
                                     </div>
@@ -157,7 +157,7 @@ export const BracketView: React.FC<BracketViewProps> = ({ groups, registrations,
                         </div>
                         <div>
                             <p className="text-xs font-bold text-stone-800">Classificado</p>
-                            <p className="text-[10px] text-stone-500">Matematicamente</p>
+                            <p className="text-xs text-stone-500">Matematicamente</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -166,7 +166,7 @@ export const BracketView: React.FC<BracketViewProps> = ({ groups, registrations,
                         </div>
                         <div>
                             <p className="text-xs font-bold text-stone-800">Aguardando</p>
-                            <p className="text-[10px] text-stone-500">Definição</p>
+                            <p className="text-xs text-stone-500">Definição</p>
                         </div>
                     </div>
                 </div>
@@ -180,7 +180,7 @@ export const BracketView: React.FC<BracketViewProps> = ({ groups, registrations,
                     </h3>
                     <div className="space-y-4">
                         <div className="bg-white rounded-2xl p-4 border border-stone-200 shadow-sm">
-                            <p className="text-[10px] font-black text-saibro-600 uppercase tracking-widest mb-3">Semifinal 1</p>
+                            <p className="text-xs font-black text-saibro-600 uppercase tracking-widest mb-3">Semifinal 1</p>
                             <div className="flex gap-3 items-center">
                                 {renderPlayer(bracket.semifinal1.playerA, '1º Grupo A')}
                                 <div className="text-center px-2">
@@ -190,13 +190,13 @@ export const BracketView: React.FC<BracketViewProps> = ({ groups, registrations,
                                 </div>
                                 {renderPlayer(bracket.semifinal1.playerB, '2º Grupo B')}
                             </div>
-                            <p className="mt-3 text-[10px] font-bold text-stone-500 uppercase tracking-wider">
+                            <p className="mt-3 text-xs font-bold text-stone-500 uppercase tracking-wider">
                                 {renderMatchStatus(bracket.semifinal1.match)}
                             </p>
                         </div>
 
                         <div className="bg-white rounded-2xl p-4 border border-stone-200 shadow-sm">
-                            <p className="text-[10px] font-black text-saibro-600 uppercase tracking-widest mb-3">Semifinal 2</p>
+                            <p className="text-xs font-black text-saibro-600 uppercase tracking-widest mb-3">Semifinal 2</p>
                             <div className="flex gap-3 items-center">
                                 {renderPlayer(bracket.semifinal2.playerA, '2º Grupo A')}
                                 <div className="text-center px-2">
@@ -206,7 +206,7 @@ export const BracketView: React.FC<BracketViewProps> = ({ groups, registrations,
                                 </div>
                                 {renderPlayer(bracket.semifinal2.playerB, '1º Grupo B')}
                             </div>
-                            <p className="mt-3 text-[10px] font-bold text-stone-500 uppercase tracking-wider">
+                            <p className="mt-3 text-xs font-bold text-stone-500 uppercase tracking-wider">
                                 {renderMatchStatus(bracket.semifinal2.match)}
                             </p>
                         </div>
@@ -219,7 +219,7 @@ export const BracketView: React.FC<BracketViewProps> = ({ groups, registrations,
                         Final
                     </h3>
                     <div className="bg-linear-to-br from-yellow-50 to-orange-50 rounded-2xl p-6 border-2 border-yellow-400 shadow-lg">
-                        <p className="text-center text-[10px] font-black text-yellow-700 uppercase tracking-widest mb-4">Grande Final</p>
+                        <p className="text-center text-xs font-black text-yellow-700 uppercase tracking-widest mb-4">Grande Final</p>
                         <div className="flex gap-3 items-center">
                             {renderPlayer(bracket.finalPlayers.playerA, 'Vencedor Semi 1')}
                             <div className="text-center px-2">
@@ -229,7 +229,7 @@ export const BracketView: React.FC<BracketViewProps> = ({ groups, registrations,
                             </div>
                             {renderPlayer(bracket.finalPlayers.playerB, 'Vencedor Semi 2')}
                         </div>
-                        <p className="mt-4 text-center text-[10px] font-bold text-yellow-800 uppercase tracking-wider">
+                        <p className="mt-4 text-center text-xs font-bold text-yellow-800 uppercase tracking-wider">
                             {renderMatchStatus(bracket.finalMatch)}
                         </p>
                     </div>

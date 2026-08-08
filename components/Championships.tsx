@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { createPortal } from 'react-dom';
 import { Trophy, Calendar, CalendarCheck, ListOrdered, GitMerge, ChevronDown, Loader2, Download, Share2, Users, Shirt, ChevronLeft, ChevronRight, Clock, MapPin, Save, Plus, Minus, X, AlertTriangle, BarChart3 } from 'lucide-react';
 import { Championship, Match, User, ChampionshipRound } from '../types';
 import { getMatchWinner, formatDateBr, getNowInFortaleza, formatDate, MEMBER_ROLES } from '../utils';
@@ -11,6 +10,9 @@ const FORMAT_LABELS: Record<string, string> = {
     'grupo-mata-mata': 'grupos + mata-mata',
 };
 import { supabase } from '../lib/supabase';
+import { logger } from '../lib/logger';
+import { notify } from '../lib/notifications';
+import { CHAMPIONSHIP_ERRORS } from '../lib/humanErrors';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { GroupStandingsCard } from './GroupStandingsCard';
@@ -25,6 +27,8 @@ import { ChampionshipOddsSimulator } from './ChampionshipOddsSimulator';
 import { calculateGroupStandings } from '../lib/championshipUtils';
 import { getGroupStageMatches, getRoundMatchesForDisplay } from '../lib/groupKnockout';
 import { MatchScheduleModal } from './MatchScheduleModal';
+import { useConfirm } from '../hooks/useConfirm';
+import { StandardModal } from './StandardModal';
 
 // Interface for championship with participants
 interface ChampionshipWithParticipants extends Omit<Championship, 'participantIds'> {
@@ -53,7 +57,25 @@ const isResenhaOpenChampionship = (championship?: any): boolean => {
     return name.includes('resenha open') || slug.includes('resenha-open');
 };
 
+/**
+ * Aparência das abas do campeonato.
+ *
+ * A string de 200 caracteres estava copiada nas seis abas. Copiada seis vezes,
+ * ela já tinha começado a divergir — quem ajustava uma aba não ajustava as
+ * outras cinco.
+ */
+const tabClass = (active: boolean) => [
+    'flex-1 min-w-0 flex items-center justify-center gap-1 sm:gap-2',
+    'py-3 px-2 sm:py-3.5 sm:px-4 rounded-2xl',
+    'text-xs font-black uppercase tracking-normal sm:tracking-wider',
+    'transition-all duration-300',
+    active
+        ? 'bg-linear-to-br from-saibro-600 to-saibro-700 text-white shadow-lg shadow-saibro-200 sm:scale-105'
+        : 'text-stone-500 hover:text-stone-700 hover:bg-stone-50',
+].join(' ');
+
 export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) => {
+    const confirm = useConfirm();
     // Supabase States
     const [championships, setChampionships] = useState<ChampionshipWithParticipants[]>([]);
     const [matches, setMatches] = useState<Match[]>([]);
@@ -113,7 +135,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                 .order('status', { ascending: true });
 
             if (champsError) {
-                console.error('Error fetching championships:', champsError);
+                logger.error('championships_fetch_failed', { error: champsError.message });
                 setLoading(false);
                 return;
             }
@@ -236,7 +258,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                 .eq('championship_id', selectedChampId);
 
             if (matchesError) {
-                console.error('Error fetching matches:', matchesError);
+                logger.error('championship_matches_fetch_failed', { championshipId: selectedChampId, error: matchesError.message });
                 return;
             }
 
@@ -624,7 +646,13 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
             .eq('id', schedulingMatch.id);
 
         if (error) {
-            alert((selectedChampIsResenhaOpen ? 'Erro ao salvar horário sugerido: ' : 'Erro ao agendar: ') + error.message);
+            notify.failure(
+                error,
+                selectedChampIsResenhaOpen
+                    ? 'Não foi possível salvar o horário sugerido.'
+                    : 'Não foi possível agendar a partida.',
+                { event: 'match_schedule_save_failed', matchId: schedulingMatch.id }
+            );
             throw error;
         }
 
@@ -690,8 +718,10 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
             .eq('id', matchId);
 
         if (error) {
-            console.error('Error saving result:', error);
-            alert('Erro ao salvar resultado. Tente novamente.');
+            notify.failure(error, 'Não foi possível salvar o resultado.', {
+                event: 'match_result_save_failed',
+                matchId,
+            });
             return;
         }
 
@@ -779,11 +809,19 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
         const winnerName = winnerSide === 'A' ? getRegistrationDisplayName(regA) : getRegistrationDisplayName(regB);
 
         if (!winnerRegId) {
-            alert('Não foi possível identificar o atleta vencedor.');
+            notify.warning(CHAMPIONSHIP_ERRORS.semVencedor.message, {
+                description: CHAMPIONSHIP_ERRORS.semVencedor.hint,
+            });
             return;
         }
 
-        if (!confirm(`Confirmar W.O. para ${winnerName}?`)) return;
+        if (!await confirm({
+            tone: 'warning',
+            title: `Dar W.O. para ${winnerName}?`,
+            description: 'A partida é encerrada sem ter sido jogada.',
+            consequences: [`Placar registrado: 6/0 6/0 para ${winnerName}`],
+            confirmLabel: 'Confirmar W.O.',
+        })) return;
 
         setSavingAdminResult(true);
         const winnerUserId = winnerSide === 'A' ? match.playerAId : match.playerBId;
@@ -811,8 +849,10 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
             .eq('id', match.id);
 
         if (error) {
-            console.error('Error setting walkover:', error);
-            alert('Erro ao definir W.O.: ' + error.message);
+            notify.failure(error, 'Não foi possível registrar o W.O.', {
+                event: 'match_walkover_save_failed',
+                matchId: match.id,
+            });
             setSavingAdminResult(false);
             return;
         }
@@ -862,7 +902,14 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
 
     const handleAdminCancel = async (match: Match) => {
         if (savingAdminResult) return;
-        if (!confirm('Confirmar cancelamento desta partida?')) return;
+
+        if (!await confirm({
+            tone: 'warning',
+            title: 'Cancelar esta partida?',
+            description: 'A partida vira empate técnico: ninguém vence e nenhum dos dois some da tabela.',
+            confirmLabel: 'Cancelar partida',
+            cancelLabel: 'Voltar',
+        })) return;
 
         setSavingAdminResult(true);
         const nowDate = formatDate(getNowInFortaleza());
@@ -888,8 +935,10 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
             .eq('id', match.id);
 
         if (error) {
-            console.error('Error cancelling match:', error);
-            alert('Erro ao cancelar partida: ' + error.message);
+            notify.failure(error, 'Não foi possível cancelar a partida.', {
+                event: 'match_cancel_failed',
+                matchId: match.id,
+            });
             setSavingAdminResult(false);
             return;
         }
@@ -1040,7 +1089,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                         <Trophy size={160} />
                     </div>
                     <div className="relative z-10">
-                        <span className="text-[10px] font-black uppercase tracking-widest bg-white/20 px-2 py-0.5 rounded-full animate-pulse">
+                        <span className="text-xs font-black uppercase tracking-widest bg-white/20 px-2 py-0.5 rounded-full animate-pulse">
                             📝 Inscrições Abertas
                         </span>
                         <h1 className="text-2xl font-black mt-2">{registrationChamp.name}</h1>
@@ -1092,7 +1141,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                                                     <p className="font-semibold text-stone-800 text-sm">
                                                         {getParticipantName(reg)}
                                                     </p>
-                                                    <p className="text-[10px] text-stone-400 uppercase">
+                                                    <p className="text-xs text-stone-400 uppercase">
                                                         {reg.participant_type === 'guest' ? '🎫 Convidado' : '✅ Sócio'}
                                                         {' • '} <Shirt size={10} className="inline" /> {reg.shirt_size}
                                                     </p>
@@ -1188,7 +1237,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                  quais abas existem. Só aparece quando as classes divergem. */}
             {formatoPorClasse && (
                 <div className="bg-white rounded-3xl shadow-lg shadow-stone-200/50 border-2 border-stone-100 p-3 space-y-2">
-                    <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest">
+                    <p className="text-xs font-black text-stone-400 uppercase tracking-widest">
                         Classe — formatos diferentes neste campeonato
                     </p>
                     <div className="flex gap-2 overflow-x-auto scrollbar-hide">
@@ -1216,21 +1265,13 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                     <>
                         <button
                             onClick={() => setActiveTab('partidas')}
-                            className={`flex-1 min-w-0 flex items-center justify-center gap-1 sm:gap-2 py-3 px-2 sm:py-3.5 sm:px-4 rounded-2xl text-[10px] sm:text-xs font-black uppercase tracking-normal sm:tracking-wider transition-all duration-300 ${
-                                activeTab === 'partidas' 
-                                    ? 'bg-linear-to-br from-saibro-600 to-saibro-700 text-white shadow-lg shadow-saibro-200 sm:scale-105' 
-                                    : 'text-stone-500 hover:text-stone-700 hover:bg-stone-50'
-                            }`}
+                            className={tabClass(activeTab === 'partidas')}
                         >
                             <Trophy size={16} className="hidden sm:block shrink-0" /> <span className="truncate">Partidas</span>
                         </button>
                         <button
                             onClick={() => setActiveTab('jogos')}
-                            className={`flex-1 min-w-0 flex items-center justify-center gap-1 sm:gap-2 py-3 px-2 sm:py-3.5 sm:px-4 rounded-2xl text-[10px] sm:text-xs font-black uppercase tracking-normal sm:tracking-wider transition-all duration-300 ${
-                                activeTab === 'jogos' 
-                                    ? 'bg-linear-to-br from-saibro-600 to-saibro-700 text-white shadow-lg shadow-saibro-200 sm:scale-105' 
-                                    : 'text-stone-500 hover:text-stone-700 hover:bg-stone-50'
-                            }`}
+                            className={tabClass(activeTab === 'jogos')}
                         >
                             <CalendarCheck size={16} className="hidden sm:block shrink-0" /> <span className="truncate">Jogos</span>
                         </button>
@@ -1239,11 +1280,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                 {!selectedChampIsResenhaOpen && temClassificacao && (
                     <button
                         onClick={() => setActiveTab('classificacao')}
-                        className={`flex-1 min-w-0 flex items-center justify-center gap-1 sm:gap-2 py-3 px-2 sm:py-3.5 sm:px-4 rounded-2xl text-[10px] sm:text-xs font-black uppercase tracking-normal sm:tracking-wider transition-all duration-300 ${
-                            activeTab === 'classificacao'
-                                ? 'bg-linear-to-br from-saibro-600 to-saibro-700 text-white shadow-lg shadow-saibro-200 sm:scale-105'
-                                : 'text-stone-500 hover:text-stone-700 hover:bg-stone-50'
-                        }`}
+                        className={tabClass(activeTab === 'classificacao')}
                     >
                         <ListOrdered size={16} className="hidden sm:block shrink-0" />
                         <span className="truncate sm:hidden">Classif.</span>
@@ -1253,11 +1290,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                 {(effectiveFormat === 'mata-mata' || effectiveFormat === 'grupo-mata-mata') && (
                     <button
                         onClick={() => setActiveTab('chaveamento')}
-                        className={`flex-1 min-w-0 flex items-center justify-center gap-1 sm:gap-2 py-3 px-2 sm:py-3.5 sm:px-4 rounded-2xl text-[10px] sm:text-xs font-black uppercase tracking-normal sm:tracking-wider transition-all duration-300 ${
-                            activeTab === 'chaveamento' 
-                                ? 'bg-linear-to-br from-saibro-600 to-saibro-700 text-white shadow-lg shadow-saibro-200 sm:scale-105' 
-                                : 'text-stone-500 hover:text-stone-700 hover:bg-stone-50'
-                        }`}
+                        className={tabClass(activeTab === 'chaveamento')}
                     >
                         <GitMerge size={16} className="hidden sm:block shrink-0" />
                         <span className="truncate sm:hidden">Chave</span>
@@ -1267,11 +1300,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                 {isOperationalBracketChampionship && (
                     <button
                         onClick={() => setActiveTab('estatisticas')}
-                        className={`flex-1 min-w-0 flex items-center justify-center gap-1 sm:gap-2 py-3 px-2 sm:py-3.5 sm:px-4 rounded-2xl text-[10px] sm:text-xs font-black uppercase tracking-normal sm:tracking-wider transition-all duration-300 ${
-                            activeTab === 'estatisticas'
-                                ? 'bg-linear-to-br from-saibro-600 to-saibro-700 text-white shadow-lg shadow-saibro-200 sm:scale-105'
-                                : 'text-stone-500 hover:text-stone-700 hover:bg-stone-50'
-                        }`}
+                        className={tabClass(activeTab === 'estatisticas')}
                     >
                         <BarChart3 size={16} className="hidden sm:block shrink-0" />
                         <span className="truncate sm:hidden">Stats</span>
@@ -1281,11 +1310,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                 {isOperationalBracketChampionship && (
                     <button
                         onClick={() => setActiveTab('odds')}
-                        className={`flex-1 min-w-0 flex items-center justify-center gap-1 sm:gap-2 py-3 px-2 sm:py-3.5 sm:px-4 rounded-2xl text-[10px] sm:text-xs font-black uppercase tracking-normal sm:tracking-wider transition-all duration-300 ${
-                            activeTab === 'odds'
-                                ? 'bg-linear-to-br from-saibro-600 to-saibro-700 text-white shadow-lg shadow-saibro-200 sm:scale-105'
-                                : 'text-stone-500 hover:text-stone-700 hover:bg-stone-50'
-                        }`}
+                        className={tabClass(activeTab === 'odds')}
                     >
                         <span className="truncate">Odds</span>
                     </button>
@@ -1311,12 +1336,12 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                         <div className="space-y-6">
                             {/* Rounds Header & Toggle */}
                             <div className="flex items-center justify-between px-2">
-                                <h3 className="text-[10px] font-black text-stone-400 uppercase tracking-widest leading-none">
+                                <h3 className="text-xs font-black text-stone-400 uppercase tracking-widest leading-none">
                                     {showAllRounds ? 'Todos os Confrontos' : 'Confrontos por Rodada'}
                                 </h3>
                                 <button
                                     onClick={() => setShowAllRounds(!showAllRounds)}
-                                    className={`text-[10px] font-black uppercase px-3 py-1.5 rounded-full border transition-all ${showAllRounds ? 'bg-stone-900 text-white border-stone-900' : 'bg-white text-stone-500 border-stone-200'}`}
+                                    className={`text-xs font-black uppercase px-3 py-1.5 rounded-full border transition-all ${showAllRounds ? 'bg-stone-900 text-white border-stone-900' : 'bg-white text-stone-500 border-stone-200'}`}
                                 >
                                     {showAllRounds ? 'Ver por Rodada' : 'Ver Todos'}
                                 </button>
@@ -1334,7 +1359,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                                     </button>
                                     <div className="text-center">
                                         <h3 className="font-black text-stone-800 text-sm">{currentRound.name}</h3>
-                                        <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mt-0.5">
+                                        <p className="text-xs font-bold text-stone-400 uppercase tracking-widest mt-0.5">
                                             {formatDateBr(currentRound.start_date)} - {formatDateBr(currentRound.end_date)}
                                         </p>
                                     </div>
@@ -1647,7 +1672,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                                                                                         <div className="flex flex-col items-end gap-2">
                                                                                             {match.scheduled_date ? (
                                                                                                 <>
-                                                                                                    <span className="text-[9px] font-black uppercase tracking-widest text-stone-400">
+                                                                                                    <span className="text-xs font-black uppercase tracking-widest text-stone-400">
                                                                                                         {selectedChampIsResenhaOpen ? 'Sugerido' : 'Agendado'}
                                                                                                     </span>
                                                                                                     <div className="flex items-center gap-2 text-sm bg-saibro-50 px-3 py-1.5 rounded-xl border-2 border-saibro-200">
@@ -1673,13 +1698,13 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                                                                                                 canDefineResult ? (
                                                                                                     <button
                                                                                                         onClick={() => setAdminResultMatch(match)}
-                                                                                                        className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wide text-amber-800 bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-200 hover:bg-amber-100 whitespace-nowrap transition-colors"
+                                                                                                        className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wide text-amber-800 bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-200 hover:bg-amber-100 whitespace-nowrap transition-colors"
                                                                                                     >
                                                                                                         <AlertTriangle size={12} className="text-amber-600" />
                                                                                                         Definir Resultado
                                                                                                     </button>
                                                                                                 ) : (
-                                                                                                    <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wide text-stone-500 bg-stone-100 px-3 py-1.5 rounded-lg border border-dashed border-stone-300 whitespace-nowrap">
+                                                                                                    <span className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wide text-stone-500 bg-stone-100 px-3 py-1.5 rounded-lg border border-dashed border-stone-300 whitespace-nowrap">
                                                                                                         <Calendar size={12} className="text-stone-400" />
                                                                                                         {selectedChampIsResenhaOpen ? 'Sem horário sugerido' : 'Sem agendamento'}
                                                                                                     </span>
@@ -1874,7 +1899,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
 
                                                 return (
                                                     <div key={phase} className="space-y-4">
-                                                        <h4 className="text-[10px] font-black text-saibro-600 uppercase tracking-widest ml-1 border-l-2 border-saibro-500 pl-2">
+                                                        <h4 className="text-xs font-black text-saibro-600 uppercase tracking-widest ml-1 border-l-2 border-saibro-500 pl-2">
                                                             {phase}
                                                         </h4>
                                                         <div className="space-y-3">
@@ -1912,7 +1937,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                                         <div className="space-y-8">
                                             {rodadasComJogos.map(({ round, partidas }) => (
                                                 <div key={round.id} className="space-y-4">
-                                                    <h4 className="text-[10px] font-black text-saibro-600 uppercase tracking-widest ml-1 border-l-2 border-saibro-500 pl-2">
+                                                    <h4 className="text-xs font-black text-saibro-600 uppercase tracking-widest ml-1 border-l-2 border-saibro-500 pl-2">
                                                         {round.name}
                                                     </h4>
                                                     <div className="space-y-3">
@@ -2136,12 +2161,12 @@ export const ResultModal: React.FC<{ match: Match; profiles: User[]; registratio
         return 'border-stone-200';
     };
 
-    return createPortal(
-        <div className="fixed inset-0 z-999 bg-stone-900/60 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
-            <div className="bg-white rounded-[2.5rem] w-full max-w-sm overflow-visible shadow-2xl animate-in zoom-in-95 duration-300 relative">
+    return (
+        <StandardModal isOpen onClose={onClose} ariaLabel="Lançar placar">
+            <div className="bg-white rounded-[2.5rem] w-full max-w-sm overflow-visible shadow-2xl relative">
                 <button
                     onClick={onClose}
-                    className="absolute -top-12 right-0 bg-white/10 p-2 rounded-full hover:bg-white/20 transition-colors text-white"
+                    className="hit-44 absolute -top-12 right-0 bg-white/10 rounded-full hover:bg-white/20 transition-colors text-white"
                 >
                     <ChevronDown size={24} />
                 </button>
@@ -2149,7 +2174,7 @@ export const ResultModal: React.FC<{ match: Match; profiles: User[]; registratio
                 <div className="px-6 py-5 bg-stone-900 text-white flex justify-between items-center rounded-t-[2.5rem]">
                     <div>
                         <h3 className="text-lg font-black tracking-tight">Resultado</h3>
-                        <p className="text-[10px] text-stone-400 uppercase tracking-widest font-bold">Lançamento Oficial</p>
+                        <p className="text-xs text-stone-400 uppercase tracking-widest font-bold">Lançamento Oficial</p>
                     </div>
                 </div>
 
@@ -2187,7 +2212,7 @@ export const ResultModal: React.FC<{ match: Match; profiles: User[]; registratio
                             return (
                                 <div key={idx} className={`flex items-center justify-between ${idx > 0 ? 'pt-4 border-t border-stone-100' : ''}`}>
                                     <div className="w-12 text-center">
-                                        <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest leading-none">
+                                        <p className="text-xs font-black text-stone-400 uppercase tracking-widest leading-none">
                                             {isSuperTie ? 'Super' : 'Set'}
                                         </p>
                                         <p className="text-xs font-black text-saibro-600 mt-1">
@@ -2251,14 +2276,13 @@ export const ResultModal: React.FC<{ match: Match; profiles: User[]; registratio
                         Confirmar Resultado
                     </button>
                     {!canSave && (scoreA[0] > 0 || scoreB[0] > 0) && (
-                        <p className="text-[10px] uppercase tracking-widest text-stone-400 text-center font-bold">
+                        <p className="text-xs uppercase tracking-widest text-stone-400 text-center font-bold">
                             Placar incompleto ou inválido
                         </p>
                     )}
                 </div>
             </div>
-        </div>,
-        document.body
+        </StandardModal>
     );
 };
 
@@ -2277,17 +2301,17 @@ const AdminMatchResultModal: React.FC<{
     const avatarA = regA?.user?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(nameA)}&background=random`;
     const avatarB = regB?.user?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(nameB)}&background=random`;
 
-    return createPortal(
-        <div className="fixed inset-0 z-999 bg-stone-900/60 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
-            <div className="bg-white rounded-[2.5rem] w-full max-w-md overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
+    return (
+        <StandardModal isOpen onClose={onClose} ariaLabel="Definir resultado">
+            <div className="bg-white rounded-[2.5rem] w-full max-w-md overflow-hidden shadow-2xl">
                 <div className="p-5 border-b border-stone-100 flex items-center justify-between">
                     <div>
                         <h3 className="text-lg font-black text-stone-800">Definir Resultado</h3>
-                        <p className="text-[10px] uppercase tracking-widest font-bold text-stone-400">Administração</p>
+                        <p className="text-xs uppercase tracking-widest font-bold text-stone-400">Administração</p>
                     </div>
                     <button
                         onClick={onClose}
-                        className="p-2 rounded-full text-stone-400 hover:text-stone-700 hover:bg-stone-50 transition-colors"
+                        className="hit-44 rounded-full text-stone-400 hover:text-stone-700 hover:bg-stone-50 transition-colors"
                     >
                         <X size={18} />
                     </button>
@@ -2307,7 +2331,7 @@ const AdminMatchResultModal: React.FC<{
                     </div>
 
                     <div className="space-y-3">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-amber-600">Marcar W.O.</p>
+                        <p className="text-xs font-black uppercase tracking-widest text-amber-600">Marcar W.O.</p>
                         <button
                             onClick={() => onWalkover('A')}
                             disabled={saving}
@@ -2325,7 +2349,7 @@ const AdminMatchResultModal: React.FC<{
                     </div>
 
                     <div className="pt-4 border-t border-stone-100 space-y-3">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-red-500">Cancelar Partida</p>
+                        <p className="text-xs font-black uppercase tracking-widest text-red-500">Cancelar Partida</p>
                         <button
                             onClick={onCancel}
                             disabled={saving}
@@ -2337,8 +2361,7 @@ const AdminMatchResultModal: React.FC<{
                     </div>
                 </div>
             </div>
-        </div>,
-        document.body
+        </StandardModal>
     );
 };
 
@@ -2471,7 +2494,7 @@ const MatchCard: React.FC<{
     return (
         <div className="bg-white rounded-3xl p-4 sm:p-6 shadow-lg shadow-stone-200/50 border-2 border-stone-100 relative overflow-hidden group transition-all duration-300 hover:shadow-xl hover:shadow-saibro-100/30 hover:border-saibro-300 hover:scale-[1.01]">
             {/* Class Tag */}
-            <div className="absolute top-0 left-0 bg-linear-to-br from-stone-800 to-stone-900 px-4 py-1.5 rounded-br-3xl text-[10px] font-black text-white uppercase tracking-wider shadow-md">
+            <div className="absolute top-0 left-0 bg-linear-to-br from-stone-800 to-stone-900 px-4 py-1.5 rounded-br-3xl text-xs font-black text-white uppercase tracking-wider shadow-md">
                 {regA?.class || 'S/C'}
             </div>
 
@@ -2493,7 +2516,7 @@ const MatchCard: React.FC<{
                                 <p className={`text-base font-black transition-colors leading-tight wrap-break-word ${isWinnerSide(match, 'A') ? 'text-stone-900' : 'text-stone-600'}`}>
                                     {nameA}
                                 </p>
-                                <p className="text-[10px] text-stone-500 font-bold uppercase tracking-wide">{regA?.participant_type === 'guest' ? '🎫 Convidado' : '⭐ Sócio'}</p>
+                                <p className="text-xs text-stone-500 font-bold uppercase tracking-wide">{regA?.participant_type === 'guest' ? '🎫 Convidado' : '⭐ Sócio'}</p>
                             </div>
                         </div>
                         {isFinished && (
@@ -2531,7 +2554,7 @@ const MatchCard: React.FC<{
                                 <p className={`text-base font-black transition-colors leading-tight wrap-break-word ${isWinnerSide(match, 'B') ? 'text-stone-900' : 'text-stone-600'}`}>
                                     {nameB}
                                 </p>
-                                <p className="text-[10px] text-stone-500 font-bold uppercase tracking-wide">{regB?.participant_type === 'guest' ? '🎫 Convidado' : '⭐ Sócio'}</p>
+                                <p className="text-xs text-stone-500 font-bold uppercase tracking-wide">{regB?.participant_type === 'guest' ? '🎫 Convidado' : '⭐ Sócio'}</p>
                             </div>
                         </div>
                         {isFinished && (
@@ -2565,7 +2588,7 @@ const MatchCard: React.FC<{
                                     ? 'bg-amber-50 border-amber-200'
                                     : 'bg-linear-to-br from-emerald-50 to-green-50 border-emerald-200'
                         }`}>
-                            <p className={`text-[9px] font-black uppercase tracking-wider mb-0.5 ${
+                            <p className={`text-xs font-black uppercase tracking-wider mb-0.5 ${
                                 isTechnicalDraw
                                     ? 'text-blue-600'
                                     : match.is_walkover || !hasScores
@@ -2586,7 +2609,7 @@ const MatchCard: React.FC<{
                         </div>
                     ) : match.scheduledDate ? (
                         <div className="bg-linear-to-br from-saibro-50 to-orange-50 px-4 py-2.5 rounded-2xl border-2 border-saibro-200 shadow-md md:w-auto">
-                            <p className="text-[9px] font-black text-saibro-700 uppercase tracking-wider mb-1.5">
+                            <p className="text-xs font-black text-saibro-700 uppercase tracking-wider mb-1.5">
                                 {isSuggestedSchedule ? 'Horário sugerido' : 'Agendado'}
                             </p>
                             <div className="flex items-center gap-1.5 text-xs font-bold text-saibro-800 mb-0.5">
@@ -2601,7 +2624,7 @@ const MatchCard: React.FC<{
                             <div className="w-10 h-10 bg-stone-100 rounded-full flex items-center justify-center text-stone-300 mb-2 mx-auto">
                                 <Calendar size={18} />
                             </div>
-                            <p className="text-[10px] font-black text-stone-400 uppercase tracking-wider">
+                            <p className="text-xs font-black text-stone-400 uppercase tracking-wider">
                                 {isSuggestedSchedule ? 'Sem horário sugerido' : 'Pendente'}
                             </p>
                         </div>

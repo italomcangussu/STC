@@ -2,6 +2,7 @@ import React from 'react';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Agenda } from '../components/Agenda';
+import { ConfirmProvider } from '../components/ui/ConfirmProvider';
 import { supabase } from '../lib/supabase';
 import { User } from '../types';
 
@@ -131,7 +132,7 @@ beforeEach(() => {
 });
 
 async function openValidPlayReservationModal() {
-  render(<Agenda currentUser={currentUser} />);
+  render(<ConfirmProvider><Agenda currentUser={currentUser} /></ConfirmProvider>);
 
   fireEvent.click(await screen.findByRole('button', { name: /nova reserva/i }));
   fireEvent.click(screen.getByRole('button', { name: /próximo/i }));
@@ -163,7 +164,7 @@ describe('Agenda reservation persistence', () => {
   it('keeps already loaded reservations visible when a refetch fails because of an unstable connection', async () => {
     const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     tableData.reservations = [{ ...reservationRow, date: new Date().toISOString().slice(0, 10) }];
-    render(<Agenda currentUser={currentUser} />);
+    render(<ConfirmProvider><Agenda currentUser={currentUser} /></ConfirmProvider>);
 
     expect(await screen.findByText(/Italo/)).toBeInTheDocument();
 

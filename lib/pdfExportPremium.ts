@@ -1,5 +1,6 @@
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import { notify } from './notifications';
 
 interface Registration {
     id: string;
@@ -177,8 +178,10 @@ export const generatePremiumPDF = async (
         pdf.save(`${championship.name}-lista-oficial.pdf`);
 
     } catch (error) {
-        console.error('PDF Export Error:', error);
-        alert('Erro ao gerar PDF');
+        notify.failure(error, 'Não foi possível gerar o PDF.', {
+            event: 'championship_pdf_export_failed',
+            championshipId: championship.id,
+        });
     } finally {
         if (document.body.contains(container)) {
             document.body.removeChild(container);

@@ -3,6 +3,8 @@ import {
     DollarSign, Loader2, TrendingUp, Calendar, Users, Trash2, Sparkles, CreditCard, UserCheck, Receipt
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { notify } from '../lib/notifications';
+import { useConfirm } from '../hooks/useConfirm';
 import { Reservation, NonSocioStudent } from '../types';
 import { getNowInFortaleza, formatDateBr } from '../utils';
 
@@ -36,6 +38,7 @@ const getReservationNonSocioIds = (r: Reservation): string[] => {
 };
 
 export const FinanceiroAdmin: React.FC = () => {
+    const confirm = useConfirm();
     const [reservations, setReservations] = useState<Reservation[]>([]);
     const [monthlyStudents, setMonthlyStudents] = useState<NonSocioStudent[]>([]);
     const [studentPayments, setStudentPayments] = useState<StudentPayment[]>([]);
@@ -119,11 +122,19 @@ export const FinanceiroAdmin: React.FC = () => {
 
     // --- Actions ---
     const handleDeletePayment = async (id: string) => {
-        if (!confirm('Deseja excluir este pagamento de Card Mensal? O valor será removido do relatório.')) return;
+        if (!await confirm({
+            title: 'Excluir este pagamento?',
+            description: 'O pagamento de Card Mensal some do histórico e do relatório do mês.',
+            confirmLabel: 'Excluir pagamento',
+        })) return;
+
         setProcessingPayment(id);
         const { error } = await supabase.from('student_payments').delete().eq('id', id);
         if (error) {
-            alert('Erro ao excluir: ' + error.message);
+            notify.failure(error, 'Não foi possível excluir o pagamento.', {
+                event: 'student_payment_delete_failed',
+                paymentId: id,
+            });
         } else {
             setDeleteSuccess(id);
             setTimeout(() => setDeleteSuccess(null), 1500);
@@ -133,9 +144,20 @@ export const FinanceiroAdmin: React.FC = () => {
     };
 
     const handleToggleDayUseExempt = async (reservation: Reservation) => {
-        if (!confirm('Tem certeza que deseja isentar este Day Use? O valor será removido do relatório mensal.')) return;
-
+        // A ação é um alternador, mas a pergunta antiga só falava de isentar —
+        // quem estava desfazendo uma isenção lia o contrário do que ia fazer.
         const newStatus = (reservation as any).payment_status === 'exempt' ? 'paid' : 'exempt';
+        const isentando = newStatus === 'exempt';
+
+        if (!await confirm({
+            tone: 'warning',
+            title: isentando ? 'Isentar este Day Use?' : 'Cobrar este Day Use de novo?',
+            description: isentando
+                ? 'O valor sai do relatório mensal.'
+                : 'O valor volta a contar no relatório mensal.',
+            confirmLabel: isentando ? 'Isentar' : 'Voltar a cobrar',
+        })) return;
+
         setProcessingPayment(reservation.id);
 
         const { error } = await supabase
@@ -144,7 +166,10 @@ export const FinanceiroAdmin: React.FC = () => {
             .eq('id', reservation.id);
 
         if (error) {
-            alert('Erro ao atualizar: ' + error.message);
+            notify.failure(error, 'Não foi possível alterar a isenção do Day Use.', {
+                event: 'day_use_exempt_toggle_failed',
+                reservationId: reservation.id,
+            });
         } else {
             setDeleteSuccess(reservation.id);
             setTimeout(() => setDeleteSuccess(null), 1500);

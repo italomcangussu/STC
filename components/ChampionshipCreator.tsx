@@ -7,8 +7,6 @@ import { supabase } from '../lib/supabase';
 import { MEMBER_ROLES } from '../utils';
 import {
     drawClasse5, buildClasse5Bracket,
-    drawClasse4PrimeiraFase,
-    drawClasse4CabecasDeChave, buildClasse4Bracket,
     buildClasse4OfficialBracket,
     type DrawAthlete, type DrawMatch,
 } from '../lib/resenhaOpenDraw';
@@ -31,13 +29,14 @@ import { activateFirstRound, activateRoundByPhase } from '../lib/championship/ro
 import { defaultConfigFor, type ClassFormats } from '../lib/championship/formatConfig';
 import { emptySetup, type SetupValues } from '../lib/championship/setupValues';
 import { fetchClassRegistrations } from '../lib/championship/registration';
+import { useConfirm } from '../hooks/useConfirm';
 import { toast } from 'sonner';
+import { notify } from '../lib/notifications';
+import { errorMessage, logger } from '../lib/logger';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type AdminStep = 'setup' | 'format' | 'registering' | 'drawing' | 'bracket';
-type DrawSubStep4 = 'qualify' | 'primeira-fase' | 'cabecas-de-chave' | 'done';
-
 interface Profile { id: string; name: string; category: string | null; }
 
 interface ChampionshipRow { id: string; name: string; status: string; }
@@ -45,6 +44,7 @@ interface ChampionshipRow { id: string; name: string; status: string; }
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export const ChampionshipCreator: React.FC = () => {
+    const confirm = useConfirm();
     const [classe, setClasse] = useState<ResenhaClass>('4ª Classe');
     const [step, setStep] = useState<AdminStep>('setup');
 
@@ -72,9 +72,6 @@ export const ChampionshipCreator: React.FC = () => {
 
     // Draw results
     const [drawMatches, setDrawMatches] = useState<DrawMatch[]>([]);
-    const [drawSubStep, setDrawSubStep] = useState<DrawSubStep4>('qualify');
-    const [qualifyMatches, setQualifyMatches] = useState<DrawMatch[]>([]);
-    const [primeiraFaseMatches, setPrimeiraFaseMatches] = useState<DrawMatch[]>([]);
 
     // Bracket
     const [bracket, setBracket] = useState<BracketMatchWithPhase[]>([]);
@@ -302,10 +299,7 @@ export const ChampionshipCreator: React.FC = () => {
 
     function goToDraw() {
         setStep('drawing');
-        setDrawSubStep('qualify');
         setDrawMatches([]);
-        setQualifyMatches([]);
-        setPrimeiraFaseMatches([]);
     }
 
     // ── Draw — 5ª Classe ──────────────────────────────────────────────────────
@@ -349,17 +343,23 @@ export const ChampionshipCreator: React.FC = () => {
 
     const [animating4, setAnimating4] = useState(false);
     const [displayQualify, setDisplayQualify] = useState<DrawMatch[]>([]);
-    const [displayPrimeira, setDisplayPrimeira] = useState<DrawMatch[]>([]);
-    const [displayCabecas, setDisplayCabecas] = useState<{ quartas1: DrawAthlete; quartas2: DrawAthlete; quartas3: DrawAthlete } | null>(null);
-    const [remainingPool4] = useState<DrawAthlete[]>([]);
     const anim4Ref = useRef<ReturnType<typeof setInterval> | null>(null);
 
     function runDrawQualify() {
         let fullBracket: DrawMatch[];
         try {
             fullBracket = buildClasse4OfficialBracket(athletes);
-        } catch (e: any) {
-            toast.error(e.message);
+        } catch (e) {
+            // O quadro oficial da 4ª Classe é fechado em 20 vagas. A mensagem
+            // crua ('esperado 20 atletas, recebido 18') não diz o que fazer —
+            // vai para o log, e a tela recebe a versão acionável.
+            logger.warn('classe4_bracket_rejected', {
+                atletas: athletes.length,
+                error: errorMessage(e),
+            });
+            notify.warning('O quadro da 4ª Classe precisa de exatamente 20 atletas.', {
+                description: `Há ${athletes.length} inscrito(s). Ajuste as inscrições antes de sortear.`,
+            });
             return;
         }
         if (anim4Ref.current) clearInterval(anim4Ref.current);
@@ -379,68 +379,18 @@ export const ChampionshipCreator: React.FC = () => {
                 clearInterval(anim4Ref.current!);
                 setDisplayQualify(fullBracket.filter(m => m.match_number <= 4));
                 setDrawMatches(fullBracket);
-                setDrawSubStep('done');
                 setAnimating4(false);
             }
         }, 60);
     }
 
-    function runDrawPrimeiraFase() {
-        const pool = remainingPool4;
-        let pm: DrawMatch[];
-        try {
-            pm = drawClasse4PrimeiraFase(pool);
-        } catch (e: any) {
-            toast.error(e.message);
-            return;
-        }
+    // Os timers de sorteio precisam morrer com o componente: sair do passo no meio
+    // da animação deixaria o setInterval vivo chamando setState em componente
+    // desmontado.
+    useEffect(() => () => {
+        if (anim5Ref.current) clearInterval(anim5Ref.current);
         if (anim4Ref.current) clearInterval(anim4Ref.current);
-        setAnimating4(true);
-        let ticks = 0;
-        anim4Ref.current = setInterval(() => {
-            ticks++;
-            const shuffled = [...pool].sort(() => Math.random() - 0.5);
-            setDisplayPrimeira(Array.from({ length: 5 }, (_, i) => ({
-                match_number: i + 4,
-                registration_a_id: shuffled[i * 2]?.id ?? null,
-                registration_b_id: shuffled[i * 2 + 1]?.id ?? null,
-                player_a_label: shuffled[i * 2]?.name ?? '',
-                player_b_label: shuffled[i * 2 + 1]?.name ?? '',
-            })));
-            if (ticks >= 30) {
-                clearInterval(anim4Ref.current!);
-                setDisplayPrimeira(pm.filter(m => m.match_number !== 9));
-                setPrimeiraFaseMatches(pm);
-                setAnimating4(false);
-            }
-        }, 60);
-    }
-
-    function runDrawCabecas() {
-        const ccs = athletes.filter(a => a.cabeca_de_chave);
-        let seeds: { quartas1: DrawAthlete; quartas2: DrawAthlete; quartas3: DrawAthlete };
-        try {
-            seeds = drawClasse4CabecasDeChave(ccs);
-        } catch (e: any) {
-            toast.error(e.message);
-            return;
-        }
-        if (anim4Ref.current) clearInterval(anim4Ref.current);
-        setAnimating4(true);
-        let ticks = 0;
-        anim4Ref.current = setInterval(() => {
-            ticks++;
-            const shuffled = [...ccs].sort(() => Math.random() - 0.5);
-            setDisplayCabecas({ quartas1: shuffled[0], quartas2: shuffled[1], quartas3: shuffled[2] });
-            if (ticks >= 30) {
-                clearInterval(anim4Ref.current!);
-                setDisplayCabecas(seeds);
-                const full = buildClasse4Bracket(qualifyMatches, primeiraFaseMatches, seeds);
-                setDrawMatches(full);
-                setAnimating4(false);
-            }
-        }, 60);
-    }
+    }, []);
 
     // ── Save bracket ──────────────────────────────────────────────────────────
 
@@ -479,7 +429,17 @@ export const ChampionshipCreator: React.FC = () => {
     }
 
     async function handleFinish() {
-        if (!confirm('Encerrar campeonato e apurar pontos?')) return;
+        if (!await confirm({
+            tone: 'warning',
+            title: 'Encerrar campeonato?',
+            description: 'A pontuação desta edição vai para o ranking geral e o campeonato passa para "encerrado".',
+            consequences: [
+                'O ranking de todos os participantes muda',
+                'Novos placares deixam de ser aceitos',
+            ],
+            confirmLabel: 'Encerrar e apurar',
+        })) return;
+
         setSaving(true);
         try {
             await resolveAndFinish(selectedChampId);
@@ -570,7 +530,7 @@ export const ChampionshipCreator: React.FC = () => {
                             </select>
                             {classesDoSelecionado.length > 0 && (
                                 <div className="space-y-2">
-                                    <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest">
+                                    <p className="text-xs font-black text-stone-400 uppercase tracking-widest">
                                         Retomar em qual classe
                                     </p>
                                     <div className="flex flex-wrap gap-2">
@@ -909,141 +869,39 @@ export const ChampionshipCreator: React.FC = () => {
                         </div>
                     )}
 
-                    {/* 4ª Classe — 3 step draw */}
+                    {/* 4ª Classe — sorteio do quadro oficial */}
                     {classe === '4ª Classe' && (
                         <div className="space-y-4">
-                            {/* Step indicator */}
-                            <div className="flex gap-2">
-                                {(['qualify', 'primeira-fase', 'cabecas-de-chave'] as DrawSubStep4[]).map((s, i) => {
-                                    const labels = ['Qualify', '1ª Fase', 'Cabeças'];
-                                    const done = drawSubStep === 'done' ||
-                                        (drawSubStep === 'cabecas-de-chave' && i < 2) ||
-                                        (drawSubStep === 'primeira-fase' && i < 1);
-                                    const active = drawSubStep === s;
-                                    return (
-                                        <div key={s} className={`flex-1 py-2 rounded-xl text-xs font-bold text-center transition-colors ${active ? 'bg-saibro-600 text-white' : done ? 'bg-green-100 text-green-700' : 'bg-stone-100 text-stone-400'}`}>
-                                            {done ? <Check size={12} className="inline mr-1" /> : null}{labels[i]}
-                                        </div>
-                                    );
-                                })}
+                            {/* O quadro sai inteiro de uma vez (`buildClasse4OfficialBracket`);
+                                estes são os confrontos da fase preliminar, os únicos com os
+                                dois nomes já definidos. O restante da chave depende deles. */}
+                            <div className="bg-white rounded-2xl border border-stone-100 p-5 space-y-4">
+                                <h2 className="font-black text-stone-800">Sorteio — 4ª Classe</h2>
+                                <p className="text-stone-500 text-sm">
+                                    Sorteia os 20 atletas no quadro oficial. Abaixo aparecem os Jogos 1 a 4,
+                                    da fase preliminar; o resto da chave é montado a partir dos vencedores.
+                                </p>
+                                <button
+                                    disabled={animating4}
+                                    onClick={runDrawQualify}
+                                    className="w-full py-4 bg-saibro-600 text-white rounded-xl font-black flex items-center justify-center gap-3 hover:bg-saibro-700 disabled:opacity-60"
+                                >
+                                    {animating4 ? <Loader2 className="animate-spin" size={20} /> : <Shuffle size={20} />}
+                                    {animating4 ? 'Sorteando...' : displayQualify.length ? 'Sortear novamente' : 'Sortear'}
+                                </button>
+                                {displayQualify.length > 0 && (
+                                    <div className={`space-y-2 transition-all ${animating4 ? 'opacity-60 blur-sm' : 'opacity-100'}`}>
+                                        {displayQualify.map(m => (
+                                            <div key={m.match_number} className="flex items-center gap-2 bg-stone-50 rounded-xl px-4 py-3">
+                                                <span className="text-xs font-bold text-stone-400 w-14">J{m.match_number}</span>
+                                                <span className="flex-1 font-bold text-stone-800 text-sm truncate">{m.player_a_label}</span>
+                                                <span className="text-xs text-stone-400 font-bold">vs</span>
+                                                <span className="flex-1 font-bold text-stone-800 text-sm truncate text-right">{m.player_b_label}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
-
-                            {/* Qualify */}
-                            {(drawSubStep === 'qualify') && (
-                                <div className="bg-white rounded-2xl border border-stone-100 p-5 space-y-4">
-                                    <h2 className="font-black text-stone-800">Etapa 1 — Qualify</h2>
-                                    <p className="text-stone-500 text-sm">Sorteio de 6 atletas elegíveis (sócios ou convidados de Sobral, não-CC) para os Jogos 1, 2 e 3.</p>
-                                    <button
-                                        disabled={animating4}
-                                        onClick={runDrawQualify}
-                                        className="w-full py-4 bg-saibro-600 text-white rounded-xl font-black flex items-center justify-center gap-3 hover:bg-saibro-700 disabled:opacity-60"
-                                    >
-                                        {animating4 ? <Loader2 className="animate-spin" size={20} /> : <Shuffle size={20} />}
-                                        {animating4 ? 'Sorteando...' : displayQualify.length ? 'Sortear novamente' : 'Sortear Qualify'}
-                                    </button>
-                                    {displayQualify.length > 0 && (
-                                        <>
-                                            <div className={`space-y-2 ${animating4 ? 'opacity-60 blur-sm' : ''}`}>
-                                                {displayQualify.map(m => (
-                                                    <div key={m.match_number} className="flex items-center gap-2 bg-stone-50 rounded-xl px-4 py-3">
-                                                        <span className="text-xs font-bold text-stone-400 w-14">J{m.match_number}</span>
-                                                        <span className="flex-1 font-bold text-stone-800 text-sm truncate">{m.player_a_label}</span>
-                                                        <span className="text-xs text-stone-400 font-bold">vs</span>
-                                                        <span className="flex-1 font-bold text-stone-800 text-sm truncate text-right">{m.player_b_label}</span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                            {!animating4 && (
-                                                <button
-                                                    onClick={() => { setDrawSubStep('primeira-fase'); }}
-                                                    className="w-full py-3 bg-green-600 text-white rounded-xl font-bold flex items-center justify-center gap-2"
-                                                >
-                                                    <ChevronRight size={18} /> Avançar para 1ª Fase
-                                                </button>
-                                            )}
-                                        </>
-                                    )}
-                                </div>
-                            )}
-
-                            {/* 1ª Fase */}
-                            {drawSubStep === 'primeira-fase' && (
-                                <div className="bg-white rounded-2xl border border-stone-100 p-5 space-y-4">
-                                    <h2 className="font-black text-stone-800">Etapa 2 — 1ª Fase</h2>
-                                    <p className="text-stone-500 text-sm">Sorteio dos Jogos 4 a 8. O Jogo 9 (Venc. J1 × Venc. J2) é automático.</p>
-                                    <button
-                                        disabled={animating4}
-                                        onClick={runDrawPrimeiraFase}
-                                        className="w-full py-4 bg-saibro-600 text-white rounded-xl font-black flex items-center justify-center gap-3 hover:bg-saibro-700 disabled:opacity-60"
-                                    >
-                                        {animating4 ? <Loader2 className="animate-spin" size={20} /> : <Shuffle size={20} />}
-                                        {animating4 ? 'Sorteando...' : displayPrimeira.length ? 'Sortear novamente' : 'Sortear 1ª Fase'}
-                                    </button>
-                                    {displayPrimeira.length > 0 && (
-                                        <>
-                                            <div className={`space-y-2 ${animating4 ? 'opacity-60 blur-sm' : ''}`}>
-                                                {displayPrimeira.map(m => (
-                                                    <div key={m.match_number} className="flex items-center gap-2 bg-stone-50 rounded-xl px-4 py-3">
-                                                        <span className="text-xs font-bold text-stone-400 w-14">J{m.match_number}</span>
-                                                        <span className="flex-1 font-bold text-stone-800 text-sm truncate">{m.player_a_label}</span>
-                                                        <span className="text-xs text-stone-400 font-bold">vs</span>
-                                                        <span className="flex-1 font-bold text-stone-800 text-sm truncate text-right">{m.player_b_label}</span>
-                                                    </div>
-                                                ))}
-                                                <div className="flex items-center gap-2 bg-blue-50 rounded-xl px-4 py-3">
-                                                    <span className="text-xs font-bold text-blue-400 w-14">J9</span>
-                                                    <span className="flex-1 font-bold text-blue-800 text-sm">Vencedor Jogo 1</span>
-                                                    <span className="text-xs text-blue-400 font-bold">vs</span>
-                                                    <span className="flex-1 font-bold text-blue-800 text-sm text-right">Vencedor Jogo 2</span>
-                                                </div>
-                                            </div>
-                                            {!animating4 && (
-                                                <button
-                                                    onClick={() => setDrawSubStep('cabecas-de-chave')}
-                                                    className="w-full py-3 bg-green-600 text-white rounded-xl font-bold flex items-center justify-center gap-2"
-                                                >
-                                                    <ChevronRight size={18} /> Sortear Cabeças de Chave
-                                                </button>
-                                            )}
-                                        </>
-                                    )}
-                                </div>
-                            )}
-
-                            {/* Cabeças de chave */}
-                            {drawSubStep === 'cabecas-de-chave' && (
-                                <div className="bg-white rounded-2xl border border-stone-100 p-5 space-y-4">
-                                    <h2 className="font-black text-stone-800">Etapa 3 — Cabeças de Chave</h2>
-                                    <p className="text-stone-500 text-sm">Os 3 CCs são sorteados para as posições das Quartas 1, 2 e 3.</p>
-                                    <button
-                                        disabled={animating4}
-                                        onClick={runDrawCabecas}
-                                        className="w-full py-4 bg-yellow-500 text-white rounded-xl font-black flex items-center justify-center gap-3 hover:bg-yellow-600 disabled:opacity-60"
-                                    >
-                                        {animating4 ? <Loader2 className="animate-spin" size={20} /> : <Star size={20} />}
-                                        {animating4 ? 'Sorteando...' : displayCabecas ? 'Sortear novamente' : 'Sortear Cabeças'}
-                                    </button>
-                                    {displayCabecas && (
-                                        <>
-                                            <div className={`space-y-2 ${animating4 ? 'opacity-60 blur-sm' : ''}`}>
-                                                {[
-                                                    { label: 'Quartas 1 (vs Venc. J11)', cc: displayCabecas.quartas1 },
-                                                    { label: 'Quartas 2 (vs Venc. J9)', cc: displayCabecas.quartas2 },
-                                                    { label: 'Quartas 3 (vs Venc. J10)', cc: displayCabecas.quartas3 },
-                                                ].map(({ label, cc }) => (
-                                                    <div key={cc.id} className="flex items-center gap-3 bg-yellow-50 rounded-xl px-4 py-3">
-                                                        <Star size={14} className="text-yellow-600 shrink-0" />
-                                                        <div>
-                                                            <p className="font-black text-stone-800 text-sm">{cc.name}</p>
-                                                            <p className="text-xs text-stone-400">{label}</p>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </>
-                                    )}
-                                </div>
-                            )}
                         </div>
                     )}
 
@@ -1092,7 +950,7 @@ export const ChampionshipCreator: React.FC = () => {
                     <div className="flex items-center justify-between">
                         <h2 className="font-black text-stone-800 text-lg">Tabela de Confrontos</h2>
                         <div className="flex gap-2">
-                            <button onClick={loadBracket} disabled={loadingBracket} className="p-2 rounded-xl border border-stone-200 hover:bg-stone-50 text-stone-500">
+                            <button onClick={loadBracket} disabled={loadingBracket} className="hit-44 rounded-xl border border-stone-200 hover:bg-stone-50 text-stone-500">
                                 <RefreshCw size={16} className={loadingBracket ? 'animate-spin' : ''} />
                             </button>
                             <button

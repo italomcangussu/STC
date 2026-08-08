@@ -102,16 +102,16 @@ export const KnockoutFromGroups: React.FC<Props> = ({
                     )}
 
                     <div>
-                        <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest mb-2">
+                        <p className="text-xs font-black text-stone-400 uppercase tracking-widest mb-2">
                             {preview.qualified.length} classificados
                         </p>
                         <ul className="space-y-2">
                             {preview.pairs.map(([a, b], i) => (
                                 <li key={`${a}-${b}`} className="p-3 rounded-xl border border-stone-100 text-sm">
-                                    <span className="text-[10px] font-bold text-stone-400">Jogo {i + 1}</span>
+                                    <span className="text-xs font-bold text-stone-400">Jogo {i + 1}</span>
                                     <div className="flex items-center justify-between gap-2 font-bold text-stone-700">
                                         <span className="truncate">{nomeDe(a)}</span>
-                                        <span className="text-[10px] text-stone-300">VS</span>
+                                        <span className="text-xs text-stone-300">VS</span>
                                         <span className="truncate text-right">{nomeDe(b)}</span>
                                     </div>
                                 </li>

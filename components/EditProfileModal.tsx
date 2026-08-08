@@ -2,6 +2,7 @@
 import React, { useState, useRef } from 'react';
 import { Camera, User as UserIcon, X, Save, Loader2, Upload } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { notify } from '../lib/notifications';
 import { User } from '../types';
 
 interface EditProfileModalProps {
@@ -43,8 +44,10 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ currentUser,
             setAvatarUrl(data.publicUrl);
 
         } catch (error) {
-            console.error('Error uploading avatar:', error);
-            alert('Erro ao fazer upload da imagem.');
+            notify.failure(error, 'Não foi possível enviar a imagem.', {
+                event: 'profile_avatar_upload_failed',
+                userId: currentUser.id,
+            });
         } finally {
             setUploading(false);
         }
@@ -72,8 +75,10 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ currentUser,
             onClose();
 
         } catch (error) {
-            console.error('Error saving profile:', error);
-            alert('Erro ao salvar perfil.');
+            notify.failure(error, 'Não foi possível salvar o perfil.', {
+                event: 'profile_save_failed',
+                userId: currentUser.id,
+            });
         } finally {
             setSaving(false);
         }

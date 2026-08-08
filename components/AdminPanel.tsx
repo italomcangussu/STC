@@ -9,6 +9,9 @@ import { Dashboard } from './Dashboard';
 import { Reservation, User, Challenge, AccessRequest } from '../types';
 import { formatDateBr } from '../utils';
 import { supabase } from '../lib/supabase';
+import { notify } from '../lib/notifications';
+import { useConfirm } from '../hooks/useConfirm';
+import { plural } from '../utils';
 import { getNowInFortaleza, formatDate, MEMBER_ROLES } from '../utils';
 import { AdminUserEditor } from './AdminUserEditor';
 import { AdminMatchCreator } from './AdminMatchCreator';
@@ -381,6 +384,7 @@ const ReservasTab: React.FC = () => {
 
 // --- Sub-component: Desafios Tab ---
 const DesafiosTab: React.FC = () => {
+    const confirm = useConfirm();
     const [challenges, setChallenges] = useState<Challenge[]>([]);
     const [profiles, setProfiles] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
@@ -437,7 +441,12 @@ const DesafiosTab: React.FC = () => {
     };
 
     const handleCancel = async (id: string) => {
-        if (!confirm('Tem certeza que deseja cancelar este desafio?')) return;
+        if (!await confirm({
+            title: 'Cancelar este desafio?',
+            description: 'Os dois atletas param de ver o desafio como pendente.',
+            confirmLabel: 'Cancelar desafio',
+            cancelLabel: 'Manter',
+        })) return;
         await supabase.from('challenges').update({ status: 'cancelled' }).eq('id', id);
         setChallenges(challenges.map(c =>
             c.id === id ? { ...c, status: 'cancelled' } : c
@@ -514,8 +523,9 @@ const DesafiosTab: React.FC = () => {
             setSelectedChallenge(null);
 
         } catch (error) {
-            console.error('Error saving score:', error);
-            alert('Erro ao salvar placar.');
+            notify.failure(error, 'Não foi possível salvar o placar.', {
+                event: 'admin_challenge_score_save_failed',
+            });
         }
     };
 
@@ -671,6 +681,7 @@ interface Announcement {
 }
 
 const AnunciosTab: React.FC = () => {
+    const confirm = useConfirm();
     const [announcements, setAnnouncements] = useState<Announcement[]>([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
@@ -759,7 +770,11 @@ const AnunciosTab: React.FC = () => {
     };
 
     const handleDelete = async (id: string) => {
-        if (!confirm('Excluir este aviso?')) return;
+        if (!await confirm({
+            title: 'Excluir este aviso?',
+            description: 'Ele some do mural e não pode ser recuperado.',
+            confirmLabel: 'Excluir aviso',
+        })) return;
         await supabase.from('announcements').delete().eq('id', id);
         setAnnouncements(prev => prev.filter(a => a.id !== id));
     };
@@ -991,6 +1006,7 @@ const SociosTab: React.FC = () => {
 };
 
 const AcessosTab: React.FC = () => {
+    const confirm = useConfirm();
     const [requests, setRequests] = useState<AccessRequest[]>([]);
     const [loading, setLoading] = useState(true);
     const [auditLoading, setAuditLoading] = useState(true);
@@ -1132,7 +1148,12 @@ const AcessosTab: React.FC = () => {
     };
 
     const handleApprove = async (req: AccessRequest) => {
-        if (!confirm(`Aprovar solicitação de ${req.name}?`)) return;
+        if (!await confirm({
+            tone: 'warning',
+            title: `Aprovar ${req.name}?`,
+            description: 'O atleta ganha acesso ao app e passa a aparecer nas listas do clube.',
+            confirmLabel: 'Aprovar acesso',
+        })) return;
 
         try {
             setSaving(true);
@@ -1141,10 +1162,14 @@ const AcessosTab: React.FC = () => {
                 requestId: req.id
             });
             await fetchRequests();
-            alert('Solicitação aprovada e atleta provisionado.');
-        } catch (error: any) {
-            console.error(error);
-            alert(error.message || 'Erro ao aprovar solicitação.');
+            notify.success(`${req.name} agora tem acesso.`, {
+                description: 'O cadastro foi provisionado e já aparece nas listas.',
+            });
+        } catch (error) {
+            notify.failure(error, 'Não foi possível aprovar a solicitação.', {
+                event: 'access_request_approve_failed',
+                requestId: req.id,
+            });
         } finally {
             setSaving(false);
         }
@@ -1152,7 +1177,12 @@ const AcessosTab: React.FC = () => {
 
     const handleReject = async (req: AccessRequest) => {
         const reason = prompt(`Motivo da rejeição para ${req.name} (opcional):`, '') ?? null;
-        if (reason === null && !confirm(`Rejeitar solicitação de ${req.name} sem motivo?`)) return;
+        if (reason === null && !await confirm({
+            title: `Rejeitar ${req.name} sem informar motivo?`,
+            description: 'Sem motivo registrado, ninguém saberá depois por que o acesso foi negado.',
+            confirmLabel: 'Rejeitar assim mesmo',
+            cancelLabel: 'Voltar e escrever',
+        })) return;
 
         try {
             setSaving(true);
@@ -1162,10 +1192,12 @@ const AcessosTab: React.FC = () => {
                 rejectionReason: reason || null
             });
             await fetchRequests();
-            alert('Solicitação rejeitada.');
-        } catch (error: any) {
-            console.error(error);
-            alert(error.message || 'Erro ao rejeitar solicitação.');
+            notify.success(`Solicitação de ${req.name} rejeitada.`);
+        } catch (error) {
+            notify.failure(error, 'Não foi possível rejeitar a solicitação.', {
+                event: 'access_request_reject_failed',
+                requestId: req.id,
+            });
         } finally {
             setSaving(false);
         }
@@ -1188,10 +1220,11 @@ const AcessosTab: React.FC = () => {
             setPhone('');
             setEmail('');
             await fetchRequests();
-            alert('Atleta criado com sucesso.');
-        } catch (error: any) {
-            console.error(error);
-            alert(error.message || 'Erro ao criar atleta.');
+            notify.success('Atleta criado.', { description: 'Já pode entrar no app pelo telefone cadastrado.' });
+        } catch (error) {
+            notify.failure(error, 'Não foi possível criar o atleta.', {
+                event: 'admin_athlete_create_failed',
+            });
         } finally {
             setSaving(false);
         }
@@ -1391,6 +1424,7 @@ const AcessosTab: React.FC = () => {
 
 // --- Sub-component: Lançamentos Tab (Retroativo & Auditoria) ---
 const LancamentosTab: React.FC = () => {
+    const confirm = useConfirm();
     const [_loading, _setLoading] = useState(false);
     const [auditLogs, setAuditLogs] = useState<any[]>([]);
     const [resetReason, setResetReason] = useState('');
@@ -1475,20 +1509,21 @@ const LancamentosTab: React.FC = () => {
     };
 
     const handleFullRankingReset = async () => {
-        const typed = prompt(
-            'Esta ação vai zerar completamente o ranking (pontos, vitórias, sets e games) de todos os atletas ativos. Digite ZERAR para continuar:'
-        );
-        if (typed === null) return;
-
-        if (typed.trim().toUpperCase() !== 'ZERAR') {
-            alert('Confirmação inválida. Digite exatamente ZERAR.');
-            return;
-        }
-
-        const secondConfirm = confirm(
-            'Confirma o reset completo do ranking agora? Esta ação inicia um novo ciclo de ranking.'
-        );
-        if (!secondConfirm) return;
+        // Eram três diálogos nativos em sequência — `prompt`, um `alert` para
+        // quem digitasse errado e um `confirm` — para uma decisão só. Um
+        // diálogo com confirmação digitada faz o mesmo trabalho e diz, antes do
+        // clique, exatamente o que se perde.
+        if (!await confirm({
+            tone: 'danger',
+            title: 'Zerar o ranking de todos os atletas?',
+            description: 'Começa um novo ciclo de ranking. Esta ação não pode ser desfeita.',
+            consequences: [
+                'Pontos, vitórias, sets e games voltam a zero',
+                'Vale para todos os atletas ativos',
+            ],
+            requireTyped: 'ZERAR',
+            confirmLabel: 'Zerar ranking',
+        })) return;
 
         try {
             setResettingRanking(true);
@@ -1502,12 +1537,17 @@ const LancamentosTab: React.FC = () => {
             clearRankingCache();
             await fetchResetHistory();
 
-            const affected = (data as any)?.affected_profiles ?? 'N/A';
-            alert(`Ranking zerado com sucesso. Atletas afetados: ${affected}.`);
+            const affected = (data as any)?.affected_profiles ?? null;
+            notify.success('Ranking zerado.', {
+                description: affected === null
+                    ? 'Um novo ciclo de ranking começou.'
+                    : `${plural(affected, 'atleta')} no novo ciclo.`,
+            });
             setResetReason('');
-        } catch (error: any) {
-            console.error('Error resetting ranking:', error);
-            alert(error?.message || 'Erro ao zerar ranking.');
+        } catch (error) {
+            notify.failure(error, 'Não foi possível zerar o ranking.', {
+                event: 'ranking_full_reset_failed',
+            });
         } finally {
             setResettingRanking(false);
         }
@@ -1607,7 +1647,7 @@ const LancamentosTab: React.FC = () => {
                 courts={courts}
                 onSuccess={() => {
                     fetchAudit(); // Refresh audit logs
-                    alert('Pontos atualizados!');
+                    notify.success('Pontos atualizados.');
                 }}
             />
         </div>

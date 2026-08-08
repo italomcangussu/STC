@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { User, NonSocioStudent, Reservation, Court, RelationshipType } from '../types';
 import { Calendar, Users, Plus, Edit, CheckCircle, XCircle, Clock, MapPin, DollarSign, Loader2, AlertCircle, UserPlus, ArrowUpCircle, X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { notify } from '../lib/notifications';
+import { useConfirm } from '../hooks/useConfirm';
+import { validateStudentForm } from '../lib/students/validateStudentForm';
 import { getNowInFortaleza, formatDate, formatDateBr, MEMBER_ROLES } from '../utils';
 import { StandardModal } from './StandardModal';
 
@@ -140,6 +143,7 @@ interface ProfessorProfileProps {
 }
 
 export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser }) => {
+    const confirm = useConfirm();
     const [activeTab, setActiveTab] = useState<'classes' | 'students'>('classes');
     const [loading, setLoading] = useState(true);
     const [professorRecord, setProfessorRecord] = useState<{ id: string; name: string; bio?: string } | null>(null);
@@ -296,17 +300,13 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
 
     // --- HANDLERS ---
     const handleSaveStudent = async () => {
-        if (!studentForm.name?.trim() || !professorRecord) {
-            return alert('O nome do aluno é obrigatório.');
-        }
-
-        if (studentForm.studentType === 'dependent') {
-            if (!studentForm.responsibleSocioId) {
-                return alert('Selecione o sócio responsável pelo dependente.');
-            }
-            if (!studentForm.relationshipType) {
-                return alert('Selecione o tipo de relacionamento.');
-            }
+        // O professor logado já é o responsável, então não há professor a escolher.
+        const problema = !professorRecord
+            ? { message: 'Seu cadastro de professor não foi carregado.', hint: 'Recarregue a página e tente de novo.' }
+            : validateStudentForm(studentForm);
+        if (problema) {
+            notify.warning(problema.message, { description: problema.hint });
+            return;
         }
 
         const studentData = {
@@ -327,7 +327,10 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                 .eq('id', editingStudent.id);
 
             if (error) {
-                alert('Erro ao salvar: ' + error.message);
+                notify.failure(error, 'Não foi possível salvar as alterações do aluno.', {
+                    event: 'student_update_failed',
+                    studentId: editingStudent.id,
+                });
                 return;
             }
             setStudents(prev => prev.map(s => s.id === editingStudent.id ? {
@@ -349,7 +352,9 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                 .single();
 
             if (error) {
-                alert('Erro ao salvar aluno: ' + error.message);
+                notify.failure(error, 'Não foi possível cadastrar o aluno.', {
+                    event: 'student_create_failed',
+                });
                 return;
             }
 
@@ -410,20 +415,27 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
         const student = students.find(s => s.id === id);
         if (!student) return;
 
-        if (confirm(`Tem certeza que deseja desativar o aluno "${student.name}"? O histórico de pagamentos será preservado.`)) {
-            const { error } = await supabase
-                .from('non_socio_students')
-                .update({ is_active: false })
-                .eq('id', id);
+        if (!await confirm({
+            title: `Desativar ${student.name}?`,
+            description: 'Ele sai da sua lista de alunos ativos. O histórico de pagamentos é preservado.',
+            confirmLabel: 'Desativar aluno',
+        })) return;
 
-            if (error) {
-                alert('Erro ao desativar aluno: ' + error.message);
-                return;
-            }
+        const { error } = await supabase
+            .from('non_socio_students')
+            .update({ is_active: false })
+            .eq('id', id);
 
-            // Remove da lista local (soft delete - não mostra mais na interface)
-            setStudents(prev => prev.filter(s => s.id !== id));
+        if (error) {
+            notify.failure(error, 'Não foi possível desativar o aluno.', {
+                event: 'student_deactivate_failed',
+                studentId: id,
+            });
+            return;
         }
+
+        // Remove da lista local (soft delete - não mostra mais na interface)
+        setStudents(prev => prev.filter(s => s.id !== id));
     };
 
     // --- Conversão para Card Mensal ---
@@ -489,13 +501,16 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
             setShowConvertModal(false);
             setConvertStudent(null);
 
-            if (isExperimental) {
-                alert(`Conversão realizada! Pagamento(s) Day Card Experimental estornado(s). Card Mensal ativado até ${formatDateBr(isoExp)}.`);
-            } else {
-                alert(`Conversão realizada! Card Mensal ativado até ${formatDateBr(isoExp)}. Pagamento(s) Day Card anteriores mantidos.`);
-            }
-        } catch (error: any) {
-            alert('Erro na conversão: ' + error.message);
+            notify.success(`Card Mensal ativado até ${formatDateBr(isoExp)}.`, {
+                description: isExperimental
+                    ? 'Os pagamentos do Day Card Experimental foram estornados.'
+                    : 'Os pagamentos de Day Card anteriores foram mantidos.',
+            });
+        } catch (error) {
+            notify.failure(error, 'Não foi possível converter para Card Mensal.', {
+                event: 'student_plan_conversion_failed',
+                studentId: convertStudent?.id,
+            });
         } finally {
             setProcessing(false);
         }
@@ -509,7 +524,12 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
 
 
     const handleDeleteClass = async (id: string) => {
-        if (confirm('Cancelar esta aula?')) {
+        if (await confirm({
+            title: 'Cancelar esta aula?',
+            description: 'O horário volta a ficar livre na agenda.',
+            confirmLabel: 'Cancelar aula',
+            cancelLabel: 'Manter',
+        })) {
             await supabase
                 .from('reservations')
                 .update({ status: 'cancelled' })

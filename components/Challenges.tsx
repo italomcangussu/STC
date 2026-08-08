@@ -5,6 +5,7 @@ import { Trophy, Plus, CheckCircle, XCircle, Clock, Calendar, AlertTriangle, Shi
 import { fetchRanking, getEligibleOpponents, checkMonthlyChallengeLimit, PlayerStats } from '../lib/rankingService';
 import { sendPushNotification } from '../lib/notificationService';
 import { supabase } from '../lib/supabase';
+import { notify } from '../lib/notifications';
 import { LiveScoreboard } from './LiveScoreboard';
 import { getNowInFortaleza, formatDate } from '../utils';
 
@@ -651,8 +652,10 @@ export const ChallengesView: React.FC<{ currentUser: User }> = ({ currentUser })
             });
 
         } catch (err) {
-            console.error('Error creating challenge:', err);
-            alert('Erro ao criar desafio');
+            notify.failure(err, 'Não foi possível criar o desafio.', {
+                event: 'challenge_create_failed',
+                opponentId: data.opponentId,
+            });
         }
     };
 

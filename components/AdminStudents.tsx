@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { notify } from '../lib/notifications';
+import { useConfirm } from '../hooks/useConfirm';
+import { validateStudentForm } from '../lib/students/validateStudentForm';
 import { NonSocioStudent, Professor, User, RelationshipType } from '../types';
 import {
     Users, Plus, Search, Edit, Trash2, CheckCircle, Loader2, DollarSign, X, UserPlus, ArrowUpCircle
@@ -23,6 +26,7 @@ function addOneMonth(dateStr: string): string {
 }
 
 export const AdminStudents: React.FC = () => {
+    const confirm = useConfirm();
     const [students, setStudents] = useState<NonSocioStudent[]>([]);
     const [professors, setProfessors] = useState<Professor[]>([]);
     const [socios, setSocios] = useState<User[]>([]);
@@ -112,21 +116,11 @@ export const AdminStudents: React.FC = () => {
 
     // --- Student CRUD ---
     const handleSaveStudent = async () => {
-        if (!studentForm.name || !studentForm.name.trim()) {
-            return alert('O nome do aluno é obrigatório.');
-        }
-
-        if (studentForm.studentType === 'dependent') {
-            if (!studentForm.responsibleSocioId) {
-                return alert('Selecione o sócio responsável pelo dependente.');
-            }
-            if (!studentForm.relationshipType) {
-                return alert('Selecione o tipo de relacionamento.');
-            }
-        } else {
-            if (professors.length > 0 && !studentForm.professorId) {
-                return alert('Selecione um professor responsável.');
-            }
+        // Só cobra professor quando existe professor cadastrado para escolher.
+        const problema = validateStudentForm(studentForm, { requireProfessor: professors.length > 0 });
+        if (problema) {
+            notify.warning(problema.message, { description: problema.hint });
+            return;
         }
 
         setProcessing(true);
@@ -153,10 +147,12 @@ export const AdminStudents: React.FC = () => {
             setShowStudentModal(false);
             setEditingStudent(null);
             setStudentForm({ name: '', phone: '', professorId: '', studentType: 'regular', responsibleSocioId: '', relationshipType: '', planType: 'Day Card' });
-            alert('Aluno salvo com sucesso!');
-        } catch (error: any) {
-            console.error('Erro ao salvar aluno:', error);
-            alert('Erro ao salvar: ' + error.message);
+            notify.success(editingStudent ? 'Aluno atualizado.' : 'Aluno cadastrado.');
+        } catch (error) {
+            notify.failure(error, 'Não foi possível salvar o aluno.', {
+                event: 'student_save_failed',
+                studentId: editingStudent?.id,
+            });
         } finally {
             setProcessing(false);
         }
@@ -164,7 +160,12 @@ export const AdminStudents: React.FC = () => {
 
     const handleDeleteStudent = async (id: string) => {
         const student = students.find(s => s.id === id);
-        if (!confirm(`Desativar "${student?.name}"? O histórico de pagamentos será preservado.`)) return;
+        if (!await confirm({
+            title: `Desativar ${student?.name ?? 'este aluno'}?`,
+            description: 'Ele sai da lista de alunos ativos. O histórico de pagamentos é preservado.',
+            confirmLabel: 'Desativar aluno',
+        })) return;
+
         setProcessing(true);
         try {
             const { error } = await supabase
@@ -173,8 +174,11 @@ export const AdminStudents: React.FC = () => {
                 .eq('id', id);
             if (error) throw error;
             await fetchData();
-        } catch (error: any) {
-            alert('Erro ao desativar aluno: ' + error.message);
+        } catch (error) {
+            notify.failure(error, 'Não foi possível desativar o aluno.', {
+                event: 'student_deactivate_failed',
+                studentId: id,
+            });
         } finally {
             setProcessing(false);
         }
@@ -223,12 +227,16 @@ export const AdminStudents: React.FC = () => {
             await fetchData();
             setShowPaymentModal(false);
             setPaymentStudent(null);
-            alert(isCardMensal
-                ? `Pagamento Card Mensal registrado! Vencimento: ${formatDateBr(isoExp!)}`
-                : `Pagamento Day Card de R$ ${price},00 registrado!`
-            );
-        } catch (error: any) {
-            alert('Erro ao registrar pagamento: ' + error.message);
+            notify.success('Pagamento registrado.', {
+                description: isCardMensal
+                    ? `Card Mensal válido até ${formatDateBr(isoExp!)}.`
+                    : `Day Card de R$ ${price},00.`,
+            });
+        } catch (error) {
+            notify.failure(error, 'Não foi possível registrar o pagamento.', {
+                event: 'student_payment_create_failed',
+                studentId: paymentStudent?.id,
+            });
         } finally {
             setProcessing(false);
         }
@@ -291,13 +299,16 @@ export const AdminStudents: React.FC = () => {
             setShowConvertModal(false);
             setConvertStudent(null);
 
-            if (isExperimental) {
-                alert(`Conversão realizada! Pagamento(s) Day Card Experimental estornado(s). Card Mensal ativado até ${formatDateBr(isoExp)}.`);
-            } else {
-                alert(`Conversão realizada! Card Mensal ativado até ${formatDateBr(isoExp)}. Pagamento(s) Day Card anteriores mantidos.`);
-            }
-        } catch (error: any) {
-            alert('Erro na conversão: ' + error.message);
+            notify.success(`Card Mensal ativado até ${formatDateBr(isoExp)}.`, {
+                description: isExperimental
+                    ? 'Os pagamentos do Day Card Experimental foram estornados.'
+                    : 'Os pagamentos de Day Card anteriores foram mantidos.',
+            });
+        } catch (error) {
+            notify.failure(error, 'Não foi possível converter para Card Mensal.', {
+                event: 'student_plan_conversion_failed',
+                studentId: convertStudent?.id,
+            });
         } finally {
             setProcessing(false);
         }

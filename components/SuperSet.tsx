@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { notify } from '../lib/notifications';
 import { User } from '../types';
 import { Trophy, Search, Users, ArrowRight, History, Zap, TrendingUp, Sparkles } from 'lucide-react';
 import { getNowInFortaleza, formatDate, MEMBER_ROLES } from '../utils';
@@ -127,15 +128,18 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
                 });
             }
 
-            alert('SuperSet salvo! Pontuação aplicada conforme regra atual (3 pts para o vencedor).');
+            notify.success('SuperSet salvo.', {
+                description: 'Pontuação aplicada pela regra atual: 3 pontos para o vencedor.',
+            });
             // Reset
             setScoreA(0);
             setScoreB(0);
             setPlayerAId('');
             setPlayerBId('');
-        } catch (error: any) {
-            console.error(error);
-            alert('Erro ao salvar: ' + error.message);
+        } catch (error) {
+            notify.failure(error, 'Não foi possível salvar o SuperSet.', {
+                event: 'superset_save_failed',
+            });
         } finally {
             setSaving(false);
         }

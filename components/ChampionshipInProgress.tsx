@@ -1,19 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Championship, ChampionshipRound, Match, ChampionshipRegistration } from '../types';
-import { Play, Calendar, AlertTriangle, Loader2, Clock, ChevronLeft, ChevronRight, Trash2, Shuffle, Target } from 'lucide-react';
+import { Play, Calendar, Loader2, Clock, ChevronLeft, ChevronRight, Trash2, Shuffle, Target } from 'lucide-react';
 import { generateRoundRobinMatches, getRoundDates } from '../lib/championshipUtils';
 import { MatchScheduleModal } from './MatchScheduleModal';
 import { GroupStandingsCard } from './GroupStandingsCard';
 import { calculateGroupStandings } from '../lib/championshipUtils';
 import { isTechnicalDrawAllowed } from '../lib/championshipStandings';
-import { formatDateBr } from '../utils';
+import { formatDateBr, plural } from '../utils';
 import { MatchGenerationModal } from './MatchGenerationModal';
 import { MatchExportPreview } from './MatchExportPreview';
 import { BracketView } from './BracketView';
 import { ResenhaOpenBracketView } from './ResenhaOpenBracketView';
 import { StandingsDetailModal } from './StandingsDetailModal';
 import { getGroupStageMatches, getRoundMatchesForDisplay } from '../lib/groupKnockout';
+import { logger } from '../lib/logger';
+import { notify } from '../lib/notifications';
+import { CHAMPIONSHIP_ERRORS } from '../lib/humanErrors';
+import { useConfirm } from '../hooks/useConfirm';
+import { StandardModal } from './StandardModal';
+import { deleteChampionshipMatches } from '../lib/championship/matches';
 import { ResultModal } from './Championships';
 import html2canvas from 'html2canvas';
 import { Share2, Download, X } from 'lucide-react';
@@ -36,6 +42,7 @@ const isResenhaOpenChampionship = (championship?: Pick<Championship, 'name' | 's
 };
 
 export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentUser, onUpdate, initialTab = 'matches' }) => {
+    const confirm = useConfirm();
     const [loading, setLoading] = useState(true);
     const [rounds, setRounds] = useState<ChampionshipRound[]>([]);
     const [matches, setMatches] = useState<Match[]>([]);
@@ -52,7 +59,6 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
     const [courts, setCourts] = useState<any[]>([]);
 
     // Confirmation Modal State
-    const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [showGenModal, setShowGenModal] = useState(false);
     const [resetting, setResetting] = useState(false);
 
@@ -173,11 +179,16 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
     };
 
     const handleStartChampionship = async () => {
-        console.log('🎾 Starting championship initialization...');
+        if (!await confirm({
+            tone: 'warning',
+            title: 'Iniciar o campeonato agora?',
+            description: 'O sistema gera todas as rodadas e partidas da fase classificatória, para todos os grupos.',
+            confirmLabel: 'Sim, iniciar',
+        })) return;
+
         setProcessing(true);
 
         try {
-            console.log('📅 Step 1: Creating rounds...');
             // 1. Create Rounds (3 rounds fixed for now based on rules)
             const roundsToCreate = [1, 2, 3].map(num => ({
                 championship_id: championship.id,
@@ -189,31 +200,18 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                 status: num === 1 ? 'active' : 'pending' // First round active
             }));
 
-            console.log('Rounds to create:', roundsToCreate);
-
             const { data: createdRounds, error: roundError } = await supabase
                 .from('championship_rounds')
                 .insert(roundsToCreate)
                 .select();
 
-            if (roundError) {
-                console.error('❌ Error creating rounds:', roundError);
-                throw roundError;
-            }
-            if (!createdRounds) {
-                console.error('❌ No rounds were created');
-                throw new Error('Failed to create rounds');
-            }
-
-            console.log('✅ Rounds created:', createdRounds);
+            if (roundError) throw roundError;
+            if (!createdRounds) throw new Error('Failed to create rounds');
 
             // 2. Generate Matches for each Group
-            console.log('🎯 Step 2: Generating matches for', groups.length, 'groups...');
             let allMatches: any[] = [];
 
             for (const group of groups) {
-                console.log(`Processing group: ${group.category} - Grupo ${group.group_name}`);
-
                 // Prepare members with drawOrder
                 const members = group.members.map((m: any) => ({
                     id: m.registration_id, // We use registration ID as player ID for logic
@@ -221,11 +219,8 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                     registrationId: m.registration_id
                 }));
 
-                console.log(`  Members (${members.length}):`, members);
-
                 // If seed (drawOrder 0), ensure it's handled. logic handles 0,1,2,3
                 const generated = generateRoundRobinMatches(members, group.id, createdRounds);
-                console.log(`  Generated ${generated.length} matches for this group`);
 
                 // IMPORTANT: map generateRoundRobinMatches result to DB schema
                 // generateRoundRobinMatches now returns Partial<Match> with registration_id set
@@ -244,10 +239,6 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                 allMatches = [...allMatches, ...resolvedMatches];
             }
 
-            console.log(`✅ Total matches generated: ${allMatches.length}`);
-
-
-
             // 3. Insert Matches
             // Convert to database schema (snake_case)
             const matchesForDB = allMatches.map(m => ({
@@ -265,33 +256,34 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                 result_type: 'played'
             }));
 
-            console.log('💾 Step 3: Inserting matches...', matchesForDB.length, 'matches');
-            console.log('Sample match:', matchesForDB[0]);
-
             const { data: insertedMatches, error: matchError } = await supabase
                 .from('matches')
                 .insert(matchesForDB)
                 .select();
 
-            if (matchError) {
-                console.error('❌ Match insertion error:', matchError);
-                throw matchError;
-            }
+            if (matchError) throw matchError;
 
-            console.log('✅ Matches inserted successfully:', insertedMatches?.length);
+            logger.info('championship_started', {
+                championshipId: championship.id,
+                rounds: createdRounds.length,
+                groups: groups.length,
+                matches: insertedMatches?.length ?? 0,
+            });
 
             // 4. Update status? Already ongoing. maybe set slug if not set?
             // (Slug logic can be done separately or auto-generated)
 
-            console.log('🎉 Championship initialization complete!');
-            alert('Campeonato iniciado com sucesso! Partidas geradas.');
+            notify.success('Campeonato iniciado!', {
+                description: `${plural(insertedMatches?.length ?? 0, 'confronto')} em ${plural(createdRounds.length, 'rodada')}.`,
+            });
             fetchData();
             onUpdate?.();
 
         } catch (error: any) {
-            console.error('💥 Championship start error:', error);
-            console.error('Error details:', error);
-            alert('Erro ao iniciar campeonato: ' + (error.message || JSON.stringify(error)));
+            notify.failure(error, 'Não foi possível iniciar o campeonato.', {
+                event: 'championship_start_failed',
+                championshipId: championship.id,
+            });
         }
         setProcessing(false);
     };
@@ -314,7 +306,13 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
             .eq('id', schedulingMatch.id);
 
         if (error) {
-            alert((isResenhaOpen ? 'Erro ao salvar horário sugerido: ' : 'Erro ao agendar: ') + error.message);
+            notify.failure(
+                error,
+                isResenhaOpen
+                    ? 'Não foi possível salvar o horário sugerido.'
+                    : 'Não foi possível agendar a partida.',
+                { event: 'match_schedule_save_failed', matchId: schedulingMatch.id }
+            );
             throw error;
         }
 
@@ -394,7 +392,9 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
         }
 
         if (!winnerRegId) {
-            alert('Não foi possível determinar o vencedor.');
+            notify.warning(CHAMPIONSHIP_ERRORS.semVencedor.message, {
+                description: CHAMPIONSHIP_ERRORS.semVencedor.hint,
+            });
             return;
         }
 
@@ -415,7 +415,10 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
             setScoringMatch(null);
             await fetchData();
         } catch (error: any) {
-            alert('Erro ao salvar placar: ' + error.message);
+            notify.failure(error, 'Não foi possível salvar o placar.', {
+                event: 'match_result_save_failed',
+                matchId: match.id,
+            });
         }
     };
 
@@ -444,7 +447,10 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
             setAdminResultMatch(null);
             await fetchData();
         } catch (error: any) {
-            alert('Erro ao definir W.O.: ' + error.message);
+            notify.failure(error, 'Não foi possível registrar o W.O.', {
+                event: 'match_walkover_save_failed',
+                matchId: match.id,
+            });
         } finally {
             setSavingAdminResult(false);
         }
@@ -455,7 +461,9 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
 
         const round = getRoundByMatch(match);
         if (!isTechnicalDrawAllowed(round?.phase, match.phase)) {
-            alert('Empate técnico não é permitido no mata-mata.');
+            notify.warning(CHAMPIONSHIP_ERRORS.empateNoMataMata.message, {
+                description: CHAMPIONSHIP_ERRORS.empateNoMataMata.hint,
+            });
             return;
         }
 
@@ -476,7 +484,10 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
             setAdminResultMatch(null);
             await fetchData();
         } catch (error: any) {
-            alert('Erro ao definir empate técnico: ' + error.message);
+            notify.failure(error, 'Não foi possível registrar o empate técnico.', {
+                event: 'match_technical_draw_save_failed',
+                matchId: match.id,
+            });
         } finally {
             setSavingAdminResult(false);
         }
@@ -502,38 +513,48 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
             setAdminResultMatch(null);
             await fetchData();
         } catch (error: any) {
-            alert('Erro ao reabrir partida: ' + error.message);
+            notify.failure(error, 'Não foi possível reabrir a partida.', {
+                event: 'match_reopen_failed',
+                matchId: match.id,
+            });
         } finally {
             setSavingAdminResult(false);
         }
     };
 
     const handleResetMatches = async () => {
-        if (!confirm('ATENÇÃO: Isso irá apagar TODOS os confrontos deste campeonato. Os grupos serão mantidos. Deseja continuar?')) return;
+        // Apagar confrontos não tem desfazer: os resultados já lançados somem
+        // junto. Por isso a confirmação é tipada, e o diálogo mostra o tamanho
+        // real do estrago antes do clique. As duas linhas aparecem sempre,
+        // mesmo zeradas — um '0 placares já lançados' diz ao admin que não há
+        // nada de valor em jogo, informação que a ausência da linha não daria.
+        const placaresLancados = matches.filter(m => m.status === 'finished').length;
+
+        if (!await confirm({
+            tone: 'danger',
+            title: 'Apagar todos os confrontos?',
+            description: 'Esta ação não pode ser desfeita. Os grupos e as inscrições são mantidos.',
+            consequences: [
+                plural(matches.length, 'confronto'),
+                plural(placaresLancados, 'placar já lançado', 'placares já lançados'),
+            ],
+            requireTyped: 'APAGAR',
+            confirmLabel: 'Apagar confrontos',
+        })) return;
 
         setResetting(true);
         try {
-            const roundIds = rounds.map(r => r.id);
-            if (roundIds.length === 0) {
-                // If no rounds yet, nothing to delete (or delete by championship_id if matches exist without rounds)
-                const { error } = await supabase
-                    .from('matches')
-                    .delete()
-                    .eq('championship_id', championship.id);
-                if (error) throw error;
-            } else {
-                const { error } = await supabase
-                    .from('matches')
-                    .delete()
-                    .in('round_id', roundIds);
-                if (error) throw error;
-            }
+            await deleteChampionshipMatches(championship.id, rounds.map(r => r.id));
 
-            alert('Confrontos apagados com sucesso!');
+            notify.success('Confrontos apagados.', {
+                description: 'Os grupos e as inscrições continuam intactos.',
+            });
             fetchData();
         } catch (error: any) {
-            console.error('Error resetting matches:', error);
-            alert('Erro ao resetar confrontos: ' + error.message);
+            notify.failure(error, 'Não foi possível apagar os confrontos.', {
+                event: 'championship_matches_reset_failed',
+                championshipId: championship.id,
+            });
         }
         setResetting(false);
     };
@@ -553,8 +574,11 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
             link.href = canvas.toDataURL('image/png');
             link.click();
         } catch (err) {
-            console.error('Export failed:', err);
-            alert('Erro ao gerar imagem.');
+            notify.failure(err, 'Não foi possível gerar a imagem da agenda.', {
+                event: 'championship_schedule_export_failed',
+                championshipId: championship.id,
+                exportDate,
+            });
         } finally {
             setExporting(false);
         }
@@ -605,7 +629,7 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                     Os grupos foram sorteados. Ao iniciar, o sistema irá gerar automaticamente todas as rodadas e partidas da fase classificatória.
                 </p>
                 <button
-                    onClick={() => setShowConfirmModal(true)}
+                    onClick={handleStartChampionship}
                     disabled={processing}
                     className="px-8 py-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl shadow-lg shadow-green-200 transition-all flex items-center gap-2 text-lg"
                 >
@@ -613,39 +637,6 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                     Iniciar Campeonato Agora
                 </button>
 
-                {/* Confirm Modal Overlay */}
-                {showConfirmModal && (
-                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                        <div className="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
-                            <div className="p-8 text-center">
-                                <div className="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                                    <AlertTriangle size={32} className="text-amber-500" />
-                                </div>
-                                <h3 className="text-xl font-black text-stone-800 mb-2">Tem certeza?</h3>
-                                <p className="text-stone-500 leading-relaxed">
-                                    Isso irá gerar todas as partidas e o cronograma inicial para todos os grupos.
-                                </p>
-                            </div>
-                            <div className="flex border-t border-stone-100">
-                                <button
-                                    onClick={() => setShowConfirmModal(false)}
-                                    className="flex-1 py-4 text-stone-500 font-bold hover:bg-stone-50 transition-colors"
-                                >
-                                    Cancelar
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        setShowConfirmModal(false);
-                                        handleStartChampionship();
-                                    }}
-                                    className="flex-1 py-4 text-green-600 font-black hover:bg-green-50 transition-colors border-l border-stone-100"
-                                >
-                                    Sim, Iniciar!
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
             </div>
         );
     }
@@ -660,13 +651,13 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                 </div>
                 <div className="flex-1">
                     <h3 className="text-sm font-black text-stone-800 uppercase tracking-tighter">Regras de Agendamento</h3>
-                    <p className="text-[10px] text-stone-400 mt-1 leading-relaxed">
+                    <p className="text-xs text-stone-400 mt-1 leading-relaxed">
                         Jogos devem ser agendados via WhatsApp. Verifique as restrições:
                     </p>
                     <div className="flex flex-wrap gap-2 mt-3">
-                        <span className="text-[9px] font-bold bg-saibro-50 text-saibro-600 px-2 py-1 rounded-lg border border-saibro-100">4-5ª: Saibro</span>
-                        <span className="text-[9px] font-bold bg-stone-900 text-white px-2 py-1 rounded-lg">6ª: Rápida</span>
-                        <span className="text-[9px] font-bold bg-stone-100 text-stone-600 px-2 py-1 rounded-lg">1-3ª: Livre</span>
+                        <span className="text-xs font-bold bg-saibro-50 text-saibro-600 px-2 py-1 rounded-lg border border-saibro-100">4-5ª: Saibro</span>
+                        <span className="text-xs font-bold bg-stone-900 text-white px-2 py-1 rounded-lg">6ª: Rápida</span>
+                        <span className="text-xs font-bold bg-stone-100 text-stone-600 px-2 py-1 rounded-lg">1-3ª: Livre</span>
                     </div>
                 </div>
             </div>
@@ -685,7 +676,7 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                         </button>
                         <button
                             onClick={handleResetMatches}
-                            disabled={resetting}
+                            disabled={resetting || matches.length === 0}
                             className="flex items-center justify-center gap-2 py-4 bg-red-50 text-red-700 font-bold rounded-2xl border border-red-100 hover:bg-red-100 transition-all active:scale-[0.98] disabled:opacity-50"
                         >
                             {resetting ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
@@ -706,21 +697,21 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
             <div className="flex bg-stone-100 p-1.5 rounded-3xl shadow-inner">
                 <button
                     onClick={() => setActiveTab('matches')}
-                    className={`flex-1 py-3 rounded-2xl text-[10px] font-black tracking-widest transition-all ${activeTab === 'matches' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-400'}`}
+                    className={`flex-1 py-3 rounded-2xl text-xs font-black tracking-widest transition-all ${activeTab === 'matches' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-400'}`}
                 >
                     RODADAS
                 </button>
                 {!isResenhaOpen && (
                     <button
                         onClick={() => setActiveTab('standings')}
-                        className={`flex-1 py-3 rounded-2xl text-[10px] font-black tracking-widest transition-all ${activeTab === 'standings' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-400'}`}
+                        className={`flex-1 py-3 rounded-2xl text-xs font-black tracking-widest transition-all ${activeTab === 'standings' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-400'}`}
                     >
                         CLASSIFICAÇÃO
                     </button>
                 )}
                 <button
                     onClick={() => setActiveTab('bracket')}
-                    className={`flex-1 py-3 rounded-2xl text-[10px] font-black tracking-widest transition-all ${activeTab === 'bracket' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-400'}`}
+                    className={`flex-1 py-3 rounded-2xl text-xs font-black tracking-widest transition-all ${activeTab === 'bracket' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-400'}`}
                 >
                     CHAVEAMENTO
                 </button>
@@ -743,7 +734,7 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                                     </button>
                                     <div className="text-center">
                                         <h3 className="font-black text-stone-900 text-sm">{currentRound.name}</h3>
-                                        <p className="text-[9px] font-black text-saibro-600 uppercase tracking-widest mt-1">
+                                        <p className="text-xs font-black text-saibro-600 uppercase tracking-widest mt-1">
                                             {formatDateBr(currentRound.start_date)} - {formatDateBr(currentRound.end_date)}
                                         </p>
                                     </div>
@@ -761,7 +752,7 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                                     <div className="bg-amber-50 border border-amber-100 p-5 rounded-4xl flex items-center justify-between gap-4 animate-in fade-in slide-in-from-top-2">
                                         <div className="flex-1">
                                             <h4 className="text-sm font-black text-amber-900 leading-tight">Rodada em Rascunho</h4>
-                                            <p className="text-[10px] text-amber-700 font-bold mt-1">Os matches não estão visíveis para os sócios.</p>
+                                            <p className="text-xs text-amber-700 font-bold mt-1">Os matches não estão visíveis para os sócios.</p>
                                         </div>
                                         <button
                                             onClick={async () => {
@@ -773,7 +764,10 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                                                     .eq('id', currentRound.id);
 
                                                 if (error) {
-                                                    alert('Erro ao publicar: ' + error.message);
+                                                    notify.failure(error, 'Não foi possível publicar a rodada.', {
+                                                        event: 'round_publish_failed',
+                                                        roundId: currentRound.id,
+                                                    });
                                                 } else {
                                                     await logAudit(
                                                         'round_status_published',
@@ -787,7 +781,7 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                                                 setProcessing(false);
                                             }}
                                             disabled={processing}
-                                            className="px-6 py-3 bg-amber-500 text-white text-[11px] font-black uppercase rounded-xl hover:bg-amber-600 transition-all shadow-lg shadow-amber-200 flex items-center gap-2"
+                                            className="px-6 py-3 bg-amber-500 text-white text-xs font-black uppercase rounded-xl hover:bg-amber-600 transition-all shadow-lg shadow-amber-200 flex items-center gap-2"
                                         >
                                             {processing ? <Loader2 size={14} className="animate-spin" /> : <Play size={14} fill="white" />}
                                             Publicar Rodada
@@ -800,7 +794,7 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                                     <div className="flex bg-stone-100 p-1.5 rounded-3xl shadow-inner gap-1">
                                         <button
                                             onClick={() => setSelectedMatchClass('Todas')}
-                                            className={`flex-1 py-3 rounded-2xl text-[10px] font-black tracking-widest transition-all ${
+                                            className={`flex-1 py-3 rounded-2xl text-xs font-black tracking-widest transition-all ${
                                                 selectedMatchClass === 'Todas'
                                                     ? 'bg-white text-stone-900 shadow-sm'
                                                     : 'text-stone-400 hover:text-stone-600'
@@ -812,7 +806,7 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                                             <button
                                                 key={cls}
                                                 onClick={() => setSelectedMatchClass(cls)}
-                                                className={`flex-1 py-3 rounded-2xl text-[10px] font-black tracking-widest transition-all ${
+                                                className={`flex-1 py-3 rounded-2xl text-xs font-black tracking-widest transition-all ${
                                                     selectedMatchClass === cls
                                                         ? 'bg-white text-stone-900 shadow-sm'
                                                         : 'text-stone-400 hover:text-stone-600'
@@ -854,14 +848,14 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
 
                                             return (
                                                 <div key={match.id} className="bg-white rounded-4xl p-6 shadow-sm border border-stone-100 relative overflow-hidden transition-all hover:border-saibro-200">
-                                                    <div className="absolute top-0 left-0 bg-stone-50 px-3 py-1 rounded-br-2xl text-[9px] font-black text-stone-400 uppercase tracking-tighter">
+                                                    <div className="absolute top-0 left-0 bg-stone-50 px-3 py-1 rounded-br-2xl text-xs font-black text-stone-400 uppercase tracking-tighter">
                                                         {regA?.class || 'N/A'}
                                                     </div>
 
                                                     <div className="flex items-center gap-6 mt-2">
                                                         <div className="flex-1 space-y-4">
                                                             <div className="flex items-center justify-between">
-                                                                <span className="text-[9px] uppercase tracking-widest font-black text-stone-400">
+                                                                <span className="text-xs uppercase tracking-widest font-black text-stone-400">
                                                                     {resultLabel}
                                                                 </span>
                                                             </div>
@@ -896,7 +890,7 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                                                                     <div className="bg-saibro-50 p-2 rounded-xl text-saibro-600 group-hover:bg-saibro-100 transition-colors">
                                                                         <Clock size={16} />
                                                                     </div>
-                                                                    <p className="text-[10px] font-black text-stone-800 mt-1">{match.scheduled_time?.substring(0, 5)}</p>
+                                                                    <p className="text-xs font-black text-stone-800 mt-1">{match.scheduled_time?.substring(0, 5)}</p>
                                                                 </button>
                                                             ) : (
                                                                 <button
@@ -1045,8 +1039,11 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
             )}
 
             {/* EXPORT MODAL */}
-            {showExportModal && (
-                <div className="fixed inset-0 bg-black/80 z-200 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
+            <StandardModal
+                isOpen={showExportModal}
+                onClose={() => setShowExportModal(false)}
+                ariaLabel="Exportar agenda"
+            >
                     <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col md:flex-row">
                         {/* CONTROLS */}
                         <div className="p-6 md:w-80 border-r border-stone-100 bg-stone-50 flex flex-col gap-6 overflow-y-auto">
@@ -1100,7 +1097,7 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                                     {exporting ? <Loader2 className="animate-spin" /> : <Download size={20} />}
                                     Baixar Imagem
                                 </button>
-                                <p className="text-[10px] text-stone-400 text-center mt-3">
+                                <p className="text-xs text-stone-400 text-center mt-3">
                                     A imagem será gerada com os jogos filtrados ao lado.
                                 </p>
                             </div>
@@ -1127,8 +1124,7 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                             )}
                         </div>
                     </div>
-                </div>
-            )}
+            </StandardModal>
 
             {/* Standings Detail Modal */}
             {showStandingsDetail && selectedGroupForDetail && (
@@ -1167,7 +1163,7 @@ const AdminResultActionsModal: React.FC<{
     const isFinished = match.status === 'finished';
 
     return (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <StandardModal isOpen onClose={onClose} ariaLabel="Ações de resultado">
             <div className="w-full max-w-md bg-white rounded-3xl border border-stone-100 shadow-2xl overflow-hidden">
                 <div className="p-5 border-b border-stone-100">
                     <h3 className="text-lg font-black text-stone-800">Ações de Resultado</h3>
@@ -1209,7 +1205,7 @@ const AdminResultActionsModal: React.FC<{
                     </button>
 
                     {!canTechnicalDraw && (
-                        <p className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-xl p-2">
+                        <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl p-2">
                             Empate técnico não é permitido em fases mata-mata.
                         </p>
                     )}
@@ -1234,6 +1230,6 @@ const AdminResultActionsModal: React.FC<{
                     </button>
                 </div>
             </div>
-        </div>
+        </StandardModal>
     );
 };

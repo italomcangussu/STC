@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { logger, withErrorLogging } from '../lib/logger';
+import { errorMessage, logger, withErrorLogging } from '../lib/logger';
 
 describe('Logger', () => {
   // Mock console methods
@@ -52,6 +52,27 @@ describe('Logger', () => {
 
       expect(() => fn()).toThrow('Test error');
       expect(console.group).toHaveBeenCalled();
+    });
+  });
+
+  describe('errorMessage', () => {
+    it('extrai a mensagem de um Error', () => {
+      expect(errorMessage(new Error('falhou'))).toBe('falhou');
+    });
+
+    it('extrai message de objeto solto, como o PostgrestError do Supabase', () => {
+      expect(errorMessage({ message: 'duplicate key', code: '23505' })).toBe('duplicate key');
+    });
+
+    it('serializa message não-string sem quebrar', () => {
+      expect(errorMessage({ message: 42 })).toBe('42');
+    });
+
+    it('cai para String() em valores sem message', () => {
+      expect(errorMessage('erro cru')).toBe('erro cru');
+      expect(errorMessage(null)).toBe('null');
+      expect(errorMessage(undefined)).toBe('undefined');
+      expect(errorMessage(500)).toBe('500');
     });
   });
 });

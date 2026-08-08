@@ -1,11 +1,15 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Check, Loader2, Shuffle, Trophy, UserPlus, Users, Star, AlertTriangle, X } from 'lucide-react';
+import { Check, Loader2, Shuffle, Trophy, UserPlus, Users, Star, AlertTriangle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { errorMessage, logger } from '../lib/logger';
+import { notify } from '../lib/notifications';
+import { CHAMPIONSHIP_ERRORS } from '../lib/humanErrors';
 import { User } from '../types';
-import { MEMBER_ROLES } from '../utils';
+import { MEMBER_ROLES, plural } from '../utils';
 import { GroupDrawPage } from './GroupDrawPage';
 import { PhasePointsEditor } from './admin/PhasePointsEditor';
 import { ChampionshipInProgress } from './ChampionshipInProgress';
+import { useConfirm } from '../hooks/useConfirm';
 import { useAuth } from '../contexts/AuthContext';
 
 interface ChampionshipRow {
@@ -131,6 +135,7 @@ interface Props {
 
 export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
     const { currentUser: authUser } = useAuth();
+    const confirm = useConfirm();
     const resolvedUser = currentUser || authUser;
 
     const [championships, setChampionships] = useState<ChampionshipRow[]>([]);
@@ -153,7 +158,6 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
     const [applyingPoints, setApplyingPoints] = useState(false);
     const [finishingChampionship, setFinishingChampionship] = useState(false);
     const [cancellingEdition, setCancellingEdition] = useState(false);
-    const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
     const [statusFilter, setStatusFilter] = useState<'all' | 'draft' | 'ongoing' | 'finished'>('all');
     const [activeTab, setActiveTab] = useState<'overview' | 'rounds' | 'matches' | 'standings' | 'audit' | 'points'>('overview');
@@ -239,7 +243,7 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
         ]);
 
         if (championshipRes.error) {
-            console.error('Erro ao carregar campeonatos no admin:', championshipRes.error);
+            logger.error('admin_championships_fetch_failed', { error: errorMessage(championshipRes.error) });
         }
 
         if (Array.isArray(championshipRes.data)) {
@@ -299,7 +303,7 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
         ]);
 
         if (champRes.error) {
-            console.error('Erro ao carregar campeonato selecionado no admin:', champRes.error);
+            logger.error('admin_championship_detail_fetch_failed', { championshipId, error: errorMessage(champRes.error) });
         }
 
         if (champRes.data?.[0]) {
@@ -358,12 +362,16 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
         if (!selectedChampionship || !resolvedUser?.id) return;
 
         if (participantType === 'socio' && !selectedUserId) {
-            alert('Selecione um sócio.');
+            notify.warning(CHAMPIONSHIP_ERRORS.semSocioSelecionado.message, {
+                description: CHAMPIONSHIP_ERRORS.semSocioSelecionado.hint,
+            });
             return;
         }
 
         if (participantType === 'guest' && !guestName.trim()) {
-            alert('Informe o nome do convidado.');
+            notify.warning(CHAMPIONSHIP_ERRORS.semNomeConvidado.message, {
+                description: CHAMPIONSHIP_ERRORS.semNomeConvidado.hint,
+            });
             return;
         }
 
@@ -382,7 +390,10 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
         const { error } = await supabase.from('championship_registrations').insert(payload);
 
         if (error) {
-            alert('Erro ao adicionar inscrição: ' + error.message);
+            notify.failure(error, 'Não foi possível inscrever o atleta.', {
+                event: 'championship_registration_add_failed',
+                championshipId: selectedChampionship.id,
+            });
         } else {
             await createAuditLog('registration_created', 'registration', null, null, payload);
             setSelectedUserId('');
@@ -395,9 +406,15 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
 
     const handleDeleteRegistration = async (registrationId: string) => {
         if (!selectedChampionship) return;
-        if (!confirm('Remover esta inscrição?')) return;
 
         const beforeData = registrations.find(r => r.id === registrationId) || null;
+        const nome = beforeData?.user?.name ?? beforeData?.guest_name ?? 'este participante';
+
+        if (!await confirm({
+            title: `Remover ${nome} do campeonato?`,
+            description: 'A inscrição sai da lista. Dá para inscrever de novo depois, mas os confrontos já gerados com este participante não se ajustam sozinhos.',
+            confirmLabel: 'Remover inscrição',
+        })) return;
 
         const { error } = await supabase
             .from('championship_registrations')
@@ -405,7 +422,10 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
             .eq('id', registrationId);
 
         if (error) {
-            alert('Erro ao remover inscrição: ' + error.message);
+            notify.failure(error, 'Não foi possível remover a inscrição.', {
+                event: 'championship_registration_delete_failed',
+                registrationId,
+            });
             return;
         }
 
@@ -431,7 +451,10 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
             .eq('id', selectedChampionship.id);
 
         if (error) {
-            alert('Erro ao atualizar status de inscrição: ' + error.message);
+            notify.failure(error, 'Não foi possível alterar o status das inscrições.', {
+                event: 'championship_registration_status_failed',
+                championshipId: selectedChampionship.id,
+            });
             return;
         }
 
@@ -449,7 +472,17 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
 
     const handleFinishChampionship = async () => {
         if (!selectedChampionship) return;
-        if (!confirm(`Deseja realmente encerrar o campeonato "${selectedChampionship.name}" e apurar os pontos para o ranking?`)) return;
+
+        if (!await confirm({
+            tone: 'warning',
+            title: `Encerrar "${selectedChampionship.name}"?`,
+            description: 'O campeonato passa para "encerrado" e a pontuação vai para o ranking geral.',
+            consequences: [
+                'O ranking de todos os participantes muda',
+                'Novos placares deixam de ser aceitos',
+            ],
+            confirmLabel: 'Encerrar e apurar',
+        })) return;
 
         setFinishingChampionship(true);
         try {
@@ -468,13 +501,21 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
             );
 
             const pointsApplied = rpcRes?.applied_points_count ?? 0;
-            alert(`Campeonato encerrado com sucesso! ${pointsApplied > 0 ? `${pointsApplied} registros de pontuação foram aplicados ao ranking.` : 'Pontos apurados.'}`);
-            
+            notify.success('Campeonato encerrado.', {
+                description: pointsApplied > 0
+                    ? `${plural(pointsApplied, 'registro')} de pontuação aplicados ao ranking.`
+                    : 'Pontos apurados.',
+            });
+
+
             setStatusFilter('all');
             await fetchInitialData();
             await fetchSelectedChampionshipData(selectedChampionship.id);
         } catch (err: any) {
-            alert('Erro ao finalizar campeonato: ' + err.message);
+            notify.failure(err, 'Não foi possível encerrar o campeonato.', {
+                event: 'championship_finish_failed',
+                championshipId: selectedChampionship.id,
+            });
         } finally {
             setFinishingChampionship(false);
         }
@@ -482,7 +523,9 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
 
     const handleApplyChampionshipPoints = async () => {
         if (!selectedChampionship?.series_id) {
-            alert('Este campeonato não tem série associada. Vincule-o a uma série antes de aplicar pontos.');
+            notify.warning(CHAMPIONSHIP_ERRORS.semSerie.message, {
+                description: CHAMPIONSHIP_ERRORS.semSerie.hint,
+            });
             return;
         }
         setApplyingPoints(true);
@@ -491,9 +534,12 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
                 p_championship_id: selectedChampionship.id
             });
             if (error) throw error;
-            alert('Pontos aplicados ao ranking com sucesso!');
+            notify.success('Pontos aplicados ao ranking.');
         } catch (err: any) {
-            alert('Erro ao aplicar pontos: ' + err.message);
+            notify.failure(err, 'Não foi possível aplicar os pontos ao ranking.', {
+                event: 'championship_points_apply_failed',
+                championshipId: selectedChampionship.id,
+            });
         } finally {
             setApplyingPoints(false);
         }
@@ -501,17 +547,34 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
 
     const handleCancelEdition = async () => {
         if (!selectedChampionship) return;
+
+        if (!await confirm({
+            tone: 'danger',
+            title: `Cancelar a edição "${selectedChampionship.name}"?`,
+            description: 'Os pontos desta edição saem do ranking e os da edição anterior da mesma série voltam.',
+            consequences: [
+                'O ranking de todos os participantes muda',
+                'A edição anterior volta a valer',
+            ],
+            confirmLabel: 'Cancelar edição',
+            cancelLabel: 'Voltar',
+        })) return;
+
         setCancellingEdition(true);
         try {
             const { error } = await supabase.rpc('revert_championship_edition_points', {
                 p_championship_id: selectedChampionship.id
             });
             if (error) throw error;
-            setShowCancelConfirm(false);
-            alert('Edição cancelada. Pontos da edição anterior foram restaurados.');
+            notify.success('Edição cancelada.', {
+                description: 'Os pontos da edição anterior foram restaurados no ranking.',
+            });
             await fetchInitialData();
         } catch (err: any) {
-            alert('Erro ao cancelar edição: ' + err.message);
+            notify.failure(err, 'Não foi possível cancelar a edição.', {
+                event: 'championship_edition_cancel_failed',
+                championshipId: selectedChampionship.id,
+            });
         } finally {
             setCancellingEdition(false);
         }
@@ -550,7 +613,10 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
             .eq('id', roundId);
 
         if (error) {
-            alert('Erro ao salvar rodada: ' + error.message);
+            notify.failure(error, 'Não foi possível salvar a rodada.', {
+                event: 'championship_round_save_failed',
+                roundId,
+            });
             setSavingRoundById(prev => ({ ...prev, [roundId]: false }));
             return;
         }
@@ -587,7 +653,10 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
             .in('id', targetIds);
 
         if (error) {
-            alert('Erro ao atualizar rodadas: ' + error.message);
+            notify.failure(error, 'Não foi possível atualizar as rodadas.', {
+                event: 'championship_rounds_bulk_update_failed',
+                roundIds: targetIds,
+            });
             setSavingBulkRounds(false);
             return;
         }
@@ -762,47 +831,16 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
 
                                     {selectedChampionship.series_id && (
                                         <button
-                                            onClick={() => setShowCancelConfirm(true)}
-                                            className="py-3 rounded-xl bg-red-600 text-white font-bold flex items-center justify-center gap-2"
+                                            onClick={handleCancelEdition}
+                                            disabled={cancellingEdition}
+                                            className="py-3 rounded-xl bg-red-600 text-white font-bold flex items-center justify-center gap-2 disabled:opacity-60"
                                         >
-                                            <AlertTriangle size={16} /> Cancelar Edição + Reverter Pontos
+                                            {cancellingEdition ? <Loader2 size={16} className="animate-spin" /> : <AlertTriangle size={16} />}
+                                            Cancelar Edição + Reverter Pontos
                                         </button>
                                     )}
                                 </div>
                             </div>
-
-                            {/* Cancel confirmation modal */}
-                            {showCancelConfirm && (
-                                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                                    <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl">
-                                        <div className="flex items-start gap-3 mb-4">
-                                            <AlertTriangle className="text-red-500 shrink-0 mt-0.5" size={24} />
-                                            <div>
-                                                <h3 className="font-black text-stone-900 text-lg">Cancelar edição?</h3>
-                                                <p className="text-sm text-stone-600 mt-1">
-                                                    Isso irá reverter os pontos desta edição e reaplicar os pontos da edição anterior da mesma série. Esta ação altera o ranking.
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div className="flex gap-3">
-                                            <button
-                                                onClick={() => setShowCancelConfirm(false)}
-                                                className="flex-1 py-3 rounded-xl border border-stone-200 font-bold text-stone-600 flex items-center justify-center gap-2"
-                                            >
-                                                <X size={16} /> Voltar
-                                            </button>
-                                            <button
-                                                onClick={handleCancelEdition}
-                                                disabled={cancellingEdition}
-                                                className="flex-1 py-3 rounded-xl bg-red-600 text-white font-bold flex items-center justify-center gap-2 disabled:opacity-60"
-                                            >
-                                                {cancellingEdition ? <Loader2 size={16} className="animate-spin" /> : <AlertTriangle size={16} />}
-                                                Confirmar Cancelamento
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
 
                             <div className="bg-white rounded-2xl border border-stone-100 p-5">
                                 <h2 className="text-lg font-black text-stone-800 mb-4">Nova inscrição</h2>
@@ -969,7 +1007,7 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
                                                 />
                                                 <span className="truncate">{round.name}</span>
                                                 {round.class && (
-                                                    <span className="shrink-0 px-2 py-0.5 rounded-full bg-saibro-50 text-saibro-700 text-[10px] font-black uppercase tracking-wide">
+                                                    <span className="shrink-0 px-2 py-0.5 rounded-full bg-saibro-50 text-saibro-700 text-xs font-black uppercase tracking-wide">
                                                         {round.class}
                                                     </span>
                                                 )}

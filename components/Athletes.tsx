@@ -3,6 +3,8 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Search, Trophy, Mail, ArrowLeft, TrendingUp, Activity, MapPin, Clock, History, ArrowRight, Edit2, Shield, Swords } from 'lucide-react';
 import { User, Reservation } from '../types';
 import { supabase } from '../lib/supabase';
+import { notify } from '../lib/notifications';
+import { useConfirm } from '../hooks/useConfirm';
 import { getNowInFortaleza, formatDateBr } from '../utils';
 import { EditProfileModal } from './EditProfileModal';
 import { fetchRanking, canChallenge, PlayerStats } from '../lib/rankingService';
@@ -42,6 +44,7 @@ interface AthleteProfileProps {
 }
 
 const AthleteProfile: React.FC<AthleteProfileProps> = ({ userId, currentUser, users, onBack, onProfileUpdate }) => {
+    const confirm = useConfirm();
     const user = users.find(u => u.id === userId);
     const [activeTab, setActiveTab] = useState<'stats' | 'history' | 'presence' | 'points'>('stats');
     const [showEdit, setShowEdit] = useState(false);
@@ -135,38 +138,52 @@ const AthleteProfile: React.FC<AthleteProfileProps> = ({ userId, currentUser, us
     const isSelf = currentUser.id === userId;
 
     // Challenge Validation Logic using new service
-    const handleChallengeClick = () => {
+    const handleChallengeClick = async () => {
         if (!myRankStats || !userRankStats) {
-            alert("Erro ao calcular ranking.");
+            notify.warning('O ranking ainda está carregando.', {
+                description: 'Aguarde a lista terminar de carregar e tente de novo.',
+            });
             return;
         }
 
         const result = canChallenge(myRankStats, userRankStats, ranking);
 
         if (!result.allowed) {
-            alert(`Não é possível desafiar: ${result.reason}`);
+            notify.warning('Este desafio não é permitido.', { description: result.reason });
             return;
         }
 
-        if (confirm(`Deseja iniciar um desafio contra ${user?.name}?`)) {
-            // Create challenge in database
-            supabase.from('challenges').insert({
-                challenger_id: currentUser.id,
-                challenged_id: userId,
-                status: 'proposed',
-                month_ref: getNowInFortaleza().toISOString().slice(0, 7)
-            }).then(({ error }) => {
-                if (error) {
-                    alert('Erro ao criar desafio');
-                } else {
-                    alert("Desafio criado com sucesso!");
-                }
+        if (!await confirm({
+            tone: 'warning',
+            title: `Desafiar ${user?.name}?`,
+            description: 'O desafio fica pendente até o adversário aceitar.',
+            confirmLabel: 'Enviar desafio',
+        })) return;
+
+        const { error } = await supabase.from('challenges').insert({
+            challenger_id: currentUser.id,
+            challenged_id: userId,
+            status: 'proposed',
+            month_ref: getNowInFortaleza().toISOString().slice(0, 7)
+        });
+
+        if (error) {
+            notify.failure(error, 'Não foi possível criar o desafio.', {
+                event: 'challenge_create_failed',
+                opponentId: userId,
             });
+            return;
         }
+
+        notify.success('Desafio enviado.', {
+            description: `${user?.name} recebe a proposta e precisa aceitar.`,
+        });
     };
 
     const handleReservationClick = () => {
-        alert(`Iniciando reserva com ${user?.name}... (Redirecionando para Agenda)`);
+        notify.info('Abrindo a Agenda...', {
+            description: `Escolha a quadra e o horário para jogar com ${user?.name}.`,
+        });
     };
 
     // 2. Get Reservations (Presence) - now from state

@@ -33,34 +33,41 @@
 
 ## 🎨 Paleta de Cores
 
+> **Fonte da verdade:** o bloco `@theme` de [`index.css`](index.css). Os valores abaixo
+> são cópia dele — ao alterar um token, altere nos dois lugares.
+
 ### Cores Primárias
 
 ```tsx
 // SAIBRO - Cor principal do brand
-saibro-50:  '#FFF8F3'  // Backgrounds sutis
-saibro-100: '#FFE8D9'  // Backgrounds leves
-saibro-200: '#FFD1B3'  // Borders, badges
-saibro-300: '#FFB070'  // Sombras coloridas
-saibro-500: '#FF8040'  // Cor base
-saibro-600: '#F26522'  // Primária principal
-saibro-700: '#D94A0B'  // Hover states
-saibro-800: '#B33B00'  // Pressed states
+saibro-50:  '#fff7ed'  // Backgrounds sutis
+saibro-100: '#ffedd5'  // Backgrounds leves
+saibro-200: '#fed7aa'  // Borders, badges
+saibro-300: '#fdba74'  // Sombras coloridas
+saibro-400: '#fb923c'
+saibro-500: '#f97316'  // Cor base
+saibro-600: '#ea580c'  // Primária principal
+saibro-700: '#c2410c'  // Hover states
+saibro-800: '#9a3412'  // Pressed states
+saibro-900: '#7c2d12'
+saibro-950: '#431407'
 ```
 
 ### Cores Neutras
 
 ```tsx
 // STONE - Neutros sofisticados
-stone-50:  '#FAFAF9'  // Backgrounds alternados
-stone-100: '#F5F5F4'  // Backgrounds, dividers
-stone-200: '#E7E5E4'  // Borders padrão
-stone-300: '#D6D3D1'  // Borders disabled
-stone-400: '#A8A29E'  // Text secondary
-stone-500: '#78716C'  // Text tertiary
-stone-600: '#57534E'  // Text secondary bold
-stone-700: '#44403C'  // Text primary
+stone-50:  '#fafaf9'  // Backgrounds alternados
+stone-100: '#f5f5f4'  // Backgrounds, dividers
+stone-200: '#e7e5e4'  // Borders padrão
+stone-300: '#d6d3d1'  // Borders disabled
+stone-400: '#a8a29e'  // Text secondary
+stone-500: '#78716c'  // Text tertiary
+stone-600: '#57534e'  // Text secondary bold
+stone-700: '#44403c'  // Text primary
 stone-800: '#292524'  // Text dark headers
-stone-900: '#1C1917'  // Text darkest, backgrounds escuros
+stone-900: '#1c1917'  // Text darkest, backgrounds escuros
+stone-950: '#0c0a09'
 ```
 
 ### Cores de Suporte

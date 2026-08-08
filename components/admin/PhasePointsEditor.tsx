@@ -97,7 +97,7 @@ export const PhasePointsEditor: React.FC = () => {
                         <li key={row.phase} className="flex items-center justify-between gap-3 p-3 rounded-xl border border-stone-100">
                             <label htmlFor={`points-${row.phase}`} className="font-bold text-sm text-stone-700">
                                 {labelDe(row.phase)}
-                                <span className="ml-2 text-[10px] font-medium text-stone-400 uppercase">{row.phase}</span>
+                                <span className="ml-2 text-xs font-medium text-stone-400 uppercase">{row.phase}</span>
                             </label>
                             <div className="flex items-center gap-2">
                                 {savingPhase === row.phase && <Loader2 size={14} className="animate-spin text-saibro-600" />}
@@ -127,7 +127,7 @@ export const PhasePointsEditor: React.FC = () => {
                             <li key={phase} className="flex items-center justify-between p-3 rounded-xl border border-dashed border-stone-200">
                                 <span className="font-bold text-sm text-stone-500">
                                     {label}
-                                    <span className="ml-2 text-[10px] font-medium text-stone-400 uppercase">{phase}</span>
+                                    <span className="ml-2 text-xs font-medium text-stone-400 uppercase">{phase}</span>
                                 </span>
                                 <button
                                     type="button"

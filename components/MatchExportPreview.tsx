@@ -48,7 +48,7 @@ export const MatchExportPreview = forwardRef<HTMLDivElement, MatchExportPreviewP
                     </div>
                     <div>
                         <div className="flex items-center gap-2 mb-1">
-                            <span className="px-2 py-0.5 rounded-md bg-saibro-500 text-[10px] font-black uppercase tracking-widest text-white shadow-sm">
+                            <span className="px-2 py-0.5 rounded-md bg-saibro-500 text-xs font-black uppercase tracking-widest text-white shadow-sm">
                                 {groupName || 'Fase de Grupos'}
                             </span>
                         </div>
@@ -64,7 +64,7 @@ export const MatchExportPreview = forwardRef<HTMLDivElement, MatchExportPreviewP
                     <div className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center mb-1 mx-auto backdrop-blur-md border border-white/10">
                         <Ticket className="text-stone-300" size={24} />
                     </div>
-                    <p className="text-[10px] font-black text-stone-500 uppercase tracking-widest">Agenda do Dia</p>
+                    <p className="text-xs font-black text-stone-500 uppercase tracking-widest">Agenda do Dia</p>
                 </div>
             </div>
 
@@ -88,7 +88,7 @@ export const MatchExportPreview = forwardRef<HTMLDivElement, MatchExportPreviewP
                                 {/* Time */}
                                 <div className="pl-4 pr-6 flex flex-col items-center justify-center border-r border-white/10 w-24 shrink-0">
                                     <span className="text-2xl font-black text-white italic tracking-tighter">{time}</span>
-                                    <span className="text-[10px] uppercase font-bold text-stone-500">Horário</span>
+                                    <span className="text-xs uppercase font-bold text-stone-500">Horário</span>
                                 </div>
 
                                 {/* Players */}
@@ -139,7 +139,7 @@ export const MatchExportPreview = forwardRef<HTMLDivElement, MatchExportPreviewP
                     <span className="text-sm font-bold text-stone-300">Reserva SCT</span>
                 </div>
                 <div className="text-right">
-                    <p className="text-[10px] text-stone-500 uppercase tracking-widest mb-0.5">Organização</p>
+                    <p className="text-xs text-stone-500 uppercase tracking-widest mb-0.5">Organização</p>
                     <p className="text-xs font-bold text-white">SCT TENNIS</p>
                 </div>
             </div>

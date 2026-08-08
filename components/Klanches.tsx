@@ -6,6 +6,8 @@ import {
     ChevronDown, ChevronUp, AlertCircle, Calendar, Clock, MapPin
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { notify } from '../lib/notifications';
+import { useConfirm } from '../hooks/useConfirm';
 import { getNowInFortaleza, formatDate, isMember, MEMBER_ROLES } from '../utils';
 
 interface KlanchesProps {
@@ -34,6 +36,7 @@ const ICON_MAP: Record<string, React.ReactNode> = {
 };
 
 export const Klanches: React.FC<KlanchesProps> = ({ currentUser }) => {
+    const confirm = useConfirm();
     const [consumptions, setConsumptions] = useState<Consumption[]>([]);
     const [products, setProducts] = useState<ExtendedProduct[]>([]);
     const [profiles, setProfiles] = useState<User[]>([]);
@@ -70,9 +73,10 @@ export const Klanches: React.FC<KlanchesProps> = ({ currentUser }) => {
                 .getPublicUrl(filePath);
 
             setProductForm(prev => ({ ...prev, imageUrl: data.publicUrl }));
-        } catch (error: any) {
-            console.error('Error uploading image:', error);
-            alert('Erro ao fazer upload da imagem.');
+        } catch (error) {
+            notify.failure(error, 'Não foi possível enviar a imagem do produto.', {
+                event: 'product_image_upload_failed',
+            });
         } finally {
             setUploadingImage(false);
         }
@@ -248,7 +252,9 @@ export const Klanches: React.FC<KlanchesProps> = ({ currentUser }) => {
     // Cart functions
     const addToCart = (product: ExtendedProduct) => {
         if (!selectedUser) {
-            alert('Selecione um cliente primeiro!');
+            notify.warning('Nenhum cliente selecionado.', {
+                description: 'Escolha quem está consumindo antes de montar o pedido.',
+            });
             return;
         }
         const existing = cart.find(c => c.productId === product.id);
@@ -312,11 +318,16 @@ export const Klanches: React.FC<KlanchesProps> = ({ currentUser }) => {
 
         setCart([]);
         setSaving(false);
-        alert('Consumo salvo com sucesso!');
+        notify.success('Consumo lançado na conta.');
     };
 
     const handleLiquidateAccount = async (userId: string) => {
-        if (!confirm('Confirma o recebimento do pagamento?')) return;
+        if (!await confirm({
+            tone: 'warning',
+            title: 'Confirmar o recebimento?',
+            description: 'Toda a conta aberta deste cliente passa para "pago".',
+            confirmLabel: 'Recebi o pagamento',
+        })) return;
 
         await supabase
             .from('consumptions')
@@ -334,7 +345,9 @@ export const Klanches: React.FC<KlanchesProps> = ({ currentUser }) => {
     const handleSaveProduct = async () => {
         try {
             if (!productForm.name || !productForm.price) {
-                alert('Preencha nome e preço!');
+                notify.warning('Faltam nome e preço.', {
+                    description: 'Os dois são obrigatórios para cadastrar o produto.',
+                });
                 return;
             }
 
@@ -373,14 +386,19 @@ export const Klanches: React.FC<KlanchesProps> = ({ currentUser }) => {
             setShowAddProduct(false);
             setEditingProduct(null);
             setProductForm({ name: '', price: '', imageUrl: '', icon: 'package', stockQuantity: '0' });
-        } catch (error: any) {
-            console.error('Error saving product:', error);
-            alert(`Erro ao salvar produto: ${error.message}`);
+        } catch (error) {
+            notify.failure(error, 'Não foi possível salvar o produto.', {
+                event: 'product_save_failed',
+            });
         }
     };
 
     const handleDeleteProduct = async (productId: string) => {
-        if (!confirm('Excluir este produto?')) return;
+        if (!await confirm({
+            title: 'Tirar este produto do cardápio?',
+            description: 'Ele deixa de aparecer para venda. O histórico de consumo é mantido.',
+            confirmLabel: 'Tirar do cardápio',
+        })) return;
 
         await supabase.from('products').update({ is_active: false }).eq('id', productId);
         setProducts(products.filter(p => p.id !== productId));

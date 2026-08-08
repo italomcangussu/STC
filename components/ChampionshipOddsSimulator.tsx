@@ -98,7 +98,7 @@ const AthleteSelect: React.FC<{
     onChange: (value: string) => void;
 }> = ({ label, athletes, value, onChange }) => (
     <label className="block">
-        <span className="mb-2 block text-[10px] font-black uppercase tracking-widest text-stone-400">{label}</span>
+        <span className="mb-2 block text-xs font-black uppercase tracking-widest text-stone-400">{label}</span>
         <div className="relative">
             <select
                 value={value || athletes[0]?.registrationId || ''}
@@ -123,11 +123,11 @@ const OddCard: React.FC<{
         <p className="truncate text-sm font-black text-stone-900">{stat.name}</p>
         <div className="mt-3 flex items-end justify-between gap-3">
             <div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-stone-400">Prob.</p>
+                <p className="text-xs font-black uppercase tracking-widest text-stone-400">Prob.</p>
                 <p className="text-xl font-black text-stone-900">{side.probability}%</p>
             </div>
             <div className="text-right">
-                <p className="text-[10px] font-black uppercase tracking-widest text-stone-400">Odd</p>
+                <p className="text-xs font-black uppercase tracking-widest text-stone-400">Odd</p>
                 <p className="text-3xl font-black text-saibro-600">{side.decimalOdd.toFixed(2)}</p>
             </div>
         </div>

@@ -119,6 +119,19 @@ class Logger {
 export const logger = new Logger();
 
 /**
+ * Texto de um erro de origem desconhecida (Error, PostgrestError, string, null).
+ * Existe para que os `catch` não precisem repetir o mesmo encadeamento de
+ * fallbacks — e para que os ramos dessa decisão morem num lugar só.
+ */
+export function errorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'object' && error !== null && 'message' in error) {
+    return String((error as { message: unknown }).message);
+  }
+  return String(error);
+}
+
+/**
  * HOC para adicionar error boundary com logging
  */
 export function withErrorLogging<T extends (...args: any[]) => any>(

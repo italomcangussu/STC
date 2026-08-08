@@ -128,7 +128,7 @@ export const ResenhaOpenTournamentBoard: React.FC<Props> = ({ bracket, champions
             <section className="rounded-none border-x-0 sm:rounded-[1.75rem] sm:border-x bg-[#061320] text-white shadow-2xl shadow-slate-950/30 overflow-hidden border border-white/10">
                 <div className="px-3 sm:px-6 pt-5 pb-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                     <div>
-                        <p className="text-[10px] font-black uppercase tracking-[0.22em] text-orange-300">Tabela de Confrontos</p>
+                        <p className="text-xs font-black uppercase tracking-[0.22em] text-orange-300">Tabela de Confrontos</p>
                         <h2 className="text-xl sm:text-2xl font-black tracking-tight">{championshipName}</h2>
                     </div>
 
@@ -188,7 +188,7 @@ export const ResenhaOpenTournamentBoard: React.FC<Props> = ({ bracket, champions
                         </div>
                     </div>
 
-                    <div className="sticky left-2 sm:left-4 bottom-3 mt-3 inline-flex rounded-full border border-white/10 bg-[#061320]/85 px-3 py-2 text-[11px] font-bold text-slate-300 backdrop-blur-md">
+                    <div className="sticky left-2 sm:left-4 bottom-3 mt-3 inline-flex rounded-full border border-white/10 bg-[#061320]/85 px-3 py-2 text-xs font-bold text-slate-300 backdrop-blur-md">
                         Arraste para navegar • Use zoom para ajustar • Toque em um jogo para destacar
                     </div>
                 </div>
@@ -246,7 +246,7 @@ const PhaseHeaders: React.FC<{ layout: ReturnType<typeof buildResenhaBracketLayo
         {layout.phases.map(phase => (
             <div
                 key={phase.phase}
-                className="absolute text-[10px] font-black uppercase tracking-[0.18em] text-sky-200/80"
+                className="absolute text-xs font-black uppercase tracking-[0.18em] text-sky-200/80"
                 style={{ left: phase.x, top: 26, width: layout.cardWidth }}
             >
                 {phase.label}
@@ -314,7 +314,7 @@ const BracketMatchCard: React.FC<{
         >
             {displayTime && (
                 <span
-                    className={`absolute left-1/2 -translate-x-1/2 -top-5 flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-black whitespace-nowrap shadow ${
+                    className={`absolute left-1/2 -translate-x-1/2 -top-5 flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-black whitespace-nowrap shadow ${
                         isScheduled
                             ? 'bg-orange-500 text-white'
                             : 'bg-slate-700/80 text-slate-200'
@@ -367,11 +367,11 @@ const BracketMatchCard: React.FC<{
                     </div>
                 </div>
             </div>
-            <span className="absolute -left-2 -top-2 rounded-full bg-slate-950 px-2 py-1 text-[10px] font-black text-white shadow-lg">
+            <span className="absolute -left-2 -top-2 rounded-full bg-slate-950 px-2 py-1 text-xs font-black text-white shadow-lg">
                 J{match.match_number}
             </span>
             {match.is_walkover && (
-                <span className="absolute -right-2 -top-2 rounded-full bg-red-600 px-2 py-1 text-[10px] font-black text-white shadow-lg">W.O.</span>
+                <span className="absolute -right-2 -top-2 rounded-full bg-red-600 px-2 py-1 text-xs font-black text-white shadow-lg">W.O.</span>
             )}
             {winnerSide && (
                 <Trophy className="absolute -right-2 -bottom-2 rounded-full bg-green-600 p-1 text-white shadow-lg" size={22} />
@@ -385,7 +385,7 @@ const PlayerRow: React.FC<{ label: string; pending: boolean; won: boolean; lost:
         <span className={`truncate text-[13px] font-black ${pending ? 'italic text-slate-400' : ''}`}>
             {label}
         </span>
-        {won && <span className="ml-auto text-[11px] font-black text-green-600">V</span>}
+        {won && <span className="ml-auto text-xs font-black text-green-600">V</span>}
     </div>
 );
 

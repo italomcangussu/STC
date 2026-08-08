@@ -11,7 +11,8 @@
 
 import { toast } from 'sonner';
 import type { ReactElement } from 'react';
-import { logger } from './logger';
+import { errorMessage, logger } from './logger';
+import { humanizeError } from './humanErrors';
 
 interface NotificationOptions {
   description?: string;
@@ -56,6 +57,35 @@ class NotificationService {
       duration: options?.duration || 5000,
       action: options?.action,
       cancel: options?.cancel,
+    });
+  }
+
+  /**
+   * Erro vindo de uma exceção — o caminho padrão de todo `catch` que fala com
+   * o usuário.
+   *
+   * Faz as duas coisas que precisam acontecer juntas e costumavam ficar
+   * separadas: **loga o erro cru** (para o suporte) e **mostra o humano**
+   * (para quem está na tela). Passar `event` no contexto nomeia o log com o
+   * evento de domínio, em vez do genérico.
+   *
+   * @param fallback O que falhou, na voz do usuário — 'Não foi possível salvar
+   *                 o placar.'. Só aparece quando o erro não é reconhecido,
+   *                 mas é o que salva a mensagem de virar jargão.
+   */
+  failure(
+    error: unknown,
+    fallback: string,
+    logContext?: NotificationContext & { event?: string }
+  ): void {
+    const { event = 'notification_failure', ...context } = logContext ?? {};
+    const human = humanizeError(error, fallback);
+
+    logger.error(event, { ...context, error: errorMessage(error) });
+
+    toast.error(human.message, {
+      description: human.hint,
+      duration: 5000,
     });
   }
 
@@ -132,67 +162,7 @@ class NotificationService {
   dismiss(id?: string | number): void {
     toast.dismiss(id);
   }
-
-  /**
-   * Notificação de confirmação
-   */
-  confirm(
-    message: string,
-    onConfirm: () => void | Promise<void>,
-    options?: {
-      description?: string;
-      confirmLabel?: string;
-      cancelLabel?: string;
-    }
-  ): void {
-    toast.warning(message, {
-      description: options?.description,
-      duration: 10000, // Tempo maior para dar tempo de decidir
-      action: {
-        label: options?.confirmLabel || 'Confirmar',
-        onClick: async () => {
-          try {
-            await onConfirm();
-            this.success('Ação confirmada');
-          } catch (error) {
-            this.error('Erro ao executar ação', {
-              description: error instanceof Error ? error.message : 'Erro desconhecido',
-            });
-          }
-        },
-      },
-      cancel: {
-        label: options?.cancelLabel || 'Cancelar',
-        onClick: () => {},
-      },
-    });
-  }
 }
 
 // Singleton instance
 export const notify = new NotificationService();
-
-/**
- * Wrapper para operações assíncronas com notificação automática
- */
-export async function withNotification<T>(
-  operation: () => Promise<T>,
-  config: {
-    loadingMessage: string;
-    successMessage: string | ((data: T) => string);
-    errorMessage: string | ((error: any) => string);
-    logEvent: string;
-    logContext?: NotificationContext;
-  }
-): Promise<T> {
-  return notify.promise(
-    operation(),
-    {
-      loading: config.loadingMessage,
-      success: config.successMessage,
-      error: config.errorMessage,
-    },
-    config.logEvent,
-    config.logContext
-  );
-}

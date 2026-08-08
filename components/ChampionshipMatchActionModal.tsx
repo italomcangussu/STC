@@ -1,6 +1,6 @@
 import React from 'react';
-import { createPortal } from 'react-dom';
 import { Calendar, Clock, Trophy, X } from 'lucide-react';
+import { StandardModal } from './StandardModal';
 import type { Match } from '../types';
 import { formatDateBr } from '../utils';
 
@@ -82,7 +82,7 @@ const PlayerLine: React.FC<{ registration?: RegistrationLike; winner: boolean; l
         <img src={getRegistrationAvatar(registration)} className="h-11 w-11 rounded-full border-2 border-white object-cover shadow-sm" />
         <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-black text-stone-900">{getRegistrationName(registration, label)}</p>
-            <p className="text-[10px] font-black uppercase tracking-widest text-stone-400">{registration?.participant_type === 'guest' ? 'Convidado' : registration ? 'Sócio' : 'Origem da chave'}</p>
+            <p className="text-xs font-black uppercase tracking-widest text-stone-400">{registration?.participant_type === 'guest' ? 'Convidado' : registration ? 'Sócio' : 'Origem da chave'}</p>
         </div>
         {winner && <Trophy size={18} className="text-saibro-600" />}
     </div>
@@ -105,16 +105,16 @@ export const ChampionshipMatchActionModal: React.FC<ChampionshipMatchActionModal
     const canShowLaunch = !isFinished(match) && Boolean(onLaunch);
     const canShowSchedule = !isFinished(match) && Boolean(onSchedule);
 
-    return createPortal(
-        <div className="fixed inset-0 z-999 flex items-center justify-center bg-stone-950/65 p-4 backdrop-blur-md animate-in fade-in duration-200">
-            <div className="w-full max-w-md overflow-hidden rounded-[2rem] bg-white shadow-2xl animate-in zoom-in-95 duration-200">
+    return (
+        <StandardModal isOpen onClose={onClose} ariaLabel={`Ações do ${matchNumber}`}>
+            <div className="w-full max-w-md overflow-hidden rounded-[2rem] bg-white shadow-2xl">
                 <div className="flex items-start justify-between gap-4 border-b border-stone-100 bg-stone-950 px-5 py-5 text-white">
                     <div>
-                        <p className="text-[10px] font-black uppercase tracking-[0.22em] text-orange-300">{className || 'Classe'}</p>
+                        <p className="text-xs font-black uppercase tracking-[0.22em] text-orange-300">{className || 'Classe'}</p>
                         <h3 className="mt-1 text-xl font-black tracking-tight">{matchNumber}</h3>
                         <p className="mt-1 text-xs font-bold text-stone-300">{roundName}</p>
                     </div>
-                    <button onClick={onClose} className="rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20" aria-label="Fechar">
+                    <button onClick={onClose} className="hit-44 rounded-full bg-white/10 text-white transition-colors hover:bg-white/20" aria-label="Fechar">
                         <X size={18} />
                     </button>
                 </div>
@@ -125,7 +125,7 @@ export const ChampionshipMatchActionModal: React.FC<ChampionshipMatchActionModal
 
                     <div className="grid grid-cols-2 gap-3">
                         <div className="rounded-2xl border border-stone-100 bg-stone-50 p-3">
-                            <p className="mb-1 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-stone-400">
+                            <p className="mb-1 flex items-center gap-1.5 text-xs font-black uppercase tracking-widest text-stone-400">
                                 <Calendar size={12} />
                                 {scheduleMode === 'suggested' ? 'Sugerido' : 'Agendado'}
                             </p>
@@ -134,7 +134,7 @@ export const ChampionshipMatchActionModal: React.FC<ChampionshipMatchActionModal
                             </p>
                         </div>
                         <div className="rounded-2xl border border-stone-100 bg-stone-50 p-3">
-                            <p className="mb-1 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-stone-400">
+                            <p className="mb-1 flex items-center gap-1.5 text-xs font-black uppercase tracking-widest text-stone-400">
                                 <Clock size={12} />
                                 Horário
                             </p>
@@ -146,7 +146,7 @@ export const ChampionshipMatchActionModal: React.FC<ChampionshipMatchActionModal
 
                     <div className="flex items-center justify-between rounded-2xl border border-stone-100 bg-white p-4 shadow-sm">
                         <div>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-stone-400">Status</p>
+                            <p className="text-xs font-black uppercase tracking-widest text-stone-400">Status</p>
                             <p className="mt-1 text-sm font-black text-stone-900">{isFinished(match) ? 'Finalizada' : 'Pendente'}</p>
                         </div>
                         <ScoreSummary match={match} />
@@ -176,7 +176,6 @@ export const ChampionshipMatchActionModal: React.FC<ChampionshipMatchActionModal
                     )}
                 </div>
             </div>
-        </div>,
-        document.body,
+        </StandardModal>
     );
 };

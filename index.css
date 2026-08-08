@@ -115,6 +115,24 @@
 /* Custom Utilities and Components */
 @layer utilities {
 
+    /**
+     * Alvo de toque mínimo de 44px (WCAG 2.5.8 / iOS HIG).
+     *
+     * Um ícone de 16px dentro de um `p-2` dá um alvo de 32px — abaixo do que
+     * um polegar acerta com confiança, e o custo do erro aqui é clicar em
+     * "remover inscrição" querendo clicar na estrela ao lado.
+     *
+     * O alvo cresce sem empurrar o layout: a área invisível vem do
+     * `min-width`/`min-height`, e o ícone continua centralizado.
+     */
+    .hit-44 {
+        min-width: 44px;
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
     /* Tennis Court Background */
     .bg-clay-pattern {
         background-color: #c45c2c;
@@ -1662,5 +1680,31 @@
 @media (prefers-reduced-motion: reduce) {
     .tennis-court-animation {
         display: none;
+    }
+
+    /**
+     * Quem pediu menos movimento ao sistema pediu para o app inteiro, não para
+     * a tela que alguém lembrou de marcar. A regra é global de propósito: são
+     * mais de 250 usos de `animate-*` e `transition-*` espalhados, e depender
+     * de cada autor lembrar do `motion-reduce:` é depender de ninguém esquecer.
+     */
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+
+    /**
+     * O spinner é a exceção: é a única animação que carrega informação. Parado,
+     * ele diz "travou" — o oposto do que existe para dizer. Continua girando,
+     * mais devagar.
+     */
+    .animate-spin,
+    .animate-spin-slow {
+        animation-duration: 1.5s !important;
+        animation-iteration-count: infinite !important;
     }
 }

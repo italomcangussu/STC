@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, Court } from '../types';
 import { supabase } from '../lib/supabase';
+import { notify } from '../lib/notifications';
 import { X, Trophy, Calendar, Clock, CheckCircle, Loader2, Minus, Plus } from 'lucide-react';
 import { getNowInFortaleza, formatDate } from '../utils';
 import { StandardModal } from './StandardModal';
@@ -73,18 +74,24 @@ export const AdminMatchCreator: React.FC<AdminMatchCreatorProps> = ({ isOpen, on
     const handleSave = async () => {
         // Validation
         if (!playerAId || !playerBId || !date || !time) {
-            alert('Preencha todos os campos obrigatórios.');
+            notify.warning('Faltam campos obrigatórios.', {
+                description: 'Preencha os dois jogadores, a data e o horário.',
+            });
             return;
         }
         if (playerAId === playerBId) {
-            alert('Os jogadores devem ser diferentes.');
+            notify.warning('Os dois jogadores são a mesma pessoa.', {
+                description: 'Escolha um adversário diferente.',
+            });
             return;
         }
 
         // Validate Scores
         const validSets = sets.filter(s => s.a !== '' && s.b !== '');
         if (validSets.length === 0) {
-            alert('Informe o placar de pelo menos um set.');
+            notify.warning('Nenhum set preenchido.', {
+                description: 'Informe o placar de pelo menos um set.',
+            });
             return;
         }
 
@@ -108,7 +115,9 @@ export const AdminMatchCreator: React.FC<AdminMatchCreatorProps> = ({ isOpen, on
         });
 
         if (setsWonA === setsWonB) {
-            alert('O jogo não pode terminar empatado. Verifique os placares.');
+            notify.warning('O jogo terminou empatado em sets.', {
+                description: 'Revise os placares — uma partida precisa de um vencedor.',
+            });
             return;
         }
 
@@ -175,13 +184,16 @@ export const AdminMatchCreator: React.FC<AdminMatchCreatorProps> = ({ isOpen, on
             // 4. Points are handled automatically by DB Triggers (trg_calculate_match_points)
             // when match is inserted with status='finished'.
 
-            alert('Partida retroativa registrada com sucesso! Pontos e histórico calculados automaticamente.');
+            notify.success('Partida retroativa registrada.', {
+                description: 'Pontos e histórico foram calculados automaticamente.',
+            });
             onSuccess();
             onClose();
 
-        } catch (error: any) {
-            console.error('Error creating match:', error);
-            alert(`Erro ao registrar partida: ${error.message}`);
+        } catch (error) {
+            notify.failure(error, 'Não foi possível registrar a partida.', {
+                event: 'retroactive_match_create_failed',
+            });
         } finally {
             setLoading(false);
         }

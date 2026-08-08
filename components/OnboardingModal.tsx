@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { User } from '../types';
 import { supabase } from '../lib/supabase';
+import { notify } from '../lib/notifications';
 import { Upload, Loader2, Save, User as UserIcon } from 'lucide-react';
 
 interface OnboardingModalProps {
@@ -48,8 +49,9 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ currentUser, o
 
             setAvatarUrl(publicUrl);
         } catch (error) {
-            console.error('Error uploading avatar:', error);
-            alert('Erro ao enviar foto.');
+            notify.failure(error, 'Não foi possível enviar a foto.', {
+                event: 'onboarding_avatar_upload_failed',
+            });
         } finally {
             setUploading(false);
         }

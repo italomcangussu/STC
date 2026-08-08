@@ -12,7 +12,27 @@ import {
   isMember,
   isAdminRole,
   MEMBER_ROLES,
+  plural,
 } from '../utils';
+
+describe('plural', () => {
+  it('usa o singular para exatamente 1', () => {
+    expect(plural(1, 'confronto')).toBe('1 confronto');
+  });
+
+  it('usa o plural para 0 — em português, zero é plural', () => {
+    expect(plural(0, 'confronto')).toBe('0 confrontos');
+  });
+
+  it('usa o plural acima de 1', () => {
+    expect(plural(32, 'confronto')).toBe('32 confrontos');
+  });
+
+  it('aceita plural irregular', () => {
+    expect(plural(3, 'placar já lançado', 'placares já lançados')).toBe('3 placares já lançados');
+    expect(plural(1, 'placar já lançado', 'placares já lançados')).toBe('1 placar já lançado');
+  });
+});
 
 describe('Membership Utils', () => {
   describe('isMember', () => {

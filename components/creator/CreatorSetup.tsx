@@ -163,7 +163,7 @@ export const CreatorSetup: React.FC<Props> = ({ value, onChange, onNext }) => {
                             ['finalRankingPts', 'Bônus do campeão'],
                         ] as [keyof ScoringRules, string][]).map(([key, label]) => (
                             <div key={key}>
-                                <label htmlFor={`scoring-${key}`} className="block text-[10px] font-bold text-stone-400 uppercase mb-1">{label}</label>
+                                <label htmlFor={`scoring-${key}`} className="block text-xs font-bold text-stone-400 uppercase mb-1">{label}</label>
                                 <input
                                     id={`scoring-${key}`}
                                     type="number"

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 
 /**
@@ -33,6 +33,15 @@ interface StandardModalProps {
     containerClassName?: string;
     /** Alinhamento vertical do modal (padrão: 'center') */
     verticalAlign?: 'start' | 'center' | 'end';
+    /** Descreve o modal para leitores de tela quando não há título visível com id. */
+    ariaLabel?: string;
+    /**
+     * Respiro entre o modal e a borda da tela. Existe como prop, e não como
+     * `containerClassName`, porque duas classes de padding no mesmo elemento
+     * dependem da ordem em que o Tailwind as emite — e quem escreve não
+     * controla essa ordem. Bottom sheets usam `p-0 sm:p-4`.
+     */
+    padding?: string;
 }
 
 export const StandardModal: React.FC<StandardModalProps> = ({
@@ -41,8 +50,12 @@ export const StandardModal: React.FC<StandardModalProps> = ({
     children,
     closeOnBackdrop = true,
     containerClassName = '',
-    verticalAlign = 'center'
+    verticalAlign = 'center',
+    ariaLabel,
+    padding = 'p-4'
 }) => {
+    const panelRef = useRef<HTMLDivElement>(null);
+
     // Bloquear scroll do body e escutar tecla Escape para fechar modal
     useEffect(() => {
         if (!isOpen) return;
@@ -63,6 +76,18 @@ export const StandardModal: React.FC<StandardModalProps> = ({
         };
     }, [isOpen, onClose]);
 
+    // Levar o foco para dentro ao abrir e devolvê-lo a quem abriu ao fechar.
+    // Sem isso o Tab continua percorrendo a página atrás do modal, e ao fechar
+    // o teclado volta para o topo — o usuário perde o lugar onde estava.
+    useEffect(() => {
+        if (!isOpen) return;
+        const opener = document.activeElement as HTMLElement | null;
+        const panel = panelRef.current;
+        // Um campo com `autoFocus` já se apossou do foco; não roubamos de volta.
+        if (panel && !panel.contains(document.activeElement)) panel.focus();
+        return () => opener?.focus?.();
+    }, [isOpen]);
+
     if (!isOpen) return null;
 
     const alignmentClass = 
@@ -72,13 +97,16 @@ export const StandardModal: React.FC<StandardModalProps> = ({
 
     return createPortal(
         <div 
-            className={`fixed inset-0 z-999 bg-stone-900/60 backdrop-blur-md flex ${alignmentClass} justify-center p-4 animate-in fade-in duration-200 ease-out ${containerClassName}`}
+            className={`fixed inset-0 z-999 bg-stone-900/60 backdrop-blur-md flex ${alignmentClass} justify-center ${padding} animate-in fade-in duration-200 ease-out motion-reduce:animate-none ${containerClassName}`}
             onClick={closeOnBackdrop ? onClose : undefined}
             role="dialog"
             aria-modal="true"
+            aria-label={ariaLabel}
         >
-            <div 
-                className="animate-in zoom-in-95 duration-180 ease-out"
+            <div
+                ref={panelRef}
+                tabIndex={-1}
+                className="animate-in zoom-in-95 duration-180 ease-out motion-reduce:animate-none outline-none"
                 onClick={(e) => e.stopPropagation()}
             >
                 {children}

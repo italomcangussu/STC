@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { User } from '../types';
 import { supabase } from '../lib/supabase';
+import { notify } from '../lib/notifications';
 import { X, Save, Camera, Shield, Trophy, Mail, User as UserIcon, Loader2 } from 'lucide-react';
 import { getNowInFortaleza } from '../utils';
 
@@ -62,9 +63,11 @@ export const AdminUserEditor: React.FC<AdminUserEditorProps> = ({ user, onClose,
             // Success
             onSave();
             onClose();
-        } catch (error: any) {
-            console.error('Error updating user:', error);
-            alert(`Erro ao salvar: ${error.message}`);
+        } catch (error) {
+            notify.failure(error, 'Não foi possível salvar as alterações do atleta.', {
+                event: 'admin_user_save_failed',
+                userId: user.id,
+            });
         } finally {
             setLoading(false);
         }

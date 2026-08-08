@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
+import { notify } from '../lib/notifications';
 import { PointRule } from '../types';
 import { getNowInFortaleza } from '../utils';
 import { Save, Loader2, Info, Trophy, Target, Award, TrendingUp, CheckCircle2, Sparkles } from 'lucide-react';
@@ -57,9 +58,11 @@ export const AdminRules: React.FC = () => {
             setSaveSuccess(rule.id);
             setTimeout(() => setSaveSuccess(null), 2000);
 
-        } catch (error: any) {
-            console.error('Error updating rule:', error);
-            alert('Erro ao atualizar regra.');
+        } catch (error) {
+            notify.failure(error, 'Não foi possível atualizar a regra de pontuação.', {
+                event: 'point_rule_update_failed',
+                ruleId: rule.id,
+            });
         } finally {
             setSaving(null);
         }

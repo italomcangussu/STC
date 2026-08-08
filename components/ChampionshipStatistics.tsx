@@ -23,16 +23,16 @@ const AthleteRow: React.FC<{ stat: AthleteStat; index: number }> = ({ stat, inde
             <div className="flex items-center gap-2">
                 <p className="truncate text-sm font-black text-stone-900">{stat.name}</p>
                 {stat.lastResult && (
-                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-black ${stat.lastResult === 'V' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'}`}>
+                    <span className={`rounded-full px-2 py-0.5 text-xs font-black ${stat.lastResult === 'V' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'}`}>
                         {stat.lastResult}
                     </span>
                 )}
             </div>
-            <p className="mt-1 text-[11px] font-bold text-stone-400">
+            <p className="mt-1 text-xs font-bold text-stone-400">
                 {stat.matchesPlayed} jogos · {stat.wins}V/{stat.losses}D · aproveitamento {pct(stat.wins, stat.matchesPlayed)}
             </p>
         </div>
-        <div className="grid grid-cols-2 gap-2 text-right text-[11px] font-black text-stone-600 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-2 text-right text-xs font-black text-stone-600 sm:grid-cols-4">
             <span>Sets {stat.setsWon}-{stat.setsLost}</span>
             <span>Saldo {balance(stat.setsWon, stat.setsLost)}</span>
             <span>Games {stat.gamesWon}-{stat.gamesLost}</span>
@@ -61,7 +61,7 @@ export const ChampionshipStatistics: React.FC<Props> = ({ matches, registrations
             <div className="rounded-3xl bg-stone-950 p-5 text-white shadow-xl shadow-stone-200">
                 <div className="mb-4 flex items-center justify-between gap-3">
                     <div>
-                        <p className="text-[10px] font-black uppercase tracking-[0.22em] text-orange-300">Estatísticas</p>
+                        <p className="text-xs font-black uppercase tracking-[0.22em] text-orange-300">Estatísticas</p>
                         <h3 className="mt-1 text-xl font-black">Desempenho do campeonato</h3>
                     </div>
                     <BarChart3 className="text-orange-300" size={28} />
@@ -104,7 +104,7 @@ export const ChampionshipStatistics: React.FC<Props> = ({ matches, registrations
 
 const Metric: React.FC<{ label: string; value: number }> = ({ label, value }) => (
     <div className="rounded-2xl border border-white/10 bg-white/10 p-3">
-        <p className="text-[10px] font-black uppercase tracking-widest text-stone-300">{label}</p>
+        <p className="text-xs font-black uppercase tracking-widest text-stone-300">{label}</p>
         <p className="mt-1 text-2xl font-black">{value}</p>
     </div>
 );

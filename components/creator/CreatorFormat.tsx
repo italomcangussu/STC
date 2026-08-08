@@ -23,7 +23,7 @@ const BRACKET_LABELS: Record<BracketSize, string> = {
 
 const NumberField: React.FC<{ id: string; label: string; value: number; min: number; onChange: (v: number) => void }> = ({ id, label, value, min, onChange }) => (
     <div>
-        <label htmlFor={id} className="block text-[10px] font-bold text-stone-400 uppercase mb-1">{label}</label>
+        <label htmlFor={id} className="block text-xs font-bold text-stone-400 uppercase mb-1">{label}</label>
         <input id={id} type="number" min={min} value={value} onChange={e => onChange(Number(e.target.value))}
             className="w-full p-2 border border-stone-200 rounded-xl font-bold" />
     </div>
@@ -31,7 +31,7 @@ const NumberField: React.FC<{ id: string; label: string; value: number; min: num
 
 const BracketSelect: React.FC<{ id: string; label: string; value: BracketSize; onChange: (v: BracketSize) => void }> = ({ id, label, value, onChange }) => (
     <div>
-        <label htmlFor={id} className="block text-[10px] font-bold text-stone-400 uppercase mb-1">{label}</label>
+        <label htmlFor={id} className="block text-xs font-bold text-stone-400 uppercase mb-1">{label}</label>
         <select id={id} value={value} onChange={e => onChange(e.target.value as BracketSize)}
             className="w-full p-2 border border-stone-200 rounded-xl font-bold">
             {(Object.keys(BRACKET_LABELS) as BracketSize[]).map(k => <option key={k} value={k}>{BRACKET_LABELS[k]}</option>)}
@@ -159,7 +159,7 @@ export const CreatorFormat: React.FC<Props> = ({ classes, classFormats, onChange
                             onChange={v => set('qualifying', { matchCount: v, entrySlots: qualifying.entrySlots.slice(0, v) })}
                         />
                         <div>
-                            <label htmlFor="ko-entry-slots" className="block text-[10px] font-bold text-stone-400 uppercase mb-1">
+                            <label htmlFor="ko-entry-slots" className="block text-xs font-bold text-stone-400 uppercase mb-1">
                                 Vagas do quadro onde os vencedores entram (1 a {slots}, separadas por vírgula)
                             </label>
                             <input

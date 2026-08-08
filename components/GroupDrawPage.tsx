@@ -5,6 +5,10 @@ import {
 } from 'lucide-react';
 import { User } from '../types';
 import { supabase } from '../lib/supabase';
+import { logger } from '../lib/logger';
+import { notify } from '../lib/notifications';
+import { StandardModal } from './StandardModal';
+import { CHAMPIONSHIP_ERRORS } from '../lib/humanErrors';
 import { getNowInFortaleza } from '../utils';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
@@ -170,7 +174,7 @@ export const GroupDrawPage: React.FC<Props> = ({ currentUser: _currentUser, cham
                     }
                 } catch {
                     // Tables might not exist yet, initialize empty draws
-                    console.log('Group tables not found, initializing empty draws');
+                    logger.debug('championship_groups_absent', { championshipId }, 'Tabelas de grupo ausentes; iniciando sorteios vazios.');
                     const draws: Record<string, DrawnGroup> = {};
                     CLASSES.forEach(cls => {
                         draws[cls] = {
@@ -237,7 +241,9 @@ export const GroupDrawPage: React.FC<Props> = ({ currentUser: _currentUser, cham
         const categoryDraw = categoryDraws[cls];
 
         if (!categoryDraw.groupA.seed || !categoryDraw.groupB.seed) {
-            alert('Selecione os cabeças de chave para ambos os grupos antes de sortear.');
+            notify.warning(CHAMPIONSHIP_ERRORS.semCabecasDeChave.message, {
+                description: CHAMPIONSHIP_ERRORS.semCabecasDeChave.hint,
+            });
             return;
         }
 
@@ -346,7 +352,9 @@ export const GroupDrawPage: React.FC<Props> = ({ currentUser: _currentUser, cham
 
         const categoryDraw = categoryDraws[manualDefineCategory];
         if (!categoryDraw?.groupA.seed || !categoryDraw?.groupB.seed) {
-            alert('Selecione os cabeças de chave para ambos os grupos antes de definir.');
+            notify.warning(CHAMPIONSHIP_ERRORS.semCabecasDeChave.message, {
+                description: CHAMPIONSHIP_ERRORS.semCabecasDeChave.hint,
+            });
             return;
         }
 
@@ -356,7 +364,9 @@ export const GroupDrawPage: React.FC<Props> = ({ currentUser: _currentUser, cham
         );
 
         if (!allAssigned) {
-            alert('Todos os jogadores devem ser atribuídos a um grupo.');
+            notify.warning(CHAMPIONSHIP_ERRORS.jogadoresSemGrupo.message, {
+                description: CHAMPIONSHIP_ERRORS.jogadoresSemGrupo.hint,
+            });
             return;
         }
 
@@ -455,8 +465,11 @@ export const GroupDrawPage: React.FC<Props> = ({ currentUser: _currentUser, cham
             }));
 
         } catch (error) {
-            console.error('Error saving groups:', error);
-            alert('Erro ao salvar grupos. Tente novamente.');
+            notify.failure(error, 'Não foi possível salvar os grupos.', {
+                event: 'championship_groups_save_failed',
+                championshipId,
+                classe: cls,
+            });
         }
 
         setSaving(null);
@@ -572,8 +585,10 @@ export const GroupDrawPage: React.FC<Props> = ({ currentUser: _currentUser, cham
             link.click();
 
         } catch (error) {
-            console.error('Error exporting PNG:', error);
-            alert('Erro ao exportar PNG. Tente novamente.');
+            notify.failure(error, 'Não foi possível gerar o PNG dos grupos.', {
+                event: 'championship_groups_png_export_failed',
+                classe: cls,
+            });
         }
 
         setExporting(null);
@@ -654,8 +669,10 @@ export const GroupDrawPage: React.FC<Props> = ({ currentUser: _currentUser, cham
             pdf.save(`${championship.name}-${cls}-grupos.pdf`);
 
         } catch (error) {
-            console.error('Error exporting PDF:', error);
-            alert('Erro ao exportar PDF. Tente novamente.');
+            notify.failure(error, 'Não foi possível gerar o PDF dos grupos.', {
+                event: 'championship_groups_pdf_export_failed',
+                classe: cls,
+            });
         }
 
         setExporting(null);
@@ -719,7 +736,7 @@ export const GroupDrawPage: React.FC<Props> = ({ currentUser: _currentUser, cham
                 <div className="relative p-6">
                     <button
                         onClick={onBack}
-                        className="flex items-center gap-2 text-amber-200/80 hover:text-amber-100 transition-colors mb-6"
+                        className="hit-44 gap-2 text-amber-200/80 hover:text-amber-100 transition-colors mb-6 pr-3"
                     >
                         <ArrowLeft size={20} />
                         <span className="text-sm font-medium">Voltar</span>
@@ -822,7 +839,12 @@ export const GroupDrawPage: React.FC<Props> = ({ currentUser: _currentUser, cham
 
             {/* Manual Define Modal */}
             {manualDefineCategory && (
-                <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-xl flex items-center justify-center p-4">
+            <StandardModal
+                isOpen
+                onClose={() => setManualDefineCategory(null)}
+                containerClassName="bg-black/90! backdrop-blur-xl"
+                ariaLabel="Definir grupos manualmente"
+            >
                     <div className="relative max-w-2xl w-full max-h-[90vh] overflow-auto">
                         <div className="bg-linear-to-br from-stone-800 to-stone-900 rounded-3xl border border-violet-500/30 shadow-2xl shadow-violet-500/20">
                             {/* Header */}
@@ -989,7 +1011,7 @@ export const GroupDrawPage: React.FC<Props> = ({ currentUser: _currentUser, cham
                             </div>
                         </div>
                     </div>
-                </div>
+            </StandardModal>
             )}
 
             {/* Categories */}

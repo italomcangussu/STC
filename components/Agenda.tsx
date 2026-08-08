@@ -4,6 +4,8 @@ import { createPortal } from 'react-dom';
 import { User, Reservation, ReservationType, NonSocioStudent, Professor, Match } from '../types';
 import { ChevronLeft, ChevronRight, Plus, X, Calendar, MapPin, Users, Check, AlertCircle, Search, Loader2, Trash2, Trophy, UserCog, ArrowRight, Info, UserPlus, LogOut, Wallet, Pencil, UserMinus, Share2, ArrowLeft } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { notify } from '../lib/notifications';
+import { useConfirm } from '../hooks/useConfirm';
 import { ScoreModal } from './ScoreModal';
 import { LiveScoreboard } from './LiveScoreboard';
 import { StandardModal } from './StandardModal';
@@ -1206,6 +1208,7 @@ const ReservationCard: React.FC<{
 
 // --- COMPONENT: Agenda ---
 export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
+    const confirm = useConfirm();
     const [currentDate, setCurrentDate] = useState(getNowInFortaleza());
     const [view, setView] = useState<'day' | 'week' | 'month'>('day');
     const [reservations, setReservations] = useState<Reservation[]>([]);
@@ -1499,7 +1502,9 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
             if (!res) return;
 
             if (res.participantIds.length >= 8) {
-                alert('Limite de 8 participantes atingido.');
+                notify.warning('A partida já tem 8 participantes.', {
+                    description: 'Este é o limite por reserva. Marque outro horário.',
+                });
                 return;
             }
 
@@ -1520,8 +1525,10 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                 return newRes;
             });
         } catch (error) {
-            console.error('Error joining reservation:', error);
-            alert('Erro ao entrar na reserva. Tente novamente.');
+            notify.failure(error, 'Não foi possível entrar na reserva.', {
+                event: 'reservation_join_failed',
+                reservationId: id,
+            });
         }
     };
 
@@ -1534,7 +1541,13 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
 
             // If it was the last Sócio and no guest, the reservation should be cancelled
             if (newParticipants.length === 0 && !res.guestName) {
-                if (confirm('Você é o último atleta da partida. Ao sair, o agendamento será cancelado. Confirmar?')) {
+                if (await confirm({
+                    tone: 'warning',
+                    title: 'Sair e cancelar o agendamento?',
+                    description: 'Você é o último atleta da partida — ao sair, a reserva inteira é cancelada.',
+                    confirmLabel: 'Sair e cancelar',
+                    cancelLabel: 'Continuar na partida',
+                })) {
                     // 1. Update status to cancelled in Supabase
                     const { error } = await supabase
                         .from('reservations')
@@ -1569,13 +1582,20 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                 return newRes;
             });
         } catch (error) {
-            console.error('Error leaving reservation:', error);
-            alert('Erro ao sair da reserva.');
+            notify.failure(error, 'Não foi possível sair da reserva.', {
+                event: 'reservation_leave_failed',
+                reservationId: id,
+            });
         }
     };
 
     const handleCancel = async (id: string) => {
-        if (confirm('Tem certeza que deseja cancelar esta reserva?')) {
+        if (await confirm({
+            title: 'Cancelar esta reserva?',
+            description: 'O horário volta a ficar livre para os outros sócios.',
+            confirmLabel: 'Cancelar reserva',
+            cancelLabel: 'Manter',
+        })) {
             try {
                 // Update in Supabase
                 const { error } = await supabase
@@ -1592,8 +1612,10 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                     return newRes;
                 });
             } catch (err) {
-                console.error('Error cancelling reservation:', err);
-                alert('Erro ao cancelar reserva');
+                notify.failure(err, 'Não foi possível cancelar a reserva.', {
+                    event: 'reservation_cancel_failed',
+                    reservationId: id,
+                });
             }
         }
     };
@@ -1616,10 +1638,12 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
             setReservations(prev => prev.filter(r => r.id !== internalId));
             setSelectedReservation(null);
 
-            alert('Resultado confirmado com sucesso!');
+            notify.success('Resultado confirmado.');
         } catch (err) {
-            console.error('Error saving match result:', err);
-            alert('Erro ao salvar resultado. Tente novamente.');
+            notify.failure(err, 'Não foi possível salvar o resultado.', {
+                event: 'championship_match_finish_failed',
+                matchId,
+            });
         }
     };
 
@@ -1756,8 +1780,10 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
             setShowAddModal(false);
             setReservationToEdit(undefined);
         } catch (err) {
-            console.error('Error saving reservation:', err);
-            alert('Erro ao salvar reserva. Verifique se a tabela reservations existe no banco.');
+            notify.failure(err, 'Não foi possível salvar a reserva.', {
+                event: 'reservation_save_failed',
+                reservationId: res.id,
+            });
         }
     };
 
@@ -1844,11 +1870,13 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
             }
 
             setSelectedChallenge(null);
-            alert('Placar salvo com sucesso!');
+            notify.success('Placar salvo.');
 
         } catch (error) {
-            console.error('Error saving score:', error);
-            alert('Erro ao salvar placar.');
+            notify.failure(error, 'Não foi possível salvar o placar.', {
+                event: 'challenge_score_save_failed',
+                challengeId: selectedChallenge.id,
+            });
         }
     };
 
@@ -2191,6 +2219,7 @@ const AddReservationModal: React.FC<{
     existingReservations: Reservation[];
     initialData?: Reservation;
 }> = ({ onClose, onSave, currentUser, profiles, courts, professors, nonSocioStudents, existingReservations, initialData }) => {
+    const confirm = useConfirm();
     const isEdit = !!initialData;
     const [step, setStep] = useState(1);
     const initialReservationType: ReservationType = initialData?.type || 'Play';
@@ -2443,7 +2472,14 @@ const AddReservationModal: React.FC<{
                 // ... (simplified logic for brevity, matches original) ...
             });
             const namesString = Array.from(new Set(allNames)).join(', ');
-            if (!window.confirm(`Choque de horário com: ${namesString}. Deseja marcar mesmo assim?`)) return;
+            if (!await confirm({
+                tone: 'warning',
+                title: 'Choque de horário',
+                description: 'Estes atletas já têm compromisso neste horário. Dá para marcar mesmo assim.',
+                consequences: [namesString],
+                confirmLabel: 'Marcar assim mesmo',
+                cancelLabel: 'Escolher outro horário',
+            })) return;
         }
 
         const derivedStudentType = type === 'Aula'

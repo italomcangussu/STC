@@ -79,6 +79,20 @@ export function formatDateBr(dateStr: string): string {
   return `${d}/${m}/${y}`;
 }
 
+/**
+ * Contagem com concordância: `plural(1, 'confronto')` → `'1 confronto'`,
+ * `plural(32, 'confronto')` → `'32 confrontos'`.
+ *
+ * Existe para tirar o ternário de dentro do JSX. Escrito inline, cada texto
+ * com número vira dois ramos que ninguém testa e que somam complexidade no
+ * componente inteiro.
+ *
+ * @param plural Só quando o plural não é `singular + 's'` — 'placares', 'finais'.
+ */
+export function plural(n: number, singular: string, plural?: string): string {
+  return `${n} ${n === 1 ? singular : (plural ?? `${singular}s`)}`;
+}
+
 export function getDayName(dateStr: string): string {
   const days = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
   const date = new Date(dateStr + 'T00:00:00');

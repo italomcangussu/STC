@@ -109,7 +109,7 @@ export const MatchScheduleModal: React.FC<Props> = ({
                             <h3 className="text-lg font-black text-stone-800">
                                 {isSuggestedTimeMode ? 'Editar horário sugerido' : 'Agendar Partida'}
                             </h3>
-                            <p className="text-[10px] font-bold text-saibro-600 uppercase tracking-widest">{roundName}</p>
+                            <p className="text-xs font-bold text-saibro-600 uppercase tracking-widest">{roundName}</p>
                         </div>
                     </div>
                 </div>
@@ -130,7 +130,7 @@ export const MatchScheduleModal: React.FC<Props> = ({
                                 onChange={(e) => setDate(e.target.value)}
                                 className="w-full p-4 bg-stone-50 border border-stone-100 rounded-2xl focus:ring-2 focus:ring-saibro-500 outline-hidden transition-all font-bold text-stone-800"
                             />
-                            <p className="text-[10px] text-stone-400 mt-2 pl-1 font-medium italic">
+                            <p className="text-xs text-stone-400 mt-2 pl-1 font-medium italic">
                                 {isSuggestedTimeMode ? 'Período previsto da fase' : 'Período da rodada'}: {formatDateBr(roundStartDate)} até {formatDateBr(roundEndDate)}
                             </p>
                         </div>
@@ -149,7 +149,7 @@ export const MatchScheduleModal: React.FC<Props> = ({
                                         onChange={(e) => setTime(e.target.value)}
                                         className="w-full p-4 bg-stone-50 border border-stone-100 rounded-2xl focus:ring-2 focus:ring-saibro-500 outline-hidden transition-all font-bold text-stone-800"
                                     />
-                                    <p className="text-[10px] text-green-600 font-black mt-1 pl-1 flex items-center gap-1 uppercase tracking-tighter">
+                                    <p className="text-xs text-green-600 font-black mt-1 pl-1 flex items-center gap-1 uppercase tracking-tighter">
                                         <Check size={10} /> Sexta-feira: Horário livre disponível!
                                     </p>
                                 </div>
@@ -172,7 +172,7 @@ export const MatchScheduleModal: React.FC<Props> = ({
                             )}
                             {!isFriday(date) && (
                                 <div className="mt-3 p-3 bg-stone-50 rounded-xl border border-stone-100">
-                                    <p className="text-[9px] text-stone-400 font-black uppercase tracking-widest flex items-center gap-2">
+                                    <p className="text-xs text-stone-400 font-black uppercase tracking-widest flex items-center gap-2">
                                         <span className="w-1.5 h-1.5 bg-saibro-500 rounded-full" />
                                         {isSuggestedTimeMode ? 'Este horário é apenas ilustrativo dentro do prazo da fase' : 'Manhã (6h-7h) • Tarde (16h-19h30) • Noite (20h-22h)'}
                                     </p>
@@ -206,7 +206,7 @@ export const MatchScheduleModal: React.FC<Props> = ({
                                                     <div className={`w-2 h-2 rounded-full ${selectedCourtId === court.id ? 'bg-saibro-600' : 'bg-stone-200'}`} />
                                                     <div>
                                                         <div className="font-black text-stone-800 text-sm tracking-tight">{court.name}</div>
-                                                        <div className="text-[10px] font-bold text-stone-400 uppercase tracking-tighter">{court.type}</div>
+                                                        <div className="text-xs font-bold text-stone-400 uppercase tracking-tighter">{court.type}</div>
                                                     </div>
                                                 </div>
                                                 {selectedCourtId === court.id && <Check size={16} className="text-saibro-600" />}

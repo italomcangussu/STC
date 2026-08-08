@@ -12,6 +12,7 @@ import { SuperSet } from './components/SuperSet';
 import { AdminProtect } from './components/AdminProtect';
 import { Auth } from './components/Auth';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ConfirmProvider } from './components/ui/ConfirmProvider';
 import { User } from './types';
 import { supabase } from './lib/supabase';
 
@@ -286,7 +287,9 @@ export default function App() {
           className: 'toast-custom',
         }}
       />
-      <AppContent />
+      <ConfirmProvider>
+        <AppContent />
+      </ConfirmProvider>
     </AuthProvider>
   );
 }

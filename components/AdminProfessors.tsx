@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { notify } from '../lib/notifications';
+import { useConfirm } from '../hooks/useConfirm';
 import { Professor, NonSocioStudent } from '../types';
 import { Users, GraduationCap, DollarSign, Loader2, ChevronRight, ChevronDown, Plus, Edit, Trash2 } from 'lucide-react';
 import { StandardModal } from './StandardModal';
@@ -24,8 +26,9 @@ const ProfessorModal: React.FC<ProfessorModalProps> = ({ professor, onClose, onS
             await onSave({ name, bio, is_active: isActive });
             onClose();
         } catch (error) {
-            console.error(error);
-            alert('Erro ao salvar.');
+            notify.failure(error, 'Não foi possível salvar o professor.', {
+                event: 'professor_save_failed',
+            });
         } finally {
             setSaving(false);
         }
@@ -83,6 +86,7 @@ const ProfessorModal: React.FC<ProfessorModalProps> = ({ professor, onClose, onS
 };
 
 export const AdminProfessors: React.FC = () => {
+    const confirm = useConfirm();
     const [professors, setProfessors] = useState<Professor[]>([]);
     const [students, setStudents] = useState<NonSocioStudent[]>([]);
     const [loading, setLoading] = useState(true);
@@ -139,8 +143,9 @@ export const AdminProfessors: React.FC = () => {
             setStudents(mappedStudents);
 
         } catch (error) {
-            console.error('Error fetching professors data:', error);
-            alert('Erro ao carregar dados de professores.');
+            notify.failure(error, 'Não foi possível carregar os professores.', {
+                event: 'professors_load_failed',
+            });
         } finally {
             setLoading(false);
         }
@@ -156,10 +161,18 @@ export const AdminProfessors: React.FC = () => {
     };
 
     const handleDeleteProfessor = async (id: string) => {
-        if (!confirm('Tem certeza que deseja remover este professor?')) return;
+        if (!await confirm({
+            title: 'Remover este professor?',
+            description: 'O professor sai da lista. Só é possível remover quem não tem aluno vinculado.',
+            confirmLabel: 'Remover professor',
+        })) return;
+
         const { error } = await supabase.from('professors').delete().eq('id', id);
         if (error) {
-            alert('Não é possível excluir professores com alunos vinculados.');
+            notify.failure(error, 'Este professor ainda tem alunos vinculados.', {
+                event: 'professor_delete_failed',
+                professorId: id,
+            });
         } else {
             fetchData();
         }

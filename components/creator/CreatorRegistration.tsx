@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { ChevronLeft, Loader2, Search, Star, Trash2, UserPlus, Users } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { notify } from '../../lib/notifications';
 import { MEMBER_ROLES } from '../../utils';
 import { Toggle } from './Toggle';
 import {
@@ -10,6 +11,13 @@ import {
     type ClassRegistration,
     type StudentOption,
 } from '../../lib/championship/registration';
+import {
+    DEFAULT_SOURCES,
+    deriveSources,
+    fetchParticipantSources,
+    saveParticipantSources,
+    type ParticipantSources,
+} from '../../lib/championship/participantSources';
 import { applySeeds, suggestSeedsFromRanking } from '../../lib/championship/seeding';
 import { createRounds } from '../../lib/championship/rounds';
 import { validateAgainstParticipants, type ClassFormats } from '../../lib/championship/formatConfig';
@@ -49,8 +57,8 @@ export const CreatorRegistration: React.FC<Props> = ({
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string[]>([]);
 
-    const [allowGuests, setAllowGuests] = useState(false);
-    const [allowStudents, setAllowStudents] = useState(false);
+    const [sources, setSources] = useState<ParticipantSources>(DEFAULT_SOURCES);
+    const { allowGuests, allowStudents } = sources;
     const [origem, setOrigem] = useState<Origem>('socio');
 
     const [profiles, setProfiles] = useState<Profile[]>([]);
@@ -66,15 +74,45 @@ export const CreatorRegistration: React.FC<Props> = ({
     const reload = useCallback(async () => {
         setLoading(true);
         try {
-            const regs = await fetchClassRegistrations(championshipId, classe);
+            const [regs, saved] = await Promise.all([
+                fetchClassRegistrations(championshipId, classe),
+                fetchParticipantSources(championshipId),
+            ]);
             setRegistrations(regs);
             setSeedIds(regs.filter(r => r.isSeed).map(r => r.registrationId));
+
+            // Três fontes se somam, e nenhuma desliga a outra: o que o admin
+            // acabou de marcar (`prev`), o que está gravado (`saved`) e o que as
+            // inscrições provam (`deriveSources`). O terceiro existe porque um
+            // convidado na lista sem a aba "Convidado" deixa o admin sem como
+            // inscrever o próximo — a tela negando o que os dados afirmam.
+            setSources(prev => deriveSources(regs, {
+                allowGuests: prev.allowGuests || saved.allowGuests,
+                allowStudents: prev.allowStudents || saved.allowStudents,
+            }));
         } catch (e: any) {
-            setError([e.message]);
+            notify.failure(e, 'Não foi possível carregar os inscritos.', {
+                event: 'creator_registrations_load_failed',
+                championshipId,
+                classe,
+            });
         } finally {
             setLoading(false);
         }
     }, [championshipId, classe]);
+
+    /** Marca o toggle na hora e grava atrás — a tela não espera o banco. */
+    const updateSource = async (patch: Partial<ParticipantSources>) => {
+        setSources(prev => ({ ...prev, ...patch }));
+        try {
+            await saveParticipantSources(championshipId, patch);
+        } catch (e) {
+            notify.failure(e, 'Não foi possível salvar quem pode se inscrever.', {
+                event: 'participant_sources_save_failed',
+                championshipId,
+            });
+        }
+    };
 
     useEffect(() => { if (classe) reload(); }, [classe, reload]);
 
@@ -90,7 +128,9 @@ export const CreatorRegistration: React.FC<Props> = ({
 
     useEffect(() => {
         if (!allowStudents) return;
-        fetchActiveStudents().then(setStudents).catch((e: any) => setError([e.message]));
+        fetchActiveStudents().then(setStudents).catch(e => notify.failure(
+            e, 'Não foi possível carregar a lista de alunos.', { event: 'creator_students_load_failed' }
+        ));
     }, [allowStudents]);
 
     const jaInscrito = (userId: string) => registrations.some(r => r.userId === userId);
@@ -107,10 +147,14 @@ export const CreatorRegistration: React.FC<Props> = ({
                     user_id: profile.id,
                     class: classe,
                 });
-            if (insertError) throw new Error(insertError.message);
+            if (insertError) throw insertError;
             await reload();
-        } catch (e: any) {
-            setError([e.message]);
+        } catch (e) {
+            notify.failure(e, `Não foi possível inscrever ${profile.name}.`, {
+                event: 'creator_socio_register_failed',
+                championshipId,
+                classe,
+            });
         } finally {
             setSaving(false);
         }
@@ -130,12 +174,16 @@ export const CreatorRegistration: React.FC<Props> = ({
                     guest_cidade: guestCidade.trim() || null,
                     class: classe,
                 });
-            if (insertError) throw new Error(insertError.message);
+            if (insertError) throw insertError;
             setGuestName('');
             setGuestCidade('');
             await reload();
-        } catch (e: any) {
-            setError([e.message]);
+        } catch (e) {
+            notify.failure(e, `Não foi possível inscrever ${guestName.trim()}.`, {
+                event: 'creator_guest_register_failed',
+                championshipId,
+                classe,
+            });
         } finally {
             setSaving(false);
         }
@@ -147,8 +195,12 @@ export const CreatorRegistration: React.FC<Props> = ({
         try {
             await registerAluno({ championshipId, studentId: student.id, classe });
             await reload();
-        } catch (e: any) {
-            setError([e.message]);
+        } catch (e) {
+            notify.failure(e, `Não foi possível inscrever ${student.name}.`, {
+                event: 'creator_aluno_register_failed',
+                championshipId,
+                classe,
+            });
         } finally {
             setSaving(false);
         }
@@ -157,8 +209,20 @@ export const CreatorRegistration: React.FC<Props> = ({
     const remover = async (registrationId: string) => {
         setSaving(true);
         try {
-            await supabase.from('championship_registrations').delete().eq('id', registrationId);
+            // Sem este `throw`, um delete barrado pela RLS voltava com o nome
+            // ainda na lista e nenhuma mensagem: a tela dizia "não removi" sem
+            // dizer isso em lugar nenhum.
+            const { error: deleteError } = await supabase
+                .from('championship_registrations')
+                .delete()
+                .eq('id', registrationId);
+            if (deleteError) throw deleteError;
             await reload();
+        } catch (e) {
+            notify.failure(e, 'Não foi possível remover a inscrição.', {
+                event: 'creator_registration_delete_failed',
+                registrationId,
+            });
         } finally {
             setSaving(false);
         }
@@ -179,8 +243,11 @@ export const CreatorRegistration: React.FC<Props> = ({
                 name: r.name,
             }));
             setSeedIds(await suggestSeedsFromRanking(candidates, classe, seedCount));
-        } catch (e: any) {
-            setError([e.message]);
+        } catch (e) {
+            notify.failure(e, 'Não foi possível puxar os cabeças de chave do ranking.', {
+                event: 'creator_seeding_from_ranking_failed',
+                classe,
+            });
         } finally {
             setSeeding(false);
         }
@@ -212,8 +279,12 @@ export const CreatorRegistration: React.FC<Props> = ({
                 endDate,
             });
             onRoundsCreated(classe, phaseToRoundId, registrations, seedIds);
-        } catch (e: any) {
-            setError([e.message]);
+        } catch (e) {
+            notify.failure(e, 'Não foi possível fechar as inscrições e gerar as rodadas.', {
+                event: 'creator_close_registrations_failed',
+                championshipId,
+                classe,
+            });
         } finally {
             setSaving(false);
         }
@@ -251,11 +322,11 @@ export const CreatorRegistration: React.FC<Props> = ({
                     <Users size={18} className="text-saibro-600" /> Quem pode se inscrever
                 </h2>
                 <Toggle id="allow-guests" label="Aceitar convidados" checked={allowGuests} onChange={v => {
-                    setAllowGuests(v);
+                    updateSource({ allowGuests: v });
                     if (!v && origem === 'guest') setOrigem('socio');
                 }} />
                 <Toggle id="allow-students" label="Aceitar alunos" checked={allowStudents} onChange={v => {
-                    setAllowStudents(v);
+                    updateSource({ allowStudents: v });
                     if (!v && origem === 'aluno') setOrigem('socio');
                 }} />
             </div>
@@ -282,15 +353,15 @@ export const CreatorRegistration: React.FC<Props> = ({
                                         onClick={() => toggleSeed(r.registrationId)}
                                         aria-pressed={seedIds.includes(r.registrationId)}
                                         aria-label={`Marcar ${r.name} como cabeça de chave`}
-                                        className={seedIds.includes(r.registrationId) ? 'text-saibro-600' : 'text-stone-300'}
+                                        className={`hit-44 ${seedIds.includes(r.registrationId) ? 'text-saibro-600' : 'text-stone-300'}`}
                                     >
                                         <Star size={16} fill={seedIds.includes(r.registrationId) ? 'currentColor' : 'none'} />
                                     </button>
                                     <span className="font-bold text-sm text-stone-700 truncate">{r.name}</span>
-                                    <span className="text-[10px] uppercase text-stone-400">{r.participantType}</span>
+                                    <span className="text-xs uppercase text-stone-400">{r.participantType}</span>
                                 </div>
                                 <button type="button" onClick={() => remover(r.registrationId)} aria-label={`Remover ${r.name}`}
-                                    className="text-red-400 hover:text-red-600">
+                                    className="hit-44 text-red-400 hover:text-red-600">
                                     <Trash2 size={16} />
                                 </button>
                             </li>

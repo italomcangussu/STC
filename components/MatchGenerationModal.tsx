@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import { X, Trophy, Calendar, Check, Loader2, AlertTriangle, Play } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { notify } from '../lib/notifications';
 import { Championship, ChampionshipRound, ChampionshipRegistration } from '../types';
 import { generateRoundRobinMatches } from '../lib/championshipUtils';
+import { plural } from '../utils';
+import { StandardModal } from './StandardModal';
 
 interface Props {
     championship: Championship;
@@ -36,7 +39,9 @@ export const MatchGenerationModal: React.FC<Props> = ({
 
             const classGroups = groups.filter(g => g.category === selectedClass);
             if (classGroups.length === 0) {
-                alert(`Nenhum grupo encontrado para a categoria ${selectedClass}`);
+                notify.warning(`Nenhum grupo na ${selectedClass}.`, {
+                    description: 'Faça o sorteio de grupos desta classe antes de gerar confrontos.',
+                });
                 return;
             }
 
@@ -77,14 +82,20 @@ export const MatchGenerationModal: React.FC<Props> = ({
             }
 
             if (matchesToPreview.length === 0) {
-                alert('Nenhum confronto gerado para os critérios selecionados.');
+                notify.warning('Nenhum confronto para gerar.', {
+                    description: 'Os grupos desta classe precisam de pelo menos dois atletas cada.',
+                });
                 return;
             }
 
             setPreviewMatches(matchesToPreview);
             setStep('preview');
         } catch (error: any) {
-            alert('Erro ao gerar preview: ' + error.message);
+            notify.failure(error, 'Não foi possível montar a prévia dos confrontos.', {
+                event: 'championship_matches_preview_failed',
+                championshipId: championship.id,
+                classe: selectedClass,
+            });
         }
     };
 
@@ -111,22 +122,30 @@ export const MatchGenerationModal: React.FC<Props> = ({
 
             if (insertError) throw insertError;
 
-            alert(`${cleanMatches.length} confrontos gerados com sucesso!`);
+            notify.success('Confrontos gerados.', {
+                description: `${plural(cleanMatches.length, 'confronto')} na ${selectedClass}, já visíveis na aba Confrontos.`,
+            });
             onGenerated();
             onClose();
         } catch (error: any) {
-            console.error('Error saving matches:', error);
-            alert('Erro ao salvar confrontos: ' + error.message);
+            notify.failure(error, 'Não foi possível salvar os confrontos.', {
+                event: 'championship_matches_generation_failed',
+                championshipId: championship.id,
+            });
         }
         setProcessing(false);
     };
 
     return (
-        <div className="fixed inset-0 z-100 flex items-end sm:items-center justify-center p-0 sm:p-4">
-            {/* Backdrop */}
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-
-            <div className="relative bg-white rounded-t-[2.5rem] sm:rounded-[2.5rem] w-full max-w-md overflow-hidden shadow-2xl animate-in slide-in-from-bottom sm:zoom-in-95 duration-300 max-h-[90vh] flex flex-col pt-safe pb-safe">
+        <StandardModal
+            isOpen
+            onClose={onClose}
+            verticalAlign="end"
+            containerClassName="sm:items-center"
+            padding="p-0 sm:p-4"
+            ariaLabel="Gerar confrontos"
+        >
+            <div className="relative bg-white rounded-t-[2.5rem] sm:rounded-[2.5rem] w-full max-w-md overflow-hidden shadow-2xl max-h-[90vh] flex flex-col pt-safe pb-safe">
                 {/* Header */}
                 <div className="p-6 border-b border-stone-100 flex justify-between items-center bg-saibro-50/50 flex-none">
                     <div className="flex items-center gap-3">
@@ -135,10 +154,10 @@ export const MatchGenerationModal: React.FC<Props> = ({
                         </div>
                         <div>
                             <h3 className="text-lg font-black text-stone-800">Gerar Confrontos</h3>
-                            <p className="text-[10px] font-bold text-saibro-600 uppercase tracking-widest">Geração Manual por Rodada</p>
+                            <p className="text-xs font-bold text-saibro-600 uppercase tracking-widest">Geração Manual por Rodada</p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="p-2 hover:bg-stone-100 rounded-full transition-colors">
+                    <button onClick={onClose} className="hit-44 hover:bg-stone-100 rounded-full transition-colors">
                         <X size={20} className="text-stone-400" />
                     </button>
                 </div>
@@ -153,7 +172,7 @@ export const MatchGenerationModal: React.FC<Props> = ({
                                         <button
                                             key={cls}
                                             onClick={() => setSelectedClass(cls)}
-                                            className={`py-3 px-2 rounded-xl text-[10px] sm:text-xs font-bold transition-all border ${selectedClass === cls
+                                            className={`py-3 px-2 rounded-xl text-xs font-bold transition-all border ${selectedClass === cls
                                                 ? 'bg-saibro-600 text-white border-saibro-600 shadow-md transform scale-[1.02]'
                                                 : 'bg-white text-stone-600 border-stone-100 hover:border-saibro-200'
                                                 }`}
@@ -180,7 +199,7 @@ export const MatchGenerationModal: React.FC<Props> = ({
                                                 <Calendar size={18} className={selectedRoundId === round.id ? 'text-saibro-600' : 'text-stone-300'} />
                                                 <div>
                                                     <p className={`text-sm font-bold ${selectedRoundId === round.id ? 'text-saibro-700' : 'text-stone-700'}`}>{round.name}</p>
-                                                    <p className="text-[10px] text-stone-400">{round.start_date} até {round.end_date}</p>
+                                                    <p className="text-xs text-stone-400">{round.start_date} até {round.end_date}</p>
                                                 </div>
                                             </div>
                                             {selectedRoundId === round.id && <Check size={18} className="text-saibro-600" />}
@@ -193,18 +212,18 @@ export const MatchGenerationModal: React.FC<Props> = ({
                         <div className="space-y-6">
                             <div className="flex items-center justify-between pb-2">
                                 <h4 className="text-xs font-black text-stone-400 uppercase tracking-widest">Preview dos Confrontos</h4>
-                                <span className="bg-saibro-100 text-saibro-600 text-[10px] font-black px-2 py-0.5 rounded-full">{previewMatches.length} JOGOS</span>
+                                <span className="bg-saibro-100 text-saibro-600 text-xs font-black px-2 py-0.5 rounded-full">{previewMatches.length} JOGOS</span>
                             </div>
                             <div className="space-y-3">
                                 {previewMatches.map((m, i) => (
                                     <div key={i} className="p-4 rounded-2xl bg-stone-50 border border-stone-100 flex items-center justify-between gap-4">
                                         <div className="flex-1 text-xs">
                                             <p className="font-bold text-stone-800">{m._nameA}</p>
-                                            <p className="text-[10px] text-stone-300 font-black my-1">VS</p>
+                                            <p className="text-xs text-stone-300 font-black my-1">VS</p>
                                             <p className="font-bold text-stone-800">{m._nameB}</p>
                                         </div>
                                         <div className="text-right">
-                                            <span className="text-[9px] font-black text-stone-400 uppercase">Grupo {m._groupName}</span>
+                                            <span className="text-xs font-black text-stone-400 uppercase">Grupo {m._groupName}</span>
                                         </div>
                                     </div>
                                 ))}
@@ -221,7 +240,7 @@ export const MatchGenerationModal: React.FC<Props> = ({
                                     Gerar <strong>{previewMatches.length} confrontos</strong> para <strong>{selectedClass}</strong> na <strong>{rounds.find(r => r.id === selectedRoundId)?.name}</strong>.
                                 </p>
                                 <div className="mt-4 p-4 bg-red-50 rounded-2xl border border-red-100">
-                                    <p className="text-[11px] text-red-600 font-bold leading-relaxed px-2">
+                                    <p className="text-xs text-red-600 font-bold leading-relaxed px-2">
                                         Atenção: Os jogos existentes para esta categoria e rodada serão removidos e substituídos por estes novos.
                                     </p>
                                 </div>
@@ -277,6 +296,6 @@ export const MatchGenerationModal: React.FC<Props> = ({
                     )}
                 </div>
             </div>
-        </div>
+        </StandardModal>
     );
 };
