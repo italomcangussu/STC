@@ -82,7 +82,7 @@ export const ResenhaOpenBracketView: React.FC<Props> = ({ championshipId, onMatc
             bracket={bracket}
             championshipName={champName}
             onMatchSelect={onMatchSelect}
-            showOfficialTimes
+            isResenhaOpen
         />
     );
 };
