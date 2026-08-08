@@ -399,6 +399,44 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
     const formatoPorClasse = hasMixedFormats(selectedChamp);
     const isOperationalBracketChampionship = effectiveFormat === 'mata-mata' || effectiveFormat === 'grupo-mata-mata';
 
+    /**
+     * Classificação das classes de pontos corridos. A liga não cria grupos —
+     * `saveLeagueMatches` grava só partidas — e a aba só sabia desenhar grupos,
+     * então essas classes ficavam sem tabela alguma, justamente para onde o
+     * auto-switch de aba as manda.
+     */
+    const ligaPorClasse = React.useMemo(() => {
+        const rodadasDeLiga = rounds.filter(r => r.phase === 'classificatoria' || r.phase === 'classificatoria-volta');
+        if (rodadasDeLiga.length === 0) return [];
+
+        const scoring = {
+            ptsVictory: selectedChamp?.ptsVictory,
+            ptsDefeat: selectedChamp?.ptsDefeat,
+            ptsWoVictory: selectedChamp?.ptsWoVictory,
+            ptsSet: selectedChamp?.ptsSet,
+            ptsGame: selectedChamp?.ptsGame,
+            ptsTechnicalDraw: selectedChamp?.ptsTechnicalDraw,
+        };
+
+        // Rodadas do modelo antigo têm class nulo e valem para todo mundo.
+        const classes = [...new Set(rodadasDeLiga.map(r => r.class ?? ''))];
+
+        return classes
+            .map(classe => {
+                const idsDasRodadas = new Set(
+                    rodadasDeLiga.filter(r => (r.class ?? '') === classe).map(r => r.id)
+                );
+                const partidas = matches.filter(m => m.round_id && idsDasRodadas.has(m.round_id));
+                const inscritos = classe ? registrations.filter(r => r.class === classe) : registrations;
+
+                return {
+                    classe,
+                    standings: calculateGroupStandings(inscritos, partidas, scoring),
+                };
+            })
+            .filter(liga => liga.standings.length > 0);
+    }, [rounds, matches, registrations, selectedChamp]);
+
     // Automatic tab selection based on format if current tab isn't applicable
     // This must be before early returns to maintain consistent hook order
     useEffect(() => {
@@ -1687,6 +1725,17 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                                     );
                                 })}
                             </div>
+                        ) : ligaPorClasse.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {ligaPorClasse.map(liga => (
+                                    <GroupStandingsCard
+                                        key={liga.classe || 'geral'}
+                                        groupName={liga.classe || 'Classificação geral'}
+                                        standings={liga.standings}
+                                        registrations={registrations}
+                                    />
+                                ))}
+                            </div>
                         ) : (
                             <div className="bg-white rounded-3xl shadow-sm border border-stone-100 overflow-hidden">
                                 <div className="p-8 text-center text-stone-400">
@@ -1754,6 +1803,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                                                 registrations={registrations}
                                                 matches={matches}
                                                 category={selectedBracketCategory}
+                                                rounds={rounds}
                                             />
                                         </>
                                     );

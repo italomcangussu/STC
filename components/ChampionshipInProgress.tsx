@@ -984,6 +984,7 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                             registrations={registrations}
                             matches={matches}
                             category={selectedBracketCategory}
+                            rounds={rounds}
                         />
                     </>
                     )}
