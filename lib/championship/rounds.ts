@@ -168,34 +168,23 @@ export async function createRounds(params: CreateRoundsParams): Promise<Map<stri
 }
 
 /**
- * Publica a fase inicial da classe e tira o campeonato do rascunho.
+ * Tira a rodada do rascunho e coloca o campeonato em andamento.
  *
- * Chamado logo depois de gravar a chave — sorteada ou montada à mão. Só a
- * primeira rodada sai de 'pending': as seguintes ainda são placeholders
+ * Só é chamada para uma rodada cujos confrontos já estão definidos — as fases
+ * seguintes seguem 'pending' porque ainda são placeholders
  * (registration_a_id/registration_b_id nulos, ligados por
- * player_a_source_match_id), então publicá-las mostraria "a definir" aos
- * sócios. Idempotente: as condições de status fazem a chamada repetida não
- * reabrir uma rodada já finalizada nem reverter um campeonato encerrado.
+ * player_a_source_match_id) e apareceriam como "a definir" para os sócios.
+ * Idempotente: as condições de status fazem a chamada repetida não reabrir uma
+ * rodada já finalizada nem reverter um campeonato encerrado.
  */
-export async function activateFirstRound(championshipId: string, classe: string): Promise<void> {
-    const { data: primeira, error: fetchError } = await supabase
-        .from('championship_rounds')
-        .select('id')
-        .eq('championship_id', championshipId)
-        .eq('class', classe)
-        .order('round_number', { ascending: true })
-        .limit(1);
-
-    if (fetchError) throw new Error(`Erro ao buscar a primeira rodada: ${fetchError.message}`);
-    if (!primeira || primeira.length === 0) return;
-
+async function publishRound(championshipId: string, roundId: string): Promise<void> {
     const { error: roundError } = await supabase
         .from('championship_rounds')
         .update({ status: 'active' })
-        .eq('id', primeira[0].id)
+        .eq('id', roundId)
         .eq('status', 'pending');
 
-    if (roundError) throw new Error(`Erro ao publicar a primeira rodada: ${roundError.message}`);
+    if (roundError) throw new Error(`Erro ao publicar a rodada: ${roundError.message}`);
 
     const { error: champError } = await supabase
         .from('championships')
@@ -204,4 +193,48 @@ export async function activateFirstRound(championshipId: string, classe: string)
         .eq('status', 'draft');
 
     if (champError) throw new Error(`Erro ao colocar o campeonato em andamento: ${champError.message}`);
+}
+
+/**
+ * Publica a fase inicial da classe. Chamado depois de gravar a chave —
+ * sorteada ou montada à mão.
+ */
+export async function activateFirstRound(championshipId: string, classe: string): Promise<void> {
+    const { data: primeira, error } = await supabase
+        .from('championship_rounds')
+        .select('id')
+        .eq('championship_id', championshipId)
+        .eq('class', classe)
+        .order('round_number', { ascending: true })
+        .limit(1);
+
+    if (error) throw new Error(`Erro ao buscar a primeira rodada: ${error.message}`);
+    if (!primeira || primeira.length === 0) return;
+
+    await publishRound(championshipId, primeira[0].id);
+}
+
+/**
+ * Publica a rodada de uma fase específica da classe. Serve ao mata-mata gerado
+ * a partir dos grupos, cuja primeira fase eliminatória só ganha confrontos
+ * depois que a fase de grupos é jogada — e portanto não é a primeira rodada da
+ * classe.
+ */
+export async function activateRoundByPhase(
+    championshipId: string,
+    classe: string,
+    phase: string
+): Promise<void> {
+    const { data: rodada, error } = await supabase
+        .from('championship_rounds')
+        .select('id')
+        .eq('championship_id', championshipId)
+        .eq('class', classe)
+        .eq('phase', phase)
+        .limit(1);
+
+    if (error) throw new Error(`Erro ao buscar a rodada da fase "${phase}": ${error.message}`);
+    if (!rodada || rodada.length === 0) return;
+
+    await publishRound(championshipId, rodada[0].id);
 }

@@ -27,7 +27,7 @@ import { BracketEditor, type BracketAthlete } from './creator/BracketEditor';
 import { GroupDrawEditor } from './creator/GroupDrawEditor';
 import { KnockoutFromGroups } from './creator/KnockoutFromGroups';
 import { createChampionship } from '../lib/championship/creation';
-import { activateFirstRound } from '../lib/championship/rounds';
+import { activateFirstRound, activateRoundByPhase } from '../lib/championship/rounds';
 import { defaultConfigFor, type ClassFormats } from '../lib/championship/formatConfig';
 import { emptySetup, type SetupValues } from '../lib/championship/setupValues';
 import { fetchClassRegistrations } from '../lib/championship/registration';
@@ -1079,9 +1079,10 @@ export const ChampionshipCreator: React.FC = () => {
                     config={classFormats[classeCorrente]}
                     athletes={bracketAthletes}
                     phaseToRoundId={phaseToRoundId}
-                    onSaved={async () => {
+                    onSaved={async (faseInicial: string) => {
+                        await activateRoundByPhase(selectedChampId, classeCorrente, faseInicial);
                         await loadBracket();
-                        toast.success('Mata-mata gerado!');
+                        toast.success('Mata-mata gerado e primeira fase publicada!');
                     }}
                 />
             )}

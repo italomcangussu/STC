@@ -26,7 +26,7 @@ interface Props {
     /** Classes do campeonato que ainda não passaram por inscrição e chave. */
     restantes: string[];
     onBack: () => void;
-    onSaved: () => void;
+    onSaved: () => void | Promise<void>;
     onProximaClasse: () => void;
 }
 
@@ -124,7 +124,7 @@ export const BracketEditor: React.FC<Props> = ({
                 phaseToRoundId,
                 registrationUserMap: new Map(athletes.map(a => [a.registrationId, a.userId])),
             });
-            onSaved();
+            await onSaved();
         } catch (e: any) {
             setSaveError(e.message);
         } finally {
