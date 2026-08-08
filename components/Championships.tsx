@@ -377,9 +377,13 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
 
     // Fetch Groups if needed (for Group Stage)
     const [groupsDetail, setGroupsDetail] = useState<any[]>([]);
+    // Antes da resposta, "sem grupos" e "ainda não sei" são indistinguíveis —
+    // e esconder a aba com base no palpite errado tiraria o sócio dela.
+    const [groupsLoaded, setGroupsLoaded] = useState(false);
 
     useEffect(() => {
         if (!selectedChampId) return;
+        setGroupsLoaded(false);
 
         const fetchGroups = async () => {
             const { data: grps } = await supabase
@@ -387,6 +391,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                 .select(`*, members:championship_group_members(*)`)
                 .eq('championship_id', selectedChampId);
             setGroupsDetail(grps || []);
+            setGroupsLoaded(true);
         };
         fetchGroups();
     }, [selectedChampId]);
@@ -438,6 +443,14 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
             .filter(liga => liga.standings.length > 0);
     }, [rounds, matches, registrations, selectedChamp]);
 
+    /**
+     * A aba Classificação só existe se houver o que classificar: grupos ou uma
+     * fase de liga. Num mata-mata puro ela só sabia dizer que não havia nada.
+     * Enquanto os grupos não chegam, a aba fica — sumir e voltar é pior do que
+     * esperar.
+     */
+    const temClassificacao = !groupsLoaded || groupsDetail.length > 0 || ligaPorClasse.length > 0;
+
     // Automatic tab selection based on format if current tab isn't applicable
     // This must be before early returns to maintain consistent hook order
     useEffect(() => {
@@ -449,16 +462,20 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
             setActiveTab('chaveamento');
             return;
         }
-        if (!isOperationalBracketChampionship && (activeTab === 'estatisticas' || activeTab === 'odds')) {
+        if (!temClassificacao && activeTab === 'classificacao') {
+            setActiveTab(isOperationalBracketChampionship ? 'chaveamento' : 'jogos');
+            return;
+        }
+        if (temClassificacao && !isOperationalBracketChampionship && (activeTab === 'estatisticas' || activeTab === 'odds')) {
             setActiveTab('classificacao');
             return;
         }
-        if (effectiveFormat === 'pontos-corridos' && activeTab === 'chaveamento') {
+        if (temClassificacao && effectiveFormat === 'pontos-corridos' && activeTab === 'chaveamento') {
             setActiveTab('classificacao');
         }
         // Don't auto-switch for mata-mata or grupo-mata-mata formats
         // grupo-mata-mata supports both classificacao and chaveamento
-    }, [effectiveFormat, selectedChampIsResenhaOpen, isOperationalBracketChampionship, activeTab]);
+    }, [effectiveFormat, selectedChampIsResenhaOpen, isOperationalBracketChampionship, temClassificacao, activeTab]);
 
     useEffect(() => {
         if (isOperationalBracketChampionship) {
@@ -1219,7 +1236,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                         </button>
                     </>
                 )}
-                {!selectedChampIsResenhaOpen && (
+                {!selectedChampIsResenhaOpen && temClassificacao && (
                     <button
                         onClick={() => setActiveTab('classificacao')}
                         className={`flex-1 min-w-0 flex items-center justify-center gap-1 sm:gap-2 py-3 px-2 sm:py-3.5 sm:px-4 rounded-2xl text-[10px] sm:text-xs font-black uppercase tracking-normal sm:tracking-wider transition-all duration-300 ${

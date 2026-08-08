@@ -38,6 +38,18 @@ export const PublicChampionshipPage: React.FC<Props> = ({ slug, championshipId }
 // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [slug, championshipId]);
 
+    /**
+     * A classificação aqui é a dos grupos. Sem fase de grupos não há o que
+     * mostrar, e a aba — que é a inicial — abria vazia.
+     */
+    const temClassificacao = groups.length > 0;
+
+    useEffect(() => {
+        if (!loading && !temClassificacao && activeTab === 'standings') {
+            setActiveTab('bracket');
+        }
+    }, [loading, temClassificacao, activeTab]);
+
     const fetchData = async () => {
         setLoading(true);
 
@@ -153,7 +165,7 @@ export const PublicChampionshipPage: React.FC<Props> = ({ slug, championshipId }
 
                 {/* Main Tabs: CLASSIFICAÇÃO / CHAVEAMENTO / STATS / ODDS */}
                 <div className="flex bg-white/65 p-1.5 rounded-3xl backdrop-blur-md shadow-sm">
-                    {!isResenhaOpen && (
+                    {!isResenhaOpen && temClassificacao && (
                         <button
                             onClick={() => setActiveTab('standings')}
                             className={`flex-1 py-3.5 rounded-2xl text-[10px] font-black tracking-widest transition-all duration-500 ${activeTab === 'standings' ? 'bg-white text-stone-900 shadow-lg' : 'bg-white/25 text-stone-800 hover:bg-white/50 hover:text-stone-950'}`}
