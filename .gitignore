@@ -37,3 +37,7 @@ dist-ssr
 
 # cobertura de testes
 coverage/
+
+# Relatórios de mutação (Stryker) — gerados sob demanda, pesados
+reports/mutation/
+.stryker-tmp/

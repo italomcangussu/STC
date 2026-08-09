@@ -30,9 +30,14 @@ import { defaultConfigFor, type ClassFormats } from '../lib/championship/formatC
 import { emptySetup, type SetupValues } from '../lib/championship/setupValues';
 import { fetchClassRegistrations } from '../lib/championship/registration';
 import { useConfirm } from '../hooks/useConfirm';
-import { toast } from 'sonner';
 import { notify } from '../lib/notifications';
 import { errorMessage, logger } from '../lib/logger';
+
+/** Guarda repetida em duas inscrições: sem campeonato, não há onde gravar. */
+const SEM_CAMPEONATO = {
+    message: 'Nenhum campeonato selecionado.',
+    hint: 'Escolha um campeonato existente ou crie um antes de inscrever alguém.',
+};
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -114,8 +119,11 @@ export const ChampionshipCreator: React.FC = () => {
         try {
             const b = await fetchBracket(selectedChampId);
             setBracket(b);
-        } catch (e: any) {
-            toast.error(e.message);
+        } catch (e) {
+            notify.failure(e, 'Não foi possível carregar o quadro de confrontos.', {
+                event: 'creator_bracket_load_failed',
+                championshipId: selectedChampId,
+            });
         } finally {
             setLoadingBracket(false);
         }
@@ -213,8 +221,11 @@ export const ChampionshipCreator: React.FC = () => {
 
             await loadBracket();
             setStep('bracket');
-        } catch (e: any) {
-            toast.error(e.message);
+        } catch (e) {
+            notify.failure(e, 'Não foi possível retomar este campeonato.', {
+                event: 'creator_resume_failed',
+                championshipId: selectedChampId,
+            });
         } finally {
             setSaving(false);
         }
@@ -228,7 +239,7 @@ export const ChampionshipCreator: React.FC = () => {
     );
 
     async function handleAddSocio(profile: Profile) {
-        if (!selectedChampId) { toast.error('Nenhum campeonato selecionado.'); return; }
+        if (!selectedChampId) { notify.warning(SEM_CAMPEONATO.message, { description: SEM_CAMPEONATO.hint }); return; }
         setSaving(true);
         try {
             const regId = await registerSocio({
@@ -244,8 +255,11 @@ export const ChampionshipCreator: React.FC = () => {
                 cabeca_de_chave: isCabeca,
             }]);
             setProfileSearch('');
-        } catch (e: any) {
-            toast.error(e.message);
+        } catch (e) {
+            notify.failure(e, `Não foi possível inscrever ${profile.name}.`, {
+                event: 'creator_socio_register_failed',
+                championshipId: selectedChampId,
+            });
         } finally {
             setSaving(false);
         }
@@ -253,7 +267,7 @@ export const ChampionshipCreator: React.FC = () => {
 
     async function handleAddGuest() {
         if (!guestName.trim()) return;
-        if (!selectedChampId) { toast.error('Nenhum campeonato selecionado.'); return; }
+        if (!selectedChampId) { notify.warning(SEM_CAMPEONATO.message, { description: SEM_CAMPEONATO.hint }); return; }
         setSaving(true);
         try {
             const regId = await registerGuest({
@@ -273,8 +287,11 @@ export const ChampionshipCreator: React.FC = () => {
             }]);
             setIsGuestCabeca(false);
             setGuestName(''); setGuestCidade(''); setGuestIdade('');
-        } catch (e: any) {
-            toast.error(e.message);
+        } catch (e) {
+            notify.failure(e, `Não foi possível inscrever ${guestName.trim()}.`, {
+                event: 'creator_guest_register_failed',
+                championshipId: selectedChampId,
+            });
         } finally {
             setSaving(false);
         }
@@ -285,8 +302,11 @@ export const ChampionshipCreator: React.FC = () => {
         try {
             await removeRegistration(id);
             setAthletes(prev => prev.filter(a => a.id !== id));
-        } catch (e: any) {
-            toast.error(e.message);
+        } catch (e) {
+            notify.failure(e, 'Não foi possível remover a inscrição.', {
+                event: 'creator_registration_delete_failed',
+                registrationId: id,
+            });
         } finally {
             setSaving(false);
         }
@@ -313,8 +333,13 @@ export const ChampionshipCreator: React.FC = () => {
         let result: DrawMatch[];
         try {
             result = drawClasse5(athletes);
-        } catch (e: any) {
-            toast.error(e.message);
+        } catch (e) {
+            // O quadro da 5ª Classe é fechado em 16 vagas. A mensagem crua
+            // ('esperado 16 atletas, recebido 14') não diz o que fazer.
+            logger.warn('classe5_draw_rejected', { atletas: athletes.length, error: errorMessage(e) });
+            notify.warning('O sorteio da 5ª Classe precisa de exatamente 16 atletas.', {
+                description: `Há ${athletes.length} inscrito(s). Ajuste as inscrições antes de sortear.`,
+            });
             return;
         }
         if (anim5Ref.current) clearInterval(anim5Ref.current);
@@ -402,9 +427,12 @@ export const ChampionshipCreator: React.FC = () => {
             await activateChampionship(selectedChampId);
             await loadBracket();
             setStep('bracket');
-            toast.success('Chave salva e campeonato ativado!');
-        } catch (e: any) {
-            toast.error(e.message);
+            notify.success('Chave salva.', { description: 'O campeonato está ativo.' });
+        } catch (e) {
+            notify.failure(e, 'Não foi possível salvar a chave.', {
+                event: 'creator_bracket_save_failed',
+                championshipId: selectedChampId,
+            });
         } finally {
             setSaving(false);
         }
@@ -421,8 +449,11 @@ export const ChampionshipCreator: React.FC = () => {
                 await recordMatchResult(matchId, winnerRegId);
             }
             await loadBracket();
-        } catch (e: any) {
-            toast.error(e.message);
+        } catch (e) {
+            notify.failure(e, 'Não foi possível registrar o resultado.', {
+                event: 'creator_match_result_failed',
+                matchId,
+            });
         } finally {
             setSaving(false);
         }
@@ -443,10 +474,15 @@ export const ChampionshipCreator: React.FC = () => {
         setSaving(true);
         try {
             await resolveAndFinish(selectedChampId);
-            toast.success('Campeonato encerrado e pontos apurados!');
+            notify.success('Campeonato encerrado.', {
+                description: 'Os pontos foram apurados no ranking.',
+            });
             loadChampionships();
-        } catch (e: any) {
-            toast.error(e.message);
+        } catch (e) {
+            notify.failure(e, 'Não foi possível encerrar o campeonato.', {
+                event: 'creator_finish_failed',
+                championshipId: selectedChampId,
+            });
         } finally {
             setSaving(false);
         }
@@ -604,9 +640,13 @@ export const ChampionshipCreator: React.FC = () => {
                             // Rodadas não nascem aqui: são derivadas do formato e do número real
                             // de inscritos ao fechar as inscrições (decisão D2 da spec).
                             setStep('registering');
-                            toast.success('Campeonato criado!');
-                        } catch (e: any) {
-                            toast.error(e.message);
+                            notify.success('Campeonato criado.', {
+                                description: 'As rodadas nascem ao fechar as inscrições.',
+                            });
+                        } catch (e) {
+                            notify.failure(e, 'Não foi possível criar o campeonato.', {
+                                event: 'creator_championship_create_failed',
+                            });
                         } finally {
                             setSaving(false);
                         }
@@ -805,7 +845,9 @@ export const ChampionshipCreator: React.FC = () => {
                         await activateFirstRound(selectedChampId, classeCorrente);
                         await loadBracket();
                         setStep('bracket');
-                        toast.success(`Confrontos da ${classeCorrente} gerados e primeira fase publicada!`);
+                        notify.success(`Confrontos da ${classeCorrente} gerados.`, {
+                            description: 'A primeira fase já está publicada.',
+                        });
                     }}
                     onProximaClasse={() => {
                         setBracketAthletes([]);
@@ -828,7 +870,9 @@ export const ChampionshipCreator: React.FC = () => {
                         await activateFirstRound(selectedChampId, classeCorrente);
                         await loadBracket();
                         setStep('bracket');
-                        toast.success(`Chave da ${classeCorrente} salva e primeira fase publicada!`);
+                        notify.success(`Chave da ${classeCorrente} salva.`, {
+                            description: 'A primeira fase já está publicada.',
+                        });
                     }}
                     onProximaClasse={() => {
                         setBracketAthletes([]);
@@ -940,7 +984,9 @@ export const ChampionshipCreator: React.FC = () => {
                     onSaved={async (faseInicial: string) => {
                         await activateRoundByPhase(selectedChampId, classeCorrente, faseInicial);
                         await loadBracket();
-                        toast.success('Mata-mata gerado e primeira fase publicada!');
+                        notify.success('Mata-mata gerado.', {
+                            description: 'A primeira fase já está publicada.',
+                        });
                     }}
                 />
             )}
