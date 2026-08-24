@@ -1,0 +1,26 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html", "x": 0, "y": 0, "w": 1440, "h": 700, "title": "Como está hoje" },
+    { "file": "PlacarDeCadeira.dc.html", "x": 0, "y": 820, "w": 1000, "h": 780 },
+    { "file": "CartaoVivo.dc.html", "x": 1080, "y": 820, "w": 1000, "h": 780 },
+    { "file": "ChaveCompacta.dc.html", "x": 2160, "y": 820, "w": 1060, "h": 800 },
+    { "file": "Movimento.dc.html", "x": 0, "y": 1720, "w": 1060, "h": 860 }
+  ],
+  "annotations": [
+    {
+      "id": "como-ler",
+      "x": 1560,
+      "y": 60,
+      "w": 300,
+      "text": "Em cima: o quadro como está hoje, recriado com os valores reais do componente.\n\nNo meio: três direções de evolução do cartão — A, B e C — cada uma com o que ganha e o que custa.\n\nEmbaixo: as animações, rodando.\n\nAs três direções dividem o mesmo placar de sets. O que muda é quanto peso ele recebe."
+    },
+    {
+      "id": "escolha",
+      "x": 1180,
+      "y": 1780,
+      "w": 300,
+      "text": "As direções não são excludentes: o movimento vale para qualquer uma das três. A escolha é só quanto do cartão mexer."
+    }
+  ],
+  "launch": { "view": "canvas" }
+}

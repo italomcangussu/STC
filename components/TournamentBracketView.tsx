@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Loader2, Trophy } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { fetchBracket, type BracketMatchWithPhase } from '../lib/resenhaOpenService';
@@ -8,6 +8,16 @@ interface Props {
     championshipId: string;
     championshipName: string;
     onMatchSelect?: (match: BracketMatchWithPhase) => void;
+    /**
+     * Muda para forçar a releitura da chave.
+     *
+     * O quadro tem estado próprio, separado do da tela de campeonatos: quando o
+     * admin reagenda ou lança um placar pelo modal, quem se atualiza é a tela, e
+     * o quadro seguia mostrando o horário antigo. A inscrição realtime abaixo
+     * deveria cobrir isso e não cobre — a tabela `matches` não está publicada
+     * para realtime no banco, então o evento nunca chega.
+     */
+    refreshToken?: number;
 }
 
 /**
@@ -18,25 +28,39 @@ interface Props {
  * ele: o quadro oficial impresso como fallback e os horários oficiais por
  * número de jogo. As fases e as classes saem dos próprios dados.
  */
-export const TournamentBracketView: React.FC<Props> = ({ championshipId, championshipName, onMatchSelect }) => {
+export const TournamentBracketView: React.FC<Props> = ({ championshipId, championshipName, onMatchSelect, refreshToken = 0 }) => {
     const [bracket, setBracket] = useState<BracketMatchWithPhase[]>([]);
     const [loading, setLoading] = useState(true);
 
+    // Primeira carga e releituras. `refreshToken` entra aqui, e não no efeito da
+    // inscrição: reler não pode derrubar e recriar o canal a cada vez.
+    const primeiraCarga = useRef(true);
+
     useEffect(() => {
         let active = true;
+        const comLoading = primeiraCarga.current;
+        primeiraCarga.current = false;
 
-        const carregar = async (comLoading: boolean) => {
+        (async () => {
             if (comLoading) setLoading(true);
-
             try {
                 const dados = await fetchBracket(championshipId, { officialFallback: false });
                 if (active) setBracket(dados);
             } finally {
                 if (comLoading && active) setLoading(false);
             }
-        };
+        })();
 
-        carregar(true);
+        return () => { active = false; };
+    }, [championshipId, refreshToken]);
+
+    useEffect(() => {
+        let active = true;
+
+        const carregar = async () => {
+            const dados = await fetchBracket(championshipId, { officialFallback: false });
+            if (active) setBracket(dados);
+        };
 
         const channel = supabase
             .channel(`tournament-bracket-${championshipId}`)
@@ -49,7 +73,7 @@ export const TournamentBracketView: React.FC<Props> = ({ championshipId, champio
                     filter: `championship_id=eq.${championshipId}`,
                 },
                 () => {
-                    carregar(false);
+                    carregar();
                 },
             )
             .subscribe();

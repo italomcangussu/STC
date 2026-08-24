@@ -84,8 +84,25 @@ export function calculateGroupStandings(
     return calculateGroupStandingsWithRules(registrations, matches, scoring);
 }
 
-export function getClassCourtRestriction(className: string): 'Saibro' | 'Rápida' | null {
-    if (['4ª Classe', '5ª Classe'].includes(className)) return 'Saibro';
-    if (['6ª Classe'].includes(className)) return 'Rápida';
+export type CourtSurface = 'Saibro' | 'Rápida';
+
+/**
+ * Em que piso a classe joga. `null` = sem restrição.
+ *
+ * Fonte única da regra: até aqui ela vivia em dois lugares — nesta função, com
+ * teste mas sem nenhum uso em produção, e escrita de novo à mão dentro do modal
+ * de agendamento, que era quem de fato filtrava as quadras. Mudar o piso de uma
+ * classe exigia lembrar das duas.
+ */
+export function getClassCourtRestriction(className: string): CourtSurface | null {
+    const classe = (className || '').trim();
+    if (classe.includes('4ª')) return 'Saibro';
+    if (classe.includes('5ª') || classe.includes('6ª')) return 'Rápida';
     return null; // Livre (1, 2, 3)
+}
+
+/** Compara o piso da quadra ignorando acento e caixa — o cadastro varia. */
+export function courtMatchesSurface(courtType: string | null | undefined, surface: CourtSurface): boolean {
+    const normalizado = (courtType || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    return surface === 'Saibro' ? normalizado.includes('saibro') : normalizado.includes('rapida');
 }

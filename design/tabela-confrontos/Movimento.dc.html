@@ -1,0 +1,217 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap">
+  <style>
+    body { margin: 0; font-family: Inter, system-ui, sans-serif; }
+    a { color: #ea580c; } a:hover { color: #c2410c; }
+    .num { font-variant-numeric: tabular-nums; }
+    .eyebrow { font-size: 10px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; }
+
+    /* ── 1. Avanço do vencedor — ciclo de 6s ───────────────────────────── */
+    @keyframes railGrow { 0%, 8% { transform: scaleY(0); } 20%, 100% { transform: scaleY(1); } }
+    .adv-rail { transform-origin: top; animation: railGrow 6s cubic-bezier(0.32,0.72,0,1) infinite; }
+
+    @keyframes loserFade { 0%, 12% { opacity: 1; } 26%, 100% { opacity: 0.42; } }
+    .adv-loser { animation: loserFade 6s cubic-bezier(0.32,0.72,0,1) infinite; }
+
+    @keyframes lineDraw { 0%, 22% { stroke-dashoffset: 240; } 46%, 100% { stroke-dashoffset: 0; } }
+    .adv-line { stroke-dasharray: 240; animation: lineDraw 6s cubic-bezier(0.32,0.72,0,1) infinite; }
+
+    @keyframes landIn {
+      0%, 44% { opacity: 0; transform: translateX(-18px) scale(0.94); }
+      62%, 92% { opacity: 1; transform: translateX(0) scale(1); }
+      100% { opacity: 0; transform: translateX(-18px) scale(0.94); }
+    }
+    .adv-land { animation: landIn 6s cubic-bezier(0.32,0.72,0,1) infinite; }
+
+    @keyframes ghostOut { 0%, 44% { opacity: 1; } 58%, 92% { opacity: 0; } 100% { opacity: 1; } }
+    .adv-ghost { animation: ghostOut 6s cubic-bezier(0.32,0.72,0,1) infinite; }
+
+    @keyframes slotPulse { 0%, 52% { transform: scale(1); } 62% { transform: scale(1.035); } 74%, 100% { transform: scale(1); } }
+    .adv-card { animation: slotPulse 6s cubic-bezier(0.32,0.72,0,1) infinite; }
+
+    /* ── 2. Troca de classe — entrada escalonada ───────────────────────── */
+    @keyframes staggerIn {
+      0%, 6% { opacity: 0; transform: translateY(22px) scale(0.97); }
+      26%, 88% { opacity: 1; transform: translateY(0) scale(1); }
+      100% { opacity: 0; transform: translateY(22px) scale(0.97); }
+    }
+    .stg { animation: staggerIn 4.4s cubic-bezier(0.32,0.72,0,1) infinite; }
+    .stg-1 { animation-delay: 0s; }
+    .stg-2 { animation-delay: 0.07s; }
+    .stg-3 { animation-delay: 0.14s; }
+    .stg-4 { animation-delay: 0.21s; }
+
+    /* ── 3. Set fechado — a virada da célula ───────────────────────────── */
+    @keyframes cellTurn {
+      0%, 30% { transform: rotateX(0deg); background: #f1f5f9; color: #94a3b8; }
+      44% { transform: rotateX(-90deg); background: #f1f5f9; color: #f1f5f9; }
+      58%, 100% { transform: rotateX(0deg); background: #ea580c; color: #ffffff; }
+    }
+    .cell-turn { animation: cellTurn 3.6s cubic-bezier(0.32,0.72,0,1) infinite; backface-visibility: hidden; }
+
+    /* ── 4. Ao vivo — respiração, não pisca-pisca ──────────────────────── */
+    @keyframes breathe { 0%, 100% { opacity: 0.32; } 50% { opacity: 1; } }
+    .breathe { animation: breathe 2.4s cubic-bezier(0.32,0.72,0,1) infinite; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .adv-rail, .adv-loser, .adv-line, .adv-land, .adv-ghost, .adv-card,
+      .stg, .cell-turn, .breathe { animation: none; }
+    }
+  </style>
+</helmet>
+
+<div style="width: 1060px; height: 860px; background: #061320; padding: 32px; box-sizing: border-box; display: flex; flex-direction: column; gap: 22px">
+
+  <div style="display: flex; flex-direction: column; gap: 6px">
+    <span class="eyebrow" style="color: #fdba74">Movimento</span>
+    <h1 style="margin: 0; color: #f8fafc; font-size: 30px; font-weight: 900; letter-spacing: -0.02em">Quatro momentos, um só assunto</h1>
+    <p style="margin: 0; max-width: 720px; color: #94a3b8; font-size: 14px; font-weight: 500; line-height: 1.6; text-wrap: pretty">A chave tem um acontecimento dramático — alguém venceu e subiu. Hoje isso é um <em>reload</em> silencioso. Tudo abaixo roda só em <span style="color:#cbd5e1">transform</span> e <span style="color:#cbd5e1">opacity</span>, e desliga inteiro sob <span style="color:#cbd5e1">prefers-reduced-motion</span>.</p>
+  </div>
+
+  <!-- 1. AVANÇO -->
+  <div style="border-radius: 22px; border: 1px solid rgba(255,255,255,0.1); background: linear-gradient(to bottom right, #071b2d, #050b16); padding: 20px 22px; display: flex; gap: 24px; align-items: center">
+    <div style="width: 178px; flex-shrink: 0">
+      <p class="eyebrow" style="margin: 0 0 6px; color: #fdba74">1 · Avanço do vencedor</p>
+      <p style="margin: 0; color: #94a3b8; font-size: 12px; font-weight: 500; line-height: 1.6; text-wrap: pretty">Trilho cresce, perdedor recua, a linha desenha e o nome pousa na vaga. 900 ms no total.</p>
+    </div>
+
+    <div style="position: relative; width: 620px; height: 132px; flex-shrink: 0">
+      <svg style="position: absolute; left: 268px; top: 0; width: 180px; height: 132px; overflow: visible" aria-hidden="true">
+        <path d="M 0 42 H 60 Q 78 42 78 66 Q 78 90 96 90 H 172" fill="none" stroke="#334155" stroke-width="4" stroke-linecap="round"></path>
+        <path class="adv-line" d="M 0 42 H 60 Q 78 42 78 66 Q 78 90 96 90 H 172" fill="none" stroke="#f06423" stroke-width="5" stroke-linecap="round"></path>
+      </svg>
+
+      <!-- J5 encerrado -->
+      <div style="position: absolute; left: 0; top: 0; width: 268px; border-radius: 14px; background: #f8fafc; overflow: hidden; box-shadow: 0 16px 22px -8px rgba(0,0,0,0.4)">
+        <div style="display: flex; align-items: center; justify-content: space-between; height: 16px; padding: 0 9px; background: #ea580c">
+          <span class="eyebrow" style="color: #fff; font-size: 9px">J5 · Quartas</span>
+          <span class="eyebrow" style="color: rgba(255,255,255,0.85); font-size: 9px">Encerrado</span>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 76px; height: 68px">
+          <div>
+            <div style="display: flex; height: 34px; align-items: center; gap: 8px; border-bottom: 1px solid #e2e8f0">
+              <span class="adv-rail" style="width: 3px; height: 34px; background: #ea580c"></span>
+              <span style="color: #020617; font-size: 13px; font-weight: 900">Thieslley Soares</span>
+            </div>
+            <div class="adv-loser" style="display: flex; height: 34px; align-items: center; gap: 8px">
+              <span style="width: 3px; height: 34px; background: transparent"></span>
+              <span style="color: #475569; font-size: 13px; font-weight: 600">Diego Memória</span>
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); background: #f1f5f9; border-left: 1px solid #e2e8f0">
+            <span class="num" style="display: grid; place-items: center; border-bottom: 1px solid #e2e8f0; color: #ea580c; font-size: 14px; font-weight: 900">6</span>
+            <span class="num" style="display: grid; place-items: center; border-left: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; color: #ea580c; font-size: 14px; font-weight: 900">6</span>
+            <span class="num" style="display: grid; place-items: center; color: #94a3b8; font-size: 14px; font-weight: 700">1</span>
+            <span class="num" style="display: grid; place-items: center; border-left: 1px solid #e2e8f0; color: #94a3b8; font-size: 14px; font-weight: 700">3</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- J7 recebendo -->
+      <div class="adv-card" style="position: absolute; left: 440px; top: 48px; width: 180px; border-radius: 14px; background: #f8fafc; overflow: hidden; box-shadow: 0 16px 22px -8px rgba(0,0,0,0.4)">
+        <div style="display: flex; align-items: center; height: 16px; padding: 0 9px; background: #cbd5e1">
+          <span class="eyebrow" style="color: #334155; font-size: 9px">J7 · Semifinal</span>
+        </div>
+        <div style="height: 34px; display: flex; align-items: center; padding: 0 10px; border-bottom: 1px solid #e2e8f0">
+          <span style="color: #94a3b8; font-size: 12px; font-weight: 600; font-style: italic">Vencedor do J4</span>
+        </div>
+        <div style="position: relative; height: 34px; display: flex; align-items: center; padding: 0 10px">
+          <span class="adv-ghost" style="position: absolute; color: #94a3b8; font-size: 12px; font-weight: 600; font-style: italic">Vencedor do J5</span>
+          <span class="adv-land" style="position: absolute; color: #020617; font-size: 12px; font-weight: 900">Thieslley Soares</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="flex-grow: 1; border-left: 1px solid rgba(255,255,255,0.08); padding-left: 20px">
+      <p style="margin: 0; color: #64748b; font-size: 12px; font-weight: 500; line-height: 1.7; text-wrap: pretty">A única propriedade fora de <span style="color:#94a3b8">transform/opacity</span> é o <span style="color:#94a3b8">stroke-dashoffset</span> da linha — uma path só, que é como se desenha um traço.</p>
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 20px; flex-grow: 1">
+
+    <!-- 2. STAGGER -->
+    <div style="flex-grow: 1; border-radius: 22px; border: 1px solid rgba(255,255,255,0.1); background: linear-gradient(to bottom right, #071b2d, #050b16); padding: 20px 22px; display: flex; flex-direction: column; gap: 14px">
+      <div>
+        <p class="eyebrow" style="margin: 0 0 6px; color: #fdba74">2 · Troca de classe</p>
+        <p style="margin: 0; color: #94a3b8; font-size: 12px; font-weight: 500; line-height: 1.6; text-wrap: pretty">4ª → 5ª deixa de ser um corte seco. 70 ms de defasagem entre cartões.</p>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 7px">
+        <div class="stg stg-1" style="height: 34px; border-radius: 9px; background: #f8fafc; display: flex; align-items: center; padding: 0 10px"><span style="color: #020617; font-size: 12px; font-weight: 800">Davi Arcelino</span><span class="num" style="margin-left: auto; color: #64748b; font-size: 11px; font-weight: 900">18h30</span></div>
+        <div class="stg stg-2" style="height: 34px; border-radius: 9px; background: #f8fafc; display: flex; align-items: center; padding: 0 10px"><span style="color: #020617; font-size: 12px; font-weight: 800">Derlan</span><span class="num" style="margin-left: auto; color: #64748b; font-size: 11px; font-weight: 900">19h30</span></div>
+        <div class="stg stg-3" style="height: 34px; border-radius: 9px; background: #f8fafc; display: flex; align-items: center; padding: 0 10px"><span style="color: #020617; font-size: 12px; font-weight: 800">Ítalo Cangussú</span><span class="num" style="margin-left: auto; color: #64748b; font-size: 11px; font-weight: 900">20h00</span></div>
+        <div class="stg stg-4" style="height: 34px; border-radius: 9px; background: #f8fafc; display: flex; align-items: center; padding: 0 10px"><span style="color: #020617; font-size: 12px; font-weight: 800">Diego Parente</span><span class="num" style="margin-left: auto; color: #64748b; font-size: 11px; font-weight: 900">21h00</span></div>
+      </div>
+    </div>
+
+    <!-- 3. SET FECHADO -->
+    <div style="width: 250px; flex-shrink: 0; border-radius: 22px; border: 1px solid rgba(255,255,255,0.1); background: linear-gradient(to bottom right, #071b2d, #050b16); padding: 20px 22px; display: flex; flex-direction: column; gap: 14px">
+      <div>
+        <p class="eyebrow" style="margin: 0 0 6px; color: #fdba74">3 · Set fechado</p>
+        <p style="margin: 0; color: #94a3b8; font-size: 12px; font-weight: 500; line-height: 1.6; text-wrap: pretty">A célula vira no eixo X quando o set fecha — o gesto de um placar mecânico.</p>
+      </div>
+      <div style="display: flex; justify-content: center; align-items: center; flex-grow: 1; perspective: 420px">
+        <div style="display: grid; grid-template-columns: repeat(2, 44px); grid-template-rows: repeat(2, 40px); border-radius: 10px; overflow: hidden; border: 1px solid #e2e8f0">
+          <span class="num" style="display: grid; place-items: center; background: #ea580c; color: #fff; font-size: 16px; font-weight: 900">6</span>
+          <span class="num cell-turn" style="display: grid; place-items: center; font-size: 16px; font-weight: 900">6</span>
+          <span class="num" style="display: grid; place-items: center; background: #f1f5f9; color: #94a3b8; font-size: 16px; font-weight: 700">1</span>
+          <span class="num" style="display: grid; place-items: center; background: #f1f5f9; color: #94a3b8; font-size: 16px; font-weight: 700">3</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. AO VIVO -->
+    <div style="width: 250px; flex-shrink: 0; border-radius: 22px; border: 1px solid rgba(255,255,255,0.1); background: linear-gradient(to bottom right, #071b2d, #050b16); padding: 20px 22px; display: flex; flex-direction: column; gap: 14px">
+      <div>
+        <p class="eyebrow" style="margin: 0 0 6px; color: #fdba74">4 · Ao vivo</p>
+        <p style="margin: 0; color: #94a3b8; font-size: 12px; font-weight: 500; line-height: 1.6; text-wrap: pretty">2,4 s de respiração no rótulo. O corpo do cartão fica parado — ninguém lê um placar que pisca.</p>
+      </div>
+      <div style="flex-grow: 1; display: grid; place-items: center">
+        <div style="width: 190px; border-radius: 12px; background: #f8fafc; overflow: hidden; box-shadow: 0 16px 22px -8px rgba(0,0,0,0.4)">
+          <div style="display: flex; align-items: center; justify-content: space-between; height: 18px; padding: 0 9px; background: #9a3412">
+            <span class="eyebrow" style="color: #fff; font-size: 9px">J4</span>
+            <span class="eyebrow breathe" style="display: inline-flex; align-items: center; gap: 4px; color: #fed7aa; font-size: 9px"><span style="width: 5px; height: 5px; border-radius: 999px; background: #fdba74"></span>Ao vivo</span>
+          </div>
+          <div style="padding: 9px 10px; display: flex; flex-direction: column; gap: 3px">
+            <span style="color: #020617; font-size: 12px; font-weight: 900">Marcelo Sampieri</span>
+            <span style="color: #020617; font-size: 12px; font-weight: 900">Flavio</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PERFORMANCE -->
+  <div style="border-radius: 22px; border: 1px solid rgba(255,255,255,0.1); background: rgba(148,163,184,0.06); padding: 18px 22px">
+    <p class="eyebrow" style="margin: 0 0 12px; color: #fdba74">O que precisa mudar por baixo para isso rodar liso</p>
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px">
+      <div style="display: flex; gap: 10px">
+        <span class="num" style="color: #ea580c; font-size: 12px; font-weight: 900; flex-shrink: 0">01</span>
+        <p style="margin: 0; color: #cbd5e1; font-size: 12px; font-weight: 500; line-height: 1.6; text-wrap: pretty"><span style="color: #f8fafc; font-weight: 800">Blur fora do scroller.</span> O rodapé com <span style="color:#94a3b8">backdrop-blur</span> mora dentro do contêiner que rola — repinta a cada quadro do arrasto. Sai para fora, como overlay fixo.</p>
+      </div>
+      <div style="display: flex; gap: 10px">
+        <span class="num" style="color: #ea580c; font-size: 12px; font-weight: 900; flex-shrink: 0">02</span>
+        <p style="margin: 0; color: #cbd5e1; font-size: 12px; font-weight: 500; line-height: 1.6; text-wrap: pretty"><span style="color: #f8fafc; font-weight: 800">Zoom sem layout.</span> Hoje o zoom recalcula <span style="color:#94a3b8">width</span> e <span style="color:#94a3b8">height</span> do quadro inteiro. Com a moldura fixa e só o <span style="color:#94a3b8">transform</span> mudando, o passo vira composição pura.</p>
+      </div>
+      <div style="display: flex; gap: 10px">
+        <span class="num" style="color: #ea580c; font-size: 12px; font-weight: 900; flex-shrink: 0">03</span>
+        <p style="margin: 0; color: #cbd5e1; font-size: 12px; font-weight: 500; line-height: 1.6; text-wrap: pretty"><span style="color: #f8fafc; font-weight: 800">Transições nomeadas.</span> <span style="color:#94a3b8">transition-all</span> nos 8 cartões escuta toda propriedade que existe. Trocar por <span style="color:#94a3b8">transform, opacity</span> e a curva <span style="color:#94a3b8">(0.32, 0.72, 0, 1)</span>.</p>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script data-dc-script data-props='{}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

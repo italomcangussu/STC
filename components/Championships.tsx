@@ -93,6 +93,13 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
     const [activeTab, setActiveTab] = useState<'partidas' | 'jogos' | 'classificacao' | 'chaveamento' | 'inscritos' | 'estatisticas' | 'odds'>('chaveamento');
     const [editingMatch, setEditingMatch] = useState<Match | null>(null);
     const [schedulingMatch, setSchedulingMatch] = useState<Match | null>(null);
+    /**
+     * O quadro de confrontos lê a chave por conta própria, então uma escrita
+     * daqui não chega até ele sozinha. Cada gravação que muda a chave mexe neste
+     * contador, e o quadro relê.
+     */
+    const [bracketRefreshToken, setBracketRefreshToken] = useState(0);
+    const refreshBracket = () => setBracketRefreshToken(t => t + 1);
     const [selectedBracketMatch, setSelectedBracketMatch] = useState<Match | null>(null);
     const [adminResultMatch, setAdminResultMatch] = useState<Match | null>(null);
     const [savingAdminResult, setSavingAdminResult] = useState(false);
@@ -582,6 +589,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                 : m
         ));
 
+        refreshBracket();
         setSchedulingMatch(null);
     };
 
@@ -695,6 +703,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
             }
         }
 
+        refreshBracket();
         setEditingMatch(null);
     };
 
@@ -801,6 +810,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                 : m
         ));
 
+        refreshBracket();
         setAdminResultMatch(null);
         setSavingAdminResult(false);
     };
@@ -887,6 +897,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                 : m
         ));
 
+        refreshBracket();
         setAdminResultMatch(null);
         setSavingAdminResult(false);
     };
@@ -1762,6 +1773,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                             <TournamentBracketView
                                 championshipId={selectedChamp.id}
                                 championshipName={selectedChamp.name}
+                                refreshToken={bracketRefreshToken}
                                 onMatchSelect={bracketMatch => {
                                     const local = matches.find(m => m.id === bracketMatch.id);
                                     if (local) setSelectedBracketMatch(local);

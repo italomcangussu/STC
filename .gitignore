@@ -41,3 +41,8 @@ coverage/
 # Relatórios de mutação (Stryker) — gerados sob demanda, pesados
 reports/mutation/
 .stryker-tmp/
+
+# Canvas de design publicado — 2,2 MB de payload gerado, refeito a partir dos
+# .dc.html ao lado com o seed do /design
+design/**/*.html
+!design/**/*.dc.html

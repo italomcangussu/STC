@@ -1,0 +1,147 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap">
+  <style>
+    body { margin: 0; font-family: Inter, system-ui, sans-serif; }
+    a { color: #ea580c; } a:hover { color: #c2410c; }
+    .num { font-variant-numeric: tabular-nums; }
+    .eyebrow { font-size: 10px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; }
+    @keyframes railGlow { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
+    .rail-live { animation: railGlow 2.4s cubic-bezier(0.32, 0.72, 0, 1) infinite; }
+  </style>
+</helmet>
+
+<div style="width: 1000px; height: 780px; background: #061320; padding: 32px; box-sizing: border-box; display: flex; flex-direction: column; gap: 24px">
+
+  <div style="display: flex; flex-direction: column; gap: 6px">
+    <span class="eyebrow" style="color: #fdba74">Direção B</span>
+    <h1 style="margin: 0; color: #f8fafc; font-size: 30px; font-weight: 900; letter-spacing: -0.02em">Cartão Vivo</h1>
+    <p style="margin: 0; max-width: 660px; color: #94a3b8; font-size: 14px; font-weight: 500; line-height: 1.6; text-wrap: pretty">Mesma caixa de 280 × 84 px de hoje — nem um pixel a mais na chave. O que muda é a hierarquia dentro dela: o número do jogo e o horário entram para dentro do cartão, os traços somem e o vencedor ganha trilho.</p>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px">
+
+    <!-- ENCERRADO -->
+    <div style="display: flex; flex-direction: column; gap: 12px">
+      <span class="eyebrow" style="color: #64748b">Encerrado</span>
+      <div style="width: 280px; height: 84px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.7); background: #f8fafc; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.25), 0 8px 10px -6px rgba(0,0,0,0.25)">
+        <div style="display: flex; align-items: center; justify-content: space-between; height: 16px; padding: 0 9px; background: #ea580c">
+          <span class="eyebrow" style="color: #fff; font-size: 9px">J5 · Quartas</span>
+          <span class="eyebrow" style="color: rgba(255,255,255,0.85); font-size: 9px">20h00</span>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 84px; height: 68px">
+          <div>
+            <div style="display: flex; height: 34px; align-items: center; gap: 8px; border-bottom: 1px solid #e2e8f0">
+              <span style="width: 3px; height: 34px; background: #ea580c"></span>
+              <span style="color: #020617; font-size: 13px; font-weight: 900; letter-spacing: -0.01em">Thieslley Soares</span>
+            </div>
+            <div style="display: flex; height: 34px; align-items: center; gap: 8px">
+              <span style="width: 3px; height: 34px; background: transparent"></span>
+              <span style="color: #94a3b8; font-size: 13px; font-weight: 600; letter-spacing: -0.01em">Diego Memória</span>
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); background: #f1f5f9; border-left: 1px solid #e2e8f0">
+            <span class="num" style="display: grid; place-items: center; border-bottom: 1px solid #e2e8f0; color: #ea580c; font-size: 15px; font-weight: 900">6</span>
+            <span class="num" style="display: grid; place-items: center; border-left: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; color: #ea580c; font-size: 15px; font-weight: 900">6</span>
+            <span class="num" style="display: grid; place-items: center; color: #94a3b8; font-size: 15px; font-weight: 700">1</span>
+            <span class="num" style="display: grid; place-items: center; border-left: 1px solid #e2e8f0; color: #94a3b8; font-size: 15px; font-weight: 700">3</span>
+          </div>
+        </div>
+      </div>
+      <p style="margin: 0; color: #64748b; font-size: 12px; font-weight: 500; line-height: 1.6; text-wrap: pretty">Duas colunas porque foram dois sets. O placar sobe de 12 px para 15 px sem roubar largura do nome.</p>
+    </div>
+
+    <!-- AO VIVO -->
+    <div style="display: flex; flex-direction: column; gap: 12px">
+      <span class="eyebrow" style="color: #64748b">Ao vivo</span>
+      <div style="width: 280px; height: 84px; border-radius: 16px; border: 1px solid rgba(251,146,60,0.5); background: #f8fafc; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.25), 0 0 0 4px rgba(234,88,12,0.14)">
+        <div style="display: flex; align-items: center; justify-content: space-between; height: 16px; padding: 0 9px; background: #9a3412">
+          <span class="eyebrow" style="color: #fff; font-size: 9px">J4 · Quartas</span>
+          <span class="eyebrow rail-live" style="display: inline-flex; align-items: center; gap: 4px; color: #fed7aa; font-size: 9px">
+            <span style="width: 5px; height: 5px; border-radius: 999px; background: #fdba74"></span>Ao vivo
+          </span>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 84px; height: 68px">
+          <div>
+            <div style="display: flex; height: 34px; align-items: center; gap: 8px; border-bottom: 1px solid #e2e8f0">
+              <span style="width: 3px; height: 34px; background: transparent"></span>
+              <span style="color: #020617; font-size: 13px; font-weight: 900; letter-spacing: -0.01em">Marcelo Sampieri</span>
+            </div>
+            <div style="display: flex; height: 34px; align-items: center; gap: 8px">
+              <span style="width: 3px; height: 34px; background: transparent"></span>
+              <span style="color: #020617; font-size: 13px; font-weight: 900; letter-spacing: -0.01em">Flavio</span>
+              <svg width="11" height="11" style="margin-left: auto; margin-right: 8px" viewBox="0 0 24 24" fill="#ea580c" aria-hidden="true"><circle cx="12" cy="12" r="5"></circle></svg>
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); background: #fff7ed; border-left: 1px solid #fed7aa">
+            <span class="num" style="display: grid; place-items: center; border-bottom: 1px solid #fed7aa; color: #ea580c; font-size: 15px; font-weight: 900">6</span>
+            <span class="num" style="display: grid; place-items: center; border-left: 1px solid #fed7aa; border-bottom: 1px solid #fed7aa; color: #020617; font-size: 15px; font-weight: 900">3</span>
+            <span class="num" style="display: grid; place-items: center; color: #94a3b8; font-size: 15px; font-weight: 700">4</span>
+            <span class="num" style="display: grid; place-items: center; border-left: 1px solid #fed7aa; color: #020617; font-size: 15px; font-weight: 900">4</span>
+          </div>
+        </div>
+      </div>
+      <p style="margin: 0; color: #64748b; font-size: 12px; font-weight: 500; line-height: 1.6; text-wrap: pretty">A faixa do topo carrega o estado. Nada pisca no corpo do cartão — só o rótulo respira.</p>
+    </div>
+
+    <!-- A JOGAR -->
+    <div style="display: flex; flex-direction: column; gap: 12px">
+      <span class="eyebrow" style="color: #64748b">A jogar</span>
+      <div style="width: 280px; height: 84px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.35); background: #f1f5f9; overflow: hidden; box-shadow: 0 10px 15px -6px rgba(0,0,0,0.2)">
+        <div style="display: flex; align-items: center; justify-content: space-between; height: 16px; padding: 0 9px; background: #cbd5e1">
+          <span class="eyebrow" style="color: #334155; font-size: 9px">J2 · Quartas</span>
+          <span class="eyebrow" style="color: #475569; font-size: 9px">Hoje 18h30</span>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 84px; height: 68px">
+          <div>
+            <div style="display: flex; height: 34px; align-items: center; gap: 8px; border-bottom: 1px solid #dbe3ec">
+              <span style="width: 3px; height: 34px; background: transparent"></span>
+              <span style="color: #020617; font-size: 13px; font-weight: 900; letter-spacing: -0.01em">Mario Rego</span>
+            </div>
+            <div style="display: flex; height: 34px; align-items: center; gap: 8px">
+              <span style="width: 3px; height: 34px; background: transparent"></span>
+              <span style="display: inline-flex; align-items: center; gap: 5px; color: #94a3b8; font-size: 12px; font-weight: 600; font-style: italic">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="m13 6 6 6-6 6"></path></svg>
+                Vencedor do J1
+              </span>
+            </div>
+          </div>
+          <div style="display: grid; place-items: center; background: #e8edf3; border-left: 1px solid #dbe3ec">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#b8c4d4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
+          </div>
+        </div>
+      </div>
+      <p style="margin: 0; color: #64748b; font-size: 12px; font-weight: 500; line-height: 1.6; text-wrap: pretty">Seis traços viram um relógio. O cartão para de fingir que tem dados.</p>
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 20px; align-items: stretch">
+    <div style="flex-grow: 1; border-radius: 18px; border: 1px solid rgba(255,255,255,0.08); background: rgba(148,163,184,0.06); padding: 18px 20px">
+      <p class="eyebrow" style="margin: 0 0 10px; color: #fdba74">O que sai do cartão</p>
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <div style="display: flex; align-items: center; gap: 10px; color: #cbd5e1; font-size: 13px; font-weight: 500"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>Pílula de horário flutuando sobre a borda superior</div>
+        <div style="display: flex; align-items: center; gap: 10px; color: #cbd5e1; font-size: 13px; font-weight: 500"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>Selo "J5" pendurado fora da caixa, colidindo com o horário</div>
+        <div style="display: flex; align-items: center; gap: 10px; color: #cbd5e1; font-size: 13px; font-weight: 500"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>Troféu e "V" competindo para dizer a mesma coisa</div>
+      </div>
+    </div>
+    <div style="width: 340px; flex-shrink: 0; border-radius: 18px; border: 1px solid rgba(255,255,255,0.08); background: rgba(148,163,184,0.06); padding: 18px 20px">
+      <p class="eyebrow" style="margin: 0 0 10px; color: #fdba74">Custo</p>
+      <p style="margin: 0; color: #cbd5e1; font-size: 13px; font-weight: 500; line-height: 1.6; text-wrap: pretty">Não ataca o vazio da chave — resolve o cartão e deixa a coluna de um jogo só ainda com 250 px de nada. É a direção que ganha menos e arrisca menos.</p>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script data-dc-script data-props='{}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

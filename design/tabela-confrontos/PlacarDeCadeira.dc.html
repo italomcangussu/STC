@@ -1,0 +1,178 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap">
+  <style>
+    body { margin: 0; font-family: Inter, system-ui, sans-serif; }
+    a { color: #ea580c; } a:hover { color: #c2410c; }
+    .num { font-variant-numeric: tabular-nums; letter-spacing: 0.01em; }
+    .eyebrow { font-size: 10px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; }
+    @keyframes liveRail { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
+    .live-rail { animation: liveRail 2.4s cubic-bezier(0.32, 0.72, 0, 1) infinite; }
+  </style>
+</helmet>
+
+<div style="width: 1000px; height: 780px; background: #061320; padding: 32px; box-sizing: border-box; display: flex; flex-direction: column; gap: 24px">
+
+  <div style="display: flex; flex-direction: column; gap: 6px">
+    <span class="eyebrow" style="color: #fdba74">Direção A</span>
+    <h1 style="margin: 0; color: #f8fafc; font-size: 30px; font-weight: 900; letter-spacing: -0.02em">Placar de Cadeira</h1>
+    <p style="margin: 0; max-width: 660px; color: #94a3b8; font-size: 14px; font-weight: 500; line-height: 1.6; text-wrap: pretty">O placar deixa de ser um apêndice de 92 px e vira o assunto do cartão: uma tira escura embutida na ficha branca, com numerais tabulares e cabeçalho de sets. É o quadro do árbitro de cadeira dentro da chave.</p>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 18px">
+
+    <!-- ENCERRADO -->
+    <div style="display: flex; align-items: center; gap: 24px">
+      <div style="width: 108px; flex-shrink: 0">
+        <span class="eyebrow" style="color: #64748b">Encerrado</span>
+      </div>
+      <div style="position: relative; width: 320px">
+        <div style="border-radius: 16px; border: 1px solid rgba(255,255,255,0.7); background: #f8fafc; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.25), 0 8px 10px -6px rgba(0,0,0,0.25)">
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 7px 12px; background: #eef2f7; border-bottom: 1px solid #e2e8f0">
+            <span class="eyebrow" style="color: #64748b">Quartas · J5</span>
+            <span class="eyebrow" style="display: inline-flex; align-items: center; gap: 5px; color: #15803d">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
+              Final 6/1 6/3
+            </span>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 118px">
+            <div>
+              <div style="display: flex; height: 38px; align-items: center; gap: 9px; padding: 0 12px 0 0; border-bottom: 1px solid #e2e8f0">
+                <span style="width: 3px; height: 38px; background: #ea580c"></span>
+                <span class="num" style="color: #94a3b8; font-size: 11px; font-weight: 800; width: 14px">3</span>
+                <span style="color: #020617; font-size: 14px; font-weight: 900; letter-spacing: -0.01em">Thieslley Soares</span>
+              </div>
+              <div style="display: flex; height: 38px; align-items: center; gap: 9px; padding: 0 12px 0 0">
+                <span style="width: 3px; height: 38px; background: transparent"></span>
+                <span class="num" style="color: #cbd5e1; font-size: 11px; font-weight: 800; width: 14px">6</span>
+                <span style="color: #94a3b8; font-size: 14px; font-weight: 600; letter-spacing: -0.01em">Diego Memória</span>
+              </div>
+            </div>
+            <div style="background: #0b1a2b; display: grid; grid-template-rows: 16px 1fr 1fr">
+              <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr))">
+                <span class="num eyebrow" style="display: grid; place-items: center; color: #475569; font-size: 9px">1</span>
+                <span class="num eyebrow" style="display: grid; place-items: center; color: #475569; font-size: 9px">2</span>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr))">
+                <span class="num" style="display: grid; place-items: center; color: #fb923c; font-size: 17px; font-weight: 900">6</span>
+                <span class="num" style="display: grid; place-items: center; color: #fb923c; font-size: 17px; font-weight: 900">6</span>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr))">
+                <span class="num" style="display: grid; place-items: center; color: #64748b; font-size: 17px; font-weight: 900">1</span>
+                <span class="num" style="display: grid; place-items: center; color: #64748b; font-size: 17px; font-weight: 900">3</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p style="margin: 0; max-width: 400px; color: #64748b; font-size: 13px; font-weight: 500; line-height: 1.6; text-wrap: pretty">Só os sets jogados ocupam colunas — o terceiro set não existe neste cartão. O cabeçalho <span style="color:#cbd5e1">1 2</span> substitui os seis traços de hoje.</p>
+    </div>
+
+    <!-- AO VIVO -->
+    <div style="display: flex; align-items: center; gap: 24px">
+      <div style="width: 108px; flex-shrink: 0">
+        <span class="eyebrow" style="color: #64748b">Ao vivo</span>
+      </div>
+      <div style="position: relative; width: 320px">
+        <div style="border-radius: 16px; border: 1px solid rgba(251,146,60,0.55); background: #f8fafc; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.25), 0 0 0 4px rgba(234,88,12,0.14)">
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 7px 12px; background: #fff7ed; border-bottom: 1px solid #fed7aa">
+            <span class="eyebrow" style="color: #9a3412">Quartas · J4</span>
+            <span class="eyebrow live-rail" style="display: inline-flex; align-items: center; gap: 5px; color: #c2410c">
+              <span style="width: 6px; height: 6px; border-radius: 999px; background: #ea580c"></span>
+              Ao vivo · 2º set
+            </span>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 118px">
+            <div>
+              <div style="display: flex; height: 38px; align-items: center; gap: 9px; padding: 0 12px 0 0; border-bottom: 1px solid #e2e8f0">
+                <span style="width: 3px; height: 38px; background: transparent"></span>
+                <span class="num" style="color: #cbd5e1; font-size: 11px; font-weight: 800; width: 14px">2</span>
+                <span style="color: #020617; font-size: 14px; font-weight: 900; letter-spacing: -0.01em">Marcelo Sampieri</span>
+              </div>
+              <div style="display: flex; height: 38px; align-items: center; gap: 9px; padding: 0 12px 0 0">
+                <span style="width: 3px; height: 38px; background: transparent"></span>
+                <span class="num" style="color: #cbd5e1; font-size: 11px; font-weight: 800; width: 14px">7</span>
+                <span style="color: #020617; font-size: 14px; font-weight: 900; letter-spacing: -0.01em">Flavio</span>
+                <svg width="13" height="13" style="margin-left: auto" viewBox="0 0 24 24" fill="#ea580c" aria-hidden="true"><circle cx="12" cy="12" r="5"></circle></svg>
+              </div>
+            </div>
+            <div style="background: #0b1a2b; display: grid; grid-template-rows: 16px 1fr 1fr">
+              <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr))">
+                <span class="num eyebrow" style="display: grid; place-items: center; color: #475569; font-size: 9px">1</span>
+                <span class="num eyebrow" style="display: grid; place-items: center; color: #fb923c; font-size: 9px">2</span>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr))">
+                <span class="num" style="display: grid; place-items: center; color: #fb923c; font-size: 17px; font-weight: 900">6</span>
+                <span class="num" style="display: grid; place-items: center; color: #e2e8f0; font-size: 17px; font-weight: 900">3</span>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr))">
+                <span class="num" style="display: grid; place-items: center; color: #64748b; font-size: 17px; font-weight: 900">4</span>
+                <span class="num" style="display: grid; place-items: center; color: #e2e8f0; font-size: 17px; font-weight: 900">4</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p style="margin: 0; max-width: 400px; color: #64748b; font-size: 13px; font-weight: 500; line-height: 1.6; text-wrap: pretty">O estado que hoje não existe. O ponto cheio marca quem saca; o set corrente acende no cabeçalho. Nenhum dos dois nomes é atenuado — ainda não há perdedor.</p>
+    </div>
+
+    <!-- PENDENTE -->
+    <div style="display: flex; align-items: center; gap: 24px">
+      <div style="width: 108px; flex-shrink: 0">
+        <span class="eyebrow" style="color: #64748b">A jogar</span>
+      </div>
+      <div style="position: relative; width: 320px">
+        <div style="border-radius: 16px; border: 1px solid rgba(255,255,255,0.35); background: #f1f5f9; overflow: hidden; box-shadow: 0 10px 15px -6px rgba(0,0,0,0.2)">
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 7px 12px; background: #e8edf3; border-bottom: 1px solid #dbe3ec">
+            <span class="eyebrow" style="color: #64748b">Quartas · J2</span>
+            <span class="eyebrow" style="display: inline-flex; align-items: center; gap: 5px; color: #475569">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
+              Hoje 18h30
+            </span>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 118px">
+            <div>
+              <div style="display: flex; height: 38px; align-items: center; gap: 9px; padding: 0 12px 0 0; border-bottom: 1px solid #dbe3ec">
+                <span style="width: 3px; height: 38px; background: transparent"></span>
+                <span class="num" style="color: #cbd5e1; font-size: 11px; font-weight: 800; width: 14px">1</span>
+                <span style="color: #020617; font-size: 14px; font-weight: 900; letter-spacing: -0.01em">Mario Rego</span>
+              </div>
+              <div style="display: flex; height: 38px; align-items: center; gap: 9px; padding: 0 12px 0 0">
+                <span style="width: 3px; height: 38px; background: transparent"></span>
+                <span class="num" style="color: #cbd5e1; font-size: 11px; font-weight: 800; width: 14px"></span>
+                <span style="display: inline-flex; align-items: center; gap: 6px; color: #94a3b8; font-size: 13px; font-weight: 600; font-style: italic">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="m13 6 6 6-6 6"></path></svg>
+                  Vencedor do J1
+                </span>
+              </div>
+            </div>
+            <div style="background: #0f1e30; display: grid; place-items: center">
+              <span class="eyebrow" style="color: #475569; font-size: 9px; text-align: center; line-height: 1.7">Sem<br>placar</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p style="margin: 0; max-width: 400px; color: #64748b; font-size: 13px; font-weight: 500; line-height: 1.6; text-wrap: pretty">Cartão a jogar recua um degrau — fundo mais frio, sombra menor, sem tira de placar. A chave passa a ter profundidade: o que já aconteceu vem à frente.</p>
+    </div>
+  </div>
+
+  <div style="margin-top: auto; display: flex; gap: 12px; align-items: flex-start; border-radius: 18px; border: 1px solid rgba(255,255,255,0.08); background: rgba(148,163,184,0.06); padding: 16px 18px">
+    <svg width="16" height="16" style="flex-shrink: 0; margin-top: 2px" viewBox="0 0 24 24" fill="none" stroke="#fdba74" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4"></path><path d="M12 17h.01"></path><circle cx="12" cy="12" r="9"></circle></svg>
+    <p style="margin: 0; color: #cbd5e1; font-size: 13px; font-weight: 500; line-height: 1.6; text-wrap: pretty"><span style="color: #f8fafc; font-weight: 800">Custo:</span> o cartão cresce de 280×84 para 320×108, então a chave fica ~14% mais larga e a coluna do celular aperta. Vale se a leitura do placar for prioridade sobre caber mais fases na tela.</p>
+  </div>
+</div>
+</x-dc>
+<script data-dc-script data-props='{}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

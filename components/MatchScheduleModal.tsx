@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { StandardModal } from './StandardModal';
-import { Calendar, Clock, MapPin, Check, AlertCircle, Loader2 } from 'lucide-react';
+import { Calendar, Clock, MapPin, Check, AlertCircle, Loader2, X } from 'lucide-react';
 import { Match, Court } from '../types';
 import { formatDateBr } from '../utils';
+import { courtMatchesSurface, getClassCourtRestriction } from '../lib/championshipUtils';
 
 interface Props {
     match: Match;
@@ -17,15 +18,16 @@ interface Props {
     mode?: 'schedule' | 'suggested-time';
 }
 
-const TIME_SLOTS_MORNING = ['06:00', '06:30', '07:00'];
-const TIME_SLOTS_AFTERNOON = ['16:00', '16:30', '17:00', '17:30', '18:00', '18:30', '19:00', '19:30'];
-const TIME_SLOTS_NIGHT = ['20:00', '21:00', '22:00'];
-
-const ALL_TIME_SLOTS = [
-    ...TIME_SLOTS_MORNING,
-    ...TIME_SLOTS_AFTERNOON,
-    ...TIME_SLOTS_NIGHT
-];
+/**
+ * Os períodos são o agrupamento da grade, e não uma legenda embaixo dela.
+ * Antes eram 13 botões iguais numa grade 3×5 e um parágrafo em caixa alta
+ * explicando o agrupamento que a grade deveria mostrar sozinha.
+ */
+const TIME_PERIODS = [
+    { label: 'Manhã', slots: ['06:00', '06:30', '07:00'] },
+    { label: 'Tarde', slots: ['16:00', '16:30', '17:00', '17:30', '18:00', '18:30', '19:00', '19:30'] },
+    { label: 'Noite', slots: ['20:00', '21:00', '22:00'] },
+] as const;
 
 export const MatchScheduleModal: React.FC<Props> = ({
     match, roundName, roundStartDate, roundEndDate, className, courts, isAdmin, mode = 'schedule', onSchedule, onClose
@@ -37,23 +39,19 @@ export const MatchScheduleModal: React.FC<Props> = ({
     const [error, setError] = useState<string | null>(null);
     const isSuggestedTimeMode = mode === 'suggested-time';
 
-    // Filter courts based on class (robust check)
+    /**
+     * Quadras que a classe pode usar. A regra de piso mora em
+     * `getClassCourtRestriction` — antes estava escrita aqui de novo, à mão, e
+     * a cópia da lib só era exercitada pelos testes. Mudar o piso de uma classe
+     * exigia lembrar das duas.
+     */
+    const surface = getClassCourtRestriction(className);
     const availableCourts = courts.filter(court => {
-        // Handle both camelCase and snake_case from DB
+        // O banco devolve ora camelCase, ora snake_case.
         const isActive = (court as any).is_active !== undefined ? (court as any).is_active : court.isActive;
         if (isActive === false) return false;
 
-        const normalizedClassName = (className || '').trim();
-
-        const type = (court.type || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-
-        // 6th class -> Hard Court (Rápida or Rapida)
-        if (normalizedClassName.includes('6ª')) return type.includes('rapida');
-
-        // 4th/5th class -> Clay Court (Saibro)
-        if (normalizedClassName.includes('4ª') || normalizedClassName.includes('5ª')) return type.includes('saibro');
-
-        return true; // Other classes (1, 2, 3, etc.) - any court
+        return surface === null || courtMatchesSurface(court.type, surface);
     });
 
     // Auto-select court if only one is available
@@ -100,8 +98,8 @@ export const MatchScheduleModal: React.FC<Props> = ({
         <StandardModal isOpen={true} onClose={onClose}>
             <div className="bg-white rounded-t-[2.5rem] sm:rounded-[2.5rem] w-full max-w-md overflow-hidden shadow-2xl flex flex-col pt-safe pb-safe max-h-[90vh]">
                 {/* Header */}
-                <div className="p-6 border-b border-stone-100 flex justify-between items-center bg-saibro-50/50 flex-none">
-                    <div className="flex items-center gap-3">
+                <div className="p-6 border-b border-stone-100 flex justify-between items-center gap-3 bg-saibro-50/50 flex-none">
+                    <div className="flex items-center gap-3 min-w-0">
                         <div className="w-10 h-10 bg-saibro-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-orange-200">
                             <Calendar size={20} />
                         </div>
@@ -112,6 +110,17 @@ export const MatchScheduleModal: React.FC<Props> = ({
                             <p className="text-xs font-bold text-saibro-600 uppercase tracking-widest">{roundName}</p>
                         </div>
                     </div>
+                    {/* A saída precisa estar visível: num sheet que ocupa 90%
+                        da tela, fechar dependia de acertar a faixa fina de
+                        fundo ou de uma tecla que o celular não tem. */}
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        aria-label="Fechar"
+                        className="hit-target-44 shrink-0 rounded-full text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors"
+                    >
+                        <X size={20} />
+                    </button>
                 </div>
 
                 {/* Content - Scrollable area */}
@@ -154,27 +163,38 @@ export const MatchScheduleModal: React.FC<Props> = ({
                                     </p>
                                 </div>
                             ) : (
-                                <div className="grid grid-cols-3 gap-2">
-                                    {ALL_TIME_SLOTS.map(slot => (
-                                        <button
-                                            key={slot}
-                                            type="button"
-                                            onClick={() => setTime(slot)}
-                                            className={`py-3 rounded-xl text-xs font-black transition-all border ${time === slot
-                                                ? 'bg-saibro-600 text-white border-saibro-600 shadow-md'
-                                                : 'bg-white text-stone-600 border-stone-100 hover:border-saibro-200'
-                                                }`}
-                                        >
-                                            {slot}
-                                        </button>
+                                <div className="space-y-4">
+                                    {TIME_PERIODS.map(period => (
+                                        <div key={period.label}>
+                                            <p className="mb-2 text-[11px] font-black uppercase tracking-widest text-stone-400">{period.label}</p>
+                                            <div className="grid grid-cols-3 gap-2">
+                                                {period.slots.map(slot => (
+                                                    <button
+                                                        key={slot}
+                                                        type="button"
+                                                        aria-pressed={time === slot}
+                                                        onClick={() => setTime(slot)}
+                                                        className={`hit-target-44 rounded-xl text-sm font-black transition-colors border ${time === slot
+                                                            ? 'bg-saibro-600 text-white border-saibro-600 shadow-md'
+                                                            : 'bg-white text-stone-600 border-stone-100 hover:border-saibro-200'
+                                                            }`}
+                                                    >
+                                                        {slot}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
                                     ))}
                                 </div>
                             )}
-                            {!isFriday(date) && (
+                            {/* A legenda dos períodos saiu: ela explicava o
+                                agrupamento que a grade agora mostra. Só o aviso
+                                do modo sugerido continua, porque esse é
+                                informação que a grade não tem como dar. */}
+                            {!isFriday(date) && isSuggestedTimeMode && (
                                 <div className="mt-3 p-3 bg-stone-50 rounded-xl border border-stone-100">
-                                    <p className="text-xs text-stone-400 font-black uppercase tracking-widest flex items-center gap-2">
-                                        <span className="w-1.5 h-1.5 bg-saibro-500 rounded-full" />
-                                        {isSuggestedTimeMode ? 'Este horário é apenas ilustrativo dentro do prazo da fase' : 'Manhã (6h-7h) • Tarde (16h-19h30) • Noite (20h-22h)'}
+                                    <p className="text-xs text-stone-500 font-medium leading-relaxed">
+                                        Este horário é apenas ilustrativo dentro do prazo da fase.
                                     </p>
                                 </div>
                             )}

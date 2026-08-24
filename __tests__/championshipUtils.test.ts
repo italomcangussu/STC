@@ -130,12 +130,13 @@ describe('generateRoundRobinMatches — tamanhos que a versão antiga ignorava',
 });
 
 describe('getClassCourtRestriction', () => {
-    it('manda 4ª e 5ª para o saibro', () => {
+    /** Só a 4ª joga no saibro. */
+    it('manda a 4ª para o saibro', () => {
         expect(getClassCourtRestriction('4ª Classe')).toBe('Saibro');
-        expect(getClassCourtRestriction('5ª Classe')).toBe('Saibro');
     });
 
-    it('manda a 6ª para a rápida', () => {
+    it('manda 5ª e 6ª para a rápida', () => {
+        expect(getClassCourtRestriction('5ª Classe')).toBe('Rápida');
         expect(getClassCourtRestriction('6ª Classe')).toBe('Rápida');
     });
 
