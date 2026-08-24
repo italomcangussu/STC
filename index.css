@@ -1708,3 +1708,87 @@
         animation-iteration-count: infinite !important;
     }
 }
+
+/* ===== TABELA DE CONFRONTOS ===== */
+/**
+ * A chave tem um acontecimento dramático — alguém venceu e subiu — que até
+ * aqui era um recarregamento silencioso. Estas animações contam esse momento.
+ *
+ * Todas mexem só em `transform` e `opacity`, fora o `stroke-dashoffset` da
+ * linha do conector, que é como se desenha um traço. A redução de movimento
+ * global no fim deste arquivo desliga todas elas.
+ */
+
+/* O trilho do vencedor cresce de cima para baixo */
+@keyframes bracketRailGrow {
+    from { transform: scaleY(0); }
+    to   { transform: scaleY(1); }
+}
+
+/* O perdedor recua — não some, recua */
+@keyframes bracketLoserFade {
+    from { opacity: 1; }
+    to   { opacity: 0.45; }
+}
+
+/* A linha até a próxima chave se desenha */
+@keyframes bracketLineDraw {
+    from { stroke-dashoffset: var(--bracket-line-length, 400); }
+    to   { stroke-dashoffset: 0; }
+}
+
+/* O nome pousa na vaga que estava vazia */
+@keyframes bracketLandIn {
+    from { opacity: 0; transform: translateX(-14px) scale(0.94); }
+    to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+/* O cartão que recebeu o vencedor dá um pulso curto */
+@keyframes bracketSlotPulse {
+    0%   { transform: scale(1); }
+    40%  { transform: scale(1.035); }
+    100% { transform: scale(1); }
+}
+
+/* A célula do set vira no eixo X, como um placar mecânico */
+@keyframes bracketCellTurn {
+    0%   { transform: rotateX(0deg); }
+    50%  { transform: rotateX(-90deg); }
+    100% { transform: rotateX(0deg); }
+}
+
+/* "Ao vivo" respira. Não pisca: ninguém lê um placar que pisca. */
+@keyframes bracketBreathe {
+    0%, 100% { opacity: 0.35; }
+    50%      { opacity: 1; }
+}
+
+/* Entrada escalonada na troca de classe */
+@keyframes bracketCardIn {
+    from { opacity: 0; transform: translateY(16px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@layer utilities {
+    .bracket-rail-grow  { transform-origin: top; animation: bracketRailGrow 340ms cubic-bezier(0.32, 0.72, 0, 1) both; }
+    .bracket-loser-fade { animation: bracketLoserFade 340ms cubic-bezier(0.32, 0.72, 0, 1) 220ms both; }
+    .bracket-line-draw  { animation: bracketLineDraw 420ms cubic-bezier(0.32, 0.72, 0, 1) 260ms both; }
+    .bracket-land-in    { animation: bracketLandIn 380ms cubic-bezier(0.32, 0.72, 0, 1) 600ms both; }
+    .bracket-slot-pulse { animation: bracketSlotPulse 420ms cubic-bezier(0.32, 0.72, 0, 1) 640ms both; }
+    .bracket-cell-turn  { backface-visibility: hidden; animation: bracketCellTurn 420ms cubic-bezier(0.32, 0.72, 0, 1) both; }
+    .bracket-breathe    { animation: bracketBreathe 2400ms cubic-bezier(0.32, 0.72, 0, 1) infinite; }
+    .bracket-card-in    { animation: bracketCardIn 260ms cubic-bezier(0.32, 0.72, 0, 1) both; }
+}
+
+/**
+ * A cópia montada para exportar é uma fotografia: nada nela pode depender do
+ * tempo. Sem esta regra a captura pegava os cartões no `opacity: 0` inicial da
+ * entrada escalonada — o PNG saía com moldura, fases e conectores, e nenhum
+ * jogo. Vale para toda animação, inclusive as que ainda não existem.
+ */
+[data-bracket-export-host] *,
+[data-bracket-export-host] *::before,
+[data-bracket-export-host] *::after {
+    animation: none !important;
+    transition: none !important;
+}

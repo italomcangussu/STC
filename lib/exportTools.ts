@@ -18,6 +18,22 @@ export const loadHtml2Canvas = async () => (await import('html2canvas')).default
 
 export const loadJsPdf = async () => (await import('jspdf')).default;
 
+/**
+ * `modern-screenshot` para imagem, e não o `html2canvas` acima.
+ *
+ * O html2canvas 1.4.1 reimplementa o parser de CSS por conta própria e para em
+ * `Attempting to parse an unsupported color function "oklab"` — e o Tailwind v4
+ * emite `oklch`/`oklab` em praticamente toda cor do app, então ele não consegue
+ * fotografar nenhuma tela nossa. O `modern-screenshot` serializa o DOM para SVG
+ * e deixa o próprio navegador pintar, então entende qualquer CSS que o
+ * navegador entenda — e embute as fontes, que o caminho de `foreignObject`
+ * senão perderia.
+ *
+ * O `html2canvas` continua onde já estava (o PDF premium) para não trocar o
+ * motor de um recurso que funciona sem necessidade.
+ */
+export const loadDomToPng = async () => (await import('modern-screenshot')).domToPng;
+
 /** Quando a exportação precisa das duas, buscá-las em paralelo evita a espera em série. */
 export async function loadExportTools() {
     const [html2canvas, jsPDF] = await Promise.all([loadHtml2Canvas(), loadJsPdf()]);
