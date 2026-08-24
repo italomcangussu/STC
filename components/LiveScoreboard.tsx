@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase';
 import { Match, User } from '../types';
 import { Clock, Save, Trophy, Loader2, AlertCircle, CheckCircle, Plus, Minus } from 'lucide-react';
 import { getNowInFortaleza, formatDate, isMember, isAdminRole } from '../utils';
+import { resolveWinnerIdentity } from '../lib/liveScore';
 
 interface LiveScoreboardProps {
     match: Match;
@@ -140,8 +141,16 @@ export const LiveScoreboard: React.FC<LiveScoreboardProps> = ({
         setSaving(true);
         setError(null);
 
-        const winnerId = matchWinner === 'A' ? match.playerAId : match.playerBId;
-        const winnerRegistrationId = matchWinner === 'A' ? match.registration_a_id : match.registration_b_id;
+        let winnerId: string | null;
+        let winnerRegistrationId: string | null;
+        try {
+            ({ winnerId, winnerRegistrationId } = resolveWinnerIdentity(match, matchWinner));
+        } catch (identityError: any) {
+            setSaving(false);
+            setError(identityError.message);
+            return;
+        }
+
         const finalScoreA = showThirdSet ? scoreA : scoreA.slice(0, 2);
         const finalScoreB = showThirdSet ? scoreB : scoreB.slice(0, 2);
 
@@ -155,7 +164,7 @@ export const LiveScoreboard: React.FC<LiveScoreboardProps> = ({
                 score_a: finalScoreA,
                 score_b: finalScoreB,
                 winner_id: winnerId,
-                winner_registration_id: winnerRegistrationId || null,
+                winner_registration_id: winnerRegistrationId,
                 status: 'finished',
                 date: formatDate(getNowInFortaleza())
             })

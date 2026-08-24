@@ -4,7 +4,8 @@ const { supabaseMock } = vi.hoisted(() => ({ supabaseMock: { from: vi.fn() } }))
 vi.mock('../lib/supabase', () => ({ supabase: supabaseMock }));
 
 import {
-    assignToSlot, buildEmptyBracket, saveGenericBracket, seedPositionFor, seedSlots, validateBracket,
+    assignToSlot, buildEmptyBracket, resolveLegacyAdvanceTarget, saveGenericBracket, seedPositionFor,
+    seedSlots, validateBracket,
     type BracketSlot,
 } from '../lib/championship/bracket';
 import type { GroupKnockoutConfig, KnockoutConfig, RoundRobinConfig } from '../lib/championship/formatConfig';
@@ -280,5 +281,78 @@ describe('championship/bracket', () => {
                 saveGenericBracket({ championshipId: 'c1', slots, phaseToRoundId, registrationUserMap })
             ).rejects.toThrow('violates foreign key');
         });
+    });
+});
+
+// ── Avanço legado (campeonatos sem FK de origem) ─────────────────────────────
+
+describe('resolveLegacyAdvanceTarget', () => {
+    const semi = (over: Partial<any> = {}) => ({
+        id: 'semi-1', phase: 'Semi', match_number: 1,
+        playerAId: 'p1', playerBId: 'p2', registration_a_id: 'r1', registration_b_id: 'r2',
+        ...over,
+    });
+    const finalVazia = (over: Partial<any> = {}) => ({
+        id: 'final-1', phase: 'Final', match_number: 9,
+        playerAId: null, playerBId: null, registration_a_id: null, registration_b_id: null,
+        ...over,
+    });
+
+    /**
+     * Quando a chave declara a origem, quem promove o vencedor é o trigger
+     * `propagate_bracket_winner` — ele segue a FK e acerta a vaga. O palpite por
+     * fase aqui só atrapalharia.
+     */
+    it('não mexe em chave que já declara a origem do confronto', () => {
+        const matches = [
+            semi(),
+            finalVazia({ player_a_source_match_id: 'semi-1' }),
+        ];
+
+        expect(resolveLegacyAdvanceTarget(matches, 'semi-1')).toBeNull();
+    });
+
+    it('leva o vencedor da semi para a vaga livre da final', () => {
+        const matches = [semi(), finalVazia()];
+
+        expect(resolveLegacyAdvanceTarget(matches, 'semi-1')).toEqual({ matchId: 'final-1', slot: 'a' });
+    });
+
+    it('usa a vaga B quando a A já está ocupada', () => {
+        const matches = [
+            semi({ id: 'semi-2', match_number: 2 }),
+            finalVazia({ playerAId: 'p9', registration_a_id: 'r9' }),
+        ];
+
+        expect(resolveLegacyAdvanceTarget(matches, 'semi-2')).toEqual({ matchId: 'final-1', slot: 'b' });
+    });
+
+    /**
+     * Sem FK não há como saber a vaga certa — mas o palpite tem que ser o mesmo
+     * toda vez. Antes dependia da ordem em que o array chegava da rede.
+     */
+    it('escolhe sempre o mesmo jogo quando há mais de uma vaga aberta na fase', () => {
+        const foraDeOrdem = [
+            finalVazia({ id: 'final-b', match_number: 12 }),
+            semi(),
+            finalVazia({ id: 'final-a', match_number: 10 }),
+        ];
+
+        expect(resolveLegacyAdvanceTarget(foraDeOrdem, 'semi-1')).toEqual({ matchId: 'final-a', slot: 'a' });
+    });
+
+    it('para na final: não há fase seguinte', () => {
+        const matches = [finalVazia({ id: 'final-1' }), finalVazia({ id: 'final-2', match_number: 10 })];
+
+        expect(resolveLegacyAdvanceTarget(matches, 'final-1')).toBeNull();
+    });
+
+    it('não inventa vaga quando a fase seguinte já está cheia', () => {
+        const matches = [
+            semi(),
+            finalVazia({ playerAId: 'p9', playerBId: 'p8', registration_a_id: 'r9', registration_b_id: 'r8' }),
+        ];
+
+        expect(resolveLegacyAdvanceTarget(matches, 'semi-1')).toBeNull();
     });
 });

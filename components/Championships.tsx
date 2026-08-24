@@ -3,6 +3,7 @@ import { Trophy, Calendar, CalendarCheck, ListOrdered, GitMerge, ChevronDown, Lo
 import { Championship, Match, User, ChampionshipRound } from '../types';
 import { getMatchWinner, formatDateBr, getNowInFortaleza, formatDate, MEMBER_ROLES } from '../utils';
 import { classesWithFormat, hasMixedFormats, resolveClassFormat } from '../lib/championship/effectiveFormat';
+import { resolveLegacyAdvanceTarget } from '../lib/championship/bracket';
 
 const FORMAT_LABELS: Record<string, string> = {
     'mata-mata': 'mata-mata',
@@ -272,6 +273,8 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                 registration_a_id: m.registration_a_id,
                 registration_b_id: m.registration_b_id,
                 match_number: m.match_number,
+                player_a_source_match_id: m.player_a_source_match_id,
+                player_b_source_match_id: m.player_b_source_match_id,
                 scoreA: m.score_a || [],
                 scoreB: m.score_b || [],
                 winnerId: m.winner_id,
@@ -666,34 +669,28 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                 : m
         ));
 
-        // If it's mata-mata, we might need to update the next round
-        if (effectiveFormat === 'mata-mata' && match.phase) {
-            const currentPhase = match.phase;
-            const nextPhase = currentPhase === 'Oitavas' ? 'Quartas' : currentPhase === 'Quartas' ? 'Semi' : currentPhase === 'Semi' ? 'Final' : null;
+        /**
+         * Campeonatos antigos não ligam os jogos por FK, então o vencedor
+         * precisa ser promovido daqui. Nos novos quem faz isso é o trigger
+         * `propagate_bracket_winner`, e `resolveLegacyAdvanceTarget` devolve
+         * null para não disputar a vaga com ele.
+         */
+        if (effectiveFormat === 'mata-mata') {
+            const destino = resolveLegacyAdvanceTarget(
+                matches.filter(m => m.championshipId === selectedChamp.id),
+                matchId
+            );
 
-            if (nextPhase) {
-                // Find next match waiting for opponents
-                const nextMatch = matches.find(m =>
-                    m.championshipId === selectedChamp.id &&
-                    m.phase === nextPhase &&
-                    (!m.playerAId || !m.playerBId)
-                );
-
-                if (nextMatch) {
-                    const isSlotA = !nextMatch.playerAId && !nextMatch.registration_a_id;
-                    const updateData: Record<string, any> = {};
-                    if (winnerId) {
-                        updateData[isSlotA ? 'player_a_id' : 'player_b_id'] = winnerId;
-                    }
-                    if (winnerRegistrationId) {
-                        updateData[isSlotA ? 'registration_a_id' : 'registration_b_id'] = winnerRegistrationId;
-                    }
-                    if (Object.keys(updateData).length > 0) {
-                        await supabase
-                            .from('matches')
-                            .update(updateData)
-                            .eq('id', nextMatch.id);
-                    }
+            if (destino) {
+                const updateData: Record<string, any> = {};
+                if (winnerId) {
+                    updateData[destino.slot === 'a' ? 'player_a_id' : 'player_b_id'] = winnerId;
+                }
+                if (winnerRegistrationId) {
+                    updateData[destino.slot === 'a' ? 'registration_a_id' : 'registration_b_id'] = winnerRegistrationId;
+                }
+                if (Object.keys(updateData).length > 0) {
+                    await supabase.from('matches').update(updateData).eq('id', destino.matchId);
                 }
             }
         }

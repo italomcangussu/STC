@@ -249,3 +249,60 @@ export async function saveGenericBracket(params: SaveBracketParams): Promise<voi
         if (error) throw new Error(`Erro ao vincular jogo ${slot.matchNumber}: ${error.message}`);
     }
 }
+
+/**
+ * Cadeia de fases dos campeonatos antigos, que gravavam a fase em
+ * `matches.phase` com inicial maiúscula. Os campeonatos novos não usam isto:
+ * eles ligam cada jogo ao anterior por `player_a_source_match_id`.
+ */
+const FASE_SEGUINTE: Record<string, string> = {
+    Oitavas: 'Quartas',
+    Quartas: 'Semi',
+    Semi: 'Final',
+};
+
+export interface AdvanceTarget {
+    matchId: string;
+    slot: 'a' | 'b';
+}
+
+/**
+ * Para onde vai o vencedor de uma partida de campeonato **antigo**, sem FK de
+ * origem na chave.
+ *
+ * Devolve `null` quando a chave declara a origem: aí quem promove é o trigger
+ * `propagate_bracket_winner`, que segue a FK e acerta a vaga certa. Palpite por
+ * fase competindo com a FK só erraria — e erraria calado.
+ *
+ * Sem FK não existe resposta certa, só uma escolha: a primeira vaga livre da
+ * fase seguinte, na ordem do número do jogo. O ponto é ser **a mesma escolha
+ * toda vez** — antes dependia da ordem em que o array chegava da rede.
+ */
+export function resolveLegacyAdvanceTarget(
+    matches: any[],
+    finishedMatchId: string
+): AdvanceTarget | null {
+    const chaveLigada = matches.some(m =>
+        m.player_a_source_match_id === finishedMatchId ||
+        m.player_b_source_match_id === finishedMatchId
+    );
+    if (chaveLigada) return null;
+
+    const finished = matches.find(m => m.id === finishedMatchId);
+    const proximaFase = finished?.phase ? FASE_SEGUINTE[finished.phase] : undefined;
+    if (!proximaFase) return null;
+
+    const candidatos = matches
+        .filter(m => m.phase === proximaFase)
+        .sort((x, y) =>
+            (x.match_number ?? Number.MAX_SAFE_INTEGER) - (y.match_number ?? Number.MAX_SAFE_INTEGER)
+            || String(x.id).localeCompare(String(y.id))
+        );
+
+    for (const candidato of candidatos) {
+        if (!candidato.playerAId && !candidato.registration_a_id) return { matchId: candidato.id, slot: 'a' };
+        if (!candidato.playerBId && !candidato.registration_b_id) return { matchId: candidato.id, slot: 'b' };
+    }
+
+    return null;
+}

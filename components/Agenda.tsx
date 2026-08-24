@@ -8,6 +8,7 @@ import { notify } from '../lib/notifications';
 import { useConfirm } from '../hooks/useConfirm';
 import { ScoreModal } from './ScoreModal';
 import { LiveScoreboard } from './LiveScoreboard';
+import { buildLiveScoreMatch } from '../lib/liveScore';
 import { StandardModal } from './StandardModal';
 import { TennisCourtAnimation } from './ui/TennisCourtAnimation';
 import { Challenge } from '../types';
@@ -345,7 +346,7 @@ const getChampionshipCardResult = (res: Reservation): {
 // LiveScore HUD legacy removed in favor of shared LiveScoreboard
 
 // --- COMPONENT: Reservation Details View ---
-const ReservationDetails: React.FC<{
+export const ReservationDetails: React.FC<{
     res: Reservation;
     currentUser: User;
     profiles: User[];
@@ -358,9 +359,8 @@ const ReservationDetails: React.FC<{
     onJoin: (id: string) => void;
     onLeave: (id: string) => void;
     onUpdate: (res: Reservation) => void;
-    onFinishMatch: (matchId: string, winnerId: string, scoreA: number[], scoreB: number[]) => Promise<void>;
     onDataRefresh?: () => void;
-}> = ({ res, currentUser, profiles, courts, professors, nonSocioStudents, onClose, onEdit, onCancel, onJoin, onLeave, onUpdate, onFinishMatch: _onFinishMatch, onDataRefresh }) => {
+}> = ({ res, currentUser, profiles, courts, professors, nonSocioStudents, onClose, onEdit, onCancel, onJoin, onLeave, onUpdate, onDataRefresh }) => {
     const [showManageParticipants, setShowManageParticipants] = useState(false);
     const [showGuestModal, setShowGuestModal] = useState(false);
     const court = courts.find(c => c.id === res.courtId);
@@ -537,31 +537,7 @@ const ReservationDetails: React.FC<{
                     {isMatchLive(res) && res.matchId && (
                         <div className="animate-in zoom-in-95 duration-500">
                             <LiveScoreboard
-                                match={{
-                                    id: res.matchId,
-                                    championshipId: undefined,
-                                    type: 'Campeonato',
-                                    playerAId: res.participantIds[0] || null,
-                                    playerBId: res.participantIds[1] || null,
-                                    scoreA: (res.scoreA && res.scoreA.length > 0 ? res.scoreA : [0, 0, 0]).concat(Array(Math.max(0, 3 - (res.scoreA?.length || 0))).fill(0)).slice(0, 3),
-                                    scoreB: (res.scoreB && res.scoreB.length > 0 ? res.scoreB : [0, 0, 0]).concat(Array(Math.max(0, 3 - (res.scoreB?.length || 0))).fill(0)).slice(0, 3),
-                                    phase: undefined,
-                                    slot: undefined,
-                                    winnerId: undefined,
-                                    date: res.date,
-                                    scheduledDate: res.date,
-                                    scheduledTime: res.startTime,
-                                    status: 'pending',
-                                    championship_group_id: undefined,
-                                    round_id: undefined,
-                                    scheduled_date: res.date,
-                                    scheduled_time: res.startTime,
-                                    court_id: res.courtId,
-                                    registration_a_id: undefined,
-                                    registration_b_id: undefined,
-                                    is_walkover: undefined,
-                                    walkover_winner_id: undefined,
-                                }}
+                                match={buildLiveScoreMatch(res)}
                                 profiles={profiles}
                                 // Fallback names/avatars for guests (registrations) injected when available
                                 overrideNames={res.participantNames}
@@ -1620,33 +1596,6 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
         }
     };
 
-    const handleFinishChampionshipMatch = async (matchId: string, winnerId: string, scoreA: number[], scoreB: number[]) => {
-        try {
-            const { error: matchError } = await supabase
-                .from('matches')
-                .update({
-                    score_a: scoreA,
-                    score_b: scoreB,
-                    winner_id: winnerId,
-                    status: 'finished'
-                })
-                .eq('id', matchId);
-
-            if (matchError) throw matchError;
-
-            const internalId = `match_${matchId}`;
-            setReservations(prev => prev.filter(r => r.id !== internalId));
-            setSelectedReservation(null);
-
-            notify.success('Resultado confirmado.');
-        } catch (err) {
-            notify.failure(err, 'Não foi possível salvar o resultado.', {
-                event: 'championship_match_finish_failed',
-                matchId,
-            });
-        }
-    };
-
     const handleSaveReservation = async (res: Reservation) => {
         try {
             const exists = reservations.some(r => r.id === res.id);
@@ -2165,7 +2114,6 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                             onJoin={handleJoin}
                             onLeave={handleLeave}
                             onUpdate={handleSaveReservation}
-                            onFinishMatch={handleFinishChampionshipMatch}
                             onDataRefresh={() => fetchData(false)}
                         />
                     )}
