@@ -323,3 +323,75 @@ export interface PointRule {
   description: string;
   updated_at: string;
 }
+
+// -- Club Forms & Voting Types --
+export type QuestionType = 'single_choice' | 'multiple_choice' | 'open_text';
+
+export interface FormOption {
+  id?: string;
+  question_id?: string;
+  label: string;
+  display_order?: number;
+}
+
+export interface FormQuestion {
+  id: string;
+  form_id?: string;
+  title: string;
+  description?: string | null;
+  question_type: QuestionType;
+  is_required: boolean;
+  display_order: number;
+  options?: FormOption[];
+}
+
+export interface ClubForm {
+  id: string;
+  title: string;
+  description?: string | null;
+  slug: string;
+  is_active: boolean;
+  is_secret_vote: boolean;
+  requires_auth: boolean;
+  allow_multiple_submissions: boolean;
+  show_live_results: boolean;
+  starts_at?: string | null;
+  expires_at?: string | null;
+  created_by?: string | null;
+  created_at: string;
+  updated_at: string;
+  questions?: FormQuestion[];
+  total_participants?: number;
+}
+
+export interface LiveOptionResult {
+  option_id: string;
+  label: string;
+  display_order: number;
+  votes: number;
+}
+
+export interface LiveQuestionResult {
+  question_id: string;
+  title: string;
+  question_type: QuestionType;
+  total_votes: number;
+  options: LiveOptionResult[];
+  open_responses_count: number;
+}
+
+export interface FormLiveResults {
+  allowed: boolean;
+  message?: string;
+  form_id: string;
+  total_participants: number;
+  questions: LiveQuestionResult[];
+}
+
+export interface FormAnswerItem {
+  question_id: string;
+  option_id?: string;
+  option_ids?: string[];
+  text_response?: string;
+}
+

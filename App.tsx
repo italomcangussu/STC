@@ -29,11 +29,13 @@ const FinanceiroAdmin = lazy(() => import('./components/FinanceiroAdmin').then(m
 const AdminStudents = lazy(() => import('./components/AdminStudents').then(m => ({ default: m.AdminStudents })));
 const ChampionshipAdmin = lazy(() => import('./components/ChampionshipAdmin').then(m => ({ default: m.ChampionshipAdmin })));
 const ChampionshipCreator = lazy(() => import('./components/ChampionshipCreator').then(m => ({ default: m.ChampionshipCreator })));
+const AdminForms = lazy(() => import('./components/AdminForms').then(m => ({ default: m.AdminForms })));
 import { getPublicChampionshipRoute, PublicChampionshipRoute, selectPublicChampionship } from './lib/publicRoutes';
 
 import { OnboardingModal } from './components/OnboardingModal';
 import { ChallengeNotificationPopup } from './components/ChallengeNotificationPopup';
 import { PublicChampionshipPage } from './components/PublicChampionshipPage';
+import { PublicFormPage } from './components/PublicFormPage';
 import { UpdateNotification } from './components/UpdateNotification';
 import { useVersionCheck } from './hooks/useVersionCheck';
 
@@ -231,6 +233,7 @@ const AppContent: React.FC = () => {
             {view === 'financeiro-admin' && <AdminProtect><FinanceiroAdmin /></AdminProtect>}
             {view === 'championship-admin' && <AdminProtect><ChampionshipAdmin currentUser={currentUser} /></AdminProtect>}
             {view === 'championship-creator' && <AdminProtect><ChampionshipCreator /></AdminProtect>}
+            {view === 'admin-forms' && <AdminProtect><AdminForms /></AdminProtect>}
           </div>
         </Suspense>
       </Layout>
@@ -255,6 +258,31 @@ export default function App() {
   const publicRoute = typeof window !== 'undefined'
     ? getPublicChampionshipRoute(window.location.pathname, window.location.hostname)
     : { type: 'none' as const };
+
+  if (publicRoute.type === 'form-slug') {
+    return (
+      <AuthProvider>
+        <Toaster
+          position="top-center"
+          richColors
+          expand={false}
+          closeButton
+          toastOptions={{
+            style: {
+              fontFamily: 'inherit',
+            },
+            className: 'toast-custom',
+          }}
+        />
+        <PublicFormPage
+          slug={publicRoute.slug}
+          onBackToApp={() => {
+            window.location.href = '/';
+          }}
+        />
+      </AuthProvider>
+    );
+  }
 
   if (publicRoute.type !== 'none') {
     return (

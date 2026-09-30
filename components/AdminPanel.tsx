@@ -3,7 +3,7 @@ import {
     Calendar, Trophy, Swords, DollarSign, Users,
     Search, XCircle,
     ChevronRight, Trash2, Edit, Plus, AlertCircle, Loader2,
-    LayoutDashboard, Megaphone, Save, PlusSquare, Zap, History, GraduationCap, Settings
+    LayoutDashboard, Megaphone, Save, PlusSquare, Zap, History, GraduationCap, Settings, Vote
 } from 'lucide-react';
 import { Dashboard } from './Dashboard';
 import { Reservation, User, Challenge, AccessRequest } from '../types';
@@ -25,6 +25,7 @@ import { AdminProfessors } from './AdminProfessors';
 import { AdminRules } from './AdminRules';
 import { AdminStudents } from './AdminStudents';
 import { ChampionshipAdmin } from './ChampionshipAdmin';
+import { AdminForms } from './AdminForms';
 import { clearRankingCache } from '../lib/rankingService';
 import { buildAdminAuditQueryParams, describeAuditLog, type AdminAuditLog } from '../lib/adminAudit';
 
@@ -232,6 +233,7 @@ interface TabItem {
 // Tab configuration
 const TABS: TabItem[] = [
     { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={18} /> },
+    { id: 'formularios', label: 'Formulários', icon: <Vote size={18} /> },
     { id: 'lancamentos', label: 'Lançamentos', icon: <PlusSquare size={18} /> },
     { id: 'superset', label: 'SuperSet', icon: <Trophy size={18} /> },
     { id: 'torneios', label: 'Torneios', icon: <Trophy size={18} /> },
@@ -1662,6 +1664,7 @@ export const AdminPanel: React.FC = () => {
     const renderTabContent = () => {
         switch (activeTab) {
             case 'dashboard': return <Dashboard />;
+            case 'formularios': return <AdminForms />;
             case 'lancamentos': return <LancamentosTab />;
             case 'superset': return <SuperSet />;
             case 'torneios': return <ChampionshipAdmin />;

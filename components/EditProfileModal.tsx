@@ -3,6 +3,8 @@ import React, { useState, useRef } from 'react';
 import { Camera, User as UserIcon, X, Save, Loader2, Upload } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { notify } from '../lib/notifications';
+import { errorMessage, logger } from '../lib/logger';
+import { AVATAR_BUCKET, buildAvatarPath, pruneOldAvatars } from '../lib/avatarStorage';
 import { User } from '../types';
 
 interface EditProfileModalProps {
@@ -13,7 +15,9 @@ interface EditProfileModalProps {
 
 export const EditProfileModal: React.FC<EditProfileModalProps> = ({ currentUser, onClose, onUpdate }) => {
     const [name, setName] = useState(currentUser.name);
-    const [category, setCategory] = useState(currentUser.category || '6ª Classe');
+    // Nunca inventa uma classe para quem ainda não tem: gravar uma classe que o
+    // sócio não escolheu conta como promoção no banco e mexe no ranking dele.
+    const [category, setCategory] = useState(currentUser.category || '');
     // Handle 'age' ensuring it's treated as string for input, handling undefined/null
     const [age, setAge] = useState(currentUser.age ? currentUser.age.toString() : '');
     const [avatarUrl, setAvatarUrl] = useState(currentUser.avatar);
@@ -30,18 +34,26 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ currentUser,
             const file = event.target.files?.[0];
             if (!file) return;
 
-            const fileExt = file.name.split('.').pop();
-            const fileName = `${currentUser.id}-${Math.random()}.${fileExt}`;
-            const filePath = `avatars/${fileName}`;
+            const filePath = buildAvatarPath(currentUser.id, file.name);
+            const bucket = supabase.storage.from(AVATAR_BUCKET);
 
-            const { error: uploadError } = await supabase.storage
-                .from('avatars')
-                .upload(filePath, file, { upsert: true });
+            const { error: uploadError } = await bucket.upload(filePath, file, { upsert: true });
 
             if (uploadError) throw uploadError;
 
-            const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
+            const { data } = bucket.getPublicUrl(filePath);
             setAvatarUrl(data.publicUrl);
+
+            // A foto nova já está no ar: uma falha na faxina não pode custar a
+            // troca ao sócio, então ela só vai para o log.
+            try {
+                await pruneOldAvatars(bucket, currentUser.id, filePath);
+            } catch (pruneError) {
+                logger.warn('avatar_prune_failed', {
+                    userId: currentUser.id,
+                    error: errorMessage(pruneError),
+                });
+            }
 
         } catch (error) {
             notify.failure(error, 'Não foi possível enviar a imagem.', {
@@ -59,7 +71,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ currentUser,
         try {
             const updates = {
                 name,
-                category,
+                category: category || null,
                 avatar_url: avatarUrl,
                 age: age ? parseInt(age) : null
             };
@@ -145,6 +157,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ currentUser,
                                     onChange={(e) => setCategory(e.target.value)}
                                     className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-saibro-400 outline-hidden font-semibold text-stone-800 appearance-none"
                                 >
+                                    {!category && <option value="">Selecione sua classe</option>}
                                     {categories.map(c => (
                                         <option key={c} value={c}>{c}</option>
                                     ))}

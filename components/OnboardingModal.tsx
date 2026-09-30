@@ -2,6 +2,8 @@ import React, { useState, useRef } from 'react';
 import { User } from '../types';
 import { supabase } from '../lib/supabase';
 import { notify } from '../lib/notifications';
+import { errorMessage, logger } from '../lib/logger';
+import { AVATAR_BUCKET, buildAvatarPath, pruneOldAvatars } from '../lib/avatarStorage';
 import { Upload, Loader2, Save, User as UserIcon } from 'lucide-react';
 
 interface OnboardingModalProps {
@@ -25,29 +27,26 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ currentUser, o
         setUploading(true);
 
         try {
-            const fileExt = file.name.split('.').pop();
-            const fileName = `${currentUser.id}-${Math.random()}.${fileExt}`;
-            const filePath = `avatars/${fileName}`;
+            const filePath = buildAvatarPath(currentUser.id, file.name);
+            const bucket = supabase.storage.from(AVATAR_BUCKET);
 
-            // Create avatars bucket if not exists - assuming it exists or handled
-            // We'll use the championship-logos bucket or a generic public one for now if avatars doesn't exist?
-            // Better to use 'avatars' bucket if we created it. 
-            // Since we didn't explicitly create 'avatars' bucket in previous plans, let's assume we can use 'championship-logos' temporarily OR create it.
-            // Actually, storage buckets usually need explicit creation. I'll use 'championship-logos' for now to avoid migration blocks, 
-            // OR I should create 'avatars' bucket. I'll create 'avatars' bucket in next step.
-
-            // For now, let's assume 'avatars' bucket exists (I will create it)
-            const { error: uploadError } = await supabase.storage
-                .from('avatars')
-                .upload(filePath, file, { upsert: true });
+            const { error: uploadError } = await bucket.upload(filePath, file, { upsert: true });
 
             if (uploadError) throw uploadError;
 
-            const { data: { publicUrl } } = supabase.storage
-                .from('avatars')
-                .getPublicUrl(filePath);
+            const { data: { publicUrl } } = bucket.getPublicUrl(filePath);
 
             setAvatarUrl(publicUrl);
+
+            // Faxina é melhor-esforço: a foto nova já está no ar.
+            try {
+                await pruneOldAvatars(bucket, currentUser.id, filePath);
+            } catch (pruneError) {
+                logger.warn('avatar_prune_failed', {
+                    userId: currentUser.id,
+                    error: errorMessage(pruneError),
+                });
+            }
         } catch (error) {
             notify.failure(error, 'Não foi possível enviar a foto.', {
                 event: 'onboarding_avatar_upload_failed',

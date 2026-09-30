@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { User, Reservation, ReservationType, NonSocioStudent, Professor, Match } from '../types';
 import { ChevronLeft, ChevronRight, Plus, X, Calendar, MapPin, Users, Check, AlertCircle, Search, Loader2, Trash2, Trophy, UserCog, ArrowRight, Info, UserPlus, LogOut, Wallet, Pencil, UserMinus, Share2, ArrowLeft } from 'lucide-react';
@@ -2156,7 +2156,15 @@ const CalendarIcon: React.FC<{ date: Date }> = ({ date }) => (
 );
 
 // --- SUB-COMPONENT: Add/Edit Reservation Modal ---
-const AddReservationModal: React.FC<{
+/**
+ * Tipo da quadra sem acento e em minúsculas — o banco tem 'Rápida', mas já
+ * apareceu 'Rapida' em dados mais antigos e a comparação precisa aceitar os
+ * dois.
+ */
+const normalizeCourtType = (rawType: string | undefined): string =>
+    (rawType || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+export const AddReservationModal: React.FC<{
     onClose: () => void;
     onSave: (res: Reservation) => void | Promise<void>;
     currentUser: User;
@@ -2228,40 +2236,45 @@ const AddReservationModal: React.FC<{
     // Only Admin or Professor can create 'Aula'
     const canCreateAula = currentUser.role === 'admin' || !!professorRecord;
 
-    // Initial Setup & Defaults
+    /**
+     * Para qual tipo os padrões de quadra e duração já foram aplicados.
+     *
+     * Sem essa trava, o padrão era reaplicado a cada vez que a identidade de
+     * `courts` mudava — e ela muda a cada evento de realtime da agenda, ou
+     * seja, sempre que alguém no clube cria uma reserva, marca um jogo ou
+     * lança um desafio. O sócio escolhia a Quadra Rápida, um evento chegava, e
+     * o `setCourtId` do padrão sobrescrevia a escolha: a reserva saía no
+     * saibro sem ninguém ter pedido.
+     */
+    const defaultsAppliedForType = useRef<ReservationType | null>(null);
+
+    // Padrões do passo 2 — uma vez por tipo, nunca por cima da escolha do sócio.
     useEffect(() => {
-        if (!isEdit) {
-            // STEP 2 Defaults logic
-            if (step === 2) {
-                if (type === 'Play') {
-                    // Default to Saibro
-                    const saibro = courts.find(c => c.type.toLowerCase().includes('saibro') && c.isActive);
-                    if (saibro && !initialData) setCourtId(saibro.id);
-                    // Standard duration 60
-                    if (!initialData) setDuration(60);
-                } else if (type === 'Aula') {
-                    // Default to Rapida
-                    const rapida = courts.find(c => c.type.toLowerCase().includes('rápida') && c.isActive);
-                    if (rapida && !initialData) setCourtId(rapida.id);
-                    // Default duration 30 logic
-                    if (!initialData) setDuration(30);
-                }
-            }
+        if (isEdit || step !== 2) return;
+        if (defaultsAppliedForType.current === type) return;
 
-            // Sync prof selection
-            if (currentUser.isProfessor && professorRecord) setSelectedProfessorId(professorRecord.id);
-            if (currentUser.role === 'admin' && type === 'Aula' && !selectedProfessorId && professors.length > 0) {
-                setSelectedProfessorId(professors[0].id);
-            }
-        }
+        const courtOfType = (needle: string) => courts.find(c =>
+            normalizeCourtType(c.type).includes(needle) && c.isActive
+        );
 
-        // Logic to clear start time if unavailable on new date/type
-        if (!isEdit || (isEdit && date !== initialData.date)) {
-            // We don't verify strict availability here to avoid clearing user selection while browsing, 
-            // but we could. For now, let user pick.
+        const defaultCourt = type === 'Play' ? courtOfType('saibro') : type === 'Aula' ? courtOfType('rapida') : null;
+        // Quadra ainda não carregou: tenta de novo quando ela chegar.
+        if (!defaultCourt) return;
+
+        setCourtId(defaultCourt.id);
+        setDuration(type === 'Aula' ? 30 : 60);
+        defaultsAppliedForType.current = type;
+    }, [step, type, courts, isEdit]);
+
+    // Sync prof selection
+    useEffect(() => {
+        if (isEdit) return;
+        if (currentUser.isProfessor && professorRecord) setSelectedProfessorId(professorRecord.id);
+        if (currentUser.role === 'admin' && type === 'Aula' && !selectedProfessorId && professors.length > 0) {
+            setSelectedProfessorId(professors[0].id);
         }
 // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [step, type, courts, isEdit, currentUser, professorRecord]);
+    }, [step, type, isEdit, currentUser, professorRecord]);
 
     // Generate Available Times based on rules
     const getAvailableTimes = (resType: ReservationType, resDate: string, restrictNonSocioTimes: boolean) => {
@@ -2334,12 +2347,8 @@ const AddReservationModal: React.FC<{
 
         if (type === 'Aula') {
             const selectedCourt = courts.find(c => c.id === courtId);
-            if (selectedCourt) {
-                const rawType = selectedCourt.type || '';
-                const courtType = rawType.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-                if (!courtType.includes('rapida')) {
-                    return "Aulas são permitidas apenas na Quadra Rápida.";
-                }
+            if (selectedCourt && !normalizeCourtType(selectedCourt.type).includes('rapida')) {
+                return "Aulas são permitidas apenas na Quadra Rápida.";
             }
         }
         return null; // OK
@@ -2525,7 +2534,7 @@ const AddReservationModal: React.FC<{
                                             setParticipantIds([]);
                                             setNonSocioStudentIds([]);
                                         }
-                                        const rapidaId = courts.find(c => (c.type || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes('rapida'))?.id || '';
+                                        const rapidaId = courts.find(c => normalizeCourtType(c.type).includes('rapida'))?.id || '';
                                         setCourtId(rapidaId);
                                     }}
                                     className={`w-full p-6 rounded-2xl border-2 text-left transition-all group ${type === 'Aula' ? 'border-saibro-500 bg-saibro-50' : 'border-stone-100 bg-white hover:border-saibro-200 hover:bg-stone-50'}`}

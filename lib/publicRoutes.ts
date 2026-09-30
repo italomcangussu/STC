@@ -1,7 +1,10 @@
-export type PublicChampionshipRoute =
+export type PublicAppRoute =
   | { type: 'list' }
   | { type: 'slug'; slug: string }
+  | { type: 'form-slug'; slug: string }
   | { type: 'none' };
+
+export type PublicChampionshipRoute = PublicAppRoute;
 
 export interface PublicChampionshipSummary {
   id: string;
@@ -32,16 +35,32 @@ const APP_PATHS = new Set([
   'championship-creator',
 ]);
 
-export function getPublicChampionshipRoute(pathname: string, hostname = ''): PublicChampionshipRoute {
+export function getPublicAppRoute(pathname: string, search = '', hostname = ''): PublicAppRoute {
+  // 1. Verificar query parameters (ex: ?form=slug ou ?votacao=slug)
+  if (search) {
+    const params = new URLSearchParams(search);
+    const formSlug = params.get('form') || params.get('votacao');
+    if (formSlug) {
+      return { type: 'form-slug', slug: formSlug.trim() };
+    }
+  }
+
   const [pathWithoutQuery] = pathname.split(/[?#]/);
   const normalized = pathWithoutQuery.replace(/^\/+|\/+$/g, '');
   const normalizedHost = hostname.toLowerCase();
 
+  // 2. Verificar rotas diretas de formulário/votação (ex: /votacao/:slug ou /form/:slug)
+  const formMatch = normalized.match(/^(?:votacao|form|forms|formulario)\/([a-zA-Z0-9_-]+)$/i);
+  if (formMatch && formMatch[1]) {
+    return { type: 'form-slug', slug: formMatch[1] };
+  }
+
+  // Se for subdomínio específico de campeonatos
   if (normalizedHost === 'camp.stcplay.com.br') {
     return { type: 'none' };
   }
 
-  if (!normalized || normalized.includes('.') || normalized.includes('/')) {
+  if (!normalized || normalized.includes('.')) {
     return { type: 'none' };
   }
 
@@ -49,7 +68,18 @@ export function getPublicChampionshipRoute(pathname: string, hostname = ''): Pub
     return { type: 'none' };
   }
 
+  // Rotas de campeonatos públicos sem barra interna
+  if (!normalized.includes('/')) {
+    return { type: 'none' };
+  }
+
   return { type: 'none' };
+}
+
+// Retrocompatibilidade
+export function getPublicChampionshipRoute(pathname: string, hostname = ''): PublicAppRoute {
+  const search = typeof window !== 'undefined' ? window.location.search : '';
+  return getPublicAppRoute(pathname, search, hostname);
 }
 
 export function selectPublicChampionship(championships: PublicChampionshipSummary[]) {
