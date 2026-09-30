@@ -187,6 +187,11 @@ export const PublicFormPage: React.FC<PublicFormPageProps> = ({ slug, onBackToAp
       }
     });
 
+    if (payload.length === 0) {
+      notify.error('Por favor, preencha ao menos um dos campos antes de enviar.');
+      return;
+    }
+
     try {
       setSubmitting(true);
       const res = await formsService.submitFormAnswers(form.id, payload);
@@ -628,19 +633,19 @@ export const PublicFormPage: React.FC<PublicFormPageProps> = ({ slug, onBackToAp
                     {submitting ? (
                       <>
                         <Loader2 size={20} className="animate-spin" />
-                        <span>Computando Voto na Urna...</span>
+                        <span>{form.is_secret_vote ? 'Computando Voto na Urna...' : 'Gravando Suas Sugestões...'}</span>
                       </>
                     ) : (
                       <>
                         <CheckCircle2 size={20} />
-                        <span>Confirmar e Registrar Meu Voto</span>
+                        <span>{form.is_secret_vote ? 'Confirmar e Registrar Meu Voto' : 'Enviar Minhas Sugestões'}</span>
                       </>
                     )}
                   </button>
                   <p className="text-center text-[11px] text-stone-500 mt-2.5">
                     {form.is_secret_vote
                       ? '🔒 Urna Cega Criptográfica: seu voto é estritamente confidencial.'
-                      : 'Voto identificado associado ao seu perfil de sócio.'}
+                      : 'Respostas associadas ao seu perfil de sócio para acompanhamento da diretoria.'}
                   </p>
                 </div>
               </>

@@ -50,6 +50,7 @@ def detect_test_framework(project_path: Path) -> dict:
                 # Try to detect specific framework for coverage
                 if "vitest" in deps:
                     result["framework"] = "vitest"
+                    result["cmd"] = ["npx", "vitest", "run"]
                     result["coverage_cmd"] = ["npx", "vitest", "run", "--coverage"]
                 elif "jest" in deps:
                     result["framework"] = "jest"

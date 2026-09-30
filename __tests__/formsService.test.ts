@@ -34,6 +34,13 @@ describe('Public Form & Voting Routes', () => {
     });
   });
 
+  it('correctly routes the club improvement suggestions form', () => {
+    expect(getPublicAppRoute('/votacao/sugestoes-melhorias')).toEqual({
+      type: 'form-slug',
+      slug: 'sugestoes-melhorias'
+    });
+  });
+
   it('ignores standard app paths', () => {
     expect(getPublicAppRoute('/agenda')).toEqual({ type: 'none' });
     expect(getPublicAppRoute('/dashboard')).toEqual({ type: 'none' });
