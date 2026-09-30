@@ -3,21 +3,34 @@ import {
   Vote, CheckCircle2, Lock, Users, BarChart3,
   Loader2, AlertCircle, ArrowLeft, RefreshCw,
   Radio, CheckSquare, MessageSquare, ShieldCheck,
-  ChevronRight, LogIn
+  ChevronRight, LogIn, Phone, Mail, Sparkles
 } from 'lucide-react';
 import { formsService } from '../lib/formsService';
 import { ClubForm, FormLiveResults, FormAnswerItem } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import { notify } from '../lib/notifications';
-import { Auth } from './Auth';
 
 interface PublicFormPageProps {
   slug: string;
   onBackToApp?: () => void;
 }
 
+const maskPhone = (val: string) => {
+  const digits = val.replace(/\D/g, '').slice(0, 11);
+  if (digits.length <= 2) return digits;
+  if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+};
+
 export const PublicFormPage: React.FC<PublicFormPageProps> = ({ slug, onBackToApp }) => {
-  const { currentUser, loading: authLoading } = useAuth();
+  const {
+    currentUser,
+    loading: authLoading,
+    signInWithPhoneLegacy,
+    signInWithEmail,
+    submitAccessRequest
+  } = useAuth();
+
   const [form, setForm] = useState<ClubForm | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -35,6 +48,17 @@ export const PublicFormPage: React.FC<PublicFormPageProps> = ({ slug, onBackToAp
   const [viewMode, setViewMode] = useState<'vote' | 'results'>('vote');
   const [liveResults, setLiveResults] = useState<FormLiveResults | null>(null);
   const [loadingLive, setLoadingLive] = useState(false);
+
+  // Estados de Login Inline para a Urna (HIG Mobile)
+  const [loginPhone, setLoginPhone] = useState('');
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [loginMode, setLoginMode] = useState<'phone' | 'email' | 'request'>('phone');
+  const [reqName, setReqName] = useState('');
+  const [reqEmail, setReqEmail] = useState('');
+  const [authSubmitting, setAuthSubmitting] = useState(false);
+  const [authError, setAuthError] = useState('');
+  const [authInfo, setAuthInfo] = useState('');
 
   // Carregar dados do formulário
   const loadFormData = useCallback(async () => {
@@ -117,6 +141,98 @@ export const PublicFormPage: React.FC<PublicFormPageProps> = ({ slug, onBackToAp
       };
     }
   }, [viewMode, form, loadLiveResults]);
+
+  // Manipuladores de Autenticação Inline (HIG)
+  const handlePhoneLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError('');
+    setAuthInfo('');
+
+    const clean = loginPhone.replace(/\D/g, '');
+    if (!clean || clean.length < 10) {
+      setAuthError('Digite seu número de celular completo com DDD.');
+      return;
+    }
+
+    setAuthSubmitting(true);
+    try {
+      const res = await signInWithPhoneLegacy(loginPhone);
+      if (!res.success) {
+        if (res.phoneNotFound || res.needsRequest) {
+          setLoginMode('request');
+          setReqName('');
+          setAuthInfo('Telefone não localizado no cadastro. Preencha seu nome para solicitar seu acesso de sócio.');
+          return;
+        }
+        if (res.needsApproval) {
+          setAuthInfo(res.error || 'Seu acesso está aguardando aprovação pelo administrador.');
+          return;
+        }
+        setAuthError(res.error || 'Não foi possível validar seu telefone.');
+      } else {
+        notify.success('Identificado como sócio com sucesso!');
+      }
+    } catch (err: any) {
+      setAuthError(err.message || 'Erro ao conectar.');
+    } finally {
+      setAuthSubmitting(false);
+    }
+  };
+
+  const handleEmailLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError('');
+    setAuthInfo('');
+
+    if (!loginEmail.trim() || !loginPassword.trim()) {
+      setAuthError('Informe email e senha.');
+      return;
+    }
+
+    setAuthSubmitting(true);
+    try {
+      const res = await signInWithEmail(loginEmail, loginPassword);
+      if (!res.success) {
+        setAuthError(res.error || 'Credenciais inválidas.');
+      } else {
+        notify.success('Login realizado com sucesso!');
+      }
+    } catch (err: any) {
+      setAuthError(err.message || 'Erro ao entrar.');
+    } finally {
+      setAuthSubmitting(false);
+    }
+  };
+
+  const handleAccessRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError('');
+    setAuthInfo('');
+
+    if (!reqName.trim() || !loginPhone.trim()) {
+      setAuthError('Preencha seu nome completo e celular.');
+      return;
+    }
+
+    setAuthSubmitting(true);
+    try {
+      const res = await submitAccessRequest({
+        name: reqName.trim(),
+        phone: loginPhone.trim(),
+        email: reqEmail.trim() || undefined
+      });
+      if (res.success) {
+        setAuthInfo('Solicitação enviada com sucesso! A diretoria irá aprovar seu acesso.');
+        setLoginMode('phone');
+      } else {
+        setAuthError(res.error || 'Erro ao enviar solicitação.');
+      }
+    } catch (err: any) {
+      setAuthError(err.message || 'Erro inesperado.');
+    } finally {
+      setAuthSubmitting(false);
+    }
+  };
 
   // Manipuladores de Seleção de Respostas
   const handleSelectSingleChoice = (questionId: string, optionId: string) => {
@@ -214,7 +330,7 @@ export const PublicFormPage: React.FC<PublicFormPageProps> = ({ slug, onBackToAp
   // 1. Loading Inicial
   if (loading || authLoading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-stone-900 text-white p-6">
+      <div className="fixed inset-0 h-full w-full overflow-y-auto overscroll-y-contain -webkit-overflow-scrolling-touch bg-stone-950 text-white flex flex-col items-center justify-center p-6 z-50">
         <Loader2 className="animate-spin text-saibro-500 mb-4" size={48} />
         <span className="text-xs uppercase tracking-widest font-bold text-stone-400">
           Carregando Votação STC...
@@ -226,7 +342,7 @@ export const PublicFormPage: React.FC<PublicFormPageProps> = ({ slug, onBackToAp
   // 2. Formulário não encontrado
   if (notFound || !form) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-stone-900 text-white p-6 text-center">
+      <div className="fixed inset-0 h-full w-full overflow-y-auto overscroll-y-contain -webkit-overflow-scrolling-touch bg-stone-950 text-white flex flex-col items-center justify-center p-6 text-center z-50">
         <div className="w-16 h-16 rounded-2xl bg-stone-800 text-saibro-500 flex items-center justify-center mb-4 border border-stone-700">
           <AlertCircle size={32} />
         </div>
@@ -237,7 +353,7 @@ export const PublicFormPage: React.FC<PublicFormPageProps> = ({ slug, onBackToAp
         {onBackToApp && (
           <button
             onClick={onBackToApp}
-            className="px-6 py-2.5 rounded-xl bg-saibro-600 hover:bg-saibro-700 text-white font-bold text-sm transition-all shadow-lg shadow-saibro-600/20"
+            className="min-h-[48px] px-6 py-2.5 rounded-xl bg-saibro-600 hover:bg-saibro-700 active:scale-95 text-white font-bold text-sm transition-all shadow-lg shadow-saibro-600/20"
           >
             Voltar ao Início
           </button>
@@ -246,49 +362,255 @@ export const PublicFormPage: React.FC<PublicFormPageProps> = ({ slug, onBackToAp
     );
   }
 
-  // 3. Exige Sócio Autenticado e Visitante não está Logado
+  // 3. Exige Sócio Autenticado e Visitante não está Logado (Experiência Mobile Apple HIG)
   if (form.requires_auth && !currentUser) {
     return (
-      <div className="min-h-screen bg-stone-950 text-stone-100 flex flex-col justify-center items-center p-4">
-        <div className="max-w-md w-full bg-stone-900 border border-stone-800 rounded-3xl p-6 md:p-8 shadow-2xl space-y-6">
-          <div className="text-center space-y-2">
-            <div className="w-14 h-14 rounded-2xl bg-saibro-500/10 text-saibro-500 flex items-center justify-center mx-auto border border-saibro-500/20">
-              <Lock size={28} />
+      <div className="fixed inset-0 h-full w-full overflow-y-auto overscroll-y-contain -webkit-overflow-scrolling-touch bg-stone-950 text-stone-100 flex flex-col items-center justify-start md:justify-center px-4 py-8 pt-[max(1.5rem,env(safe-area-inset-top))] pb-[max(3.5rem,env(safe-area-inset-bottom))] z-50">
+        <div className="max-w-md w-full my-auto bg-stone-900/95 border border-stone-800 rounded-[32px] p-6 md:p-8 shadow-2xl backdrop-blur-xl space-y-6">
+          
+          {/* Header Mobile Apple HIG */}
+          <div className="flex flex-col items-center text-center space-y-3">
+            <div className="w-16 h-16 rounded-2xl bg-saibro-500/10 border border-saibro-500/20 flex items-center justify-center p-2.5 shadow-md">
+              <img
+                src="https://smztsayzldjmkzmufqcz.supabase.co/storage/v1/object/public/logoapp/SOBRAL.zip%20-%201.png"
+                alt="STC"
+                className="w-full h-full object-contain"
+              />
             </div>
-            <span className="text-[10px] uppercase font-black tracking-widest text-saibro-500 bg-saibro-500/10 px-3 py-1 rounded-full inline-block">
-              Área Restrita a Sócios
-            </span>
-            <h2 className="text-xl font-black text-white">{form.title}</h2>
-            <p className="text-xs text-stone-400">
-              Para garantir a legitimidade e o voto único, é necessário fazer login com sua conta de sócio do STC Play.
-            </p>
+            
+            <div className="space-y-1">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold tracking-wider uppercase bg-saibro-500/15 text-saibro-400 border border-saibro-500/30">
+                <Lock size={12} />
+                Área Restrita a Sócios
+              </span>
+              <h2 className="text-xl md:text-2xl font-black text-white tracking-tight pt-1">
+                {form.title}
+              </h2>
+              <p className="text-xs text-stone-400 leading-relaxed max-w-xs mx-auto">
+                {loginMode === 'request'
+                  ? 'Informe seus dados para solicitar liberação de acesso junto à diretoria.'
+                  : 'Para garantir a legitimidade e o registro do sócio, identifique-se abaixo.'}
+              </p>
+            </div>
           </div>
 
-          {/* Componente de Login Autenticado */}
-          <div className="pt-2">
-            <Auth />
+          {/* Mensagens de Feedback */}
+          {authError && (
+            <div className="p-3.5 bg-red-500/15 border border-red-500/30 rounded-2xl text-xs text-red-300 flex items-start gap-2.5">
+              <AlertCircle size={16} className="text-red-400 shrink-0 mt-0.5" />
+              <span>{authError}</span>
+            </div>
+          )}
+
+          {authInfo && (
+            <div className="p-3.5 bg-saibro-500/15 border border-saibro-500/30 rounded-2xl text-xs text-saibro-300 flex items-start gap-2.5">
+              <CheckCircle2 size={16} className="text-saibro-400 shrink-0 mt-0.5" />
+              <span>{authInfo}</span>
+            </div>
+          )}
+
+          {/* MODO 1: LOGIN POR CELULAR (PADRÃO STC) */}
+          {loginMode === 'phone' && (
+            <form onSubmit={handlePhoneLogin} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-stone-400 uppercase tracking-wider ml-1">
+                  Celular do Sócio
+                </label>
+                <div className="relative">
+                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-500" size={18} />
+                  <input
+                    type="tel"
+                    inputMode="tel"
+                    autoComplete="tel"
+                    required
+                    value={loginPhone}
+                    onChange={e => setLoginPhone(maskPhone(e.target.value))}
+                    placeholder="(88) 99999-9999"
+                    className="w-full min-h-[52px] pl-11 pr-4 py-3.5 bg-stone-950 border border-stone-800 rounded-2xl text-base text-white placeholder-stone-600 focus:outline-none focus:ring-2 focus:ring-saibro-500 focus:border-transparent transition-all"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={authSubmitting}
+                className="w-full min-h-[52px] py-4 bg-saibro-600 hover:bg-saibro-500 active:scale-[0.98] disabled:opacity-50 text-white font-bold text-base rounded-2xl shadow-xl shadow-saibro-600/25 transition-all flex items-center justify-center gap-2"
+              >
+                {authSubmitting ? (
+                  <>
+                    <Loader2 className="animate-spin" size={20} />
+                    <span>Validando Sócio...</span>
+                  </>
+                ) : (
+                  <>
+                    <LogIn size={20} />
+                    <span>Entrar e Responder</span>
+                  </>
+                )}
+              </button>
+            </form>
+          )}
+
+          {/* MODO 2: LOGIN POR EMAIL/SENHA */}
+          {loginMode === 'email' && (
+            <form onSubmit={handleEmailLogin} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-stone-400 uppercase tracking-wider ml-1">
+                  E-mail
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-500" size={18} />
+                  <input
+                    type="email"
+                    required
+                    value={loginEmail}
+                    onChange={e => setLoginEmail(e.target.value)}
+                    placeholder="seu@email.com"
+                    className="w-full min-h-[52px] pl-11 pr-4 py-3.5 bg-stone-950 border border-stone-800 rounded-2xl text-base text-white placeholder-stone-600 focus:outline-none focus:ring-2 focus:ring-saibro-500 focus:border-transparent transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-stone-400 uppercase tracking-wider ml-1">
+                  Senha
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-500" size={18} />
+                  <input
+                    type="password"
+                    required
+                    value={loginPassword}
+                    onChange={e => setLoginPassword(e.target.value)}
+                    placeholder="Sua senha"
+                    className="w-full min-h-[52px] pl-11 pr-4 py-3.5 bg-stone-950 border border-stone-800 rounded-2xl text-base text-white placeholder-stone-600 focus:outline-none focus:ring-2 focus:ring-saibro-500 focus:border-transparent transition-all"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={authSubmitting}
+                className="w-full min-h-[52px] py-4 bg-saibro-600 hover:bg-saibro-500 active:scale-[0.98] disabled:opacity-50 text-white font-bold text-base rounded-2xl shadow-xl shadow-saibro-600/25 transition-all flex items-center justify-center gap-2"
+              >
+                {authSubmitting ? (
+                  <>
+                    <Loader2 className="animate-spin" size={20} />
+                    <span>Entrando...</span>
+                  </>
+                ) : (
+                  <>
+                    <LogIn size={20} />
+                    <span>Entrar com E-mail</span>
+                  </>
+                )}
+              </button>
+            </form>
+          )}
+
+          {/* MODO 3: SOLICITAR ACESSO */}
+          {loginMode === 'request' && (
+            <form onSubmit={handleAccessRequest} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-stone-400 uppercase tracking-wider ml-1">
+                  Nome Completo
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={reqName}
+                  onChange={e => setReqName(e.target.value)}
+                  placeholder="Seu nome"
+                  className="w-full min-h-[52px] px-4 py-3.5 bg-stone-950 border border-stone-800 rounded-2xl text-base text-white placeholder-stone-600 focus:outline-none focus:ring-2 focus:ring-saibro-500 transition-all"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-stone-400 uppercase tracking-wider ml-1">
+                  Celular
+                </label>
+                <input
+                  type="tel"
+                  inputMode="tel"
+                  required
+                  value={loginPhone}
+                  onChange={e => setLoginPhone(maskPhone(e.target.value))}
+                  placeholder="(88) 99999-9999"
+                  className="w-full min-h-[52px] px-4 py-3.5 bg-stone-950 border border-stone-800 rounded-2xl text-base text-white placeholder-stone-600 focus:outline-none focus:ring-2 focus:ring-saibro-500 transition-all"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={authSubmitting}
+                className="w-full min-h-[52px] py-4 bg-saibro-600 hover:bg-saibro-500 active:scale-[0.98] disabled:opacity-50 text-white font-bold text-base rounded-2xl shadow-xl shadow-saibro-600/25 transition-all flex items-center justify-center gap-2"
+              >
+                {authSubmitting ? (
+                  <>
+                    <Loader2 className="animate-spin" size={20} />
+                    <span>Enviando...</span>
+                  </>
+                ) : (
+                  <span>Solicitar Cadastro de Sócio</span>
+                )}
+              </button>
+            </form>
+          )}
+
+          {/* Alternadores de Modo */}
+          <div className="flex flex-wrap items-center justify-center gap-4 text-xs text-stone-500 pt-3 border-t border-stone-800/80">
+            {loginMode !== 'phone' && (
+              <button
+                type="button"
+                onClick={() => { setLoginMode('phone'); setAuthError(''); setAuthInfo(''); }}
+                className="text-saibro-400 hover:text-saibro-300 font-bold transition-colors"
+              >
+                ← Entrar com Celular
+              </button>
+            )}
+
+            {loginMode === 'phone' && (
+              <button
+                type="button"
+                onClick={() => { setLoginMode('email'); setAuthError(''); setAuthInfo(''); }}
+                className="text-stone-400 hover:text-stone-200 transition-colors"
+              >
+                Entrar com Senha
+              </button>
+            )}
+
+            {loginMode === 'phone' && (
+              <button
+                type="button"
+                onClick={() => { setLoginMode('request'); setAuthError(''); setAuthInfo(''); }}
+                className="text-stone-400 hover:text-saibro-400 transition-colors"
+              >
+                Não é cadastrado? Solicitar Acesso
+              </button>
+            )}
           </div>
         </div>
       </div>
     );
   }
 
+  // 4. Interface Principal do Formulário / Votação (Suporte Total a Rolagem Mobile & HIG)
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100 flex flex-col selection:bg-saibro-500 selection:text-white pb-16">
-      {/* Top Header Barra STC */}
-      <header className="bg-stone-900/90 backdrop-blur-xl border-b border-stone-800/80 sticky top-0 z-40 px-4 py-3.5">
+    <div className="fixed inset-0 h-full w-full overflow-y-auto overscroll-y-contain -webkit-overflow-scrolling-touch bg-stone-950 text-stone-100 flex flex-col selection:bg-saibro-500 selection:text-white">
+      {/* Top Header Barra STC (Sticky com Blur e Suporte a Safe Area) */}
+      <header className="bg-stone-900/90 backdrop-blur-xl border-b border-stone-800/80 sticky top-0 z-40 px-4 py-3.5 pt-[max(0.875rem,env(safe-area-inset-top))] shrink-0">
         <div className="max-w-3xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             {onBackToApp && (
               <button
                 onClick={onBackToApp}
-                className="p-1.5 rounded-lg text-stone-400 hover:text-white hover:bg-stone-800 transition-colors"
+                className="p-2 rounded-xl text-stone-400 hover:text-white hover:bg-stone-800 active:scale-95 transition-all"
                 title="Voltar ao STC Play"
               >
                 <ArrowLeft size={20} />
               </button>
             )}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5">
               <img
                 src="https://smztsayzldjmkzmufqcz.supabase.co/storage/v1/object/public/logoapp/SOBRAL.zip%20-%201.png"
                 alt="STC"
@@ -303,7 +625,7 @@ export const PublicFormPage: React.FC<PublicFormPageProps> = ({ slug, onBackToAp
             <div className="flex items-center bg-stone-800/90 p-1 rounded-xl border border-stone-700/60 text-xs">
               <button
                 onClick={() => setViewMode('vote')}
-                className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
+                className={`min-h-[36px] px-3.5 py-1.5 rounded-lg font-bold transition-all ${
                   viewMode === 'vote'
                     ? 'bg-saibro-600 text-white shadow-xs'
                     : 'text-stone-400 hover:text-white'
@@ -313,7 +635,7 @@ export const PublicFormPage: React.FC<PublicFormPageProps> = ({ slug, onBackToAp
               </button>
               <button
                 onClick={() => setViewMode('results')}
-                className={`px-3 py-1.5 rounded-lg font-bold transition-all flex items-center gap-1.5 ${
+                className={`min-h-[36px] px-3.5 py-1.5 rounded-lg font-bold transition-all flex items-center gap-1.5 ${
                   viewMode === 'results'
                     ? 'bg-saibro-600 text-white shadow-xs'
                     : 'text-stone-400 hover:text-white'
@@ -327,8 +649,8 @@ export const PublicFormPage: React.FC<PublicFormPageProps> = ({ slug, onBackToAp
         </div>
       </header>
 
-      {/* Conteúdo Central */}
-      <main className="flex-1 max-w-3xl w-full mx-auto px-4 pt-6 space-y-6">
+      {/* Conteúdo Central Rolável com Margem de Respiro Inferior (HIG) */}
+      <main className="flex-1 max-w-3xl w-full mx-auto px-4 pt-6 pb-[max(5rem,env(safe-area-inset-bottom))] space-y-6">
         {/* Banner do Formulário */}
         <div className="bg-stone-900/90 border border-stone-800 rounded-3xl p-6 md:p-8 shadow-xl relative overflow-hidden space-y-4">
           <div className="absolute top-0 right-0 w-72 h-72 bg-saibro-500/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" />
@@ -471,7 +793,7 @@ export const PublicFormPage: React.FC<PublicFormPageProps> = ({ slug, onBackToAp
             {(!alreadyVoted || form.allow_multiple_submissions) && form.is_active && (
               <button
                 onClick={() => setViewMode('vote')}
-                className="w-full py-3.5 rounded-2xl font-bold text-sm bg-stone-800 hover:bg-stone-700 text-white transition-all text-center"
+                className="w-full min-h-[48px] py-3.5 rounded-2xl font-bold text-sm bg-stone-800 hover:bg-stone-700 active:scale-[0.99] text-white transition-all text-center"
               >
                 Voltar e Responder Formulário
               </button>
@@ -495,7 +817,7 @@ export const PublicFormPage: React.FC<PublicFormPageProps> = ({ slug, onBackToAp
                 {form.show_live_results && (
                   <button
                     onClick={() => setViewMode('results')}
-                    className="px-6 py-2.5 rounded-xl font-bold text-xs bg-saibro-600 hover:bg-saibro-700 text-white transition-all"
+                    className="min-h-[48px] px-6 py-2.5 rounded-xl font-bold text-xs bg-saibro-600 hover:bg-saibro-700 active:scale-95 text-white transition-all"
                   >
                     Acompanhar Placar ao Vivo
                   </button>
@@ -548,7 +870,7 @@ export const PublicFormPage: React.FC<PublicFormPageProps> = ({ slug, onBackToAp
                                   type="button"
                                   key={opt.id}
                                   onClick={() => handleSelectSingleChoice(q.id, opt.id)}
-                                  className={`w-full min-h-[48px] px-4 py-3 rounded-2xl border text-left flex items-center gap-3.5 transition-all duration-200 active:scale-[0.99] select-none ${
+                                  className={`w-full min-h-[50px] px-4 py-3.5 rounded-2xl border text-left flex items-center gap-3.5 transition-all duration-200 active:scale-[0.99] select-none ${
                                     isSelected
                                       ? 'bg-saibro-950/60 border-saibro-500 ring-2 ring-saibro-500 text-white shadow-md shadow-saibro-950'
                                       : 'bg-stone-950/70 border-stone-800 text-stone-200 hover:border-stone-700 hover:bg-stone-900'
@@ -582,7 +904,7 @@ export const PublicFormPage: React.FC<PublicFormPageProps> = ({ slug, onBackToAp
                                   type="button"
                                   key={opt.id}
                                   onClick={() => handleToggleMultipleChoice(q.id, opt.id)}
-                                  className={`w-full min-h-[48px] px-4 py-3 rounded-2xl border text-left flex items-center gap-3.5 transition-all duration-200 active:scale-[0.99] select-none ${
+                                  className={`w-full min-h-[50px] px-4 py-3.5 rounded-2xl border text-left flex items-center gap-3.5 transition-all duration-200 active:scale-[0.99] select-none ${
                                     isSelected
                                       ? 'bg-saibro-950/60 border-saibro-500 ring-2 ring-saibro-500 text-white shadow-md shadow-saibro-950'
                                       : 'bg-stone-950/70 border-stone-800 text-stone-200 hover:border-stone-700 hover:bg-stone-900'
@@ -606,15 +928,15 @@ export const PublicFormPage: React.FC<PublicFormPageProps> = ({ slug, onBackToAp
                           </div>
                         )}
 
-                        {/* Campo de Texto Aberto */}
+                        {/* Campo de Texto Aberto (HIG: Área Confortável com Altura Mínima Adequada) */}
                         {q.question_type === 'open_text' && (
                           <div className="space-y-1.5 pt-1">
                             <textarea
-                              rows={3}
+                              rows={4}
                               value={ans?.text_response || ''}
                               onChange={e => handleTextChange(q.id, e.target.value)}
-                              placeholder="Digite sua resposta aqui..."
-                              className="w-full px-4 py-3 rounded-2xl border border-stone-800 bg-stone-950/70 text-white placeholder-stone-500 text-sm focus:outline-none focus:ring-2 focus:ring-saibro-500 focus:border-transparent resize-none"
+                              placeholder="Digite suas observações ou sugestões..."
+                              className="w-full min-h-[110px] px-4 py-3.5 rounded-2xl border border-stone-800 bg-stone-950/80 text-white placeholder-stone-600 text-sm focus:outline-none focus:ring-2 focus:ring-saibro-500 focus:border-transparent resize-y"
                             />
                           </div>
                         )}
@@ -628,7 +950,7 @@ export const PublicFormPage: React.FC<PublicFormPageProps> = ({ slug, onBackToAp
                   <button
                     onClick={handleSubmit}
                     disabled={submitting || !form.is_active}
-                    className="w-full min-h-[52px] py-4 rounded-2xl font-black text-base bg-saibro-600 hover:bg-saibro-500 active:scale-[0.99] text-white shadow-xl shadow-saibro-600/30 transition-all flex items-center justify-center gap-2.5 cursor-pointer disabled:opacity-50"
+                    className="w-full min-h-[54px] py-4 rounded-2xl font-black text-base bg-saibro-600 hover:bg-saibro-500 active:scale-[0.99] text-white shadow-xl shadow-saibro-600/30 transition-all flex items-center justify-center gap-2.5 cursor-pointer disabled:opacity-50"
                   >
                     {submitting ? (
                       <>
