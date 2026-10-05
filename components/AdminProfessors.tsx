@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase';
 import { notify } from '../lib/notifications';
 import { useConfirm } from '../hooks/useConfirm';
 import { Professor, NonSocioStudent } from '../types';
-import { Users, GraduationCap, DollarSign, Loader2, ChevronRight, ChevronDown, Plus, Edit, Trash2 } from 'lucide-react';
+import { Users, GraduationCap, Loader2, ChevronRight, ChevronDown, Plus, Edit, Trash2 } from 'lucide-react';
 import { StandardModal } from './StandardModal';
 
 // --- Modal Component ---
@@ -180,17 +180,9 @@ export const AdminProfessors: React.FC = () => {
 
     const getProfessorStats = (profId: string) => {
         const profStudents = students.filter(s => s.professorId === profId);
-        const activeStudents = profStudents.filter(s => s.planStatus === 'active');
-        const estimatedRevenue = activeStudents.reduce((sum, s) => {
-            if (s.planType === 'Card Mensal') return sum + 200;
-            if (s.planType === 'Day Card' || s.planType === 'Day Card Experimental') return sum + 50;
-            return sum; // Dependente = R$ 0
-        }, 0);
-
         return {
             total: profStudents.length,
-            active: activeStudents.length,
-            revenue: estimatedRevenue
+            active: profStudents.filter(s => s.isActive).length
         };
     };
 
@@ -216,18 +208,6 @@ export const AdminProfessors: React.FC = () => {
                     </div>
                 </div>
                 {/* ... other stats ... */}
-                <div className="bg-white p-5 rounded-2xl shadow-sm border border-stone-100 flex items-center gap-4">
-                    <div className="p-3 bg-green-100 text-green-600 rounded-xl">
-                        <DollarSign size={24} />
-                    </div>
-                    <div>
-                        <p className="text-xs text-stone-500 uppercase font-bold">Receita Estimada (Mensal)</p>
-                        <p className="text-2xl font-black text-stone-800">
-                            R$ {professors.reduce((acc, p) => acc + getProfessorStats(p.id).revenue, 0).toLocaleString('pt-BR')}
-                        </p>
-                    </div>
-                </div>
-
                 {/* Add Button */}
                 <button
                     onClick={() => { setEditingProf(null); setShowModal(true); }}

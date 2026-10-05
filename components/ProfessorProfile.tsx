@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, NonSocioStudent, Reservation, Court, RelationshipType } from '../types';
+import { User, NonSocioStudent, Reservation, Court, RelationshipType, StudentProfile } from '../types';
 import { Calendar, Users, Plus, Edit, CheckCircle, XCircle, Clock, MapPin, DollarSign, Loader2, AlertCircle, UserPlus, ArrowUpCircle, X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { notify } from '../lib/notifications';
@@ -7,6 +7,7 @@ import { useConfirm } from '../hooks/useConfirm';
 import { validateStudentForm } from '../lib/students/validateStudentForm';
 import { getNowInFortaleza, formatDate, formatDateBr, MEMBER_ROLES } from '../utils';
 import { StandardModal } from './StandardModal';
+import { STUDENT_LEVELS, StudentLevel, getCardStatus } from '../lib/students/studentRules';
 
 type RegularPlanType = 'Day Card' | 'Day Card Experimental' | 'Card Mensal';
 
@@ -47,16 +48,16 @@ const StudentCard: React.FC<{
     student: NonSocioStudent, 
     onEdit: (s: NonSocioStudent) => void, 
     onToggleStatus: (id: string) => void, 
-    onDelete: (id: string) => void,
     onConvert: (s: NonSocioStudent) => void,
+    onHistory: (s: NonSocioStudent) => void,
     canConvert: boolean
-}> = ({ student, onEdit, onToggleStatus, onDelete, onConvert, canConvert }) => {
+}> = ({ student, onEdit, onToggleStatus, onConvert, onHistory, canConvert }) => {
     const isMaster = student.planType === 'Card Mensal';
     const isDependent = student.studentType === 'dependent';
     const isActive = student.planStatus === 'active';
     const isExpired = isMaster && (!student.masterExpirationDate || new Date(student.masterExpirationDate + 'T00:00:00') < getNowInFortaleza());
 
-    let statusLabel = 'Ativo';
+    let statusLabel = isExpired ? 'Card vencido' : isActive ? 'Card válido' : 'Sem Card válido';
     let statusColor = 'text-green-600 bg-green-50';
     let icon = <CheckCircle size={12} />;
 
@@ -65,7 +66,7 @@ const StudentCard: React.FC<{
         statusColor = 'text-blue-600 bg-blue-50';
         icon = <UserPlus size={12} />;
     } else if (!isActive) {
-        statusLabel = 'Inativo / Aguardando Pagamento';
+        statusLabel = 'Sem Card válido';
         statusColor = 'text-orange-600 bg-orange-50';
         icon = <Clock size={12} />;
     } else if (isExpired) {
@@ -118,20 +119,12 @@ const StudentCard: React.FC<{
             )}
 
             <div className="flex gap-2 border-t border-stone-50 pt-3">
+                <button onClick={() => onHistory(student)} className="py-1.5 px-2 text-xs font-bold text-stone-500 border border-stone-200 rounded">Evolução</button>
                 <button onClick={() => onEdit(student)} className="flex-1 py-1.5 text-xs font-bold text-stone-600 bg-stone-100 hover:bg-stone-200 rounded flex items-center justify-center gap-1">
                     <Edit size={12} /> Editar
                 </button>
-                {!isDependent && (
-                    <button onClick={() => onToggleStatus(student.id)} className="flex-1 py-1.5 text-xs font-bold text-stone-500 border border-stone-200 hover:bg-stone-50 rounded">
-                        {isActive ? 'Desativar' : 'Ativar'}
-                    </button>
-                )}
-                <button 
-                    onClick={() => onDelete(student.id)} 
-                    className="py-1.5 px-3 text-xs font-bold text-red-600 border border-red-200 hover:bg-red-50 rounded flex items-center justify-center gap-1 transition-colors"
-                    title="Excluir aluno"
-                >
-                    <XCircle size={12} /> Excluir
+                <button onClick={() => onToggleStatus(student.id)} className="flex-1 py-1.5 text-xs font-bold text-stone-500 border border-stone-200 hover:bg-stone-50 rounded">
+                    {student.studentStatus === 'paused' ? 'Reativar aluno' : 'Pausar aluno'}
                 </button>
             </div>
         </div>
@@ -148,6 +141,8 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
     const [loading, setLoading] = useState(true);
     const [professorRecord, setProfessorRecord] = useState<{ id: string; name: string; bio?: string } | null>(null);
     const [students, setStudents] = useState<NonSocioStudent[]>([]);
+    const [studentProfiles, setStudentProfiles] = useState<StudentProfile[]>([]);
+    const [studentStatusFilter, setStudentStatusFilter] = useState<'active' | 'paused' | 'all'>('active');
     const [reservations, setReservations] = useState<Reservation[]>([]);
     const [courts, setCourts] = useState<Court[]>([]);
     const [profiles, setProfiles] = useState<User[]>([]);
@@ -162,7 +157,9 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
         studentType: 'regular' as 'regular' | 'dependent',
         planType: 'Day Card' as RegularPlanType,
         responsibleSocioId: '',
-        relationshipType: '' as RelationshipType | ''
+        relationshipType: '' as RelationshipType | '',
+        profileId: '',
+        technicalLevel: '' as StudentLevel | '',
     });
 
     // --- CONVERT TO MENSAL MODAL ---
@@ -170,6 +167,9 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
     const [convertStudent, setConvertStudent] = useState<NonSocioStudent | null>(null);
     const [convertDate, setConvertDate] = useState(formatDate(getNowInFortaleza()));
     const [processing, setProcessing] = useState(false);
+    const [showExpiredCardModal, setShowExpiredCardModal] = useState(false);
+    const [levelHistory, setLevelHistory] = useState<any[]>([]);
+    const [levelHistoryTitle, setLevelHistoryTitle] = useState('');
 
 
     // Fetch data from Supabase
@@ -192,12 +192,27 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                     bio: profData.bio
                 });
 
-                // Fetch students for this professor (only active)
+                // Keep paused records available for reactivation and history.
                 const { data: studentsData } = await supabase
                     .from('non_socio_students')
                     .select('*')
-                    .eq('professor_id', profData.id)
-                    .eq('is_active', true);
+                    .eq('professor_id', profData.id);
+
+                const { data: studentProfileData } = await supabase
+                    .from('student_profiles')
+                    .select('id, profile_id, non_socio_student_id, technical_level, student_status, professor_id, card_expired_reviewed_for')
+                    .eq('professor_id', profData.id);
+
+                const mappedProfiles: StudentProfile[] = (studentProfileData || []).map(profile => ({
+                    id: profile.id,
+                    profileId: profile.profile_id,
+                    nonSocioStudentId: profile.non_socio_student_id,
+                    technicalLevel: profile.technical_level,
+                    studentStatus: profile.student_status,
+                    professorId: profile.professor_id,
+                    cardExpiredReviewedFor: profile.card_expired_reviewed_for,
+                }));
+                setStudentProfiles(mappedProfiles);
 
                 setStudents((studentsData || []).map(s => ({
                     id: s.id,
@@ -210,7 +225,10 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                     studentType: s.student_type || 'regular',
                     responsibleSocioId: s.responsible_socio_id,
                     relationshipType: s.relationship_type,
-                    isActive: s.is_active ?? true
+                    isActive: s.is_active ?? true,
+                    studentProfileId: mappedProfiles.find(profile => profile.nonSocioStudentId === s.id)?.id,
+                    technicalLevel: mappedProfiles.find(profile => profile.nonSocioStudentId === s.id)?.technicalLevel,
+                    studentStatus: mappedProfiles.find(profile => profile.nonSocioStudentId === s.id)?.studentStatus || (s.is_active === false ? 'paused' : 'active')
                 })));
 
                 // Fetch reservations for this professor
@@ -291,6 +309,31 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
 
     // --- DERIVED DATA ---
     const myStudents = students.filter(s => s.professorId === professorRecord?.id);
+    const myMemberStudents = studentProfiles
+        .filter(profile => profile.profileId && profile.professorId === professorRecord?.id)
+        .map(profile => ({ profile, person: profiles.find(user => user.id === profile.profileId) }))
+        .filter((entry): entry is { profile: StudentProfile; person: User } => !!entry.person);
+    const visibleStudents = myStudents.filter(student => studentStatusFilter === 'all' || (student.studentStatus || 'active') === studentStatusFilter);
+    const visibleMemberStudents = myMemberStudents.filter(student => studentStatusFilter === 'all' || student.profile.studentStatus === studentStatusFilter);
+    const pendingExpiredCardStudents = myStudents.filter(student => {
+        if (student.studentType === 'dependent' || student.planType !== 'Card Mensal' || student.studentStatus === 'paused') return false;
+        const expiry = student.masterExpirationDate || '1970-01-01';
+        const cardStatus = getCardStatus({
+            relationship: 'non-socio',
+            status: student.studentStatus || 'active',
+            planType: student.planType,
+            planStatus: student.planStatus,
+            expirationDate: student.masterExpirationDate,
+        }, formatDate(getNowInFortaleza()));
+        const studentProfile = studentProfiles.find(profile => profile.nonSocioStudentId === student.id);
+        return cardStatus === 'expired' && studentProfile?.cardExpiredReviewedFor !== expiry;
+    });
+    const expiredCardReviewKey = pendingExpiredCardStudents.map(student => `${student.id}:${student.masterExpirationDate || 'unknown'}`).join('|');
+
+    useEffect(() => {
+        if (pendingExpiredCardStudents.length > 0) setShowExpiredCardModal(true);
+        else setShowExpiredCardModal(false);
+    }, [expiredCardReviewKey, pendingExpiredCardStudents.length]);
     const myClasses = reservations
         .filter(r => r.type === 'Aula' && r.professorId === professorRecord?.id && r.status === 'active')
         .sort((a, b) => new Date(a.date + 'T' + a.startTime).getTime() - new Date(b.date + 'T' + b.startTime).getTime());
@@ -309,6 +352,11 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
             return;
         }
 
+        if (!studentForm.technicalLevel) {
+            notify.warning('Selecione o nível técnico do aluno.');
+            return;
+        }
+
         const studentData = {
             name: studentForm.name.trim(),
             phone: studentForm.phone || null,
@@ -317,7 +365,9 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
             responsible_socio_id: studentForm.studentType === 'dependent' ? studentForm.responsibleSocioId : null,
             relationship_type: studentForm.studentType === 'dependent' ? studentForm.relationshipType : null,
             plan_type: studentForm.studentType === 'dependent' ? 'Dependente' : studentForm.planType,
-            plan_status: studentForm.studentType === 'dependent' ? 'active' : 'inactive'
+            plan_status: editingStudent
+                ? editingStudent.planStatus
+                : (studentForm.studentType === 'dependent' ? 'active' : 'inactive')
         };
 
         if (editingStudent) {
@@ -333,6 +383,13 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                 });
                 return;
             }
+            if (!editingStudent.studentProfileId) throw new Error('O perfil de aluno não foi localizado. Atualize a página e tente novamente.');
+            const { error: levelError } = await supabase.rpc('set_student_level', {
+                p_student_profile_id: editingStudent.studentProfileId,
+                p_new_level: studentForm.technicalLevel,
+                p_observation: null,
+            });
+            if (levelError) throw levelError;
             setStudents(prev => prev.map(s => s.id === editingStudent.id ? {
                 ...s,
                 name: studentData.name,
@@ -342,8 +399,10 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                 professorId: studentData.professor_id,
                 studentType: studentData.student_type as any,
                 responsibleSocioId: studentData.responsible_socio_id,
-                relationshipType: studentData.relationship_type as any
+                relationshipType: studentData.relationship_type as any,
+                technicalLevel: studentForm.technicalLevel as StudentLevel,
             } : s));
+            setStudentProfiles(prev => prev.map(profile => profile.id === editingStudent.studentProfileId ? { ...profile, technicalLevel: studentForm.technicalLevel as StudentLevel } : profile));
         } else {
             const { data, error } = await supabase
                 .from('non_socio_students')
@@ -359,6 +418,25 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
             }
 
             if (data) {
+                const { data: profileData, error: profileError } = await supabase
+                    .from('student_profiles')
+                    .insert({
+                        non_socio_student_id: data.id,
+                        technical_level: studentForm.technicalLevel as StudentLevel,
+                        student_status: 'active',
+                        professor_id: professorRecord.id,
+                    })
+                    .select('id, non_socio_student_id, technical_level, student_status, professor_id')
+                    .single();
+                if (profileError) throw profileError;
+                const newProfile: StudentProfile = {
+                    id: profileData.id,
+                    nonSocioStudentId: profileData.non_socio_student_id,
+                    technicalLevel: profileData.technical_level as StudentLevel,
+                    studentStatus: profileData.student_status,
+                    professorId: profileData.professor_id,
+                };
+                setStudentProfiles(prev => [...prev, newProfile]);
                 setStudents([...students, {
                     id: data.id,
                     name: data.name,
@@ -369,7 +447,11 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                     professorId: data.professor_id,
                     studentType: data.student_type || 'regular',
                     responsibleSocioId: data.responsible_socio_id,
-                    relationshipType: data.relationship_type
+                    relationshipType: data.relationship_type,
+                    isActive: true,
+                    studentProfileId: profileData.id,
+                    technicalLevel: profileData.technical_level,
+                    studentStatus: profileData.student_status,
                 }]);
             }
         }
@@ -388,27 +470,15 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                     ? student.planType as RegularPlanType
                     : 'Day Card'),
                 responsibleSocioId: student.responsibleSocioId || '',
-                relationshipType: student.relationshipType || ''
+                relationshipType: student.relationshipType || '',
+                profileId: '',
+                technicalLevel: student.technicalLevel || '',
             });
         } else {
             setEditingStudent(null);
-            setStudentForm({ name: '', phone: '', studentType: 'regular', planType: 'Day Card', responsibleSocioId: '', relationshipType: '' });
+            setStudentForm({ name: '', phone: '', studentType: 'regular', planType: 'Day Card', responsibleSocioId: '', relationshipType: '', profileId: '', technicalLevel: '' });
         }
         setShowStudentModal(true);
-    };
-
-    const toggleStudentStatus = async (id: string) => {
-        const student = students.find(s => s.id === id);
-        if (!student) return;
-
-        const newStatus = student.planStatus === 'active' ? 'inactive' : 'active';
-
-        await supabase
-            .from('non_socio_students')
-            .update({ plan_status: newStatus })
-            .eq('id', id);
-
-        setStudents(prev => prev.map(s => s.id === id ? { ...s, planStatus: newStatus } : s));
     };
 
     const handleDeleteStudent = async (id: string) => {
@@ -422,9 +492,9 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
         })) return;
 
         const { error } = await supabase
-            .from('non_socio_students')
-            .update({ is_active: false })
-            .eq('id', id);
+            .from('student_profiles')
+            .update({ student_status: 'paused' })
+            .eq('id', student.studentProfileId);
 
         if (error) {
             notify.failure(error, 'Não foi possível desativar o aluno.', {
@@ -434,8 +504,61 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
             return;
         }
 
-        // Remove da lista local (soft delete - não mostra mais na interface)
-        setStudents(prev => prev.filter(s => s.id !== id));
+        setStudents(prev => prev.map(s => s.id === id ? { ...s, isActive: false, studentStatus: 'paused' } : s));
+        setStudentProfiles(prev => prev.map(profile => profile.id === student.studentProfileId ? { ...profile, studentStatus: 'paused' } : profile));
+    };
+
+    const reactivateStudent = async (studentProfile: StudentProfile) => {
+        const { error } = await supabase.from('student_profiles').update({ student_status: 'active' }).eq('id', studentProfile.id);
+        if (error) {
+            notify.failure(error, 'Não foi possível reativar o aluno.');
+            return;
+        }
+        setStudentProfiles(prev => prev.map(profile => profile.id === studentProfile.id ? { ...profile, studentStatus: 'active' } : profile));
+        if (studentProfile.nonSocioStudentId) {
+            setStudents(prev => prev.map(student => student.id === studentProfile.nonSocioStudentId ? { ...student, isActive: true, studentStatus: 'active' } : student));
+        }
+    };
+
+    const toggleMemberStudentStatus = async (studentProfile: StudentProfile) => {
+        const nextStatus = studentProfile.studentStatus === 'paused' ? 'active' : 'paused';
+        const { error } = await supabase.from('student_profiles').update({ student_status: nextStatus }).eq('id', studentProfile.id);
+        if (error) { notify.failure(error, 'Não foi possível atualizar a situação do aluno.'); return; }
+        setStudentProfiles(prev => prev.map(profile => profile.id === studentProfile.id ? { ...profile, studentStatus: nextStatus } : profile));
+    };
+
+    const changeStudentLevel = async (studentProfile: StudentProfile, level: StudentLevel) => {
+        const { error } = await supabase.rpc('set_student_level', { p_student_profile_id: studentProfile.id, p_new_level: level, p_observation: null });
+        if (error) { notify.failure(error, 'Não foi possível atualizar o nível.'); return; }
+        setStudentProfiles(prev => prev.map(profile => profile.id === studentProfile.id ? { ...profile, technicalLevel: level } : profile));
+    };
+
+    const showStudentLevelHistory = async (studentProfile: StudentProfile | undefined, name: string) => {
+        if (!studentProfile) { notify.warning('Histórico indisponível para este perfil.'); return; }
+        const { data, error } = await supabase.from('student_level_history').select('*').eq('student_profile_id', studentProfile.id).order('changed_at', { ascending: false });
+        if (error) { notify.failure(error, 'Não foi possível carregar a evolução do aluno.'); return; }
+        setLevelHistory(data || []); setLevelHistoryTitle(name);
+    };
+
+    const reviewExpiredCard = async (student: NonSocioStudent, action: 'keep' | 'pause') => {
+        const studentProfile = studentProfiles.find(profile => profile.nonSocioStudentId === student.id);
+        if (!studentProfile) return;
+        const update = action === 'pause'
+            ? { student_status: 'paused' }
+            : { card_expired_reviewed_for: student.masterExpirationDate || '1970-01-01' };
+        const { error } = await supabase.from('student_profiles').update(update).eq('id', studentProfile.id);
+        if (error) {
+            notify.failure(error, 'Não foi possível atualizar a situação deste aluno.');
+            return;
+        }
+        setStudentProfiles(prev => prev.map(profile => profile.id === studentProfile.id
+            ? action === 'pause'
+                ? { ...profile, studentStatus: 'paused' }
+                : { ...profile, cardExpiredReviewedFor: student.masterExpirationDate || '1970-01-01' }
+            : profile));
+        if (action === 'pause') {
+            setStudents(prev => prev.map(item => item.id === student.id ? { ...item, isActive: false, studentStatus: 'paused' } : item));
+        }
     };
 
     // --- Conversão para Card Mensal ---
@@ -561,9 +684,7 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                             <h2 className="text-xl font-bold">{professorRecord.name}</h2>
                             <span className="bg-white/20 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide">Professor</span>
                         </div>
-                        <p className="text-saibro-100 text-sm mt-1">{professorRecord.bio || 'Instrutor'}</p>
-                    </div>
-                </div>
+                        <p className="text-saibro-100 text-sm mt-1">{professorRecord.bio�[h��춻�q�^t   </div>
             </div>
 
             {/* --- TABS --- */}
@@ -666,6 +787,9 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
             {/* --- CONTENT: STUDENTS --- */}
             {activeTab === 'students' && (
                 <div className="space-y-4 animate-in fade-in slide-in-from-right-4">
+                    <div className="flex gap-2">
+                        {(['active', 'paused', 'all'] as const).map(status => <button key={status} onClick={() => setStudentStatusFilter(status)} className={`px-4 py-2 rounded-full text-sm font-semibold ${studentStatusFilter === status ? 'bg-saibro-600 text-white' : 'bg-stone-100 text-stone-600'}`}>{status === 'active' ? 'Ativos' : status === 'paused' ? 'Pausados' : 'Todos'}</button>)}
+                    </div>
                     <button
                         onClick={() => openStudentModal()}
                         className="w-full py-3 border-2 border-dashed border-saibro-300 text-saibro-600 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-saibro-50 transition-colors"
@@ -675,7 +799,7 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
 
                     <div className="space-y-6">
                         {/* PENDING / EXPIRED SECTION */}
-                        {myStudents.some(s => {
+                        {studentStatusFilter !== 'paused' && visibleStudents.some(s => {
                             if (s.studentType === 'dependent') return false;
                             const isMaster = s.planType === 'Card Mensal';
                             const isExpired = isMaster && (!s.masterExpirationDate || new Date(s.masterExpirationDate + 'T00:00:00') < getNowInFortaleza());
@@ -686,13 +810,13 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                                         <AlertCircle size={16} /> Atenção Necessária
                                     </h4>
                                     <div className="grid gap-3">
-                                        {myStudents.filter(s => {
+                                        {visibleStudents.filter(s => {
                                             if (s.studentType === 'dependent') return false;
                                             const isMaster = s.planType === 'Card Mensal';
                                             const isExpired = isMaster && (!s.masterExpirationDate || new Date(s.masterExpirationDate + 'T00:00:00') < getNowInFortaleza());
                                             return s.planStatus !== 'active' || isExpired;
                                         }).map(student => (
-                                            <StudentCard key={student.id} student={student} onEdit={openStudentModal} onToggleStatus={toggleStudentStatus} onDelete={handleDeleteStudent} onConvert={handleOpenConvert} canConvert={canConvertToMensal(student)} />
+                                            <StudentCard key={student.id} student={student} onEdit={openStudentModal} onToggleStatus={() => handleDeleteStudent(student.id)} onConvert={handleOpenConvert} onHistory={s => void showStudentLevelHistory(studentProfiles.find(p => p.id === s.studentProfileId), s.name)} canConvert={canConvertToMensal(student)} />
                                         ))}
                                     </div>
                                 </div>
@@ -700,17 +824,13 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
 
                         {/* ACTIVE SECTION */}
                         <div>
-                            <h4 className="text-sm font-bold text-stone-500 uppercase mb-2">Alunos Ativos / Dependentes</h4>
+                            <h4 className="text-sm font-bold text-stone-500 uppercase mb-2">{studentStatusFilter === 'active' ? 'Alunos ativos' : 'Alunos pausados'}</h4>
                             <div className="grid gap-3">
-                                {myStudents.filter(s => {
-                                    if (s.studentType === 'dependent') return true;
-                                    const isMaster = s.planType === 'Card Mensal';
-                                    const isExpired = isMaster && (!s.masterExpirationDate || new Date(s.masterExpirationDate + 'T00:00:00') < getNowInFortaleza());
-                                    return s.planStatus === 'active' && !isExpired;
-                                }).map(student => (
-                                    <StudentCard key={student.id} student={student} onEdit={openStudentModal} onToggleStatus={toggleStudentStatus} onDelete={handleDeleteStudent} onConvert={handleOpenConvert} canConvert={canConvertToMensal(student)} />
+                                {visibleStudents.map(student => (
+                                    <StudentCard key={student.id} student={student} onEdit={openStudentModal} onToggleStatus={() => { const p = studentProfiles.find(profile => profile.id === student.studentProfileId); if (student.studentStatus === 'paused' && p) void reactivateStudent(p); else void handleDeleteStudent(student.id); }} onConvert={handleOpenConvert} onHistory={s => void showStudentLevelHistory(studentProfiles.find(p => p.id === s.studentProfileId), s.name)} canConvert={canConvertToMensal(student)} />
                                 ))}
-                                {myStudents.length === 0 && <p className="text-stone-400 text-sm italic">Nenhum aluno cadastrado.</p>}
+                                {visibleMemberStudents.map(({ profile, person }) => <div key={profile.id} className="bg-white rounded-xl border p-4 flex items-center justify-between gap-3"><div><p className="font-bold text-stone-800">{person.name}</p><p className="text-sm text-stone-500">Sócio</p></div><select aria-label={`Nível de ${person.name}`} value={profile.technicalLevel || ''} onChange={e => e.target.value && void changeStudentLevel(profile, e.target.value as StudentLevel)} className="max-w-44 rounded-lg border px-2 py-2 text-sm"><option value="">Nível</option>{STUDENT_LEVELS.map(level => <option key={level} value={level}>{level}</option>)}</select><button onClick={() => void showStudentLevelHistory(profile, person.name)} className="text-sm font-semibold text-stone-600">Evolução</button><button onClick={() => toggleMemberStudentStatus(profile)} className="text-sm font-semibold text-saibro-700">{profile.studentStatus === 'paused' ? 'Reativar' : 'Pausar'}</button></div>)}
+                                {visibleStudents.length + visibleMemberStudents.length === 0 && <p className="text-stone-400 text-sm italic">Nenhum aluno encontrado.</p>}
                             </div>
                         </div>
                     </div>
@@ -731,6 +851,13 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                     </div>
 
                     <div className="space-y-4">
+                        <div>
+                            <label className="block text-xs font-bold text-stone-500 mb-1">Nível técnico</label>
+                            <select value={studentForm.technicalLevel} onChange={e => setStudentForm({ ...studentForm, technicalLevel: e.target.value as StudentLevel })} className="w-full p-3 bg-stone-50 rounded-xl border border-stone-200">
+                                <option value="">Selecione o nível</option>
+                                {STUDENT_LEVELS.map(level => <option key={level} value={level}>{level}</option>)}
+                            </select>
+                        </div>
                         <div>
                             <label className="block text-xs font-black text-stone-500 uppercase mb-2 tracking-wide">Nome Completo</label>
                             <input
@@ -893,6 +1020,25 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                     </div>
                 </div>
             </StandardModal>
+
+            {showExpiredCardModal && pendingExpiredCardStudents.length > 0 && (
+                <StandardModal isOpen onClose={() => { void Promise.all(pendingExpiredCardStudents.map(student => reviewExpiredCard(student, 'keep'))); setShowExpiredCardModal(false); }} verticalAlign="center">
+                    <div className="bg-white rounded-2xl p-6 w-full max-w-md space-y-4">
+                        <h3 className="text-lg font-bold text-stone-800">Cards mensais vencidos</h3>
+                        <p className="text-sm text-stone-500">O vencimento não encerra o aluno. Escolha como organizar sua lista.</p>
+                        {pendingExpiredCardStudents.map(student => <div key={student.id} className="border rounded-xl p-3 flex flex-col gap-2"><div><p className="font-semibold">{student.name}</p><p className="text-sm text-red-600">Card vencido em {student.masterExpirationDate ? formatDateBr(student.masterExpirationDate) : 'data não informada'}</p></div><div className="flex gap-2"><button onClick={() => void reviewExpiredCard(student, 'keep')} className="flex-1 rounded-lg bg-stone-100 py-2 text-sm">Manter aluno</button><button onClick={() => void reviewExpiredCard(student, 'pause')} className="flex-1 rounded-lg bg-saibro-600 text-white py-2 text-sm">Pausar aluno</button></div></div>)}
+                    </div>
+                </StandardModal>
+            )}
+
+            {levelHistoryTitle && (
+                <StandardModal isOpen onClose={() => setLevelHistoryTitle('')} verticalAlign="center">
+                    <div className="bg-white rounded-2xl p-6 w-full max-w-md space-y-4">
+                        <div className="flex items-center justify-between"><h3 className="text-lg font-bold">Evolução · {levelHistoryTitle}</h3><button onClick={() => setLevelHistoryTitle('')} aria-label="Fechar histórico"><X size={18} /></button></div>
+                        {levelHistory.length === 0 ? <p className="text-sm text-stone-500">Ainda não há alterações de nível registradas.</p> : <ol className="space-y-3">{levelHistory.map(entry => <li key={entry.id} className="border-l-2 border-saibro-300 pl-3"><p className="font-semibold text-stone-800">{entry.previous_level || 'Cadastro'} → {entry.new_level}</p><p className="text-xs text-stone-500">{new Date(entry.changed_at).toLocaleString('pt-BR', { timeZone: 'America/Fortaleza' })}{entry.changed_by ? ` · ${profiles.find(profile => profile.id === entry.changed_by)?.name || 'Professor'}` : ''}</p>{entry.observation && <p className="text-sm text-stone-600">{entry.observation}</p>}</li>)}</ol>}
+                    </div>
+                </StandardModal>
+            )}
 
             {/* --- Convert to Card Mensal Modal --- */}
             {showConvertModal && convertStudent && (

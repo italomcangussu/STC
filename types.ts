@@ -51,6 +51,17 @@ export type PlanType = 'Day Card' | 'Card Mensal' | 'Dependente' | 'Day Card Exp
 export type StudentType = 'regular' | 'dependent';
 export type RelationshipType = 'filho' | 'filha' | 'esposo' | 'esposa' | 'outro';
 export type PaymentStatus = 'active' | 'cancelled';
+export type { StudentLevel, StudentStatus, StudentRelationship } from './lib/students/studentRules';
+
+export interface StudentProfile {
+  id: string;
+  profileId?: string | null;
+  nonSocioStudentId?: string | null;
+  technicalLevel?: import('./lib/students/studentRules').StudentLevel | null;
+  studentStatus: import('./lib/students/studentRules').StudentStatus;
+  professorId?: string | null;
+  cardExpiredReviewedFor?: string | null;
+}
 
 export interface NonSocioStudent {
   id: string;
@@ -61,6 +72,9 @@ export interface NonSocioStudent {
   masterExpirationDate?: string; // YYYY-MM-DD, required if Master Card
   professorId: string | null; // The professor who manages this student (null for dependents)
   isActive?: boolean; // Soft delete flag (default: true)
+  studentProfileId?: string;
+  technicalLevel?: import('./lib/students/studentRules').StudentLevel | null;
+  studentStatus?: import('./lib/students/studentRules').StudentStatus;
   
   // Dependent student fields
   studentType?: StudentType; // 'regular' or 'dependent'
@@ -394,4 +408,3 @@ export interface FormAnswerItem {
   option_ids?: string[];
   text_response?: string;
 }
-

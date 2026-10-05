@@ -50,6 +50,8 @@ function renderModal(courts: AgendaCourt[]) {
                 courts={courts}
                 professors={[]}
                 nonSocioStudents={[]}
+                studentProfiles={[]}
+                onStudentCreated={vi.fn()}
                 existingReservations={[]}
             />
         </ConfirmProvider>
@@ -66,6 +68,8 @@ function renderModal(courts: AgendaCourt[]) {
                     courts={next}
                     professors={[]}
                     nonSocioStudents={[]}
+                    studentProfiles={[]}
+                    onStudentCreated={vi.fn()}
                     existingReservations={[]}
                 />
             </ConfirmProvider>
