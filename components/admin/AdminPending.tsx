@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { UserCheck, Swords, ChevronRight } from 'lucide-react';
+import { UserCheck, Swords, ChevronRight, Calendar, DollarSign, Vote } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { getNowInFortaleza, formatDate } from '../../utils';
 import type { AdminTabId } from './adminNav';
 
 interface Props {
@@ -10,13 +11,16 @@ interface Props {
 interface Counts {
     access: number;
     challenges: number;
+    today: number;
+    payments: number;
+    forms: number;
 }
 
-const countOf = async (table: string, column: string, values: string[]): Promise<number> => {
-    const { count, error } = await supabase
-        .from(table)
-        .select('id', { count: 'exact', head: true })
-        .in(column, values);
+type Filter = (q: any) => any;
+
+const countOf = async (table: string, apply: Filter): Promise<number> => {
+    const { count, error } = await apply(
+        supabase.from(table).select('id', { count: 'exact', head: true }));
     return error ? 0 : count ?? 0;
 };
 
@@ -26,9 +30,13 @@ export const AdminPending: React.FC<Props> = ({ onGo }) => {
     useEffect(() => {
         let alive = true;
         Promise.all([
-            countOf('access_requests', 'status', ['pending']),
-            countOf('challenges', 'status', ['accepted', 'scheduled']),
-        ]).then(([access, challenges]) => alive && setCounts({ access, challenges }));
+            countOf('access_requests', q => q.eq('status', 'pending')),
+            countOf('challenges', q => q.in('status', ['accepted', 'scheduled'])),
+            countOf('reservations', q => q.eq('date', formatDate(getNowInFortaleza())).neq('status', 'cancelled')),
+            countOf('reservations', q => q.eq('payment_status', 'pending').neq('status', 'cancelled')),
+            countOf('club_forms', q => q.eq('is_active', true)),
+        ]).then(([access, challenges, today, payments, forms]) =>
+            alive && setCounts({ access, challenges, today, payments, forms }));
         return () => { alive = false; };
     }, []);
 
@@ -37,6 +45,9 @@ export const AdminPending: React.FC<Props> = ({ onGo }) => {
     const items: { id: AdminTabId; icon: React.ReactNode; label: string; n: number }[] = [
         { id: 'acessos', icon: <UserCheck size={16} />, label: 'cadastros aguardando aprovação', n: counts.access },
         { id: 'desafios', icon: <Swords size={16} />, label: 'desafios aguardando resultado', n: counts.challenges },
+        { id: 'financeiro', icon: <DollarSign size={16} />, label: 'reservas com pagamento pendente', n: counts.payments },
+        { id: 'reservas', icon: <Calendar size={16} />, label: 'reservas hoje', n: counts.today },
+        { id: 'formularios', icon: <Vote size={16} />, label: 'formulários abertos', n: counts.forms },
     ];
     const active = items.filter(i => i.n > 0);
 
@@ -45,7 +56,7 @@ export const AdminPending: React.FC<Props> = ({ onGo }) => {
             {active.length === 0 ? (
                 <p className="text-sm text-stone-500 bg-stone-50 rounded-2xl px-4 py-3">Tudo em dia: nenhuma pendência.</p>
             ) : (
-                <div className="flex flex-col gap-2 sm:flex-row">
+                <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                     {active.map(i => (
                         <button
                             key={i.id}
