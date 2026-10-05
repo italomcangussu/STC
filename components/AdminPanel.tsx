@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import {
-    Calendar, Trophy, Swords, DollarSign, Users,
+import { Trophy, Swords,
     Search, XCircle,
-    ChevronRight, Trash2, Edit, Plus, AlertCircle, Loader2,
-    LayoutDashboard, Megaphone, Save, PlusSquare, Zap, History, GraduationCap, Settings, Vote
+    ChevronRight, Trash2, Edit, Plus, AlertCircle, Loader2, Save, Zap, History
 } from 'lucide-react';
 import { Dashboard } from './Dashboard';
+import { AdminPending } from './admin/AdminPending';
+import { ADMIN_GROUPS, AdminTabId, groupOf, loadLastTab, saveLastTab, searchSections } from './admin/adminNav';
 import { Reservation, User, Challenge, AccessRequest } from '../types';
 import { formatDateBr } from '../utils';
 import { supabase } from '../lib/supabase';
@@ -223,30 +223,6 @@ interface _ScoreModalProps {
     onSave: (scores: { a: number, b: number }[]) => Promise<void>;
 }
 
-
-interface TabItem {
-    id: string;
-    label: string;
-    icon: React.ReactElement<{ size?: number }>;
-}
-
-// Tab configuration
-const TABS: TabItem[] = [
-    { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={18} /> },
-    { id: 'formularios', label: 'Formulários', icon: <Vote size={18} /> },
-    { id: 'lancamentos', label: 'Lançamentos', icon: <PlusSquare size={18} /> },
-    { id: 'superset', label: 'SuperSet', icon: <Trophy size={18} /> },
-    { id: 'torneios', label: 'Torneios', icon: <Trophy size={18} /> },
-    { id: 'reservas', label: 'Reservas', icon: <Calendar size={18} /> },
-    { id: 'desafios', label: 'Desafios', icon: <Swords size={18} /> },
-    { id: 'financeiro', label: 'Financeiro', icon: <DollarSign size={18} /> },
-    { id: 'acessos', label: 'Acessos', icon: <Users size={18} /> },
-    { id: 'socios', label: 'Sócios', icon: <Users size={18} /> },
-    { id: 'alunos', label: 'Alunos', icon: <Users size={18} /> },
-    { id: 'professores', label: 'Professores', icon: <GraduationCap size={18} /> },
-    { id: 'regras', label: 'Regras', icon: <Settings size={18} /> },
-    { id: 'avisos', label: 'Avisos', icon: <Megaphone size={18} /> },
-];
 
 interface Court {
     id: string;
@@ -1659,11 +1635,20 @@ const LancamentosTab: React.FC = () => {
 // --- Main Admin Panel Component ---
 
 export const AdminPanel: React.FC = () => {
-    const [activeTab, setActiveTab] = useState('dashboard');
+    const [activeTab, setActiveTab] = useState<AdminTabId>(loadLastTab);
+    const [query, setQuery] = useState('');
+    const results = searchSections(query);
+    const group = groupOf(activeTab);
+
+    const go = (id: AdminTabId) => {
+        setActiveTab(id);
+        saveLastTab(id);
+        setQuery('');
+    };
 
     const renderTabContent = () => {
         switch (activeTab) {
-            case 'dashboard': return <Dashboard />;
+            case 'dashboard': return <><AdminPending onGo={go} /><Dashboard /></>;
             case 'formularios': return <AdminForms />;
             case 'lancamentos': return <LancamentosTab />;
             case 'superset': return <SuperSet />;
@@ -1683,39 +1668,71 @@ export const AdminPanel: React.FC = () => {
 
     return (
         <div className="flex flex-col min-h-screen bg-stone-50">
-            {/* Header Moderno */}
             <div className="bg-saibro-600 pt-8 pb-16 px-4 md:px-8 rounded-b-[40px] shadow-2xl relative overflow-hidden shrink-0">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-saibro-500/20 rounded-full -mr-20 -mt-20 blur-3xl animate-pulse"></div>
-                <div className="relative z-10 flex flex-col gap-1 max-w-7xl mx-auto w-full">
-                    <span className="text-saibro-200 text-xs font-bold uppercase tracking-widest">Administração</span>
-                    <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">Centro de Comando</h1>
-                    <p className="text-saibro-100 text-sm opacity-80">Gestão integrada do Reserva SCT</p>
+                <div className="absolute top-0 right-0 w-64 h-64 bg-saibro-500/20 rounded-full -mr-20 -mt-20 blur-3xl"></div>
+                <div className="relative z-10 flex flex-col gap-3 max-w-7xl mx-auto w-full">
+                    <div>
+                        <span className="text-saibro-200 text-xs font-bold uppercase tracking-widest">Administração</span>
+                        <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">Centro de Comando</h1>
+                    </div>
+                    <div className="relative max-w-md">
+                        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+                        <input
+                            value={query}
+                            onChange={e => setQuery(e.target.value)}
+                            placeholder="O que você quer fazer? (ex.: mensalidade, aluno, aprovar)"
+                            aria-label="Buscar seção do painel"
+                            className="w-full rounded-2xl bg-white py-2.5 pl-9 pr-3 text-sm text-stone-700 outline-none focus:ring-2 focus:ring-saibro-300"
+                        />
+                        {query && (
+                            <div className="absolute z-30 mt-1 w-full rounded-2xl bg-white shadow-xl border border-stone-100 overflow-hidden">
+                                {results.length === 0 ? (
+                                    <p className="px-4 py-3 text-sm text-stone-400">Nada encontrado.</p>
+                                ) : results.map(r => (
+                                    <button key={r.id} onClick={() => go(r.id)} className="flex w-full flex-col px-4 py-2.5 text-left hover:bg-stone-50">
+                                        <span className="text-sm font-bold text-stone-700">{r.label}</span>
+                                        <span className="text-xs text-stone-400">{r.hint}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
 
-            {/* Navigation Cards (Overlapping) */}
-            <div className="px-2 md:px-8 -mt-10 relative z-20 max-w-7xl mx-auto w-full">
-                <div className="flex gap-2 overflow-x-auto pb-4 pt-2 scrollbar-hide snap-x">
-                    {TABS.map(tab => (
+            <div className="px-2 md:px-8 -mt-8 relative z-20 max-w-7xl mx-auto w-full">
+                <div className="bg-white rounded-2xl shadow-lg p-2 flex gap-1 overflow-x-auto scrollbar-hide" role="tablist" aria-label="Áreas">
+                    {ADMIN_GROUPS.map(g => (
                         <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id)}
-                            className={`flex flex-col items-center justify-center min-w-[90px] h-[90px] md:min-w-[100px] md:h-[100px] rounded-2xl md:rounded-3xl font-bold transition-all duration-300 shadow-lg snap-start ${activeTab === tab.id
-                                ? 'bg-white text-saibro-600 scale-105 border-b-4 border-saibro-500'
-                                : 'bg-white/95 text-stone-400 backdrop-blur-md hover:bg-white hover:text-stone-600'
-                                }`}
+                            key={g.id}
+                            role="tab"
+                            aria-selected={g.id === group.id}
+                            onClick={() => go(g.sections[0].id)}
+                            className={`px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-colors ${g.id === group.id ? 'bg-saibro-600 text-white' : 'text-stone-500 hover:bg-stone-100'}`}
                         >
-                            <div className={`p-2 rounded-xl mb-1 ${activeTab === tab.id ? 'bg-saibro-50 text-saibro-600' : 'bg-stone-50'}`}>
-                                {React.cloneElement<{ size?: number }>(tab.icon, { size: 20 })}
-                            </div>
-                            <span className="text-[9px] uppercase tracking-tighter">{tab.label}</span>
+                            {g.label}
                         </button>
                     ))}
                 </div>
+                {group.sections.length > 1 && (
+                    <div className="flex gap-2 overflow-x-auto pt-3 scrollbar-hide" role="tablist" aria-label={group.label}>
+                        {group.sections.map(s => (
+                            <button
+                                key={s.id}
+                                role="tab"
+                                aria-selected={s.id === activeTab}
+                                onClick={() => go(s.id)}
+                                title={s.hint}
+                                className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap border transition-colors ${s.id === activeTab ? 'bg-saibro-50 text-saibro-700 border-saibro-300' : 'bg-white text-stone-500 border-stone-200 hover:border-stone-300'}`}
+                            >
+                                {s.label}
+                            </button>
+                        ))}
+                    </div>
+                )}
             </div>
 
-            {/* Main Content Area */}
-            <div className="flex-1 px-2 md:px-8 mt-2 pb-8 animate-in fade-in slide-in-from-bottom-6 duration-500 max-w-7xl mx-auto w-full">
+            <div className="flex-1 px-2 md:px-8 mt-3 pb-8 max-w-7xl mx-auto w-full">
                 <div className="bg-white rounded-[24px] md:rounded-[32px] shadow-sm border border-stone-100 min-h-[500px] p-4 md:p-6 overflow-x-hidden">
                     {renderTabContent()}
                 </div>
