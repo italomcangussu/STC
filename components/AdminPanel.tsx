@@ -837,20 +837,28 @@ const AnunciosTab: React.FC = () => {
             expires_at: expiresAt ? new Date(expiresAt + 'T23:59:59').toISOString() : null
         };
 
-        if (editingAnn) {
-            await supabase.from('announcements').update(payload).eq('id', editingAnn.id);
-        } else {
-            await supabase.from('announcements').insert(payload);
-        }
+        const { error } = editingAnn
+            ? await supabase.from('announcements').update(payload).eq('id', editingAnn.id)
+            : await supabase.from('announcements').insert(payload);
 
         setSaving(false);
+        if (error) {
+            notify.error('Não foi possível salvar o aviso.');
+            return;
+        }
+        notify.success(editingAnn ? 'Aviso atualizado.' : 'Aviso publicado.');
         setShowModal(false);
         fetchAnnouncements();
     };
 
     const toggleActive = async (id: string, current: boolean) => {
-        await supabase.from('announcements').update({ is_active: !current }).eq('id', id);
+        const { error } = await supabase.from('announcements').update({ is_active: !current }).eq('id', id);
+        if (error) {
+            notify.error('Não foi possível alterar o aviso.');
+            return;
+        }
         setAnnouncements(prev => prev.map(a => a.id === id ? { ...a, isActive: !current } : a));
+        notify.success(current ? 'Aviso desativado.' : 'Aviso ativado.');
     };
 
     const handleDelete = async (id: string) => {
@@ -859,8 +867,13 @@ const AnunciosTab: React.FC = () => {
             description: 'Ele some do mural e não pode ser recuperado.',
             confirmLabel: 'Excluir aviso',
         })) return;
-        await supabase.from('announcements').delete().eq('id', id);
+        const { error } = await supabase.from('announcements').delete().eq('id', id);
+        if (error) {
+            notify.error('Não foi possível excluir o aviso.');
+            return;
+        }
         setAnnouncements(prev => prev.filter(a => a.id !== id));
+        notify.success('Aviso excluído.');
     };
 
     if (loading) {
@@ -883,13 +896,16 @@ const AnunciosTab: React.FC = () => {
                 <div className="text-center py-8 text-stone-400">Nenhum aviso cadastrado</div>
             ) : (
                 <div className="space-y-3">
-                    {announcements.map(ann => (
-                        <div key={ann.id} className={`p-4 rounded-xl border ${ann.isActive ? 'bg-white border-stone-200' : 'bg-stone-50 border-stone-100 opacity-60'}`}>
+                    {announcements.map(ann => {
+                        const expired = !!ann.expiresAt && new Date(ann.expiresAt).getTime() < Date.now();
+                        return (
+                        <div key={ann.id} className={`p-4 rounded-xl border ${ann.isActive && !expired ? 'bg-white border-stone-200' : 'bg-stone-50 border-stone-100 opacity-60'}`}>
                             <div className="flex justify-between items-start">
                                 <div className="flex-1">
                                     <h3 className="font-bold text-stone-800">{ann.title}</h3>
                                     <p className="text-sm text-stone-500 mt-1 line-clamp-2">{ann.message}</p>
                                     <div className="flex gap-2 mt-2 text-[10px] text-stone-400">
+                                        {expired && <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded">Expirado — não aparece mais</span>}
                                         {ann.showOnce && <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded">Única vez</span>}
                                         {ann.expiresAt && <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded">Expira: {new Date(ann.expiresAt).toLocaleDateString('pt-BR', { timeZone: 'America/Fortaleza' })}</span>}
                                     </div>
@@ -897,20 +913,23 @@ const AnunciosTab: React.FC = () => {
                                 <div className="flex items-center gap-2">
                                     <button
                                         onClick={() => toggleActive(ann.id, ann.isActive)}
+                                        aria-pressed={ann.isActive}
+                                        title={ann.isActive ? 'Clique para desativar' : 'Clique para ativar'}
                                         className={`px-3 py-1 rounded-full text-xs font-bold ${ann.isActive ? 'bg-green-100 text-green-700' : 'bg-stone-200 text-stone-500'}`}
                                     >
                                         {ann.isActive ? 'Ativo' : 'Inativo'}
                                     </button>
-                                    <button onClick={() => openEditModal(ann)} className="p-2 hover:bg-stone-100 rounded-lg">
+                                    <button onClick={() => openEditModal(ann)} aria-label="Editar aviso" className="p-2 hover:bg-stone-100 rounded-lg">
                                         <Edit size={16} className="text-stone-500" />
                                     </button>
-                                    <button onClick={() => handleDelete(ann.id)} className="p-2 hover:bg-red-50 rounded-lg">
+                                    <button onClick={() => handleDelete(ann.id)} aria-label="Excluir aviso" className="p-2 hover:bg-red-50 rounded-lg">
                                         <Trash2 size={16} className="text-red-500" />
                                     </button>
                                 </div>
                             </div>
                         </div>
-                    ))}
+                        );
+                    })}
                 </div>
             )}
 
@@ -934,6 +953,9 @@ const AnunciosTab: React.FC = () => {
                         rows={4}
                         className="w-full px-4 py-3 border border-stone-200 rounded-xl resize-none"
                     />
+                    {imageUrl.trim() && (
+                        <img src={imageUrl.trim()} alt="Pré-visualização" className="max-h-32 rounded-xl object-cover" onError={e => { e.currentTarget.style.display = 'none'; }} />
+                    )}
 
                     <input
                         type="text"
