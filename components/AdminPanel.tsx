@@ -431,6 +431,8 @@ const DesafiosTab: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null); // For scoring
     const [showNewChallengeModal, setShowNewChallengeModal] = useState(false);
+    const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'active' | 'finished'>('pending');
+    const [query, setQuery] = useState('');
     const [courts, setCourts] = useState<Court[]>([]);
 
     useEffect(() => {
@@ -488,10 +490,15 @@ const DesafiosTab: React.FC = () => {
             confirmLabel: 'Cancelar desafio',
             cancelLabel: 'Manter',
         })) return;
-        await supabase.from('challenges').update({ status: 'cancelled' }).eq('id', id);
+        const { error } = await supabase.from('challenges').update({ status: 'cancelled' }).eq('id', id);
+        if (error) {
+            notify.error('Não foi possível cancelar o desafio.');
+            return;
+        }
         setChallenges(challenges.map(c =>
             c.id === id ? { ...c, status: 'cancelled' } : c
         ));
+        notify.success('Desafio cancelado.');
     };
 
     const _handleSaveScore = async (scores: { a: number, b: number }[]) => {
@@ -624,6 +631,23 @@ const DesafiosTab: React.FC = () => {
         }, ...challenges]);
     };
 
+    const bucketOf = (status: string) =>
+        status === 'proposed' ? 'pending'
+            : status === 'accepted' || status === 'scheduled' ? 'active'
+                : status === 'finished' ? 'finished' : 'other';
+    const counts = {
+        pending: challenges.filter(c => bucketOf(c.status) === 'pending').length,
+        active: challenges.filter(c => bucketOf(c.status) === 'active').length,
+        finished: challenges.filter(c => bucketOf(c.status) === 'finished').length,
+    };
+    const q = query.trim().toLowerCase();
+    const visibleChallenges = challenges.filter(c => {
+        if (statusFilter !== 'all' && bucketOf(c.status) !== statusFilter) return false;
+        if (!q) return true;
+        const names = [c.challengerId, c.challengedId].map(id => profiles.find(u => u.id === id)?.name ?? '').join(' ');
+        return names.toLowerCase().includes(q);
+    });
+
     if (loading) {
         return <div className="flex justify-center py-8"><Loader2 className="animate-spin text-saibro-500" size={32} /></div>;
     }
@@ -631,18 +655,32 @@ const DesafiosTab: React.FC = () => {
     return (
         <div className="space-y-4">
             <div className="grid grid-cols-3 gap-3 text-center">
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-stone-100">
-                    <p className="text-2xl font-bold text-blue-600">{challenges.filter(c => c.status === 'proposed').length}</p>
-                    <p className="text-xs text-stone-500">Pendentes</p>
-                </div>
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-stone-100">
-                    <p className="text-2xl font-bold text-green-600">{challenges.filter(c => c.status === 'accepted' || c.status === 'scheduled').length}</p>
-                    <p className="text-xs text-stone-500">Ativos</p>
-                </div>
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-stone-100">
-                    <p className="text-2xl font-bold text-stone-600">{challenges.filter(c => c.status === 'finished').length}</p>
-                    <p className="text-xs text-stone-500">Finalizados</p>
-                </div>
+                {([
+                    { id: 'pending', label: 'Pendentes', n: counts.pending, color: 'text-blue-600' },
+                    { id: 'active', label: 'Ativos', n: counts.active, color: 'text-green-600' },
+                    { id: 'finished', label: 'Finalizados', n: counts.finished, color: 'text-stone-600' },
+                ] as const).map(c => (
+                    <button
+                        key={c.id}
+                        onClick={() => setStatusFilter(statusFilter === c.id ? 'all' : c.id)}
+                        aria-pressed={statusFilter === c.id}
+                        className={`bg-white rounded-xl p-4 shadow-sm border transition-colors ${statusFilter === c.id ? 'border-saibro-400 ring-2 ring-saibro-100' : 'border-stone-100 hover:border-stone-200'}`}
+                    >
+                        <p className={`text-2xl font-bold ${c.color}`}>{c.n}</p>
+                        <p className="text-xs text-stone-500">{c.label}</p>
+                    </button>
+                ))}
+            </div>
+
+            <div className="relative">
+                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+                <input
+                    value={query}
+                    onChange={e => setQuery(e.target.value)}
+                    placeholder="Buscar por atleta"
+                    aria-label="Buscar desafios"
+                    className="w-full rounded-xl border border-stone-200 py-2 pl-9 pr-3 text-sm outline-none focus:border-saibro-400"
+                />
             </div>
 
             <div className="flex justify-end">
@@ -655,7 +693,10 @@ const DesafiosTab: React.FC = () => {
             </div>
 
             <div className="space-y-3">
-                {challenges.map(challenge => {
+                {visibleChallenges.length === 0 && (
+                    <p className="text-sm text-stone-400 text-center py-8">Nenhum desafio neste filtro.</p>
+                )}
+                {visibleChallenges.map(challenge => {
                     const challenger = profiles.find(u => u.id === challenge.challengerId);
                     const challenged = profiles.find(u => u.id === challenge.challengedId);
                     const statusInfo = getStatusInfo(challenge.status);
@@ -685,6 +726,8 @@ const DesafiosTab: React.FC = () => {
                                 {challenge.status !== 'finished' && challenge.status !== 'cancelled' && (
                                     <button
                                         onClick={() => handleCancel(challenge.id)}
+                                        aria-label="Cancelar desafio"
+                                        title="Cancelar desafio"
                                         className="p-2 text-stone-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                                     >
                                         <XCircle size={18} />
