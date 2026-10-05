@@ -684,7 +684,9 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                             <h2 className="text-xl font-bold">{professorRecord.name}</h2>
                             <span className="bg-white/20 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide">Professor</span>
                         </div>
-                        <p className="text-saibro-100 text-sm mt-1">{professorRecord.bioÛ[h‘éì¶»§q«^t   </div>
+                        <p className="text-saibro-100 text-sm mt-1">{professorRecord.bio || 'Instrutor'}</p>
+                    </div>
+                </div>
             </div>
 
             {/* --- TABS --- */}
