@@ -1392,43 +1392,6 @@ const AcessosTab: React.FC = () => {
 
     return (
         <div className="space-y-8">
-            <form onSubmit={handleCreateAthlete} className="bg-saibro-50 border border-saibro-100 rounded-2xl p-5 space-y-4">
-                <h3 className="font-bold text-saibro-800">Novo Atleta (Criação Direta)</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <input
-                        type="text"
-                        value={name}
-                        onChange={e => setName(e.target.value)}
-                        placeholder="Nome *"
-                        className="w-full px-3 py-2.5 bg-white border border-stone-200 rounded-xl text-sm"
-                        required
-                    />
-                    <input
-                        type="tel"
-                        value={phone}
-                        onChange={e => setPhone(e.target.value)}
-                        placeholder="Telefone *"
-                        className="w-full px-3 py-2.5 bg-white border border-stone-200 rounded-xl text-sm"
-                        required
-                    />
-                    <input
-                        type="email"
-                        value={email}
-                        onChange={e => setEmail(e.target.value)}
-                        placeholder="Email (opcional)"
-                        className="w-full px-3 py-2.5 bg-white border border-stone-200 rounded-xl text-sm"
-                    />
-                </div>
-                <button
-                    type="submit"
-                    disabled={saving}
-                    className="px-4 py-2 bg-saibro-600 text-white text-sm font-bold rounded-xl hover:bg-saibro-700 disabled:opacity-60 flex items-center gap-2"
-                >
-                    {saving ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
-                    Criar atleta
-                </button>
-            </form>
-
             <div className="space-y-4">
                 <div className="flex items-center justify-between gap-3">
                     <h3 className="font-bold text-stone-800">Solicitações Pendentes ({filteredPending.length})</h3>
@@ -1480,8 +1443,9 @@ const AcessosTab: React.FC = () => {
                 </div>
             </div>
 
-            <div className="space-y-3">
-                <h3 className="font-bold text-stone-800">Decisões Recentes</h3>
+            <details className="group">
+                <summary className="cursor-pointer font-bold text-stone-800">Decisões recentes ({recentDecisions.length})</summary>
+                <div className="mt-3">
                 <div className="space-y-2">
                     {recentDecisions.map(req => (
                         <div key={req.id} className="bg-stone-50 border border-stone-100 rounded-xl p-3">
@@ -1503,14 +1467,58 @@ const AcessosTab: React.FC = () => {
                         <p className="text-sm text-stone-500 italic">Sem decisões recentes.</p>
                     )}
                 </div>
-            </div>
-
+                </div>
+            </details>
+            <details className="group bg-saibro-50 border border-saibro-100 rounded-2xl">
+                <summary className="cursor-pointer list-none px-5 py-4 font-bold text-saibro-800 flex items-center gap-2">
+                    <Plus size={16} /> Cadastrar atleta direto (sem solicitação)
+                </summary>
+                <div className="px-5 pb-5">
+            <form onSubmit={handleCreateAthlete} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <input
+                        type="text"
+                        value={name}
+                        onChange={e => setName(e.target.value)}
+                        placeholder="Nome *"
+                        className="w-full px-3 py-2.5 bg-white border border-stone-200 rounded-xl text-sm"
+                        required
+                    />
+                    <input
+                        type="tel"
+                        value={phone}
+                        onChange={e => setPhone(e.target.value)}
+                        placeholder="Telefone *"
+                        className="w-full px-3 py-2.5 bg-white border border-stone-200 rounded-xl text-sm"
+                        required
+                    />
+                    <input
+                        type="email"
+                        value={email}
+                        onChange={e => setEmail(e.target.value)}
+                        placeholder="Email (opcional)"
+                        className="w-full px-3 py-2.5 bg-white border border-stone-200 rounded-xl text-sm"
+                    />
+                </div>
+                <button
+                    type="submit"
+                    disabled={saving}
+                    className="px-4 py-2 bg-saibro-600 text-white text-sm font-bold rounded-xl hover:bg-saibro-700 disabled:opacity-60 flex items-center gap-2"
+                >
+                    {saving ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
+                    Criar atleta
+                </button>
+            </form>
+                </div>
+            </details>
+            <details className="group">
+                <summary className="cursor-pointer font-bold text-stone-800 flex items-center gap-2">
+                    <History size={18} className="text-stone-400" /> Logs de entrada e alterações
+                </summary>
+                <div className="mt-3">
             <div className="space-y-4">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                     <div>
-                        <h3 className="font-bold text-stone-800 flex items-center gap-2">
-                            <History size={18} className="text-stone-400" /> Logs de Entrada e Alterações
-                        </h3>
                         <p className="text-xs text-stone-500">Últimos registros de login e mudanças feitas no sistema.</p>
                     </div>
                     <select
@@ -1559,6 +1567,8 @@ const AcessosTab: React.FC = () => {
                     </div>
                 )}
             </div>
+                </div>
+            </details>
         </div>
     );
 };
