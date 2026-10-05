@@ -1728,6 +1728,34 @@ const LancamentosTab: React.FC = () => {
                 </div>
             </div>
 
+            <div className="space-y-4">
+                <h3 className="text-lg font-bold text-stone-800 flex items-center gap-2">
+                    <History size={20} className="text-stone-400" /> Auditoria de Pontos
+                </h3>
+                <div className="space-y-2">
+                    {auditLogs.map(log => (
+                        <div key={log.id} className="bg-stone-50 p-4 rounded-xl flex justify-between items-center border border-stone-100">
+                            <div>
+                                <p className="font-bold text-stone-800">{log.profiles?.name}</p>
+                                <p className="text-xs text-stone-500">{log.reason}</p>
+                                {log.created_at && (
+                                    <p className="text-[11px] text-stone-400">
+                                        {new Date(log.created_at).toLocaleString('pt-BR', { timeZone: 'America/Fortaleza' })}
+                                    </p>
+                                )}
+                            </div>
+                            <div className={`font-black text-lg ${log.points > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                {log.points > 0 ? '+' : ''}{log.points}
+                            </div>
+                        </div>
+                    ))}
+                    {auditLogs.length === 0 && <p className="text-center py-8 text-stone-400 italic">Nenhum histórico encontrado.</p>}
+                </div>
+            </div>
+
+            <details className="group">
+                <summary className="cursor-pointer text-sm font-bold text-red-700">Zona de risco: reset do ranking</summary>
+                <div className="mt-3">
             <div className="bg-red-50 p-6 rounded-[24px] border border-red-200 space-y-4">
                 <div>
                     <h3 className="text-xl font-black text-red-800 mb-2">Reset Completo do Ranking</h3>
@@ -1768,26 +1796,8 @@ const LancamentosTab: React.FC = () => {
                     ))}
                 </div>
             </div>
-
-            <div className="space-y-4">
-                <h3 className="text-lg font-bold text-stone-800 flex items-center gap-2">
-                    <History size={20} className="text-stone-400" /> Auditoria de Pontos
-                </h3>
-                <div className="space-y-2">
-                    {auditLogs.map(log => (
-                        <div key={log.id} className="bg-stone-50 p-4 rounded-xl flex justify-between items-center border border-stone-100">
-                            <div>
-                                <p className="font-bold text-stone-800">{log.profiles?.name}</p>
-                                <p className="text-xs text-stone-500">{log.reason}</p>
-                            </div>
-                            <div className={`font-black text-lg ${log.points > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                {log.points > 0 ? '+' : ''}{log.points}
-                            </div>
-                        </div>
-                    ))}
-                    {auditLogs.length === 0 && <p className="text-center py-8 text-stone-400 italic">Nenhum histórico encontrado.</p>}
                 </div>
-            </div>
+            </details>
 
             {/* Match Creator Modal */}
             <AdminMatchCreator
