@@ -26,6 +26,7 @@ import { AdminRules } from './AdminRules';
 import { AdminStudents } from './AdminStudents';
 import { ChampionshipAdmin } from './ChampionshipAdmin';
 import { AdminForms } from './AdminForms';
+import { filterReservations, type ReservationPeriod, type ReservationRow } from '../lib/adminReservations';
 import { clearRankingCache } from '../lib/rankingService';
 import { buildAdminAuditQueryParams, describeAuditLog, type AdminAuditLog } from '../lib/adminAudit';
 
@@ -232,20 +233,33 @@ interface Court {
 }
 
 // --- Sub-component: Reservas Tab ---
+const PERIODS: { id: ReservationPeriod; label: string }[] = [
+    { id: 'upcoming', label: 'Próximas' },
+    { id: 'today', label: 'Hoje' },
+    { id: 'past', label: 'Passadas' },
+    { id: 'all', label: 'Todas' },
+];
+
 const ReservasTab: React.FC = () => {
+    const confirm = useConfirm();
     const [reservations, setReservations] = useState<Reservation[]>([]);
     const [courts, setCourts] = useState<Court[]>([]);
     const [profiles, setProfiles] = useState<User[]>([]);
-    const [filter, setFilter] = useState<string>('all');
+    const [type, setType] = useState('all');
+    const [period, setPeriod] = useState<ReservationPeriod>('upcoming');
+    const [query, setQuery] = useState('');
+    const [showCancelled, setShowCancelled] = useState(false);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
+            const since = new Date(getNowInFortaleza());
+            since.setDate(since.getDate() - 90);
             const [resData, courtsData, profilesData] = await Promise.all([
-                supabase.from('reservations').select('*').order('date', { ascending: false }),
+                supabase.from('reservations').select('*').gte('date', formatDate(since)).order('date', { ascending: false }),
                 supabase.from('courts').select('id, name, type'),
-                supabase.from('profiles').select('id, name, avatar_url').eq('is_active', true)
+                supabase.from('profiles').select('id, name, avatar_url')
             ]);
 
             setReservations((resData.data || []).map(r => ({
@@ -275,43 +289,89 @@ const ReservasTab: React.FC = () => {
         fetchData();
     }, []);
 
-    const filteredReservations = reservations.filter(r =>
-        filter === 'all' || r.type === filter
-    ).sort((a, b) => new Date(b.date + 'T12:00:00').getTime() - new Date(a.date + 'T12:00:00').getTime());
+    const nameOf = (id: string) => profiles.find(u => u.id === id)?.name;
+    const rowById = new Map(reservations.map(r => [r.id, r]));
+    const rows: ReservationRow[] = reservations.map(r => ({
+        id: r.id,
+        type: r.type,
+        date: r.date,
+        startTime: r.startTime,
+        endTime: r.endTime,
+        status: r.status,
+        courtName: courts.find(c => c.id === r.courtId)?.name ?? '',
+        people: [r.creatorId, ...(r.participantIds || [])].map(nameOf).filter(Boolean).join(' '),
+    }));
+    const visible = filterReservations(rows, {
+        period, type, query, showCancelled, today: formatDate(getNowInFortaleza()),
+    });
+    const cancelledCount = reservations.filter(r => r.status === 'cancelled').length;
 
     const handleCancel = async (id: string) => {
-        await supabase.from('reservations').update({ status: 'cancelled' }).eq('id', id);
-        setReservations(reservations.map(r =>
-            r.id === id ? { ...r, status: 'cancelled' } : r
-        ));
+        const res = rowById.get(id);
+        if (!res) return;
+        if (!await confirm({
+            title: 'Cancelar esta reserva?',
+            description: `${formatDateBr(res.date)} • ${res.startTime}-${res.endTime}. O horário volta a ficar livre na agenda.`,
+            confirmLabel: 'Cancelar reserva',
+            cancelLabel: 'Manter',
+        })) return;
+        const { error } = await supabase.from('reservations').update({ status: 'cancelled' }).eq('id', id);
+        if (error) {
+            notify.error('Não foi possível cancelar a reserva.');
+            return;
+        }
+        setReservations(prev => prev.map(r => r.id === id ? { ...r, status: 'cancelled' } : r));
+        notify.success('Reserva cancelada.');
     };
 
     if (loading) {
         return <div className="flex justify-center py-8"><Loader2 className="animate-spin text-saibro-500" size={32} /></div>;
     }
 
+    const chip = (active: boolean) => `px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${active ? 'bg-saibro-500 text-white' : 'bg-stone-50 text-stone-600 hover:bg-saibro-50'}`;
+
     return (
         <div className="space-y-4">
+            <div className="relative">
+                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+                <input
+                    value={query}
+                    onChange={e => setQuery(e.target.value)}
+                    placeholder="Buscar por atleta ou quadra"
+                    aria-label="Buscar reservas"
+                    className="w-full rounded-xl border border-stone-200 py-2 pl-9 pr-3 text-sm outline-none focus:border-saibro-400"
+                />
+            </div>
             <div className="flex gap-2 flex-wrap">
-                {['all', 'Play', 'Aula', 'Campeonato', 'Desafio'].map(f => (
-                    <button
-                        key={f}
-                        onClick={() => setFilter(f)}
-                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${filter === f
-                            ? 'bg-saibro-500 text-white'
-                            : 'bg-white text-stone-600 hover:bg-saibro-50'
-                            }`}
-                    >
-                        {f === 'all' ? 'Todas' : f}
-                    </button>
+                {PERIODS.map(p => (
+                    <button key={p.id} onClick={() => setPeriod(p.id)} className={chip(period === p.id)}>{p.label}</button>
                 ))}
             </div>
+            <div className="flex gap-2 flex-wrap items-center">
+                {['all', 'Play', 'Aula', 'Campeonato', 'Desafio'].map(f => (
+                    <button key={f} onClick={() => setType(f)} className={`${chip(type === f)} !py-1 !text-xs`}>
+                        {f === 'all' ? 'Todos os tipos' : f}
+                    </button>
+                ))}
+                {cancelledCount > 0 && (
+                    <label className="ml-auto flex items-center gap-2 text-xs text-stone-500 cursor-pointer">
+                        <input type="checkbox" checked={showCancelled} onChange={e => setShowCancelled(e.target.checked)} />
+                        Mostrar canceladas ({cancelledCount})
+                    </label>
+                )}
+            </div>
+            <p className="text-xs text-stone-400">{plural(visible.length, 'reserva')} · últimos 90 dias em diante</p>
 
             <div className="space-y-3">
-                {filteredReservations.map(res => {
+                {visible.length === 0 && (
+                    <p className="text-sm text-stone-400 text-center py-8">Nenhuma reserva neste filtro.</p>
+                )}
+                {visible.map(row => {
+                    const res = rowById.get(row.id)!;
                     const court = courts.find(c => c.id === res.courtId);
                     const creator = profiles.find(u => u.id === res.creatorId);
                     const isCancelled = res.status === 'cancelled';
+                    const others = (res.participantIds || []).filter(id => id !== res.creatorId).map(nameOf).filter(Boolean);
 
                     return (
                         <div
@@ -338,12 +398,15 @@ const ReservasTab: React.FC = () => {
                                         {formatDateBr(res.date)} • {res.startTime} - {res.endTime}
                                     </p>
                                     <p className="text-sm text-stone-500">
-                                        {court?.name} ({court?.type}) • Criado por {creator?.name}
+                                        {court?.name} ({court?.type}) • {creator?.name ?? 'Criador desconhecido'}
+                                        {others.length > 0 && ` com ${others.join(', ')}`}
                                     </p>
                                 </div>
                                 {!isCancelled && (
                                     <button
                                         onClick={() => handleCancel(res.id)}
+                                        aria-label="Cancelar reserva"
+                                        title="Cancelar reserva"
                                         className="p-2 text-stone-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                                     >
                                         <XCircle size={18} />
