@@ -1,0 +1,114 @@
+{
+  "versao": 2,
+  "geradoEm": "2026-10-05T19:23:19.228Z",
+  "commit": "6f578caf",
+  "pastas": [
+    "__tests__",
+    "components",
+    "components/TenisProPlayer",
+    "components/admin",
+    "components/creator",
+    "components/ui",
+    "contexts",
+    "design",
+    "design/tabela-confrontos",
+    "docs",
+    "docs/superpowers",
+    "hooks",
+    "lib",
+    "lib/championship",
+    "lib/students",
+    "migrations",
+    "public",
+    "scripts",
+    "supabase",
+    "supabase/functions",
+    "supabase/migrations",
+    "tasks"
+  ],
+  "agentmap": {
+    "arquivos": 205,
+    "sha": "6f578ca",
+    "hubs": [
+      "types.ts",
+      "lib/supabase.ts",
+      "lib/logger.ts",
+      "utils.ts",
+      "components/TenisProPlayer/constants.ts",
+      "lib/championship/formatConfig.ts",
+      "lib/championship/bracket.ts",
+      "lib/notifications.ts",
+      "lib/exportTools.ts",
+      "lib/championship/rounds.ts"
+    ]
+  },
+  "skillsPorPerfil": {
+    "nuvem": [
+      {
+        "name": "brand-guidelines",
+        "origem": "global",
+        "hash": "f7f3c8d35f22"
+      },
+      {
+        "name": "docs",
+        "origem": "global",
+        "hash": "4ca444740219"
+      },
+      {
+        "name": "docx",
+        "origem": "global",
+        "hash": "2c57cdc0688e"
+      },
+      {
+        "name": "fabuloso",
+        "origem": "global",
+        "hash": "94848fca4244"
+      },
+      {
+        "name": "google-workspace",
+        "origem": "global",
+        "hash": "822589fa268c"
+      },
+      {
+        "name": "import-memory",
+        "origem": "global",
+        "hash": "b158007fcb5a"
+      },
+      {
+        "name": "morning",
+        "origem": "global",
+        "hash": "b8bbaa39e8d8"
+      },
+      {
+        "name": "pdf",
+        "origem": "global",
+        "hash": "7489d5b400fe"
+      },
+      {
+        "name": "pptx",
+        "origem": "global",
+        "hash": "ec54f4194f80"
+      },
+      {
+        "name": "skill-creator",
+        "origem": "global",
+        "hash": "6693efb6e390"
+      },
+      {
+        "name": "startup-hook-skill",
+        "origem": "global",
+        "hash": "13f62e839e1b"
+      },
+      {
+        "name": "theme-factory",
+        "origem": "global",
+        "hash": "8e70c603a335"
+      },
+      {
+        "name": "xlsx",
+        "origem": "global",
+        "hash": "54069c5dd7f8"
+      }
+    ]
+  }
+}

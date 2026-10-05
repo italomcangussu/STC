@@ -46,3 +46,5 @@ reports/mutation/
 # .dc.html ao lado com o seed do /design
 design/**/*.html
 !design/**/*.dc.html
+.fabuloso/checkpoint*.md
+.claude/agentmap/
