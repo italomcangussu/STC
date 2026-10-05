@@ -256,15 +256,17 @@ export const AdminProfessors: React.FC = () => {
                                             <p className="font-bold text-stone-800">{stats.active}</p>
                                         </div>
 
-                                        <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <div className="flex gap-2 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100 focus:opacity-100 transition-opacity">
                                             <button
                                                 onClick={() => { setEditingProf(prof); setShowModal(true); }}
+                                                aria-label={`Editar ${prof.name}`}
                                                 className="p-2 text-stone-400 hover:text-saibro-600 hover:bg-white rounded-lg"
                                             >
                                                 <Edit size={18} />
                                             </button>
                                             <button
                                                 onClick={() => handleDeleteProfessor(prof.id)}
+                                                aria-label={`Remover ${prof.name}`}
                                                 className="p-2 text-stone-400 hover:text-red-500 hover:bg-red-50 rounded-lg"
                                             >
                                                 <Trash2 size={18} />

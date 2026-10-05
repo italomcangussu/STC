@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import {
-    Calendar, Trophy, Swords, DollarSign, Users,
+import { Trophy, Swords,
     Search, XCircle,
-    ChevronRight, Trash2, Edit, Plus, AlertCircle, Loader2,
-    LayoutDashboard, Megaphone, Save, PlusSquare, Zap, History, GraduationCap, Settings, Vote
+    ChevronRight, Trash2, Edit, Plus, AlertCircle, Loader2, Save, Zap, History
 } from 'lucide-react';
 import { Dashboard } from './Dashboard';
+import { AdminPending } from './admin/AdminPending';
+import { ADMIN_GROUPS, AdminTabId, groupOf, loadLastTab, saveLastTab, searchSections } from './admin/adminNav';
 import { Reservation, User, Challenge, AccessRequest } from '../types';
 import { formatDateBr } from '../utils';
 import { supabase } from '../lib/supabase';
@@ -26,6 +26,7 @@ import { AdminRules } from './AdminRules';
 import { AdminStudents } from './AdminStudents';
 import { ChampionshipAdmin } from './ChampionshipAdmin';
 import { AdminForms } from './AdminForms';
+import { filterReservations, type ReservationPeriod, type ReservationRow } from '../lib/adminReservations';
 import { clearRankingCache } from '../lib/rankingService';
 import { buildAdminAuditQueryParams, describeAuditLog, type AdminAuditLog } from '../lib/adminAudit';
 
@@ -224,30 +225,6 @@ interface _ScoreModalProps {
 }
 
 
-interface TabItem {
-    id: string;
-    label: string;
-    icon: React.ReactElement<{ size?: number }>;
-}
-
-// Tab configuration
-const TABS: TabItem[] = [
-    { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={18} /> },
-    { id: 'formularios', label: 'Formulários', icon: <Vote size={18} /> },
-    { id: 'lancamentos', label: 'Lançamentos', icon: <PlusSquare size={18} /> },
-    { id: 'superset', label: 'SuperSet', icon: <Trophy size={18} /> },
-    { id: 'torneios', label: 'Torneios', icon: <Trophy size={18} /> },
-    { id: 'reservas', label: 'Reservas', icon: <Calendar size={18} /> },
-    { id: 'desafios', label: 'Desafios', icon: <Swords size={18} /> },
-    { id: 'financeiro', label: 'Financeiro', icon: <DollarSign size={18} /> },
-    { id: 'acessos', label: 'Acessos', icon: <Users size={18} /> },
-    { id: 'socios', label: 'Sócios', icon: <Users size={18} /> },
-    { id: 'alunos', label: 'Alunos', icon: <Users size={18} /> },
-    { id: 'professores', label: 'Professores', icon: <GraduationCap size={18} /> },
-    { id: 'regras', label: 'Regras', icon: <Settings size={18} /> },
-    { id: 'avisos', label: 'Avisos', icon: <Megaphone size={18} /> },
-];
-
 interface Court {
     id: string;
     name: string;
@@ -256,20 +233,33 @@ interface Court {
 }
 
 // --- Sub-component: Reservas Tab ---
+const PERIODS: { id: ReservationPeriod; label: string }[] = [
+    { id: 'upcoming', label: 'Próximas' },
+    { id: 'today', label: 'Hoje' },
+    { id: 'past', label: 'Passadas' },
+    { id: 'all', label: 'Todas' },
+];
+
 const ReservasTab: React.FC = () => {
+    const confirm = useConfirm();
     const [reservations, setReservations] = useState<Reservation[]>([]);
     const [courts, setCourts] = useState<Court[]>([]);
     const [profiles, setProfiles] = useState<User[]>([]);
-    const [filter, setFilter] = useState<string>('all');
+    const [type, setType] = useState('all');
+    const [period, setPeriod] = useState<ReservationPeriod>('upcoming');
+    const [query, setQuery] = useState('');
+    const [showCancelled, setShowCancelled] = useState(false);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
+            const since = new Date(getNowInFortaleza());
+            since.setDate(since.getDate() - 90);
             const [resData, courtsData, profilesData] = await Promise.all([
-                supabase.from('reservations').select('*').order('date', { ascending: false }),
+                supabase.from('reservations').select('*').gte('date', formatDate(since)).order('date', { ascending: false }),
                 supabase.from('courts').select('id, name, type'),
-                supabase.from('profiles').select('id, name, avatar_url').eq('is_active', true)
+                supabase.from('profiles').select('id, name, avatar_url')
             ]);
 
             setReservations((resData.data || []).map(r => ({
@@ -299,43 +289,89 @@ const ReservasTab: React.FC = () => {
         fetchData();
     }, []);
 
-    const filteredReservations = reservations.filter(r =>
-        filter === 'all' || r.type === filter
-    ).sort((a, b) => new Date(b.date + 'T12:00:00').getTime() - new Date(a.date + 'T12:00:00').getTime());
+    const nameOf = (id: string) => profiles.find(u => u.id === id)?.name;
+    const rowById = new Map(reservations.map(r => [r.id, r]));
+    const rows: ReservationRow[] = reservations.map(r => ({
+        id: r.id,
+        type: r.type,
+        date: r.date,
+        startTime: r.startTime,
+        endTime: r.endTime,
+        status: r.status,
+        courtName: courts.find(c => c.id === r.courtId)?.name ?? '',
+        people: [r.creatorId, ...(r.participantIds || [])].map(nameOf).filter(Boolean).join(' '),
+    }));
+    const visible = filterReservations(rows, {
+        period, type, query, showCancelled, today: formatDate(getNowInFortaleza()),
+    });
+    const cancelledCount = reservations.filter(r => r.status === 'cancelled').length;
 
     const handleCancel = async (id: string) => {
-        await supabase.from('reservations').update({ status: 'cancelled' }).eq('id', id);
-        setReservations(reservations.map(r =>
-            r.id === id ? { ...r, status: 'cancelled' } : r
-        ));
+        const res = rowById.get(id);
+        if (!res) return;
+        if (!await confirm({
+            title: 'Cancelar esta reserva?',
+            description: `${formatDateBr(res.date)} • ${res.startTime}-${res.endTime}. O horário volta a ficar livre na agenda.`,
+            confirmLabel: 'Cancelar reserva',
+            cancelLabel: 'Manter',
+        })) return;
+        const { error } = await supabase.from('reservations').update({ status: 'cancelled' }).eq('id', id);
+        if (error) {
+            notify.error('Não foi possível cancelar a reserva.');
+            return;
+        }
+        setReservations(prev => prev.map(r => r.id === id ? { ...r, status: 'cancelled' } : r));
+        notify.success('Reserva cancelada.');
     };
 
     if (loading) {
         return <div className="flex justify-center py-8"><Loader2 className="animate-spin text-saibro-500" size={32} /></div>;
     }
 
+    const chip = (active: boolean) => `px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${active ? 'bg-saibro-500 text-white' : 'bg-stone-50 text-stone-600 hover:bg-saibro-50'}`;
+
     return (
         <div className="space-y-4">
+            <div className="relative">
+                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+                <input
+                    value={query}
+                    onChange={e => setQuery(e.target.value)}
+                    placeholder="Buscar por atleta ou quadra"
+                    aria-label="Buscar reservas"
+                    className="w-full rounded-xl border border-stone-200 py-2 pl-9 pr-3 text-sm outline-none focus:border-saibro-400"
+                />
+            </div>
             <div className="flex gap-2 flex-wrap">
-                {['all', 'Play', 'Aula', 'Campeonato', 'Desafio'].map(f => (
-                    <button
-                        key={f}
-                        onClick={() => setFilter(f)}
-                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${filter === f
-                            ? 'bg-saibro-500 text-white'
-                            : 'bg-white text-stone-600 hover:bg-saibro-50'
-                            }`}
-                    >
-                        {f === 'all' ? 'Todas' : f}
-                    </button>
+                {PERIODS.map(p => (
+                    <button key={p.id} onClick={() => setPeriod(p.id)} className={chip(period === p.id)}>{p.label}</button>
                 ))}
             </div>
+            <div className="flex gap-2 flex-wrap items-center">
+                {['all', 'Play', 'Aula', 'Campeonato', 'Desafio'].map(f => (
+                    <button key={f} onClick={() => setType(f)} className={`${chip(type === f)} !py-1 !text-xs`}>
+                        {f === 'all' ? 'Todos os tipos' : f}
+                    </button>
+                ))}
+                {cancelledCount > 0 && (
+                    <label className="ml-auto flex items-center gap-2 text-xs text-stone-500 cursor-pointer">
+                        <input type="checkbox" checked={showCancelled} onChange={e => setShowCancelled(e.target.checked)} />
+                        Mostrar canceladas ({cancelledCount})
+                    </label>
+                )}
+            </div>
+            <p className="text-xs text-stone-400">{plural(visible.length, 'reserva')} · últimos 90 dias em diante</p>
 
             <div className="space-y-3">
-                {filteredReservations.map(res => {
+                {visible.length === 0 && (
+                    <p className="text-sm text-stone-400 text-center py-8">Nenhuma reserva neste filtro.</p>
+                )}
+                {visible.map(row => {
+                    const res = rowById.get(row.id)!;
                     const court = courts.find(c => c.id === res.courtId);
                     const creator = profiles.find(u => u.id === res.creatorId);
                     const isCancelled = res.status === 'cancelled';
+                    const others = (res.participantIds || []).filter(id => id !== res.creatorId).map(nameOf).filter(Boolean);
 
                     return (
                         <div
@@ -362,12 +398,15 @@ const ReservasTab: React.FC = () => {
                                         {formatDateBr(res.date)} • {res.startTime} - {res.endTime}
                                     </p>
                                     <p className="text-sm text-stone-500">
-                                        {court?.name} ({court?.type}) • Criado por {creator?.name}
+                                        {court?.name} ({court?.type}) • {creator?.name ?? 'Criador desconhecido'}
+                                        {others.length > 0 && ` com ${others.join(', ')}`}
                                     </p>
                                 </div>
                                 {!isCancelled && (
                                     <button
                                         onClick={() => handleCancel(res.id)}
+                                        aria-label="Cancelar reserva"
+                                        title="Cancelar reserva"
                                         className="p-2 text-stone-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                                     >
                                         <XCircle size={18} />
@@ -392,6 +431,8 @@ const DesafiosTab: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null); // For scoring
     const [showNewChallengeModal, setShowNewChallengeModal] = useState(false);
+    const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'active' | 'finished'>('pending');
+    const [query, setQuery] = useState('');
     const [courts, setCourts] = useState<Court[]>([]);
 
     useEffect(() => {
@@ -449,10 +490,15 @@ const DesafiosTab: React.FC = () => {
             confirmLabel: 'Cancelar desafio',
             cancelLabel: 'Manter',
         })) return;
-        await supabase.from('challenges').update({ status: 'cancelled' }).eq('id', id);
+        const { error } = await supabase.from('challenges').update({ status: 'cancelled' }).eq('id', id);
+        if (error) {
+            notify.error('Não foi possível cancelar o desafio.');
+            return;
+        }
         setChallenges(challenges.map(c =>
             c.id === id ? { ...c, status: 'cancelled' } : c
         ));
+        notify.success('Desafio cancelado.');
     };
 
     const _handleSaveScore = async (scores: { a: number, b: number }[]) => {
@@ -585,6 +631,23 @@ const DesafiosTab: React.FC = () => {
         }, ...challenges]);
     };
 
+    const bucketOf = (status: string) =>
+        status === 'proposed' ? 'pending'
+            : status === 'accepted' || status === 'scheduled' ? 'active'
+                : status === 'finished' ? 'finished' : 'other';
+    const counts = {
+        pending: challenges.filter(c => bucketOf(c.status) === 'pending').length,
+        active: challenges.filter(c => bucketOf(c.status) === 'active').length,
+        finished: challenges.filter(c => bucketOf(c.status) === 'finished').length,
+    };
+    const q = query.trim().toLowerCase();
+    const visibleChallenges = challenges.filter(c => {
+        if (statusFilter !== 'all' && bucketOf(c.status) !== statusFilter) return false;
+        if (!q) return true;
+        const names = [c.challengerId, c.challengedId].map(id => profiles.find(u => u.id === id)?.name ?? '').join(' ');
+        return names.toLowerCase().includes(q);
+    });
+
     if (loading) {
         return <div className="flex justify-center py-8"><Loader2 className="animate-spin text-saibro-500" size={32} /></div>;
     }
@@ -592,18 +655,32 @@ const DesafiosTab: React.FC = () => {
     return (
         <div className="space-y-4">
             <div className="grid grid-cols-3 gap-3 text-center">
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-stone-100">
-                    <p className="text-2xl font-bold text-blue-600">{challenges.filter(c => c.status === 'proposed').length}</p>
-                    <p className="text-xs text-stone-500">Pendentes</p>
-                </div>
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-stone-100">
-                    <p className="text-2xl font-bold text-green-600">{challenges.filter(c => c.status === 'accepted' || c.status === 'scheduled').length}</p>
-                    <p className="text-xs text-stone-500">Ativos</p>
-                </div>
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-stone-100">
-                    <p className="text-2xl font-bold text-stone-600">{challenges.filter(c => c.status === 'finished').length}</p>
-                    <p className="text-xs text-stone-500">Finalizados</p>
-                </div>
+                {([
+                    { id: 'pending', label: 'Pendentes', n: counts.pending, color: 'text-blue-600' },
+                    { id: 'active', label: 'Ativos', n: counts.active, color: 'text-green-600' },
+                    { id: 'finished', label: 'Finalizados', n: counts.finished, color: 'text-stone-600' },
+                ] as const).map(c => (
+                    <button
+                        key={c.id}
+                        onClick={() => setStatusFilter(statusFilter === c.id ? 'all' : c.id)}
+                        aria-pressed={statusFilter === c.id}
+                        className={`bg-white rounded-xl p-4 shadow-sm border transition-colors ${statusFilter === c.id ? 'border-saibro-400 ring-2 ring-saibro-100' : 'border-stone-100 hover:border-stone-200'}`}
+                    >
+                        <p className={`text-2xl font-bold ${c.color}`}>{c.n}</p>
+                        <p className="text-xs text-stone-500">{c.label}</p>
+                    </button>
+                ))}
+            </div>
+
+            <div className="relative">
+                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+                <input
+                    value={query}
+                    onChange={e => setQuery(e.target.value)}
+                    placeholder="Buscar por atleta"
+                    aria-label="Buscar desafios"
+                    className="w-full rounded-xl border border-stone-200 py-2 pl-9 pr-3 text-sm outline-none focus:border-saibro-400"
+                />
             </div>
 
             <div className="flex justify-end">
@@ -616,7 +693,10 @@ const DesafiosTab: React.FC = () => {
             </div>
 
             <div className="space-y-3">
-                {challenges.map(challenge => {
+                {visibleChallenges.length === 0 && (
+                    <p className="text-sm text-stone-400 text-center py-8">Nenhum desafio neste filtro.</p>
+                )}
+                {visibleChallenges.map(challenge => {
                     const challenger = profiles.find(u => u.id === challenge.challengerId);
                     const challenged = profiles.find(u => u.id === challenge.challengedId);
                     const statusInfo = getStatusInfo(challenge.status);
@@ -646,6 +726,8 @@ const DesafiosTab: React.FC = () => {
                                 {challenge.status !== 'finished' && challenge.status !== 'cancelled' && (
                                     <button
                                         onClick={() => handleCancel(challenge.id)}
+                                        aria-label="Cancelar desafio"
+                                        title="Cancelar desafio"
                                         className="p-2 text-stone-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                                     >
                                         <XCircle size={18} />
@@ -755,20 +837,28 @@ const AnunciosTab: React.FC = () => {
             expires_at: expiresAt ? new Date(expiresAt + 'T23:59:59').toISOString() : null
         };
 
-        if (editingAnn) {
-            await supabase.from('announcements').update(payload).eq('id', editingAnn.id);
-        } else {
-            await supabase.from('announcements').insert(payload);
-        }
+        const { error } = editingAnn
+            ? await supabase.from('announcements').update(payload).eq('id', editingAnn.id)
+            : await supabase.from('announcements').insert(payload);
 
         setSaving(false);
+        if (error) {
+            notify.error('Não foi possível salvar o aviso.');
+            return;
+        }
+        notify.success(editingAnn ? 'Aviso atualizado.' : 'Aviso publicado.');
         setShowModal(false);
         fetchAnnouncements();
     };
 
     const toggleActive = async (id: string, current: boolean) => {
-        await supabase.from('announcements').update({ is_active: !current }).eq('id', id);
+        const { error } = await supabase.from('announcements').update({ is_active: !current }).eq('id', id);
+        if (error) {
+            notify.error('Não foi possível alterar o aviso.');
+            return;
+        }
         setAnnouncements(prev => prev.map(a => a.id === id ? { ...a, isActive: !current } : a));
+        notify.success(current ? 'Aviso desativado.' : 'Aviso ativado.');
     };
 
     const handleDelete = async (id: string) => {
@@ -777,8 +867,13 @@ const AnunciosTab: React.FC = () => {
             description: 'Ele some do mural e não pode ser recuperado.',
             confirmLabel: 'Excluir aviso',
         })) return;
-        await supabase.from('announcements').delete().eq('id', id);
+        const { error } = await supabase.from('announcements').delete().eq('id', id);
+        if (error) {
+            notify.error('Não foi possível excluir o aviso.');
+            return;
+        }
         setAnnouncements(prev => prev.filter(a => a.id !== id));
+        notify.success('Aviso excluído.');
     };
 
     if (loading) {
@@ -801,13 +896,16 @@ const AnunciosTab: React.FC = () => {
                 <div className="text-center py-8 text-stone-400">Nenhum aviso cadastrado</div>
             ) : (
                 <div className="space-y-3">
-                    {announcements.map(ann => (
-                        <div key={ann.id} className={`p-4 rounded-xl border ${ann.isActive ? 'bg-white border-stone-200' : 'bg-stone-50 border-stone-100 opacity-60'}`}>
+                    {announcements.map(ann => {
+                        const expired = !!ann.expiresAt && new Date(ann.expiresAt).getTime() < Date.now();
+                        return (
+                        <div key={ann.id} className={`p-4 rounded-xl border ${ann.isActive && !expired ? 'bg-white border-stone-200' : 'bg-stone-50 border-stone-100 opacity-60'}`}>
                             <div className="flex justify-between items-start">
                                 <div className="flex-1">
                                     <h3 className="font-bold text-stone-800">{ann.title}</h3>
                                     <p className="text-sm text-stone-500 mt-1 line-clamp-2">{ann.message}</p>
                                     <div className="flex gap-2 mt-2 text-[10px] text-stone-400">
+                                        {expired && <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded">Expirado — não aparece mais</span>}
                                         {ann.showOnce && <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded">Única vez</span>}
                                         {ann.expiresAt && <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded">Expira: {new Date(ann.expiresAt).toLocaleDateString('pt-BR', { timeZone: 'America/Fortaleza' })}</span>}
                                     </div>
@@ -815,20 +913,23 @@ const AnunciosTab: React.FC = () => {
                                 <div className="flex items-center gap-2">
                                     <button
                                         onClick={() => toggleActive(ann.id, ann.isActive)}
+                                        aria-pressed={ann.isActive}
+                                        title={ann.isActive ? 'Clique para desativar' : 'Clique para ativar'}
                                         className={`px-3 py-1 rounded-full text-xs font-bold ${ann.isActive ? 'bg-green-100 text-green-700' : 'bg-stone-200 text-stone-500'}`}
                                     >
                                         {ann.isActive ? 'Ativo' : 'Inativo'}
                                     </button>
-                                    <button onClick={() => openEditModal(ann)} className="p-2 hover:bg-stone-100 rounded-lg">
+                                    <button onClick={() => openEditModal(ann)} aria-label="Editar aviso" className="p-2 hover:bg-stone-100 rounded-lg">
                                         <Edit size={16} className="text-stone-500" />
                                     </button>
-                                    <button onClick={() => handleDelete(ann.id)} className="p-2 hover:bg-red-50 rounded-lg">
+                                    <button onClick={() => handleDelete(ann.id)} aria-label="Excluir aviso" className="p-2 hover:bg-red-50 rounded-lg">
                                         <Trash2 size={16} className="text-red-500" />
                                     </button>
                                 </div>
                             </div>
                         </div>
-                    ))}
+                        );
+                    })}
                 </div>
             )}
 
@@ -852,6 +953,9 @@ const AnunciosTab: React.FC = () => {
                         rows={4}
                         className="w-full px-4 py-3 border border-stone-200 rounded-xl resize-none"
                     />
+                    {imageUrl.trim() && (
+                        <img src={imageUrl.trim()} alt="Pré-visualização" className="max-h-32 rounded-xl object-cover" onError={e => { e.currentTarget.style.display = 'none'; }} />
+                    )}
 
                     <input
                         type="text"
@@ -910,7 +1014,8 @@ const AnunciosTab: React.FC = () => {
 const SociosTab: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [members, setMembers] = useState<User[]>([]);
-    const [_loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(true);
+    const [roleFilter, setRoleFilter] = useState<'all' | 'admin' | 'professor'>('all');
     const [editingMember, setEditingMember] = useState<User | null>(null);
 
 
@@ -950,6 +1055,20 @@ const SociosTab: React.FC = () => {
         setEditingMember(member);
     };
 
+    const term = searchTerm.trim().toLowerCase();
+    const digits = term.replace(/\D/g, '');
+    const visibleMembers = members.filter(m => {
+        if (roleFilter === 'admin' && m.role !== 'admin') return false;
+        if (roleFilter === 'professor' && !m.isProfessor) return false;
+        if (!term) return true;
+        return m.name.toLowerCase().includes(term)
+            || (m.email || '').toLowerCase().includes(term)
+            || (digits.length >= 3 && (m.phone || '').includes(digits));
+    });
+
+    if (loading) {
+        return <div className="flex justify-center py-8"><Loader2 className="animate-spin text-saibro-500" size={32} /></div>;
+    }
 
     return (
         <div className="space-y-6">
@@ -958,27 +1077,47 @@ const SociosTab: React.FC = () => {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" size={18} />
                     <input
                         type="text"
-                        placeholder="Buscar sócios..."
+                        placeholder="Buscar por nome, e-mail ou telefone"
+                        aria-label="Buscar sócios"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="w-full pl-10 pr-4 py-3 bg-white border border-stone-200 rounded-xl outline-hidden focus:ring-2 focus:ring-saibro-500"
                     />
                 </div>
 
+                <div className="flex gap-2 flex-wrap items-center">
+                    {([['all', 'Todos'], ['admin', 'Administradores'], ['professor', 'Professores']] as const).map(([id, label]) => (
+                        <button
+                            key={id}
+                            onClick={() => setRoleFilter(id)}
+                            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${roleFilter === id ? 'bg-saibro-500 text-white' : 'bg-stone-50 text-stone-600 hover:bg-saibro-50'}`}
+                        >
+                            {label}
+                        </button>
+                    ))}
+                    <span className="ml-auto text-xs text-stone-400">{plural(visibleMembers.length, 'sócio')}</span>
+                </div>
+
                 <div className="grid gap-3">
-                    {members.filter(m => m.name.toLowerCase().includes(searchTerm.toLowerCase())).map(member => (
+                    {visibleMembers.map(member => (
                         <div key={member.id} className="bg-white p-4 rounded-2xl shadow-sm border border-stone-100 flex items-center justify-between group hover:border-saibro-200 transition-all">
                             <div className="flex items-center gap-3">
                                 <img src={member.avatar || 'https://via.placeholder.com/50'} alt="" className="w-12 h-12 rounded-full border-2 border-saibro-50 object-cover" />
                                 <div>
                                     <h3 className="font-bold text-stone-800">{member.name}</h3>
                                     <p className="text-xs text-stone-400">+{member.phone}</p>
-                                    <p className="text-[10px] text-saibro-600 uppercase font-bold mt-1">{member.category || 'Sem classe'}</p>
+                                    <p className="text-[10px] text-saibro-600 uppercase font-bold mt-1">
+                                        {member.category || 'Sem classe'}
+                                        {member.role === 'admin' && <span className="ml-2 bg-stone-800 text-white px-1.5 py-0.5 rounded">Admin</span>}
+                                        {member.isProfessor && <span className="ml-2 bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded">Professor</span>}
+                                    </p>
                                 </div>
                             </div>
-                            <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="flex gap-2">
                                 <button
                                     onClick={() => openEditMember(member)}
+                                    aria-label={`Editar ${member.name}`}
+                                    title="Editar sócio"
                                     className="p-2 text-stone-400 hover:text-saibro-600 hover:bg-saibro-50 rounded-lg"
                                 >
                                     <Edit size={18} />
@@ -986,7 +1125,7 @@ const SociosTab: React.FC = () => {
                             </div>
                         </div>
                     ))}
-                    {members.length === 0 && (
+                    {visibleMembers.length === 0 && (
                         <p className="text-center text-stone-400 py-8">Nenhum sócio encontrado.</p>
                     )}
                 </div>
@@ -1253,43 +1392,6 @@ const AcessosTab: React.FC = () => {
 
     return (
         <div className="space-y-8">
-            <form onSubmit={handleCreateAthlete} className="bg-saibro-50 border border-saibro-100 rounded-2xl p-5 space-y-4">
-                <h3 className="font-bold text-saibro-800">Novo Atleta (Criação Direta)</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <input
-                        type="text"
-                        value={name}
-                        onChange={e => setName(e.target.value)}
-                        placeholder="Nome *"
-                        className="w-full px-3 py-2.5 bg-white border border-stone-200 rounded-xl text-sm"
-                        required
-                    />
-                    <input
-                        type="tel"
-                        value={phone}
-                        onChange={e => setPhone(e.target.value)}
-                        placeholder="Telefone *"
-                        className="w-full px-3 py-2.5 bg-white border border-stone-200 rounded-xl text-sm"
-                        required
-                    />
-                    <input
-                        type="email"
-                        value={email}
-                        onChange={e => setEmail(e.target.value)}
-                        placeholder="Email (opcional)"
-                        className="w-full px-3 py-2.5 bg-white border border-stone-200 rounded-xl text-sm"
-                    />
-                </div>
-                <button
-                    type="submit"
-                    disabled={saving}
-                    className="px-4 py-2 bg-saibro-600 text-white text-sm font-bold rounded-xl hover:bg-saibro-700 disabled:opacity-60 flex items-center gap-2"
-                >
-                    {saving ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
-                    Criar atleta
-                </button>
-            </form>
-
             <div className="space-y-4">
                 <div className="flex items-center justify-between gap-3">
                     <h3 className="font-bold text-stone-800">Solicitações Pendentes ({filteredPending.length})</h3>
@@ -1341,8 +1443,9 @@ const AcessosTab: React.FC = () => {
                 </div>
             </div>
 
-            <div className="space-y-3">
-                <h3 className="font-bold text-stone-800">Decisões Recentes</h3>
+            <details className="group">
+                <summary className="cursor-pointer font-bold text-stone-800">Decisões recentes ({recentDecisions.length})</summary>
+                <div className="mt-3">
                 <div className="space-y-2">
                     {recentDecisions.map(req => (
                         <div key={req.id} className="bg-stone-50 border border-stone-100 rounded-xl p-3">
@@ -1364,14 +1467,58 @@ const AcessosTab: React.FC = () => {
                         <p className="text-sm text-stone-500 italic">Sem decisões recentes.</p>
                     )}
                 </div>
-            </div>
-
+                </div>
+            </details>
+            <details className="group bg-saibro-50 border border-saibro-100 rounded-2xl">
+                <summary className="cursor-pointer list-none px-5 py-4 font-bold text-saibro-800 flex items-center gap-2">
+                    <Plus size={16} /> Cadastrar atleta direto (sem solicitação)
+                </summary>
+                <div className="px-5 pb-5">
+            <form onSubmit={handleCreateAthlete} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <input
+                        type="text"
+                        value={name}
+                        onChange={e => setName(e.target.value)}
+                        placeholder="Nome *"
+                        className="w-full px-3 py-2.5 bg-white border border-stone-200 rounded-xl text-sm"
+                        required
+                    />
+                    <input
+                        type="tel"
+                        value={phone}
+                        onChange={e => setPhone(e.target.value)}
+                        placeholder="Telefone *"
+                        className="w-full px-3 py-2.5 bg-white border border-stone-200 rounded-xl text-sm"
+                        required
+                    />
+                    <input
+                        type="email"
+                        value={email}
+                        onChange={e => setEmail(e.target.value)}
+                        placeholder="Email (opcional)"
+                        className="w-full px-3 py-2.5 bg-white border border-stone-200 rounded-xl text-sm"
+                    />
+                </div>
+                <button
+                    type="submit"
+                    disabled={saving}
+                    className="px-4 py-2 bg-saibro-600 text-white text-sm font-bold rounded-xl hover:bg-saibro-700 disabled:opacity-60 flex items-center gap-2"
+                >
+                    {saving ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
+                    Criar atleta
+                </button>
+            </form>
+                </div>
+            </details>
+            <details className="group">
+                <summary className="cursor-pointer font-bold text-stone-800 flex items-center gap-2">
+                    <History size={18} className="text-stone-400" /> Logs de entrada e alterações
+                </summary>
+                <div className="mt-3">
             <div className="space-y-4">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                     <div>
-                        <h3 className="font-bold text-stone-800 flex items-center gap-2">
-                            <History size={18} className="text-stone-400" /> Logs de Entrada e Alterações
-                        </h3>
                         <p className="text-xs text-stone-500">Últimos registros de login e mudanças feitas no sistema.</p>
                     </div>
                     <select
@@ -1420,6 +1567,8 @@ const AcessosTab: React.FC = () => {
                     </div>
                 )}
             </div>
+                </div>
+            </details>
         </div>
     );
 };
@@ -1579,6 +1728,34 @@ const LancamentosTab: React.FC = () => {
                 </div>
             </div>
 
+            <div className="space-y-4">
+                <h3 className="text-lg font-bold text-stone-800 flex items-center gap-2">
+                    <History size={20} className="text-stone-400" /> Auditoria de Pontos
+                </h3>
+                <div className="space-y-2">
+                    {auditLogs.map(log => (
+                        <div key={log.id} className="bg-stone-50 p-4 rounded-xl flex justify-between items-center border border-stone-100">
+                            <div>
+                                <p className="font-bold text-stone-800">{log.profiles?.name}</p>
+                                <p className="text-xs text-stone-500">{log.reason}</p>
+                                {log.created_at && (
+                                    <p className="text-[11px] text-stone-400">
+                                        {new Date(log.created_at).toLocaleString('pt-BR', { timeZone: 'America/Fortaleza' })}
+                                    </p>
+                                )}
+                            </div>
+                            <div className={`font-black text-lg ${log.points > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                {log.points > 0 ? '+' : ''}{log.points}
+                            </div>
+                        </div>
+                    ))}
+                    {auditLogs.length === 0 && <p className="text-center py-8 text-stone-400 italic">Nenhum histórico encontrado.</p>}
+                </div>
+            </div>
+
+            <details className="group">
+                <summary className="cursor-pointer text-sm font-bold text-red-700">Zona de risco: reset do ranking</summary>
+                <div className="mt-3">
             <div className="bg-red-50 p-6 rounded-[24px] border border-red-200 space-y-4">
                 <div>
                     <h3 className="text-xl font-black text-red-800 mb-2">Reset Completo do Ranking</h3>
@@ -1619,26 +1796,8 @@ const LancamentosTab: React.FC = () => {
                     ))}
                 </div>
             </div>
-
-            <div className="space-y-4">
-                <h3 className="text-lg font-bold text-stone-800 flex items-center gap-2">
-                    <History size={20} className="text-stone-400" /> Auditoria de Pontos
-                </h3>
-                <div className="space-y-2">
-                    {auditLogs.map(log => (
-                        <div key={log.id} className="bg-stone-50 p-4 rounded-xl flex justify-between items-center border border-stone-100">
-                            <div>
-                                <p className="font-bold text-stone-800">{log.profiles?.name}</p>
-                                <p className="text-xs text-stone-500">{log.reason}</p>
-                            </div>
-                            <div className={`font-black text-lg ${log.points > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                {log.points > 0 ? '+' : ''}{log.points}
-                            </div>
-                        </div>
-                    ))}
-                    {auditLogs.length === 0 && <p className="text-center py-8 text-stone-400 italic">Nenhum histórico encontrado.</p>}
                 </div>
-            </div>
+            </details>
 
             {/* Match Creator Modal */}
             <AdminMatchCreator
@@ -1659,11 +1818,20 @@ const LancamentosTab: React.FC = () => {
 // --- Main Admin Panel Component ---
 
 export const AdminPanel: React.FC = () => {
-    const [activeTab, setActiveTab] = useState('dashboard');
+    const [activeTab, setActiveTab] = useState<AdminTabId>(loadLastTab);
+    const [query, setQuery] = useState('');
+    const results = searchSections(query);
+    const group = groupOf(activeTab);
+
+    const go = (id: AdminTabId) => {
+        setActiveTab(id);
+        saveLastTab(id);
+        setQuery('');
+    };
 
     const renderTabContent = () => {
         switch (activeTab) {
-            case 'dashboard': return <Dashboard />;
+            case 'dashboard': return <><AdminPending onGo={go} /><Dashboard /></>;
             case 'formularios': return <AdminForms />;
             case 'lancamentos': return <LancamentosTab />;
             case 'superset': return <SuperSet />;
@@ -1683,39 +1851,71 @@ export const AdminPanel: React.FC = () => {
 
     return (
         <div className="flex flex-col min-h-screen bg-stone-50">
-            {/* Header Moderno */}
             <div className="bg-saibro-600 pt-8 pb-16 px-4 md:px-8 rounded-b-[40px] shadow-2xl relative overflow-hidden shrink-0">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-saibro-500/20 rounded-full -mr-20 -mt-20 blur-3xl animate-pulse"></div>
-                <div className="relative z-10 flex flex-col gap-1 max-w-7xl mx-auto w-full">
-                    <span className="text-saibro-200 text-xs font-bold uppercase tracking-widest">Administração</span>
-                    <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">Centro de Comando</h1>
-                    <p className="text-saibro-100 text-sm opacity-80">Gestão integrada do Reserva SCT</p>
+                <div className="absolute top-0 right-0 w-64 h-64 bg-saibro-500/20 rounded-full -mr-20 -mt-20 blur-3xl"></div>
+                <div className="relative z-10 flex flex-col gap-3 max-w-7xl mx-auto w-full">
+                    <div>
+                        <span className="text-saibro-200 text-xs font-bold uppercase tracking-widest">Administração</span>
+                        <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">Centro de Comando</h1>
+                    </div>
+                    <div className="relative max-w-md">
+                        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+                        <input
+                            value={query}
+                            onChange={e => setQuery(e.target.value)}
+                            placeholder="O que você quer fazer? (ex.: mensalidade, aluno, aprovar)"
+                            aria-label="Buscar seção do painel"
+                            className="w-full rounded-2xl bg-white py-2.5 pl-9 pr-3 text-sm text-stone-700 outline-none focus:ring-2 focus:ring-saibro-300"
+                        />
+                        {query && (
+                            <div className="absolute z-30 mt-1 w-full rounded-2xl bg-white shadow-xl border border-stone-100 overflow-hidden">
+                                {results.length === 0 ? (
+                                    <p className="px-4 py-3 text-sm text-stone-400">Nada encontrado.</p>
+                                ) : results.map(r => (
+                                    <button key={r.id} onClick={() => go(r.id)} className="flex w-full flex-col px-4 py-2.5 text-left hover:bg-stone-50">
+                                        <span className="text-sm font-bold text-stone-700">{r.label}</span>
+                                        <span className="text-xs text-stone-400">{r.hint}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
 
-            {/* Navigation Cards (Overlapping) */}
-            <div className="px-2 md:px-8 -mt-10 relative z-20 max-w-7xl mx-auto w-full">
-                <div className="flex gap-2 overflow-x-auto pb-4 pt-2 scrollbar-hide snap-x">
-                    {TABS.map(tab => (
+            <div className="px-2 md:px-8 -mt-8 relative z-20 max-w-7xl mx-auto w-full">
+                <div className="bg-white rounded-2xl shadow-lg p-2 flex gap-1 overflow-x-auto scrollbar-hide" role="tablist" aria-label="Áreas">
+                    {ADMIN_GROUPS.map(g => (
                         <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id)}
-                            className={`flex flex-col items-center justify-center min-w-[90px] h-[90px] md:min-w-[100px] md:h-[100px] rounded-2xl md:rounded-3xl font-bold transition-all duration-300 shadow-lg snap-start ${activeTab === tab.id
-                                ? 'bg-white text-saibro-600 scale-105 border-b-4 border-saibro-500'
-                                : 'bg-white/95 text-stone-400 backdrop-blur-md hover:bg-white hover:text-stone-600'
-                                }`}
+                            key={g.id}
+                            role="tab"
+                            aria-selected={g.id === group.id}
+                            onClick={() => go(g.sections[0].id)}
+                            className={`px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-colors ${g.id === group.id ? 'bg-saibro-600 text-white' : 'text-stone-500 hover:bg-stone-100'}`}
                         >
-                            <div className={`p-2 rounded-xl mb-1 ${activeTab === tab.id ? 'bg-saibro-50 text-saibro-600' : 'bg-stone-50'}`}>
-                                {React.cloneElement<{ size?: number }>(tab.icon, { size: 20 })}
-                            </div>
-                            <span className="text-[9px] uppercase tracking-tighter">{tab.label}</span>
+                            {g.label}
                         </button>
                     ))}
                 </div>
+                {group.sections.length > 1 && (
+                    <div className="flex gap-2 overflow-x-auto pt-3 scrollbar-hide" role="tablist" aria-label={group.label}>
+                        {group.sections.map(s => (
+                            <button
+                                key={s.id}
+                                role="tab"
+                                aria-selected={s.id === activeTab}
+                                onClick={() => go(s.id)}
+                                title={s.hint}
+                                className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap border transition-colors ${s.id === activeTab ? 'bg-saibro-50 text-saibro-700 border-saibro-300' : 'bg-white text-stone-500 border-stone-200 hover:border-stone-300'}`}
+                            >
+                                {s.label}
+                            </button>
+                        ))}
+                    </div>
+                )}
             </div>
 
-            {/* Main Content Area */}
-            <div className="flex-1 px-2 md:px-8 mt-2 pb-8 animate-in fade-in slide-in-from-bottom-6 duration-500 max-w-7xl mx-auto w-full">
+            <div className="flex-1 px-2 md:px-8 mt-3 pb-8 max-w-7xl mx-auto w-full">
                 <div className="bg-white rounded-[24px] md:rounded-[32px] shadow-sm border border-stone-100 min-h-[500px] p-4 md:p-6 overflow-x-hidden">
                     {renderTabContent()}
                 </div>

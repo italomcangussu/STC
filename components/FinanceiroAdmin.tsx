@@ -478,7 +478,7 @@ export const FinanceiroAdmin: React.FC = () => {
                                                 onClick={() => handleDeletePayment(p.id!)}
                                                 disabled={isDeleting}
                                                 title="Excluir pagamento"
-                                                className="p-2.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-all active:scale-95 disabled:opacity-50 opacity-0 group-hover:opacity-100"
+                                                className="p-2.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-all active:scale-95 disabled:opacity-50 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100 focus:opacity-100"
                                             >
                                                 {isDeleting ? <Loader2 className="animate-spin" size={18} /> : <Trash2 size={18} />}
                                             </button>
