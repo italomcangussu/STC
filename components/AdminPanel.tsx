@@ -1014,7 +1014,8 @@ const AnunciosTab: React.FC = () => {
 const SociosTab: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [members, setMembers] = useState<User[]>([]);
-    const [_loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(true);
+    const [roleFilter, setRoleFilter] = useState<'all' | 'admin' | 'professor'>('all');
     const [editingMember, setEditingMember] = useState<User | null>(null);
 
 
@@ -1054,6 +1055,20 @@ const SociosTab: React.FC = () => {
         setEditingMember(member);
     };
 
+    const term = searchTerm.trim().toLowerCase();
+    const digits = term.replace(/\D/g, '');
+    const visibleMembers = members.filter(m => {
+        if (roleFilter === 'admin' && m.role !== 'admin') return false;
+        if (roleFilter === 'professor' && !m.isProfessor) return false;
+        if (!term) return true;
+        return m.name.toLowerCase().includes(term)
+            || (m.email || '').toLowerCase().includes(term)
+            || (digits.length >= 3 && (m.phone || '').includes(digits));
+    });
+
+    if (loading) {
+        return <div className="flex justify-center py-8"><Loader2 className="animate-spin text-saibro-500" size={32} /></div>;
+    }
 
     return (
         <div className="space-y-6">
@@ -1062,27 +1077,47 @@ const SociosTab: React.FC = () => {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" size={18} />
                     <input
                         type="text"
-                        placeholder="Buscar sócios..."
+                        placeholder="Buscar por nome, e-mail ou telefone"
+                        aria-label="Buscar sócios"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="w-full pl-10 pr-4 py-3 bg-white border border-stone-200 rounded-xl outline-hidden focus:ring-2 focus:ring-saibro-500"
                     />
                 </div>
 
+                <div className="flex gap-2 flex-wrap items-center">
+                    {([['all', 'Todos'], ['admin', 'Administradores'], ['professor', 'Professores']] as const).map(([id, label]) => (
+                        <button
+                            key={id}
+                            onClick={() => setRoleFilter(id)}
+                            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${roleFilter === id ? 'bg-saibro-500 text-white' : 'bg-stone-50 text-stone-600 hover:bg-saibro-50'}`}
+                        >
+                            {label}
+                        </button>
+                    ))}
+                    <span className="ml-auto text-xs text-stone-400">{plural(visibleMembers.length, 'sócio')}</span>
+                </div>
+
                 <div className="grid gap-3">
-                    {members.filter(m => m.name.toLowerCase().includes(searchTerm.toLowerCase())).map(member => (
+                    {visibleMembers.map(member => (
                         <div key={member.id} className="bg-white p-4 rounded-2xl shadow-sm border border-stone-100 flex items-center justify-between group hover:border-saibro-200 transition-all">
                             <div className="flex items-center gap-3">
                                 <img src={member.avatar || 'https://via.placeholder.com/50'} alt="" className="w-12 h-12 rounded-full border-2 border-saibro-50 object-cover" />
                                 <div>
                                     <h3 className="font-bold text-stone-800">{member.name}</h3>
                                     <p className="text-xs text-stone-400">+{member.phone}</p>
-                                    <p className="text-[10px] text-saibro-600 uppercase font-bold mt-1">{member.category || 'Sem classe'}</p>
+                                    <p className="text-[10px] text-saibro-600 uppercase font-bold mt-1">
+                                        {member.category || 'Sem classe'}
+                                        {member.role === 'admin' && <span className="ml-2 bg-stone-800 text-white px-1.5 py-0.5 rounded">Admin</span>}
+                                        {member.isProfessor && <span className="ml-2 bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded">Professor</span>}
+                                    </p>
                                 </div>
                             </div>
-                            <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="flex gap-2">
                                 <button
                                     onClick={() => openEditMember(member)}
+                                    aria-label={`Editar ${member.name}`}
+                                    title="Editar sócio"
                                     className="p-2 text-stone-400 hover:text-saibro-600 hover:bg-saibro-50 rounded-lg"
                                 >
                                     <Edit size={18} />
@@ -1090,7 +1125,7 @@ const SociosTab: React.FC = () => {
                             </div>
                         </div>
                     ))}
-                    {members.length === 0 && (
+                    {visibleMembers.length === 0 && (
                         <p className="text-center text-stone-400 py-8">Nenhum sócio encontrado.</p>
                     )}
                 </div>
