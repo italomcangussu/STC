@@ -85,10 +85,10 @@ export async function world() {
   const db = await newDb();
   await seedPeople(db);
   await db.exec(`
-    update public.profiles set phone = '15550000001' where id = '${U.admin}';
-    update public.profiles set phone = '15550000002' where id = '${U.socioA}';
-    update public.profiles set phone = '15550000003' where id = '${U.socioB}';
-    update public.profiles set phone = '15550000004' where id = '${U.prof}';
+    update public.profiles set phone = '99900000001' where id = '${U.admin}';
+    update public.profiles set phone = '99900000002' where id = '${U.socioA}';
+    update public.profiles set phone = '99900000003' where id = '${U.socioB}';
+    update public.profiles set phone = '99900000004' where id = '${U.prof}';
     insert into public.professors(id, user_id, name) values ('${ID(900)}', '${U.prof}', 'Paulo Professor');
     insert into public.courts(id, name, type) values ('${ID(801)}', 'Quadra 1', 'Saibro'), ('${ID(802)}', 'Quadra 2', 'Saibro'), ('${ID(803)}', 'Quadra Rápida', 'Rápida');
   `);
