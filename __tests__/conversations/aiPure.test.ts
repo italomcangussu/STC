@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
-import { asksForHuman, cadence, claimsSuccess, dayLabel, describeReservation, mergeSlots, nearest, parseAnswer, parseSlots, pickCourts, proposalMessage, successMessage, CODE_TEXT } from '../../supabase/functions/_shared/aiAgent/turn';
+import { asksForHuman, clipSummary, wantsHuman, cadence, claimsSuccess, dayLabel, describeReservation, mergeSlots, nearest, parseAnswer, parseSlots, pickCourts, proposalMessage, successMessage, CODE_TEXT } from '../../supabase/functions/_shared/aiAgent/turn';
 import { repararJson, extrairObjeto, stripCodeFence } from '../../supabase/functions/_shared/aiAgent/jsonRepair';
 import { buildChatBody, chatClient, LlmError } from '../../supabase/functions/_shared/aiAgent/llm';
 import { systemPrompt, userPrompt, type AiSettings } from '../../supabase/functions/_shared/aiAgent/prompts';
@@ -89,6 +89,46 @@ describe('quadras, horários e cadência', () => {
     expect(asksForHuman('Quero falar com um ATENDENTE', ['atendente'])).toBe(true);
     expect(asksForHuman('Atendênte', ['atendente'])).toBe(true);
     expect(asksForHuman('bom dia', ['atendente'])).toBe(false);
+  });
+});
+
+describe('resumo do histórico e atalho de transferência por sentido', () => {
+  it('o resumo vem do modelo, sem quebras de linha e com no máximo 600 caracteres; ausente = null (mantém o anterior)', () => {
+    expect(clipSummary('  Prefere   saibro\nà noite.  ')).toBe('Prefere saibro à noite.');
+    const longo = clipSummary('x'.repeat(2000))!;
+    expect(longo.length).toBe(600);
+    expect(longo.endsWith('…')).toBe(true);
+    expect(clipSummary('')).toBeNull();
+    expect(clipSummary(42)).toBeNull();
+    expect(parseAnswer(JSON.stringify({ messages: ['oi'], summary: 'quer jogar amanhã' })).summary).toBe('quer jogar amanhã');
+    expect(parseAnswer(JSON.stringify({ messages: ['oi'] })).summary).toBeNull();
+    expect(parseAnswer('lixo').summary).toBeNull();
+  });
+
+  it('palavra-gatilho sozinha não transfere: "eu e uma pessoa" segue para o modelo; pedido claro ou frase curta transfere', () => {
+    const kw = ['atendente', 'humano', 'pessoa', 'falar com alguém', 'reclamação'];
+    expect(wantsHuman('quero falar com uma pessoa', kw)).toBe(true);
+    expect(wantsHuman('atendente', kw)).toBe(true);
+    expect(wantsHuman('pessoa', kw)).toBe(true);
+    expect(wantsHuman('Preciso de um ATENDENTE por favor, tá difícil aqui', kw)).toBe(true);
+    expect(wantsHuman('quero marcar amanhã às 18h eu e mais uma pessoa no saibro', kw)).toBe(false);
+    expect(wantsHuman('vou levar uma pessoa que nunca jogou, pode ser às 17h?', kw)).toBe(false);
+    expect(wantsHuman('bom dia', kw)).toBe(false);
+  });
+
+  it('o prompt traz o resumo (próprio, fora da memória), a janela de 8 trocas e o aviso do que ficou só no resumo', () => {
+    const base = { now_local: '2026-10-06T10:00', weekday_today: 2, settings, institutional_name: 'STC', is_group: false, requester: { profile: null }, courts: [], my_reservations: [], open_proposal: null, transcript: [] };
+    const u = userPrompt({ ...base, older_messages: 6 }, { intent: 'reservar', summary: 'Prefere saibro à noite.' }, 'oi');
+    expect(u).toContain('# RESUMO DO QUE JÁ FOI CONVERSADO');
+    expect(u).toContain('Prefere saibro à noite.');
+    expect(u).toContain('as últimas 8 trocas; 6 mensagens mais antigas ficaram só no resumo');
+    expect(u.match(/Prefere saibro à noite\./g)).toHaveLength(1);        // o resumo não se repete dentro da memória
+    expect(userPrompt(base, {}, 'oi')).toContain('(conversa nova)');
+    expect(userPrompt({ ...base, older_messages: 3 }, {}, 'oi')).toContain('ainda sem resumo');
+    expect(userPrompt({ ...base, prior_summary: 'Joga às terças.' }, {}, 'oi')).toContain('Joga às terças.');   // sessão nova herda o anterior
+    const sys = systemPrompt(settings, base);
+    expect(sys).toContain('# ENTENDA O CONTEXTO');
+    expect(sys).toContain('"summary":"..."');
   });
 });
 

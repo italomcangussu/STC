@@ -56,6 +56,8 @@ export type Answer = {
   handoff_kind: 'soft' | 'hard' | null;
   handoff_note: string | null;
   close: boolean;
+  /** Resumo compactado da conversa (o agente reescreve a cada turno); ausente = manter o anterior. */
+  summary?: string | null;
 };
 
 /* ------------------------------- Parse (soft-fail) ------------------------------- */
@@ -95,12 +97,21 @@ export function parseSlots(raw: unknown): Slots {
   return out;
 }
 
+const SUMMARY_MAX = 600;
+/** Resumo do histórico: texto corrido, sem quebras, no máximo 600 caracteres (a conta do prompt não cresce com a conversa). */
+export function clipSummary(v: unknown): string | null {
+  if (typeof v !== 'string') return null;
+  const t = v.replace(/\s+/g, ' ').trim();
+  if (!t) return null;
+  return t.length > SUMMARY_MAX ? `${t.slice(0, SUMMARY_MAX - 1).trimEnd()}…` : t;
+}
+
 /** Falha vira transferência com mensagens vazias: nunca silêncio, nunca invenção. */
 export function parseAnswer(output: string): Answer {
   const obj = lerJson(output);
   if (!obj) {
     return { messages: [], intent: 'outro', slots: {}, ready: false, customer_confirmed: false, declined: false, awaiting: false,
-      transfer: true, handoff_kind: 'hard', handoff_note: 'Falha ao interpretar a resposta da IA.', close: false };
+      transfer: true, handoff_kind: 'hard', handoff_note: 'Falha ao interpretar a resposta da IA.', close: false, summary: null };
   }
   const msgs = Array.isArray(obj.messages) ? obj.messages : obj.message ? [obj.message] : [];
   const transfer = obj.transfer === true;
@@ -112,6 +123,7 @@ export function parseAnswer(output: string): Answer {
     declined: obj.declined === true, awaiting: obj.awaiting === true,
     transfer, handoff_kind: obj.handoff_kind === 'soft' || obj.handoff_kind === 'hard' ? obj.handoff_kind : transfer ? 'hard' : null,
     handoff_note: str(obj.handoff_note)?.slice(0, 500) ?? null, close: obj.close === true && !transfer,
+    summary: clipSummary(obj.summary),
   };
 }
 
@@ -164,6 +176,19 @@ const norm = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCa
 export function asksForHuman(text: string, keywords: string[]): boolean {
   const t = norm(text);
   return keywords.some((k) => k && t.includes(norm(k)));
+}
+
+/** Pedido claro por pessoa/atendente, em qualquer tamanho de frase. */
+const STRONG_HUMAN = /\b(atendente|humano|gerente|secretaria|alguem da equipe|pessoa de verdade|falar com (alguem|uma pessoa|um humano|uma atendente|a equipe)|reclamacao|reclamar)\b/;
+
+/**
+ * Atalho SEM modelo para "quero falar com alguém": a palavra-gatilho sozinha não basta. Vale se a mensagem é curta
+ * (até 5 palavras) ou traz um pedido claro; "eu e mais uma pessoa jogamos amanhã" segue para o modelo, que entende o contexto.
+ */
+export function wantsHuman(text: string, keywords: string[]): boolean {
+  if (!asksForHuman(text, keywords)) return false;
+  const palavras = text.trim().split(/\s+/).filter(Boolean).length;
+  return palavras <= 5 || STRONG_HUMAN.test(norm(text));
 }
 
 /** O texto do modelo afirma que algo foi feito? Quem afirma isso é o sistema, não o modelo. */
@@ -311,7 +336,7 @@ const first = <T,>(r: RpcResult): T | null => (Array.isArray(r.data) ? (r.data[0
 
 export type TurnResult = { status: string; reason?: string; bubbles?: number; handoff?: string | null; action?: string | null };
 
-type Memory = { intent?: Intent; slots?: Slots; proposal_names?: string[]; pending_guest?: string | null; [k: string]: unknown };
+type Memory = { intent?: Intent; slots?: Slots; proposal_names?: string[]; pending_guest?: string | null; summary?: string; [k: string]: unknown };
 
 type Decision = { bubbles: string[]; awaiting: boolean; close: boolean; action: string | null; memory: Memory; handoff?: { kind: 'soft' | 'hard'; note: string } };
 
@@ -383,7 +408,7 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
   // Regras que não dependem do modelo.
   if (!deps.chat || !settings.model) return transferir('hard', 'Agente de IA sem provedor ou modelo configurado.', null, false);
   if (Number(ctx.session?.turns ?? 0) >= settings.max_turns) return transferir('hard', `Atendimento passou de ${settings.max_turns} turnos com a IA sem concluir.`, null);
-  if (asksForHuman(buffered, settings.handoff_keywords ?? [])) return transferir('hard', 'A pessoa pediu atendimento humano.', null);
+  if (wantsHuman(buffered, settings.handoff_keywords ?? [])) return transferir('hard', 'A pessoa pediu atendimento humano.', null);
   if (soMidia && !isGroup) return transferir('hard', `Chegou ${[...new Set(pendentes.map((t) => t.kind))].join(', ')} sem texto; a IA não lê mídia.`, null);
 
   const memory = (ctx.session?.memory ?? {}) as Memory;
@@ -392,7 +417,7 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
     const r = await deps.chat([
       { role: 'system', content: systemPrompt(settings, ctx) },
       { role: 'user', content: userPrompt(ctx, memory, buffered) },
-    ], { model: settings.model, temperature: 0.2, maxTokens: 900, json: true });
+    ], { model: settings.model, temperature: 0.2, maxTokens: 1000, json: true });
     answer = parseAnswer(r.output);
   } catch {
     return transferir('hard', 'Falha ao chamar o modelo de IA.', memory);
@@ -404,9 +429,13 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
   // Trocar de ação no meio ("na verdade quero cancelar") recomeça os dados; o resto soma ao que já se sabia.
   const trocouDeAcao = memory.intent !== undefined && ACTIONABLE.includes(memory.intent) && ACTIONABLE.includes(answer.intent) && memory.intent !== answer.intent;
   const slots = mergeSlots(memory.slots, answer.slots, trocouDeAcao);
-  const nextMemory: Memory = { ...memory, intent: answer.intent, slots };
+  // Resumo: o que o modelo reescreveu agora; senão o anterior; senão o do atendimento anterior da mesma pessoa.
+  const summary = answer.summary ?? memory.summary ?? (typeof ctx.prior_summary === 'string' ? ctx.prior_summary : undefined);
+  const nextMemory: Memory = { ...memory, intent: answer.intent, slots, ...(summary ? { summary } : {}) };
 
   const d = await decide({ deps, ctx, answer, slots, memory: nextMemory, session, ultimaId: ultima?.id as string | undefined, today });
+  // Os fechamentos (confirmou, desistiu) zeram os dados do pedido, mas o resumo da conversa fica.
+  if (summary && !d.memory.summary) d.memory = { ...d.memory, summary };
   if (d.handoff) {
     await entregar(cadence(d.bubbles));
     await db('conv_svc_ai_handoff', { p_session: session, p_kind: d.handoff.kind, p_note: d.handoff.note });
