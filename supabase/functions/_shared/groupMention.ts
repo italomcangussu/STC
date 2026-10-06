@@ -18,6 +18,16 @@ type Rec = Record<string, unknown>;
 
 const asRec = (v: unknown): Rec | null => (v && typeof v === 'object' && !Array.isArray(v) ? v as Rec : null);
 
+/**
+ * Lê um campo sem distinguir maiúsculas de minúsculas: a UazAPI entrega `mentionedJID` (JID em maiúsculas,
+ * comprovado em produção), e o WhatsApp/Baileys costuma usar `mentionedJid`. Um nome só não cobre os dois.
+ */
+const field = (o: Rec | null | undefined, name: string): unknown => {
+  if (!o) return undefined;
+  const key = Object.keys(o).find((k) => k.toLowerCase() === name.toLowerCase());
+  return key === undefined ? undefined : o[key];
+};
+
 export type BotIdentity = { phone?: string | null; lids?: string[] | null };
 
 export type MentionInfo = {
@@ -56,15 +66,15 @@ function listFrom(value: unknown): string[] | null {
  * Não inventa: lugar que não existe no payload é ignorado.
  */
 export function extractMentions(message: Rec, text: string): MentionInfo {
-  const content = asRec(message.content);
-  const ctxInfo = asRec(content?.contextInfo) ?? asRec(message.contextInfo);
+  const content = asRec(field(message, 'content'));
+  const ctxInfo = asRec(field(content, 'contextInfo')) ?? asRec(field(message, 'contextInfo'));
   const places: [string, unknown][] = [
-    ['message.mentions', message.mentions],
-    ['message.mentionedJid', message.mentionedJid],
-    ['content.mentions', content?.mentions],
-    ['content.mentionedJid', content?.mentionedJid],
-    ['content.contextInfo.mentionedJid', ctxInfo?.mentionedJid],
-    ['content.contextInfo.mentions', ctxInfo?.mentions],
+    ['message.mentions', field(message, 'mentions')],
+    ['message.mentionedJid', field(message, 'mentionedJid')],
+    ['content.mentions', field(content, 'mentions')],
+    ['content.mentionedJid', field(content, 'mentionedJid')],
+    ['content.contextInfo.mentionedJid', field(ctxInfo, 'mentionedJid')],
+    ['content.contextInfo.mentions', field(ctxInfo, 'mentions')],
   ];
   const ids = new Set<string>();
   const sources: string[] = [];
@@ -75,8 +85,8 @@ export function extractMentions(message: Rec, text: string): MentionInfo {
     list.forEach((i) => ids.add(i));
   }
   // Campos de menção coletiva (grupo inteiro / não-JID): se existirem e vierem preenchidos, é "todos".
-  const nonJid = Number(ctxInfo?.nonJidMentions ?? content?.nonJidMentions ?? 0);
-  const groupMentions = ctxInfo?.groupMentions ?? content?.groupMentions;
+  const nonJid = Number(field(ctxInfo, 'nonJidMentions') ?? field(content, 'nonJidMentions') ?? 0);
+  const groupMentions = field(ctxInfo, 'groupMentions') ?? field(content, 'groupMentions');
   const allMarker = ALL_TOKEN.test(text) || (Number.isFinite(nonJid) && nonJid > 0)
     || (Array.isArray(groupMentions) && groupMentions.length > 0);
   return { ids: [...ids], hasMetadata: sources.length > 0, allMarker, sources };

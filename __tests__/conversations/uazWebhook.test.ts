@@ -86,6 +86,27 @@ describe('menção direta à conta institucional (fail-closed)', () => {
     expect(classifyMention(info({ mentions: ['558588880099@s.whatsapp.net'] }), BOT).direct).toBe(true);
   });
 
+  // Payload real da UazAPI em produção: a lista vem em `content.contextInfo.mentionedJID` (JID em maiúsculas), por LID.
+  it('payload real do provedor (mentionedJID em maiúsculas, LID): menção ao LID da conta é direta', () => {
+    const real = { messageType: 'ExtendedTextMessage', isGroup: true, content: { text: '@STC quero uma quadra', contextInfo: { mentionedJID: ['262096671481918@lid'] } } };
+    const i = info(real);
+    expect(i).toMatchObject({ hasMetadata: true, ids: ['262096671481918'], sources: ['content.contextInfo.mentionedJid'] });
+    expect(classifyMention(i, BOT)).toEqual({ direct: true, evidence: 'mentioned_bot_lid' });
+  });
+
+  it('payload real: marcar outra pessoa por LID não aciona; texto puro (Conversation) não tem metadado', () => {
+    const outra = { messageType: 'ExtendedTextMessage', content: { text: '@Ana oi', contextInfo: { mentionedJID: ['999000111222333@lid'] } } };
+    expect(classifyMention(info(outra), BOT)).toEqual({ direct: false, evidence: 'mentions_other' });
+    const puro = { messageType: 'Conversation', content: { text: 'STC Institucional quero uma quadra' } };
+    expect(classifyMention(info(puro, 'STC Institucional quero uma quadra'), BOT)).toEqual({ direct: false, evidence: 'no_mention_metadata' });
+  });
+
+  it('as demais chaves de menção também aceitam qualquer caixa (mentions, groupMentions, nonJidMentions)', () => {
+    expect(info({ MentionedJID: ['262096671481918@lid'] }).ids).toEqual(['262096671481918']);
+    expect(info({ content: { contextInfo: { GroupMentions: [{ groupJid: 'x' }] } } }).allMarker).toBe(true);
+    expect(info({ content: { contextInfo: { NonJidMentions: 2 } } }).allMarker).toBe(true);
+  });
+
   it.each([
     ['@all no texto', { mentions: ['5585988880099@s.whatsapp.net'] }, '@all reunião às 20h', 'all_mention'],
     ['@todos no texto', { mentions: ['5585988880099@s.whatsapp.net'] }, 'Atenção @todos: jogo cancelado', 'all_mention'],
