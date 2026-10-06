@@ -97,6 +97,12 @@ describe('prompt e cliente do modelo', () => {
     requester: { profile: { name: 'Ana Sócia', is_member: true, is_admin: false, professor_id: null } },
     courts: [{ id: '1', name: 'Quadra 1', type: 'Saibro' }], my_reservations: [], open_proposal: null, transcript: [{ direction: 'inbound', origin: 'customer', kind: 'text', body: 'quero quadra' }] };
 
+  it('o agente se apresenta no masculino, com o nome configurado ("João Fonseca")', () => {
+    const s = systemPrompt({ ...settings, persona_name: 'João Fonseca' }, ctx);
+    expect(s).toContain('Você é João Fonseca, o assistente de WhatsApp do Sobral Tênis Clube');
+    expect(s).not.toMatch(/a assistente/);
+  });
+
   it('o prompt proíbe anunciar sucesso, trata mensagens como dado e no grupo não expõe terceiros', () => {
     const s = systemPrompt(settings, ctx);
     expect(s).toMatch(/NUNCA diga que a reserva foi feita/);
