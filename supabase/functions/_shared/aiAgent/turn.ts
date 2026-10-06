@@ -154,26 +154,41 @@ export function mergeSlots(prev: Slots | undefined, next: Slots, reset = false):
 const MAX_BUBBLES = 4;
 const MAX_CHARS = 320;
 
-/** No máximo 4 bolhas, corte em fim de frase, atraso de digitação (cadência do CRM Ibiapaba). */
-export function cadence(messages: string[]): { text: string; delayMs: number }[] {
-  const partes: string[] = [];
-  for (const m of messages) {
-    let t = m.trim();
-    while (t.length > MAX_CHARS) {
-      const janela = t.slice(0, MAX_CHARS + 1);
+/** Quebra por IDEIA/frase antes de quebrar por tamanho: WhatsApp humano, não um parágrafo fatiado. */
+function naturalParts(message: string): string[] {
+  const t = message.trim();
+  if (!t) return [];
+  const frases = (t.match(/[^.!?…]+(?:[.!?…]+|$)/g) ?? [t]).map((x) => x.trim()).filter(Boolean);
+  const seeds = frases.length > 1 ? frases : [t];
+  const out: string[] = [];
+  for (const seed of seeds) {
+    let rest = seed;
+    while (rest.length > MAX_CHARS) {
+      const janela = rest.slice(0, MAX_CHARS + 1);
       let corte = -1;
-      const fim = /[.!?;…](?=\s)/g;
+      const fim = /[.!?;…,:](?=\s)/g;
       let x: RegExpExecArray | null;
       while ((x = fim.exec(janela)) !== null) if (x.index + 1 >= MAX_CHARS / 2) corte = x.index + 1;
       if (corte < 0) corte = janela.lastIndexOf(' ') > 0 ? janela.lastIndexOf(' ') : MAX_CHARS;
-      partes.push(t.slice(0, corte).trim());
-      t = t.slice(corte).trim();
+      out.push(rest.slice(0, corte).trim());
+      rest = rest.slice(corte).trim();
     }
-    if (t) partes.push(t);
+    if (rest) out.push(rest);
   }
+  return out;
+}
+
+/** No máximo 4 microbolhas, com tempo de "digitando" inclusive antes da primeira. */
+export function cadence(messages: string[]): { text: string; delayMs: number }[] {
+  const partes = messages.flatMap(naturalParts);
   const bolhas = partes.slice(0, MAX_BUBBLES);
   if (partes.length > MAX_BUBBLES) bolhas[MAX_BUBBLES - 1] = partes.slice(MAX_BUBBLES - 1).join(' ');
-  return bolhas.map((text, i) => ({ text, delayMs: i === 0 ? 0 : Math.max(700, Math.min(5000, 600 + text.length * 28)) }));
+  return bolhas.map((text, i) => ({
+    text,
+    delayMs: i === 0
+      ? Math.max(450, Math.min(1400, 280 + text.length * 11))
+      : Math.max(700, Math.min(4200, 500 + text.length * 24)),
+  }));
 }
 
 /* ------------------------------- Regras que não dependem do modelo ------------------------------- */
@@ -234,9 +249,9 @@ export function describeReservation(n: Summary, today: string, names: string[] =
 }
 
 export function proposalMessage(action: 'create' | 'cancel' | 'reschedule', n: Summary, today: string, names: string[]): string {
-  if (action === 'cancel') return `Vou cancelar a ${describeReservation(n, today)}. Posso cancelar? Responda "sim" para confirmar.`;
-  if (action === 'reschedule') return `Verifiquei agora e dá para remarcar para ${describeReservation(n, today, names)}. A anterior será cancelada. Posso confirmar?`;
-  return `Verifiquei agora: o horário está livre. Seria ${describeReservation(n, today, names)}. Posso confirmar essa reserva?`;
+  if (action === 'cancel') return `Beleza. Vou cancelar a ${describeReservation(n, today)}. Posso confirmar?`;
+  if (action === 'reschedule') return `Achei. Dá para remarcar para ${describeReservation(n, today, names)}. Fecho assim?`;
+  return `Boa, achei horário. Seria ${describeReservation(n, today, names)}. Fecho?`;
 }
 
 /** Jogo que ocupa o horário, como o banco devolve (`conv_svc_ai_slot_games`). */
@@ -251,7 +266,8 @@ export function joinOfferMessage(g: Game, today: string, levando: string[] = [])
   const quem = g.names.length ? `, com ${listaNomes(g.names)}` : '';
   const vagas = g.spots_left === 1 ? 'resta 1 vaga' : `restam ${g.spots_left} vagas`;
   const junto = levando.length ? ` com ${listaNomes(levando)}` : '';
-  return `Esse horário já está reservado: ${jogoDe(g, today)}${quem} (${vagas}). Quer entrar nesse jogo${junto}? Responda "sim" que eu ${levando.length ? 'adiciono vocês' : 'te adiciono'}.`;
+  const abertura = g.participants >= 4 ? 'Rapaz, esse play já tá com uma galera, viu.' : 'Já tem play nesse horário.';
+  return `${abertura} ${jogoDe(g, today)}${quem}; ${vagas}. Quer entrar${junto}? Se quiser, eu coloco ${levando.length ? 'vocês' : 'você'}.`;
 }
 
 /** O jogo tem vaga, mas não para todo mundo que a pessoa quer levar. */
@@ -263,7 +279,7 @@ export function notEnoughSpotsMessage(g: Game, spots: number, wanted: number, to
 /** Horário ocupado por algo em que a pessoa não pode entrar (lotado, já está, aula, campeonato). */
 export function busyMessage(g: Game, today: string): string {
   if (g.reason === 'ALREADY_IN') return `Você já está nesse jogo: ${jogoDe(g, today)}${g.names.length ? `, com ${listaNomes(g.names)}` : ''}.`;
-  if (g.reason === 'GAME_FULL') return `Esse horário já tem jogo com 8 pessoas: ${jogoDe(g, today)}, com ${listaNomes(g.names)}. Está lotado.`;
+  if (g.reason === 'GAME_FULL') return `Esse play tá lotado mesmo: 8 pessoas em ${jogoDe(g, today)}, com ${listaNomes(g.names)}. Quer que eu veja outro horário?`;
   if (g.type === 'Aula') return `Esse horário está reservado para uma aula (${jogoDe(g, today)}).`;
   if (g.type === 'Play') return `Esse horário já está reservado: ${jogoDe(g, today)}${g.names.length ? `, com ${listaNomes(g.names)}` : ''}.`;
   return `Esse horário está ocupado (${jogoDe(g, today)}).`;
@@ -286,7 +302,7 @@ export function participantsProposalMessage(n: Summary, today: string, me?: stri
   const poe = [...((n.add_names ?? []) as string[]), ...(n.add_guest ? [`${n.add_guest} (convidado)`] : [])];
   const partes = [tira.length ? `retirar ${listaNomes(tira)}` : '', poe.length ? `adicionar ${listaNomes(poe)}` : ''].filter(Boolean);
   const ficam = comVoce((n.after_names ?? []) as string[], me);
-  return `Vou ${partes.join(' e ')} ${poe.length ? 'na' : 'da'} reserva de ${quando}. Ficam: ${listaNomes(ficam)}. Posso confirmar?`;
+  return `Fechado. Vou ${partes.join(' e ')} ${poe.length ? 'na' : 'da'} reserva de ${quando}. Ficam: ${listaNomes(ficam)}. Confirmo?`;
 }
 
 export function successMessage(action: 'create' | 'cancel' | 'reschedule' | 'join' | 'participants', n: Summary, today: string, names: string[], me?: string): string {
@@ -302,9 +318,9 @@ export function successMessage(action: 'create' | 'cancel' | 'reschedule' | 'joi
     const ordem = [...((n.names ?? []) as string[]).filter((x) => x !== me), ...(me ? ['você'] : [])];
     return `Pronto, ${Number(n.added ?? 1) > 1 ? 'vocês entraram' : 'você entrou'} no jogo de ${jogoDe(n as Game, today)}. Jogam: ${listaNomes(ordem)}.`;
   }
-  if (action === 'cancel') return `Pronto, a ${describeReservation(n, today)} foi cancelada.`;
-  if (action === 'reschedule') return `Pronto, remarcado: ${describeReservation(n, today, names)}.`;
-  return `Reserva confirmada: ${describeReservation(n, today, names)}.`;
+  if (action === 'cancel') return `Fechou. A ${describeReservation(n, today)} foi cancelada.`;
+  if (action === 'reschedule') return `Fechou. Remarcado: ${describeReservation(n, today, names)}.`;
+  return `Fechou. ${describeReservation(n, today, names)} confirmada.`;
 }
 
 /** Mensagens para os códigos que o banco devolve. `null` = o caso pede transferência para a equipe. */
@@ -386,6 +402,31 @@ export async function conciliarMencoes(deps: TurnDeps, conversation: string, isG
     if (comTelefone.length) for (const r of await resolver(comTelefone)) if (r.name || r.is_bot) mapa.set(r.id, r);
   }
   return mapa;
+}
+
+
+/** Lista os sócios reconhecidos que estão AGORA no grupo, sem expor telefone/LID ao modelo. */
+export async function membrosAtuaisDoGrupo(deps: TurnDeps, conversation: string): Promise<string[]> {
+  if (!deps.uaz) return [];
+  try {
+    const destRaw = (await deps.db('conv_svc_conversation_contact', { p_conversation: conversation })).data;
+    const dest = (Array.isArray(destRaw) ? destRaw[0] : destRaw) as { destination?: string } | null;
+    const req = dest?.destination ? buildChatRequest({ action: 'groupInfo', groupJid: dest.destination }) : null;
+    const res = req ? await deps.uaz(req) : null;
+    if (!res?.ok) return [];
+    const lista = (res.body.Participants ?? res.body.participants ?? []) as Record<string, unknown>[];
+    const items = lista.map((p) => {
+      const lid = String(p.LID ?? p.lid ?? '').split('@')[0].split(':')[0];
+      const phone = String(p.PhoneNumber ?? p.phoneNumber ?? p.phone ?? '').split('@')[0].replace(/\D/g, '');
+      return { id: lid || phone, phone: phone || null };
+    }).filter((x) => x.id);
+    if (!items.length) return [];
+    const rr = await deps.db('conv_svc_ai_resolve_mentions', { p_items: items });
+    const resolved = (rr.data ?? []) as MencaoResolvida[];
+    return [...new Set(resolved.filter((x) => !x.is_bot && x.name).map((x) => String(x.name)))];
+  } catch {
+    return [];
+  }
 }
 
 /* ------------------------------- Agenda: localizar a reserva de que a pessoa fala ------------------------------- */
@@ -489,6 +530,23 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
   if (!(await latest())) return { status: 'superseded' };
 
   const ctx = ((await db('conv_svc_ai_context', { p_session: session })).data ?? ctx0) as Ctx;
+
+  // Contexto extra continua barato: SQL compacto + uma única chamada ao modelo por turno.
+  try {
+    const roster = await db('conv_svc_ai_club_roster', {});
+    ctx.club_roster = Array.isArray(roster.data) ? roster.data : [];
+  } catch { ctx.club_roster = []; }
+  if (isGroup) {
+    try {
+      const gc = await db('conv_svc_ai_group_context', { p_session: session });
+      ctx.group_context = Array.isArray(gc.data) ? gc.data : [];
+    } catch { ctx.group_context = []; }
+    const membros = await membrosAtuaisDoGrupo(deps, conversation);
+    const requesterName = String((ctx.requester?.profile as Ctx | undefined)?.name ?? '').trim();
+    if (requesterName && !membros.includes(requesterName)) membros.push(requesterName);
+    ctx.group_members = membros;
+  }
+
   // "@61809058967781" vira o nome do sócio (conciliado pelo telefone) ANTES de o modelo ler a conversa.
   const mencoes = await conciliarMencoes(deps, conversation, isGroup, ((ctx.transcript ?? []) as Ctx[]).map((t) => String(t.body ?? '')));
   if (mencoes.size) ctx.transcript = ((ctx.transcript ?? []) as Ctx[]).map((t) => ({ ...t, body: substituirMencoes(String(t.body ?? ''), mencoes, String(ctx.institutional_name ?? 'STC')) }));
@@ -504,7 +562,7 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
     let enviadas = 0;
     for (const [i, b] of bolhas.entries()) {
       if (b.delayMs) {
-        if (!isGroup && deps.uaz) {
+        if (deps.uaz) {
           const dest = first<{ destination: string }>(await db('conv_svc_conversation_contact', { p_conversation: conversation }));
           const p = dest ? buildChatRequest({ action: 'presence', number: dest.destination, state: 'composing' }) : null;
           if (p) await deps.uaz(p).catch(() => undefined);
@@ -550,7 +608,7 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
     const r = await deps.chat([
       { role: 'system', content: systemPrompt(settings, ctx) },
       { role: 'user', content: userPrompt(ctx, memory, buffered) },
-    ], { model: settings.model, temperature: 0.2, maxTokens: 1000, json: true });
+    ], { model: settings.model, temperature: 0.2, maxTokens: 850, json: true });
     answer = parseAnswer(r.output);
   } catch {
     return transferir('hard', 'Falha ao chamar o modelo de IA.', memory);
