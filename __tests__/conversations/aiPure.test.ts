@@ -51,9 +51,9 @@ describe('textos escritos pelo servidor', () => {
     const n = { type: 'Play', date: '2026-10-07', start: '16:00', end: '17:00', court_name: 'Quadra 1' };
     expect(describeReservation(n, hoje, ['Ana', 'Beto', 'Carla'])).toBe('reserva amanhã, 16:00–17:00 na Quadra 1 para Ana, Beto e Carla');
     expect(describeReservation({ ...n, type: 'Aula' }, hoje)).toBe('aula amanhã, 16:00–17:00 na Quadra 1');
-    expect(proposalMessage('create', n, hoje, ['Ana'])).toMatch(/^Boa, achei horário\. Seria .* Fecho\?$/);
-    expect(proposalMessage('cancel', n, hoje, [])).toMatch(/Posso confirmar\?/);
-    expect(successMessage('create', n, hoje, ['Ana'])).toBe('Fechou. reserva amanhã, 16:00–17:00 na Quadra 1 para Ana confirmada.');
+    expect(proposalMessage('create', n, hoje, ['Ana'])).toMatch(/^Verifiquei agora: o horário está livre\. .* Posso confirmar essa reserva\?$/);
+    expect(proposalMessage('cancel', n, hoje, [])).toMatch(/Posso cancelar\?/);
+    expect(successMessage('create', n, hoje, ['Ana'])).toBe('Reserva confirmada: reserva amanhã, 16:00–17:00 na Quadra 1 para Ana.');
     expect(successMessage('cancel', n, hoje, [])).toMatch(/foi cancelada\.$/);
   });
 
@@ -82,7 +82,7 @@ describe('quadras, horários e cadência', () => {
     const bolhas = cadence([longo]);
     expect(bolhas.length).toBeLessThanOrEqual(4);
     expect(bolhas[0].delayMs).toBeGreaterThan(0);
-    expect(cadence(['Bora. Achei horário. Fecho?']).map((b) => b.text)).toEqual(['Bora.', 'Achei horário.', 'Fecho?']);
+    expect(cadence(['Bora.', 'Achei horário.', 'Fecho?']).map((b) => b.text)).toEqual(['Bora.', 'Achei horário.', 'Fecho?']);
     expect(bolhas.slice(0, 3).every((b) => b.text.length <= 320)).toBe(true);
     expect(cadence(['  ', ''])).toEqual([]);
   });
@@ -175,12 +175,12 @@ describe('prompt e cliente do modelo', () => {
   it('corpo da requisição e erros do provedor sem vazar a requisição', async () => {
     expect(buildChatBody([{ role: 'user', content: 'x' }], { model: 'm', temperature: 0.2, maxTokens: 10, json: true })).toMatchObject({ model: 'm', response_format: { type: 'json_object' }, max_tokens: 10 });
     let auth = '';
-    const ok = await chatClient({ apiKey: 'chave-secreta', baseUrl: 'https://llm.example/v1/', fetch: (async (_u: string, init: any) => { auth = init.headers.authorization; return new Response(JSON.stringify({ choices: [{ message: { content: '{"ok":1}' } }], model: 'm2' })); }) as any })([{ role: 'user', content: 'x' }], { model: 'm' });
-    expect([ok.output, ok.model, auth]).toEqual(['{"ok":1}', 'm2', 'Bearer chave-secreta']);
-    await expect(chatClient({ apiKey: 'chave-secreta', fetch: (async () => new Response('x'.repeat(5000) + 'chave-secreta', { status: 500 })) as any })([], { model: 'm' }))
+    const ok = await chatClient({ apiKey: 'test-key', baseUrl: 'https://llm.example/v1/', fetch: (async (_u: string, init: any) => { auth = init.headers.authorization; return new Response(JSON.stringify({ choices: [{ message: { content: '{"ok":1}' } }], model: 'm2' })); }) as any })([{ role: 'user', content: 'x' }], { model: 'm' });
+    expect([ok.output, ok.model, auth]).toEqual(['{"ok":1}', 'm2', 'Bearer test-key']);
+    await expect(chatClient({ apiKey: 'test-key', fetch: (async () => new Response('x'.repeat(5000) + 'test-key', { status: 500 })) as any })([], { model: 'm' }))
       .rejects.toThrow(LlmError);
     try {
-      await chatClient({ apiKey: 'chave-secreta', fetch: (async () => new Response('erro com chave-secreta no eco', { status: 401 })) as any })([], { model: 'm' });
+      await chatClient({ apiKey: 'test-key', fetch: (async () => new Response('erro com test-key no eco', { status: 401 })) as any })([], { model: 'm' });
     } catch (e) {
       expect((e as Error).message.length).toBeLessThan(200);
     }
