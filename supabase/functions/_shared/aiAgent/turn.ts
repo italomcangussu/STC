@@ -620,6 +620,9 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
   } catch {
     return transferir('hard', 'Falha ao chamar o modelo de IA.', memory);
   }
+  for (const candidate of answer.memory_candidates ?? []) {
+    await Promise.resolve(deps.db('conv_svc_ai_memory_candidate', { p: { ...candidate, source_message_id: messageId } })).catch(() => undefined);
+  }
   if (answer.transfer && answer.messages.length === 0) {
     return transferir(answer.handoff_kind ?? 'hard', answer.handoff_note || 'A IA pediu ajuda da equipe.', memory);
   }
