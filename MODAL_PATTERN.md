@@ -245,6 +245,12 @@ Todos os modais **DEVEM** usar o `StandardModal` com z-999.
 
 ---
 
+## 📱 Regras de app nativo (iOS)
+
+- **Nada de rolagem horizontal.** `index.css` corta o eixo X de todo overlay (`StandardModal`, `role="dialog"`, `fixed inset-0`) e tira a aparência nativa dos `input[type=date|time]`, que no iOS ignoram `width:100%`. Se uma faixa precisa rolar de lado de propósito (abas, carrossel), use `overflow-x-auto` explicitamente.
+- **Modal alto rola.** O painel do `StandardModal` centralizado usa `my-auto`: cabendo na tela fica centrado; não cabendo, cola no topo e rola (com `items-center` puro o topo ficava inalcançável).
+- Em grid de formulário, filhos com `min-w-0` e campos com `w-full min-w-0`.
+
 ## 🔍 Checklist de Qualidade
 
 Ao migrar um modal, verificar:
