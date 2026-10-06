@@ -1,7 +1,7 @@
 // @vitest-environment node
 // Quem foi marcado numa mensagem: do número ("@61809058967781") para o sócio do cadastro, pelo telefone.
 import { describe, expect, it } from 'vitest';
-import { ID, j, key, q, rpc, svc, U, world } from './harness';
+import { j, key, q, rpc, svc, U, world } from './harness';
 
 type W = Awaited<ReturnType<typeof world>>;
 let n = 0;
