@@ -662,6 +662,46 @@
     }
 }
 
+/* Sem rolagem horizontal: o app tem que parecer nativo.
+   iOS Safari ignora `width: 100%` em campos de data/hora com a aparência
+   nativa (a largura intrínseca vira o piso) e eles estouram a célula do grid,
+   empurrando o modal para o lado. Sem a aparência nativa o campo obedece ao
+   container. Vale para qualquer tela, não só modais. */
+input[type="date"],
+input[type="time"],
+input[type="month"],
+input[type="week"],
+input[type="datetime-local"] {
+    -webkit-appearance: none;
+    appearance: none;
+    min-width: 0;
+    max-width: 100%;
+}
+
+/* Rede de segurança para todo overlay (StandardModal, `role="dialog"` e os
+   `fixed inset-0` avulsos): `overflow-y-auto` faz o navegador tratar o eixo X
+   como `auto` também, então qualquer filho 1px mais largo vira barra
+   horizontal. Aqui o eixo X é cortado, a menos que o autor tenha pedido
+   `overflow-x-auto` de propósito (carrosséis, tabelas, abas). Fica fora de
+   `@layer` para vencer os utilitários do Tailwind. */
+:is([role="dialog"], .fixed.inset-0) {
+    overflow-x: hidden;
+}
+
+:is([role="dialog"], .fixed.inset-0)
+    :is(.overflow-y-auto, .overflow-auto, .overflow-y-scroll, .overflow-scroll):not(.overflow-x-auto, .overflow-x-scroll) {
+    overflow-x: hidden;
+}
+
+:is([role="dialog"], .fixed.inset-0) :is(input, select, textarea) {
+    min-width: 0;
+    max-width: 100%;
+}
+
+:is([role="dialog"], .fixed.inset-0) .grid > * {
+    min-width: 0;
+}
+
 /* ========================================
    TENNIS COURT ANIMATION - Championship Games
    VISÃO TOP-DOWN (Câmera de Cima)

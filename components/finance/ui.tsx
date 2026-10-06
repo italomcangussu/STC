@@ -15,7 +15,7 @@ import { exportFilename, toCsv, type ReportSpec } from '../../lib/finance/export
 import { downloadBlob } from './hooks';
 import { financeErrorInfo, notifyFinanceError } from '../../lib/finance/errors';
 
-export const inputCls = 'w-full min-h-11 rounded-xl border border-stone-200 bg-white px-3 py-2 text-sm text-stone-800 outline-hidden focus:border-saibro-400 focus:ring-2 focus:ring-saibro-100 disabled:bg-stone-50 disabled:text-stone-400';
+export const inputCls = 'w-full min-w-0 max-w-full min-h-11rounded-xl border border-stone-200 bg-white px-3 py-2 text-sm text-stone-800 outline-hidden focus:border-saibro-400 focus:ring-2 focus:ring-saibro-100 disabled:bg-stone-50 disabled:text-stone-400';
 export const btnPrimary = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-saibro-600 px-4 py-2 text-sm font-black text-white shadow-sm shadow-saibro-200 transition active:scale-95 hover:bg-saibro-700 disabled:opacity-50 disabled:active:scale-100';
 export const btnGhost = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-stone-200 bg-white px-4 py-2 text-sm font-bold text-stone-600 transition active:scale-95 hover:bg-stone-50 disabled:opacity-50';
 export const btnDanger = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm font-bold text-red-700 transition active:scale-95 hover:bg-red-100 disabled:opacity-50';
@@ -95,7 +95,7 @@ export const Notice: React.FC<{ tone?: 'info' | 'warn' | 'bad'; title?: string; 
 };
 
 export const Field: React.FC<{ label: string; hint?: string; children: React.ReactNode; className?: string }> = ({ label, hint, children, className = '' }) => (
-  <label className={`block space-y-1 ${className}`}>
+  <label className={`block min-w-0 space-y-1 ${className}`}>
     <span className="text-[11px] font-black uppercase tracking-wider text-stone-400">{label}</span>
     {children}
     {hint && <span className="block text-[11px] text-stone-400">{hint}</span>}
@@ -117,7 +117,7 @@ export const MoneyInput: React.FC<{ value: number | null; onChange: (cents: numb
 
 export const Sheet: React.FC<{ open: boolean; onClose: () => void; title: string; subtitle?: string; children: React.ReactNode; footer?: React.ReactNode; wide?: boolean }> = ({ open, onClose, title, subtitle, children, footer, wide }) => (
   <StandardModal isOpen={open} onClose={onClose} verticalAlign="end" padding="p-0 sm:p-4" ariaLabel={title}>
-    <div className={`flex max-h-[92dvh] w-screen flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl sm:w-[92vw] sm:rounded-3xl ${wide ? 'sm:max-w-3xl' : 'sm:max-w-lg'}`}>
+    <div className={`flex max-h-[92dvh] w-screen max-w-full flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl sm:w-[92vw] sm:rounded-3xl ${wide ? 'sm:max-w-3xl' : 'sm:max-w-lg'}`}>
       <header className="flex items-start justify-between gap-3 border-b border-stone-100 px-5 py-4">
         <div className="min-w-0">
           <h2 className="text-lg font-black text-stone-800">{title}</h2>
@@ -125,7 +125,7 @@ export const Sheet: React.FC<{ open: boolean; onClose: () => void; title: string
         </div>
         <button onClick={onClose} aria-label="Fechar" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-stone-400 hover:bg-stone-100"><X size={20} /></button>
       </header>
-      <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">{children}</div>
+      <div className="min-w-0 flex-1 space-y-4 overflow-y-auto overflow-x-hidden px-5 py-4">{children}</div>
       {footer && <footer className="flex flex-col-reverse gap-2 border-t border-stone-100 px-5 py-3 sm:flex-row sm:justify-end">{footer}</footer>}
     </div>
   </StandardModal>
