@@ -19,6 +19,17 @@ export { ID, U, key, seedPeople, asUser, asUserError, q, rpc, rpcError, j };
 const MIGRATIONS = resolve(__dirname, '../../../supabase/migrations');
 
 const EXTRA = `
+-- Campos/objetos de ranking usados pelo contexto dinâmico do João.
+alter table public.profiles add column if not exists legacy_points integer default 0;
+alter table public.profiles add column if not exists legacy_wins integer default 0;
+alter table public.profiles add column if not exists legacy_sets_won integer default 0;
+create table if not exists public.ranking_reset_events(
+  id uuid primary key default gen_random_uuid(),
+  executed_at timestamptz not null default now()
+);
+create or replace function public.get_ranking_cycle_start() returns timestamptz
+language sql stable as $ select max(executed_at) from public.ranking_reset_events $;
+
 create type court_type as enum ('Saibro', 'Rápida');
 create table public.courts(id uuid primary key default gen_random_uuid(), name text not null, type court_type not null,
   is_active boolean default true);
@@ -33,6 +44,7 @@ create table public.championship_registrations(id uuid primary key default gen_r
 create table public.matches(id uuid primary key default gen_random_uuid(), championship_id uuid references public.championships(id),
   phase text, player_a_id uuid references public.profiles(id), player_b_id uuid references public.profiles(id),
   score_a integer[], score_b integer[], winner_id uuid references public.profiles(id), status text default 'pending',
+  type text default 'Amistoso', date date, created_at timestamptz default now(), updated_at timestamptz default now(),
   registration_a_id uuid references public.championship_registrations(id), registration_b_id uuid references public.championship_registrations(id),
   winner_registration_id uuid references public.championship_registrations(id),
   walkover_winner_id uuid, walkover_winner_registration_id uuid, is_walkover boolean default false,
