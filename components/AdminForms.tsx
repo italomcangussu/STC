@@ -1,15 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  Vote, Plus, Link, QrCode, Eye, CheckCircle2,
+  Vote, Plus, Link, QrCode, CheckCircle2,
   Trash2, Edit3, Loader2, ArrowLeft,
-  Lock, Users, BarChart3, AlertCircle,
-  HelpCircle, RefreshCw, Radio, CheckSquare, MessageSquare, Copy, X
+  Lock, Users, BarChart3, RefreshCw, Radio, CheckSquare, MessageSquare, Copy, X
 } from 'lucide-react';
 import { formsService } from '../lib/formsService';
 import { ClubForm, FormQuestion, QuestionType, FormLiveResults, FormOption } from '../types';
 import { notify } from '../lib/notifications';
 import { useConfirm } from '../hooks/useConfirm';
 import { StandardModal } from './StandardModal';
+import { AdminPageHeader, adminBtnPrimary } from './admin/ui';
 
 export const AdminForms: React.FC = () => {
   const confirm = useConfirm();
@@ -711,25 +711,17 @@ export const AdminForms: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header com Ação de Criar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-stone-200/80 pb-5">
-        <div>
-          <h2 className="text-xl md:text-2xl font-black text-stone-900 tracking-tight flex items-center gap-2.5">
-            <Vote className="text-saibro-600" size={26} />
-            Formulários & Urna de Votação
-          </h2>
-          <p className="text-xs md:text-sm text-stone-500 mt-0.5">
-            Crie pesquisas, enquetes e votações oficiais com apuração ao vivo e urna cega.
-          </p>
-        </div>
-
-        <button
-          onClick={handleOpenCreate}
-          className="px-4 py-2.5 rounded-xl font-bold text-sm bg-saibro-600 hover:bg-saibro-700 text-white shadow-md shadow-saibro-500/20 active:scale-95 transition-all flex items-center justify-center gap-2 shrink-0"
-        >
-          <Plus size={18} />
-          Criar Novo Formulário
-        </button>
-      </div>
+      <AdminPageHeader
+        icon={<Vote className="text-saibro-600" size={26} />}
+        title="Formulários & Urna de Votação"
+        subtitle="Crie pesquisas, enquetes e votações oficiais com apuração ao vivo e urna cega."
+        actions={
+          <button onClick={handleOpenCreate} className={adminBtnPrimary}>
+            <Plus size={18} />
+            Criar Novo Formulário
+          </button>
+        }
+      />
 
       {/* Loading State */}
       {loading ? (

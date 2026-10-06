@@ -27,12 +27,15 @@ export const Money: React.FC<{ cents: number; className?: string; signed?: boole
 export const Card: React.FC<{ title?: React.ReactNode; subtitle?: React.ReactNode; right?: React.ReactNode; children?: React.ReactNode; className?: string }> = ({ title, subtitle, right, children, className = '' }) => (
   <section className={`rounded-3xl border border-stone-100 bg-white p-4 shadow-sm md:p-5 ${className}`}>
     {(title || right) && (
-      <header className="mb-3 flex items-start justify-between gap-3">
-        <div className="min-w-0">
+      // No celular o título ocupa a linha inteira e as ações vêm logo abaixo,
+      // alinhadas à esquerda e podendo quebrar: antes, ações largas (ex.: "Gerar
+      // lançamentos" + "Nova") esmagavam o título até sumir atrás delas.
+      <header className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+        <div className="min-w-0 sm:flex-1">
           {title && <h3 className="text-base font-black text-stone-800">{title}</h3>}
           {subtitle && <p className="text-xs font-medium text-stone-500">{subtitle}</p>}
         </div>
-        {right && <div className="shrink-0">{right}</div>}
+        {right && <div className="flex flex-wrap items-center gap-2 sm:shrink-0 sm:justify-end">{right}</div>}
       </header>
     )}
     {children}
@@ -225,16 +228,41 @@ export const Row: React.FC<{ children: React.ReactNode; onClick?: () => void; cl
   >{children}</div>
 );
 
-export const SectionTabs: React.FC<{ items: Array<{ id: string; label: string; badge?: number }>; value: string; onChange: (id: string) => void; label: string }> = ({ items, value, onChange, label }) => (
-  <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide" role="tablist" aria-label={label}>
-    {items.map((i) => (
-      <button
-        key={i.id} role="tab" aria-selected={i.id === value} onClick={() => onChange(i.id)}
-        className={`min-h-11 whitespace-nowrap rounded-full border px-3.5 text-xs font-bold transition-colors ${i.id === value ? 'border-saibro-300 bg-saibro-50 text-saibro-700' : 'border-stone-200 bg-white text-stone-500 hover:border-stone-300'}`}
-      >
-        {i.label}
-        {!!i.badge && <span className="ml-1.5 rounded-full bg-saibro-600 px-1.5 py-0.5 text-[10px] font-black text-white">{i.badge}</span>}
-      </button>
-    ))}
-  </div>
-);
+type TabItem = { id: string; label: string; badge?: number };
+
+/**
+ * Abas em dois estilos, para que níveis diferentes de navegação não pareçam o
+ * mesmo controle: `segmented` (blocos de largura igual, o nível de cima) e
+ * `chips` (pílulas roláveis, o nível de baixo).
+ */
+export const SectionTabs: React.FC<{ items: TabItem[]; value: string; onChange: (id: string) => void; label: string; variant?: 'chips' | 'segmented' }> = ({ items, value, onChange, label, variant = 'chips' }) => {
+  const badge = (n?: number) => !!n && <span className="ml-1.5 rounded-full bg-saibro-600 px-1.5 py-0.5 text-[10px] font-black text-white">{n}<span className="sr-only"> pendentes</span></span>;
+  // No seletor de blocos o selo flutua no canto: dentro do texto ele disputava a largura com o nome da aba.
+  const cornerBadge = (n?: number) => !!n && <span className="absolute right-1 top-0.5 min-w-4 rounded-full bg-saibro-600 px-1 text-center text-[10px] font-black leading-4 text-white">{n}<span className="sr-only"> pendentes</span></span>;
+  if (variant === 'segmented') {
+    return (
+      <div className="grid auto-cols-fr grid-flow-col gap-1 rounded-2xl bg-stone-100 p-1" role="tablist" aria-label={label}>
+        {items.map((i) => (
+          <button
+            key={i.id} role="tab" aria-selected={i.id === value} onClick={() => onChange(i.id)}
+            className={`relative min-h-11 min-w-0 rounded-xl px-1 text-sm font-bold transition ${i.id === value ? 'bg-white text-saibro-700 shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}
+          >
+            {i.label}{cornerBadge(i.badge)}
+          </button>
+        ))}
+      </div>
+    );
+  }
+  return (
+    <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide" role="tablist" aria-label={label}>
+      {items.map((i) => (
+        <button
+          key={i.id} role="tab" aria-selected={i.id === value} onClick={() => onChange(i.id)}
+          className={`min-h-11 whitespace-nowrap rounded-full border px-3.5 text-xs font-bold transition-colors ${i.id === value ? 'border-saibro-300 bg-saibro-50 text-saibro-700' : 'border-stone-200 bg-white text-stone-500 hover:border-stone-300'}`}
+        >
+          {i.label}{badge(i.badge)}
+        </button>
+      ))}
+    </div>
+  );
+};

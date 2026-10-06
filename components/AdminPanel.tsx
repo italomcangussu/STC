@@ -1,11 +1,16 @@
-import React, { Suspense, lazy, useState, useEffect } from 'react';
-import { Trophy, Swords,
+import React, { Suspense, lazy, useState, useEffect, useRef } from 'react';
+import { Trophy, Swords, Calendar, Megaphone, UserCheck,
     Search, XCircle,
     ChevronRight, Trash2, Edit, Plus, AlertCircle, Loader2, Save, Zap, History
 } from 'lucide-react';
 import { Dashboard } from './Dashboard';
 import { AdminPending } from './admin/AdminPending';
-import { ADMIN_GROUPS, AdminTabId, groupOf, loadLastTab, saveLastTab, searchSections } from './admin/adminNav';
+import { AdminNav, AdminSearchBox, AdminSectionHeading } from './admin/AdminNav';
+import { PANEL_DOM_ID, sectionById, tabDomId } from './admin/adminNavMeta';
+import { AdminEmbedProvider } from './admin/AdminEmbedContext';
+import { AdminEmpty, AdminPageHeader, AdminSearch, ChipGroup, adminBtnPrimary } from './admin/ui';
+import { pendingBySection, useAdminPending } from './admin/useAdminPending';
+import { AdminTabId, groupOf, loadLastTab, saveLastTab } from './admin/adminNav';
 import { Reservation, User, Challenge, AccessRequest } from '../types';
 import { formatDateBr } from '../utils';
 import { supabase } from '../lib/supabase';
@@ -328,43 +333,24 @@ const ReservasTab: React.FC = () => {
         return <div className="flex justify-center py-8"><Loader2 className="animate-spin text-saibro-500" size={32} /></div>;
     }
 
-    const chip = (active: boolean) => `px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${active ? 'bg-saibro-500 text-white' : 'bg-stone-50 text-stone-600 hover:bg-saibro-50'}`;
+    const TYPES = ['all', 'Play', 'Aula', 'Campeonato', 'Desafio'].map(f => ({ id: f, label: f === 'all' ? 'Todos os tipos' : f }));
 
     return (
         <div className="space-y-4">
-            <div className="relative">
-                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
-                <input
-                    value={query}
-                    onChange={e => setQuery(e.target.value)}
-                    placeholder="Buscar por atleta ou quadra"
-                    aria-label="Buscar reservas"
-                    className="w-full rounded-xl border border-stone-200 py-2 pl-9 pr-3 text-sm outline-none focus:border-saibro-400"
-                />
-            </div>
-            <div className="flex gap-2 flex-wrap">
-                {PERIODS.map(p => (
-                    <button key={p.id} onClick={() => setPeriod(p.id)} className={chip(period === p.id)}>{p.label}</button>
-                ))}
-            </div>
-            <div className="flex gap-2 flex-wrap items-center">
-                {['all', 'Play', 'Aula', 'Campeonato', 'Desafio'].map(f => (
-                    <button key={f} onClick={() => setType(f)} className={`${chip(type === f)} !py-1 !text-xs`}>
-                        {f === 'all' ? 'Todos os tipos' : f}
-                    </button>
-                ))}
-                {cancelledCount > 0 && (
-                    <label className="ml-auto flex items-center gap-2 text-xs text-stone-500 cursor-pointer">
-                        <input type="checkbox" checked={showCancelled} onChange={e => setShowCancelled(e.target.checked)} />
-                        Mostrar canceladas ({cancelledCount})
-                    </label>
-                )}
-            </div>
+            <AdminSearch value={query} onChange={setQuery} placeholder="Buscar por atleta ou quadra" label="Buscar reservas" />
+            <ChipGroup<ReservationPeriod> label="Período" items={PERIODS} value={period} onChange={setPeriod} />
+            <ChipGroup label="Tipo de reserva" items={TYPES} value={type} onChange={setType} />
+            {cancelledCount > 0 && (
+                <label className="flex min-h-11 cursor-pointer items-center gap-2.5 text-sm text-stone-600">
+                    <input type="checkbox" className="h-5 w-5 accent-saibro-600" checked={showCancelled} onChange={e => setShowCancelled(e.target.checked)} />
+                    Mostrar canceladas ({cancelledCount})
+                </label>
+            )}
             <p className="text-xs text-stone-400">{plural(visible.length, 'reserva')} · últimos 90 dias em diante</p>
 
             <div className="space-y-3">
                 {visible.length === 0 && (
-                    <p className="text-sm text-stone-400 text-center py-8">Nenhuma reserva neste filtro.</p>
+                    <AdminEmpty title="Nenhuma reserva neste filtro" hint="Troque o período ou o tipo para ver outras reservas." icon={<Calendar size={28} />} />
                 )}
                 {visible.map(row => {
                     const res = rowById.get(row.id)!;
@@ -378,8 +364,8 @@ const ReservasTab: React.FC = () => {
                             key={res.id}
                             className={`bg-white rounded-xl p-4 shadow-sm border ${isCancelled ? 'border-red-200 opacity-60' : 'border-stone-100'}`}
                         >
-                            <div className="flex justify-between items-start">
-                                <div>
+                            <div className="flex justify-between items-start gap-2">
+                                <div className="min-w-0">
                                     <div className="flex items-center gap-2 mb-1">
                                         <span className={`text-xs font-bold px-2 py-0.5 rounded ${res.type === 'Play' ? 'bg-green-100 text-green-700' :
                                             res.type === 'Aula' ? 'bg-orange-100 text-orange-700' :
@@ -407,9 +393,9 @@ const ReservasTab: React.FC = () => {
                                         onClick={() => handleCancel(res.id)}
                                         aria-label="Cancelar reserva"
                                         title="Cancelar reserva"
-                                        className="p-2 text-stone-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-stone-400 transition-colors hover:bg-red-50 hover:text-red-500"
                                     >
-                                        <XCircle size={18} />
+                                        <XCircle size={20} />
                                     </button>
                                 )}
                             </div>
@@ -672,29 +658,16 @@ const DesafiosTab: React.FC = () => {
                 ))}
             </div>
 
-            <div className="relative">
-                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
-                <input
-                    value={query}
-                    onChange={e => setQuery(e.target.value)}
-                    placeholder="Buscar por atleta"
-                    aria-label="Buscar desafios"
-                    className="w-full rounded-xl border border-stone-200 py-2 pl-9 pr-3 text-sm outline-none focus:border-saibro-400"
-                />
-            </div>
-
-            <div className="flex justify-end">
-                <button
-                    onClick={() => setShowNewChallengeModal(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-saibro-500 text-white rounded-xl shadow-lg shadow-saibro-200 font-bold hover:bg-saibro-600 transition-colors"
-                >
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <AdminSearch value={query} onChange={setQuery} placeholder="Buscar por atleta" label="Buscar desafios" className="sm:flex-1" />
+                <button onClick={() => setShowNewChallengeModal(true)} className={adminBtnPrimary}>
                     <Plus size={18} /> Novo Desafio
                 </button>
             </div>
 
             <div className="space-y-3">
                 {visibleChallenges.length === 0 && (
-                    <p className="text-sm text-stone-400 text-center py-8">Nenhum desafio neste filtro.</p>
+                    <AdminEmpty title="Nenhum desafio neste filtro" hint="Toque num dos números acima para trocar o filtro." icon={<Swords size={28} />} />
                 )}
                 {visibleChallenges.map(challenge => {
                     const challenger = profiles.find(u => u.id === challenge.challengerId);
@@ -703,23 +676,23 @@ const DesafiosTab: React.FC = () => {
 
                     return (
                         <div key={challenge.id} className="bg-white rounded-xl p-4 shadow-sm border border-stone-100">
-                            <div className="flex justify-between items-start">
-                                <div>
+                            <div className="flex justify-between items-start gap-2">
+                                <div className="min-w-0">
                                     <div className="flex items-center gap-2 mb-2">
                                         <span className={`text-xs font-bold px-2 py-0.5 rounded ${statusInfo.color}`}>
                                             {statusInfo.label}
                                         </span>
                                         <span className="text-xs text-stone-400">{challenge.monthRef}</span>
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                        <div className="flex items-center gap-2">
-                                            <img src={challenger?.avatar} alt="" className="w-8 h-8 rounded-full bg-stone-200" />
-                                            <span className="font-medium text-stone-700">{challenger?.name}</span>
+                                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                                        <div className="flex min-w-0 items-center gap-2">
+                                            <img src={challenger?.avatar} alt="" className="w-8 h-8 shrink-0 rounded-full bg-stone-200" />
+                                            <span className="truncate font-medium text-stone-700">{challenger?.name}</span>
                                         </div>
-                                        <ChevronRight size={16} className="text-stone-400" />
-                                        <div className="flex items-center gap-2">
-                                            <img src={challenged?.avatar} alt="" className="w-8 h-8 rounded-full bg-stone-200" />
-                                            <span className="font-medium text-stone-700">{challenged?.name}</span>
+                                        <ChevronRight size={16} className="shrink-0 text-stone-400" />
+                                        <div className="flex min-w-0 items-center gap-2">
+                                            <img src={challenged?.avatar} alt="" className="w-8 h-8 shrink-0 rounded-full bg-stone-200" />
+                                            <span className="truncate font-medium text-stone-700">{challenged?.name}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -728,9 +701,9 @@ const DesafiosTab: React.FC = () => {
                                         onClick={() => handleCancel(challenge.id)}
                                         aria-label="Cancelar desafio"
                                         title="Cancelar desafio"
-                                        className="p-2 text-stone-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-stone-400 transition-colors hover:bg-red-50 hover:text-red-500"
                                     >
-                                        <XCircle size={18} />
+                                        <XCircle size={20} />
                                     </button>
                                 )}
                             </div>
@@ -882,48 +855,45 @@ const AnunciosTab: React.FC = () => {
 
     return (
         <div className="space-y-4">
-            <div className="flex justify-between items-center">
-                <h2 className="text-lg font-bold text-stone-800">Gerenciar Avisos</h2>
-                <button
-                    onClick={openAddModal}
-                    className="px-4 py-2 bg-saibro-600 text-white rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-saibro-700"
-                >
-                    <Plus size={16} /> Novo Aviso
-                </button>
-            </div>
+            <AdminPageHeader
+                icon={<Megaphone size={22} className="text-saibro-600" />}
+                title="Gerenciar Avisos"
+                subtitle="Comunicados que aparecem para os sócios"
+                actions={<button onClick={openAddModal} className={adminBtnPrimary}><Plus size={18} /> Novo Aviso</button>}
+            />
 
             {announcements.length === 0 ? (
-                <div className="text-center py-8 text-stone-400">Nenhum aviso cadastrado</div>
+                <AdminEmpty title="Nenhum aviso cadastrado" hint="Toque em “Novo Aviso” para publicar o primeiro comunicado." icon={<Megaphone size={28} />} />
             ) : (
                 <div className="space-y-3">
                     {announcements.map(ann => {
                         const expired = !!ann.expiresAt && new Date(ann.expiresAt).getTime() < Date.now();
                         return (
                         <div key={ann.id} className={`p-4 rounded-xl border ${ann.isActive && !expired ? 'bg-white border-stone-200' : 'bg-stone-50 border-stone-100 opacity-60'}`}>
-                            <div className="flex justify-between items-start">
-                                <div className="flex-1">
+                            <div className="flex justify-between items-start gap-3">
+                                <div className="min-w-0 flex-1">
                                     <h3 className="font-bold text-stone-800">{ann.title}</h3>
                                     <p className="text-sm text-stone-500 mt-1 line-clamp-2">{ann.message}</p>
-                                    <div className="flex gap-2 mt-2 text-[10px] text-stone-400">
+                                    <div className="flex flex-wrap gap-2 mt-2 text-[10px] text-stone-400">
                                         {expired && <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded">Expirado — não aparece mais</span>}
                                         {ann.showOnce && <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded">Única vez</span>}
                                         {ann.expiresAt && <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded">Expira: {new Date(ann.expiresAt).toLocaleDateString('pt-BR', { timeZone: 'America/Fortaleza' })}</span>}
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-2">
+                                <div className="flex shrink-0 flex-wrap items-center justify-end gap-1">
                                     <button
                                         onClick={() => toggleActive(ann.id, ann.isActive)}
                                         aria-pressed={ann.isActive}
                                         title={ann.isActive ? 'Clique para desativar' : 'Clique para ativar'}
-                                        className={`px-3 py-1 rounded-full text-xs font-bold ${ann.isActive ? 'bg-green-100 text-green-700' : 'bg-stone-200 text-stone-500'}`}
+                                        className={`min-h-11 rounded-full px-4 text-xs font-bold ${ann.isActive ? 'bg-green-100 text-green-700' : 'bg-stone-200 text-stone-500'}`}
                                     >
                                         {ann.isActive ? 'Ativo' : 'Inativo'}
                                     </button>
-                                    <button onClick={() => openEditModal(ann)} aria-label="Editar aviso" className="p-2 hover:bg-stone-100 rounded-lg">
-                                        <Edit size={16} className="text-stone-500" />
+                                    <button onClick={() => openEditModal(ann)} aria-label="Editar aviso" className="flex h-11 w-11 items-center justify-center rounded-xl hover:bg-stone-100">
+                                        <Edit size={18} className="text-stone-500" />
                                     </button>
-                                    <button onClick={() => handleDelete(ann.id)} aria-label="Excluir aviso" className="p-2 hover:bg-red-50 rounded-lg">
-                                        <Trash2 size={16} className="text-red-500" />
+                                    <button onClick={() => handleDelete(ann.id)} aria-label="Excluir aviso" className="flex h-11 w-11 items-center justify-center rounded-xl hover:bg-red-50">
+                                        <Trash2 size={18} className="text-red-500" />
                                     </button>
                                 </div>
                             </div>
@@ -1073,38 +1043,25 @@ const SociosTab: React.FC = () => {
     return (
         <div className="space-y-6">
             <div className="space-y-4">
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" size={18} />
-                    <input
-                        type="text"
-                        placeholder="Buscar por nome, e-mail ou telefone"
-                        aria-label="Buscar sócios"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 bg-white border border-stone-200 rounded-xl outline-hidden focus:ring-2 focus:ring-saibro-500"
-                    />
-                </div>
+                <AdminSearch value={searchTerm} onChange={setSearchTerm} placeholder="Buscar por nome, e-mail ou telefone" label="Buscar sócios" />
 
-                <div className="flex gap-2 flex-wrap items-center">
-                    {([['all', 'Todos'], ['admin', 'Administradores'], ['professor', 'Professores']] as const).map(([id, label]) => (
-                        <button
-                            key={id}
-                            onClick={() => setRoleFilter(id)}
-                            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${roleFilter === id ? 'bg-saibro-500 text-white' : 'bg-stone-50 text-stone-600 hover:bg-saibro-50'}`}
-                        >
-                            {label}
-                        </button>
-                    ))}
-                    <span className="ml-auto text-xs text-stone-400">{plural(visibleMembers.length, 'sócio')}</span>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                    <ChipGroup<'all' | 'admin' | 'professor'>
+                        label="Papel"
+                        value={roleFilter}
+                        onChange={setRoleFilter}
+                        items={[{ id: 'all', label: 'Todos' }, { id: 'admin', label: 'Administradores' }, { id: 'professor', label: 'Professores' }]}
+                    />
+                    <span className="text-xs text-stone-400 sm:ml-auto">{plural(visibleMembers.length, 'sócio')}</span>
                 </div>
 
                 <div className="grid gap-3">
                     {visibleMembers.map(member => (
                         <div key={member.id} className="bg-white p-4 rounded-2xl shadow-sm border border-stone-100 flex items-center justify-between group hover:border-saibro-200 transition-all">
-                            <div className="flex items-center gap-3">
-                                <img src={member.avatar || 'https://via.placeholder.com/50'} alt="" className="w-12 h-12 rounded-full border-2 border-saibro-50 object-cover" />
-                                <div>
-                                    <h3 className="font-bold text-stone-800">{member.name}</h3>
+                            <div className="flex min-w-0 items-center gap-3">
+                                <img src={member.avatar || 'https://via.placeholder.com/50'} alt="" className="h-12 w-12 shrink-0 rounded-full border-2 border-saibro-50 object-cover" />
+                                <div className="min-w-0">
+                                    <h3 className="truncate font-bold text-stone-800">{member.name}</h3>
                                     <p className="text-xs text-stone-400">+{member.phone}</p>
                                     <p className="text-[10px] text-saibro-600 uppercase font-bold mt-1">
                                         {member.category || 'Sem classe'}
@@ -1118,15 +1075,15 @@ const SociosTab: React.FC = () => {
                                     onClick={() => openEditMember(member)}
                                     aria-label={`Editar ${member.name}`}
                                     title="Editar sócio"
-                                    className="p-2 text-stone-400 hover:text-saibro-600 hover:bg-saibro-50 rounded-lg"
+                                    className="flex h-11 w-11 items-center justify-center rounded-xl text-stone-400 hover:bg-saibro-50 hover:text-saibro-600"
                                 >
-                                    <Edit size={18} />
+                                    <Edit size={20} />
                                 </button>
                             </div>
                         </div>
                     ))}
                     {visibleMembers.length === 0 && (
-                        <p className="text-center text-stone-400 py-8">Nenhum sócio encontrado.</p>
+                        <AdminEmpty title="Nenhum sócio encontrado" hint="Revise a busca ou o filtro de papel." icon={<Search size={28} />} />
                     )}
                 </div>
             </div>
@@ -1393,18 +1350,9 @@ const AcessosTab: React.FC = () => {
     return (
         <div className="space-y-8">
             <div className="space-y-4">
-                <div className="flex items-center justify-between gap-3">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <h3 className="font-bold text-stone-800">Solicitações Pendentes ({filteredPending.length})</h3>
-                    <div className="relative max-w-xs w-full">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" size={16} />
-                        <input
-                            type="text"
-                            value={searchTerm}
-                            onChange={e => setSearchTerm(e.target.value)}
-                            placeholder="Buscar solicitações..."
-                            className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-stone-200 rounded-xl"
-                        />
-                    </div>
+                    <AdminSearch value={searchTerm} onChange={setSearchTerm} placeholder="Buscar solicitações..." label="Buscar solicitações" className="w-full sm:max-w-xs" />
                 </div>
 
                 <div className="space-y-2">
@@ -1418,18 +1366,18 @@ const AcessosTab: React.FC = () => {
                                     Solicitado em {new Date(req.createdAt).toLocaleString('pt-BR', { timeZone: 'America/Fortaleza' })}
                                 </p>
                             </div>
-                            <div className="flex gap-2">
+                            <div className="flex gap-2 md:shrink-0">
                                 <button
                                     onClick={() => handleReject(req)}
                                     disabled={saving}
-                                    className="px-3 py-1.5 text-xs font-bold text-stone-700 bg-stone-100 rounded-lg hover:bg-stone-200 disabled:opacity-50"
+                                    className="min-h-11 flex-1 rounded-xl bg-stone-100 px-4 text-sm font-bold text-stone-700 hover:bg-stone-200 disabled:opacity-50 md:flex-none"
                                 >
                                     Rejeitar
                                 </button>
                                 <button
                                     onClick={() => handleApprove(req)}
                                     disabled={saving}
-                                    className="px-3 py-1.5 text-xs font-bold text-white bg-amber-500 rounded-lg hover:bg-amber-600 disabled:opacity-50"
+                                    className="min-h-11 flex-1 rounded-xl bg-saibro-600 px-4 text-sm font-bold text-white hover:bg-saibro-700 disabled:opacity-50 md:flex-none"
                                 >
                                     Aprovar
                                 </button>
@@ -1438,7 +1386,7 @@ const AcessosTab: React.FC = () => {
                     ))}
 
                     {filteredPending.length === 0 && (
-                        <p className="text-sm text-stone-500 italic">Nenhuma solicitação pendente.</p>
+                        <AdminEmpty title="Nenhuma solicitação pendente" hint="Novos pedidos de acesso aparecem aqui para você aprovar." icon={<UserCheck size={28} />} />
                     )}
                 </div>
             </div>
@@ -1819,19 +1767,29 @@ const LancamentosTab: React.FC = () => {
 
 export const AdminPanel: React.FC = () => {
     const [activeTab, setActiveTab] = useState<AdminTabId>(loadLastTab);
-    const [query, setQuery] = useState('');
-    const results = searchSections(query);
-    const group = groupOf(activeTab);
+    const { counts, refresh } = useAdminPending();
+    const navRef = useRef<HTMLDivElement>(null);
+    const firstRender = useRef(true);
+    const section = sectionById(activeTab);
+    const hasSectionTabs = groupOf(activeTab).sections.length > 1;
 
     const go = (id: AdminTabId) => {
         setActiveTab(id);
         saveLastTab(id);
-        setQuery('');
+        refresh();
     };
+
+    // Ao trocar de seção com a página rolada, volta ao início da seção nova
+    // (senão o usuário cai no meio de uma tela que ainda nem viu).
+    useEffect(() => {
+        if (firstRender.current) { firstRender.current = false; return; }
+        const nav = navRef.current;
+        if (nav && nav.getBoundingClientRect().top < 0) nav.scrollIntoView?.({ block: 'start' });
+    }, [activeTab]);
 
     const renderTabContent = () => {
         switch (activeTab) {
-            case 'dashboard': return <><AdminPending onGo={go} /><Dashboard /></>;
+            case 'dashboard': return <><AdminPending counts={counts} onGo={go} /><Dashboard /></>;
             case 'formularios': return <AdminForms />;
             case 'lancamentos': return <LancamentosTab />;
             case 'superset': return <SuperSet />;
@@ -1850,75 +1808,34 @@ export const AdminPanel: React.FC = () => {
     };
 
     return (
-        <div className="flex flex-col min-h-screen bg-stone-50">
-            <div className="bg-saibro-600 pt-8 pb-16 px-4 md:px-8 rounded-b-[40px] shadow-2xl relative overflow-hidden shrink-0">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-saibro-500/20 rounded-full -mr-20 -mt-20 blur-3xl"></div>
-                <div className="relative z-10 flex flex-col gap-3 max-w-7xl mx-auto w-full">
+        <div className="flex min-h-full flex-col bg-white">
+            <header className="relative shrink-0 rounded-b-3xl bg-saibro-600 px-3 pb-12 pt-4 shadow-xl md:px-8 md:pt-6">
+                <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-b-3xl" aria-hidden>
+                    <div className="absolute -right-16 -top-20 h-56 w-56 rounded-full bg-saibro-500/30 blur-3xl" />
+                </div>
+                <div className="relative mx-auto flex w-full max-w-7xl flex-col gap-3">
                     <div>
-                        <span className="text-saibro-200 text-xs font-bold uppercase tracking-widest">Administração</span>
-                        <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">Centro de Comando</h1>
+                        <p className="text-xs font-bold uppercase tracking-widest text-saibro-200">Administração</p>
+                        <p className="text-xl font-black tracking-tight text-white md:text-2xl">Centro de Comando</p>
                     </div>
-                    <div className="relative max-w-md">
-                        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
-                        <input
-                            value={query}
-                            onChange={e => setQuery(e.target.value)}
-                            placeholder="O que você quer fazer? (ex.: mensalidade, aluno, aprovar)"
-                            aria-label="Buscar seção do painel"
-                            className="w-full rounded-2xl bg-white py-2.5 pl-9 pr-3 text-sm text-stone-700 outline-none focus:ring-2 focus:ring-saibro-300"
-                        />
-                        {query && (
-                            <div className="absolute z-30 mt-1 w-full rounded-2xl bg-white shadow-xl border border-stone-100 overflow-hidden">
-                                {results.length === 0 ? (
-                                    <p className="px-4 py-3 text-sm text-stone-400">Nada encontrado.</p>
-                                ) : results.map(r => (
-                                    <button key={r.id} onClick={() => go(r.id)} className="flex w-full flex-col px-4 py-2.5 text-left hover:bg-stone-50">
-                                        <span className="text-sm font-bold text-stone-700">{r.label}</span>
-                                        <span className="text-xs text-stone-400">{r.hint}</span>
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-                    </div>
+                    <AdminSearchBox onGo={go} />
                 </div>
+            </header>
+
+            <div ref={navRef} className="relative z-20 -mt-8 mx-auto w-full max-w-7xl px-3 md:px-8">
+                <AdminNav active={activeTab} onGo={go} pending={pendingBySection(counts)} />
             </div>
 
-            <div className="px-2 md:px-8 -mt-8 relative z-20 max-w-7xl mx-auto w-full">
-                <div className="bg-white rounded-2xl shadow-lg p-2 flex gap-1 overflow-x-auto scrollbar-hide" role="tablist" aria-label="Áreas">
-                    {ADMIN_GROUPS.map(g => (
-                        <button
-                            key={g.id}
-                            role="tab"
-                            aria-selected={g.id === group.id}
-                            onClick={() => go(g.sections[0].id)}
-                            className={`px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-colors ${g.id === group.id ? 'bg-saibro-600 text-white' : 'text-stone-500 hover:bg-stone-100'}`}
-                        >
-                            {g.label}
-                        </button>
-                    ))}
-                </div>
-                {group.sections.length > 1 && (
-                    <div className="flex gap-2 overflow-x-auto pt-3 scrollbar-hide" role="tablist" aria-label={group.label}>
-                        {group.sections.map(s => (
-                            <button
-                                key={s.id}
-                                role="tab"
-                                aria-selected={s.id === activeTab}
-                                onClick={() => go(s.id)}
-                                title={s.hint}
-                                className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap border transition-colors ${s.id === activeTab ? 'bg-saibro-50 text-saibro-700 border-saibro-300' : 'bg-white text-stone-500 border-stone-200 hover:border-stone-300'}`}
-                            >
-                                {s.label}
-                            </button>
-                        ))}
-                    </div>
-                )}
-            </div>
-
-            <div className="flex-1 px-2 md:px-8 mt-3 pb-8 max-w-7xl mx-auto w-full">
-                <div className="bg-white rounded-[24px] md:rounded-[32px] shadow-sm border border-stone-100 min-h-[500px] p-4 md:p-6 overflow-x-hidden">
+            <div
+                id={PANEL_DOM_ID}
+                role="tabpanel"
+                {...(hasSectionTabs ? { 'aria-labelledby': tabDomId(activeTab) } : { 'aria-label': section.label })}
+                className="mx-auto w-full max-w-7xl flex-1 px-3 pb-8 md:px-8"
+            >
+                <AdminSectionHeading section={section} />
+                <AdminEmbedProvider>
                     {renderTabContent()}
-                </div>
+                </AdminEmbedProvider>
             </div>
         </div>
     );

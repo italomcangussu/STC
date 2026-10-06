@@ -401,6 +401,17 @@
         padding-bottom: calc(76px + max(34px, calc(env(safe-area-inset-bottom, 0px) + 12px)));
     }
 
+    /* Faixas roláveis (abas, chips) sem barra visível. O Tailwind 4 não traz
+       essa classe; sem ela as abas mostravam a barra fora do iOS. */
+    .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+    }
+
     /* Custom Scrollbar */
     .custom-scrollbar::-webkit-scrollbar {
         width: 4px;
