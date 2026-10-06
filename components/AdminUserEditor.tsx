@@ -2,8 +2,11 @@ import React, { useState } from 'react';
 import { User } from '../types';
 import { supabase } from '../lib/supabase';
 import { notify } from '../lib/notifications';
-import { X, Save, Camera, Shield, Trophy, Mail, User as UserIcon, Loader2 } from 'lucide-react';
+import { useConfirm } from '../hooks/useConfirm';
+import { Save, Loader2 } from 'lucide-react';
 import { getNowInFortaleza } from '../utils';
+import { Sheet } from './ui/Sheet';
+import { AdminField, adminBtnGhost, adminBtnPrimary, adminInputCls } from './admin/ui';
 
 interface AdminUserEditorProps {
     user: User;
@@ -11,14 +14,53 @@ interface AdminUserEditorProps {
     onSave: () => void;
 }
 
+type Role = 'socio' | 'admin' | 'lanchonete';
+
+const ROLE_LABEL: Record<Role, string> = { socio: 'Sócio', admin: 'Administrador', lanchonete: 'Lanchonete' };
+const ROLE_HINT: Record<Role, string> = {
+    socio: 'Acesso comum de sócio.',
+    admin: 'Acesso total: painel administrativo, financeiro e ajustes de ranking.',
+    lanchonete: 'Acesso restrito à lanchonete.',
+};
+
+const CATEGORIES = ['1ª Classe', '2ª Classe', '3ª Classe', '4ª Classe', '5ª Classe', '6ª Classe', 'Iniciante', 'Fem C', 'Fem B', 'Fem A'];
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const Section: React.FC<{ title: string; tone?: 'neutral' | 'danger' | 'warn'; children: React.ReactNode }> = ({ title, tone = 'neutral', children }) => {
+    const cls = { neutral: 'border-stone-100 bg-stone-50/60', danger: 'border-red-100 bg-red-50/40', warn: 'border-amber-100 bg-amber-50/50' }[tone];
+    const titleCls = { neutral: 'text-stone-700', danger: 'text-red-800', warn: 'text-amber-800' }[tone];
+    return (
+        <section className={`space-y-3 rounded-2xl border p-4 ${cls}`}>
+            <h3 className={`text-sm font-black uppercase tracking-wider ${titleCls}`}>{title}</h3>
+            {children}
+        </section>
+    );
+};
+
+/** Foto do sócio; sem link (ou com link quebrado) mostra a inicial em vez de uma imagem de outro site. */
+const AvatarPreview: React.FC<{ url: string; name: string }> = ({ url, name }) => {
+    const [failedUrl, setFailedUrl] = useState<string | null>(null);
+    const showImage = url.trim() && failedUrl !== url;
+    return showImage ? (
+        <img src={url} alt="" onError={() => setFailedUrl(url)} className="h-16 w-16 shrink-0 rounded-2xl border-2 border-white object-cover shadow-md" />
+    ) : (
+        <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-saibro-100 text-2xl font-black text-saibro-700 shadow-md" aria-hidden>
+            {(name.trim().charAt(0) || '?').toUpperCase()}
+        </span>
+    );
+};
+
 export const AdminUserEditor: React.FC<AdminUserEditorProps> = ({ user, onClose, onSave }) => {
+    const confirm = useConfirm();
     const [loading, setLoading] = useState(false);
+    const [submitted, setSubmitted] = useState(false);
 
     // Form States
     const [name, setName] = useState(user.name || '');
     const [email, setEmail] = useState(user.email || '');
     const [phone, setPhone] = useState(user.phone || '');
-    const [role, setRole] = useState(user.role || 'socio');
+    const [role, setRole] = useState<Role>((user.role as Role) || 'socio');
     const [avatarUrl, setAvatarUrl] = useState(user.avatar || '');
     const [category, setCategory] = useState(user.category || '');
 
@@ -26,34 +68,84 @@ export const AdminUserEditor: React.FC<AdminUserEditorProps> = ({ user, onClose,
     const [pointsAdjustment, setPointsAdjustment] = useState('');
     const [adjustmentReason, setAdjustmentReason] = useState('Ajuste Manual de Admin');
 
+    const pointsDelta = /^[+-]?\d+$/.test(pointsAdjustment.trim()) ? parseInt(pointsAdjustment.trim(), 10) : NaN;
+    const hasPointsText = pointsAdjustment.trim() !== '';
+    const willAdjustPoints = !isNaN(pointsDelta) && pointsDelta !== 0;
+
+    const errors = {
+        name: name.trim().length < 2 ? 'Informe o nome (mínimo 2 letras).' : undefined,
+        email: email.trim() && !EMAIL_RE.test(email.trim()) ? 'E-mail inválido. Confira o formato (nome@dominio.com).' : undefined,
+        points: hasPointsText && isNaN(pointsDelta) ? 'Digite um número inteiro (ex.: 100 ou -50).' : undefined,
+        reason: willAdjustPoints && !adjustmentReason.trim() ? 'Explique o motivo: ele fica registrado no histórico do atleta.' : undefined,
+    };
+    const hasErrors = Object.values(errors).some(Boolean);
+
+    const profileDirty =
+        name !== (user.name || '') || email !== (user.email || '') || phone !== (user.phone || '') ||
+        role !== (user.role || 'socio') || avatarUrl !== (user.avatar || '') || category !== (user.category || '');
+    const dirty = profileDirty || hasPointsText;
+
+    const show = (msg: string | undefined) => (submitted ? msg : undefined);
+
+    // Fechar com dados digitados pede confirmação: o toque no ✕, o Escape e o gesto de voltar
+    // passam todos por aqui, então nenhum deles joga fora o formulário sem avisar.
+    const requestClose = async () => {
+        if (loading) return;
+        if (dirty && !await confirm({
+            title: 'Descartar alterações?',
+            description: 'O que você mudou neste cadastro ainda não foi salvo.',
+            confirmLabel: 'Descartar',
+            cancelLabel: 'Continuar editando',
+        })) return;
+        onClose();
+    };
+
     const handleSave = async () => {
+        setSubmitted(true);
+        if (hasErrors) return;
+
+        if (role !== (user.role || 'socio')) {
+            const from = ROLE_LABEL[(user.role as Role) || 'socio'];
+            const to = ROLE_LABEL[role];
+            if (!await confirm({
+                title: `Mudar ${name.trim()} de ${from} para ${to}?`,
+                description: role === 'admin'
+                    ? 'Esta pessoa passa a ter acesso total ao painel administrativo, incluindo financeiro e ajustes de ranking.'
+                    : user.role === 'admin'
+                        ? 'Esta pessoa perde o acesso ao painel administrativo.'
+                        : 'As telas que esta pessoa vê mudam na próxima vez que ela abrir o app.',
+                confirmLabel: 'Mudar função',
+            })) return;
+        }
+
         setLoading(true);
+        let profileSaved = false;
         try {
             // 1. Update Profile (God Mode allows role update)
             const { error: profileError } = await supabase
                 .from('profiles')
                 .update({
-                    name,
-                    email, // Note: Syncing auth email is complex, this updates profile only usually
-                    phone,
+                    name: name.trim(),
+                    email: email.trim(), // Note: Syncing auth email is complex, this updates profile only usually
+                    phone: phone.trim(),
                     role,
-                    avatar_url: avatarUrl,
+                    avatar_url: avatarUrl.trim(),
                     category
                 })
                 .eq('id', user.id);
 
             if (profileError) throw profileError;
+            profileSaved = true;
 
             // 2. Handle Point Adjustment (if any)
-            const pointsDelta = parseInt(pointsAdjustment);
-            if (!isNaN(pointsDelta) && pointsDelta !== 0) {
+            if (willAdjustPoints) {
                 const { error: pointsError } = await supabase
                     .from('point_history')
                     .insert({
                         user_id: user.id,
                         amount: pointsDelta,
                         event_type: 'Manual Adjustment',
-                        description: adjustmentReason,
+                        description: adjustmentReason.trim(),
                         earned_date: getNowInFortaleza().toISOString()
                     });
 
@@ -64,215 +156,133 @@ export const AdminUserEditor: React.FC<AdminUserEditorProps> = ({ user, onClose,
             onSave();
             onClose();
         } catch (error) {
-            notify.failure(error, 'Não foi possível salvar as alterações do atleta.', {
-                event: 'admin_user_save_failed',
-                userId: user.id,
-            });
+            // Com o cadastro já gravado e só os pontos pendentes, dizer isso evita que a pessoa
+            // ache que nada foi salvo (ou que refaça tudo por engano).
+            notify.failure(
+                error,
+                profileSaved
+                    ? 'Os dados foram salvos, mas o ajuste de pontos não foi registrado. Toque em Salvar para tentar de novo.'
+                    : 'Não foi possível salvar as alterações do atleta.',
+                { event: 'admin_user_save_failed', userId: user.id },
+            );
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="fixed inset-0 z-60 flex items-start sm:items-center justify-center p-4 sm:p-4 pt-10 sm:pt-4 bg-stone-900/40 backdrop-blur-md animate-in fade-in duration-300">
-            <div className="bg-white w-full max-w-2xl rounded-[32px] sm:rounded-[40px] shadow-2xl overflow-hidden flex flex-col max-h-[85vh] sm:max-h-[90vh] animate-in slide-in-from-bottom duration-500">
-
-                {/* Header with Glass Effect */}
-                <div className="px-8 py-6 border-b border-stone-100/50 bg-white/80 backdrop-blur-xl sticky top-0 z-10 flex justify-between items-center">
-                    <div>
-                        <h2 className="text-2xl font-black text-stone-800 tracking-tight flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-red-600">
-                                <Shield size={20} />
-                            </div>
-                            God Mode Editor
-                        </h2>
-                        <p className="text-xs font-bold text-stone-400 uppercase tracking-widest mt-1 ml-14">
-                            ID: {user.id.slice(0, 8)}...
-                        </p>
-                    </div>
-                    <button
-                        onClick={onClose}
-                        className="p-3 bg-stone-50 hover:bg-stone-100 text-stone-400 hover:text-stone-600 rounded-full transition-all active:scale-90"
-                    >
-                        <X size={24} />
-                    </button>
+        <Sheet
+            open
+            wide
+            onClose={requestClose}
+            closeOnBackdrop={false}
+            title="Editar cadastro"
+            subtitle={`${user.name} · ID ${user.id.slice(0, 8)}`}
+            footer={<>
+                <button type="button" className={adminBtnGhost} onClick={requestClose} disabled={loading}>Cancelar</button>
+                <button type="button" className={`${adminBtnPrimary} sm:min-w-48`} onClick={handleSave} disabled={loading || !dirty}>
+                    {loading ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
+                    Salvar alterações
+                </button>
+            </>}
+        >
+            <div className="flex items-center gap-3">
+                <AvatarPreview url={avatarUrl} name={name} />
+                <div className="min-w-0 flex-1">
+                    <AdminField label="Nome completo" error={show(errors.name)}>
+                        <input
+                            type="text"
+                            value={name}
+                            onChange={e => setName(e.target.value)}
+                            className={adminInputCls}
+                            placeholder="Nome do usuário"
+                            autoComplete="off"
+                        />
+                    </AdminField>
                 </div>
-
-                {/* Scrollable Content */}
-                <div className="flex-1 overflow-y-auto p-8 space-y-8">
-
-                    {/* Identity Section */}
-                    <div className="flex gap-8 items-start">
-                        <div className="flex-none">
-                            <div className="w-32 h-32 rounded-[32px] bg-stone-100 relative overflow-hidden group border-4 border-white shadow-xl">
-                                <img
-                                    src={avatarUrl || 'https://via.placeholder.com/150'}
-                                    alt="Avatar"
-                                    className="w-full h-full object-cover"
-                                />
-                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 cursor-pointer backdrop-blur-sm">
-                                    <Camera size={32} className="text-white drop-shadow-md" />
-                                </div>
-                            </div>
-                        </div>
-                        <div className="flex-1 space-y-5">
-                            <div>
-                                <label className="flex items-center gap-2 text-[10px] font-black text-stone-400 uppercase tracking-widest mb-2">
-                                    <UserIcon size={12} /> Nome Completo
-                                </label>
-                                <input
-                                    type="text"
-                                    value={name}
-                                    onChange={e => setName(e.target.value)}
-                                    className="w-full px-5 py-4 bg-stone-50 border-none rounded-2xl text-lg font-bold text-stone-800 focus:ring-2 focus:ring-saibro-500 outline-hidden transition-all placeholder:text-stone-300"
-                                    placeholder="Nome do usuário"
-                                />
-                            </div>
-                            <div>
-                                <label className="flex items-center gap-2 text-[10px] font-black text-stone-400 uppercase tracking-widest mb-2">
-                                    <Camera size={12} /> Avatar URL
-                                </label>
-                                <input
-                                    type="text"
-                                    value={avatarUrl}
-                                    onChange={e => setAvatarUrl(e.target.value)}
-                                    className="w-full px-5 py-3 bg-stone-50 border-none rounded-2xl text-xs font-mono text-stone-500 focus:ring-2 focus:ring-saibro-500 outline-hidden transition-all"
-                                    placeholder="https://..."
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* Contact Info */}
-                        <div className="space-y-5 p-6 rounded-[32px] bg-stone-50/50 border border-stone-100">
-                            <h3 className="text-sm font-black text-stone-700 uppercase tracking-widest flex items-center gap-2">
-                                <Mail size={16} className="text-saibro-500" /> Contato
-                            </h3>
-                            <div>
-                                <label className="block text-[10px] font-bold text-stone-400 uppercase tracking-wider mb-2">Email</label>
-                                <input
-                                    type="text"
-                                    value={email}
-                                    onChange={e => setEmail(e.target.value)}
-                                    className="w-full px-4 py-3 bg-white border-none rounded-2xl text-sm font-medium text-stone-600 focus:ring-2 focus:ring-saibro-500 outline-hidden shadow-sm"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-[10px] font-bold text-stone-400 uppercase tracking-wider mb-2">Telefone</label>
-                                <input
-                                    type="text"
-                                    value={phone}
-                                    onChange={e => setPhone(e.target.value)}
-                                    className="w-full px-4 py-3 bg-white border-none rounded-2xl text-sm font-medium text-stone-600 focus:ring-2 focus:ring-saibro-500 outline-hidden shadow-sm"
-                                />
-                            </div>
-                        </div>
-
-                        {/* System Roles */}
-                        <div className="space-y-5 p-6 rounded-[32px] bg-red-50/30 border border-red-100/50">
-                            <h3 className="text-sm font-black text-red-800 uppercase tracking-widest flex items-center gap-2">
-                                <Shield size={16} /> Permissões
-                            </h3>
-                            <div>
-                                <label className="block text-[10px] font-bold text-red-400 uppercase tracking-wider mb-2">
-                                    Função (Role)
-                                </label>
-                                <div className="relative">
-                                    <select
-                                        value={role}
-                                        onChange={e => setRole(e.target.value as any)}
-                                        className="w-full px-4 py-3 bg-white border-none rounded-2xl text-sm font-bold text-red-700 focus:ring-2 focus:ring-red-500 outline-hidden shadow-sm appearance-none"
-                                    >
-                                        <option value="socio">Sócio</option>
-                                        <option value="admin">Administrador</option>
-                                        <option value="lanchonete">Lanchonete</option>
-                                    </select>
-                                </div>
-                                {role === 'admin' && (
-                                    <p className="text-[10px] text-red-500 mt-2 font-bold bg-red-100 inline-block px-2 py-1 rounded-lg">
-                                        ⚠️ Acesso Total (God Mode)
-                                    </p>
-                                )}
-                            </div>
-                            <div>
-                                <label className="block text-[10px] font-bold text-red-400 uppercase tracking-wider mb-2">
-                                    Categoria
-                                </label>
-                                <select
-                                    value={category}
-                                    onChange={e => setCategory(e.target.value)}
-                                    className="w-full px-4 py-3 bg-white border-none rounded-2xl text-sm font-medium text-stone-700 focus:ring-2 focus:ring-red-500 outline-hidden shadow-sm appearance-none"
-                                >
-                                    <option value="">Sem classe</option>
-                                    <option value="1ª Classe">1ª Classe</option>
-                                    <option value="2ª Classe">2ª Classe</option>
-                                    <option value="3ª Classe">3ª Classe</option>
-                                    <option value="4ª Classe">4ª Classe</option>
-                                    <option value="5ª Classe">5ª Classe</option>
-                                    <option value="6ª Classe">6ª Classe</option>
-                                    <option value="Iniciante">Iniciante</option>
-                                    <option value="Fem C">Fem C</option>
-                                    <option value="Fem B">Fem B</option>
-                                    <option value="Fem A">Fem A</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Points Adjustment */}
-                    <div className="p-6 rounded-[32px] bg-amber-50/50 border border-amber-100">
-                        <h3 className="text-sm font-black text-amber-700 uppercase tracking-widest flex items-center gap-2 mb-4">
-                            <Trophy size={16} /> Ajuste de Ranking
-                        </h3>
-                        <div className="flex gap-4">
-                            <div className="w-1/3">
-                                <label className="block text-[10px] font-bold text-amber-400 uppercase tracking-wider mb-2">
-                                    Pontos (+/-)
-                                </label>
-                                <input
-                                    type="number"
-                                    value={pointsAdjustment}
-                                    onChange={e => setPointsAdjustment(e.target.value)}
-                                    placeholder="+100"
-                                    className="w-full px-4 py-3 bg-white border-none rounded-2xl text-lg font-black text-amber-600 focus:ring-2 focus:ring-amber-500 outline-hidden shadow-sm placeholder:text-amber-200"
-                                />
-                            </div>
-                            <div className="flex-1">
-                                <label className="block text-[10px] font-bold text-amber-400 uppercase tracking-wider mb-2">
-                                    Motivo
-                                </label>
-                                <input
-                                    type="text"
-                                    value={adjustmentReason}
-                                    onChange={e => setAdjustmentReason(e.target.value)}
-                                    className="w-full px-4 py-3 bg-white border-none rounded-2xl text-sm font-medium text-stone-600 focus:ring-2 focus:ring-amber-500 outline-hidden shadow-sm"
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-
-                {/* Footer */}
-                <div className="p-6 border-t border-stone-100 bg-white/50 backdrop-blur-md flex gap-4">
-                    <button
-                        onClick={onClose}
-                        className="flex-1 py-4 text-stone-500 font-bold bg-stone-100 hover:bg-stone-200 rounded-2xl transition-all text-sm uppercase tracking-wider"
-                    >
-                        Cancelar
-                    </button>
-                    <button
-                        onClick={handleSave}
-                        disabled={loading}
-                        className="flex-2 py-4 bg-saibro-600 hover:bg-saibro-700 text-white font-black rounded-2xl shadow-xl shadow-saibro-200 hover:shadow-2xl hover:shadow-saibro-300 transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm uppercase tracking-wider"
-                    >
-                        {loading ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
-                        Salvar Alterações
-                    </button>
-                </div>
-
             </div>
-        </div>
+
+            <AdminField label="Link da foto (opcional)" hint="Endereço de uma imagem na internet. Sem link, aparece a inicial do nome.">
+                <input
+                    type="url"
+                    inputMode="url"
+                    value={avatarUrl}
+                    onChange={e => setAvatarUrl(e.target.value)}
+                    className={`${adminInputCls} font-mono text-xs`}
+                    placeholder="https://..."
+                    autoComplete="off"
+                    autoCapitalize="none"
+                />
+            </AdminField>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <Section title="Contato">
+                    <AdminField label="E-mail" error={show(errors.email)}>
+                        <input
+                            type="email"
+                            inputMode="email"
+                            value={email}
+                            onChange={e => setEmail(e.target.value)}
+                            className={adminInputCls}
+                            autoComplete="off"
+                            autoCapitalize="none"
+                        />
+                    </AdminField>
+                    <AdminField label="Telefone">
+                        <input
+                            type="tel"
+                            inputMode="tel"
+                            value={phone}
+                            onChange={e => setPhone(e.target.value)}
+                            className={adminInputCls}
+                            autoComplete="off"
+                        />
+                    </AdminField>
+                </Section>
+
+                <Section title="Permissões" tone={role === 'admin' ? 'danger' : 'neutral'}>
+                    <AdminField label="Função" hint={ROLE_HINT[role]}>
+                        <select value={role} onChange={e => setRole(e.target.value as Role)} className={`${adminInputCls} font-bold`}>
+                            {(Object.keys(ROLE_LABEL) as Role[]).map(r => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}
+                        </select>
+                    </AdminField>
+                    <AdminField label="Categoria">
+                        <select value={category} onChange={e => setCategory(e.target.value)} className={adminInputCls}>
+                            <option value="">Sem classe</option>
+                            {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                        </select>
+                    </AdminField>
+                </Section>
+            </div>
+
+            <Section title="Ajuste de ranking" tone="warn">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-[8rem_1fr]">
+                    <AdminField label="Pontos (+/−)" error={show(errors.points)}>
+                        <input
+                            type="number"
+                            step={1}
+                            value={pointsAdjustment}
+                            onChange={e => setPointsAdjustment(e.target.value)}
+                            placeholder="+100"
+                            className={`${adminInputCls} text-lg font-black`}
+                        />
+                    </AdminField>
+                    <AdminField label="Motivo" error={show(errors.reason)}>
+                        <input
+                            type="text"
+                            value={adjustmentReason}
+                            onChange={e => setAdjustmentReason(e.target.value)}
+                            className={adminInputCls}
+                            autoComplete="off"
+                        />
+                    </AdminField>
+                </div>
+                {willAdjustPoints && (
+                    <p className="text-sm font-medium text-amber-800" role="status">
+                        Ao salvar, {pointsDelta > 0 ? `+${pointsDelta}` : pointsDelta} pontos entram no histórico de {name.trim() || 'este atleta'}.
+                    </p>
+                )}
+            </Section>
+        </Sheet>
     );
 };

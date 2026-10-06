@@ -5,6 +5,7 @@ import { User, Reservation, ReservationType, NonSocioStudent, Professor, Match, 
 import { ChevronLeft, ChevronRight, Plus, X, Calendar, MapPin, Users, Check, AlertCircle, Search, Loader2, Trash2, Trophy, UserCog, ArrowRight, Info, UserPlus, LogOut, Wallet, Pencil, UserMinus, Share2, ArrowLeft } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { notify } from '../lib/notifications';
+import { matchesSearch } from '../lib/searchText';
 import { useConfirm } from '../hooks/useConfirm';
 import { ScoreModal } from './ScoreModal';
 import { LiveScoreboard } from './LiveScoreboard';
@@ -124,7 +125,7 @@ const ManageParticipantsModal: React.FC<{
     const availableSocios = profiles.filter(u => isMember(u) && u.isActive !== false);
 
     const filteredSocios = availableSocios.filter(u =>
-        u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        matchesSearch(searchTerm, u.name) ||
         (u.phone && u.phone.includes(searchTerm))
     );
 

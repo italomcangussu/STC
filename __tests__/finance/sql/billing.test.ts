@@ -1,5 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
+import { readFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
 import { asUser, asUserError, dbToday, ID, j, key, q, rpc, rpcError, U, world } from './harness';
 import { buildCalendar, computeDueDate, nationalHolidays, optionalBankHolidays, type DueRule } from '../../../lib/finance/calendar';
 import { addDays, addMonths, firstOfMonth } from '../../../lib/finance/dates';
@@ -69,6 +71,17 @@ describe('calendário no banco = calendário no app', () => {
 });
 
 describe('mensalidade individual e geração idempotente', () => {
+  it('a chave que a tela usa para trazer o sócio do plano existe — e há outras duas para profiles (por isso precisa ser nomeada)', async () => {
+    const w = await world();
+    const src = await readFile(resolve(__dirname, '../../../lib/finance/financeApi.ts'), 'utf8');
+    const fk = /PLAN_PROFILE_FK = '([^']+)'/.exec(src)?.[1];
+    const rows = await q<{ conname: string; col: string }>(w.db,
+      `select c.conname, a.attname col from pg_constraint c join pg_attribute a on a.attrelid = c.conrelid and a.attnum = any(c.conkey)
+       where c.conrelid = 'public.fin_member_plans'::regclass and c.contype = 'f' and c.confrelid = 'public.profiles'::regclass`);
+    expect(rows.find((r) => r.conname === fk)?.col).toBe('profile_id');
+    expect(rows.length).toBeGreaterThan(1);
+  });
+
   it('cria plano só para sócio ativo; sócio ≠ lanchonete; um plano vivo por sócio', async () => {
     const w = await world();
     await newPlan(w);
