@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabase';
 import { Loader2, TrendingUp, Clock, Calendar, Users, Trophy } from 'lucide-react';
 import { Reservation, Court } from '../types';
 import { isMember } from '../utils';
+import { useAdminEmbedded } from './admin/AdminEmbedContext';
 
 // --- Types ---
 type _TimeFilter = 'all' | 'year' | 'month';
@@ -18,6 +19,7 @@ interface DashboardProps {
 const _COLORS = ['#ea580c', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899']; // Saibro-like + others
 
 export const Dashboard: React.FC<DashboardProps> = () => {
+  const embedded = useAdminEmbedded();
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [courts, setCourts] = useState<Court[]>([]);
   const [profiles, setProfiles] = useState<Record<string, { name: string; avatar?: string; role: string }>>({});
@@ -223,51 +225,55 @@ export const Dashboard: React.FC<DashboardProps> = () => {
     <div className="space-y-6 animate-in fade-in duration-500">
       {/* Header / Filters */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-5 rounded-2xl card-court">
-        <div>
-          <h2 className="text-xl font-bold text-stone-800 flex items-center gap-2">
-            <TrendingUp className="text-saibro-500" /> Dashboard Analytics
-          </h2>
-          <p className="text-stone-500 text-sm">Visão geral em tempo real</p>
+        {!embedded && (
+          <div>
+            <h2 className="text-xl font-bold text-stone-800 flex items-center gap-2">
+              <TrendingUp className="text-saibro-500" /> Dashboard Analytics
+            </h2>
+            <p className="text-stone-500 text-sm">Visão geral em tempo real</p>
+          </div>
+        )}
+
+        {/* Filtros: três campos lado a lado a partir do tablet, empilhados (largura total) no celular */}
+        <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-3 md:w-auto">
+          <select
+            value={selectedCourt}
+            onChange={(e) => setSelectedCourt(e.target.value)}
+            className="hit-target-44 w-full px-3.5 py-2.5 rounded-xl border border-saibro-200/80 bg-white/90 text-stone-800 text-sm font-semibold outline-hidden focus:ring-2 focus:ring-saibro-500 shadow-xs btn-tactile"
+          >
+            <option value="all">Todas as Quadras</option>
+            {courts.map(c => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
+
+          <select
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value === 'all' ? 'all' : Number(e.target.value))}
+            disabled={selectedYear === 'all'}
+            className={`hit-target-44 w-full px-3.5 py-2.5 rounded-xl border border-saibro-200/80 text-stone-800 text-sm font-semibold outline-hidden focus:ring-2 focus:ring-saibro-500 shadow-xs btn-tactile ${selectedYear === 'all' ? 'bg-stone-100/80 text-stone-400 cursor-not-allowed border-stone-200' : 'bg-white/90'}`}
+          >
+            <option value="all">Todos os Meses</option>
+            {months.map(m => (
+              <option key={m.val} value={m.val}>{m.label}</option>
+            ))}
+          </select>
+
+          <select
+            value={selectedYear}
+            onChange={(e) => {
+              const val = e.target.value === 'all' ? 'all' : Number(e.target.value);
+              setSelectedYear(val);
+              if (val === 'all') setSelectedMonth('all');
+            }}
+            className="hit-target-44 w-full px-3.5 py-2.5 rounded-xl border border-saibro-200/80 bg-white/90 text-stone-800 text-sm font-semibold outline-hidden focus:ring-2 focus:ring-saibro-500 shadow-xs btn-tactile"
+          >
+            <option value="all">Todo o Período</option>
+            {years.map(y => (
+              <option key={y} value={y}>{y}</option>
+            ))}
+          </select>
         </div>
-
-        {/* Court Filter Selects */}
-        <select
-          value={selectedCourt}
-          onChange={(e) => setSelectedCourt(e.target.value)}
-          className="hit-target-44 px-3.5 py-2.5 rounded-xl border border-saibro-200/80 bg-white/90 text-stone-800 text-sm font-semibold outline-hidden focus:ring-2 focus:ring-saibro-500 shadow-xs btn-tactile"
-        >
-          <option value="all">Todas as Quadras</option>
-          {courts.map(c => (
-            <option key={c.id} value={c.id}>{c.name}</option>
-          ))}
-        </select>
-
-        <select
-          value={selectedMonth}
-          onChange={(e) => setSelectedMonth(e.target.value === 'all' ? 'all' : Number(e.target.value))}
-          disabled={selectedYear === 'all'}
-          className={`hit-target-44 px-3.5 py-2.5 rounded-xl border border-saibro-200/80 text-stone-800 text-sm font-semibold outline-hidden focus:ring-2 focus:ring-saibro-500 shadow-xs btn-tactile ${selectedYear === 'all' ? 'bg-stone-100/80 text-stone-400 cursor-not-allowed border-stone-200' : 'bg-white/90'}`}
-        >
-          <option value="all">Todos os Meses</option>
-          {months.map(m => (
-            <option key={m.val} value={m.val}>{m.label}</option>
-          ))}
-        </select>
-
-        <select
-          value={selectedYear}
-          onChange={(e) => {
-            const val = e.target.value === 'all' ? 'all' : Number(e.target.value);
-            setSelectedYear(val);
-            if (val === 'all') setSelectedMonth('all');
-          }}
-          className="hit-target-44 px-3.5 py-2.5 rounded-xl border border-saibro-200/80 bg-white/90 text-stone-800 text-sm font-semibold outline-hidden focus:ring-2 focus:ring-saibro-500 shadow-xs btn-tactile"
-        >
-          <option value="all">Todo o Período</option>
-          {years.map(y => (
-            <option key={y} value={y}>{y}</option>
-          ))}
-        </select>
       </div>
 
       {/* KPI Cards */}

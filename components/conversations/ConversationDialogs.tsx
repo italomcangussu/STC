@@ -45,7 +45,7 @@ export function NewConversationDialog({ open, onClose, onOpened }: { open: boole
   }
 
   return (
-    <Sheet open={open} onClose={onClose} title="Nova conversa" subtitle="Abre (ou retoma) a conversa com o número.">
+    <Sheet open={open} onClose={onClose} closeOnBackdrop={false} title="Nova conversa" subtitle="Abre (ou retoma) a conversa com o número.">
       {erro && <InlineAlert tone="error" title={erro} onDismiss={() => setErro(null)} />}
       <form className="grid gap-2 rounded-xl border border-dashed border-stone-200 p-3"
         onSubmit={(e) => { e.preventDefault(); void abrir('numero', telefone, nome); }}>
@@ -153,7 +153,7 @@ export function QuickRepliesDialog({ open, onClose, replies, onChanged }: {
   }
 
   return (
-    <Sheet open={open} onClose={onClose} title="Respostas rápidas">
+    <Sheet open={open} onClose={onClose} closeOnBackdrop={false} title="Respostas rápidas">
       <p className="text-xs text-stone-600">Digite <kbd className="rounded bg-stone-100 px-1 font-mono">/</kbd> no campo da mensagem para usar. <code className="rounded bg-stone-100 px-1">{'{nome}'}</code> vira o primeiro nome do contato.</p>
       {erro && <InlineAlert tone="error" title={erro} onDismiss={() => setErro(null)} />}
       {editando ? (

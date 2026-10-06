@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { notify } from '../lib/notifications';
+import { matchesSearch } from '../lib/searchText';
 import { useConfirm } from '../hooks/useConfirm';
 import { validateStudentForm } from '../lib/students/validateStudentForm';
 import { NonSocioStudent, Professor, User, RelationshipType, StudentProfile } from '../types';
 import { STUDENT_LEVELS, StudentLevel } from '../lib/students/studentRules';
 import {
-    Users, Plus, Search, Edit, Trash2, CheckCircle, Loader2, DollarSign, X, UserPlus, ArrowUpCircle
+    Users, Plus, Edit, Trash2, CheckCircle, Loader2, DollarSign, X, UserPlus, ArrowUpCircle
 } from 'lucide-react';
 import { getNowInFortaleza, formatDate, formatDateBr, MEMBER_ROLES } from '../utils';
 import { StandardModal } from './StandardModal';
+import { AdminPageHeader, AdminSearch, ChipGroup, adminBtnPrimary } from './admin/ui';
+import { useAdminEmbedded } from './admin/AdminEmbedContext';
 
 const DAY_CARD_PRICE = 50;
 const CARD_MENSAL_PRICE = 200;
@@ -27,6 +30,7 @@ function addOneMonth(dateStr: string): string {
 }
 
 export const AdminStudents: React.FC = () => {
+    const embedded = useAdminEmbedded();
     const confirm = useConfirm();
     const [students, setStudents] = useState<NonSocioStudent[]>([]);
     const [studentProfiles, setStudentProfiles] = useState<StudentProfile[]>([]);
@@ -386,7 +390,7 @@ export const AdminStudents: React.FC = () => {
 
     // --- Render ---
     const filteredStudents = students.filter(s => {
-        const matchesName = s.name.toLowerCase().includes(filter.toLowerCase());
+        const matchesName = matchesSearch(filter, s.name);
         const matchesType = studentTypeFilter === 'all'
             || (studentTypeFilter === 'regular' && s.studentType !== 'dependent')
             || (studentTypeFilter === 'dependent' && s.studentType === 'dependent');
@@ -426,53 +430,40 @@ export const AdminStudents: React.FC = () => {
     };
 
     return (
-        <div className="p-4 md:p-6 pb-40 space-y-6">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold text-stone-800 flex items-center gap-2">
-                        <Users className="text-saibro-500" /> Gestão de Alunos (Non-Sócio)
-                    </h1>
-                    <p className="text-sm text-stone-500">Cadastre alunos e gerencie planos e pagamentos</p>
-                </div>
-                <button
-                    onClick={() => {
-                        setEditingStudent(null);
-                        setStudentForm({ name: '', phone: '', professorId: '', studentType: 'regular', responsibleSocioId: '', relationshipType: '', planType: 'Day Card', technicalLevel: '' });
-                        setShowStudentModal(true);
-                    }}
-                    className="bg-saibro-500 hover:bg-saibro-600 text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2"
-                >
-                    <Plus size={18} /> Novo Aluno
-                </button>
-            </div>
+        <div className={`space-y-6 ${embedded ? '' : 'p-4 md:p-6 pb-40'}`}>
+            <AdminPageHeader
+                icon={<Users className="text-saibro-500" />}
+                title="Gestão de Alunos (Non-Sócio)"
+                subtitle="Cadastre alunos e gerencie planos e pagamentos"
+                actions={
+                    <button
+                        onClick={() => {
+                            setEditingStudent(null);
+                            setStudentForm({ name: '', phone: '', professorId: '', studentType: 'regular', responsibleSocioId: '', relationshipType: '', planType: 'Day Card', technicalLevel: '' });
+                            setShowStudentModal(true);
+                        }}
+                        className={adminBtnPrimary}
+                    >
+                        <Plus size={18} /> Novo Aluno
+                    </button>
+                }
+            />
 
-            {/* Filter */}
-            <div className="bg-white p-4 rounded-xl shadow-sm border border-stone-100 space-y-3">
-                <div className="flex items-center gap-2">
-                    <Search className="text-stone-400" size={20} />
-                    <input
-                        type="text"
-                        placeholder="Buscar aluno..."
-                        value={filter}
-                        onChange={e => setFilter(e.target.value)}
-                        className="flex-1 outline-hidden text-stone-600"
-                    />
-                </div>
-                <div className="flex gap-2">
-                    {(['active', 'paused', 'all'] as const).map(status => <button key={status} onClick={() => setStudentStatusFilter(status)} className={`px-3 py-1.5 rounded-lg text-xs font-bold ${studentStatusFilter === status ? 'bg-saibro-600 text-white' : 'bg-stone-100 text-stone-500'}`}>{status === 'active' ? 'Ativos' : status === 'paused' ? 'Pausados' : 'Todos'}</button>)}
-                    {(['all', 'regular', 'dependent'] as const).map(type => (
-                        <button
-                            key={type}
-                            onClick={() => setStudentTypeFilter(type)}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${studentTypeFilter === type
-                                ? 'bg-saibro-500 text-white'
-                                : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
-                            }`}
-                        >
-                            {type === 'all' ? 'Todos' : type === 'regular' ? 'Regulares' : 'Dependentes'}
-                        </button>
-                    ))}
-                </div>
+            {/* Filtros: busca, situação e tipo em linhas separadas (antes dividiam a mesma linha e havia dois "Todos" lado a lado) */}
+            <div className="space-y-3">
+                <AdminSearch value={filter} onChange={setFilter} placeholder="Buscar aluno..." label="Buscar aluno" />
+                <ChipGroup<'active' | 'paused' | 'all'>
+                    label="Situação"
+                    value={studentStatusFilter}
+                    onChange={setStudentStatusFilter}
+                    items={[{ id: 'active', label: 'Ativos' }, { id: 'paused', label: 'Pausados' }, { id: 'all', label: 'Todas as situações' }]}
+                />
+                <ChipGroup<'all' | 'regular' | 'dependent'>
+                    label="Tipo de aluno"
+                    value={studentTypeFilter}
+                    onChange={setStudentTypeFilter}
+                    items={[{ id: 'all', label: 'Todos os tipos' }, { id: 'regular', label: 'Regulares' }, { id: 'dependent', label: 'Dependentes' }]}
+                />
             </div>
 
             <section className="bg-white border border-stone-100 rounded-xl p-4 space-y-3">

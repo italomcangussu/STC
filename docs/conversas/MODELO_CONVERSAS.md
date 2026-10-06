@@ -126,8 +126,15 @@ marcar “verificada”. **Enquanto não houver essa conferência, a IA não ate
 | Avanço de fase | só quando o motor de chaveamento já pôs o vencedor na próxima partida | ✔ | — |
 | Aviso a participantes de campeonato / a públicos (sócios, alunos, dependentes, professores, Card) | `championships`/`championship_registrations`, `profiles`, `non_socio_students` | ✔ manual (com revisão) ou agendado | — |
 
+**Convivência com a regra de vencimento do Financeiro** (decisão do clube de 2026-10-06, migration `20261006100500`): a cobrança
+vence no **mês cobrado** e só **fins de semana** são dia não útil. As automações **não recalculam nada**: leem `due_date`,
+`days_late` etc. de `fin_private.charge_rows`, então já seguem a regra (testado com a cobrança gerada pelo próprio financeiro:
+`sql/automations` › "regra do clube"). Efeito prático: como o vencimento agora cai no mesmo mês da competência, “Início do
+período” e “Antes do vencimento” podem alcançar a **mesma cobrança em dias vizinhos** (ex.: 02–03/10 com vencimento 05/10).
+O teto por contato segura a rajada (ver abaixo); se o clube quiser **uma só** mensagem antes do vencimento, ative apenas uma das duas.
+
 Regras comuns: janela de horário e dias (Fortaleza), `min_hours_between`, teto diário e semanal **por contato somando
-todas as automações**, opt-out (“parar”, “não quero receber”…) cancela o pendente, pausa/encerramento cancelam o que não
+todas as automações, contando também o que já está em envio no mesmo lote**, opt-out (“parar”, “não quero receber”…) cancela o pendente, pausa/encerramento cancelam o que não
 saiu, **variável sem valor ⇒ a mensagem não sai** (nunca texto com lacuna), uma pessoa não recebe duas vezes o mesmo
 aviso (`purpose_key + dedupe_key`), falha de um destinatário não afeta os outros (3 tentativas: 10 e 20 min), disparo
 manual fica em **revisão** até um administrador aprovar. O texto das automações **não é gerado por IA**.
@@ -146,7 +153,7 @@ Execução: `npx vitest run __tests__/conversations` (PGlite = Postgres real em 
 
 | # | Item | Onde é provado |
 |---|---|---|
-| 1 | Admin acessa | `sql/access` (admin lê), `ui/conversationsHub` (módulo abre), `adminNav` |
+| 1 | Admin acessa | `sql/access` (admin lê), `ui/conversationsHub` (módulo abre), `adminNav` (seção `conversas` em `adminSections`) |
 | 2 | Não autorizados barrados (UI, API, banco) | **Banco**: `sql/access`; **API**: `conversationOperations` (401/403); **UI**: item só no painel do admin + erro de acesso em frase (`ui/conversationsApi`, `ui/conversationsHub`) |
 | 3 | Layout/ações = chat do NJ | componentes portados do NJ (lista, bolha, compositor, painel, respostas rápidas, encaminhar, busca, rascunho, digitando); `ui/*` testa envio, assumir, histórico; **conferido por captura de tela** em 1280 px e 390 px (harness temporário, removido). Não há teste de regressão visual automatizado |
 | 4 | Ordem e estados só do provedor | `sql/ingest` (`finish_message` único a marcar enviada; estados só avançam), `ui/messageTimeline` |

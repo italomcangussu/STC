@@ -1,6 +1,8 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
-import { asUser, asUserError, dbToday, ID, j, key, q, rpc, rpcError, U, world } from './harness';
+import { readFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
+import { asUser, asUserError, dbToday, ID, j, key, q, rpc, rpcError, U, world, SETTINGS_VERSION } from './harness';
 import { buildCalendar, computeDueDate, nationalHolidays, optionalBankHolidays, type DueRule } from '../../../lib/finance/calendar';
 import { addDays, addMonths, firstOfMonth } from '../../../lib/finance/dates';
 import { computeStatement, type FeePolicy } from '../../../lib/finance/lateFees';
@@ -21,20 +23,21 @@ const charges = (w: W, planId?: string) =>
     `select id, competence_month::text, due_date::text, original_amount_cents::text, status from public.fin_member_charges
      ${planId ? `where plan_id = '${planId}'` : ''} order by competence_month`);
 
-const setPolicy = (w: W, data: Record<string, unknown>, version = 1, reason?: string) =>
+const setPolicy = (w: W, data: Record<string, unknown>, version: number | string = SETTINGS_VERSION, reason?: string) =>
   rpc(w.db, U.admin, `public.fin_save_settings('${key()}', ${version}, ${j({ ...data, ...(reason ? { reason } : {}) })})`);
 
 const pay = (w: W, charge: string, amount: number, paidOn: string, method = 'pix') =>
   rpc<any>(w.db, U.admin, `public.fin_register_payment('${key()}', '${charge}', ${amount}, '${paidOn}', '${method}', '${w.account}', null)`);
 
 describe('calendário no banco = calendário no app', () => {
-  it('feriados semeados batem com a lei (nacionais ativos; facultativos inativos)', async () => {
+  it('feriados semeados batem com a lei, todos inativos (vencimento só pula fim de semana)', async () => {
     const w = await world();
     for (const year of [2024, 2026, 2030, 2036]) {
       const rows = await q<{ holiday_date: string; active: boolean }>(w.db,
         `select holiday_date::text, active from public.fin_holidays where extract(year from holiday_date) = ${year} and scope = 'national' order by 1`);
       const expected = [...nationalHolidays(year), ...optionalBankHolidays(year)].sort((a, b) => a.date.localeCompare(b.date));
-      expect(rows.map((r) => [r.holiday_date, r.active])).toEqual(expected.map((h) => [h.date, h.active]));
+      // as datas seguem a lei, mas NENHUM conta para o vencimento: o clube usa só fins de semana (o admin pode ativar)
+      expect(rows.map((r) => [r.holiday_date, r.active])).toEqual(expected.map((h) => [h.date, false]));
     }
     // nenhum feriado estadual/municipal é presumido
     expect((await q(w.db, `select 1 from public.fin_holidays where scope <> 'national'`)).length).toBe(0);
@@ -52,7 +55,7 @@ describe('calendário no banco = calendário no app', () => {
       { dueDay: 10, monthOffset: 0, nonBusinessRule: 'next_business_day' },
     ];
     for (const sat of [false, true]) {
-      await rpc(w.db, U.admin, `public.fin_save_settings('${key()}', ${sat ? 2 : 1}, ${j({ saturday_is_business: sat })})`);
+      await rpc(w.db, U.admin, `public.fin_save_settings('${key()}', ${SETTINGS_VERSION}, ${j({ saturday_is_business: sat })})`);
       const cal = buildCalendar(hol.map((h) => ({ date: h.holiday_date, active: h.active })), sat);
       for (const rule of rules) {
         for (const period of [1, 3, 12]) {
@@ -69,6 +72,17 @@ describe('calendário no banco = calendário no app', () => {
 });
 
 describe('mensalidade individual e geração idempotente', () => {
+  it('a chave que a tela usa para trazer o sócio do plano existe — e há outras duas para profiles (por isso precisa ser nomeada)', async () => {
+    const w = await world();
+    const src = await readFile(resolve(__dirname, '../../../lib/finance/financeApi.ts'), 'utf8');
+    const fk = /PLAN_PROFILE_FK = '([^']+)'/.exec(src)?.[1];
+    const rows = await q<{ conname: string; col: string }>(w.db,
+      `select c.conname, a.attname col from pg_constraint c join pg_attribute a on a.attrelid = c.conrelid and a.attnum = any(c.conkey)
+       where c.conrelid = 'public.fin_member_plans'::regclass and c.contype = 'f' and c.confrelid = 'public.profiles'::regclass`);
+    expect(rows.find((r) => r.conname === fk)?.col).toBe('profile_id');
+    expect(rows.length).toBeGreaterThan(1);
+  });
+
   it('cria plano só para sócio ativo; sócio ≠ lanchonete; um plano vivo por sócio', async () => {
     const w = await world();
     await newPlan(w);
@@ -81,23 +95,23 @@ describe('mensalidade individual e geração idempotente', () => {
     expect(prices.map((p) => p.amount_cents)).toEqual(['10000', '15000']);
   }, 60000);
 
-  it('gera as competências com vencimento dia 5 do mês seguinte (próximo dia útil) — igual ao TypeScript', async () => {
+  it('gera as competências com vencimento dia 5 do mês cobrado (próximo dia útil) — igual ao TypeScript', async () => {
     const w = await world();
     const plan = await newPlan(w);
     const r = await generate(w, '2026-03-15'); // horizonte padrão: mês atual + 1 → jan..abr
     expect(r).toMatchObject({ created: 4, existing: 0, missing_price: 0 });
     const rows = await charges(w, plan.id);
     expect(rows.map((c) => [c.competence_month, c.due_date, c.original_amount_cents])).toEqual([
-      ['2026-01-01', '2026-02-05', '10000'],
-      ['2026-02-01', '2026-03-05', '10000'],
-      ['2026-03-01', '2026-04-06', '10000'], // 5/4 é domingo
-      ['2026-04-01', '2026-05-05', '10000'],
+      ['2026-01-01', '2026-01-05', '10000'],
+      ['2026-02-01', '2026-02-05', '10000'],
+      ['2026-03-01', '2026-03-05', '10000'],
+      ['2026-04-01', '2026-04-06', '10000'], // 5/4 é domingo
     ]);
     const hol = await q<{ holiday_date: string; active: boolean }>(w.db, `select holiday_date::text, active from public.fin_holidays`);
     const ts = planCharges(
       { id: plan.id, profileId: U.socioA, startOn: '2026-01-10', endedOn: null, status: 'active', periodMonths: 1 },
       [{ effectiveFrom: '2026-01-01', amountCents: 10000 }], [], '2026-04-01',
-      { dueDay: 5, monthOffset: 1, nonBusinessRule: 'next_business_day' }, buildCalendar(hol.map((h) => ({ date: h.holiday_date, active: h.active }))));
+      { dueDay: 5, monthOffset: 0, nonBusinessRule: 'next_business_day' }, buildCalendar(hol.map((h) => ({ date: h.holiday_date, active: h.active }))));
     expect(ts.create.map((c) => [c.competenceMonth, c.dueDate])).toEqual(rows.map((c) => [c.competence_month, c.due_date]));
   }, 60000);
 
@@ -372,8 +386,8 @@ describe('política de encargos: sem regra definida não há cálculo; dispensa 
     const st = (await q<any>(w.db, `select * from fin_private.charge_statement('${c.id}', '${today}')`))[0];
     expect(Number(st.fine_due)).toBe(300);
     expect(Number(st.interest_due)).toBe(10 * st.days_late);
-    expect(await rpcError(w.db, U.admin, `public.fin_save_settings('${key()}', 2, ${j({ fine_fixed_cents: 400 })})`)).toMatch(/REASON_REQUIRED/);
-    await rpc(w.db, U.admin, `public.fin_save_settings('${key()}', 2, ${j({ fine_fixed_cents: 400, reason: 'Aprovado em assembleia' })})`);
+    expect(await rpcError(w.db, U.admin, `public.fin_save_settings('${key()}', ${SETTINGS_VERSION}, ${j({ fine_fixed_cents: 400 })})`)).toMatch(/REASON_REQUIRED/);
+    await rpc(w.db, U.admin, `public.fin_save_settings('${key()}', ${SETTINGS_VERSION}, ${j({ fine_fixed_cents: 400, reason: 'Aprovado em assembleia' })})`);
   }, 60000);
 
   it('dispensa de encargos: só admin, só com justificativa, só sobre encargo existente, com antes/depois na auditoria', async () => {
@@ -507,7 +521,7 @@ describe('RLS e permissões — sócio, professor, administrador e lanchonete', 
       `public.fin_charge_statements()`,
       `public.fin_generate_member_charges('${key()}')`,
       `public.fin_register_payment('${key()}', '${own[0].id}', 1000, '2026-01-05', 'pix', '${w.account}', null)`,
-      `public.fin_save_settings('${key()}', 1, '{}'::jsonb)`,
+      `public.fin_save_settings('${key()}', 1, '{}'::jsonb)`, // sócio não lê fin_settings: a versão não pode ser subconsulta aqui
       `public.fin_adjust_charge('${key()}', '${own[0].id}', 'discount', 100, 'Quero desconto')`,
     ];
     for (const uid of [U.socioA, U.prof, U.lanch]) {
@@ -530,7 +544,7 @@ describe('RLS e permissões — sócio, professor, administrador e lanchonete', 
   it('regra pública de vencimento/encargos é legível por qualquer logado, sem expor a configuração inteira', async () => {
     const { w } = await seed();
     const row = (await asUser<any>(w.db, U.socioA, `select * from public.fin_public_settings()`))[0];
-    expect(row).toMatchObject({ due_day: 5, due_month_offset: 1, non_business_rule: 'next_business_day', late_fee_confirmed: false });
+    expect(row).toMatchObject({ due_day: 5, due_month_offset: 0, non_business_rule: 'next_business_day', late_fee_confirmed: false });
     expect(row.fine_fixed_cents).toBeNull();
     expect(await asUserError(w.db, null, `select * from public.fin_public_settings()`)).toMatch(/permission denied/);
   }, 60000);

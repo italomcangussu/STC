@@ -124,13 +124,17 @@ export function adjustToBusinessDay(date: IsoDate, calendar: BusinessCalendar, r
 export interface DueRule {
   /** Dia do mês do vencimento (1–31; em mês curto vale o último dia). */
   dueDay: number;
-  /** 0 = mês do fim do período; 1 = mês seguinte (regra inicial do clube). */
+  /** 0 = mês do fim do período (padrão do clube); 1 = mês seguinte; 2 = o 2º mês seguinte. */
   monthOffset: number;
   nonBusinessRule: NonBusinessRule;
 }
 
-/** Regra inicial informada pelo clube: dia 5 do mês seguinte, próximo dia útil. */
-export const CLUB_DEFAULT_DUE_RULE: DueRule = { dueDay: 5, monthOffset: 1, nonBusinessRule: 'next_business_day' };
+/**
+ * Padrão do clube desde 2026-10-06: a mensalidade vence no mês cobrado, dia 5; sábado e domingo vão
+ * para a segunda. Feriado não conta (o calendário do clube não tem feriado ativo; o motor ainda os respeita se ativados).
+ * (A regra inicial era o dia 5 do mês seguinte; a migration 20261006100500 faz a troca no banco.)
+ */
+export const CLUB_DEFAULT_DUE_RULE: DueRule = { dueDay: 5, monthOffset: 0, nonBusinessRule: 'next_business_day' };
 
 export interface DueDateResult {
   /** Data "de calendário" antes de ajustar (ex.: dia 5). */
@@ -145,7 +149,8 @@ export interface DueDateResult {
  * (dia 1) e dura `periodMonths`; o vencimento é `dueDay` do mês
  * (`fim do período + monthOffset`), ajustado ao dia útil.
  *
- * Mensal, competência julho, regra inicial → 5 de agosto.
+ * Mensal, competência julho, padrão do clube → 5 de julho (com `monthOffset: 1`, 5 de agosto).
+ * Trimestral/semestral/anual: `monthOffset: 0` é o último mês do período, não o primeiro.
  */
 export function computeDueDate(
   competenceMonth: IsoDate,

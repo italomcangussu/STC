@@ -313,3 +313,59 @@ describe('Card Mensal: validade e estado reais', () => {
     expect((await recipients(w, `status = 'skipped'`)).map((r) => r.skip_reason)).toContain('CARD_INATIVO_OU_CANCELADO');
   }, 90000);
 });
+
+describe('regra do clube no financeiro: vence no mês cobrado e só fins de semana contam', () => {
+  const audience = (w: W, id: string, asOf: string) =>
+    q<{ dedupe_key: string; included: boolean; reason: string | null; subject: any }>(w.db,
+      `select x.dedupe_key, x.included, x.reason, x.subject from public.conv_automations a, lateral conv_private.audience(a, '${asOf}'::date, '${asOf}') x where a.id = '${id}'`);
+
+  it('a cobrança GERADA pelo financeiro cai nos estágios certos, com o vencimento do banco (nada é recalculado aqui)', async () => {
+    const w = await world();
+    // Plano que começa no dia 1º de outubro/2026: o financeiro gera a competência de outubro vencendo em 05/10 (segunda-feira).
+    const p = await rpc<{ id: string }>(w.db, U.admin, `public.fin_create_member_plan('${key()}', ${j({ profile_id: U.socioA, start_on: '2026-10-01', amount_cents: 15000, period_months: 1 })})`);
+    await rpc(w.db, U.admin, `public.fin_generate_member_charges('${key()}', '${p.id}', '2026-10-06')`);
+    const [c] = await q<{ due_date: string; competence_month: string }>(w.db, `select due_date::text, competence_month::text from public.fin_member_charges where profile_id = '${U.socioA}' and competence_month = '2026-10-01'`);
+    expect(c.due_date).toBe('2026-10-05');   // mês cobrado (e dia 5 em dia útil)
+
+    const inicio = await save(w, draft({ name: 'Início', definition: { stage: 'period_start', days: 3 }, message_body: 'Olá, {{nome}}! {{competencia}} {{valor}} vence em {{vencimento}}.' }));
+    const antes = await save(w, draft({ name: 'Antes', definition: { stage: 'before_due', days: 3 }, message_body: 'Olá, {{nome}}! Vence em {{vencimento}} ({{valor}}).' }));
+    const atraso = await save(w, draft({ name: 'Atraso', definition: { stage: 'overdue', days: 1, repeat_days: 7 }, message_body: 'Olá, {{nome}}! Venceu em {{vencimento}} ({{total}}).' }));
+    const dias = async (id: string, asOf: string) => (await audience(w, id, asOf)).filter((r) => r.included && r.subject.competence_label?.includes('outubro/2026')).length;
+
+    // 01/10: início do período sim; vencimento ainda a 4 dias (fora da janela de 3)
+    expect([await dias(inicio.id, '2026-10-01'), await dias(antes.id, '2026-10-01'), await dias(atraso.id, '2026-10-01')]).toEqual([1, 0, 0]);
+    // 02/10: as duas janelas alcançam a mesma cobrança (consequência da regra nova) — o teto por contato é quem segura a rajada
+    expect([await dias(inicio.id, '2026-10-02'), await dias(antes.id, '2026-10-02'), await dias(atraso.id, '2026-10-02')]).toEqual([1, 1, 0]);
+    // 04/10 (domingo): nada de atraso; início do período já passou da janela de 3 dias
+    expect([await dias(inicio.id, '2026-10-04'), await dias(antes.id, '2026-10-04'), await dias(atraso.id, '2026-10-04')]).toEqual([0, 1, 0]);
+    // 05/10: vence hoje (ainda não é atraso)
+    expect([await dias(inicio.id, '2026-10-05'), await dias(antes.id, '2026-10-05'), await dias(atraso.id, '2026-10-05')]).toEqual([0, 1, 0]);
+    // 06/10: venceu ontem ⇒ atraso
+    expect([await dias(inicio.id, '2026-10-06'), await dias(antes.id, '2026-10-06'), await dias(atraso.id, '2026-10-06')]).toEqual([0, 0, 1]);
+    // O texto usa o vencimento gravado pelo financeiro
+    const [r] = (await audience(w, atraso.id, '2026-10-06')).filter((x) => x.included);
+    expect(r.subject.due_date).toBe('2026-10-05');
+    expect(r.subject.days_late).toBe(1);
+  }, 120000);
+
+  it('os estágios de aviso de uma mesma cobrança não furam o teto por contato (no máximo o teto diário, nunca rajada)', async () => {
+    const w = await world();
+    const p = await rpc<{ id: string }>(w.db, U.admin, `public.fin_create_member_plan('${key()}', ${j({ profile_id: U.socioA, start_on: '2026-10-01', amount_cents: 15000, period_months: 1 })})`);
+    await rpc(w.db, U.admin, `public.fin_generate_member_charges('${key()}', '${p.id}', '2026-10-06')`);
+    const inicio = await save(w, draft({ name: 'Início', trigger_type: 'manual', definition: { stage: 'period_start', days: 400 }, message_body: 'Olá, {{nome}}! {{competencia}}.' }));
+    const antes = await save(w, draft({ name: 'Antes', trigger_type: 'manual', definition: { stage: 'before_due', days: 400 }, message_body: 'Olá, {{nome}}! Vence {{vencimento}}.' }));
+    // janela aberta, teto de 1 por dia, 24 h entre mensagens
+    await rpc(w.db, U.admin, `public.conv_save_automation_settings('${key()}', ${j({ window_start: '00:00', window_end: '23:59:59', days: [0, 1, 2, 3, 4, 5, 6], min_hours_between: 24, daily_cap: 1, weekly_cap: 6 })})`);
+    for (const a of [inicio, antes]) { await status(w, a.id, 'active'); }
+    const r1 = await rpc<any>(w.db, U.admin, `public.conv_automation_prepare_manual('${key()}', '${inicio.id}')`);
+    const r2 = await rpc<any>(w.db, U.admin, `public.conv_automation_prepare_manual('${key()}', '${antes.id}')`);
+    expect(r1.recipients).toBeGreaterThan(0);
+    expect(r2.recipients).toBeGreaterThan(0);
+    await rpc(w.db, U.admin, `public.conv_automation_approve_run('${key()}', '${r1.run_id}')`);
+    await rpc(w.db, U.admin, `public.conv_automation_approve_run('${key()}', '${r2.run_id}')`);
+    // Só o 1º é entregue agora; o outro é reagendado para depois do teto (não sai junto).
+    const lote = await claim(w, 10);
+    const doSocio = lote.filter((x) => x.body);
+    expect(doSocio.length).toBe(1);
+  }, 120000);
+});

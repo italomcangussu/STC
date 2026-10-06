@@ -208,6 +208,18 @@ begin
   return p_at;
 end $$;
 
+-- Mensagens automáticas que JÁ CONTAM para o anti-spam de um contato: as que saíram e as que estão em
+-- envio agora (reservadas pelo `claim`, resultado ainda não informado). Sem as em envio, duas
+-- automações para a mesma pessoa reservadas no MESMO lote sairiam juntas e furariam o teto.
+create function conv_private.automation_events(p_contact uuid) returns setof timestamptz
+language sql stable security definer set search_path = '' as $$
+  select m.sent_at from public.conv_messages m join public.conv_conversations cv on cv.id = m.conversation_id
+   where cv.contact_id = p_contact and m.origin = 'automation' and m.status in ('sent', 'delivered', 'read') and m.sent_at is not null
+  union all
+  -- Reserva antiga (> 10 min) é de um envio que caiu no meio: o `claim` a reaproveita, então não bloqueia ninguém.
+  select r.claimed_at from public.conv_automation_recipients r
+   where r.contact_id = p_contact and r.status = 'processing' and r.claimed_at > now() - interval '10 minutes' $$;
+
 -- Anti-spam: a partir de quando este contato pode receber outra mensagem automática.
 create function conv_private.automation_cap_until(p_contact uuid) returns timestamptz
 language plpgsql stable set search_path = '' as $$
@@ -215,19 +227,16 @@ declare s public.conv_automation_settings%rowtype; v_last timestamptz; v_today i
   v_midnight timestamptz; v_edge timestamptz;
 begin
   select * into s from public.conv_automation_settings where id;
-  select max(m.sent_at) into v_last from public.conv_messages m join public.conv_conversations cv on cv.id = m.conversation_id
-    where cv.contact_id = p_contact and m.origin = 'automation' and m.status in ('sent', 'delivered', 'read');
+  select max(e) into v_last from conv_private.automation_events(p_contact) e;
   if v_last is null then return null; end if;
   if s.min_hours_between > 0 then v_until := v_last + make_interval(hours => s.min_hours_between); end if;
   v_midnight := date_trunc('day', now() at time zone 'America/Fortaleza') at time zone 'America/Fortaleza';
-  select count(*) filter (where m.sent_at >= v_midnight), count(*) into v_today, v_week
-    from public.conv_messages m join public.conv_conversations cv on cv.id = m.conversation_id
-    where cv.contact_id = p_contact and m.origin = 'automation' and m.status in ('sent', 'delivered', 'read') and m.sent_at > now() - interval '7 days';
+  select count(*) filter (where e >= v_midnight), count(*) into v_today, v_week
+    from conv_private.automation_events(p_contact) e where e > now() - interval '7 days';
   if v_today >= s.daily_cap then v_until := greatest(v_until, v_midnight + interval '1 day'); end if;
   if v_week >= s.weekly_cap then
-    select m.sent_at + interval '7 days' into v_edge from public.conv_messages m join public.conv_conversations cv on cv.id = m.conversation_id
-      where cv.contact_id = p_contact and m.origin = 'automation' and m.status in ('sent', 'delivered', 'read') and m.sent_at > now() - interval '7 days'
-      order by m.sent_at desc offset s.weekly_cap - 1 limit 1;
+    select e + interval '7 days' into v_edge from conv_private.automation_events(p_contact) e
+      where e > now() - interval '7 days' order by e desc offset s.weekly_cap - 1 limit 1;
     v_until := greatest(v_until, coalesce(v_edge, now()));
   end if;
   return case when v_until > now() then v_until end;

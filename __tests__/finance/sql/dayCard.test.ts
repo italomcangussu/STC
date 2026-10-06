@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
-import { asUser, asUserError, j, key, q, rpc, U, world } from './harness';
+import { asUser, asUserError, j, key, q, rpc, U, world, SETTINGS_VERSION } from './harness';
 import { EXPECTED, FX, fixtureSql } from '../fixtures/studentsAndGuests';
 
 type W = Awaited<ReturnType<typeof world>>;
@@ -27,7 +27,7 @@ describe('Day Card = taxa do convidado de um sócio (derivada da reserva com con
   it('o valor do Day Card vem da configuração e é editável; não mexe nos pagamentos dos alunos', async () => {
     const w = await withFixture();
     expect((await q<any>(w.db, `select day_card_price_cents::text p from public.fin_settings`))[0].p).toBe('5000'); // o valor que o app já usava
-    await rpc(w.db, U.admin, `public.fin_save_settings('${key()}', 1, ${j({ day_card_price_cents: 6000 })})`);
+    await rpc(w.db, U.admin, `public.fin_save_settings('${key()}', ${SETTINGS_VERSION}, ${j({ day_card_price_cents: 6000 })})`);
     const r = await rows(w);
     expect(r.find((x) => !x.exempt)!.c).toBe('6000');
     const lines = await asUser<any>(w.db, U.admin, `select name, amount_cents::text a from public.fin_dre_lines('2026-08-01','2026-08-31') where period = 'current'`);

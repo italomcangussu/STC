@@ -230,7 +230,7 @@ function EditorSheet({ initial, onClose, onSaved }: { initial: { id: string | nu
   const exemplo = renderExample(draft.message_body, EXAMPLE_VALUES);
 
   return (
-    <Sheet open onClose={onClose} wide title={novo ? 'Nova automação' : 'Editar automação'}
+    <Sheet open onClose={onClose} wide closeOnBackdrop={false} title={novo ? 'Nova automação' : 'Editar automação'}
       subtitle={novo ? 'Escolha um modelo e ajuste. Nada é enviado até você ativar.' : 'Editar uma automação ativa cria uma nova versão; o histórico fica.'}
       footer={<>
         <Button variant="ghost" onClick={onClose}>Cancelar</Button>
@@ -521,7 +521,7 @@ function RulesSheet({ settings, onClose, onSaved }: { settings: AutomationSettin
   }
 
   return (
-    <Sheet open onClose={onClose} title="Regras de envio" subtitle="Valem para TODAS as automações, somadas."
+    <Sheet open onClose={onClose} closeOnBackdrop={false} title="Regras de envio" subtitle="Valem para TODAS as automações, somadas."
       footer={<><Button variant="ghost" onClick={onClose}>Cancelar</Button><Button variant="primary" loading={salvando} onClick={() => void salvar()}>Salvar</Button></>}>
       {erro && <InlineAlert tone="error" title={erro} onDismiss={() => setErro(null)} />}
       <label className="flex min-h-11 items-center gap-2 text-sm font-semibold">

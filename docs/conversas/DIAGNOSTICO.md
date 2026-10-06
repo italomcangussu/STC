@@ -59,7 +59,7 @@ Fonte da verdade de cada informação:
 | Campeonatos, jogos, classificação | `championships`, `matches` (`status pending/finished`, `winner_id`, `winner_registration_id`, `registration_a_id/b_id`, `player_*_source_match_id`, `result_type`), `championship_registrations` (`user_id` ou convidado), `get_group_standings`; avanço de chave feito por trigger `propagate_bracket_winner` |
 | Auditoria | `admin_audit_logs` + `public.admin_audit_insert_log(...)` (usado pelo financeiro com `source='finance'`) |
 | Idempotência e RPC | padrão do financeiro: `SECURITY DEFINER`, `begin_op/finish_op` por `request_id`, schema privado, sem `INSERT/UPDATE/DELETE` direto |
-| Navegação admin | `components/admin/adminNav.ts` (5 grupos, 14 seções; **15** com “Conversas”) + `AdminPanel.tsx`; telas por `lazy` |
+| Navegação admin | `components/admin/adminSections.ts` (antes `adminNav.ts`; 5 grupos, 14 seções; **15** com “Conversas”) + `AdminPanel.tsx`; telas por `lazy` |
 | Fuso | `America/Fortaleza` (`getNowInFortaleza`, `fin_private.today`) |
 | Idioma/UX | Tailwind, paleta `saibro`/`stone`, `StandardModal`, `useConfirm`, `notify` (sonner); componentes comuns em `components/finance/ui.tsx` |
 

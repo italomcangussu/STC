@@ -5,8 +5,7 @@
  * cartões em vez de tabelas largas.
  */
 import React, { useEffect, useState } from 'react';
-import { AlertTriangle, Download, Info, Loader2, X } from 'lucide-react';
-import { StandardModal } from '../StandardModal';
+import { AlertTriangle, Download, Info, Loader2 } from 'lucide-react';
 import { formatBRL, parseBRL, formatDecimalBRL } from '../../lib/finance/money';
 import { CHARGE_STATUS_LABEL, type ChargeDisplayStatus } from '../../lib/finance/memberBilling';
 import { INDICATOR_DEFINITIONS, PERIOD_LABELS, resolvePeriod, type Period, type PeriodPreset } from '../../lib/finance/reports';
@@ -15,7 +14,7 @@ import { exportFilename, toCsv, type ReportSpec } from '../../lib/finance/export
 import { downloadBlob } from './hooks';
 import { financeErrorInfo, notifyFinanceError } from '../../lib/finance/errors';
 
-export const inputCls = 'w-full min-h-11 rounded-xl border border-stone-200 bg-white px-3 py-2 text-sm text-stone-800 outline-hidden focus:border-saibro-400 focus:ring-2 focus:ring-saibro-100 disabled:bg-stone-50 disabled:text-stone-400';
+export const inputCls = 'w-full min-w-0 max-w-full min-h-11 rounded-xl border border-stone-200 bg-white px-3 py-2 text-sm text-stone-800 outline-hidden focus:border-saibro-400 focus:ring-2 focus:ring-saibro-100 disabled:bg-stone-50 disabled:text-stone-400';
 export const btnPrimary = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-saibro-600 px-4 py-2 text-sm font-black text-white shadow-sm shadow-saibro-200 transition active:scale-95 hover:bg-saibro-700 disabled:opacity-50 disabled:active:scale-100';
 export const btnGhost = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-stone-200 bg-white px-4 py-2 text-sm font-bold text-stone-600 transition active:scale-95 hover:bg-stone-50 disabled:opacity-50';
 export const btnDanger = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm font-bold text-red-700 transition active:scale-95 hover:bg-red-100 disabled:opacity-50';
@@ -27,12 +26,15 @@ export const Money: React.FC<{ cents: number; className?: string; signed?: boole
 export const Card: React.FC<{ title?: React.ReactNode; subtitle?: React.ReactNode; right?: React.ReactNode; children?: React.ReactNode; className?: string }> = ({ title, subtitle, right, children, className = '' }) => (
   <section className={`rounded-3xl border border-stone-100 bg-white p-4 shadow-sm md:p-5 ${className}`}>
     {(title || right) && (
-      <header className="mb-3 flex items-start justify-between gap-3">
-        <div className="min-w-0">
+      // No celular o título ocupa a linha inteira e as ações vêm logo abaixo,
+      // alinhadas à esquerda e podendo quebrar: antes, ações largas (ex.: "Gerar
+      // lançamentos" + "Nova") esmagavam o título até sumir atrás delas.
+      <header className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+        <div className="min-w-0 sm:flex-1">
           {title && <h3 className="text-base font-black text-stone-800">{title}</h3>}
           {subtitle && <p className="text-xs font-medium text-stone-500">{subtitle}</p>}
         </div>
-        {right && <div className="shrink-0">{right}</div>}
+        {right && <div className="flex flex-wrap items-center gap-2 sm:shrink-0 sm:justify-end">{right}</div>}
       </header>
     )}
     {children}
@@ -92,7 +94,7 @@ export const Notice: React.FC<{ tone?: 'info' | 'warn' | 'bad'; title?: string; 
 };
 
 export const Field: React.FC<{ label: string; hint?: string; children: React.ReactNode; className?: string }> = ({ label, hint, children, className = '' }) => (
-  <label className={`block space-y-1 ${className}`}>
+  <label className={`block min-w-0 space-y-1 ${className}`}>
     <span className="text-[11px] font-black uppercase tracking-wider text-stone-400">{label}</span>
     {children}
     {hint && <span className="block text-[11px] text-stone-400">{hint}</span>}
@@ -102,7 +104,11 @@ export const Field: React.FC<{ label: string; hint?: string; children: React.Rea
 /** Campo de dinheiro: o usuário digita "1.234,56"; o valor sai em centavos inteiros. */
 export const MoneyInput: React.FC<{ value: number | null; onChange: (cents: number | null) => void; placeholder?: string; disabled?: boolean; 'aria-label'?: string }> = ({ value, onChange, placeholder = '0,00', disabled, ...rest }) => {
   const [text, setText] = useState(value === null ? '' : formatDecimalBRL(value));
-  useEffect(() => { setText(value === null ? '' : formatDecimalBRL(value)); }, [value]);
+  // Só reescreve o texto quando o valor mudou POR FORA (formulário reaberto, valor sugerido). Se o texto digitado
+  // já vale esse número, deixa como está: antes, digitar "2" virava "2,00" e jogava o cursor para o fim.
+  useEffect(() => {
+    setText((current) => (parseBRL(current) === value ? current : value === null ? '' : formatDecimalBRL(value)));
+  }, [value]);
   return (
     <input
       inputMode="decimal" className={inputCls} placeholder={placeholder} value={text} disabled={disabled} aria-label={rest['aria-label']}
@@ -112,21 +118,8 @@ export const MoneyInput: React.FC<{ value: number | null; onChange: (cents: numb
   );
 };
 
-export const Sheet: React.FC<{ open: boolean; onClose: () => void; title: string; subtitle?: string; children: React.ReactNode; footer?: React.ReactNode; wide?: boolean }> = ({ open, onClose, title, subtitle, children, footer, wide }) => (
-  <StandardModal isOpen={open} onClose={onClose} verticalAlign="end" padding="p-0 sm:p-4" ariaLabel={title}>
-    <div className={`flex max-h-[92dvh] w-screen flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl sm:w-[92vw] sm:rounded-3xl ${wide ? 'sm:max-w-3xl' : 'sm:max-w-lg'}`}>
-      <header className="flex items-start justify-between gap-3 border-b border-stone-100 px-5 py-4">
-        <div className="min-w-0">
-          <h2 className="text-lg font-black text-stone-800">{title}</h2>
-          {subtitle && <p className="text-xs text-stone-500">{subtitle}</p>}
-        </div>
-        <button onClick={onClose} aria-label="Fechar" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-stone-400 hover:bg-stone-100"><X size={20} /></button>
-      </header>
-      <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">{children}</div>
-      {footer && <footer className="flex flex-col-reverse gap-2 border-t border-stone-100 px-5 py-3 sm:flex-row sm:justify-end">{footer}</footer>}
-    </div>
-  </StandardModal>
-);
+// A folha em si é genérica e mora em `components/ui/Sheet.tsx`; o financeiro só a reexporta.
+export { Sheet } from '../ui/Sheet';
 
 /** Tag que deixa claro em que base o número foi calculado. */
 export const BasisTag: React.FC<{ basis: 'competencia' | 'caixa' | 'posicao' | 'previsao' }> = ({ basis }) => {
@@ -225,16 +218,41 @@ export const Row: React.FC<{ children: React.ReactNode; onClick?: () => void; cl
   >{children}</div>
 );
 
-export const SectionTabs: React.FC<{ items: Array<{ id: string; label: string; badge?: number }>; value: string; onChange: (id: string) => void; label: string }> = ({ items, value, onChange, label }) => (
-  <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide" role="tablist" aria-label={label}>
-    {items.map((i) => (
-      <button
-        key={i.id} role="tab" aria-selected={i.id === value} onClick={() => onChange(i.id)}
-        className={`min-h-11 whitespace-nowrap rounded-full border px-3.5 text-xs font-bold transition-colors ${i.id === value ? 'border-saibro-300 bg-saibro-50 text-saibro-700' : 'border-stone-200 bg-white text-stone-500 hover:border-stone-300'}`}
-      >
-        {i.label}
-        {!!i.badge && <span className="ml-1.5 rounded-full bg-saibro-600 px-1.5 py-0.5 text-[10px] font-black text-white">{i.badge}</span>}
-      </button>
-    ))}
-  </div>
-);
+type TabItem = { id: string; label: string; badge?: number };
+
+/**
+ * Abas em dois estilos, para que níveis diferentes de navegação não pareçam o
+ * mesmo controle: `segmented` (blocos de largura igual, o nível de cima) e
+ * `chips` (pílulas roláveis, o nível de baixo).
+ */
+export const SectionTabs: React.FC<{ items: TabItem[]; value: string; onChange: (id: string) => void; label: string; variant?: 'chips' | 'segmented' }> = ({ items, value, onChange, label, variant = 'chips' }) => {
+  const badge = (n?: number) => !!n && <span className="ml-1.5 rounded-full bg-saibro-600 px-1.5 py-0.5 text-[10px] font-black text-white">{n}<span className="sr-only"> pendentes</span></span>;
+  // No seletor de blocos o selo flutua no canto: dentro do texto ele disputava a largura com o nome da aba.
+  const cornerBadge = (n?: number) => !!n && <span className="absolute right-1 top-0.5 min-w-4 rounded-full bg-saibro-600 px-1 text-center text-[10px] font-black leading-4 text-white">{n}<span className="sr-only"> pendentes</span></span>;
+  if (variant === 'segmented') {
+    return (
+      <div className="grid auto-cols-fr grid-flow-col gap-1 rounded-2xl bg-stone-100 p-1" role="tablist" aria-label={label}>
+        {items.map((i) => (
+          <button
+            key={i.id} role="tab" aria-selected={i.id === value} onClick={() => onChange(i.id)}
+            className={`relative min-h-11 min-w-0 rounded-xl px-1 text-sm font-bold transition ${i.id === value ? 'bg-white text-saibro-700 shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}
+          >
+            {i.label}{cornerBadge(i.badge)}
+          </button>
+        ))}
+      </div>
+    );
+  }
+  return (
+    <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide" role="tablist" aria-label={label}>
+      {items.map((i) => (
+        <button
+          key={i.id} role="tab" aria-selected={i.id === value} onClick={() => onChange(i.id)}
+          className={`min-h-11 whitespace-nowrap rounded-full border px-3.5 text-xs font-bold transition-colors ${i.id === value ? 'border-saibro-300 bg-saibro-50 text-saibro-700' : 'border-stone-200 bg-white text-stone-500 hover:border-stone-300'}`}
+        >
+          {i.label}{badge(i.badge)}
+        </button>
+      ))}
+    </div>
+  );
+};

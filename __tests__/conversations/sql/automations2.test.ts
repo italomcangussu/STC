@@ -73,21 +73,21 @@ describe('públicos e dedupe', () => {
     await tickAt(w.db, '2026-10-12T12:00:00Z');
     const anaRecipients = await recipients(w, `profile_id = '${U.socioA}'`);
     expect(anaRecipients.length).toBe(2);   // um por público (finalidades diferentes)
-    // 1º envio da Ana sai e é marcado como enviado; o 2º é reagendado para amanhã (teto diário = 1)
+    // Mesmo reservados no MESMO lote, só um sai agora: o que está em envio já conta para o teto (diário = 1).
     const first = await claim(w, 50);
     const mine = first.filter((x) => anaRecipients.some((r) => r.id === x.recipient_id));
-    expect(mine.length).toBe(2);   // ambos reivindicados na mesma volta: o teto só conta o que JÁ foi enviado
-    for (const g of mine.slice(0, 1)) {
-      const qq = await svc<any>(w.db, `(select to_jsonb(x) from public.conv_svc_automation_queue('${g.recipient_id}', '${g.conversation_id}', 'olá') x)`);
-      await svc(w.db, `public.conv_svc_finish_message('${qq.message_id}', true, 'P1', null)`);
-      await svc(w.db, `public.conv_svc_automation_finish('${g.recipient_id}', '${qq.message_id}', true, null)`);
-    }
-    // o segundo, ao ser tentado de novo, esbarra no teto
-    const second = mine[1];
-    await svc(w.db, `public.conv_svc_automation_finish('${second.recipient_id}', null, false, 'HTTP_503')`);   // volta a pendente
-    await w.db.exec(`update public.conv_automation_recipients set due_at = now() - interval '1 minute' where id = '${second.recipient_id}'`);
-    expect((await claim(w, 50)).map((x) => x.recipient_id)).not.toContain(second.recipient_id);
-    const [r2] = await recipients(w, `id = '${second.recipient_id}'`);
+    expect(mine.length).toBe(1);
+    const other = anaRecipients.find((r) => r.id !== mine[0].recipient_id)!;
+    const [reagendado] = await recipients(w, `id = '${other.id}'`);
+    expect(reagendado.status).toBe('pending');
+    expect(new Date(reagendado.due_at).getTime()).toBeGreaterThan(Date.now());   // reagendado para depois do teto, não perdido
+    // O 1º sai e é marcado como enviado: o outro continua esbarrando no teto (agora pelo que JÁ foi enviado).
+    const qq = await svc<any>(w.db, `(select to_jsonb(x) from public.conv_svc_automation_queue('${mine[0].recipient_id}', '${mine[0].conversation_id}', 'olá') x)`);
+    await svc(w.db, `public.conv_svc_finish_message('${qq.message_id}', true, 'P1', null)`);
+    await svc(w.db, `public.conv_svc_automation_finish('${mine[0].recipient_id}', '${qq.message_id}', true, null)`);
+    await w.db.exec(`update public.conv_automation_recipients set due_at = now() - interval '1 minute' where id = '${other.id}'`);
+    expect((await claim(w, 50)).map((x) => x.recipient_id)).not.toContain(other.id);
+    const [r2] = await recipients(w, `id = '${other.id}'`);
     expect(new Date(r2.due_at).getTime()).toBeGreaterThan(Date.now());
   }, 120000);
 });

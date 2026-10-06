@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { ChevronLeft, Loader2, Search, Star, Trash2, UserPlus, Users } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { notify } from '../../lib/notifications';
+import { matchesSearch } from '../../lib/searchText';
 import { MEMBER_ROLES } from '../../utils';
 import { Toggle } from './Toggle';
 import {
@@ -291,8 +292,8 @@ export const CreatorRegistration: React.FC<Props> = ({
     };
 
     const filtrados = profiles.filter(p =>
-        !jaInscrito(p.id) && p.name.toLowerCase().includes(busca.toLowerCase()));
-    const alunosFiltrados = students.filter(s => s.name.toLowerCase().includes(busca.toLowerCase()));
+        !jaInscrito(p.id) && matchesSearch(busca, p.name));
+    const alunosFiltrados = students.filter(s => matchesSearch(busca, s.name));
 
     return (
         <div className="space-y-4">

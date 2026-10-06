@@ -183,6 +183,9 @@ export async function rpcError(db: PGlite, uid: string | null, call: string): Pr
 
 export const j = (o: unknown) => `'${JSON.stringify(o).replace(/'/g, "''")}'::jsonb`;
 
+/** Versão atual de `fin_settings`, lida no banco: não depende de quantas migrations já subiram a versão. */
+export const SETTINGS_VERSION = '(select version from public.fin_settings)';
+
 /** "Hoje" do banco (Fortaleza). */
 export async function dbToday(db: PGlite): Promise<string> {
   return (await q<{ d: string }>(db, `select fin_private.today()::text d`))[0].d;

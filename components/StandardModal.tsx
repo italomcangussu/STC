@@ -103,10 +103,13 @@ export const StandardModal: React.FC<StandardModalProps> = ({
             aria-modal="true"
             aria-label={ariaLabel}
         >
+            {/* `my-auto` em vez de só `items-center`: com `items-center` um modal mais alto que a tela estoura
+                igualmente para cima e para baixo e o topo fica fora do alcance da rolagem; margem automática
+                centraliza quando cabe e cola no topo (com rolagem) quando não cabe. */}
             <div
                 ref={panelRef}
                 tabIndex={-1}
-                className="animate-in zoom-in-95 duration-180 ease-out motion-reduce:animate-none outline-none"
+                className={`max-w-full min-w-0 animate-in zoom-in-95 duration-180 ease-out motion-reduce:animate-none outline-none ${verticalAlign === 'center' ? 'my-auto' : ''}`}
                 onClick={(e) => e.stopPropagation()}
             >
                 {children}

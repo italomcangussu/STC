@@ -12,6 +12,7 @@ import { listAccounts, listCategories, getSettings, receiptQueue } from '../../l
 import { FinanceProvider } from './FinanceContext';
 import { ErrorBlock, SectionTabs, Spinner } from './ui';
 import { useAsync } from './hooks';
+import { useAdminEmbedded } from '../admin/AdminEmbedContext';
 
 const OverviewTab = lazy(() => import('./tabs/OverviewTab'));
 const MembersTab = lazy(() => import('./tabs/MembersTab'));
@@ -42,6 +43,7 @@ const loadTab = (): string => {
 };
 
 export const FinanceHub: React.FC = () => {
+  const embedded = useAdminEmbedded();
   const [tab, setTab] = useState(loadTab);
   const go = useCallback((id: string) => {
     if (!ALL.includes(id)) return;
@@ -85,14 +87,16 @@ export const FinanceHub: React.FC = () => {
   return (
     <FinanceProvider value={value}>
       <div className="space-y-4">
-        <div className="flex items-center gap-3">
-          <div className="rounded-2xl bg-linear-to-br from-emerald-500 to-emerald-600 p-3 text-white shadow-lg shadow-emerald-200"><Landmark size={24} /></div>
-          <div>
-            <h1 className="text-xl font-black tracking-tight text-stone-800 md:text-2xl">Financeiro do clube</h1>
-            <p className="text-xs font-medium text-stone-500">Mensalidades, pagamentos, contas, DRE e caixa</p>
+        {!embedded && (
+          <div className="flex items-center gap-3">
+            <div className="rounded-2xl bg-linear-to-br from-emerald-500 to-emerald-600 p-3 text-white shadow-lg shadow-emerald-200"><Landmark size={24} /></div>
+            <div>
+              <h1 className="text-xl font-black tracking-tight text-stone-800 md:text-2xl">Financeiro do clube</h1>
+              <p className="text-xs font-medium text-stone-500">Mensalidades, pagamentos, contas, DRE e caixa</p>
+            </div>
           </div>
-        </div>
-        <SectionTabs label="Áreas do financeiro" value={group.id} onChange={(g) => go(FINANCE_GROUPS.find((x) => x.id === g)!.tabs[0][0])}
+        )}
+        <SectionTabs variant="segmented" label="Áreas do financeiro" value={group.id} onChange={(g) => { if (g !== group.id) go(FINANCE_GROUPS.find((x) => x.id === g)!.tabs[0][0]); }}
           items={FINANCE_GROUPS.map((g) => ({ id: g.id, label: g.label, badge: g.id === 'receber' ? pendingCount : undefined }))} />
         <SectionTabs label={group.label} value={tab} onChange={go}
           items={group.tabs.map((t) => ({ id: t[0], label: t[1], badge: t[0] === 'receipts' ? pendingCount : undefined }))} />

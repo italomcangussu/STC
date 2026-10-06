@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { CalendarPlus, CreditCard, Plus, Search, UserMinus } from 'lucide-react';
+import { CalendarPlus, CreditCard, Plus, UserMinus } from 'lucide-react';
 import { notify } from '../../../lib/notifications';
 import { useConfirm } from '../../../hooks/useConfirm';
 import { notifyFinanceError } from '../../../lib/finance/errors';
@@ -12,12 +12,17 @@ import { brDate, addMonths, firstOfMonth, monthLabel, type IsoDate } from '../..
 import { buildCalendar, CLUB_DEFAULT_DUE_RULE, type DueRule } from '../../../lib/finance/calendar';
 import { generationHorizon, planCharges, priceFor } from '../../../lib/finance/memberBilling';
 import { formatBRL } from '../../../lib/finance/money';
+import { matchesSearch } from '../../../lib/searchText';
 import { chargesSpec } from '../../../lib/finance/export';
 import { useAsync, useRequestKey, useToday } from '../hooks';
 import { useFinance } from '../FinanceContext';
+import { AdminSearch } from '../../admin/ui';
 import { Badge, Card, ChargeStatusBadge, Empty, ErrorBlock, ExportButtons, Field, MoneyInput, Notice, Row, SectionTabs, Sheet, Spinner, btnDanger, btnGhost, btnPrimary, inputCls } from '../ui';
 
 const METHODS = [['pix', 'Pix'], ['transfer', 'Transferência'], ['cash', 'Dinheiro'], ['card', 'Cartão'], ['other', 'Outro']] as const;
+/** Quantas cobranças a tela traz de uma vez; com busca por nome traz o máximo que o banco entrega. */
+const LIST_LIMIT = 300;
+const SEARCH_LIMIT = 1000;
 const STATUS_FILTERS = [['', 'Todas'], ['overdue', 'Vencidas'], ['open', 'Em aberto'], ['forecast', 'Previstas'], ['partial', 'Parciais'], ['in_review', 'Em análise'], ['paid', 'Pagas'], ['canceled', 'Canceladas']] as const;
 
 // ------------------------------------------------------------------
@@ -172,10 +177,12 @@ const NewPlanSheet: React.FC<{ open: boolean; onClose: () => void; onDone: () =>
   const preview = useMemo(() => {
     if (!amount || !start) return null;
     const rule: DueRule = settings ? { dueDay: settings.due_day, monthOffset: settings.due_month_offset, nonBusinessRule: settings.non_business_rule } : CLUB_DEFAULT_DUE_RULE;
-    const cal = buildCalendar(holidays.data ?? [], settings?.saturday_is_business ?? false);
+    const cal = buildCalendar((holidays.data ?? []).map((h) => ({ date: h.holiday_date, active: h.active })), settings?.saturday_is_business ?? false);
     return planCharges({ id: 'new', profileId: profile || 'x', startOn: start, endedOn: null, status: 'active', periodMonths: period }, [{ effectiveFrom: firstOfMonth(start), amountCents: amount }], [],
       generationHorizon(today, settings?.horizon_months ?? 1), rule, cal);
   }, [amount, start, period, holidays.data, settings, today, profile]);
+  // Com o vencimento no mês cobrado, um vínculo que começou antes de hoje já gera cobranças vencidas: o admin precisa ver isso antes de criar.
+  const overdue = preview ? preview.create.filter((c) => c.dueDate < today).length : 0;
 
   const save = async () => {
     setBusy(true);
@@ -200,8 +207,9 @@ const NewPlanSheet: React.FC<{ open: boolean; onClose: () => void; onDone: () =>
             <Field label="Início do vínculo" className="col-span-2"><input type="date" className={inputCls} value={start} onChange={(e) => setStart(e.target.value)} /></Field>
           </div>
           {preview && (
-            <Notice tone={preview.create.length > 12 ? 'warn' : 'info'} title={`Serão geradas ${preview.create.length} cobrança(s)`}>
+            <Notice tone={preview.create.length > 12 || overdue > 0 ? 'warn' : 'info'} title={`Serão geradas ${preview.create.length} cobrança(s)`}>
               {preview.create.length === 0 ? 'Nenhuma cobrança no período.' : <>De {monthLabel(preview.create[0].competenceMonth)} a {monthLabel(preview.create[preview.create.length - 1].competenceMonth)}; a primeira vence em {brDate(preview.create[0].dueDate)}.
+                {overdue > 0 && (overdue === preview.create.length ? (overdue === 1 ? ' Ela já está vencida hoje.' : ' Todas já estão vencidas hoje.') : ` ${overdue === 1 ? '1 já está vencida' : `${overdue} já estão vencidas`} hoje.`)}
                 {preview.create.length > 12 && ' Muitas competências passadas: confira se a data de início está certa.'}</>}
             </Notice>
           )}
@@ -353,12 +361,18 @@ const MembersTab: React.FC = () => {
   const [busy, setBusy] = useState(false);
   const { key, renew } = useRequestKey();
 
-  const filters = { search, status, competenceFrom: compFrom ? `${compFrom}-01` : undefined, competenceTo: compTo ? `${compTo}-01` : undefined, dueFrom: dueFrom || undefined, dueTo: dueTo || undefined };
-  const charges = useAsync(() => listCharges(filters, 300), [search, status, compFrom, compTo, dueFrom, dueTo]);
+  // A busca por nome NÃO vai ao banco: lá a comparação é sensível a acento ("joao" não acha "João").
+  // Com busca ativa a tela traz o máximo de linhas de uma vez e filtra aqui, sem acento e sem maiúsculas;
+  // digitar mais letras não refaz a consulta.
+  const searching = search.trim() !== '';
+  const filters = { status, competenceFrom: compFrom ? `${compFrom}-01` : undefined, competenceTo: compTo ? `${compTo}-01` : undefined, dueFrom: dueFrom || undefined, dueTo: dueTo || undefined };
+  const charges = useAsync(() => listCharges(filters, searching ? SEARCH_LIMIT : LIST_LIMIT), [searching, status, compFrom, compTo, dueFrom, dueTo]);
   const plans = useAsync(() => listPlans(), []);
 
-  const rows = useMemo(() => charges.data ?? [], [charges.data]);
-  const totalCount = rows[0]?.total_count ?? 0;
+  const loaded = useMemo(() => charges.data ?? [], [charges.data]);
+  const rows = useMemo(() => (searching ? loaded.filter((r) => matchesSearch(search, r.profile_name)) : loaded), [loaded, search, searching]);
+  const totalCount = loaded[0]?.total_count ?? 0;
+  const truncated = totalCount > loaded.length;
   const totals = useMemo(() => ({
     due: rows.filter((r) => r.display_status !== 'paid' && r.display_status !== 'canceled').reduce((s, r) => s + r.total_due_cents, 0),
     overdue: rows.filter((r) => r.display_status === 'overdue').reduce((s, r) => s + r.total_due_cents, 0),
@@ -375,7 +389,7 @@ const MembersTab: React.FC = () => {
   };
 
   // A tela mostra até 300 linhas; o arquivo leva TODAS as do filtro (até 5.000), com os mesmos totais da consulta.
-  const spec = async () => chargesSpec(totalCount > rows.length ? await listCharges(filters, 5000) : rows, {
+  const spec = async () => chargesSpec(!searching && truncated ? await listCharges(filters, 5000) : rows, {
     generatedAt: new Date().toISOString(), period: null,
     filters: [
       { label: 'Situação', value: STATUS_FILTERS.find((s) => s[0] === status)?.[1] ?? 'Todas' }, { label: 'Busca', value: search || '—' },
@@ -393,7 +407,7 @@ const MembersTab: React.FC = () => {
           <Card title="Cobranças" subtitle="Valor original, encargos e total atualizado de cada mensalidade."
             right={<button className={btnGhost} disabled={busy} onClick={generate}><CalendarPlus size={16} /> Gerar cobranças</button>}>
             <div className="space-y-3">
-              <div className="relative"><Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" /><input className={`${inputCls} pl-9`} placeholder="Buscar sócio…" value={search} onChange={(e) => setSearch(e.target.value)} aria-label="Buscar sócio" /></div>
+              <AdminSearch value={search} onChange={setSearch} placeholder="Buscar sócio…" label="Buscar sócio" />
               <SectionTabs label="Situação" value={status} onChange={setStatus} items={STATUS_FILTERS.map(([id, label]) => ({ id, label }))} />
               <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
                 <Field label="Competência de"><input type="month" className={inputCls} value={compFrom} onChange={(e) => setCompFrom(e.target.value)} /></Field>
@@ -404,11 +418,14 @@ const MembersTab: React.FC = () => {
             </div>
           </Card>
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-xs font-bold text-stone-500">{totalCount > rows.length ? `Mostrando ${rows.length} de ${totalCount}` : `${rows.length} cobrança(s)`} · a receber <span className="text-stone-800">{formatBRL(totals.due)}</span> · vencido <span className="text-red-600">{formatBRL(totals.overdue)}</span></p>
+            <p className="text-xs font-bold text-stone-500">{!searching && truncated ? `Mostrando ${rows.length} de ${totalCount}` : `${rows.length} cobrança(s)`} · a receber <span className="text-stone-800">{formatBRL(totals.due)}</span> · vencido <span className="text-red-600">{formatBRL(totals.overdue)}</span></p>
             <ExportButtons getSpec={spec} disabled={rows.length === 0} />
           </div>
+          {searching && truncated && !charges.loading && <Notice tone="warn">A busca olhou as {loaded.length.toLocaleString('pt-BR')} cobranças mais recentes de {totalCount.toLocaleString('pt-BR')}. Para achar as mais antigas, restrinja por competência ou vencimento.</Notice>}
           {charges.error ? <ErrorBlock error={charges.error} onRetry={charges.reload} /> : charges.loading ? <Spinner /> : rows.length === 0 ? (
-            <Empty title="Nenhuma cobrança com estes filtros" hint="Cadastre a mensalidade de um sócio em “Sócios e valores” e use “Gerar cobranças”." />
+            searching
+              ? <Empty title={`Nenhuma cobrança de “${search.trim()}”`} hint="Confira o nome ou troque a situação e as datas — os filtros abaixo da busca também valem." />
+              : <Empty title="Nenhuma cobrança com estes filtros" hint="Cadastre a mensalidade de um sócio em “Sócios e valores” e use “Gerar cobranças”." />
           ) : (
             <div className="space-y-2">{rows.map((r) => (
               <Row key={r.charge_id} onClick={() => setSel(r)}>

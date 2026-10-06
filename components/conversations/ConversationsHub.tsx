@@ -9,6 +9,7 @@
 import React, { Suspense, lazy, useEffect, useState } from 'react';
 import { Bot, MessageCircle, MessagesSquare, Plug, Zap } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { useAdminEmbedded } from '../admin/AdminEmbedContext';
 import { SectionTabs, Spinner } from './ui';
 
 const InboxTab = lazy(() => import('./InboxTab'));
@@ -32,6 +33,7 @@ const loadTab = (): string => {
 };
 
 export const ConversationsHub: React.FC<{ currentUserId?: string }> = ({ currentUserId }) => {
+  const embedded = useAdminEmbedded();
   const [tab, setTab] = useState(loadTab);
   const [me, setMe] = useState(currentUserId ?? '');
 
@@ -59,14 +61,16 @@ export const ConversationsHub: React.FC<{ currentUserId?: string }> = ({ current
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3">
-        <div className="rounded-2xl bg-linear-to-br from-emerald-500 to-emerald-600 p-3 text-white shadow-lg shadow-emerald-200"><MessagesSquare size={24} /></div>
-        <div>
-          <h1 className="text-xl font-black tracking-tight text-stone-800 md:text-2xl">Conversas e WhatsApp</h1>
-          <p className="text-xs font-medium text-stone-500">Atendimento, automações e IA no mesmo número do clube</p>
+      {!embedded && (
+        <div className="flex items-center gap-3">
+          <div className="rounded-2xl bg-linear-to-br from-emerald-500 to-emerald-600 p-3 text-white shadow-lg shadow-emerald-200"><MessagesSquare size={24} /></div>
+          <div>
+            <h1 className="text-xl font-black tracking-tight text-stone-800 md:text-2xl">Conversas e WhatsApp</h1>
+            <p className="text-xs font-medium text-stone-500">Atendimento, automações e IA no mesmo número do clube</p>
+          </div>
         </div>
-      </div>
-      <SectionTabs label="Áreas de Conversas" value={tab} onChange={go} items={CONVERSATION_TABS.map((t) => ({ id: t[0], label: t[1] }))} />
+      )}
+      <SectionTabs variant="segmented" label="Áreas de Conversas" value={tab} onChange={go} items={CONVERSATION_TABS.map((t) => ({ id: t[0], label: t[1] }))} />
       <Suspense fallback={<Spinner />}>{body}</Suspense>
     </div>
   );
