@@ -597,6 +597,17 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
     ctx.club_roster = Array.isArray(roster.data) ? roster.data : [];
   } catch { ctx.club_roster = []; }
   if (isGroup) {
+    // No grupo oficial, cards/alunos e Day Cards são contexto autorizado pela regra do clube.
+    // A RPC é service-role only; os dados não ficam expostos ao cliente/app.
+    try {
+      const fin = await db('conv_svc_ai_financial_context', {});
+      ctx.financial_context = fin.data && typeof fin.data === 'object'
+        ? fin.data
+        : { students: [], day_cards: [] };
+    } catch {
+      ctx.financial_context = { students: [], day_cards: [] };
+    }
+
     try {
       const gc = await db('conv_svc_ai_group_context', { p_session: session });
       ctx.group_context = Array.isArray(gc.data) ? gc.data : [];
@@ -658,7 +669,13 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
     db('conv_svc_ai_save_turn', { p_session: session, p_memory: memory, p_decision: decision, p_payload: payload, p_awaiting: awaiting, p_close: close });
 
   const transferir = async (kind: 'soft' | 'hard', note: string, memory: Memory | null, falar = true) => {
-    if (falar) await entregar(cadence([isGroup ? TRANSFER_GROUP : TRANSFER_DIRECT]));
+    if (isGroup) {
+      const bolhas = falar ? ['Não tenho essa informação confirmada.'] : [];
+      const enviadas = bolhas.length ? await entregar(cadence(bolhas)) : 0;
+      await save(memory, 'group_no_handoff', { reason: note.slice(0, 200) }, false, false);
+      return { status: 'replied', bubbles: enviadas, handoff: null } as TurnResult;
+    }
+    if (falar) await entregar(cadence([TRANSFER_DIRECT]));
     await db('conv_svc_ai_handoff', { p_session: session, p_kind: kind, p_note: note });
     await save(memory, `handoff_${kind}`, { reason: note.slice(0, 200) }, false, kind === 'hard');
     return { status: 'handoff', handoff: kind } as TurnResult;
@@ -697,6 +714,27 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
       awaiting: false,
     };
   }
+  if (isGroup) {
+    const falaDeHandoff = /\b(equipe|atendente|humano|transfer|transferir|encaminh|passar a conversa|passar sua conversa|pedir para algu[eé]m)\b/i;
+    const seguras = answer.messages.filter((m) => !falaDeHandoff.test(m));
+    if (answer.transfer) {
+      answer = {
+        ...answer,
+        intent: 'outro',
+        ready: false,
+        customer_confirmed: false,
+        awaiting: false,
+        transfer: false,
+        handoff_kind: null,
+        handoff_note: null,
+        close: false,
+        messages: seguras.length ? seguras : ['Não tenho essa informação confirmada.'],
+      };
+    } else if (seguras.length !== answer.messages.length) {
+      answer = { ...answer, messages: seguras };
+    }
+  }
+
   for (const candidate of answer.memory_candidates ?? []) {
     await Promise.resolve(deps.db('conv_svc_ai_memory_candidate', { p: { ...candidate, source_message_id: messageId } })).catch(() => undefined);
   }
@@ -715,13 +753,18 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
   // Os fechamentos (confirmou, desistiu) zeram os dados do pedido, mas o resumo da conversa fica.
   if (summary && !d.memory.summary) d.memory = { ...d.memory, summary };
   if (d.handoff) {
+    if (isGroup) {
+      const enviadas = await entregar(cadence(['Não consegui concluir isso por aqui.']));
+      await save(d.memory, 'group_no_handoff', { action: d.action, reason: d.handoff.note.slice(0, 200) }, false, false);
+      return { status: 'replied', bubbles: enviadas, handoff: null, action: d.action };
+    }
     await entregar(cadence(d.bubbles));
     await db('conv_svc_ai_handoff', { p_session: session, p_kind: d.handoff.kind, p_note: d.handoff.note });
     await save(d.memory, `handoff_${d.handoff.kind}`, { action: d.action, reason: d.handoff.note.slice(0, 200) }, false, d.handoff.kind === 'hard');
     return { status: 'handoff', handoff: d.handoff.kind, action: d.action };
   }
   const enviadas = await entregar(cadence(d.bubbles));
-  if (answer.transfer) {
+  if (answer.transfer && !isGroup) {
     await db('conv_svc_ai_handoff', { p_session: session, p_kind: answer.handoff_kind ?? 'hard', p_note: answer.handoff_note || 'Transferida pela IA' });
   }
   await save(d.memory, answer.transfer ? `handoff_${answer.handoff_kind}` : d.close ? 'close' : d.action ?? 'reply',
