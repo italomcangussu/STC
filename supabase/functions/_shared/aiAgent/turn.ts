@@ -40,9 +40,13 @@ export type Slots = {
   professor_name?: string | null;
   student_names?: string[];
   reservation_ref?: string | null;
+  /** Mexer nos atletas de uma reserva existente (sair, retirar, adicionar). */
+  add_names?: string[];
+  remove_names?: string[];
+  remove_guest?: boolean;
 };
 
-export type Intent = 'reservar' | 'cancelar' | 'remarcar' | 'consultar' | 'informar' | 'entrar' | 'outro';
+export type Intent = 'reservar' | 'cancelar' | 'remarcar' | 'consultar' | 'informar' | 'entrar' | 'participantes' | 'outro';
 
 export type Answer = {
   messages: string[];
@@ -73,7 +77,7 @@ function lerJson(output: string): Record<string, unknown> | null {
 
 const str = (v: unknown): string | null => (typeof v === 'string' && v.trim() ? v.trim() : null);
 const strList = (v: unknown): string[] => (Array.isArray(v) ? v.map((x) => String(x ?? '').trim()).filter(Boolean).slice(0, 8) : []);
-const INTENTS: Intent[] = ['reservar', 'cancelar', 'remarcar', 'consultar', 'informar', 'entrar', 'outro'];
+const INTENTS: Intent[] = ['reservar', 'cancelar', 'remarcar', 'consultar', 'informar', 'entrar', 'participantes', 'outro'];
 const ACTIONABLE: Intent[] = ['reservar', 'cancelar', 'remarcar'];
 
 /**
@@ -94,6 +98,9 @@ export function parseSlots(raw: unknown): Slots {
   if ('professor_name' in o) out.professor_name = str(o.professor_name);
   if ('student_names' in o) out.student_names = strList(o.student_names);
   if ('reservation_ref' in o) out.reservation_ref = str(o.reservation_ref);
+  if ('add_names' in o) out.add_names = strList(o.add_names);
+  if ('remove_names' in o) out.remove_names = strList(o.remove_names);
+  if ('remove_guest' in o) out.remove_guest = o.remove_guest === true;
   return out;
 }
 
@@ -192,7 +199,7 @@ export function wantsHuman(text: string, keywords: string[]): boolean {
 }
 
 /** O texto do modelo afirma que algo foi feito? Quem afirma isso é o sistema, não o modelo. */
-const SUCCESS_CLAIM = /\b(reservei|reservad[oa]s?|marquei|marcad[oa]s?|agendei|agendad[oa]s?|confirmei|confirmad[oa]s?|cancelei|cancelad[oa]s?|remarquei|remarcad[oa]s?|j[aá] est[aá] (garantid[oa]|feit[oa]|ok))\b/i;
+const SUCCESS_CLAIM = /\b(reservei|reservad[oa]s?|marquei|marcad[oa]s?|agendei|agendad[oa]s?|confirmei|confirmad[oa]s?|cancelei|cancelad[oa]s?|remarquei|remarcad[oa]s?|retirei|removi|tirei|adicionei|coloquei|inclu[ií]|alterei|atualizei|editei|j[aá] est[aá] (garantid[oa]|feit[oa]|ok))\b/i;
 export function claimsSuccess(text: string): boolean {
   return SUCCESS_CLAIM.test(text);
 }
@@ -262,7 +269,35 @@ export function busyMessage(g: Game, today: string): string {
   return `Esse horário está ocupado (${jogoDe(g, today)}).`;
 }
 
-export function successMessage(action: 'create' | 'cancel' | 'reschedule' | 'join', n: Summary, today: string, names: string[], me?: string): string {
+/** Reserva da agenda que o agente enxerga (`ai_agenda`). */
+export type AgendaItem = { ref: string; id: string; type: string; date: string; start: string; end: string; court: string | null;
+  people: { id: string; name: string }[]; guest: string | null; spots_left: number | null; mine: boolean;
+  can: { leave: boolean; people: boolean; edit: boolean; cancel: boolean } };
+
+const quandoDe = (n: Record<string, any>, today: string) =>
+  `${dayLabel(String(n.date), today)}, ${n.start}${n.end ? `–${n.end}` : ''}${n.court_name ?? n.court ? ` na ${n.court_name ?? n.court}` : ''}`;
+const comVoce = (nomes: string[], me?: string) => nomes.map((x) => (me && x === me ? 'você' : x));
+
+/** O que o servidor entendeu do pedido de mexer nos atletas — mostrado ANTES de gravar. */
+export function participantsProposalMessage(n: Summary, today: string, me?: string): string {
+  const quando = quandoDe(n, today);
+  if (n.cancel_all) return `Você é o último atleta da reserva de ${quando}: ao sair, a reserva inteira é cancelada. Posso cancelar?`;
+  const tira = [...comVoce((n.remove_names ?? []) as string[], me), ...(n.remove_guest && !n.add_guest ? ['o convidado'] : [])];
+  const poe = [...((n.add_names ?? []) as string[]), ...(n.add_guest ? [`${n.add_guest} (convidado)`] : [])];
+  const partes = [tira.length ? `retirar ${listaNomes(tira)}` : '', poe.length ? `adicionar ${listaNomes(poe)}` : ''].filter(Boolean);
+  const ficam = comVoce((n.after_names ?? []) as string[], me);
+  return `Vou ${partes.join(' e ')} ${poe.length ? 'na' : 'da'} reserva de ${quando}. Ficam: ${listaNomes(ficam)}. Posso confirmar?`;
+}
+
+export function successMessage(action: 'create' | 'cancel' | 'reschedule' | 'join' | 'participants', n: Summary, today: string, names: string[], me?: string): string {
+  if (action === 'participants') {
+    const quando = quandoDe(n, today);
+    if (n.cancel_all) return `Pronto, você saiu e a reserva de ${quando} foi cancelada.`;
+    const soEu = n.self_leaving && (n.remove_names ?? []).length === 1 && !(n.add_names ?? []).length && !n.add_guest && !n.remove_guest;
+    return soEu
+      ? `Pronto, você saiu da reserva de ${quando}. Continuam: ${listaNomes(comVoce((n.after_names ?? []) as string[], me))}.`
+      : `Pronto, atualizei a reserva de ${quando}. Agora jogam: ${listaNomes(comVoce((n.after_names ?? []) as string[], me))}.`;
+  }
   if (action === 'join') {
     const ordem = [...((n.names ?? []) as string[]).filter((x) => x !== me), ...(me ? ['você'] : [])];
     return `Pronto, ${Number(n.added ?? 1) > 1 ? 'vocês entraram' : 'você entrou'} no jogo de ${jogoDe(n as Game, today)}. Jogam: ${listaNomes(ordem)}.`;
@@ -293,6 +328,12 @@ export const CODE_TEXT: Record<string, string | null> = {
   NEEDS_HUMAN: null,
   CARD_INVALID: null,
   STUDENT_PAUSED: null,
+  NOT_IN_RESERVATION: 'Essa pessoa não está nessa reserva. Quem está nela eu posso te dizer; quer ver?',
+  NOT_PLAY: 'Só consigo mexer nos atletas de reservas de Play (aula e campeonato é com a equipe).',
+  NOTHING_TO_DO: 'Não vi nada para alterar nessa reserva. O que você quer mudar?',
+  RESERVATION_STARTED: 'Esse jogo já começou: agora só dá para sair dele. Quer sair?',
+  CREATOR_PROTECTED: 'Só quem criou a reserva (ou um administrador) pode retirar o criador.',
+  GUEST_ALREADY: 'Esse jogo já tem um convidado. Quer trocar por outro (retiro o atual e coloco o novo)?',
   NOT_YOUR_RESERVATION: 'Só quem criou a reserva (ou um administrador) pode cancelar ou remarcar.',
   RESERVATION_NOT_FOUND: 'Não encontrei essa reserva entre as suas futuras.',
   NOT_EXPLICIT: 'Não entendi como confirmação. Para eu seguir, responda "sim" à proposta acima — ou me diga o que mudar.',
@@ -301,6 +342,50 @@ export const CODE_TEXT: Record<string, string | null> = {
   PROPOSAL_CLOSED: 'Essa proposta já não está aberta. Quer que eu monte outra?',
   CONFIRMATION_NOT_AFTER_PROPOSAL: 'Para confirmar, responda "sim" depois do resumo que enviei.',
 };
+
+/* ------------------------------- Agenda: localizar a reserva de que a pessoa fala ------------------------------- */
+
+const agendaDe = (ctx: Ctx): AgendaItem[] => ((ctx.agenda ?? []) as AgendaItem[]);
+
+/** Reserva por referência do modelo (aN ou id), entre as da agenda e as da própria pessoa. */
+function reservaPorRef(ctx: Ctx, ref: string | null | undefined): { id: string; type: string; date: string; start: string } | undefined {
+  if (!ref) return undefined;
+  const minha = ((ctx.my_reservations ?? []) as Ctx[]).find((r) => r.id === ref);
+  if (minha) return { id: String(minha.id), type: String(minha.type), date: String(minha.date), start: String(minha.start) };
+  const a = agendaDe(ctx).find((x) => x.ref === ref || x.id === ref);
+  return a ? { id: a.id, type: a.type, date: a.date, start: a.start } : undefined;
+}
+
+/** Acha a reserva por referência ou pelo que a pessoa disse (dia, horário, quadra); sem pista, a única reserva dela. */
+export function acharReserva(ctx: Ctx, slots: Slots): { item?: AgendaItem; candidatas: AgendaItem[] } {
+  const ag = agendaDe(ctx).filter((a) => a.type === 'Play');
+  const exata = ag.find((a) => a.ref === slots.reservation_ref || a.id === slots.reservation_ref);
+  if (exata) return { item: exata, candidatas: [exata] };
+  let pool = ag;
+  const temPista = Boolean(slots.date || slots.start || slots.court_label);
+  if (slots.date) pool = pool.filter((a) => String(a.date).slice(0, 10) === slots.date);
+  if (slots.start) pool = pool.filter((a) => toMin(a.start) <= toMin(slots.start!) && toMin(slots.start!) < toMin(a.end));
+  if (slots.court_label) {
+    const l = norm(slots.court_label);
+    pool = pool.filter((a) => norm(a.court ?? '').includes(l.replace(/^quadra\s+/, '')) || l.includes(norm(a.court ?? '')));
+  }
+  if (!temPista) pool = pool.filter((a) => a.mine);
+  if (pool.length > 1) { const minhas = pool.filter((a) => a.mine); if (minhas.length === 1) pool = minhas; }
+  return { item: pool.length === 1 ? pool[0] : undefined, candidatas: pool };
+}
+
+const EU = new Set(['eu', 'me', 'mim', 'eu mesmo', 'eu mesma', 'meu nome', 'meu']);
+
+/** Quem, entre os que estão na reserva, a pessoa quer dizer? Único ou pergunta; nunca escolhe por aproximação. */
+function acharNaReserva(item: AgendaItem, nome: string): { ids: string[]; ask?: string } {
+  const q = norm(nome).trim();
+  const palavras = q.split(/\s+/).filter(Boolean);
+  const exatos = item.people.filter((p) => norm(p.name) === q);
+  const achados = exatos.length ? exatos : item.people.filter((p) => palavras.length > 0 && palavras.every((w) => norm(p.name).includes(w)));
+  if (achados.length === 1) return { ids: [achados[0].id] };
+  if (achados.length > 1) return { ids: [], ask: `Na reserva tem mais de um "${nome}": ${listaNomes(achados.map((p) => p.name))}. Qual deles?` };
+  return { ids: [], ask: `Não achei "${nome}" nessa reserva. Estão nela: ${listaNomes(item.people.map((p) => p.name))}. Quem você quer retirar?` };
+}
 
 /* ------------------------------- Quadras e horários ------------------------------- */
 
@@ -481,15 +566,18 @@ async function decide(i: DecideInput): Promise<Decision> {
   if (hasProposal && answer.customer_confirmed) {
     if (!i.ultimaId) return plain({ bubbles: [CODE_TEXT.NOT_EXPLICIT as string], awaiting: true });
     const res = (await db('conv_svc_ai_confirm', { p_proposal: (ctx.open_proposal as Ctx).id, p_message: i.ultimaId })).data as
-      { ok: boolean; code?: string; message?: string; action?: 'create' | 'cancel' | 'reschedule' | 'join'; summary?: Summary } | null;
+      { ok: boolean; code?: string; message?: string; action?: 'create' | 'cancel' | 'reschedule' | 'join' | 'participants'; summary?: Summary } | null;
     if (res?.ok && res.summary) {
       const names = (memory.proposal_names ?? []) as string[];
       const me = String(((ctx.requester as Ctx | undefined)?.profile as Ctx | undefined)?.name ?? '') || undefined;
-      return { bubbles: [successMessage(res.action ?? 'create', res.summary, today, names, me)], awaiting: false, close: true, action: res.action === 'join' ? 'joined' : 'confirmed',
+      return { bubbles: [successMessage(res.action ?? 'create', res.summary, today, names, me)], awaiting: false, close: true, action: res.action === 'join' ? 'joined' : res.action === 'participants' ? 'participants_changed' : 'confirmed',
         memory: { intent: answer.intent, slots: {} } };
     }
     return failure(res?.code ?? 'UNKNOWN', res?.message, i, memory, ctx.open_proposal as Ctx);
   }
+
+  // 2a) Sair, retirar ou adicionar atletas de uma reserva existente (e convidado): o servidor entende, valida e propõe.
+  if (answer.intent === 'participantes' && !answer.transfer) return participantes(i, memory);
 
   // 2b) "Quem marcou esse horário?" / "me adiciona nessa reserva": o servidor mostra quem está e oferece entrar. O modelo não escreve nada.
   if (answer.intent === 'entrar' && !answer.transfer) return entrarNoJogo(i, memory);
@@ -516,15 +604,15 @@ async function propose(i: DecideInput, memory: Memory): Promise<Decision> {
       'Pedido de reserva por telefone sem cadastro de sócio identificado.');
   }
   const courts = (ctx.courts ?? []) as Court[];
-  const mine = (ctx.my_reservations ?? []) as Ctx[];
   let payload: Record<string, unknown>;
   let action: 'create' | 'cancel' | 'reschedule' = answer.intent === 'cancelar' ? 'cancel' : answer.intent === 'remarcar' ? 'reschedule' : 'create';
   let names: string[] = [];
   let candidates: Court[] = [];
 
   if (action !== 'create') {
-    const ref = mine.find((r) => r.id === slots.reservation_ref);
-    if (!ref) return ask('Qual reserva? Me diga o dia e o horário que eu confiro nas suas reservas.');
+    const achada = acharReserva(ctx, slots).item;
+    const ref = reservaPorRef(ctx, slots.reservation_ref) ?? (achada && { id: achada.id, type: achada.type, date: achada.date, start: achada.start });
+    if (!ref) return ask('Qual reserva? Me diga o dia e o horário que eu confiro na agenda.');
     payload = { action, reservation_id: ref.id };
     if (action === 'reschedule') {
       if (!slots.date && !slots.start && !slots.court_label) return ask('Para quando você quer remarcar?');
@@ -584,6 +672,62 @@ async function propose(i: DecideInput, memory: Memory): Promise<Decision> {
     return { bubbles: [proposalMessage(((res.action as 'create' | 'cancel' | 'reschedule' | undefined) ?? action), res.summary, today, names)], awaiting: true, close: false, action: 'proposed', memory };
   }
   return failure(res?.code ?? 'UNKNOWN', res?.message, i, memory, null, { candidates, payload });
+}
+
+/**
+ * Sair da reserva, retirar ou adicionar pessoas, convidado — pelo contexto da conversa e da agenda. O modelo só diz o QUE a pessoa quer
+ * (reserva + nomes); o servidor acha a reserva, resolve cada nome entre quem está nela (ou no cadastro), valida pelas regras da Agenda
+ * e mostra o resumo antes de gravar.
+ */
+async function participantes(i: DecideInput, memory: Memory): Promise<Decision> {
+  const { deps, ctx, answer, slots, session, today } = i;
+  const { db } = deps;
+  const profile = (ctx.requester?.profile ?? null) as Ctx | null;
+  const ask = (text: string): Decision => ({ bubbles: [text], awaiting: true, close: false, action: 'ask', memory });
+  if (!profile?.is_member) {
+    return { bubbles: ['Não consegui identificar o seu cadastro de sócio por este telefone, então não posso mexer em reservas por aqui. Vou pedir para alguém da equipe te ajudar.'],
+      awaiting: false, close: false, action: 'handoff', memory, handoff: { kind: 'soft', note: 'Pedido para mexer em atletas de reserva por telefone sem cadastro de sócio identificado.' } };
+  }
+  const me = String(profile.name);
+  const { item, candidatas } = acharReserva(ctx, slots);
+  if (!item) {
+    if (candidatas.length === 0) return ask('Não achei essa reserva na agenda. Me diga o dia e o horário que eu confiro.');
+    const lista = candidatas.slice(0, 4).map((a) => `${dayLabel(a.date, today)} ${a.start}–${a.end} na ${a.court}`);
+    return ask(`Qual dessas reservas? ${lista.join(' · ')}`);
+  }
+
+  // Quem sai: "eu" (a própria pessoa) ou nomes entre os que estão na reserva.
+  const removeIds: string[] = [];
+  let tiraConvidado = slots.remove_guest === true || (slots.remove_names ?? []).some((n) => /^o?\s*convidad/.test(norm(n)));
+  for (const nome of (slots.remove_names ?? []).filter((n) => !/^o?\s*convidad/.test(norm(n)))) {
+    if (EU.has(norm(nome).trim()) || norm(nome) === norm(me)) { if (!removeIds.includes(String(profile.id))) removeIds.push(String(profile.id)); continue; }
+    const r = acharNaReserva(item, nome);
+    if (r.ask) return ask(r.ask);
+    for (const id of r.ids) if (!removeIds.includes(id)) removeIds.push(id);
+  }
+  // Quem entra: nomes do cadastro de sócios ("eu" = a própria pessoa).
+  const addIds: string[] = [];
+  const quemEntra = (slots.add_names ?? []);
+  if (quemEntra.some((n) => EU.has(norm(n).trim()) || norm(n) === norm(me)) && !item.people.some((p) => p.id === profile.id)) addIds.push(String(profile.id));
+  const pedidos = quemEntra.filter((n) => !EU.has(norm(n).trim()) && norm(n) !== norm(me) && !item.people.some((p) => norm(p.name) === norm(n)));
+  const r = await resolve(db, pedidos, 'member');
+  if (r.ask) return ask(r.ask);
+  for (const id of r.ids) if (!addIds.includes(id) && !item.people.some((p) => p.id === id)) addIds.push(id);
+  const convidado = answer.slots.guest_name ? String(answer.slots.guest_name) : null;
+  if (convidado && tiraConvidado && !item.guest) tiraConvidado = false;
+  if (addIds.length + removeIds.length === 0 && !convidado && !tiraConvidado) return ask('O que você quer fazer nessa reserva: sair, retirar alguém ou adicionar alguém?');
+
+  const res = (await db('conv_svc_ai_propose', { p_session: session, p: { action: 'participants', reservation_id: item.id,
+    add_ids: addIds, remove_ids: removeIds, add_guest: convidado, remove_guest: tiraConvidado } })).data as
+    { ok: boolean; code?: string; message?: string; summary?: Summary; spots_left?: number; wanted?: number } | null;
+  if (res?.ok && res.summary) {
+    return { bubbles: [participantsProposalMessage(res.summary, today, me)], awaiting: true, close: false, action: 'proposed_participants', memory };
+  }
+  if (res?.code === 'NOT_ENOUGH_SPOTS') {
+    const vagas = Number(res.spots_left ?? 0);
+    return ask(`Nessa reserva ${vagas === 0 ? 'não há mais vagas' : vagas === 1 ? 'só resta 1 vaga' : `só restam ${vagas} vagas`} e você quer adicionar ${res.wanted ?? 1}. Quer adicionar menos gente?`);
+  }
+  return failure(res?.code ?? 'UNKNOWN', res?.message, i, memory, null);
 }
 
 /**

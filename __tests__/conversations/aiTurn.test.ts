@@ -212,13 +212,13 @@ describe('conversa de reserva (individual)', () => {
     await turn(w, m2.message_id, script(answer({ intent: 'cancelar', customer_confirmed: true, slots: { reservation_ref: ID(980) } })).chat, p.uaz);
     expect((await reservations(w))[0].status).toBe('cancelled');
     expect(p.sent[1].text).toMatch(/foi cancelada\.$/);
-    // reserva de outra pessoa não está na lista da IA: pedir por id inventado não cancela nada
+    // reserva de OUTRA pessoa: a IA a enxerga na agenda, mas o servidor recusa (só quem criou ou administrador cancela)
     await w.db.exec(`insert into public.reservations(id, court_id, creator_id, date, start_time, end_time, type, participant_ids)
       values ('${ID(981)}', '${w.court2}', '${U.socioB}', '${date}', '12:00', '13:00', 'Play', '{}')`);
     await tick();
     const m3 = await direct(w, 'cancela a do Beto');
     await turn(w, m3.message_id, script(answer({ intent: 'cancelar', ready: true, slots: { reservation_ref: ID(981) } })).chat, p.uaz);
-    expect(p.sent[2].text).toMatch(/Qual reserva\?/);
+    expect(p.sent[2].text).toBe('Só quem criou a reserva (ou um administrador) pode cancelar ou remarcar.');
     expect((await q<any>(w.db, `select status from public.reservations where id = '${ID(981)}'`))[0].status).toBe('active');
   }, 120000);
 });
@@ -347,7 +347,7 @@ describe('horário ocupado por um jogo: a IA mostra quem está e oferece entrar'
     await turn(w, m.message_id, s.chat, p.uaz);
     expect(s.calls[0].system).toContain('ENTRAR NO JOGO');
     expect(s.calls[0].system).toContain('NUNCA responde que "não consegue informar quem reservou"');
-    expect(s.calls[0].system).toContain('intent":"reservar|cancelar|remarcar|consultar|informar|entrar|outro');
+    expect(s.calls[0].system).toContain('intent":"reservar|cancelar|remarcar|consultar|informar|entrar|participantes|outro');
     expect(p.sent[0].number).toBe(GROUP);
   }, 120000);
 
@@ -496,6 +496,150 @@ describe('contexto: sentido, janela de 8 trocas e resumo', () => {
     await turn(w, m3.message_id, s3.chat, p.uaz);
     expect(s3.calls[0].user).toContain('Joga sempre às 16h na Quadra 1.');                // sessão nova herdou o resumo
   }, 180000);
+});
+
+describe('agenda e atletas: sair, retirar, adicionar, convidado, cancelar de qualquer reserva permitida', () => {
+  const EMERSON = ID(8801);
+  /** Jogo do Beto amanhã 16:00–17:00 na Quadra 1; Ana e Emerson jogam. */
+  async function jogo(w: W, date: string, participants: string[], guest: string | null = null, creator: string = U.socioB) {
+    const id = ID(7800 + ++n);
+    await w.db.exec(`insert into auth.users(id) values ('${EMERSON}') on conflict do nothing;
+      insert into public.profiles(id, name, role, is_professor, is_active) values ('${EMERSON}', 'Emerson Souza', 'socio', false, true) on conflict do nothing`);
+    await w.db.exec(`insert into public.reservations(id, court_id, creator_id, date, start_time, end_time, type, participant_ids, guest_name)
+      values ('${id}', '${w.court1}', '${creator}', '${date}', '16:00', '17:00', 'Play', '{${participants.join(',')}}', ${guest ? `'${guest}'` : 'null'})`);
+    return id;
+  }
+  const part = async (w: W, id: string) => (await q<any>(w.db, `select participant_ids, status, guest_name from public.reservations where id = '${id}'`))[0];
+  const so = (ids: string[]) => [...ids].sort();
+
+  it('o pedido do exemplo: "tira eu e o Emerson da reserva" — o servidor mostra o resumo, o aceite por sentido grava', async () => {
+    const { w, date } = await setup();
+    const id = await jogo(w, date, [U.socioB, U.socioA, EMERSON]);
+    const p = provider();
+    const m1 = await direct(w, 'pode retirar meu nome e o do Emerson da reserva das 16h?');
+    const s1 = script(answer({ intent: 'participantes', ready: true, messages: ['Não consigo retirar vocês.'], slots: { reservation_ref: 'a1', remove_names: ['eu', 'Emerson'] } }));
+    const r1 = await turn(w, m1.message_id, s1.chat, p.uaz);
+    expect(s1.calls[0].user).toContain('a1 | ');                                            // a agenda está no prompt
+    expect(s1.calls[0].user).toContain('jogam: Beto Sócio, Ana Sócia, Emerson Souza');
+    expect(r1.action).toBe('proposed_participants');
+    expect(p.sent[0].text).toBe('Vou retirar você e Emerson Souza da reserva de amanhã, 16:00–17:00 na Quadra 1. Ficam: Beto Sócio. Posso confirmar?');
+    expect(p.sent.some((x) => /Não consigo/.test(x.text))).toBe(false);                     // a recusa do modelo não sai
+    expect(so((await part(w, id)).participant_ids)).toEqual(so([U.socioB, U.socioA, EMERSON]));
+    await tick();
+    const m2 = await direct(w, 'beleza, pode tirar nós dois');
+    const s2 = script(answer({ customer_confirmed: true }));
+    const r2 = await turn(w, m2.message_id, s2.chat, p.uaz);
+    expect(s2.calls[0].user).toContain('mexer nos atletas da reserva de');
+    expect(r2.action).toBe('participants_changed');
+    expect(p.sent[1].text).toBe('Pronto, atualizei a reserva de amanhã, 16:00–17:00 na Quadra 1. Agora jogam: Beto Sócio.');
+    expect((await part(w, id)).participant_ids).toEqual([U.socioB]);
+  }, 120000);
+
+  it('"não vou mais": a própria pessoa sai; sem citar a reserva, a única dela é achada pelo contexto', async () => {
+    const { w, date } = await setup();
+    const id = await jogo(w, date, [U.socioB, U.socioA]);
+    const p = provider();
+    const m1 = await direct(w, 'não vou poder ir mais, me tira');
+    const r1 = await turn(w, m1.message_id, script(answer({ intent: 'participantes', ready: true, slots: { remove_names: ['eu'] } })).chat, p.uaz);
+    expect(r1.action).toBe('proposed_participants');
+    expect(p.sent[0].text).toBe('Vou retirar você da reserva de amanhã, 16:00–17:00 na Quadra 1. Ficam: Beto Sócio. Posso confirmar?');
+    await tick();
+    const m2 = await direct(w, 'pode');
+    await turn(w, m2.message_id, script(answer({ customer_confirmed: true })).chat, p.uaz);
+    expect(p.sent[1].text).toBe('Pronto, você saiu da reserva de amanhã, 16:00–17:00 na Quadra 1. Continuam: Beto Sócio.');
+    expect((await part(w, id)).participant_ids).toEqual([U.socioB]);
+  }, 120000);
+
+  it('adicionar sócios e convidado e retirar outro no mesmo pedido; o convidado fica sob responsabilidade de quem pediu', async () => {
+    const { w, date } = await setup();
+    const id = await jogo(w, date, [U.socioB, U.socioA, EMERSON]);
+    const p = provider();
+    const m1 = await direct(w, 'bota o Paulo e a Olga, o convidado Zeca, e tira o Emerson');
+    const r1 = await turn(w, m1.message_id, script(answer({ intent: 'participantes', ready: true,
+      slots: { reservation_ref: 'a1', add_names: ['Paulo', 'Olga'], remove_names: ['Emerson'], guest_name: 'Zeca' } })).chat, p.uaz);
+    expect(r1.action).toBe('proposed_participants');
+    expect(p.sent[0].text).toBe('Vou retirar Emerson Souza e adicionar Paulo Professor, Olga Professora e Zeca (convidado) na reserva de amanhã, 16:00–17:00 na Quadra 1. Ficam: Beto Sócio, você, Paulo Professor, Olga Professora e Zeca (convidado). Posso confirmar?');
+    await tick();
+    const m2 = await direct(w, 'fechou');
+    await turn(w, m2.message_id, script(answer({ customer_confirmed: true })).chat, p.uaz);
+    const r = await part(w, id);
+    expect(so(r.participant_ids)).toEqual(so([U.socioB, U.socioA, U.prof, U.profOther]));
+    expect(r.guest_name).toBe('Zeca');
+  }, 120000);
+
+  it('último atleta saindo: o resumo avisa que a reserva inteira será cancelada; o aceite cancela', async () => {
+    const { w, date } = await setup();
+    const id = await jogo(w, date, [U.socioA], null, U.socioA);
+    const p = provider();
+    const m1 = await direct(w, 'desisto do jogo de amanhã');
+    await turn(w, m1.message_id, script(answer({ intent: 'participantes', ready: true, slots: { remove_names: ['eu'] } })).chat, p.uaz);
+    expect(p.sent[0].text).toBe('Você é o último atleta da reserva de amanhã, 16:00–17:00 na Quadra 1: ao sair, a reserva inteira é cancelada. Posso cancelar?');
+    await tick();
+    const m2 = await direct(w, 'pode cancelar');
+    await turn(w, m2.message_id, script(answer({ customer_confirmed: true })).chat, p.uaz);
+    expect(p.sent[1].text).toBe('Pronto, você saiu e a reserva de amanhã, 16:00–17:00 na Quadra 1 foi cancelada.');
+    expect((await part(w, id)).status).toBe('cancelled');
+  }, 120000);
+
+  it('nome que não está na reserva, nome ambíguo e várias reservas viram PERGUNTA; nada é gravado', async () => {
+    const { w, date } = await setup();
+    const id = await jogo(w, date, [U.socioB, U.socioA, EMERSON]);
+    const p = provider();
+    const m1 = await direct(w, 'tira o Carlos da reserva das 16h');
+    await turn(w, m1.message_id, script(answer({ intent: 'participantes', ready: true, slots: { reservation_ref: 'a1', remove_names: ['Carlos'] } })).chat, p.uaz);
+    expect(p.sent[0].text).toBe('Não achei "Carlos" nessa reserva. Estão nela: Beto Sócio, Ana Sócia e Emerson Souza. Quem você quer retirar?');
+    expect(so((await part(w, id)).participant_ids)).toEqual(so([U.socioB, U.socioA, EMERSON]));
+  }, 120000);
+
+  it('várias reservas da pessoa no dia e nenhuma pista de qual: o servidor PERGUNTA qual (não adivinha)', async () => {
+    const { w, date } = await setup();
+    const id = await jogo(w, date, [U.socioB, U.socioA]);
+    await w.db.exec(`insert into public.reservations(court_id, creator_id, date, start_time, end_time, type, participant_ids)
+      values ('${w.court2}', '${U.socioB}', '${date}', '18:00', '19:00', 'Play', array['${U.socioB}','${U.socioA}']::uuid[])`);
+    const p = provider();
+    const m = await direct(w, 'me tira da reserva de amanhã');
+    await turn(w, m.message_id, script(answer({ intent: 'participantes', ready: true, slots: { date, remove_names: ['eu'] } })).chat, p.uaz);
+    expect(p.sent[0].text).toBe('Qual dessas reservas? amanhã 16:00–17:00 na Quadra 1 · amanhã 18:00–19:00 na Quadra 2');
+    expect(so((await part(w, id)).participant_ids)).toEqual(so([U.socioB, U.socioA]));
+  }, 120000);
+
+  it('regras da Agenda valem para a IA: criador só sai por ele mesmo ou administrador; o administrador pode', async () => {
+    const { w, date } = await setup();
+    const id = await jogo(w, date, [U.socioB, U.socioA]);
+    const p = provider();
+    const m1 = await direct(w, 'tira o Beto da reserva');
+    await turn(w, m1.message_id, script(answer({ intent: 'participantes', ready: true, slots: { reservation_ref: 'a1', remove_names: ['Beto'] } })).chat, p.uaz);
+    expect(p.sent[0].text).toBe('Só quem criou a reserva (ou um administrador) pode retirar o criador.');
+    const adm = await direct(w, 'tira o Beto da reserva', '5585988880001', { name: 'Admin' });
+    const r = await turn(w, adm.message_id, script(answer({ intent: 'participantes', ready: true, slots: { reservation_ref: 'a1', remove_names: ['Beto'] } })).chat, p.uaz);
+    expect(r.action).toBe('proposed_participants');
+    expect(p.sent[1].text).toMatch(/^Vou retirar Beto Sócio da reserva/);
+    expect(so((await part(w, id)).participant_ids)).toEqual(so([U.socioB, U.socioA]));
+  }, 120000);
+
+  it('o administrador cancela a reserva de OUTRA pessoa pela agenda; quem não é criador nem admin é recusado', async () => {
+    const { w, date } = await setup();
+    const id = await jogo(w, date, [U.socioB, U.socioA]);
+    const p = provider();
+    const adm = await direct(w, 'cancela a reserva das 16h de amanhã', '5585988880001', { name: 'Admin' });
+    const r1 = await turn(w, adm.message_id, script(answer({ intent: 'cancelar', ready: true, slots: { reservation_ref: 'a1' } })).chat, p.uaz);
+    expect(r1.action).toBe('proposed');
+    await tick();
+    const yes = await direct(w, 'sim, cancela', '5585988880001', { name: 'Admin' });
+    await turn(w, yes.message_id, script(answer({ intent: 'cancelar', customer_confirmed: true, slots: { reservation_ref: 'a1' } })).chat, p.uaz);
+    expect((await part(w, id)).status).toBe('cancelled');
+  }, 120000);
+
+  it('o modelo afirma que "retirou" sem o sistema gravar: a frase não sai, e a agenda traz o que a pessoa PODE fazer', async () => {
+    const { w, date } = await setup();
+    await jogo(w, date, [U.socioB, U.socioA]);
+    const p = provider();
+    const m = await direct(w, 'e aí, tirou?');
+    const s = script(answer({ intent: 'consultar', messages: ['Pronto, retirei você da reserva!'], awaiting: true }));
+    await turn(w, m.message_id, s.chat, p.uaz);
+    expect(p.sent.some((x) => /retirei/.test(x.text))).toBe(false);
+    expect(s.calls[0].user).toMatch(/a1 \| .* \| jogam: Beto Sócio, Ana Sócia \| 6 vagas \| a pessoa ESTÁ nela \| pode: sair, mexer nos atletas\n/);
+  }, 120000);
 });
 
 describe('regras do turno que não dependem do modelo', () => {
