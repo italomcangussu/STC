@@ -11,7 +11,7 @@
 
 import { parseUazWebhook } from '../_shared/uazWebhook.ts';
 import { buildChatRequest, inboundMediaPath, type UazCaller } from '../_shared/uazChat.ts';
-import { classifyMention } from '../_shared/groupMention.ts';
+import { classifyMention, mentionId } from '../_shared/groupMention.ts';
 import type { ChannelDelivery } from './handler.ts';
 
 type RpcResult = { data: unknown; error: { message: string } | null };
@@ -85,9 +85,29 @@ export async function recordInbound(payload: Record<string, unknown>, channel: C
     case 'reaction':
       await deps.rpc('conv_svc_apply_reaction', { p_target: evento.targetId, p_emoji: evento.emoji, p_from_me: evento.fromMe });
       return 'reacao';
-    case 'edit':
-      await deps.rpc('conv_svc_apply_edit', { p_provider_id: evento.targetId, p_body: evento.body });
+    case 'edit': {
+      const verdict = evento.mentions
+        ? classifyMention(evento.mentions, { phone: channel.bot_phone, lids: channel.bot_lids })
+        : { direct: false, evidence: 'no_mention_metadata' };
+      const botIds = [
+        mentionId(channel.bot_phone ?? ''),
+        ...(channel.bot_lids ?? []).map((id) => mentionId(id)),
+      ].filter(Boolean);
+      const bodyHasExactBotId = botIds.some((id) => evento.body.includes('@' + id));
+      const direct = verdict.direct || (!evento.mentions?.hasMetadata && bodyHasExactBotId);
+      const evidence = verdict.direct
+        ? verdict.evidence
+        : direct ? 'edited_body_bot_id' : verdict.evidence;
+      const r = await deps.rpc('conv_svc_apply_edit_with_mention', {
+        p_provider_id: evento.targetId,
+        p_body: evento.body,
+        p_mention_direct: direct,
+        p_mention_evidence: evidence,
+      });
+      const out = r.data as { found?: boolean; message_id?: string; became_direct_mention?: boolean } | null;
+      if (out?.became_direct_mention && out.message_id) deps.onInbound?.(out.message_id);
       return 'edicao';
+    }
     case 'delete':
       await deps.rpc('conv_svc_apply_delete', { p_provider_id: evento.targetId });
       return 'exclusao';
