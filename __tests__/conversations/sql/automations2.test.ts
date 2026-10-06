@@ -26,8 +26,8 @@ describe('agendamento: horário e fuso configurados', () => {
     expect([t.runs, t.recipients]).toEqual([1, 4]);                          // admin, 2 sócios e o professor têm telefone; lanchonete não é sócio
     expect((await tickAt(w.db, '2026-10-12T12:30:00Z')).runs).toBe(0);     // já rodou
     expect((await tickAt(w.db, '2026-10-13T12:30:00Z')).runs).toBe(0);     // outro dia: não está na lista
-    const [run] = await q<any>(w.db, `select planned_for at time zone 'UTC' p from public.conv_automation_runs`);
-    expect(new Date(run.p).toISOString()).toBe('2026-10-12T12:00:00.000Z');
+    const [run] = await q<any>(w.db, `select to_char(planned_for at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') p from public.conv_automation_runs`);
+    expect(run.p).toBe('2026-10-12T12:00:00Z');
   }, 90000);
 
   it('recorrência semanal respeita os dias; data final encerra a regra e cancela o que faltava', async () => {
