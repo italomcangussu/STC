@@ -11,6 +11,9 @@ import { PhasePointsEditor } from './admin/PhasePointsEditor';
 import { ChampionshipInProgress } from './ChampionshipInProgress';
 import { useConfirm } from '../hooks/useConfirm';
 import { useAuth } from '../contexts/AuthContext';
+import { useAdminEmbedded } from './admin/AdminEmbedContext';
+
+const CHAMPIONSHIP_STATUS_LABEL: Record<string, string> = { draft: 'Rascunho', ongoing: 'Em andamento', finished: 'Finalizado' };
 
 interface ChampionshipRow {
     id: string;
@@ -134,6 +137,7 @@ interface Props {
 }
 
 export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
+    const embedded = useAdminEmbedded();
     const { currentUser: authUser } = useAuth();
     const confirm = useConfirm();
     const resolvedUser = currentUser || authUser;
@@ -721,11 +725,11 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
     }
 
     return (
-        <div className="p-4 pb-24 space-y-6">
+        <div className={`space-y-6 ${embedded ? '' : 'p-4 pb-24'}`}>
             <div className="bg-white rounded-3xl border border-stone-100 p-5 shadow-sm space-y-4">
                 <div className="flex items-center gap-2 text-stone-800 font-black">
                     <Trophy size={18} className="text-saibro-600" />
-                    Campeonato Admin (Fonte única)
+                    Escolha o campeonato
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -747,7 +751,7 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
                     >
                         {visibleChampionships.map(ch => (
                             <option key={ch.id} value={ch.id}>
-                                {ch.name} ({ch.status})
+                                {ch.name} ({CHAMPIONSHIP_STATUS_LABEL[ch.status] ?? ch.status})
                             </option>
                         ))}
                     </select>
@@ -761,9 +765,9 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
             ) : (
                 <>
                     <div className="bg-linear-to-br from-saibro-600 to-saibro-500 p-6 rounded-3xl text-white shadow-lg">
-                        <h1 className="text-2xl font-black">{selectedChampionship.name}</h1>
+                        <h2 className="text-2xl font-black">{selectedChampionship.name}</h2>
                         <p className="text-saibro-100 text-sm mt-1">
-                            Status: {selectedChampionship.status} • Formato: {selectedChampionship.format}
+                            Status: {CHAMPIONSHIP_STATUS_LABEL[selectedChampionship.status] ?? selectedChampionship.status} • Formato: {selectedChampionship.format}
                         </p>
                     </div>
 

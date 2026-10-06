@@ -9,6 +9,7 @@ App de gestão de clube de tênis (reservas, desafios, campeonatos, ranking, fin
 |---|---|---|---|
 | `App.tsx` / `index.tsx` | shell, navegação por estado (sem react-router), rotas públicas | `App.tsx` | `--relates App.tsx` |
 | `components/` | telas (Agenda, Challenges, Ranking, Championships*, Admin*, Financeiro, SuperSet, Klanches, TenisProPlayer) | `Layout.tsx`, `StandardModal.tsx` | `--relates components/StandardModal.tsx` |
+| `components/admin/` | casca do Painel Admin: navegação em 2 níveis (áreas → seções) com selos de pendência (`AdminNav`, `adminNav.ts` dados, `adminNavMeta.ts` ícones/ids), busca por teclado, `useAdminPending`, `AdminEmbedContext` (tela embutida omite o próprio título), peças comuns em `ui.tsx` (`AdminPageHeader`, `AdminSearch`, `ChipGroup`, `AdminEmpty`) | `AdminNav.tsx`, `ui.tsx` | `--relates components/admin/ui.tsx` |
 | `components/creator/` | assistente de criação de campeonato | `ChampionshipCreator.tsx` | `--any "Creator"` |
 | `lib/championship/` | regras de campeonato: formato, chaves, rounds, grupos, sorteio, agendamento | `formatConfig.ts`, `bracket.ts` | `--relates lib/championship/bracket.ts` |
 | `lib/finance/` | motores puros do financeiro (centavos, datas/feriados, mensalidade, encargos, DRE/indicadores, comprovantes/OCR, exportação) e `financeApi.ts` (única porta para o banco: RPCs `fin_*`) | `financeApi.ts`, `money.ts` | `--relates lib/finance/financeApi.ts` |
@@ -24,6 +25,7 @@ App de gestão de clube de tênis (reservas, desafios, campeonatos, ranking, fin
 - Financeiro: tabelas `fin_*` + schema privado `fin_private` (sem grant) em `supabase/migrations/20261006100*`; escrita só por RPC `SECURITY DEFINER` com `request_id` (idempotência) e auditoria em `admin_audit_logs` (`source='finance'`); papéis = `profiles.role`/`is_admin()` (sem papel novo; professor e lanchonete não acessam); buckets privados `fin-receipts` e `fin-docs`; OCR roda no aparelho (`tesseract.js`/`pdfjs-dist`, sugere, nunca quita). Docs: `docs/financeiro/`. Testes de SQL em PGlite: `__tests__/finance/sql/`.
 - Rotas: sem router; `App.tsx` + `lib/publicRoutes.ts` (páginas públicas de campeonato e formulários).
 - UI: Tailwind via `index.css`, padrão de modal em `MODAL_PATTERN.md`, design em `DESIGN_SYSTEM.md`/`DESIGN_QUICK_REF.md`.
+- Administração: UMA porta, o Painel Admin (`view='admin-panel'`); Alunos, Professores, Financeiro, Formulários e Torneios são seções dele (o menu lateral não lista mais cada uma). As views antigas (`admin-students`, `financeiro-admin`…) seguem em `App.tsx` só por compatibilidade. Telas do painel usam `useAdminEmbedded()` para não repetir o título que o painel já mostra e `AdminPageHeader`/`AdminSearch`/`ChipGroup` (alvos de 44 px).
 - Integrações: Web Push (`supabase/functions/send-push`, `lib/pushNotifications.ts`), export PDF/PNG (`lib/pdfExportPremium.ts`, `lib/exportTools.ts`).
 
 ## Fora do alcance do agentmap

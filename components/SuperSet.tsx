@@ -4,12 +4,14 @@ import { notify } from '../lib/notifications';
 import { User } from '../types';
 import { Trophy, Search, Users, ArrowRight, History, Zap, TrendingUp, Sparkles } from 'lucide-react';
 import { getNowInFortaleza, formatDate, MEMBER_ROLES } from '../utils';
+import { useAdminEmbedded } from './admin/AdminEmbedContext';
 
 interface SuperSetProps {
     // No props needed
 }
 
 export const SuperSet: React.FC<SuperSetProps> = () => {
+    const embedded = useAdminEmbedded();
     const [players, setPlayers] = useState<User[]>([]);
     const [_loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -249,17 +251,23 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
     const playersPresentToday = players.filter(p => todayPlayers.includes(p.id));
 
     return (
-        <div className="p-4 sm:p-6 pb-40 space-y-8 animate-in fade-in duration-500">
+        <div className={`space-y-8 animate-in fade-in duration-500 ${embedded ? '' : 'p-4 sm:p-6 pb-40'}`}>
             {/* Header Section */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-                <div className="text-center sm:text-left">
-                    <h2 className="text-2xl sm:text-3xl font-black text-stone-800 tracking-tighter flex items-center justify-center sm:justify-start gap-2">
-                        <Sparkles className="text-saibro-500" /> SuperSet
-                    </h2>
-                    <p className="text-stone-500 font-bold text-[10px] sm:text-xs uppercase tracking-widest mt-1 opacity-70">
+                {!embedded ? (
+                    <div className="text-center sm:text-left">
+                        <h2 className="text-2xl sm:text-3xl font-black text-stone-800 tracking-tighter flex items-center justify-center sm:justify-start gap-2">
+                            <Sparkles className="text-saibro-500" /> SuperSet
+                        </h2>
+                        <p className="text-stone-500 font-bold text-[10px] sm:text-xs uppercase tracking-widest mt-1 opacity-70">
+                            1 Set • 10 Pontos no Ranking
+                        </p>
+                    </div>
+                ) : (
+                    <p className="text-stone-500 font-bold text-[10px] sm:text-xs uppercase tracking-widest opacity-70">
                         1 Set • 10 Pontos no Ranking
                     </p>
-                </div>
+                )}
 
                 {stats.totalGames > 0 && (
                     <div className="flex items-center justify-center gap-2 bg-stone-100/50 p-1.5 rounded-2xl border border-stone-200/50 self-center sm:self-auto">
