@@ -1,6 +1,6 @@
 # Financeiro do STC — operação, migrations e configuração
 
-> **Estado (2026-10-06):** as 5 migrations foram testadas num Postgres em memória (PGlite) e
+> **Estado (2026-10-06):** as 5 primeiras migrations foram testadas num Postgres em memória (PGlite) e
 > **aplicadas no projeto Supabase "agentes N8N" (`smztsayzldjmkzmufqcz`, onde mora o STC)** a pedido do clube.
 > Foram aplicadas em partes, pelo conector, e **registradas em `supabase_migrations.schema_migrations`
 > com as mesmas versões dos arquivos** (`20261006100000` … `20261006100400`), então `supabase migration list`
@@ -20,6 +20,7 @@ alterada, exceto o que está listado em 1.1).
 | 3 | `20261006100200_finance_receipts.sql` | Comprovantes (estados enviado → em análise → aprovado/rejeitado/substituído), vínculo comprovante × cobrança, bucket privado `fin-receipts` + políticas de Storage, aprovação/recusa (única porta que quita). |
 | 4 | `20261006100300_finance_day_card.sql` | Só a **leitura** do Day Card dos convidados (derivado das reservas com convidado). Nenhuma tabela nova. Não há repasse a professor: o professor é pago pelo aluno, fora do financeiro do clube. |
 | 5 | `20261006100400_finance_reports.sql` | DRE por competência (mensalidades, Card Mensal e Aula avulsa pelo pagamento registrado, Day Card do convidado), detalhe por categoria, movimentos e fluxo de caixa por data real, saldos por conta, resumos a receber/a pagar, tendência mensal. |
+| 6 | `20261006100500_finance_due_same_month.sql` | **Vencimento no mês cobrado e só fins de semana** (decisão de 2026-10-06): `due_month_offset` padrão 0 (e 1 → 0 na configuração do clube, `version` +1); desativa todos os feriados (linhas preservadas) e `seed_holidays` passa a semear tudo inativo; redata só as cobranças **intocadas** (abertas, geradas, sem pagamento nem ajuste). Idempotente, sem `DROP` nem `UPDATE` sem `WHERE`. **Ainda NÃO aplicada no banco real**: depende de autorização do clube (muda vencimentos de cobranças abertas). |
 
 ### 1.1 Únicos pontos que tocam objetos já existentes
 
@@ -112,8 +113,8 @@ ou depois de backup. Os arquivos dos buckets precisam ser removidos pelo painel 
 Ordem sugerida, tudo em **Financeiro** (menu do administrador):
 
 1. **Cadastros › Contas:** crie o caixa e a(s) conta(s) do banco, com saldo inicial; marque a **conta padrão de recebimentos**.
-2. **Cadastros › Configurações › Feriados:** “Carregar nacionais” do ano e cadastre os feriados municipais/estaduais.
-3. **Configurações › Cobrança:** confira o vencimento (iniciado em dia 5 do mês seguinte, próximo dia útil — a regra informada pelo clube) e **defina a política de encargos** (carência, multa, juros). Enquanto não confirmar, **nenhum encargo é calculado**.
+2. **Cadastros › Configurações › Feriados:** (opcional) “Carregar nacionais” do ano para consulta e cadastre os municipais/estaduais; nada conta até ser ativado.
+3. **Configurações › Cobrança:** confira o vencimento (dia 5 do mês cobrado; sábado e domingo vão para a segunda; feriado não conta — decisão do clube de 2026-10-06) e **defina a política de encargos** (carência, multa, juros). Enquanto não confirmar, **nenhum encargo é calculado**.
 4. **Configurações › Day Card e comprovantes:** confira o valor do Day Card do convidado (vem do valor já usado no app, R$ 50) e os nomes do clube nos comprovantes.
 5. **Receber › Mensalidades › Sócios e valores:** crie o plano de cada sócio (valor próprio, início, periodicidade) e gere as cobranças.
 6. **Cadastros › Categorias:** revise o plano de contas do DRE.
@@ -163,8 +164,8 @@ vê tudo. A cobertura automática dessas regras está em
 | Valor da mensalidade de cada sócio, início e periodicidade | Mensalidades › Sócios e valores | Sócio sem plano não tem cobrança |
 | Carência, multa (fixa/%) e juros diários (fixo/%) | Configurações › Cobrança | **Nenhum encargo é calculado** (tela avisa “não configurados”) |
 | Base do percentual diário | Fixa no código e documentada: juros **simples**, sobre o principal em aberto no início do dia; multa única no 1º dia de atraso; encargos nunca entram na base | — (mudar exige decisão e nova versão da regra) |
-| Dia/mês do vencimento e regra de dia não útil | Configurações › Cobrança | Inicial: dia 5 do mês seguinte, próximo dia útil; sábado **não** é dia útil (configurável) |
-| Feriados locais e facultativos (Carnaval, Corpus Christi) | Configurações › Feriados | Só nacionais por lei contam; facultativos nascem **inativos** |
+| Dia/mês do vencimento e regra de dia não útil | Configurações › Cobrança | Padrão: dia 5 do mês cobrado, próximo dia útil; sábado **não** é dia útil (configurável); feriado não conta (ver abaixo) |
+| Feriados (nacionais, locais, Carnaval, Corpus Christi) | Configurações › Feriados | **Nenhum conta** por padrão (só fins de semana); todos nascem **inativos** e o admin ativa os que o vencimento deve pular |
 | Valor do Day Card (convidado) | Configurações › Day Card | R$ 50, o valor que o app já usava |
 | Day Card entra no caixa ou só na competência? | Configurações › Day Card | Só competência (DRE): é derivado da reserva, sem pagamento registrado |
 | Quem pode dispensar encargos / dar desconto | Papel `admin` (existente) | Só administrador — **não há papel financeiro separado** |

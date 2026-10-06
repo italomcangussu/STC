@@ -84,9 +84,12 @@ describe('dia útil', () => {
   });
 });
 
-describe('vencimento — regra inicial do clube (dia 5 do mês seguinte, próximo dia útil)', () => {
+/** Opção `monthOffset: 1`: dia 5 do mês seguinte (a regra inicial do clube, antes de 2026-10-06). */
+const MES_SEGUINTE: DueRule = { ...CLUB_DEFAULT_DUE_RULE, monthOffset: 1 };
+
+describe('vencimento — opção "mês seguinte" (dia 5 do mês seguinte, próximo dia útil)', () => {
   const cal = nationalCalendar(2026, 2027);
-  const due = (competence: string, months = 1, rule: DueRule = CLUB_DEFAULT_DUE_RULE, c = cal) =>
+  const due = (competence: string, months = 1, rule: DueRule = MES_SEGUINTE, c = cal) =>
     computeDueDate(competence, months, rule, c);
 
   it('competência de julho vence 5 de agosto (quarta)', () => {
@@ -127,22 +130,51 @@ describe('vencimento — regra inicial do clube (dia 5 do mês seguinte, próxim
   });
 
   it('regra "dia útil anterior" e "manter"', () => {
-    expect(due('2026-08-01', 1, { ...CLUB_DEFAULT_DUE_RULE, nonBusinessRule: 'previous_business_day' }).due).toBe('2026-09-04');
-    expect(due('2026-08-01', 1, { ...CLUB_DEFAULT_DUE_RULE, nonBusinessRule: 'keep' }).due).toBe('2026-09-05');
+    expect(due('2026-08-01', 1, { ...MES_SEGUINTE, nonBusinessRule: 'previous_business_day' }).due).toBe('2026-09-04');
+    expect(due('2026-08-01', 1, { ...MES_SEGUINTE, nonBusinessRule: 'keep' }).due).toBe('2026-09-05');
   });
 
   it('feriado municipal cadastrado muda o vencimento; desativado, não', () => {
     const withLocal = buildCalendar([...nationalHolidays(2026), { date: '2026-08-05', active: true }]);
-    expect(due('2026-07-01', 1, CLUB_DEFAULT_DUE_RULE, withLocal).due).toBe('2026-08-06');
+    expect(due('2026-07-01', 1, MES_SEGUINTE, withLocal).due).toBe('2026-08-06');
     const off = buildCalendar([...nationalHolidays(2026), { date: '2026-08-05', active: false }]);
-    expect(due('2026-07-01', 1, CLUB_DEFAULT_DUE_RULE, off).due).toBe('2026-08-05');
+    expect(due('2026-07-01', 1, MES_SEGUINTE, off).due).toBe('2026-08-05');
   });
 
   it('sábado útil mantém o dia 5 de setembro de 2026', () => {
-    expect(due('2026-08-01', 1, CLUB_DEFAULT_DUE_RULE, { ...cal, saturdayIsBusiness: true }).due).toBe('2026-09-05');
+    expect(due('2026-08-01', 1, MES_SEGUINTE, { ...cal, saturdayIsBusiness: true }).due).toBe('2026-09-05');
   });
 
   it('recusa competência inválida', () => {
     expect(() => due('2026-13-01')).toThrow();
   });
 });
+describe('vencimento — padrão do clube (no mês cobrado, dia 5, só fins de semana)', () => {
+  const cal = buildCalendar([]); // feriado não conta: só sábado e domingo
+  const due = (competence: string, months = 1) => computeDueDate(competence, months, CLUB_DEFAULT_DUE_RULE, cal);
+
+  it('o padrão é vencer no mês cobrado', () => {
+    expect(CLUB_DEFAULT_DUE_RULE).toEqual({ dueDay: 5, monthOffset: 0, nonBusinessRule: 'next_business_day' });
+  });
+
+  it('vínculo em 01/09/2026: a 1ª cobrança (competência setembro) vence em setembro, não em outubro', () => {
+    // dia 5 é sábado → segunda 7/9; o feriado da Independência não conta
+    expect(due('2026-09-01')).toEqual({ nominal: '2026-09-05', due: '2026-09-07', adjusted: true });
+  });
+
+  it('cada mês vence nele mesmo (dia 5; sábado e domingo vão para a segunda)', () => {
+    expect(due('2026-07-01')).toEqual({ nominal: '2026-07-05', due: '2026-07-06', adjusted: true }); // domingo → segunda
+    expect(due('2026-08-01').due).toBe('2026-08-05'); // quarta
+    expect(due('2026-12-01').due).toBe('2026-12-07'); // sábado → segunda; não vira janeiro
+  });
+
+  it('feriado em dia de semana NÃO empurra o vencimento (1º de maio, Natal)', () => {
+    expect(computeDueDate('2026-05-01', 1, { ...CLUB_DEFAULT_DUE_RULE, dueDay: 1 }, cal).due).toBe('2026-05-01'); // sexta, Dia do Trabalho
+    expect(computeDueDate('2026-12-01', 1, { ...CLUB_DEFAULT_DUE_RULE, dueDay: 25 }, cal).due).toBe('2026-12-25'); // sexta, Natal
+  });
+
+  it('trimestral: vence no último mês do período (offset 0 não antecipa para o 1º mês)', () => {
+    expect(due('2026-01-01', 3).nominal).toBe('2026-03-05');
+  });
+});
+
