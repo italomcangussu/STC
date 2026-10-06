@@ -5,20 +5,22 @@
  * exige motivo e deixa as cobranças em aberto. Tudo auditado.
  */
 import React, { useEffect, useMemo, useState } from 'react';
-import { CheckCircle2, FileText, ShieldAlert } from 'lucide-react';
+import { CheckCheck, CheckCircle2, FileText, ShieldAlert } from 'lucide-react';
 import { notify } from '../../../lib/notifications';
 import { useConfirm } from '../../../hooks/useConfirm';
 import { notifyFinanceError } from '../../../lib/finance/errors';
 import {
   approveReceipt, chargeStatementsByIds, rejectReceipt, receiptDetail, receiptQueue, signedUrl, startReceiptReview, RECEIPTS_BUCKET,
 } from '../../../lib/finance/financeApi';
-import type { ChargeStatementRow, ReceiptQueueRow } from '../../../lib/finance/types';
-import { analyzeReceipt, receiptStatusInfo, statementFromRow, type ReceiptFlag } from '../../../lib/finance/receipts';
+import type { ReceiptQueueRow } from '../../../lib/finance/types';
+import { receiptStatusInfo, type ReceiptFlag } from '../../../lib/finance/receipts';
+import { analyzeFromStatements } from '../../../lib/finance/batch';
 import { brDate, monthLabel, type IsoDate } from '../../../lib/finance/dates';
 import { formatBRL } from '../../../lib/finance/money';
 import { useAsync, useRequestKey, useToday } from '../hooks';
 import { useFinance } from '../FinanceContext';
 import { Badge, Card, Empty, ErrorBlock, Field, MoneyInput, Notice, Row, SectionTabs, Sheet, Spinner, btnDanger, btnGhost, btnPrimary, inputCls } from '../ui';
+import { BatchApproveSheet } from './ReceiptsBatch';
 
 const METHODS = [['pix', 'Pix'], ['transfer', 'Transferência'], ['cash', 'Dinheiro'], ['card', 'Cartão'], ['other', 'Outro']] as const;
 const FILTERS = [['pending', 'Pendentes'], ['approved', 'Aprovados'], ['rejected', 'Recusados']] as const;
@@ -76,19 +78,10 @@ const ReviewSheet: React.FC<ReviewProps> = ({ id, queue, onClose, onDone }) => {
   const analysis = useMemo(() => {
     const d = detail.data;
     if (!d || !stm.data) return null;
-    const ctxs = stm.data.atPaid.map((r) => {
-      const nowRow: ChargeStatementRow = stm.data!.now.find((n) => n.charge_id === r.charge_id) ?? r;
-      return { id: r.charge_id, competenceMonth: r.competence_month, dueDate: r.due_date, statementAtPaid: statementFromRow(r), statementToday: statementFromRow(nowRow) };
-    });
     const others = queue.filter((q) => q.id !== d.id).map((q) => ({
       amountCents: q.declared_amount_cents, paidOn: q.declared_paid_on, identifier: ((q.ocr ?? null) as { identifier?: string | null } | null)?.identifier ?? null,
     }));
-    return analyzeReceipt({
-      declared: { amountCents: d.declared_amount_cents, paidOn: d.declared_paid_on },
-      extracted: ocr ? { amountCents: ocr.amount_cents ?? null, paidOn: (ocr.paid_on ?? null) as IsoDate | null, identifier: ocr.identifier ?? null, payee: ocr.payee ?? null } : null,
-      ocrStatus: d.ocr_status, charges: ctxs, today, possibleDuplicate: d.possible_duplicate, others, payeeNames: settings?.payee_names ?? [],
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    return analyzeFromStatements({ detail: d, atPaid: stm.data.atPaid, now: stm.data.now, others, payeeNames: settings?.payee_names ?? [], today });
   }, [detail.data, stm.data, queue, settings?.payee_names, today]);
 
   // Sugestão inicial da divisão (o administrador pode editar). A sobra vai para a última cobrança e vira crédito.
@@ -236,13 +229,24 @@ const ReviewSheet: React.FC<ReviewProps> = ({ id, queue, onClose, onDone }) => {
 const ReceiptsTab: React.FC<{ onChanged?: () => void }> = ({ onChanged }) => {
   const [filter, setFilter] = useState<Filter>('pending');
   const [openId, setOpenId] = useState<string | null>(null);
+  const [batchOpen, setBatchOpen] = useState(false);
   const q = useAsync(() => receiptQueue(filter, 200, 0), [filter]);
   const rows = q.data ?? [];
+  const pendingTotal = rows.reduce((s, r) => s + (r.declared_amount_cents ?? 0), 0);
 
   return (
     <div className="space-y-4">
       <Notice tone="info" title="Como funciona">O sócio envia o comprovante; a leitura automática só sugere valor e data. <b>Nada é quitado até você aprovar.</b> Ao decidir, o sócio recebe o aviso.</Notice>
       <SectionTabs label="Situação" value={filter} onChange={(v) => setFilter(v as Filter)} items={FILTERS.map(([id, label]) => ({ id, label }))} />
+      {filter === 'pending' && !q.error && !q.loading && rows.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-saibro-200 bg-saibro-50/60 p-4">
+          <div>
+            <p className="text-sm font-black text-stone-800">{rows.length} comprovante{rows.length === 1 ? '' : 's'} aguardando · {formatBRL(pendingTotal)} informados</p>
+            <p className="text-xs text-stone-500">Já conferiu o banco? Aprove todos os que bateram de uma vez.</p>
+          </div>
+          <button className={btnPrimary} onClick={() => setBatchOpen(true)}><CheckCheck size={16} /> Aprovar em lote</button>
+        </div>
+      )}
       {q.error ? <ErrorBlock error={q.error} onRetry={q.reload} /> : q.loading ? <Spinner /> : rows.length === 0 ? (
         <Empty title={filter === 'pending' ? 'Nenhum comprovante aguardando análise' : 'Nada por aqui ainda'} icon={<FileText size={28} />} />
       ) : (
@@ -269,6 +273,7 @@ const ReceiptsTab: React.FC<{ onChanged?: () => void }> = ({ onChanged }) => {
           </ul>
         </Card>
       )}
+      <BatchApproveSheet open={batchOpen} queue={filter === 'pending' ? rows : []} onClose={() => setBatchOpen(false)} onDone={() => { q.reload(); onChanged?.(); }} onOpenOne={setOpenId} />
       <ReviewSheet id={openId} queue={rows} onClose={() => setOpenId(null)} onDone={() => { q.reload(); onChanged?.(); }} />
     </div>
   );

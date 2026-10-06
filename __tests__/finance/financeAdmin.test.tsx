@@ -112,6 +112,100 @@ describe('Comprovantes — a leitura sugere, o administrador decide', () => {
 });
 
 // ------------------------------------------------------------------
+describe('Comprovantes — aprovar em lote', () => {
+  const qrow = (id: string, profile: string, name: string, cents: number | null, over: Partial<ReceiptQueueRow> = {}): ReceiptQueueRow => ({
+    id, profile_id: profile, profile_name: name, status: 'submitted', file_name: `${id}.png`, content_type: 'image/png', size_bytes: 1000,
+    declared_amount_cents: cents, declared_paid_on: '2026-09-05', ocr_status: 'ok', ocr: { amount_cents: cents, paid_on: '2026-09-05', identifier: `ID-${id}` }, possible_duplicate: false,
+    decision_reason: null, reviewed_at: null, created_at: '2026-09-05T12:00:00Z', charge_count: 1, total_count: 3, ...over,
+  });
+  const rowsQ = [qrow('s1', 'u1', 'Ana Sócia', 15000), qrow('s2', 'u2', 'Bruno Sócio', 15000), qrow('s3', 'u3', 'Carla Sócia', 9000)];
+
+  beforeEach(() => {
+    api.receiptQueue.mockResolvedValue(rowsQ);
+    api.receiptDetail.mockImplementation(async (id: string) => {
+      const r = rowsQ.find((x) => x.id === id)!;
+      return { ...r, member_note: null, declared_reference: null, storage_path: `${r.profile_id}/${id}/x.png`, charge_ids: [`c-${id}`] };
+    });
+    api.chargeStatementsByIds.mockImplementation(async (ids: string[]) => ids.map((cid) => stm({ charge_id: cid, profile_id: cid, profile_name: cid })));
+    api.approveReceipt.mockResolvedValue({ status: 'approved', payment_ids: ['p'] });
+  });
+
+  async function openBatch() {
+    mount(<ReceiptsTab />);
+    fireEvent.click(await screen.findByRole('button', { name: /Aprovar em lote/i }));
+    return screen.findByRole('dialog');
+  }
+
+  it('separa o que está pronto do que precisa de conferência e NÃO deixa nada marcado nem aprova ao abrir', async () => {
+    const dlg = await openBatch();
+    await within(dlg).findByLabelText('Selecionar comprovante de Ana Sócia');
+    expect(within(dlg).getByLabelText('Selecionar comprovante de Bruno Sócio')).not.toBeChecked();
+    // valor a menos: vai para a lista individual, sem caixa de seleção
+    expect(within(dlg).queryByLabelText('Selecionar comprovante de Carla Sócia')).not.toBeInTheDocument();
+    expect(within(dlg).getByText(/Conferir individualmente \(1\)/)).toBeInTheDocument();
+    expect(within(dlg).getByText('Carla Sócia')).toBeInTheDocument();
+    expect(within(dlg).getByText('Nenhum selecionado')).toBeInTheDocument();
+    expect(within(dlg).getByRole('button', { name: /Aprovar selecionados/ })).toBeDisabled();
+    expect(api.approveReceipt).not.toHaveBeenCalled();
+    expect(api.startReceiptReview).not.toHaveBeenCalled();
+  });
+
+  it('"Selecionar todos" + confirmação aprova cada comprovante pronto, na conta escolhida, com a divisão por cobrança', async () => {
+    const dlg = await openBatch();
+    fireEvent.click(await within(dlg).findByLabelText(/Selecionar todos os prontos \(2\)/));
+    expect(within(dlg).getByText(/2 selecionados · R\$\s*300,00/)).toBeInTheDocument();
+    fireEvent.click(within(dlg).getByRole('button', { name: /Aprovar 2 selecionados/ }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Aprovar 2' }));
+    await waitFor(() => expect(api.approveReceipt).toHaveBeenCalledTimes(2));
+    const calls = api.approveReceipt.mock.calls;
+    expect(calls.map((c) => c[0])).toEqual(['s1', 's2']);
+    expect(calls[0][1]).toMatchObject({ accountId: 'a1', method: 'pix', paidOn: '2026-09-05', waivers: [], allocations: [{ chargeId: 'c-s1', amountCents: 15000 }] });
+    expect(calls[0][2]).toBe('u1');
+    expect(calls[1][2]).toBe('u2');
+    expect(calls[0][3]).not.toBe(calls[1][3]); // chave de idempotência própria de cada um
+    expect(api.rejectReceipt).not.toHaveBeenCalled();
+  });
+
+  it('marcar só alguns aprova só esses; cancelar a confirmação não aprova nada', async () => {
+    const dlg = await openBatch();
+    fireEvent.click(await within(dlg).findByLabelText('Selecionar comprovante de Bruno Sócio'));
+    fireEvent.click(within(dlg).getByRole('button', { name: /Aprovar 1 selecionado/ }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Cancelar' }));
+    expect(api.approveReceipt).not.toHaveBeenCalled();
+    fireEvent.click(within(dlg).getByRole('button', { name: /Aprovar 1 selecionado/ }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Aprovar 1' }));
+    await waitFor(() => expect(api.approveReceipt).toHaveBeenCalledTimes(1));
+    expect(api.approveReceipt.mock.calls[0][0]).toBe('s2');
+  });
+
+  it('uma falha não derruba as outras: mostra o motivo no sócio, mantém a seleção e repete com a MESMA chave', async () => {
+    api.approveReceipt.mockImplementation(async (id: string) => { if (id === 's2') throw new Error('RECEIPT_NOT_PENDING'); return { status: 'approved', payment_ids: ['p'] }; });
+    const dlg = await openBatch();
+    fireEvent.click(await within(dlg).findByLabelText(/Selecionar todos os prontos \(2\)/));
+    fireEvent.click(within(dlg).getByRole('button', { name: /Aprovar 2 selecionados/ }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Aprovar 2' }));
+    await waitFor(() => expect(api.approveReceipt).toHaveBeenCalledTimes(2));
+    expect(await within(dlg).findByText(/Este comprovante já foi decidido/)).toBeInTheDocument();
+    const firstKeyForS2 = api.approveReceipt.mock.calls.find((c) => c[0] === 's2')![3];
+    // o sócio aprovado (s1) saiu da seleção; o que falhou continua marcado para tentar de novo
+    await waitFor(() => expect(within(dlg).getByLabelText('Selecionar comprovante de Bruno Sócio')).toBeChecked());
+    fireEvent.click(within(dlg).getByRole('button', { name: /Aprovar 1 selecionado/ }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Aprovar 1' }));
+    await waitFor(() => expect(api.approveReceipt.mock.calls.filter((c) => c[0] === 's2')).toHaveLength(2));
+    expect(api.approveReceipt.mock.calls.filter((c) => c[0] === 's2')[1][3]).toBe(firstKeyForS2);
+  });
+
+  it('data no futuro e cobrança já quitada ficam bloqueadas e não podem ser marcadas', async () => {
+    api.chargeStatementsByIds.mockImplementation(async (ids: string[]) => ids.map((cid) => stm({ charge_id: cid, total_due_cents: cid === 'c-s1' ? 0 : 15000, principal_remaining_cents: cid === 'c-s1' ? 0 : 15000 })));
+    const dlg = await openBatch();
+    await within(dlg).findByLabelText('Selecionar comprovante de Bruno Sócio');
+    expect(within(dlg).queryByLabelText('Selecionar comprovante de Ana Sócia')).not.toBeInTheDocument();
+    expect(within(dlg).getByText(/já está quitada/i)).toBeInTheDocument();
+    expect(within(dlg).getByText('Bloqueado')).toBeInTheDocument();
+  });
+});
+
+// ------------------------------------------------------------------
 describe('Configurações — nenhum valor inventado', () => {
   it('política de encargos nasce vazia e "não configurada"; sem confirmar, avisa que nada é cobrado', async () => {
     mount(<SettingsTab />);

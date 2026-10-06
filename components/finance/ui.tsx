@@ -14,7 +14,7 @@ import { exportFilename, toCsv, type ReportSpec } from '../../lib/finance/export
 import { downloadBlob } from './hooks';
 import { financeErrorInfo, notifyFinanceError } from '../../lib/finance/errors';
 
-export const inputCls = 'w-full min-w-0 max-w-full min-h-11rounded-xl border border-stone-200 bg-white px-3 py-2 text-sm text-stone-800 outline-hidden focus:border-saibro-400 focus:ring-2 focus:ring-saibro-100 disabled:bg-stone-50 disabled:text-stone-400';
+export const inputCls = 'w-full min-w-0 max-w-full min-h-11 rounded-xl border border-stone-200 bg-white px-3 py-2 text-sm text-stone-800 outline-hidden focus:border-saibro-400 focus:ring-2 focus:ring-saibro-100 disabled:bg-stone-50 disabled:text-stone-400';
 export const btnPrimary = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-saibro-600 px-4 py-2 text-sm font-black text-white shadow-sm shadow-saibro-200 transition active:scale-95 hover:bg-saibro-700 disabled:opacity-50 disabled:active:scale-100';
 export const btnGhost = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-stone-200 bg-white px-4 py-2 text-sm font-bold text-stone-600 transition active:scale-95 hover:bg-stone-50 disabled:opacity-50';
 export const btnDanger = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm font-bold text-red-700 transition active:scale-95 hover:bg-red-100 disabled:opacity-50';
