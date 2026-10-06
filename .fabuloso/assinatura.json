@@ -1,22 +1,26 @@
 {
   "versao": 2,
-  "geradoEm": "2026-10-05T19:23:19.228Z",
-  "commit": "6f578caf",
+  "geradoEm": "2026-10-06T10:26:07.901Z",
+  "commit": "635230aa",
   "pastas": [
     "__tests__",
+    "__tests__/finance",
     "components",
     "components/TenisProPlayer",
     "components/admin",
     "components/creator",
+    "components/finance",
     "components/ui",
     "contexts",
     "design",
     "design/tabela-confrontos",
     "docs",
+    "docs/financeiro",
     "docs/superpowers",
     "hooks",
     "lib",
     "lib/championship",
+    "lib/finance",
     "lib/students",
     "migrations",
     "public",
@@ -27,27 +31,372 @@
     "tasks"
   ],
   "agentmap": {
-    "arquivos": 205,
-    "sha": "6f578ca",
+    "arquivos": 291,
+    "sha": "635230a",
     "hubs": [
       "types.ts",
       "lib/supabase.ts",
+      "lib/finance/dates.ts",
+      "dist/assets/react-vendor-CcCdIb5n.js",
       "lib/logger.ts",
       "utils.ts",
+      "dist/assets/icons-vendor-CyA8ZbFo.js",
       "components/TenisProPlayer/constants.ts",
-      "lib/championship/formatConfig.ts",
-      "lib/championship/bracket.ts",
       "lib/notifications.ts",
-      "lib/exportTools.ts",
-      "lib/championship/rounds.ts"
+      "lib/finance/money.ts"
     ]
   },
   "skillsPorPerfil": {
     "nuvem": [
       {
+        "name": "accessibility-review",
+        "origem": "plugin",
+        "hash": "8b0d8a1e0200"
+      },
+      {
+        "name": "account-context",
+        "origem": "plugin",
+        "hash": "2819dba56140"
+      },
+      {
+        "name": "account-plan",
+        "origem": "plugin",
+        "hash": "b15d64723ee1"
+      },
+      {
+        "name": "account-research",
+        "origem": "plugin",
+        "hash": "accb1eb57723"
+      },
+      {
+        "name": "account-tiering",
+        "origem": "plugin",
+        "hash": "8e09d314ba2d"
+      },
+      {
+        "name": "adobe",
+        "origem": "plugin",
+        "hash": "d831f42d926d"
+      },
+      {
+        "name": "adobe-anydocx",
+        "origem": "plugin",
+        "hash": "3854e4df2b14"
+      },
+      {
+        "name": "adobe-anyexcel",
+        "origem": "plugin",
+        "hash": "59efb34209ce"
+      },
+      {
+        "name": "adobe-anypdf",
+        "origem": "plugin",
+        "hash": "d5eeb5c7becc"
+      },
+      {
+        "name": "adobe-anypptx",
+        "origem": "plugin",
+        "hash": "5b0956e0ad4d"
+      },
+      {
+        "name": "adobe-batch-edit-photos",
+        "origem": "plugin",
+        "hash": "e06574a5bb38"
+      },
+      {
+        "name": "adobe-create-pdfs-from-data",
+        "origem": "plugin",
+        "hash": "6bfb78160c05"
+      },
+      {
+        "name": "adobe-create-social-variations",
+        "origem": "plugin",
+        "hash": "0135fc800f8c"
+      },
+      {
+        "name": "adobe-design-from-template",
+        "origem": "plugin",
+        "hash": "091d6eec2a8e"
+      },
+      {
+        "name": "adobe-design-to-pdf",
+        "origem": "plugin",
+        "hash": "94d531f2a901"
+      },
+      {
+        "name": "adobe-document-review",
+        "origem": "plugin",
+        "hash": "6e32e544ff68"
+      },
+      {
+        "name": "adobe-edit-quick-cut",
+        "origem": "plugin",
+        "hash": "bffff86cef7a"
+      },
+      {
+        "name": "adobe-fonts",
+        "origem": "plugin",
+        "hash": "145561b42bfb"
+      },
+      {
+        "name": "adobe-resize-photos-and-videos",
+        "origem": "plugin",
+        "hash": "9b2d116e9ae5"
+      },
+      {
+        "name": "adobe-retouch-portraits",
+        "origem": "plugin",
+        "hash": "693f88273dab"
+      },
+      {
+        "name": "analyze",
+        "origem": "plugin",
+        "hash": "36ea29c018fe"
+      },
+      {
+        "name": "architecture",
+        "origem": "plugin",
+        "hash": "dc1adc5cbe10"
+      },
+      {
+        "name": "audit-support",
+        "origem": "plugin",
+        "hash": "2f8810d6a06c"
+      },
+      {
+        "name": "auth0",
+        "origem": "plugin",
+        "hash": "d68c660975d1"
+      },
+      {
         "name": "brand-guidelines",
         "origem": "global",
         "hash": "f7f3c8d35f22"
+      },
+      {
+        "name": "brand-review",
+        "origem": "plugin",
+        "hash": "b01afddf9232"
+      },
+      {
+        "name": "brief",
+        "origem": "plugin",
+        "hash": "a43de8c4c1a6"
+      },
+      {
+        "name": "build-dashboard",
+        "origem": "plugin",
+        "hash": "c7e9c6c06923"
+      },
+      {
+        "name": "built-in-browser",
+        "origem": "global",
+        "hash": "82cf0526b176"
+      },
+      {
+        "name": "call-prep",
+        "origem": "plugin",
+        "hash": "9c21a7186fac"
+      },
+      {
+        "name": "call-summary",
+        "origem": "plugin",
+        "hash": "469384335cbe"
+      },
+      {
+        "name": "campaign-plan",
+        "origem": "plugin",
+        "hash": "96836aca2eee"
+      },
+      {
+        "name": "canvas-design",
+        "origem": "global",
+        "hash": "306d1b7e82ad"
+      },
+      {
+        "name": "capacity-plan",
+        "origem": "plugin",
+        "hash": "f0f2868c2d2b"
+      },
+      {
+        "name": "change-request",
+        "origem": "plugin",
+        "hash": "b4a4ce77c10c"
+      },
+      {
+        "name": "chrome-browser",
+        "origem": "global",
+        "hash": "eb21888039a8"
+      },
+      {
+        "name": "close-management",
+        "origem": "plugin",
+        "hash": "697d58e3195f"
+      },
+      {
+        "name": "close-plan",
+        "origem": "plugin",
+        "hash": "afe589fc637e"
+      },
+      {
+        "name": "code-review",
+        "origem": "plugin",
+        "hash": "e47663fb711e"
+      },
+      {
+        "name": "competitive-brief",
+        "origem": "plugin",
+        "hash": "05c291dbf042"
+      },
+      {
+        "name": "competitive-intelligence",
+        "origem": "plugin",
+        "hash": "e63504e02ffa"
+      },
+      {
+        "name": "compliance-check",
+        "origem": "plugin",
+        "hash": "fac5f9a1726a"
+      },
+      {
+        "name": "compliance-tracking",
+        "origem": "plugin",
+        "hash": "65e4a7c7a1c5"
+      },
+      {
+        "name": "computer-use",
+        "origem": "global",
+        "hash": "c5d405caab0e"
+      },
+      {
+        "name": "configurar-orcamento",
+        "origem": "plugin",
+        "hash": "c1cdfa619791"
+      },
+      {
+        "name": "content-creation",
+        "origem": "plugin",
+        "hash": "393b186bbc34"
+      },
+      {
+        "name": "cowork-plugin-customizer",
+        "origem": "plugin",
+        "hash": "449d404934e6"
+      },
+      {
+        "name": "create-an-asset",
+        "origem": "plugin",
+        "hash": "d3c811ee4a15"
+      },
+      {
+        "name": "create-cowork-plugin",
+        "origem": "plugin",
+        "hash": "04047579eb6a"
+      },
+      {
+        "name": "create-viz",
+        "origem": "plugin",
+        "hash": "daa1ef1a1d48"
+      },
+      {
+        "name": "crm-hygiene-check",
+        "origem": "plugin",
+        "hash": "5d3161b63298"
+      },
+      {
+        "name": "customer-escalation",
+        "origem": "plugin",
+        "hash": "538017646239"
+      },
+      {
+        "name": "customer-health",
+        "origem": "plugin",
+        "hash": "062419e57ed8"
+      },
+      {
+        "name": "customer-research",
+        "origem": "plugin",
+        "hash": "7bf20fee970f"
+      },
+      {
+        "name": "customer-voice",
+        "origem": "plugin",
+        "hash": "5828cd2f24ae"
+      },
+      {
+        "name": "daily-briefing",
+        "origem": "plugin",
+        "hash": "87ed47249d64"
+      },
+      {
+        "name": "data-context-extractor",
+        "origem": "plugin",
+        "hash": "d5dc5ce73339"
+      },
+      {
+        "name": "data-visualization",
+        "origem": "plugin",
+        "hash": "f76b047a8653"
+      },
+      {
+        "name": "deal-advance-gap",
+        "origem": "plugin",
+        "hash": "37e9fc9ed330"
+      },
+      {
+        "name": "deal-review",
+        "origem": "plugin",
+        "hash": "4b9e98a163ac"
+      },
+      {
+        "name": "deal-signals",
+        "origem": "plugin",
+        "hash": "651a07a81967"
+      },
+      {
+        "name": "deal-slip-scenario",
+        "origem": "plugin",
+        "hash": "9dfa0cb01b48"
+      },
+      {
+        "name": "debug",
+        "origem": "plugin",
+        "hash": "5a663df718f1"
+      },
+      {
+        "name": "deep-research",
+        "origem": "global",
+        "hash": "8aec9bc788bf"
+      },
+      {
+        "name": "deploy-checklist",
+        "origem": "plugin",
+        "hash": "68a2bfc0ff16"
+      },
+      {
+        "name": "design-critique",
+        "origem": "plugin",
+        "hash": "2cabc5e04818"
+      },
+      {
+        "name": "design-handoff",
+        "origem": "plugin",
+        "hash": "a7eeade6bc86"
+      },
+      {
+        "name": "design-system",
+        "origem": "plugin",
+        "hash": "18ae243772a6"
+      },
+      {
+        "name": "design-system-extractor",
+        "origem": "global",
+        "hash": "f5b4389d61d2"
+      },
+      {
+        "name": "doc-coauthoring",
+        "origem": "global",
+        "hash": "647d7873c1d6"
       },
       {
         "name": "docs",
@@ -55,14 +404,69 @@
         "hash": "4ca444740219"
       },
       {
+        "name": "documentation",
+        "origem": "plugin",
+        "hash": "5f5c4c45fa84"
+      },
+      {
         "name": "docx",
         "origem": "global",
         "hash": "2c57cdc0688e"
       },
       {
+        "name": "draft-content",
+        "origem": "plugin",
+        "hash": "465042f053f5"
+      },
+      {
+        "name": "draft-outreach",
+        "origem": "plugin",
+        "hash": "2dde4e019827"
+      },
+      {
+        "name": "draft-response",
+        "origem": "plugin",
+        "hash": "34e8e3644e9c"
+      },
+      {
+        "name": "email-sequence",
+        "origem": "plugin",
+        "hash": "c18ebf4b3da4"
+      },
+      {
+        "name": "end-of-day",
+        "origem": "plugin",
+        "hash": "1c8658ba312c"
+      },
+      {
+        "name": "expansion-whitespace",
+        "origem": "plugin",
+        "hash": "288fbb6ca7e5"
+      },
+      {
+        "name": "explore-data",
+        "origem": "plugin",
+        "hash": "92b2229cca99"
+      },
+      {
         "name": "fabuloso",
         "origem": "global",
-        "hash": "94848fca4244"
+        "hash": "0da07b6e94d1"
+      },
+      {
+        "name": "fechar-mes",
+        "origem": "plugin",
+        "hash": "f95c31f2c813"
+      },
+      {
+        "name": "financial-statements",
+        "origem": "plugin",
+        "hash": "28691ffc98bc"
+      },
+      {
+        "name": "forecast",
+        "origem": "plugin",
+        "hash": "2642e6c061b7"
       },
       {
         "name": "google-workspace",
@@ -70,9 +474,89 @@
         "hash": "822589fa268c"
       },
       {
+        "name": "handle-objection",
+        "origem": "plugin",
+        "hash": "17d7fce20451"
+      },
+      {
         "name": "import-memory",
         "origem": "global",
         "hash": "b158007fcb5a"
+      },
+      {
+        "name": "importar-extrato",
+        "origem": "plugin",
+        "hash": "66ea031f99ed"
+      },
+      {
+        "name": "inbox-sweep",
+        "origem": "plugin",
+        "hash": "26b78f97f980"
+      },
+      {
+        "name": "incident-response",
+        "origem": "plugin",
+        "hash": "0229680093f3"
+      },
+      {
+        "name": "journal-entry",
+        "origem": "plugin",
+        "hash": "2715e0db7cf8"
+      },
+      {
+        "name": "journal-entry-prep",
+        "origem": "plugin",
+        "hash": "3598ad7815a4"
+      },
+      {
+        "name": "karpathy-guidelines",
+        "origem": "plugin",
+        "hash": "ecea16804429"
+      },
+      {
+        "name": "kb-article",
+        "origem": "plugin",
+        "hash": "d6f543c28d95"
+      },
+      {
+        "name": "lancar-gasto",
+        "origem": "plugin",
+        "hash": "574787040252"
+      },
+      {
+        "name": "lead-triage",
+        "origem": "plugin",
+        "hash": "3c1b082d09b7"
+      },
+      {
+        "name": "legal-response",
+        "origem": "plugin",
+        "hash": "6c34cf66d1a4"
+      },
+      {
+        "name": "legal-risk-assessment",
+        "origem": "plugin",
+        "hash": "c2b34de685c6"
+      },
+      {
+        "name": "log-activity",
+        "origem": "plugin",
+        "hash": "188e61c85889"
+      },
+      {
+        "name": "meeting-briefing",
+        "origem": "plugin",
+        "hash": "dc56fd5ba5c0"
+      },
+      {
+        "name": "metas-e-compras",
+        "origem": "plugin",
+        "hash": "002a0f8b04dc"
+      },
+      {
+        "name": "metrics-review",
+        "origem": "plugin",
+        "hash": "88508a23a7e4"
       },
       {
         "name": "morning",
@@ -85,9 +569,104 @@
         "hash": "7489d5b400fe"
       },
       {
+        "name": "performance-report",
+        "origem": "plugin",
+        "hash": "91ec7fecc265"
+      },
+      {
+        "name": "pipeline-review",
+        "origem": "plugin",
+        "hash": "0d42b8faaf90"
+      },
+      {
+        "name": "planejar-mes",
+        "origem": "plugin",
+        "hash": "ca368f099b98"
+      },
+      {
         "name": "pptx",
         "origem": "global",
         "hash": "ec54f4194f80"
+      },
+      {
+        "name": "process-doc",
+        "origem": "plugin",
+        "hash": "a0744d8d6505"
+      },
+      {
+        "name": "process-optimization",
+        "origem": "plugin",
+        "hash": "e75ed90d073f"
+      },
+      {
+        "name": "product-brainstorming",
+        "origem": "plugin",
+        "hash": "d9fb8a49f623"
+      },
+      {
+        "name": "reconciliation",
+        "origem": "plugin",
+        "hash": "b1ddfe2a0aab"
+      },
+      {
+        "name": "renewal-radar",
+        "origem": "plugin",
+        "hash": "a376da491146"
+      },
+      {
+        "name": "rep-context",
+        "origem": "plugin",
+        "hash": "33d4228e2222"
+      },
+      {
+        "name": "research-synthesis",
+        "origem": "plugin",
+        "hash": "c2ce185aceb1"
+      },
+      {
+        "name": "review-contract",
+        "origem": "plugin",
+        "hash": "9035b341c97c"
+      },
+      {
+        "name": "risk-assessment",
+        "origem": "plugin",
+        "hash": "af09a37328ba"
+      },
+      {
+        "name": "roadmap-update",
+        "origem": "plugin",
+        "hash": "71fbb6275bd5"
+      },
+      {
+        "name": "route-lead",
+        "origem": "plugin",
+        "hash": "46881915c28d"
+      },
+      {
+        "name": "runbook",
+        "origem": "plugin",
+        "hash": "d0d12c906259"
+      },
+      {
+        "name": "schedule-meeting",
+        "origem": "plugin",
+        "hash": "7ba0a9648d0a"
+      },
+      {
+        "name": "seo-audit",
+        "origem": "plugin",
+        "hash": "77766595638c"
+      },
+      {
+        "name": "setup",
+        "origem": "plugin",
+        "hash": "ff832c2e064d"
+      },
+      {
+        "name": "signature-request",
+        "origem": "plugin",
+        "hash": "b8e39e1aa287"
       },
       {
         "name": "skill-creator",
@@ -95,14 +674,154 @@
         "hash": "6693efb6e390"
       },
       {
+        "name": "sox-testing",
+        "origem": "plugin",
+        "hash": "0a556cb46614"
+      },
+      {
+        "name": "sprint-planning",
+        "origem": "plugin",
+        "hash": "a1e4ae67bdf9"
+      },
+      {
+        "name": "sql-queries",
+        "origem": "plugin",
+        "hash": "ce231be3a6f9"
+      },
+      {
+        "name": "stakeholder-map",
+        "origem": "plugin",
+        "hash": "02bef4cf8fa3"
+      },
+      {
+        "name": "stakeholder-update",
+        "origem": "plugin",
+        "hash": "688ba6f76ec5"
+      },
+      {
+        "name": "standup",
+        "origem": "plugin",
+        "hash": "5d15df316712"
+      },
+      {
         "name": "startup-hook-skill",
         "origem": "global",
         "hash": "13f62e839e1b"
       },
       {
-        "name": "theme-factory",
+        "name": "statistical-analysis",
+        "origem": "plugin",
+        "hash": "80fa567e0311"
+      },
+      {
+        "name": "status-report",
+        "origem": "plugin",
+        "hash": "1087b7ec4402"
+      },
+      {
+        "name": "synthesize-research",
+        "origem": "plugin",
+        "hash": "4ba7188eb58d"
+      },
+      {
+        "name": "system-design",
+        "origem": "plugin",
+        "hash": "27c137e87d78"
+      },
+      {
+        "name": "team-pipeline",
+        "origem": "plugin",
+        "hash": "dd640e12472d"
+      },
+      {
+        "name": "tech-debt",
+        "origem": "plugin",
+        "hash": "79ab3e7bc697"
+      },
+      {
+        "name": "testing-strategy",
+        "origem": "plugin",
+        "hash": "ebfdb1c894cd"
+      },
+      {
+        "name": "ticket-triage",
+        "origem": "plugin",
+        "hash": "b9f89334f107"
+      },
+      {
+        "name": "triage-nda",
+        "origem": "plugin",
+        "hash": "b03c87f00a43"
+      },
+      {
+        "name": "uazapi",
         "origem": "global",
-        "hash": "8e70c603a335"
+        "hash": "96a9a27bfe55"
+      },
+      {
+        "name": "update-opportunity",
+        "origem": "plugin",
+        "hash": "8373f1dde48f"
+      },
+      {
+        "name": "user-research",
+        "origem": "plugin",
+        "hash": "63c5b351bcb8"
+      },
+      {
+        "name": "ux-copy",
+        "origem": "plugin",
+        "hash": "cad43b1f760b"
+      },
+      {
+        "name": "validate-data",
+        "origem": "plugin",
+        "hash": "90f83338ae75"
+      },
+      {
+        "name": "variance-analysis",
+        "origem": "plugin",
+        "hash": "6d57f4d41f92"
+      },
+      {
+        "name": "vendor-check",
+        "origem": "plugin",
+        "hash": "8685a9c43c70"
+      },
+      {
+        "name": "vendor-review",
+        "origem": "plugin",
+        "hash": "115f2a58b5c7"
+      },
+      {
+        "name": "view-pdf",
+        "origem": "plugin",
+        "hash": "bd553218eb3f"
+      },
+      {
+        "name": "web-artifacts-builder",
+        "origem": "global",
+        "hash": "fc5d078b8b85"
+      },
+      {
+        "name": "weekly-wrap",
+        "origem": "plugin",
+        "hash": "3307ebbf9780"
+      },
+      {
+        "name": "win-loss-review",
+        "origem": "plugin",
+        "hash": "d22439be0f5f"
+      },
+      {
+        "name": "write-query",
+        "origem": "plugin",
+        "hash": "1454847bc1b1"
+      },
+      {
+        "name": "write-spec",
+        "origem": "plugin",
+        "hash": "2ea435510e8e"
       },
       {
         "name": "xlsx",

@@ -1,0 +1,32 @@
+# Financeiro — cobertura de testes por critério de aceite (Etapa 9)
+
+Três camadas, todas em `__tests__/finance/`:
+
+- **Regras puras (TypeScript):** `*.test.ts` — o que o app calcula e mostra.
+- **Banco de verdade (SQL):** `sql/*.test.ts` — aplicam as 5 migrations reais num Postgres em memória (PGlite) com `auth.uid()`/papéis simulados; é aqui que RLS, permissões, idempotência e gatilhos são provados.
+- **Interface:** `*.test.tsx` — telas com a camada de dados simulada (o que o usuário vê e o que é enviado ao banco).
+
+Onde o mesmo cálculo existe em TypeScript e em SQL (vencimento, feriados, encargos, leitura de participantes), há **teste de paridade** comparando os dois.
+
+| # | Critério | Onde está provado |
+|---|---|---|
+| 1 | Mensalidade individual e reajuste sem alterar o passado | `memberBilling.test.ts` (“preço por competência”, “reajuste vale só daqui para a frente”, “valor global fixo não existe”); `sql/billing.test.ts` (“mensalidade individual e geração idempotente”, “reajuste só vale daqui para a frente”) |
+| 2 | Geração idempotente | `memberBilling.test.ts` (“rodar duas vezes não cria duplicata”); `sql/billing.test.ts` (“repetir a geração não cria duplicata”, “a mesma chave devolve o mesmo resultado”) |
+| 3 | Encerramento de cobranças futuras preservando histórico | `memberBilling.test.ts` (“fim do vínculo…”); `sql/billing.test.ts` (“fim do vínculo preserva o passado”: encerramento manual, inativar perfil, deixar de ser sócio; edição do perfil nunca é bloqueada) |
+| 4 | Vencimento dia 5 → próximo dia útil, fins de semana e feriados configurados | `calendar.test.ts` (sábado, domingo, feriado nacional/local, Sexta-feira Santa, virada de ano, mês curto, regras alternativas); `sql/billing.test.ts` (“calendário no banco = calendário no app”, “vencimento do banco é igual ao do TypeScript”) |
+| 5 | Valor fixo, percentual diário e combinação; sem juros compostos | `lateFees.test.ts` (“valor fixo, percentual e combinação”, “juros são simples”, “a multa não entra na base dos juros”, arredondamento); `sql/billing.test.ts` (“encargos: banco = TypeScript” para cada política, com pagamentos parciais) |
+| 6 | Aprovação administrativa e auditoria de dispensa de encargos | `sql/billing.test.ts` (“dispensa de encargos: só admin, só com justificativa… com antes/depois na auditoria”; “política de encargos: sem regra definida não há cálculo”); `sql/receipts.test.ts` (“dispensa de encargos na aprovação exige justificativa”); `financeAdmin.test.tsx` (“mudar encargo exige justificativa”, “desconto só com motivo”) |
+| 7 | Pagamento integral, parcial, excedente, duplicado, estorno e cancelamento | `lateFees.test.ts` (parcial, excedente, duplicado, estorno, status); `sql/billing.test.ts` (“pagamentos: integral, parcial, excedente, duplicado, estorno, cancelamento”, crédito aplicado/devolvido/baixado) |
+| 8 | Comprovante em estados de análise, sem confirmação automática | `receipts.test.ts` (“sugere, nunca quita”, `autoConfirms` sempre `false`); `receiptText.test.ts`, `receiptFile.test.ts`; `sql/receipts.test.ts` (“registra ‘enviado’ sem quitar nada”, “o texto bruto da leitura nunca é gravado”, aprovar/rejeitar/substituir, duplicidade); `memberFinance.test.tsx` (envio e status/próximo passo); `financeAdmin.test.tsx` (“abrir e conferir NÃO aprova nada”, aprovar exige ação + confirmação) |
+| 9 | Permissões e RLS: sócio, professor, administrador, demais papéis | `sql/billing.test.ts` (“RLS e permissões — sócio, professor, administrador e lanchonete”: leitura própria, tabelas de gestão só admin, escrita direta negada, funções recusam não-admin, anônimo sem acesso); `sql/receipts.test.ts` (fila só admin; Storage: sócio só na própria pasta, ninguém troca/apaga); `sql/dayCard.test.ts` e `sql/reports.test.ts` (Day Card e relatórios só admin; professor e lanchonete negados; schema interno inalcançável) |
+| 10 | Aulas/reservas × pagamentos × professores sem duplicar receita (o professor não entra no financeiro) | `sql/dayCard.test.ts` (Day Card só de reserva com convidado; **aula de aluno não gera receita**; Aula avulsa e Card Mensal só pelo pagamento registrado; “o financeiro não tem tabela, função nem categoria de repasse a professor”); `sql/reports.test.ts` (“aula de aluno não gera receita por conta própria: mais aulas não mudam o DRE”, categorias automáticas reservadas, não existe categoria de repasse); `financeiroAdminParity.test.tsx` |
+| 11 | DRE (competência) × fluxo de caixa (data real) | `sql/reports.test.ts` (“mensalidade: DRE no mês cobrado; caixa no dia do pagamento”, “cada evento entra uma única vez”, rateio trimestral, transferência/aporte/retirada fora do DRE); `reports.test.ts`; `financeReports.test.tsx` (DRE e painel; aba “Alunos e Day Card”) |
+| 12 | Despesas recorrentes e pontuais, contas e transferências | `sql/reports.test.ts` (“contas, categorias, recorrências, pontuais e transferências”, categorias automáticas reservadas); `financeReports.test.tsx` (categorias manuais no novo lançamento; despesa pendente com chave de idempotência) |
+| 13 | Exportação × valores e filtros da tela | `export.test.ts` (totais = soma das linhas exibidas, filtros, base, data de geração, CSV seguro, PDF do mesmo objeto); `financeReports.test.tsx` (“a exportação traz exatamente o que está na tela”) |
+| 14 | Regressão: alunos, dependentes, reservas, Card Mensal/Paycard, FinanceiroAdmin | `financeiroAdminParity.test.tsx` (painel de alunos: Day Card só do convidado + pagamentos de alunos, isenção e estorno preservados; passou a **não** somar a aula de aluno, a pedido do clube); `sql/dayCard.test.ts` (“os fluxos existentes continuam funcionando”: reserva, pagamento, aluno e professor ainda podem ser excluídos; trilha de auditoria de `student_payments` nunca bloqueia); suíte completa do projeto sem novas falhas |
+
+## O que estes testes **não** provam
+
+- Fluxos completos **no banco remoto real** com dados do clube (planos, cobranças, encargos, comprovantes): o banco real foi conferido por impressão digital idêntica à dos testes e por um teste de fumaça que reverte (`OPERACAO_E_MIGRATIONS.md`, seção 2.1), mas os testes de SQL usam tabelas-stub do STC derivadas das migrations do repositório.
+- Câmera, HEIC, upload real ao Storage, push e OCR em imagem real: o parser é testado com textos de comprovantes; o OCR em si (`tesseract.js`/`pdfjs-dist`) é simulado nos testes de tela.
+- Aparência em celular real: interface montada mobile-first (alvos de toque ≥ 44 px, cartões em vez de tabelas largas), mas **sem teste visual em navegador/aparelho**.

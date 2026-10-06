@@ -25,7 +25,8 @@ const TenisProPlayer = lazy(() => import('./components/TenisProPlayer').then(m =
 const ProfessorProfile = lazy(() => import('./components/ProfessorProfile').then(m => ({ default: m.ProfessorProfile })));
 const AdminProfessors = lazy(() => import('./components/AdminProfessors').then(m => ({ default: m.AdminProfessors })));
 const AdminPanel = lazy(() => import('./components/AdminPanel').then(m => ({ default: m.AdminPanel })));
-const FinanceiroAdmin = lazy(() => import('./components/FinanceiroAdmin').then(m => ({ default: m.FinanceiroAdmin })));
+const FinanceHub = lazy(() => import('./components/finance/FinanceHub').then(m => ({ default: m.FinanceHub })));
+const MemberFinance = lazy(() => import('./components/finance/MemberFinance').then(m => ({ default: m.MemberFinance })));
 const AdminStudents = lazy(() => import('./components/AdminStudents').then(m => ({ default: m.AdminStudents })));
 const ChampionshipAdmin = lazy(() => import('./components/ChampionshipAdmin').then(m => ({ default: m.ChampionshipAdmin })));
 const ChampionshipCreator = lazy(() => import('./components/ChampionshipCreator').then(m => ({ default: m.ChampionshipCreator })));
@@ -174,7 +175,8 @@ const AnnouncementPopup: React.FC<{ user: User, onClose: () => void }> = ({ user
 // -- MAIN CONTENT WRAPPER --
 const AppContent: React.FC = () => {
   const { currentUser, loading, signOut } = useAuth();
-  const [view, setView] = useState('agenda');
+  // O aviso de comprovante decidido abre direto em "Meu financeiro" (`/#meu-financeiro`).
+  const [view, setView] = useState(() => (typeof window !== 'undefined' && window.location.hash === '#meu-financeiro' ? 'meu-financeiro' : 'agenda'));
   const [showAnnouncement, setShowAnnouncement] = useState(true);
   const [targetAthleteId, setTargetAthleteId] = useState<string | null>(null);
   const [showChallengeNotification, setShowChallengeNotification] = useState(true);
@@ -230,7 +232,8 @@ const AppContent: React.FC = () => {
             {view === 'admin-students' && <AdminProtect><AdminStudents /></AdminProtect>}
             {view === 'admin-professors' && <AdminProtect><AdminProfessors /></AdminProtect>}
             {view === 'admin-panel' && <AdminProtect><AdminPanel /></AdminProtect>}
-            {view === 'financeiro-admin' && <AdminProtect><FinanceiroAdmin /></AdminProtect>}
+            {view === 'financeiro-admin' && <AdminProtect><FinanceHub /></AdminProtect>}
+            {view === 'meu-financeiro' && <MemberFinance currentUser={currentUser} />}
             {view === 'championship-admin' && <AdminProtect><ChampionshipAdmin currentUser={currentUser} /></AdminProtect>}
             {view === 'championship-creator' && <AdminProtect><ChampionshipCreator /></AdminProtect>}
             {view === 'admin-forms' && <AdminProtect><AdminForms /></AdminProtect>}
