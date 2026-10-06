@@ -104,7 +104,11 @@ export const Field: React.FC<{ label: string; hint?: string; children: React.Rea
 /** Campo de dinheiro: o usuário digita "1.234,56"; o valor sai em centavos inteiros. */
 export const MoneyInput: React.FC<{ value: number | null; onChange: (cents: number | null) => void; placeholder?: string; disabled?: boolean; 'aria-label'?: string }> = ({ value, onChange, placeholder = '0,00', disabled, ...rest }) => {
   const [text, setText] = useState(value === null ? '' : formatDecimalBRL(value));
-  useEffect(() => { setText(value === null ? '' : formatDecimalBRL(value)); }, [value]);
+  // Só reescreve o texto quando o valor mudou POR FORA (formulário reaberto, valor sugerido). Se o texto digitado
+  // já vale esse número, deixa como está: antes, digitar "2" virava "2,00" e jogava o cursor para o fim.
+  useEffect(() => {
+    setText((current) => (parseBRL(current) === value ? current : value === null ? '' : formatDecimalBRL(value)));
+  }, [value]);
   return (
     <input
       inputMode="decimal" className={inputCls} placeholder={placeholder} value={text} disabled={disabled} aria-label={rest['aria-label']}

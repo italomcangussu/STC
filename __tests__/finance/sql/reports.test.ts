@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
-import { asUser, asUserError, dbToday, j, key, q, rpc, rpcError, U, world } from './harness';
+import { asUser, asUserError, dbToday, j, key, q, rpc, rpcError, U, world, SETTINGS_VERSION } from './harness';
 import { EXPECTED, FX, fixtureSql } from '../fixtures/studentsAndGuests';
 import { addMonths, firstOfMonth } from '../../../lib/finance/dates';
 
@@ -81,7 +81,7 @@ describe('DRE por competência × caixa por data real', () => {
     const start = addMonths(firstOfMonth(today), -3);
     await rpc(w.db, U.admin, `public.fin_create_member_plan('${key()}', ${j({ profile_id: U.socioA, start_on: start, amount_cents: 10000 })})`);
     await rpc(w.db, U.admin, `public.fin_generate_member_charges('${key()}', null, '${today}')`);
-    await rpc(w.db, U.admin, `public.fin_save_settings('${key()}', 1, ${j({ fine_fixed_cents: 300, interest_daily_fixed_cents: 10, late_fee_confirmed: true })})`);
+    await rpc(w.db, U.admin, `public.fin_save_settings('${key()}', ${SETTINGS_VERSION}, ${j({ fine_fixed_cents: 300, interest_daily_fixed_cents: 10, late_fee_confirmed: true })})`);
     const c = (await q<{ id: string }>(w.db, `select id from public.fin_member_charges order by competence_month limit 1`))[0].id;
     const p = await rpc<any>(w.db, U.admin, `public.fin_register_payment('${key()}', '${c}', 5000, '${today}', 'pix', '${w.account}', null)`);
     const from = start, to = today;
@@ -251,7 +251,7 @@ describe('saldos, a receber e a pagar (dashboard)', () => {
     const w = await world();
     await w.db.exec(fixtureSql({ p1: U.prof, p2: U.profOther }));
     expect((await cash(w, '2026-08-01', '2026-08-31')).filter((m) => m.source_type === 'day_card').length).toBe(0);
-    await rpc(w.db, U.admin, `public.fin_save_settings('${key()}', 1, ${j({ day_card_in_cash: true })})`);
+    await rpc(w.db, U.admin, `public.fin_save_settings('${key()}', ${SETTINGS_VERSION}, ${j({ day_card_in_cash: true })})`);
     const rows = (await cash(w, '2026-08-01', '2026-08-31')).filter((m) => m.source_type === 'day_card');
     expect(rows.length).toBe(EXPECTED.dayCardCount);
     expect(rows.every((m) => m.origin === 'derived' && m.flow === 'day_card')).toBe(true);

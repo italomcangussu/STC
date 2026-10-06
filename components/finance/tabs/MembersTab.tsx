@@ -177,10 +177,12 @@ const NewPlanSheet: React.FC<{ open: boolean; onClose: () => void; onDone: () =>
   const preview = useMemo(() => {
     if (!amount || !start) return null;
     const rule: DueRule = settings ? { dueDay: settings.due_day, monthOffset: settings.due_month_offset, nonBusinessRule: settings.non_business_rule } : CLUB_DEFAULT_DUE_RULE;
-    const cal = buildCalendar(holidays.data ?? [], settings?.saturday_is_business ?? false);
+    const cal = buildCalendar((holidays.data ?? []).map((h) => ({ date: h.holiday_date, active: h.active })), settings?.saturday_is_business ?? false);
     return planCharges({ id: 'new', profileId: profile || 'x', startOn: start, endedOn: null, status: 'active', periodMonths: period }, [{ effectiveFrom: firstOfMonth(start), amountCents: amount }], [],
       generationHorizon(today, settings?.horizon_months ?? 1), rule, cal);
   }, [amount, start, period, holidays.data, settings, today, profile]);
+  // Com o vencimento no mês cobrado, um vínculo que começou antes de hoje já gera cobranças vencidas: o admin precisa ver isso antes de criar.
+  const overdue = preview ? preview.create.filter((c) => c.dueDate < today).length : 0;
 
   const save = async () => {
     setBusy(true);
@@ -205,8 +207,9 @@ const NewPlanSheet: React.FC<{ open: boolean; onClose: () => void; onDone: () =>
             <Field label="Início do vínculo" className="col-span-2"><input type="date" className={inputCls} value={start} onChange={(e) => setStart(e.target.value)} /></Field>
           </div>
           {preview && (
-            <Notice tone={preview.create.length > 12 ? 'warn' : 'info'} title={`Serão geradas ${preview.create.length} cobrança(s)`}>
+            <Notice tone={preview.create.length > 12 || overdue > 0 ? 'warn' : 'info'} title={`Serão geradas ${preview.create.length} cobrança(s)`}>
               {preview.create.length === 0 ? 'Nenhuma cobrança no período.' : <>De {monthLabel(preview.create[0].competenceMonth)} a {monthLabel(preview.create[preview.create.length - 1].competenceMonth)}; a primeira vence em {brDate(preview.create[0].dueDate)}.
+                {overdue > 0 && (overdue === preview.create.length ? (overdue === 1 ? ' Ela já está vencida hoje.' : ' Todas já estão vencidas hoje.') : ` ${overdue === 1 ? '1 já está vencida' : `${overdue} já estão vencidas`} hoje.`)}
                 {preview.create.length > 12 && ' Muitas competências passadas: confira se a data de início está certa.'}</>}
             </Notice>
           )}

@@ -10,7 +10,7 @@ import { PANEL_DOM_ID, sectionById, tabDomId } from './admin/adminNavMeta';
 import { AdminEmbedProvider } from './admin/AdminEmbedContext';
 import { AdminEmpty, AdminPageHeader, AdminSearch, ChipGroup, adminBtnPrimary } from './admin/ui';
 import { pendingBySection, useAdminPending } from './admin/useAdminPending';
-import { AdminTabId, groupOf, loadLastTab, saveLastTab } from './admin/adminNav';
+import { AdminTabId, groupOf, loadLastTab, saveLastTab } from './admin/adminSections';
 import { Reservation, User, Challenge, AccessRequest } from '../types';
 import { formatDateBr } from '../utils';
 import { supabase } from '../lib/supabase';

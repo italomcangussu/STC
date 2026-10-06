@@ -1,6 +1,6 @@
 import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ChargeStatementRow, FinSettings } from '../../lib/finance/types';
 
 const api = vi.hoisted(() => ({
@@ -26,9 +26,9 @@ const charge = (id: string, name: string, over: Partial<ChargeStatementRow> = {}
 
 const plan = { id: 'pl1', profile_id: 'u1', start_on: '2026-01-10', ended_on: null, status: 'active', period_months: 1, version: 1, end_reason: null, profile: { name: 'João da Silva', avatar_url: null, is_active: true } };
 
-const mount = () => render(
+const mount = (s: FinSettings = settings) => render(
   <ConfirmProvider>
-    <FinanceProvider value={{ accounts: [], categories: [], settings, reload: vi.fn(), go: vi.fn() }}><MembersTab /></FinanceProvider>
+    <FinanceProvider value={{ accounts: [], categories: [], settings: s, reload: vi.fn(), go: vi.fn() }}><MembersTab /></FinanceProvider>
   </ConfirmProvider>,
 );
 
@@ -110,5 +110,67 @@ describe('Sócios e valores — carregamento', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Tentar de novo' }));
     expect(await screen.findByText('Ativa')).toBeInTheDocument();
     expect(api.listPlans).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('Nova mensalidade — formulário', () => {
+  // Vencimento no mês cobrado (padrão do clube). "Hoje" fixo: 06/10/2026, 12:00 em Fortaleza.
+  const noMesCobrado = { ...settings, due_month_offset: 0 } as FinSettings;
+  beforeEach(() => { vi.useFakeTimers({ toFake: ['Date'] }); vi.setSystemTime(new Date('2026-10-06T15:00:00Z')); });
+  afterEach(() => { vi.useRealTimers(); });
+
+  const abrir = async (s: FinSettings = noMesCobrado) => {
+    mount(s);
+    fireEvent.click(await screen.findByRole('tab', { name: 'Sócios e valores' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Nova' }));
+    return screen.findByLabelText('Valor da mensalidade') as Promise<HTMLInputElement>;
+  };
+  const digitarValor = (box: HTMLInputElement, t: string) => fireEvent.change(box, { target: { value: t } });
+  const iniciar = (iso: string) => fireEvent.change(document.querySelector('input[type="date"]') as HTMLInputElement, { target: { value: iso } });
+
+  it('digitar o valor não reescreve o campo nem leva o cursor ao fim', async () => {
+    const box = await abrir();
+    for (const t of ['1', '15', '150', '150,', '150,5']) { digitarValor(box, t); expect(box.value).toBe(t); }
+  });
+
+  it('vínculo em 01/09 com vencimento no mês cobrado: a 1ª cobrança vence em setembro e as já vencidas são avisadas', async () => {
+    const box = await abrir();
+    digitarValor(box, '150');
+    iniciar('2026-09-01');
+    // set, out e nov (horizonte de 1 mês): vencem 07/09 (5 é sábado → segunda; feriado não conta), 05/10 e 05/11
+    expect(await screen.findByText('Serão geradas 3 cobrança(s)')).toBeInTheDocument();
+    expect(screen.getByText(/a primeira vence em 07\/09\/2026/)).toBeInTheDocument();
+    expect(screen.getByText(/2 já estão vencidas hoje/)).toBeInTheDocument();
+  });
+
+  it('feriado só pesa se o clube o ativou: ativo em 07/09, a 1ª cobrança vai para 08/09', async () => {
+    api.listHolidays.mockResolvedValue([{ id: 'h1', holiday_date: '2026-09-07', name: 'Independência', scope: 'national', kind: 'holiday', active: true }]);
+    const box = await abrir();
+    digitarValor(box, '150');
+    iniciar('2026-09-01');
+    expect(await screen.findByText(/a primeira vence em 08\/09\/2026/)).toBeInTheDocument();
+  });
+
+  it('feriado desativado não conta', async () => {
+    api.listHolidays.mockResolvedValue([{ id: 'h1', holiday_date: '2026-09-07', name: 'Independência', scope: 'national', kind: 'holiday', active: false }]);
+    const box = await abrir();
+    digitarValor(box, '150');
+    iniciar('2026-09-01');
+    expect(await screen.findByText(/a primeira vence em 07\/09\/2026/)).toBeInTheDocument();
+  });
+
+  it('vínculo deste mês, ainda no prazo: nenhum aviso de vencida', async () => {
+    const box = await abrir();
+    digitarValor(box, '150');
+    iniciar('2026-11-01');
+    await screen.findByText(/Serão geradas/);
+    expect(screen.queryByText(/vencidas? hoje|vencida hoje/)).toBeNull();
+  });
+
+  it('a regra "mês seguinte" continua valendo quando o clube a escolhe', async () => {
+    const box = await abrir({ ...settings, due_month_offset: 1 } as FinSettings);
+    digitarValor(box, '150');
+    iniciar('2026-11-01');
+    expect(await screen.findByText(/a primeira vence em 07\/12\/2026/)).toBeInTheDocument(); // 5/12 é sábado
   });
 });

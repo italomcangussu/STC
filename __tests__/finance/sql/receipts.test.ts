@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
-import { asUser, asUserError, dbToday, ID, j, key, q, rpc, rpcError, U, world } from './harness';
+import { asUser, asUserError, dbToday, ID, j, key, q, rpc, rpcError, U, world, SETTINGS_VERSION } from './harness';
 import { addDays, addMonths, firstOfMonth } from '../../../lib/finance/dates';
 
 type W = Awaited<ReturnType<typeof world>>;
@@ -14,7 +14,7 @@ async function scene() {
   await rpc(w.db, U.admin, `public.fin_create_member_plan('${key()}', ${j({ profile_id: U.socioA, start_on: start, amount_cents: 10000 })})`);
   await rpc(w.db, U.admin, `public.fin_create_member_plan('${key()}', ${j({ profile_id: U.socioB, start_on: start, amount_cents: 20000 })})`);
   await rpc(w.db, U.admin, `public.fin_generate_member_charges('${key()}', null, '${today}')`);
-  await rpc(w.db, U.admin, `public.fin_save_settings('${key()}', 1, ${j({ fine_fixed_cents: 300, interest_daily_fixed_cents: 10, late_fee_confirmed: true })})`);
+  await rpc(w.db, U.admin, `public.fin_save_settings('${key()}', ${SETTINGS_VERSION}, ${j({ fine_fixed_cents: 300, interest_daily_fixed_cents: 10, late_fee_confirmed: true })})`);
   const of = async (uid: string) => q<{ id: string; due_date: string }>(w.db,
     `select id, due_date::text from public.fin_member_charges where profile_id = '${uid}' order by competence_month`);
   return { w, today, A: await of(U.socioA), B: await of(U.socioB) };

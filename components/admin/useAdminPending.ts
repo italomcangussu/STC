@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { getNowInFortaleza, formatDate } from '../../utils';
-import type { AdminTabId } from './adminNav';
+import type { AdminTabId } from './adminSections';
 
 export interface AdminCounts {
     access: number;

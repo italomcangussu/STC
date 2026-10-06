@@ -44,12 +44,19 @@ describe('períodos do plano', () => {
 });
 
 describe('geração de cobranças — idempotente e sem reescrever o passado', () => {
-  it('gera as competências que faltam com vencimento dia 5 do mês seguinte (dia útil)', () => {
+  it('gera as competências que faltam com vencimento dia 5 do mês cobrado (dia útil)', () => {
     const r = planCharges(plan(), prices, [], '2026-03-01', CLUB_DEFAULT_DUE_RULE, cal);
     expect(r.create.map((c) => [c.competenceMonth, c.dueDate, c.originalAmountCents])).toEqual([
-      ['2026-01-01', '2026-02-05', 10000],
-      ['2026-02-01', '2026-03-05', 10000],
-      ['2026-03-01', '2026-04-06', 10000], // 5/4 é domingo
+      ['2026-01-01', '2026-01-05', 10000],
+      ['2026-02-01', '2026-02-05', 10000],
+      ['2026-03-01', '2026-03-05', 10000],
+    ]);
+  });
+
+  it('com a opção "mês seguinte", o vencimento cai no dia 5 do mês seguinte', () => {
+    const r = planCharges(plan(), prices, [], '2026-03-01', { ...CLUB_DEFAULT_DUE_RULE, monthOffset: 1 }, cal);
+    expect(r.create.map((c) => [c.competenceMonth, c.dueDate])).toEqual([
+      ['2026-01-01', '2026-02-05'], ['2026-02-01', '2026-03-05'], ['2026-03-01', '2026-04-06'], // 5/4 é domingo
     ]);
   });
 
@@ -81,8 +88,9 @@ describe('geração de cobranças — idempotente e sem reescrever o passado', (
     expect(r.create.map((c) => c.competenceMonth)).toEqual(['2026-01-01']);
   });
 
-  it('vencimento próprio do sócio substitui o global', () => {
-    const r = planCharges(plan({ dueDay: 10, dueMonthOffset: 0 }), prices, [], '2026-01-01', CLUB_DEFAULT_DUE_RULE, cal);
+  it('vencimento próprio do sócio substitui o global (dia e mês)', () => {
+    const global = { ...CLUB_DEFAULT_DUE_RULE, monthOffset: 1 }; // global: mês seguinte; o sócio escolheu o mês cobrado
+    const r = planCharges(plan({ dueDay: 10, dueMonthOffset: 0 }), prices, [], '2026-01-01', global, cal);
     expect(r.create[0].dueDate).toBe('2026-01-12'); // dia 10 é sábado → segunda 12
   });
 

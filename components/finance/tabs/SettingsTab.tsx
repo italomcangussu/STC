@@ -215,12 +215,12 @@ const HolidaysSection: React.FC<{ holidays: FinHoliday[]; onChanged: () => void 
   };
 
   return (
-    <Card title="Calendário de feriados" subtitle="Definem o dia útil do vencimento. Nacionais vêm da lei; cadastre os locais." right={<CalendarDays size={18} className="text-stone-300" />}>
+    <Card title="Calendário de feriados" subtitle="O vencimento só pula sábado e domingo. Marque um feriado para que ele também seja pulado." right={<CalendarDays size={18} className="text-stone-300" />}>
       <div className="mb-3 flex items-center gap-2">
         <button className={btnGhost} aria-label="Ano anterior" onClick={() => setYear((y) => y - 1)}>‹</button><span className="min-w-14 text-center text-sm font-black">{year}</span><button className={btnGhost} aria-label="Próximo ano" onClick={() => setYear((y) => y + 1)}>›</button>
-        <button className={btnGhost} disabled={busy} onClick={() => run(() => seedHolidays(year, key), `Feriados nacionais de ${year} carregados.`)}>Carregar nacionais de {year}</button>
+        <button className={btnGhost} disabled={busy} onClick={() => run(() => seedHolidays(year, key), `Feriados nacionais de ${year} carregados (desativados: ative os que o vencimento deve pular).`)}>Carregar nacionais de {year}</button>
       </div>
-      {list.length === 0 ? <Empty title={`Sem feriados em ${year}`} hint="Carregue os nacionais e cadastre os municipais (ex.: aniversário da cidade)." /> : (
+      {list.length === 0 ? <Empty title={`Sem feriados em ${year}`} hint="Carregue os nacionais para consultar e cadastre os municipais. Nenhum conta até você ativar." /> : (
         <ul className="space-y-1.5">
           {list.map((h) => (
             <li key={h.id}>
