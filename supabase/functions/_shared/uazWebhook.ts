@@ -54,7 +54,7 @@ export type PresenceState = 'composing' | 'recording' | 'paused' | 'available';
 export type UazEvent =
   | { kind: 'message'; message: IncomingMessage }
   | { kind: 'reaction'; targetId: string; emoji: string; fromMe: boolean }
-  | { kind: 'edit'; targetId: string; body: string }
+  | { kind: 'edit'; targetId: string; body: string; mentions: MentionInfo | null }
   | { kind: 'delete'; targetId: string }
   | { kind: 'status'; updates: StatusUpdate[] }
   | { kind: 'presence'; phone: string; state: PresenceState }
@@ -185,7 +185,7 @@ export function parseUazWebhook(payload: Rec, now: () => number = Date.now): Uaz
   // Edição: `edited` aponta sempre para o id original.
   if (texto(message.edited)) {
     const body = texto(message.text ?? content?.text ?? content?.conversation);
-    return body ? { kind: 'edit', targetId: texto(message.edited), body } : { kind: 'ignored', reason: 'edicao_vazia' };
+    return body ? { kind: 'edit', targetId: texto(message.edited), body, mentions: group && !fromMe ? extractMentions(message, body) : null } : { kind: 'ignored', reason: 'edicao_vazia' };
   }
   // Apagar para todos: protocolMessage do tipo revoke.
   const protocolo = asRec(content?.protocolMessage) ?? (tipoBruto === 'protocolmessage' ? content : null);
