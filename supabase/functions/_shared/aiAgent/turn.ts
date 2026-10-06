@@ -32,6 +32,9 @@ export type Slots = {
   type?: 'Play' | 'Aula' | null;
   date?: string | null;
   start?: string | null;
+  /** Janela para consultas de disponibilidade. Ex.: noite = 18:00–23:00. */
+  availability_from?: string | null;
+  availability_to?: string | null;
   duration?: number | null;
   court_label?: string | null;
   participant_names?: string[];
@@ -46,7 +49,7 @@ export type Slots = {
   remove_guest?: boolean;
 };
 
-export type Intent = 'reservar' | 'cancelar' | 'remarcar' | 'consultar' | 'informar' | 'entrar' | 'participantes' | 'outro';
+export type Intent = 'reservar' | 'cancelar' | 'remarcar' | 'consultar' | 'consultar_disponibilidade' | 'informar' | 'entrar' | 'participantes' | 'outro';
 
 export type Answer = {
   messages: string[];
@@ -62,6 +65,8 @@ export type Answer = {
   close: boolean;
   /** Resumo compactado da conversa (o agente reescreve a cada turno); ausente = manter o anterior. */
   summary?: string | null;
+  /** Aprendizados sociais candidatos; o servidor só registra como pendentes para revisão. */
+  memory_candidates?: { subject_name: string; kind: string; content: string; confidence?: number }[];
 };
 
 /* ------------------------------- Parse (soft-fail) ------------------------------- */
@@ -77,7 +82,7 @@ function lerJson(output: string): Record<string, unknown> | null {
 
 const str = (v: unknown): string | null => (typeof v === 'string' && v.trim() ? v.trim() : null);
 const strList = (v: unknown): string[] => (Array.isArray(v) ? v.map((x) => String(x ?? '').trim()).filter(Boolean).slice(0, 8) : []);
-const INTENTS: Intent[] = ['reservar', 'cancelar', 'remarcar', 'consultar', 'informar', 'entrar', 'participantes', 'outro'];
+const INTENTS: Intent[] = ['reservar', 'cancelar', 'remarcar', 'consultar', 'consultar_disponibilidade', 'informar', 'entrar', 'participantes', 'outro'];
 const ACTIONABLE: Intent[] = ['reservar', 'cancelar', 'remarcar'];
 
 /**
@@ -90,6 +95,8 @@ export function parseSlots(raw: unknown): Slots {
   if (o.type === 'Play' || o.type === 'Aula') out.type = o.type; else if ('type' in o) out.type = null;
   if (typeof o.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(o.date)) out.date = o.date; else if ('date' in o) out.date = null;
   if (typeof o.start === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(o.start)) out.start = o.start; else if ('start' in o) out.start = null;
+  if (typeof o.availability_from === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(o.availability_from)) out.availability_from = o.availability_from; else if ('availability_from' in o) out.availability_from = null;
+  if (typeof o.availability_to === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(o.availability_to)) out.availability_to = o.availability_to; else if ('availability_to' in o) out.availability_to = null;
   if (typeof o.duration === 'number' && [30, 60, 90, 120].includes(o.duration)) out.duration = o.duration; else if ('duration' in o) out.duration = null;
   if ('court_label' in o) out.court_label = str(o.court_label);
   if ('participant_names' in o) out.participant_names = strList(o.participant_names);
@@ -131,6 +138,17 @@ export function parseAnswer(output: string): Answer {
     transfer, handoff_kind: obj.handoff_kind === 'soft' || obj.handoff_kind === 'hard' ? obj.handoff_kind : transfer ? 'hard' : null,
     handoff_note: str(obj.handoff_note)?.slice(0, 500) ?? null, close: obj.close === true && !transfer,
     summary: clipSummary(obj.summary),
+    memory_candidates: Array.isArray(obj.memory_candidates)
+      ? obj.memory_candidates.slice(0, 2).map((x) => {
+          const m = x && typeof x === 'object' && !Array.isArray(x) ? x as Record<string, unknown> : {};
+          return {
+            subject_name: str(m.subject_name)?.slice(0, 120) ?? '',
+            kind: str(m.kind)?.slice(0, 40) ?? '',
+            content: str(m.content)?.slice(0, 500) ?? '',
+            confidence: typeof m.confidence === 'number' ? Math.max(0, Math.min(1, m.confidence)) : undefined,
+          };
+        }).filter((x) => x.subject_name && x.kind && x.content)
+      : [],
   };
 }
 
@@ -208,6 +226,49 @@ export function wantsHuman(text: string, keywords: string[]): boolean {
   if (!asksForHuman(text, keywords)) return false;
   const palavras = text.trim().split(/\s+/).filter(Boolean).length;
   return palavras <= 5 || STRONG_HUMAN.test(norm(text));
+}
+
+/** Consulta de disponibilidade é uma capacidade central do João e nunca deve cair em handoff genérico. */
+export function looksLikeAvailabilityQuery(text: string): boolean {
+  const t = norm(text).replace(/\s+/g, ' ').trim();
+  return /\b(horarios?|quadras?)\s+(livres?|disponiveis?)\b/.test(t)
+    || /\b(quais?|qual|tem|ha|confere|olha|veja)\b.{0,80}\b(quadra|horario|play)\b.{0,80}\b(livre|disponivel|vaga)\b/.test(t)
+    || /\b(quadra|horario|play)\b.{0,80}\b(livre|disponivel|vaga)\b/.test(t);
+}
+
+const addIsoDays = (iso: string, days: number) => {
+  const d = new Date(iso.slice(0, 10) + 'T12:00:00Z');
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+};
+
+/** Fallback determinístico para consultas óbvias, caso o modelo tente transferir ou esqueça a janela. */
+export function availabilityFallbackSlots(text: string, nowLocal: string, current: Slots = {}): Slots {
+  const t = norm(text);
+  const out: Slots = { ...current };
+  const today = nowLocal.slice(0, 10);
+  if (!out.date) {
+    if (/\bamanha\b/.test(t)) out.date = addIsoDays(today, 1);
+    else if (/\bhoje\b/.test(t)) out.date = today;
+  }
+  if (!out.availability_from && !out.availability_to) {
+    if (/\b(manha|pela manha|de manha)\b/.test(t)) { out.availability_from = '05:00'; out.availability_to = '12:00'; }
+    else if (/\b(tarde|a tarde|de tarde)\b/.test(t)) { out.availability_from = '12:00'; out.availability_to = '18:00'; }
+    else if (/\b(noite|a noite|de noite)\b/.test(t)) { out.availability_from = '18:00'; out.availability_to = '23:00'; }
+  }
+  const depois = t.match(/\bdepois\s+d(?:as?|e)\s+(\d{1,2})(?::(\d{2}))?\s*h?\b/);
+  if (depois) {
+    const hh = Math.max(0, Math.min(23, Number(depois[1])));
+    const mm = depois[2] ? Number(depois[2]) : 0;
+    out.availability_from = String(hh).padStart(2, '0') + ':' + String(mm).padStart(2, '0');
+    out.availability_to = out.availability_to ?? '23:00';
+  }
+  const hora = t.match(/\b(?:as|a)\s+(\d{1,2})(?::(\d{2}))?\s*h?\b/);
+  if (!out.start && hora) {
+    const hh = Number(hora[1]), mm = hora[2] ? Number(hora[2]) : 0;
+    if (hh >= 0 && hh <= 23 && mm >= 0 && mm <= 59) out.start = String(hh).padStart(2, '0') + ':' + String(mm).padStart(2, '0');
+  }
+  return out;
 }
 
 /** O texto do modelo afirma que algo foi feito? Quem afirma isso é o sistema, não o modelo. */
@@ -620,6 +681,22 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
   } catch {
     return transferir('hard', 'Falha ao chamar o modelo de IA.', memory);
   }
+
+  // Defesa em profundidade: disponibilidade de quadra é núcleo do João.
+  // Mesmo se o modelo classificar como fora do escopo, o servidor assume a consulta e nunca faz handoff genérico.
+  if (looksLikeAvailabilityQuery(buffered)) {
+    answer = {
+      ...answer,
+      intent: 'consultar_disponibilidade',
+      slots: availabilityFallbackSlots(buffered, String(ctx.now_local), answer.slots),
+      transfer: false,
+      handoff_kind: null,
+      handoff_note: null,
+      close: false,
+      messages: [],
+      awaiting: false,
+    };
+  }
   for (const candidate of answer.memory_candidates ?? []) {
     await Promise.resolve(deps.db('conv_svc_ai_memory_candidate', { p: { ...candidate, source_message_id: messageId } })).catch(() => undefined);
   }
@@ -698,6 +775,9 @@ async function decide(i: DecideInput): Promise<Decision> {
   // 2b) "Quem marcou esse horário?" / "me adiciona nessa reserva": o servidor mostra quem está e oferece entrar. O modelo não escreve nada.
   if (answer.intent === 'entrar' && !answer.transfer) return entrarNoJogo(i, memory);
 
+  // 2c) "Tem quadra livre?", "quais horários livres?" — consulta real ao motor, sem exigir participantes e sem handoff.
+  if (answer.intent === 'consultar_disponibilidade' && !answer.transfer) return consultarDisponibilidade(i, memory);
+
   // 3) Pedido pronto: o servidor resolve pessoas, confere disponibilidade e monta a PROPOSTA.
   if (answer.ready && (answer.intent === 'reservar' || answer.intent === 'cancelar' || answer.intent === 'remarcar')) {
     return propose(i, memory);
@@ -705,6 +785,85 @@ async function decide(i: DecideInput): Promise<Decision> {
 
   // 4) Resto: texto do modelo (dúvida, pergunta de dado faltante, despedida).
   return plain();
+}
+
+
+function ceilHalfHour(hhmm: string): string {
+  const m = toMin(hhmm);
+  const rounded = Math.ceil(m / 30) * 30;
+  const h = Math.min(23, Math.floor(rounded / 60));
+  const mm = rounded % 60;
+  return String(h).padStart(2, '0') + ':' + String(mm).padStart(2, '0');
+}
+
+function availabilityPeriodLabel(from: string, to: string): string {
+  if (from === '05:00' && to === '12:00') return 'pela manhã';
+  if (from === '12:00' && to === '18:00') return 'à tarde';
+  if (from === '18:00' && to === '23:00') return 'à noite';
+  if (from === '05:00' && to === '23:00') return '';
+  return `entre ${from} e ${to}`;
+}
+
+/** Consulta horários livres diretamente no mesmo motor usado pelas reservas. */
+async function consultarDisponibilidade(i: DecideInput, memory: Memory): Promise<Decision> {
+  const { deps, ctx, slots, today } = i;
+  const ask = (text: string): Decision => ({ bubbles: [text], awaiting: true, close: false, action: 'ask_availability', memory });
+  const s = availabilityFallbackSlots('', String(ctx.now_local), slots);
+  if (!s.date) return ask('Pra qual dia você quer ver os horários livres?');
+
+  const type = s.type ?? 'Play';
+  const duration = s.duration ?? (type === 'Aula' ? 30 : 60);
+  const courts = (ctx.courts ?? []) as Court[];
+  const candidates = s.court_label
+    ? pickCourts(courts, type, s.court_label)
+    : type === 'Aula'
+      ? pickCourts(courts, 'Aula', null)
+      : courts;
+  if (!candidates.length) return ask(s.court_label ? 'Não encontrei essa quadra. Quer saibro ou rápida?' : 'Não achei quadra ativa para consultar agora.');
+
+  let from = s.availability_from ?? '05:00';
+  let to = s.availability_to ?? '23:00';
+  if (s.start) { from = s.start; to = s.start; }
+
+  // No dia atual não oferece horário que já passou; arredonda para o próximo início de 30 em 30 min.
+  if (s.date === today && !s.start) {
+    const localHm = String(ctx.now_local).slice(11, 16);
+    if (/^\d{2}:\d{2}$/.test(localHm) && toMin(localHm) > toMin(from)) from = ceilHalfHour(localHm);
+  }
+
+  const byTime = new Map<string, string[]>();
+  for (const court of candidates) {
+    const raw = ((await deps.db('conv_svc_available_slots', { p_date: s.date, p_court: court.id, p_duration: duration })).data ?? []) as string[];
+    for (const time of raw) {
+      const tm = toMin(time);
+      const exact = Boolean(s.start);
+      const inWindow = exact ? time === s.start : tm >= toMin(from) && tm < toMin(to) && tm + duration <= toMin(to);
+      if (!inWindow) continue;
+      const names = byTime.get(time) ?? [];
+      names.push(court.name);
+      byTime.set(time, names);
+    }
+  }
+
+  const entries = [...byTime.entries()].sort(([a], [b]) => a.localeCompare(b)).slice(0, 8);
+  const period = s.start ? `às ${s.start}` : availabilityPeriodLabel(s.availability_from ?? '05:00', s.availability_to ?? '23:00');
+  const when = [dayLabel(s.date, today), period].filter(Boolean).join(' ');
+
+  memory.intent = 'consultar_disponibilidade';
+  memory.slots = { ...memory.slots, ...s };
+
+  if (!entries.length) {
+    return {
+      bubbles: [`Não achei horário livre ${when} para ${duration} min.`, 'Quer que eu olhe outro período ou outro dia?'],
+      awaiting: true, close: false, action: 'availability_empty', memory,
+    };
+  }
+
+  const items = entries.map(([time, names]) => `${time} — ${listaNomes(names)}`);
+  return {
+    bubbles: [`${when.charAt(0).toUpperCase() + when.slice(1)} tem horário livre sim:`, items.join(' · ') + '. Qual fica melhor?'],
+    awaiting: true, close: false, action: 'availability_listed', memory,
+  };
 }
 
 async function propose(i: DecideInput, memory: Memory): Promise<Decision> {
