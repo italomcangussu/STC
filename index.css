@@ -1843,3 +1843,71 @@ input[type="datetime-local"] {
     animation: none !important;
     transition: none !important;
 }
+
+/* Conversas (admin): altura útil da caixa para que só as mensagens rolem e o campo de resposta fique à vista. */
+.conv-shell {
+    height: calc(100dvh - 13rem);
+    min-height: 26rem;
+}
+
+@media (min-width: 768px) {
+    .conv-shell {
+        height: calc(100dvh - 12rem);
+        max-height: 56rem;
+    }
+}
+
+/* Conversa aberta no celular: tela cheia sobre o painel, acompanhando a área visível medida em
+   useChatOverlay (com o teclado aberto a casca encolhe junto e o campo fica logo acima dele). */
+@media (max-width: 767px) {
+    .conv-shell.is-chat-overlay {
+        position: fixed;
+        inset: 0 0 auto 0;
+        top: 0;
+        height: var(--chat-vv-height, 100dvh);
+        min-height: 0;
+        max-height: none;
+        margin: 0;
+        border: 0;
+        border-radius: 0;
+        z-index: 60;
+    }
+
+    .conv-top-bar-floating {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 61;
+        background: #ffffff;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    :is(.is-chat-overlay, .conv-top-bar-floating) .chat-overlay-header {
+        padding-top: calc(0.5rem + env(safe-area-inset-top, 0px));
+    }
+
+    .is-chat-overlay .chat-overlay-footer {
+        padding-bottom: max(0px, calc(env(safe-area-inset-bottom, 0px) - 0.5rem));
+    }
+
+    html[data-keyboard='open'] .is-chat-overlay .chat-overlay-footer {
+        padding-bottom: 0 !important;
+    }
+
+    html[data-keyboard='open'] .is-chat-overlay .chat-composer-form {
+        padding-top: 4px;
+        padding-bottom: 3px;
+    }
+
+    html[data-keyboard='open'] .is-chat-overlay .chat-composer-form textarea {
+        min-height: 2.5rem;
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
+    }
+
+    html[data-keyboard='open'] .is-chat-overlay .chat-composer-form button {
+        height: 2.5rem;
+        width: 2.5rem;
+    }
+}

@@ -2,9 +2,9 @@ import { describe, it, expect } from 'vitest';
 import { ADMIN_GROUPS, ALL_SECTIONS, searchSections, groupOf, isAdminTabId } from '../components/admin/adminSections';
 
 describe('adminNav', () => {
-    it('cobre as 14 seções sem duplicar', () => {
-        expect(ALL_SECTIONS).toHaveLength(14);
-        expect(new Set(ALL_SECTIONS.map(s => s.id)).size).toBe(14);
+    it('cobre as 15 seções sem duplicar', () => {
+        expect(ALL_SECTIONS).toHaveLength(15);
+        expect(new Set(ALL_SECTIONS.map(s => s.id)).size).toBe(15);
     });
     it('busca ignora acentos e caixa', () => {
         expect(searchSections('Mensalidade').map(s => s.id)).toEqual(['financeiro']);
