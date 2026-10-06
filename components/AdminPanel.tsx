@@ -15,6 +15,7 @@ import { Reservation, User, Challenge, AccessRequest } from '../types';
 import { formatDateBr } from '../utils';
 import { supabase } from '../lib/supabase';
 import { notify } from '../lib/notifications';
+import { normalizeSearch } from '../lib/searchText';
 import { useConfirm } from '../hooks/useConfirm';
 import { plural } from '../utils';
 import { getNowInFortaleza, formatDate, MEMBER_ROLES } from '../utils';
@@ -626,12 +627,12 @@ const DesafiosTab: React.FC = () => {
         active: challenges.filter(c => bucketOf(c.status) === 'active').length,
         finished: challenges.filter(c => bucketOf(c.status) === 'finished').length,
     };
-    const q = query.trim().toLowerCase();
+    const q = normalizeSearch(query);
     const visibleChallenges = challenges.filter(c => {
         if (statusFilter !== 'all' && bucketOf(c.status) !== statusFilter) return false;
         if (!q) return true;
         const names = [c.challengerId, c.challengedId].map(id => profiles.find(u => u.id === id)?.name ?? '').join(' ');
-        return names.toLowerCase().includes(q);
+        return normalizeSearch(names).includes(q);
     });
 
     if (loading) {
@@ -1025,14 +1026,14 @@ const SociosTab: React.FC = () => {
         setEditingMember(member);
     };
 
-    const term = searchTerm.trim().toLowerCase();
-    const digits = term.replace(/\D/g, '');
+    const term = normalizeSearch(searchTerm);
+    const digits = searchTerm.replace(/\D/g, '');
     const visibleMembers = members.filter(m => {
         if (roleFilter === 'admin' && m.role !== 'admin') return false;
         if (roleFilter === 'professor' && !m.isProfessor) return false;
         if (!term) return true;
-        return m.name.toLowerCase().includes(term)
-            || (m.email || '').toLowerCase().includes(term)
+        return normalizeSearch(m.name).includes(term)
+            || normalizeSearch(m.email).includes(term)
             || (digits.length >= 3 && (m.phone || '').includes(digits));
     });
 

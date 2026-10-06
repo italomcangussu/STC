@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { notify } from '../lib/notifications';
+import { matchesSearch } from '../lib/searchText';
 import { useConfirm } from '../hooks/useConfirm';
 import { validateStudentForm } from '../lib/students/validateStudentForm';
 import { NonSocioStudent, Professor, User, RelationshipType, StudentProfile } from '../types';
@@ -389,7 +390,7 @@ export const AdminStudents: React.FC = () => {
 
     // --- Render ---
     const filteredStudents = students.filter(s => {
-        const matchesName = s.name.toLowerCase().includes(filter.toLowerCase());
+        const matchesName = matchesSearch(filter, s.name);
         const matchesType = studentTypeFilter === 'all'
             || (studentTypeFilter === 'regular' && s.studentType !== 'dependent')
             || (studentTypeFilter === 'dependent' && s.studentType === 'dependent');

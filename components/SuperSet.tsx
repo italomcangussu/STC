@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { notify } from '../lib/notifications';
+import { matchesSearch } from '../lib/searchText';
 import { User } from '../types';
 import { Trophy, Search, Users, ArrowRight, History, Zap, TrendingUp, Sparkles } from 'lucide-react';
 import { getNowInFortaleza, formatDate, MEMBER_ROLES } from '../utils';
@@ -238,7 +239,7 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
     // 2. If NOT searching, show ONLY today's players (smart suggestion default)
     const filteredPlayers = searchTerm
         ? players
-            .filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()))
+            .filter(p => matchesSearch(searchTerm, p.name))
             .sort((a, b) => {
                 const aToday = todayPlayers.includes(a.id) ? 1 : 0;
                 const bToday = todayPlayers.includes(b.id) ? 1 : 0;

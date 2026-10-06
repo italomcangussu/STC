@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { MEMBER_ROLES } from '../utils';
+import { matchesSearch } from '../lib/searchText';
 import {
     drawClasse5, buildClasse5Bracket,
     buildClasse4OfficialBracket,
@@ -235,7 +236,7 @@ export const ChampionshipCreator: React.FC = () => {
 
     const filteredProfiles = profiles.filter(p =>
         !athletes.some(a => a.id === p.id) && // not already registered
-        p.name.toLowerCase().includes(profileSearch.toLowerCase())
+        matchesSearch(profileSearch, p.name)
     );
 
     async function handleAddSocio(profile: Profile) {

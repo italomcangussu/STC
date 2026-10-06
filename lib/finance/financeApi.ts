@@ -149,9 +149,13 @@ export async function signedUrl(bucket: string, path: string, seconds = 120): Pr
 // ------------------------------------------------------------------
 // Mensalidades dos sócios
 // ------------------------------------------------------------------
+/** Chave de `fin_member_plans.profile_id` → `profiles` (nome gerado pelo Postgres; um teste SQL garante que existe). */
+export const PLAN_PROFILE_FK = 'fin_member_plans_profile_id_fkey';
 export interface PlanWithMember extends MemberPlanRow { profile: { name: string; avatar_url: string | null; is_active: boolean | null } | null }
 export async function listPlans(): Promise<PlanWithMember[]> {
-  const { data, error } = await supabase.from('fin_member_plans').select('*, profile:profiles(name, avatar_url, is_active)').order('created_at', { ascending: false });
+  // `fin_member_plans` aponta 3 vezes para `profiles` (sócio, criado por, alterado por): sem dizer QUAL
+  // chave usar, o PostgREST recusa a consulta por ambiguidade e a tela inteira falha ao carregar.
+  const { data, error } = await supabase.from('fin_member_plans').select(`*, profile:profiles!${PLAN_PROFILE_FK}(name, avatar_url, is_active)`).order('created_at', { ascending: false });
   if (error) throw error;
   return (data ?? []) as unknown as PlanWithMember[];
 }

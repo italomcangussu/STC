@@ -4,6 +4,7 @@ import { Search, Trophy, Mail, ArrowLeft, TrendingUp, Activity, MapPin, Clock, H
 import { User, Reservation } from '../types';
 import { supabase } from '../lib/supabase';
 import { notify } from '../lib/notifications';
+import { matchesSearch } from '../lib/searchText';
 import { useConfirm } from '../hooks/useConfirm';
 import { getNowInFortaleza, formatDateBr } from '../utils';
 import { EditProfileModal } from './EditProfileModal';
@@ -693,7 +694,7 @@ export const Athletes: React.FC<AthletesProps> = ({ initialUserId, currentUser, 
 
     const filteredUsers = users.filter(u =>
         u.role !== 'lanchonete' &&
-        u.name.toLowerCase().includes(searchTerm.toLowerCase())
+        matchesSearch(searchTerm, u.name)
     );
 
     if (loading) {
