@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
-import { asksForHuman, clipSummary, wantsHuman, cadence, claimsSuccess, dayLabel, describeReservation, mergeSlots, nearest, parseAnswer, parseSlots, pickCourts, proposalMessage, successMessage, CODE_TEXT } from '../../supabase/functions/_shared/aiAgent/turn';
+import { asksForHuman, availabilityFallbackSlots, clipSummary, wantsHuman, cadence, claimsSuccess, dayLabel, describeReservation, looksLikeAvailabilityQuery, mergeSlots, nearest, parseAnswer, parseSlots, pickCourts, proposalMessage, successMessage, CODE_TEXT } from '../../supabase/functions/_shared/aiAgent/turn';
 import { repararJson, extrairObjeto, stripCodeFence } from '../../supabase/functions/_shared/aiAgent/jsonRepair';
 import { buildChatBody, chatClient, LlmError } from '../../supabase/functions/_shared/aiAgent/llm';
 import { systemPrompt, userPrompt, type AiSettings } from '../../supabase/functions/_shared/aiAgent/prompts';
@@ -21,6 +21,8 @@ describe('leitura da resposta do modelo (soft-fail)', () => {
     expect(parseAnswer('{"transfer":true,"ready":true,"customer_confirmed":true,"close":true}')).toMatchObject({ ready: false, customer_confirmed: false, close: false, handoff_kind: 'hard' });
     expect(parseSlots({ date: '07/10/2026', start: '25:00', duration: 75, type: 'Torneio' })).toEqual({ type: null, date: null, start: null, duration: null });
     expect(parseSlots({ start: '16:00', court_label: ' saibro ' })).toEqual({ start: '16:00', court_label: 'saibro' });
+    expect(parseSlots({ availability_from: '18:00', availability_to: '23:00' })).toEqual({ availability_from: '18:00', availability_to: '23:00' });
+    expect(parseAnswer('{"intent":"consultar_disponibilidade","slots":{"date":"2026-10-06","availability_from":"18:00","availability_to":"23:00"}}').intent).toBe('consultar_disponibilidade');
   });
 
   it('o modelo "esquece" um campo: o que já se sabia fica; lista informada substitui; troca de ação recomeça', () => {
@@ -29,6 +31,25 @@ describe('leitura da resposta do modelo (soft-fail)', () => {
     expect(mergeSlots(prev, { participant_names: [] })).toMatchObject({ participant_names: [] });
     expect(mergeSlots(prev, { participants_known: false }).participants_known).toBe(true);
     expect(mergeSlots(prev, { reservation_ref: 'x' }, true)).toEqual({ reservation_ref: 'x' });
+  });
+});
+
+
+describe('consulta de disponibilidade', () => {
+  it('reconhece perguntas abertas de quadra/horário livre e extrai hoje/amanhã + período como fallback', () => {
+    expect(looksLikeAvailabilityQuery('Tem quadra livre hoje à noite?')).toBe(true);
+    expect(looksLikeAvailabilityQuery('ele quer saber quais horários livres para o play hoje')).toBe(true);
+    expect(looksLikeAvailabilityQuery('quero falar com o gerente')).toBe(false);
+
+    expect(availabilityFallbackSlots('Tem quadra livre hoje à noite?', '2026-10-06T18:24:00-03:00')).toMatchObject({
+      date: '2026-10-06', availability_from: '18:00', availability_to: '23:00',
+    });
+    expect(availabilityFallbackSlots('quais horários livres amanhã de manhã?', '2026-10-06T18:24:00-03:00')).toMatchObject({
+      date: '2026-10-07', availability_from: '05:00', availability_to: '12:00',
+    });
+    expect(availabilityFallbackSlots('tem vaga depois das 19h?', '2026-10-06T18:24:00-03:00')).toMatchObject({
+      availability_from: '19:00', availability_to: '23:00',
+    });
   });
 });
 
@@ -130,6 +151,8 @@ describe('resumo do histórico e atalho de transferência por sentido', () => {
     const sys = systemPrompt(settings, base);
     expect(sys).toContain('# ENTENDA O CONTEXTO');
     expect(sys).toContain('"summary":"..."');
+    expect(sys).toContain('consultar_disponibilidade');
+    expect(sys).toContain('NUNCA transfira para a equipe só porque a pessoa perguntou disponibilidade');
   });
 });
 
