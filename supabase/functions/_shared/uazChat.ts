@@ -29,7 +29,8 @@ export type ChatRequest =
   | { action: 'download'; messageId: string }
   | { action: 'find'; messageId: string }
   | { action: 'historySync'; number: string; messageId: string }
-  | { action: 'details'; number: string };
+  | { action: 'details'; number: string }
+  | { action: 'groupInfo'; groupJid: string };
 
 const GROUP_JID = /^[0-9A-Za-z._-]{5,64}@g\.us$/;
 
@@ -91,6 +92,10 @@ export function buildChatRequest(input: ChatRequest): UazRequest | null {
     case 'details': {
       const number = destination(input.number);
       return number ? { path: '/chat/details', body: { number, preview: true } } : null;
+    }
+    case 'groupInfo': {
+      const jid = (input.groupJid ?? '').trim();
+      return GROUP_JID.test(jid) ? { path: '/group/info', body: { groupjid: jid } } : null;
     }
   }
 }
