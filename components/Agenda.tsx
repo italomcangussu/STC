@@ -7,6 +7,7 @@ import { supabase } from '../lib/supabase';
 import { notify } from '../lib/notifications';
 import { matchesSearch } from '../lib/searchText';
 import { useConfirm } from '../hooks/useConfirm';
+import { useAgendaRealtime } from '../hooks/useAgendaRealtime';
 import { ScoreModal } from './ScoreModal';
 import { LiveScoreboard } from './LiveScoreboard';
 import { buildLiveScoreMatch } from '../lib/liveScore';
@@ -1468,24 +1469,8 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
     }, [fetchData]);
 
     // Supabase Real-time Subscription
-    useEffect(() => {
-        const channel = supabase
-            .channel('agenda-changes')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'reservations' }, () => {
-                fetchData(false);
-            })
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'matches' }, () => {
-                fetchData(false);
-            })
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'challenges' }, () => {
-                fetchData(false);
-            })
-            .subscribe();
-
-        return () => {
-            supabase.removeChannel(channel);
-        };
-    }, [fetchData]);
+    const refetchSilently = React.useCallback(() => { fetchData(false); }, [fetchData]);
+    useAgendaRealtime(refetchSilently);
 
     // Helper to get user by ID from fetched profiles
     const _getUserById = (id: string): User | undefined => {
