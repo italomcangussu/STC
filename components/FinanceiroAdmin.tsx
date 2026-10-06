@@ -9,8 +9,12 @@ import { Reservation, NonSocioStudent } from '../types';
 import { getNowInFortaleza, formatDateBr } from '../utils';
 
 
-// Day Use price constant
-const DAY_USE_PRICE = 50;
+// Valor do Day Card do convidado (o do app desde sempre). Quando o módulo financeiro novo
+// está montado, ele passa o valor configurado em `fin_settings` por prop.
+// Day Card = taxa do convidado de um sócio (acesso ao clube por um dia), derivada da
+// reserva com convidado. Aula avulsa e Card Mensal dos alunos são os pagamentos
+// registrados em `student_payments` (listados à direita) — a aula em si não gera receita.
+const DAY_CARD_PRICE = 50;
 const CARD_MENSAL_PRICE = 200;
 
 interface StudentPayment {
@@ -24,20 +28,19 @@ interface StudentPayment {
 
 const _COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
-type DayUseEntry = {
+type DayCardEntry = {
     key: string;
     reservation: Reservation;
     label: string;
 };
 
-const getReservationNonSocioIds = (r: Reservation): string[] => {
-    if (r.nonSocioStudentIds && r.nonSocioStudentIds.length > 0) return r.nonSocioStudentIds;
-    if (r.nonSocioStudentId) return [r.nonSocioStudentId];
-    if (r.type === 'Aula' && r.studentType === 'non-socio' && r.participantIds.length > 0) return r.participantIds;
-    return [];
-};
+interface FinanceiroAdminProps {
+    /** Valor do Day Card em centavos (configuração do clube). Sem a prop, vale R$ 50 como sempre. */
+    dayCardPriceCents?: number;
+}
 
-export const FinanceiroAdmin: React.FC = () => {
+export const FinanceiroAdmin: React.FC<FinanceiroAdminProps> = ({ dayCardPriceCents }) => {
+    const dayCardPrice = dayCardPriceCents !== undefined ? dayCardPriceCents / 100 : DAY_CARD_PRICE;
     const confirm = useConfirm();
     const [reservations, setReservations] = useState<Reservation[]>([]);
     const [monthlyStudents, setMonthlyStudents] = useState<NonSocioStudent[]>([]);
@@ -50,7 +53,7 @@ export const FinanceiroAdmin: React.FC = () => {
     const fetchData = async () => {
         setLoading(true);
 
-        // 1. Fetch Reservations (Play & Aula) to calculate Day Uses
+        // 1. Fetch Reservations (amistosos com convidado => Day Card)
         const { data: resData } = await supabase
             .from('reservations')
             .select('*')
@@ -124,7 +127,7 @@ export const FinanceiroAdmin: React.FC = () => {
     const handleDeletePayment = async (id: string) => {
         if (!await confirm({
             title: 'Excluir este pagamento?',
-            description: 'O pagamento de Card Mensal some do histórico e do relatório do mês.',
+            description: 'O pagamento some do histórico e do relatório do mês.',
             confirmLabel: 'Excluir pagamento',
         })) return;
 
@@ -143,7 +146,7 @@ export const FinanceiroAdmin: React.FC = () => {
         setProcessingPayment(null);
     };
 
-    const handleToggleDayUseExempt = async (reservation: Reservation) => {
+    const handleToggleDayCardExempt = async (reservation: Reservation) => {
         // A ação é um alternador, mas a pergunta antiga só falava de isentar —
         // quem estava desfazendo uma isenção lia o contrário do que ia fazer.
         const newStatus = (reservation as any).payment_status === 'exempt' ? 'paid' : 'exempt';
@@ -151,7 +154,7 @@ export const FinanceiroAdmin: React.FC = () => {
 
         if (!await confirm({
             tone: 'warning',
-            title: isentando ? 'Isentar este Day Use?' : 'Cobrar este Day Use de novo?',
+            title: isentando ? 'Isentar este Day Card?' : 'Cobrar este Day Card de novo?',
             description: isentando
                 ? 'O valor sai do relatório mensal.'
                 : 'O valor volta a contar no relatório mensal.',
@@ -166,7 +169,7 @@ export const FinanceiroAdmin: React.FC = () => {
             .eq('id', reservation.id);
 
         if (error) {
-            notify.failure(error, 'Não foi possível alterar a isenção do Day Use.', {
+            notify.failure(error, 'Não foi possível alterar a isenção do Day Card.', {
                 event: 'day_use_exempt_toggle_failed',
                 reservationId: reservation.id,
             });
@@ -188,38 +191,17 @@ export const FinanceiroAdmin: React.FC = () => {
         const activePayments = monthPayments.filter(p => p.status === 'active');
         const cancelledPayments = monthPayments.filter(p => p.status === 'cancelled');
 
-        // Group Day Uses
-        const friendlyDayUses = monthReservations.filter(r => r.type === 'Play' && r.guestName && (r as any).payment_status !== 'exempt');
-        const friendlyEntries: DayUseEntry[] = friendlyDayUses.map(r => ({
+        // Day Card dos convidados (derivado da reserva). A aula de aluno NÃO gera receita aqui:
+        // Aula avulsa e Card Mensal contam pelo pagamento registrado (activePayments).
+        const friendlyDayCards = monthReservations.filter(r => r.type === 'Play' && r.guestName && (r as any).payment_status !== 'exempt');
+        const friendlyEntries: DayCardEntry[] = friendlyDayCards.map(r => ({
             key: r.id,
             reservation: r,
             label: r.guestName || 'Convidado'
         }));
-        const studentEntries: DayUseEntry[] = monthReservations.flatMap(r => {
-            if (r.type !== 'Aula') return [];
-            if ((r as any).payment_status === 'exempt') return [];
 
-            const nonSocioIds = getReservationNonSocioIds(r);
-            const regularIds = nonSocioIds.filter(id => {
-                const s = monthlyStudents.find(st => st.id === id);
-                return s && s.studentType !== 'dependent';
-            });
-
-            return regularIds.map(id => {
-                const s = monthlyStudents.find(st => st.id === id);
-                return {
-                    key: `${r.id}_${id}`,
-                    reservation: r,
-                    label: s?.name || 'Aluno'
-                };
-            });
-        });
-
-        const friendlyCount = friendlyDayUses.length;
-        const friendlyTotal = friendlyCount * DAY_USE_PRICE;
-
-        const studentCount = studentEntries.length;
-        const studentTotal = studentCount * DAY_USE_PRICE;
+        const friendlyCount = friendlyDayCards.length;
+        const friendlyTotal = friendlyCount * dayCardPrice;
 
         // Only active payments count toward revenue
         const activePaymentsTotal = activePayments.reduce((sum, p) => sum + p.amount, 0);
@@ -228,19 +210,16 @@ export const FinanceiroAdmin: React.FC = () => {
         return {
             friendlyCount,
             friendlyTotal,
-            studentCount,
-            studentTotal,
             activePaymentsTotal,
             cancelledTotal,
-            grandTotal: friendlyTotal + studentTotal + activePaymentsTotal,
+            grandTotal: friendlyTotal + activePaymentsTotal,
             details: {
                 friendly: friendlyEntries,
-                student: studentEntries,
                 activePayments,
                 cancelledPayments
             }
         };
-    }, [reservations, studentPayments, selectedMonth, monthlyStudents]);
+    }, [reservations, studentPayments, selectedMonth, dayCardPrice]);
 
     if (loading) {
         return (
@@ -302,17 +281,17 @@ export const FinanceiroAdmin: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Day Use Total */}
+                {/* Day Card (convidados) */}
                 <div className="bg-linear-to-br from-blue-500 to-blue-600 p-6 rounded-2xl shadow-lg shadow-blue-200 text-white relative overflow-hidden group">
                     <div className="absolute right-0 bottom-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                         <Users size={60} />
                     </div>
                     <div className="relative z-10">
-                        <p className="text-[10px] font-black uppercase tracking-wider mb-2 opacity-90">Day Use</p>
-                        <p className="text-3xl font-black mb-1">R$ {(reportData.friendlyTotal + reportData.studentTotal).toFixed(2)}</p>
+                        <p className="text-[10px] font-black uppercase tracking-wider mb-2 opacity-90">Day Card (convidados)</p>
+                        <p className="text-3xl font-black mb-1">R$ {reportData.friendlyTotal.toFixed(2)}</p>
                         <div className="flex items-center gap-1 text-blue-100 text-xs font-bold">
                             <UserCheck size={14} />
-                            <span>{reportData.friendlyCount + reportData.studentCount} usos</span>
+                            <span>{reportData.friendlyCount} convidados</span>
                         </div>
                     </div>
                 </div>
@@ -338,7 +317,7 @@ export const FinanceiroAdmin: React.FC = () => {
 
             {/* Detailed Reports */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Day Use Transactions */}
+                {/* Day Card Transactions */}
                 <div className="bg-white rounded-2xl border-2 border-stone-100 overflow-hidden shadow-sm">
                     <div className="bg-linear-to-r from-blue-50 to-indigo-50 p-5 border-b-2 border-blue-100">
                         <div className="flex items-center justify-between">
@@ -347,9 +326,9 @@ export const FinanceiroAdmin: React.FC = () => {
                                     <Users className="text-blue-600" size={20} />
                                 </div>
                                 <div>
-                                    <h3 className="font-black text-stone-800">Day Uses</h3>
+                                    <h3 className="font-black text-stone-800">Day Card (convidados)</h3>
                                     <p className="text-xs text-stone-500 font-medium">
-                                        {reportData.friendlyCount + reportData.studentCount} transações • R$ {(reportData.friendlyTotal + reportData.studentTotal).toFixed(2)}
+                                        {reportData.friendlyCount} convidados • R$ {reportData.friendlyTotal.toFixed(2)}
                                     </p>
                                 </div>
                             </div>
@@ -357,13 +336,13 @@ export const FinanceiroAdmin: React.FC = () => {
                     </div>
 
                     <div className="p-5 space-y-3 max-h-[500px] overflow-y-auto">
-                        {[...reportData.details.friendly, ...reportData.details.student].length === 0 && (
+                        {reportData.details.friendly.length === 0 && (
                             <div className="text-center py-12">
                                 <Users className="mx-auto text-stone-300 mb-3" size={48} />
-                                <p className="text-stone-400 font-medium">Nenhum Day Use neste mês</p>
+                                <p className="text-stone-400 font-medium">Nenhum convidado neste mês</p>
                             </div>
                         )}
-                        {[...reportData.details.friendly, ...reportData.details.student]
+                        {reportData.details.friendly
                             .sort((a, b) => new Date(b.reservation.date).getTime() - new Date(a.reservation.date).getTime())
                             .map(entry => {
                                 const r = entry.reservation;
@@ -384,11 +363,8 @@ export const FinanceiroAdmin: React.FC = () => {
                                                     <p className="font-bold text-stone-800 truncate">
                                                         {entry.label}
                                                     </p>
-                                                    <span className={`px-2 py-0.5 text-[10px] font-black rounded-full ${r.type === 'Play'
-                                                        ? 'bg-orange-100 text-orange-700'
-                                                        : 'bg-purple-100 text-purple-700'
-                                                        }`}>
-                                                        {r.type === 'Play' ? 'AMISTOSO' : 'AULA'}
+                                                    <span className="px-2 py-0.5 text-[10px] font-black rounded-full bg-orange-100 text-orange-700">
+                                                        CONVIDADO
                                                     </span>
                                                 </div>
                                                 <p className="text-xs text-stone-500 font-medium">
@@ -397,9 +373,9 @@ export const FinanceiroAdmin: React.FC = () => {
                                             </div>
 
                                             <div className="flex items-center gap-3">
-                                                <span className="font-black text-green-600 text-lg">R$ {DAY_USE_PRICE}</span>
+                                                <span className="font-black text-green-600 text-lg">R$ {dayCardPrice}</span>
                                                 <button
-                                                    onClick={() => handleToggleDayUseExempt(r)}
+                                                    onClick={() => handleToggleDayCardExempt(r)}
                                                     disabled={isDeleting}
                                                     title="Isentar (Remover do relatório)"
                                                     className="p-2.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-all active:scale-95 disabled:opacity-50"
@@ -445,7 +421,7 @@ export const FinanceiroAdmin: React.FC = () => {
                             const studentName = monthlyStudents.find(s => s.id === p.studentId)?.name || 'Aluno Excluído';
                             const isDeleting = processingPayment === p.id;
                             const isDeleted = deleteSuccess === p.id;
-                            const amountLabel = p.amount === CARD_MENSAL_PRICE ? 'Card Mensal' : 'Day Card';
+                            const amountLabel = p.amount === CARD_MENSAL_PRICE ? 'Card Mensal' : 'Aula avulsa';
 
                             return (
                                 <div

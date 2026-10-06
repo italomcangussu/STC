@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
     Calendar, Users, Trophy, LayoutDashboard,
-    Sandwich, Menu, X, LogOut, GraduationCap, Briefcase, Swords, Settings, DollarSign, Bell, Gamepad2, Shuffle, ChevronRight, Vote
+    Sandwich, Menu, X, LogOut, GraduationCap, Briefcase, Swords, Settings, DollarSign, Bell, Gamepad2, Shuffle, ChevronRight, Vote, Wallet
 } from 'lucide-react';
 import { User } from '../types';
 import { supabase } from '../lib/supabase';
@@ -117,6 +117,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
         { id: 'tenisproplayer', label: 'TenisProPlayer', icon: <Gamepad2 size={20} />, roles: ['admin', 'socio'] },
         { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} />, roles: ['admin', 'socio'] },
         { id: 'klanches', label: 'Klanches', icon: <Sandwich size={20} />, roles: ['admin', 'socio', 'lanchonete'] },
+        { id: 'meu-financeiro', label: 'Meu financeiro', icon: <Wallet size={20} />, roles: ['admin', 'socio'] },
     ];
 
     if (currentUser.isProfessor) {

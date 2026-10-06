@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { Suspense, lazy, useState, useEffect } from 'react';
 import { Trophy, Swords,
     Search, XCircle,
     ChevronRight, Trash2, Edit, Plus, AlertCircle, Loader2, Save, Zap, History
@@ -20,7 +20,7 @@ import { StandardModal } from './StandardModal';
 
 import { SuperSet } from './SuperSet';
 
-import { FinanceiroAdmin } from './FinanceiroAdmin';
+const FinanceHub = lazy(() => import('./finance/FinanceHub').then(m => ({ default: m.FinanceHub })));
 import { AdminProfessors } from './AdminProfessors';
 import { AdminRules } from './AdminRules';
 import { AdminStudents } from './AdminStudents';
@@ -1838,7 +1838,7 @@ export const AdminPanel: React.FC = () => {
             case 'torneios': return <ChampionshipAdmin />;
             case 'reservas': return <ReservasTab />;
             case 'desafios': return <DesafiosTab />;
-            case 'financeiro': return <FinanceiroAdmin />;
+            case 'financeiro': return <Suspense fallback={<div className="flex items-center justify-center py-16"><Loader2 className="animate-spin text-saibro-600" size={28} /></div>}><FinanceHub /></Suspense>;
             case 'professores': return <AdminProfessors />;
             case 'regras': return <AdminRules />;
             case 'avisos': return <AnunciosTab />;
