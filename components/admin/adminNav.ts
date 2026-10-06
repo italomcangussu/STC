@@ -1,7 +1,7 @@
 export type AdminTabId =
     | 'dashboard' | 'formularios' | 'lancamentos' | 'superset' | 'torneios'
     | 'reservas' | 'desafios' | 'financeiro' | 'acessos' | 'socios'
-    | 'alunos' | 'professores' | 'regras' | 'avisos';
+    | 'alunos' | 'professores' | 'regras' | 'avisos' | 'conversas';
 
 export interface AdminSection {
     id: AdminTabId;
@@ -47,6 +47,7 @@ export const ADMIN_GROUPS: AdminGroup[] = [
     {
         id: 'clube', label: 'Clube', sections: [
             { id: 'financeiro', label: 'Financeiro', hint: 'Cobranças e pagamentos', keywords: ['pagamento', 'mensalidade', 'cobranca', 'dinheiro'] },
+            { id: 'conversas', label: 'Conversas', hint: 'WhatsApp, automações e IA', keywords: ['whatsapp', 'chat', 'mensagem', 'atendimento', 'automacao', 'ia', 'bot', 'grupo'] },
             { id: 'avisos', label: 'Avisos', hint: 'Comunicados aos sócios', keywords: ['comunicado', 'anuncio', 'banner'] },
             { id: 'regras', label: 'Regras', hint: 'Regras do clube', keywords: ['regulamento', 'config'] },
         ],
