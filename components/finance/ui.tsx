@@ -5,8 +5,7 @@
  * cartões em vez de tabelas largas.
  */
 import React, { useEffect, useState } from 'react';
-import { AlertTriangle, Download, Info, Loader2, X } from 'lucide-react';
-import { StandardModal } from '../StandardModal';
+import { AlertTriangle, Download, Info, Loader2 } from 'lucide-react';
 import { formatBRL, parseBRL, formatDecimalBRL } from '../../lib/finance/money';
 import { CHARGE_STATUS_LABEL, type ChargeDisplayStatus } from '../../lib/finance/memberBilling';
 import { INDICATOR_DEFINITIONS, PERIOD_LABELS, resolvePeriod, type Period, type PeriodPreset } from '../../lib/finance/reports';
@@ -115,21 +114,8 @@ export const MoneyInput: React.FC<{ value: number | null; onChange: (cents: numb
   );
 };
 
-export const Sheet: React.FC<{ open: boolean; onClose: () => void; title: string; subtitle?: string; children: React.ReactNode; footer?: React.ReactNode; wide?: boolean }> = ({ open, onClose, title, subtitle, children, footer, wide }) => (
-  <StandardModal isOpen={open} onClose={onClose} verticalAlign="end" padding="p-0 sm:p-4" ariaLabel={title}>
-    <div className={`flex max-h-[92dvh] w-screen max-w-full flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl sm:w-[92vw] sm:rounded-3xl ${wide ? 'sm:max-w-3xl' : 'sm:max-w-lg'}`}>
-      <header className="flex items-start justify-between gap-3 border-b border-stone-100 px-5 py-4">
-        <div className="min-w-0">
-          <h2 className="text-lg font-black text-stone-800">{title}</h2>
-          {subtitle && <p className="text-xs text-stone-500">{subtitle}</p>}
-        </div>
-        <button onClick={onClose} aria-label="Fechar" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-stone-400 hover:bg-stone-100"><X size={20} /></button>
-      </header>
-      <div className="min-w-0 flex-1 space-y-4 overflow-y-auto overflow-x-hidden px-5 py-4">{children}</div>
-      {footer && <footer className="flex flex-col-reverse gap-2 border-t border-stone-100 px-5 py-3 sm:flex-row sm:justify-end">{footer}</footer>}
-    </div>
-  </StandardModal>
-);
+// A folha em si é genérica e mora em `components/ui/Sheet.tsx`; o financeiro só a reexporta.
+export { Sheet } from '../ui/Sheet';
 
 /** Tag que deixa claro em que base o número foi calculado. */
 export const BasisTag: React.FC<{ basis: 'competencia' | 'caixa' | 'posicao' | 'previsao' }> = ({ basis }) => {

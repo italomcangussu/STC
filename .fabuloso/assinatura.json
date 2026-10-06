@@ -1,9 +1,10 @@
 {
   "versao": 2,
-  "geradoEm": "2026-10-06T11:44:27.041Z",
-  "commit": "85f421c8",
+  "geradoEm": "2026-10-06T12:10:11.852Z",
+  "commit": "9744c514",
   "pastas": [
     "__tests__",
+    "__tests__/admin",
     "__tests__/finance",
     "components",
     "components/TenisProPlayer",

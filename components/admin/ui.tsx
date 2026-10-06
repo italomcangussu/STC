@@ -118,3 +118,44 @@ export const AdminEmpty: React.FC<{ title: string; hint?: string; icon?: React.R
         {hint && <p className="max-w-sm text-xs text-stone-400">{hint}</p>}
     </div>
 );
+
+/** Campo de formulário do painel: 44 px de altura, `min-w-0` para nunca estourar a coluna do grid. */
+export const adminInputCls =
+    'min-h-11 w-full min-w-0 rounded-xl border border-stone-200 bg-white px-3.5 py-2.5 text-sm text-stone-800 outline-hidden placeholder:text-stone-300 focus:border-saibro-400 focus:ring-2 focus:ring-saibro-100 disabled:bg-stone-50 disabled:text-stone-400';
+
+/**
+ * Rótulo + campo + dica/erro. O `<label>` envolve o campo, então tocar no texto
+ * foca o campo e leitores de tela leem o nome certo, sem `id`/`htmlFor` soltos.
+ */
+export const AdminField: React.FC<{
+    label: React.ReactNode;
+    hint?: React.ReactNode;
+    error?: React.ReactNode;
+    children: React.ReactNode;
+    className?: string;
+}> = ({ label, hint, error, children, className = '' }) => (
+    <label className={`block min-w-0 space-y-1 ${className}`}>
+        <span className="text-[11px] font-black uppercase tracking-wider text-stone-400">{label}</span>
+        {children}
+        {error ? (
+            <span role="alert" className="block text-xs font-medium text-red-600">{error}</span>
+        ) : hint ? (
+            <span className="block text-xs text-stone-400">{hint}</span>
+        ) : null}
+    </label>
+);
+
+/** Selo de estado (Ativo/Inativo, Pago…). Cor + texto: nunca só cor. */
+export const StatusPill: React.FC<{ tone: 'good' | 'bad' | 'muted' | 'warn'; children: React.ReactNode }> = ({ tone, children }) => {
+    const cls = { good: 'bg-emerald-100 text-emerald-700', bad: 'bg-red-100 text-red-700', muted: 'bg-stone-100 text-stone-500', warn: 'bg-amber-100 text-amber-800' }[tone];
+    return <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-black uppercase tracking-wide ${cls}`}>{children}</span>;
+};
+
+/** Bloco de número no topo de uma tela: grande, com legenda curta. */
+export const StatTile: React.FC<{ label: string; value: React.ReactNode; hint?: string }> = ({ label, value, hint }) => (
+    <div className="min-w-0 rounded-2xl border border-stone-100 bg-stone-50/70 p-3">
+        <p className="truncate text-[11px] font-black uppercase tracking-wider text-stone-400">{label}</p>
+        <p className="text-2xl font-black tabular-nums text-stone-800">{value}</p>
+        {hint && <p className="truncate text-xs text-stone-400">{hint}</p>}
+    </div>
+);

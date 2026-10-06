@@ -3,14 +3,104 @@ import { supabase } from '../lib/supabase';
 import { notify } from '../lib/notifications';
 import { PointRule } from '../types';
 import { getNowInFortaleza } from '../utils';
-import { Save, Loader2, Info, Trophy, Target, Award, TrendingUp, CheckCircle2, Sparkles } from 'lucide-react';
+import { categoryOf, parsePoints, type PointRuleCategory } from '../lib/pointRules';
+import { Save, Loader2, Info, Trophy, Target, Award, CheckCircle2, Sparkles, Undo2 } from 'lucide-react';
+import { StatTile, adminBtnGhost, adminBtnPrimary } from './admin/ui';
+
+const CATEGORIES: { id: PointRuleCategory; title: string; hint: string; icon: React.ReactNode; color: string }[] = [
+    { id: 'victory', title: 'Resultados de partida', hint: 'Vitória, derrota e W.O.', icon: <Trophy className="text-green-600" size={20} />, color: 'bg-green-100' },
+    { id: 'match', title: 'Pontuação durante a partida', hint: 'Sets e games', icon: <Target className="text-blue-600" size={20} />, color: 'bg-blue-100' },
+    { id: 'ranking', title: 'Ranking e classificação', hint: 'Fases finais e posição', icon: <Award className="text-purple-600" size={20} />, color: 'bg-purple-100' },
+    { id: 'bonus', title: 'Regras especiais', hint: 'Bônus e demais casos', icon: <Sparkles className="text-amber-600" size={20} />, color: 'bg-amber-100' },
+];
+
+interface RuleRowProps {
+    rule: PointRule;
+    /** Texto digitado, se o campo foi mexido. */
+    draft: string | undefined;
+    saving: boolean;
+    justSaved: boolean;
+    onChange: (id: string, text: string) => void;
+    onSave: (rule: PointRule) => void;
+    onUndo: (id: string) => void;
+}
+
+// Estes componentes ficam FORA de `AdminRules` de propósito. Declarados dentro dele, cada tecla
+// criava um tipo de componente novo, o React desmontava a linha inteira e o campo perdia o foco:
+// no iPhone o teclado fechava a cada dígito e não dava para digitar "15".
+const RuleRow: React.FC<RuleRowProps> = ({ rule, draft, saving, justSaved, onChange, onSave, onUndo }) => {
+    const touched = draft !== undefined;
+    const parsed = touched ? parsePoints(draft) : rule.points;
+    const invalid = touched && parsed === null;
+    const dirty = touched && parsed !== null && parsed !== rule.points;
+    const label = rule.description || rule.rule_key;
+
+    const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter' && dirty && !saving) { e.preventDefault(); onSave(rule); }
+        if (e.key === 'Escape' && touched) { e.preventDefault(); onUndo(rule.id); }
+    };
+
+    const tone = dirty
+        ? 'border-amber-200 bg-amber-50'
+        : justSaved
+            ? 'border-green-200 bg-green-50'
+            : 'border-stone-100 bg-white';
+
+    return (
+        <li className={`rounded-2xl border p-4 transition-colors ${tone}`}>
+            <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                    <p className="text-sm font-bold leading-snug text-stone-800">{label}</p>
+                    <p className="mt-0.5 truncate font-mono text-[11px] text-stone-400">{rule.rule_key}</p>
+                    {dirty && <p className="mt-1.5 text-xs font-bold text-amber-700">Era {rule.points} · alterado, falta salvar</p>}
+                    {justSaved && (
+                        <p className="mt-1.5 flex items-center gap-1 text-xs font-bold text-green-700" role="status">
+                            <CheckCircle2 size={14} /> Salvo
+                        </p>
+                    )}
+                </div>
+                <label className="shrink-0">
+                    <span className="sr-only">Pontos: {label}</span>
+                    <input
+                        type="number"
+                        step={1}
+                        value={touched ? draft : rule.points}
+                        onChange={e => onChange(rule.id, e.target.value)}
+                        onKeyDown={onKeyDown}
+                        aria-invalid={invalid}
+                        className={`h-12 w-24 rounded-xl border-2 text-center text-lg font-black outline-hidden transition-colors ${invalid
+                            ? 'border-red-400 bg-white text-red-700 ring-4 ring-red-100'
+                            : dirty
+                                ? 'border-amber-400 bg-white text-amber-700 ring-4 ring-amber-100'
+                                : 'border-stone-200 bg-stone-50 text-stone-800 focus:border-saibro-500 focus:ring-4 focus:ring-saibro-100'}`}
+                    />
+                    <span className="mt-1 block text-center text-[10px] font-black uppercase tracking-wider text-stone-400">pontos</span>
+                </label>
+            </div>
+
+            {invalid && <p role="alert" className="mt-2 text-xs font-medium text-red-600">Digite um número inteiro (ex.: 10 ou -5).</p>}
+
+            {touched && (
+                <div className="mt-3 flex justify-end gap-2">
+                    <button type="button" onClick={() => onUndo(rule.id)} className={adminBtnGhost}>
+                        <Undo2 size={16} /> Desfazer
+                    </button>
+                    <button type="button" onClick={() => onSave(rule)} disabled={!dirty || saving} className={`${adminBtnPrimary} sm:w-auto`}>
+                        {saving ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />} Salvar
+                    </button>
+                </div>
+            )}
+        </li>
+    );
+};
 
 export const AdminRules: React.FC = () => {
     const [rules, setRules] = useState<PointRule[]>([]);
     const [loading, setLoading] = useState(true);
-    const [saving, setSaving] = useState<string | null>(null);
-    const [edits, setEdits] = useState<Record<string, number>>({});
-    const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
+    const [loadFailed, setLoadFailed] = useState(false);
+    const [saving, setSaving] = useState<Set<string>>(new Set());
+    const [drafts, setDrafts] = useState<Record<string, string>>({});
+    const [savedId, setSavedId] = useState<string | null>(null);
 
     useEffect(() => {
         fetchRules();
@@ -18,258 +108,180 @@ export const AdminRules: React.FC = () => {
 
     const fetchRules = async () => {
         setLoading(true);
+        setLoadFailed(false);
         const { data, error } = await supabase
             .from('point_rules')
             .select('*')
             .order('rule_key');
 
-        if (data) setRules(data);
-        if (error) console.error('Error fetching rules:', error);
+        if (error) {
+            setLoadFailed(true);
+            notify.failure(error, 'Não foi possível carregar as regras de pontuação.', { event: 'point_rules_load_failed' });
+        } else {
+            setRules(data ?? []);
+        }
         setLoading(false);
     };
 
-    const handleEditChange = (id: string, value: string) => {
-        const numValue = parseInt(value, 10);
-        if (!isNaN(numValue)) {
-            setEdits(prev => ({ ...prev, [id]: numValue }));
-        }
+    const handleChange = (id: string, text: string) => {
+        setDrafts(prev => {
+            const rule = rules.find(r => r.id === id);
+            // Voltar ao valor original desfaz a edição: não sobra "alterado" sem diferença nenhuma.
+            if (rule && parsePoints(text) === rule.points) {
+                const { [id]: _drop, ...rest } = prev;
+                return rest;
+            }
+            return { ...prev, [id]: text };
+        });
     };
 
-    const handleSave = async (rule: PointRule) => {
-        const newValue = edits[rule.id];
-        if (newValue === undefined || newValue === rule.points) return;
+    const handleUndo = (id: string) => setDrafts(prev => {
+        const { [id]: _drop, ...rest } = prev;
+        return rest;
+    });
 
-        setSaving(rule.id);
+    /** Grava uma regra; devolve true se deu certo. Quem chama decide o que dizer ao usuário. */
+    const persist = async (rule: PointRule): Promise<boolean> => {
+        const newValue = parsePoints(drafts[rule.id] ?? '');
+        if (newValue === null || newValue === rule.points) return false;
+
+        setSaving(prev => new Set(prev).add(rule.id));
         try {
             const { error } = await supabase
                 .from('point_rules')
                 .update({ points: newValue, updated_at: getNowInFortaleza().toISOString() })
                 .eq('id', rule.id);
-
             if (error) throw error;
 
             setRules(prev => prev.map(r => r.id === rule.id ? { ...r, points: newValue } : r));
-            setEdits(prev => {
-                const newEdits = { ...prev };
-                delete newEdits[rule.id];
-                return newEdits;
-            });
-
-            setSaveSuccess(rule.id);
-            setTimeout(() => setSaveSuccess(null), 2000);
-
+            handleUndo(rule.id);
+            return true;
         } catch (error) {
-            notify.failure(error, 'Não foi possível atualizar a regra de pontuação.', {
+            notify.failure(error, `Não foi possível atualizar "${rule.description || rule.rule_key}".`, {
                 event: 'point_rule_update_failed',
                 ruleId: rule.id,
             });
+            return false;
         } finally {
-            setSaving(null);
+            setSaving(prev => {
+                const next = new Set(prev);
+                next.delete(rule.id);
+                return next;
+            });
         }
     };
 
-    // Categorize rules
-    const categorizedRules = useMemo(() => {
-        const categories: Record<string, PointRule[]> = {
-            victory: [],
-            match: [],
-            ranking: [],
-            bonus: []
-        };
+    const handleSave = async (rule: PointRule) => {
+        if (await persist(rule)) {
+            setSavedId(rule.id);
+            setTimeout(() => setSavedId(current => (current === rule.id ? null : current)), 2500);
+        }
+    };
 
-        rules.forEach(rule => {
-            const key = rule.rule_key.toLowerCase();
-            if (key.includes('victory') || key.includes('defeat') || key.includes('wo')) {
-                categories.victory.push(rule);
-            } else if (key.includes('set') || key.includes('game')) {
-                categories.match.push(rule);
-            } else if (key.includes('ranking') || key.includes('final')) {
-                categories.ranking.push(rule);
-            } else {
-                categories.bonus.push(rule);
-            }
-        });
+    const dirtyRules = rules.filter(r => {
+        const p = drafts[r.id] === undefined ? null : parsePoints(drafts[r.id]);
+        return p !== null && p !== r.points;
+    });
+    const invalidCount = Object.keys(drafts).filter(id => parsePoints(drafts[id]) === null).length;
 
-        return categories;
+    const handleSaveAll = async () => {
+        const results = await Promise.all(dirtyRules.map(persist));
+        const ok = results.filter(Boolean).length;
+        if (ok > 0) notify.success(ok === 1 ? '1 regra atualizada.' : `${ok} regras atualizadas.`);
+    };
+
+    const byCategory = useMemo(() => {
+        const groups: Record<PointRuleCategory, PointRule[]> = { victory: [], match: [], ranking: [], bonus: [] };
+        rules.forEach(rule => groups[categoryOf(rule.rule_key)].push(rule));
+        return groups;
     }, [rules]);
 
-    // Calculate stats
-    const totalRules = rules.length;
-    const modifiedRules = Object.keys(edits).length;
     const avgPoints = rules.length > 0
         ? Math.round(rules.reduce((sum, r) => sum + r.points, 0) / rules.length)
         : 0;
+    const anySaving = saving.size > 0;
 
     if (loading) {
         return (
-            <div className="flex flex-col items-center justify-center py-20">
-                <Loader2 className="animate-spin text-saibro-600 mb-4" size={40} />
-                <p className="text-stone-500 font-medium">Carregando regras de pontuação...</p>
+            <div className="flex flex-col items-center justify-center py-20" role="status">
+                <Loader2 className="mb-4 animate-spin text-saibro-600" size={40} />
+                <p className="font-medium text-stone-500">Carregando regras de pontuação...</p>
             </div>
         );
     }
 
-    const RuleCard: React.FC<{ rule: PointRule }> = ({ rule }) => {
-        const hasChanges = edits[rule.id] !== undefined && edits[rule.id] !== rule.points;
-        const isSaved = saveSuccess === rule.id;
-
+    if (loadFailed) {
         return (
-            <div className={`group p-5 rounded-xl border transition-all duration-300 ${hasChanges
-                ? 'bg-amber-50 border-amber-200 shadow-md'
-                : isSaved
-                    ? 'bg-green-50 border-green-200 shadow-md'
-                    : 'bg-white border-stone-100 hover:border-saibro-200 hover:shadow-sm'
-                }`}>
-                <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-2">
-                            <h4 className="font-black text-stone-800 text-sm tracking-tight uppercase">
-                                {rule.rule_key}
-                            </h4>
-                            {hasChanges && (
-                                <span className="px-2 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded-full animate-pulse">
-                                    MODIFICADO
-                                </span>
-                            )}
-                            {isSaved && (
-                                <CheckCircle2 className="text-green-600 animate-in zoom-in-50 duration-200" size={16} />
-                            )}
-                        </div>
-                        <p className="text-sm text-stone-600 leading-relaxed">{rule.description}</p>
-                    </div>
+            <div className="space-y-3 rounded-2xl border border-red-100 bg-red-50 p-6 text-center" role="alert">
+                <p className="text-sm font-bold text-red-700">Não foi possível carregar as regras de pontuação.</p>
+                <button className={adminBtnGhost} onClick={fetchRules}>Tentar de novo</button>
+            </div>
+        );
+    }
 
-                    <div className="flex items-center gap-3">
-                        <div className="flex flex-col items-end">
-                            <label className="text-[9px] font-black uppercase text-stone-400 tracking-wider mb-1.5">Pontos</label>
-                            <input
-                                type="number"
-                                value={edits[rule.id] !== undefined ? edits[rule.id] : rule.points}
-                                onChange={e => handleEditChange(rule.id, e.target.value)}
-                                className={`w-20 px-3 py-2.5 border-2 rounded-xl text-center font-black text-lg transition-all outline-hidden ${hasChanges
-                                    ? 'border-amber-400 bg-white text-amber-700 ring-4 ring-amber-100'
-                                    : 'border-stone-200 bg-stone-50 text-stone-800 focus:border-saibro-500 focus:ring-4 focus:ring-saibro-100'
-                                    }`}
-                            />
-                        </div>
+    return (
+        <div className="space-y-5 animate-in fade-in duration-300">
+            <div className="grid grid-cols-3 gap-2">
+                <StatTile label="Regras" value={rules.length} />
+                <StatTile label="Média" value={avgPoints} hint="por regra" />
+                <StatTile label="Não salvas" value={dirtyRules.length} hint={dirtyRules.length > 0 ? 'falta salvar' : 'tudo salvo'} />
+            </div>
 
-                        <button
-                            onClick={() => handleSave(rule)}
-                            disabled={!hasChanges || saving === rule.id}
-                            className={`p-3 rounded-xl transition-all duration-200 font-bold ${hasChanges
-                                ? 'bg-linear-to-br from-saibro-600 to-saibro-700 text-white hover:from-saibro-700 hover:to-saibro-800 shadow-lg shadow-saibro-200 active:scale-95'
-                                : 'bg-stone-100 text-stone-300 cursor-not-allowed'
-                                }`}
-                        >
-                            {saving === rule.id ? (
-                                <Loader2 className="animate-spin" size={20} />
-                            ) : (
-                                <Save size={20} />
-                            )}
+            <div className="flex gap-3 rounded-2xl border border-sky-200 bg-sky-50 p-4 text-sky-900">
+                <Info className="mt-0.5 shrink-0 text-sky-600" size={20} aria-hidden />
+                <p className="text-sm leading-relaxed">
+                    Estes valores valem para as <strong>novas partidas</strong>. Partidas antigas podem não ser recalculadas.
+                    Mude o número, confira a linha em destaque e toque em <strong>Salvar</strong> (ou Enter).
+                </p>
+            </div>
+
+            {(dirtyRules.length > 1 || invalidCount > 0) && (
+                <div className="sticky top-2 z-10 flex flex-col gap-2 rounded-2xl border border-amber-200 bg-amber-50 p-3 shadow-lg shadow-amber-900/5 sm:flex-row sm:items-center sm:justify-between" role="region" aria-label="Alterações não salvas">
+                    <p className="text-sm font-bold text-amber-800">
+                        {dirtyRules.length} {dirtyRules.length === 1 ? 'alteração não salva' : 'alterações não salvas'}
+                        {invalidCount > 0 && <span className="font-medium text-red-600"> · {invalidCount} com valor inválido</span>}
+                    </p>
+                    <div className="flex gap-2">
+                        <button type="button" className={`${adminBtnGhost} flex-1 sm:flex-none`} onClick={() => setDrafts({})} disabled={anySaving}>
+                            Descartar
+                        </button>
+                        <button type="button" className={`${adminBtnPrimary} flex-1 sm:w-auto sm:flex-none`} onClick={handleSaveAll} disabled={anySaving || dirtyRules.length === 0 || invalidCount > 0}>
+                            {anySaving ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />} Salvar tudo
                         </button>
                     </div>
                 </div>
-            </div>
-        );
-    };
+            )}
 
-    const CategorySection: React.FC<{ title: string; icon: React.ReactNode; rules: PointRule[]; color: string }> = ({ title, icon, rules, color }) => {
-        if (rules.length === 0) return null;
-
-        return (
-            <div className="space-y-3">
-                <div className="flex items-center gap-3 px-2">
-                    <div className={`p-2 rounded-lg ${color}`}>
-                        {icon}
-                    </div>
-                    <div>
-                        <h3 className="font-black text-stone-800 text-base">{title}</h3>
-                        <p className="text-xs text-stone-500 font-medium">{rules.length} regra{rules.length > 1 ? 's' : ''}</p>
-                    </div>
-                </div>
-                <div className="space-y-3">
-                    {rules.map(rule => <RuleCard key={rule.id} rule={rule} />)}
-                </div>
-            </div>
-        );
-    };
-
-    return (
-        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-6 duration-700">
-            {/* Header with Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-linear-to-br from-blue-500 to-blue-600 p-6 rounded-2xl shadow-lg shadow-blue-200 text-white">
-                    <div className="flex items-center justify-between mb-3">
-                        <Trophy className="opacity-80" size={28} />
-                        <Sparkles className="opacity-60" size={20} />
-                    </div>
-                    <p className="text-xs font-bold uppercase tracking-wider opacity-90 mb-1">Total de Regras</p>
-                    <p className="text-4xl font-black">{totalRules}</p>
-                </div>
-
-                <div className="bg-linear-to-br from-amber-500 to-amber-600 p-6 rounded-2xl shadow-lg shadow-amber-200 text-white">
-                    <div className="flex items-center justify-between mb-3">
-                        <Target className="opacity-80" size={28} />
-                        <TrendingUp className="opacity-60" size={20} />
-                    </div>
-                    <p className="text-xs font-bold uppercase tracking-wider opacity-90 mb-1">Média de Pontos</p>
-                    <p className="text-4xl font-black">{avgPoints}</p>
-                </div>
-
-                <div className={`p-6 rounded-2xl shadow-lg text-white transition-all duration-500 ${modifiedRules > 0
-                    ? 'bg-linear-to-br from-red-500 to-red-600 shadow-red-200 animate-pulse'
-                    : 'bg-linear-to-br from-green-500 to-green-600 shadow-green-200'
-                    }`}>
-                    <div className="flex items-center justify-between mb-3">
-                        <Award className="opacity-80" size={28} />
-                        {modifiedRules > 0 && <div className="w-3 h-3 bg-white rounded-full animate-ping" />}
-                    </div>
-                    <p className="text-xs font-bold uppercase tracking-wider opacity-90 mb-1">Alterações Pendentes</p>
-                    <p className="text-4xl font-black">{modifiedRules}</p>
-                </div>
-            </div>
-
-            {/* Alert Info */}
-            <div className="bg-linear-to-r from-indigo-50 to-purple-50 border-2 border-indigo-200 p-5 rounded-2xl flex gap-4 shadow-sm">
-                <Info className="shrink-0 mt-0.5 text-indigo-600" size={24} />
-                <div>
-                    <h4 className="font-black text-indigo-900 mb-1.5">Configuração Global de Pontuação</h4>
-                    <p className="text-sm text-indigo-700 leading-relaxed">
-                        Alterar estes valores afetará a pontuação calculada para <strong>novas partidas</strong>.
-                        Partidas antigas podem não ser recalculadas automaticamente.
-                        Salve cada alteração individualmente clicando no botão <Save className="inline" size={14} />.
-                    </p>
-                </div>
-            </div>
-
-            {/* Categorized Rules */}
             <div className="space-y-8">
-                <CategorySection
-                    title="Resultados de Partida"
-                    icon={<Trophy className="text-green-600" size={20} />}
-                    rules={categorizedRules.victory}
-                    color="bg-green-100"
-                />
-
-                <CategorySection
-                    title="Pontuação Durante a Partida"
-                    icon={<Target className="text-blue-600" size={20} />}
-                    rules={categorizedRules.match}
-                    color="bg-blue-100"
-                />
-
-                <CategorySection
-                    title="Ranking e Classificação"
-                    icon={<Award className="text-purple-600" size={20} />}
-                    rules={categorizedRules.ranking}
-                    color="bg-purple-100"
-                />
-
-                <CategorySection
-                    title="Regras Especiais"
-                    icon={<Sparkles className="text-amber-600" size={20} />}
-                    rules={categorizedRules.bonus}
-                    color="bg-amber-100"
-                />
+                {CATEGORIES.map(cat => {
+                    const list = byCategory[cat.id];
+                    if (list.length === 0) return null;
+                    return (
+                        <section key={cat.id} className="space-y-3" aria-labelledby={`rules-${cat.id}`}>
+                            <div className="flex items-center gap-3 px-1">
+                                <div className={`rounded-lg p-2 ${cat.color}`}>{cat.icon}</div>
+                                <div className="min-w-0">
+                                    <h3 id={`rules-${cat.id}`} className="text-base font-black text-stone-800">{cat.title}</h3>
+                                    <p className="text-xs font-medium text-stone-500">{cat.hint} · {list.length} {list.length === 1 ? 'regra' : 'regras'}</p>
+                                </div>
+                            </div>
+                            <ul className="space-y-3">
+                                {list.map(rule => (
+                                    <RuleRow
+                                        key={rule.id}
+                                        rule={rule}
+                                        draft={drafts[rule.id]}
+                                        saving={saving.has(rule.id)}
+                                        justSaved={savedId === rule.id}
+                                        onChange={handleChange}
+                                        onSave={handleSave}
+                                        onUndo={handleUndo}
+                                    />
+                                ))}
+                            </ul>
+                        </section>
+                    );
+                })}
             </div>
         </div>
     );

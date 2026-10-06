@@ -1,16 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import { notify } from '../lib/notifications';
 import { useConfirm } from '../hooks/useConfirm';
 import { Professor, NonSocioStudent } from '../types';
 import { Users, GraduationCap, Loader2, ChevronRight, ChevronDown, Plus, Edit, Trash2 } from 'lucide-react';
-import { StandardModal } from './StandardModal';
+import { Sheet } from './ui/Sheet';
+import { AdminEmpty, AdminField, AdminPageHeader, StatTile, StatusPill, adminBtnGhost, adminBtnPrimary, adminInputCls } from './admin/ui';
 
 // --- Modal Component ---
+interface ProfessorFormData {
+    name: string;
+    bio: string;
+    is_active: boolean;
+}
+
 interface ProfessorModalProps {
     professor?: Professor | null;
     onClose: () => void;
-    onSave: (data: any) => Promise<void>;
+    onSave: (data: ProfessorFormData) => Promise<void>;
 }
 
 const ProfessorModal: React.FC<ProfessorModalProps> = ({ professor, onClose, onSave }) => {
@@ -18,12 +25,17 @@ const ProfessorModal: React.FC<ProfessorModalProps> = ({ professor, onClose, onS
     const [bio, setBio] = useState(professor?.bio || '');
     const [isActive, setIsActive] = useState(professor?.isActive ?? true);
     const [saving, setSaving] = useState(false);
+    const [touched, setTouched] = useState(false);
+
+    const trimmed = name.trim();
+    const nameError = trimmed.length < 2 ? 'Informe o nome do professor (mínimo 2 letras).' : undefined;
 
     const handleSubmit = async () => {
-        if (!name) return;
+        setTouched(true);
+        if (nameError) return;
         setSaving(true);
         try {
-            await onSave({ name, bio, is_active: isActive });
+            await onSave({ name: trimmed, bio: bio.trim(), is_active: isActive });
             onClose();
         } catch (error) {
             notify.failure(error, 'Não foi possível salvar o professor.', {
@@ -35,53 +47,52 @@ const ProfessorModal: React.FC<ProfessorModalProps> = ({ professor, onClose, onS
     };
 
     return (
-        <StandardModal isOpen={true} onClose={onClose}>
-            <div className="bg-white rounded-2xl w-full max-w-md p-6 space-y-4">
-                <h3 className="text-xl font-bold text-stone-800">{professor ? 'Editar Professor' : 'Novo Professor'}</h3>
-
-                <div className="space-y-3">
-                    <div>
-                        <label className="block text-xs font-bold text-stone-500 uppercase mb-1">Nome</label>
-                        <input
-                            value={name}
-                            onChange={e => setName(e.target.value)}
-                            className="w-full p-3 border border-stone-200 rounded-xl outline-hidden focus:ring-2 focus:ring-saibro-500"
-                            placeholder="Nome do Professor"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-xs font-bold text-stone-500 uppercase mb-1">Bio / Especialidade</label>
-                        <textarea
-                            value={bio}
-                            onChange={e => setBio(e.target.value)}
-                            className="w-full p-3 border border-stone-200 rounded-xl outline-hidden focus:ring-2 focus:ring-saibro-500 h-24 resize-none"
-                            placeholder="Ex: Especialista em Tênis Avançado..."
-                        />
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <input
-                            type="checkbox"
-                            checked={isActive}
-                            onChange={e => setIsActive(e.target.checked)}
-                            className="w-5 h-5 text-saibro-600 rounded"
-                            id="isActive"
-                        />
-                        <label htmlFor="isActive" className="text-stone-700 font-medium cursor-pointer">Professor Ativo</label>
-                    </div>
-                </div>
-
-                <div className="flex gap-3 pt-4">
-                    <button onClick={onClose} className="flex-1 py-3 border border-stone-200 rounded-xl font-bold text-stone-500 hover:bg-stone-50">Cancelar</button>
-                    <button
-                        onClick={handleSubmit}
-                        disabled={saving || !name}
-                        className="flex-1 py-3 bg-saibro-600 text-white rounded-xl font-bold hover:bg-saibro-700 disabled:opacity-50 flex justify-center"
-                    >
-                        {saving ? <Loader2 className="animate-spin" /> : 'Salvar'}
-                    </button>
-                </div>
-            </div>
-        </StandardModal>
+        <Sheet
+            open
+            onClose={onClose}
+            closeOnBackdrop={false}
+            title={professor ? 'Editar professor' : 'Novo professor'}
+            subtitle="Aparece para os alunos e na agenda de aulas"
+            footer={<>
+                <button className={adminBtnGhost} onClick={onClose}>Cancelar</button>
+                <button className={`${adminBtnPrimary} sm:min-w-32`} onClick={handleSubmit} disabled={saving}>
+                    {saving ? <Loader2 className="animate-spin" size={18} /> : 'Salvar'}
+                </button>
+            </>}
+        >
+            <AdminField label="Nome" error={touched ? nameError : undefined}>
+                <input
+                    value={name}
+                    onChange={e => setName(e.target.value)}
+                    onBlur={() => setTouched(true)}
+                    className={adminInputCls}
+                    placeholder="Nome do professor"
+                    maxLength={80}
+                    autoComplete="off"
+                    autoFocus={!professor}
+                />
+            </AdminField>
+            <AdminField label="Especialidade (opcional)" hint="Ex.: tênis avançado, iniciantes, infantil.">
+                <textarea
+                    value={bio}
+                    onChange={e => setBio(e.target.value)}
+                    className={`${adminInputCls} h-24 resize-none`}
+                    maxLength={300}
+                />
+            </AdminField>
+            <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-xl bg-stone-50 px-3.5 text-sm font-bold text-stone-700">
+                <input
+                    type="checkbox"
+                    checked={isActive}
+                    onChange={e => setIsActive(e.target.checked)}
+                    className="h-5 w-5 accent-saibro-600"
+                />
+                <span className="min-w-0">
+                    Professor ativo
+                    <span className="block text-xs font-normal text-stone-400">Desmarque para tirar da lista sem perder o histórico.</span>
+                </span>
+            </label>
+        </Sheet>
     );
 };
 
@@ -90,6 +101,7 @@ export const AdminProfessors: React.FC = () => {
     const [professors, setProfessors] = useState<Professor[]>([]);
     const [students, setStudents] = useState<NonSocioStudent[]>([]);
     const [loading, setLoading] = useState(true);
+    const [loadFailed, setLoadFailed] = useState(false);
     const [expandedProf, setExpandedProf] = useState<string | null>(null);
     const [showModal, setShowModal] = useState(false);
     const [editingProf, setEditingProf] = useState<Professor | null>(null);
@@ -100,6 +112,7 @@ export const AdminProfessors: React.FC = () => {
 
     const fetchData = async () => {
         setLoading(true);
+        setLoadFailed(false);
         try {
             // Fetch Professors
             const { data: profs, error: profError } = await supabase
@@ -134,6 +147,9 @@ export const AdminProfessors: React.FC = () => {
                 planStatus: s.plan_status,
                 masterExpirationDate: s.master_expiration_date,
                 professorId: s.professor_id,
+                // `is_active` é o que a tela de Alunos usa para pausar/remover; sem ler isto a
+                // contagem de "alunos ativos" de cada professor ficava sempre em zero.
+                isActive: s.is_active ?? true,
                 studentType: s.student_type || 'regular',
                 responsibleSocioId: s.responsible_socio_id,
                 relationshipType: s.relationship_type
@@ -143,6 +159,7 @@ export const AdminProfessors: React.FC = () => {
             setStudents(mappedStudents);
 
         } catch (error) {
+            setLoadFailed(true);
             notify.failure(error, 'Não foi possível carregar os professores.', {
                 event: 'professors_load_failed',
             });
@@ -151,174 +168,179 @@ export const AdminProfessors: React.FC = () => {
         }
     };
 
-    const handleSaveProfessor = async (data: any) => {
-        if (editingProf) {
-            await supabase.from('professors').update(data).eq('id', editingProf.id);
-        } else {
-            await supabase.from('professors').insert(data);
-        }
+    const handleSaveProfessor = async (data: ProfessorFormData) => {
+        // O supabase-js não lança em erro de banco: devolve `{ error }`. Sem checar, o modal
+        // fechava como se tivesse salvo e o professor simplesmente não aparecia.
+        const { error } = editingProf
+            ? await supabase.from('professors').update(data).eq('id', editingProf.id)
+            : await supabase.from('professors').insert(data);
+        if (error) throw error;
+        notify.success(editingProf ? 'Professor atualizado.' : 'Professor cadastrado.');
         fetchData();
     };
 
-    const handleDeleteProfessor = async (id: string) => {
+    const handleDeleteProfessor = async (prof: Professor) => {
+        const linked = students.filter(s => s.professorId === prof.id).length;
+        if (linked > 0) {
+            notify.error(`${prof.name} ainda tem ${linked} ${linked === 1 ? 'aluno vinculado' : 'alunos vinculados'}.`, {
+                description: 'Passe os alunos para outro professor na seção Alunos ou, se só quer tirá-lo da lista, edite e desmarque "Professor ativo".',
+                duration: 8000,
+            });
+            return;
+        }
         if (!await confirm({
-            title: 'Remover este professor?',
-            description: 'O professor sai da lista. Só é possível remover quem não tem aluno vinculado.',
+            title: `Remover ${prof.name}?`,
+            description: 'O professor sai da lista. Esta ação não pode ser desfeita.',
             confirmLabel: 'Remover professor',
         })) return;
 
-        const { error } = await supabase.from('professors').delete().eq('id', id);
+        const { error } = await supabase.from('professors').delete().eq('id', prof.id);
         if (error) {
-            notify.failure(error, 'Este professor ainda tem alunos vinculados.', {
+            notify.failure(error, 'Não foi possível remover o professor.', {
                 event: 'professor_delete_failed',
-                professorId: id,
+                professorId: prof.id,
             });
         } else {
+            notify.success('Professor removido.');
             fetchData();
         }
     };
 
-    const getProfessorStats = (profId: string) => {
-        const profStudents = students.filter(s => s.professorId === profId);
-        return {
-            total: profStudents.length,
-            active: profStudents.filter(s => s.isActive).length
-        };
-    };
+    const studentsOf = (profId: string) => students.filter(s => s.professorId === profId);
+    const activeStudentsOf = (profId: string) => studentsOf(profId).filter(s => s.isActive !== false);
+
+    // Ativos primeiro, depois por nome: quem está em uso fica no topo.
+    const sorted = useMemo(
+        () => [...professors].sort((a, b) => Number(b.isActive) - Number(a.isActive) || a.name.localeCompare(b.name, 'pt-BR')),
+        [professors],
+    );
+    const activeProfessors = professors.filter(p => p.isActive);
+    const totalActiveStudents = students.filter(s => s.isActive !== false && professors.some(p => p.id === s.professorId)).length;
+    const withoutStudents = activeProfessors.filter(p => activeStudentsOf(p.id).length === 0).length;
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center h-64">
+            <div className="flex items-center justify-center py-16" role="status">
                 <Loader2 className="animate-spin text-saibro-600" size={32} />
+                <span className="sr-only">Carregando professores…</span>
+            </div>
+        );
+    }
+
+    if (loadFailed) {
+        return (
+            <div className="space-y-3 rounded-2xl border border-red-100 bg-red-50 p-6 text-center" role="alert">
+                <p className="text-sm font-bold text-red-700">Não foi possível carregar os professores.</p>
+                <button className={adminBtnGhost} onClick={fetchData}>Tentar de novo</button>
             </div>
         );
     }
 
     return (
-        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            {/* Header Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-white p-5 rounded-2xl shadow-sm border border-stone-100 flex items-center gap-4">
-                    <div className="p-3 bg-blue-100 text-blue-600 rounded-xl">
-                        <GraduationCap size={24} />
-                    </div>
-                    <div>
-                        <p className="text-xs text-stone-500 uppercase font-bold">Total Professores</p>
-                        <p className="text-2xl font-black text-stone-800">{professors.length}</p>
-                    </div>
-                </div>
-                {/* ... other stats ... */}
-                {/* Add Button */}
-                <button
-                    onClick={() => { setEditingProf(null); setShowModal(true); }}
-                    className="bg-saibro-600 hover:bg-saibro-700 text-white p-5 rounded-2xl shadow-lg shadow-saibro-200 flex flex-col items-center justify-center gap-1 transition-all active:scale-95"
-                >
-                    <Plus size={24} />
-                    <span className="font-bold text-sm">Novo Professor</span>
-                </button>
+        <div className="space-y-5 animate-in fade-in duration-300">
+            <AdminPageHeader
+                icon={<GraduationCap className="text-saibro-600" />}
+                title="Professores"
+                subtitle="Corpo docente e alunos de cada um"
+                actions={
+                    <button onClick={() => { setEditingProf(null); setShowModal(true); }} className={adminBtnPrimary}>
+                        <Plus size={18} /> Novo professor
+                    </button>
+                }
+            />
+
+            <div className="grid grid-cols-3 gap-2">
+                <StatTile label="Professores" value={activeProfessors.length} hint={professors.length > activeProfessors.length ? `${professors.length} no total` : 'ativos'} />
+                <StatTile label="Alunos" value={totalActiveStudents} hint="ativos" />
+                <StatTile label="Sem alunos" value={withoutStudents} hint="professores" />
             </div>
 
-            {/* Professors List */}
-            <div className="bg-white rounded-2xl shadow-sm border border-stone-100 overflow-hidden">
-                <div className="p-6 border-b border-stone-100">
-                    <h2 className="text-lg font-bold text-stone-800 flex items-center gap-2">
-                        <GraduationCap className="text-saibro-600" />
-                        Corpo Docente
-                    </h2>
-                </div>
-
-                <div className="divide-y divide-stone-100">
-                    {professors.map(prof => {
-                        const stats = getProfessorStats(prof.id);
+            {sorted.length === 0 ? (
+                <AdminEmpty
+                    icon={<GraduationCap size={28} />}
+                    title="Nenhum professor cadastrado"
+                    hint="Cadastre o primeiro para poder vincular alunos e abrir a agenda de aulas."
+                />
+            ) : (
+                <ul className="space-y-3">
+                    {sorted.map(prof => {
+                        const profStudents = studentsOf(prof.id);
+                        const activeCount = activeStudentsOf(prof.id).length;
                         const isExpanded = expandedProf === prof.id;
+                        const panelId = `prof-students-${prof.id}`;
 
                         return (
-                            <div key={prof.id} className="transition-colors hover:bg-stone-50 group">
-                                <div className="p-6 flex items-center justify-between">
-                                    <div
-                                        className="flex items-center gap-4 cursor-pointer flex-1"
+                            <li key={prof.id} className={`overflow-hidden rounded-2xl border bg-white ${prof.isActive ? 'border-stone-100' : 'border-stone-100 opacity-80'}`}>
+                                <div className="flex items-center gap-1 pr-1">
+                                    <button
                                         onClick={() => setExpandedProf(isExpanded ? null : prof.id)}
+                                        aria-expanded={isExpanded}
+                                        aria-controls={panelId}
+                                        className="flex min-h-16 min-w-0 flex-1 items-center gap-3 px-4 py-3 text-left"
                                     >
-                                        <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg ${prof.isActive ? 'bg-saibro-100 text-saibro-700' : 'bg-stone-200 text-stone-500'}`}>
-                                            {prof.name.charAt(0)}
-                                        </div>
-                                        <div>
-                                            <h3 className="font-bold text-stone-800 text-lg">{prof.name}</h3>
-                                            <p className={`text-xs font-bold uppercase tracking-wide ${prof.isActive ? 'text-green-600' : 'text-stone-400'}`}>
-                                                {prof.isActive ? 'Ativo' : 'Inativo'}
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-center gap-4">
-                                        <div className="hidden md:block text-right mr-4">
-                                            <p className="text-[10px] text-stone-400 uppercase font-bold">Alunos</p>
-                                            <p className="font-bold text-stone-800">{stats.active}</p>
-                                        </div>
-
-                                        <div className="flex gap-2 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100 focus:opacity-100 transition-opacity">
-                                            <button
-                                                onClick={() => { setEditingProf(prof); setShowModal(true); }}
-                                                aria-label={`Editar ${prof.name}`}
-                                                className="p-2 text-stone-400 hover:text-saibro-600 hover:bg-white rounded-lg"
-                                            >
-                                                <Edit size={18} />
-                                            </button>
-                                            <button
-                                                onClick={() => handleDeleteProfessor(prof.id)}
-                                                aria-label={`Remover ${prof.name}`}
-                                                className="p-2 text-stone-400 hover:text-red-500 hover:bg-red-50 rounded-lg"
-                                            >
-                                                <Trash2 size={18} />
-                                            </button>
-                                        </div>
-
-                                        <button
-                                            onClick={() => setExpandedProf(isExpanded ? null : prof.id)}
-                                            className="text-stone-400"
-                                        >
-                                            {isExpanded ? <ChevronDown /> : <ChevronRight />}
-                                        </button>
-                                    </div>
+                                        <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-lg font-black ${prof.isActive ? 'bg-saibro-100 text-saibro-700' : 'bg-stone-200 text-stone-500'}`} aria-hidden>
+                                            {prof.name.charAt(0).toUpperCase()}
+                                        </span>
+                                        <span className="min-w-0 flex-1">
+                                            <span className="block truncate font-bold text-stone-800">{prof.name}</span>
+                                            <span className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-stone-500">
+                                                <StatusPill tone={prof.isActive ? 'good' : 'muted'}>{prof.isActive ? 'Ativo' : 'Inativo'}</StatusPill>
+                                                <span>{activeCount === 1 ? '1 aluno ativo' : `${activeCount} alunos ativos`}</span>
+                                            </span>
+                                        </span>
+                                        {isExpanded ? <ChevronDown className="shrink-0 text-stone-400" size={20} /> : <ChevronRight className="shrink-0 text-stone-400" size={20} />}
+                                    </button>
+                                    <button
+                                        onClick={() => { setEditingProf(prof); setShowModal(true); }}
+                                        aria-label={`Editar ${prof.name}`}
+                                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-stone-400 hover:bg-saibro-50 hover:text-saibro-600"
+                                    >
+                                        <Edit size={19} />
+                                    </button>
+                                    <button
+                                        onClick={() => handleDeleteProfessor(prof)}
+                                        aria-label={`Remover ${prof.name}`}
+                                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-stone-400 hover:bg-red-50 hover:text-red-500"
+                                    >
+                                        <Trash2 size={19} />
+                                    </button>
                                 </div>
 
-                                {/* Expanded Details - Students List */}
                                 {isExpanded && (
-                                    <div className="bg-stone-50 p-6 border-t border-stone-100 animate-in slide-in-from-top-2 duration-200">
-                                        <h4 className="font-bold text-sm text-stone-500 uppercase mb-4 flex items-center gap-2">
-                                            <Users size={16} /> Lista de Alunos
+                                    <div id={panelId} className="space-y-3 border-t border-stone-100 bg-stone-50 p-4 animate-in slide-in-from-top-2 duration-200">
+                                        {prof.bio && <p className="text-sm text-stone-500">{prof.bio}</p>}
+                                        <h4 className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-stone-400">
+                                            <Users size={14} /> Alunos
                                         </h4>
 
-                                        {students.filter(s => s.professorId === prof.id).length === 0 ? (
-                                            <p className="text-stone-400 italic text-sm">Nenhum aluno vinculado.</p>
+                                        {profStudents.length === 0 ? (
+                                            <p className="text-sm text-stone-400">Nenhum aluno vinculado. Vincule na seção Alunos.</p>
                                         ) : (
-                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                                                {students
-                                                    .filter(s => s.professorId === prof.id)
-                                                    .map(student => (
-                                                        <div key={student.id} className="bg-white p-3 rounded-lg border border-stone-200 shadow-sm flex justify-between items-center">
-                                                            <div>
-                                                                <p className="font-bold text-stone-800">{student.name}</p>
-                                                                <p className="text-xs text-stone-500">{student.planType}</p>
-                                                            </div>
-                                                            <div className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${student.planStatus === 'active'
-                                                                ? 'bg-green-100 text-green-700'
-                                                                : 'bg-red-100 text-red-700'
-                                                                }`}>
-                                                                {student.planStatus === 'active' ? 'Ativo' : 'Inativo'}
-                                                            </div>
+                                            <ul className="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3">
+                                                {profStudents.map(student => (
+                                                    <li key={student.id} className="flex min-w-0 items-center justify-between gap-2 rounded-xl border border-stone-200 bg-white p-3">
+                                                        <div className="min-w-0">
+                                                            <p className="truncate font-bold text-stone-800">{student.name}</p>
+                                                            <p className="truncate text-xs text-stone-500">{student.planType}</p>
                                                         </div>
-                                                    ))
-                                                }
-                                            </div>
+                                                        {student.isActive === false ? (
+                                                            <StatusPill tone="warn">Pausado</StatusPill>
+                                                        ) : (
+                                                            <StatusPill tone={student.planStatus === 'active' ? 'good' : 'bad'}>
+                                                                {student.planStatus === 'active' ? 'Plano ativo' : 'Plano inativo'}
+                                                            </StatusPill>
+                                                        )}
+                                                    </li>
+                                                ))}
+                                            </ul>
                                         )}
                                     </div>
                                 )}
-                            </div>
+                            </li>
                         );
                     })}
-                </div>
-            </div>
+                </ul>
+            )}
 
             {showModal && (
                 <ProfessorModal
