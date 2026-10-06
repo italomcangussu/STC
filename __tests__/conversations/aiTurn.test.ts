@@ -258,6 +258,99 @@ describe('horário ocupado por um jogo: a IA mostra quem está e oferece entrar'
     expect((await q<any>(w.db, `select status from public.conv_ai_sessions`))[0].status).toBe('done');
   }, 120000);
 
+  it('entrar COM quem a pessoa disse que joga: a oferta cita os nomes, e o "sim" adiciona todos', async () => {
+    const { w, date } = await setup();
+    const id = await jogo(w, date, [U.socioB]);
+    const p = provider();
+    const m1 = await direct(w, 'amanhã às 16h na quadra 1, eu e o Paulo');
+    const r1 = await turn(w, m1.message_id, script(answer({ ready: true, slots: { date, start: '16:00', court_label: 'Quadra 1', participant_names: ['Paulo'] } })).chat, p.uaz);
+    expect(r1.action).toBe('proposed_join');
+    expect(p.sent[0].text).toBe('Esse horário já está reservado: amanhã, 16:00–17:00 na Quadra 1, com Beto Sócio (restam 7 vagas). Quer entrar nesse jogo com Paulo Professor? Responda "sim" que eu adiciono vocês.');
+    expect(await participantes(w, id)).toEqual([U.socioB]);
+    await tick();
+    const m2 = await direct(w, 'sim');
+    const s2 = script(answer({ customer_confirmed: true }));
+    const r2 = await turn(w, m2.message_id, s2.chat, p.uaz);
+    expect(s2.calls[0].user).toContain('levando: Paulo Professor');
+    expect(r2.action).toBe('joined');
+    expect(p.sent[1].text).toBe('Pronto, vocês entraram no jogo de amanhã, 16:00–17:00 na Quadra 1. Jogam: Beto Sócio, Paulo Professor e você.');
+    expect((await participantes(w, id)).sort()).toEqual([U.socioA, U.socioB, U.prof].sort());
+    expect((await reservations(w)).length).toBe(1);
+  }, 120000);
+
+  it('não cabe todo mundo: diz quantas vagas restam e pergunta se quer entrar com menos gente; nada é gravado', async () => {
+    const { w, date } = await setup();
+    const ids = Array.from({ length: 6 }, (_, i) => ID(8301 + i));
+    await w.db.exec(`insert into auth.users(id) values ${ids.map((x) => `('${x}')`).join(',')};
+      insert into public.profiles(id, name, role, is_professor, is_active) values ${ids.map((x, k) => `('${x}', 'Extra ${k + 1}', 'socio', false, true)`).join(',')}`);
+    const id = await jogo(w, date, [U.socioB, ...ids]);                            // 7 → resta 1 vaga
+    const p = provider();
+    const m = await direct(w, 'amanhã às 16h na quadra 1, eu e o Paulo');
+    const r = await turn(w, m.message_id, script(answer({ ready: true, slots: { date, start: '16:00', court_label: 'Quadra 1', participant_names: ['Paulo'] } })).chat, p.uaz);
+    expect(r.action).toBe('failed:NOT_ENOUGH_SPOTS');
+    expect(p.sent[0].text).toMatch(/mas só resta 1 vaga e você quer entrar com 2 pessoas\. Quer entrar com menos gente\?$/);
+    expect((await participantes(w, id)).includes(U.socioA)).toBe(false);
+    expect((await q(w.db, `select 1 from public.conv_booking_proposals`)).length).toBe(0);
+  }, 120000);
+
+  it('"quem marcou esse horário?" depois de um pedido: o servidor responde com os nomes e oferece entrar (o modelo só encaminha, sem recusar)', async () => {
+    const { w, date } = await setup();
+    const id = await jogo(w, date, [U.socioB, U.prof]);
+    const p = provider();
+    // 1) pedido incompleto: o modelo só guarda os dados e pergunta
+    const m1 = await direct(w, 'quero a quadra 1 amanhã às 16h');
+    await turn(w, m1.message_id, script(answer({ messages: ['Quem vai jogar com você?'], awaiting: true, slots: { date, start: '16:00', court_label: 'Quadra 1' } })).chat, p.uaz);
+    // 2) a pergunta que o agente recusava: os dados vêm da memória, o modelo só marca a intenção
+    await tick();
+    const m2 = await direct(w, 'quem marcou pra esse horário?');
+    const s2 = script(answer({ intent: 'entrar', ready: true, messages: ['Não consigo informar quem reservou esse horário.'] }));
+    const r2 = await turn(w, m2.message_id, s2.chat, p.uaz);
+    expect(r2.action).toBe('proposed_join');
+    expect(p.sent[1].text).toBe('Esse horário já está reservado: amanhã, 16:00–17:00 na Quadra 1, com Beto Sócio e Paulo Professor (restam 6 vagas). Quer entrar nesse jogo? Responda "sim" que eu te adiciono.');
+    expect(p.sent.some((x) => /Não consigo informar/.test(x.text))).toBe(false);   // o texto do modelo não sai
+    expect(await participantes(w, id)).toEqual([U.socioB, U.prof]);
+    // 3) "me adiciona" → "sim"
+    await tick();
+    const m3 = await direct(w, 'sim, me adiciona');
+    const r3 = await turn(w, m3.message_id, script(answer({ customer_confirmed: true })).chat, p.uaz);
+    expect(r3.action).toBe('joined');
+    expect((await participantes(w, id)).sort()).toEqual([U.socioA, U.socioB, U.prof].sort());
+  }, 120000);
+
+  it('pediu para entrar mas não há jogo: diz que o horário está livre e oferece reservar; falta dado vira pergunta', async () => {
+    const { w, date } = await setup();
+    const p = provider();
+    const m1 = await direct(w, 'me adiciona na reserva das 20h');
+    const r1 = await turn(w, m1.message_id, script(answer({ intent: 'entrar', slots: { date, start: '20:00', court_label: 'Quadra 1' } })).chat, p.uaz);
+    expect(r1.action).toBe('ask');
+    expect(p.sent[0].text).toBe('Não há nenhum jogo marcado amanhã às 20:00 na Quadra 1: o horário está livre. Quer que eu faça a reserva?');
+    await tick();
+    const m2 = await direct(w, 'e a das 18h?');
+    await turn(w, m2.message_id, script(answer({ intent: 'entrar', slots: { start: null } })).chat, p.uaz);   // o horário antigo (20:00) continua na memória
+    expect(p.sent[1].text).toMatch(/^Não há nenhum jogo marcado/);
+  }, 120000);
+
+  it('"entrar" sem dia ou sem horário: pergunta, sem consultar nada', async () => {
+    const { w } = await setup();
+    const p = provider();
+    const m = await direct(w, 'me coloca naquele jogo');
+    const r = await turn(w, m.message_id, script(answer({ intent: 'entrar' })).chat, p.uaz);
+    expect(r.action).toBe('ask');
+    expect(p.sent[0].text).toBe('De que dia é esse jogo?');
+  }, 120000);
+
+  it('o prompt ensina o modelo a encaminhar (intent "entrar") em vez de recusar, inclusive no grupo', async () => {
+    const { w, date } = await setup({ group: true });
+    const p = provider();
+    const m = await grp(w, 'quem marcou pra esse horário?', { mention: { direct: true, evidence: 'mentioned_bot_phone' } });
+    const s = script(answer({ intent: 'entrar', slots: { date, start: '20:00' } }));
+    await turn(w, m.message_id, s.chat, p.uaz);
+    expect(s.calls[0].system).toContain('ENTRAR NO JOGO');
+    expect(s.calls[0].system).toContain('NUNCA responde que "não consegue informar quem reservou"');
+    expect(s.calls[0].system).toContain('intent":"reservar|cancelar|remarcar|consultar|informar|entrar|outro');
+    expect(p.sent[0].number).toBe(GROUP);
+  }, 120000);
+
   it('o modelo diz que "entrou" sem o "sim": a frase não sai e ninguém é adicionado', async () => {
     const { w, date } = await setup();
     const id = await jogo(w, date, [U.socioB]);

@@ -42,7 +42,7 @@ export type Slots = {
   reservation_ref?: string | null;
 };
 
-export type Intent = 'reservar' | 'cancelar' | 'remarcar' | 'consultar' | 'informar' | 'outro';
+export type Intent = 'reservar' | 'cancelar' | 'remarcar' | 'consultar' | 'informar' | 'entrar' | 'outro';
 
 export type Answer = {
   messages: string[];
@@ -71,7 +71,7 @@ function lerJson(output: string): Record<string, unknown> | null {
 
 const str = (v: unknown): string | null => (typeof v === 'string' && v.trim() ? v.trim() : null);
 const strList = (v: unknown): string[] => (Array.isArray(v) ? v.map((x) => String(x ?? '').trim()).filter(Boolean).slice(0, 8) : []);
-const INTENTS: Intent[] = ['reservar', 'cancelar', 'remarcar', 'consultar', 'informar', 'outro'];
+const INTENTS: Intent[] = ['reservar', 'cancelar', 'remarcar', 'consultar', 'informar', 'entrar', 'outro'];
 const ACTIONABLE: Intent[] = ['reservar', 'cancelar', 'remarcar'];
 
 /**
@@ -215,10 +215,17 @@ const jogoDe = (g: Pick<Game, 'date' | 'start' | 'end' | 'court_name'>, today: s
   `${dayLabel(String(g.date), today)}, ${g.start}–${g.end}${g.court_name ? ` na ${g.court_name}` : ''}`;
 
 /** Horário ocupado por um jogo com vaga: mostra quem está e oferece entrar (o "sim" é confirmado pelo banco). */
-export function joinOfferMessage(g: Game, today: string): string {
+export function joinOfferMessage(g: Game, today: string, levando: string[] = []): string {
   const quem = g.names.length ? `, com ${listaNomes(g.names)}` : '';
   const vagas = g.spots_left === 1 ? 'resta 1 vaga' : `restam ${g.spots_left} vagas`;
-  return `Esse horário já está reservado: ${jogoDe(g, today)}${quem} (${vagas}). Quer entrar nesse jogo? Responda "sim" que eu te adiciono.`;
+  const junto = levando.length ? ` com ${listaNomes(levando)}` : '';
+  return `Esse horário já está reservado: ${jogoDe(g, today)}${quem} (${vagas}). Quer entrar nesse jogo${junto}? Responda "sim" que eu ${levando.length ? 'adiciono vocês' : 'te adiciono'}.`;
+}
+
+/** O jogo tem vaga, mas não para todo mundo que a pessoa quer levar. */
+export function notEnoughSpotsMessage(g: Game, spots: number, wanted: number, today: string): string {
+  const vagas = spots === 1 ? 'só resta 1 vaga' : spots === 0 ? 'não há mais vagas' : `só restam ${spots} vagas`;
+  return `Já existe um jogo nesse horário (${jogoDe(g, today)}, com ${listaNomes(g.names)}), mas ${vagas} e você quer entrar com ${wanted} ${wanted === 1 ? 'pessoa' : 'pessoas'}. Quer entrar com menos gente?`;
 }
 
 /** Horário ocupado por algo em que a pessoa não pode entrar (lotado, já está, aula, campeonato). */
@@ -233,7 +240,7 @@ export function busyMessage(g: Game, today: string): string {
 export function successMessage(action: 'create' | 'cancel' | 'reschedule' | 'join', n: Summary, today: string, names: string[], me?: string): string {
   if (action === 'join') {
     const ordem = [...((n.names ?? []) as string[]).filter((x) => x !== me), ...(me ? ['você'] : [])];
-    return `Pronto, você entrou no jogo de ${jogoDe(n as Game, today)}. Jogam: ${listaNomes(ordem)}.`;
+    return `Pronto, ${Number(n.added ?? 1) > 1 ? 'vocês entraram' : 'você entrou'} no jogo de ${jogoDe(n as Game, today)}. Jogam: ${listaNomes(ordem)}.`;
   }
   if (action === 'cancel') return `Pronto, a ${describeReservation(n, today)} foi cancelada.`;
   if (action === 'reschedule') return `Pronto, remarcado: ${describeReservation(n, today, names)}.`;
@@ -455,6 +462,9 @@ async function decide(i: DecideInput): Promise<Decision> {
     return failure(res?.code ?? 'UNKNOWN', res?.message, i, memory, ctx.open_proposal as Ctx);
   }
 
+  // 2b) "Quem marcou esse horário?" / "me adiciona nessa reserva": o servidor mostra quem está e oferece entrar. O modelo não escreve nada.
+  if (answer.intent === 'entrar' && !answer.transfer) return entrarNoJogo(i, memory);
+
   // 3) Pedido pronto: o servidor resolve pessoas, confere disponibilidade e monta a PROPOSTA.
   if (answer.ready && (answer.intent === 'reservar' || answer.intent === 'cancelar' || answer.intent === 'remarcar')) {
     return propose(i, memory);
@@ -547,6 +557,44 @@ async function propose(i: DecideInput, memory: Memory): Promise<Decision> {
   return failure(res?.code ?? 'UNKNOWN', res?.message, i, memory, null, { candidates, payload });
 }
 
+/**
+ * A pessoa quer saber quem está num horário já reservado e/ou entrar nesse jogo. Quem responde é o servidor, com o que o banco
+ * devolve: horário livre (nenhum jogo), jogo com vaga (oferta de entrar), lotado, aula, ou ela já está no jogo.
+ */
+async function entrarNoJogo(i: DecideInput, memory: Memory): Promise<Decision> {
+  const { deps, ctx, slots, today } = i;
+  const { db } = deps;
+  const profile = (ctx.requester?.profile ?? null) as Ctx | null;
+  const ask = (text: string): Decision => ({ bubbles: [text], awaiting: true, close: false, action: 'ask', memory });
+  if (!profile?.is_member) {
+    return { bubbles: ['Não consegui identificar o seu cadastro de sócio por este telefone, então não posso mexer em reservas por aqui. Vou pedir para alguém da equipe te ajudar.'],
+      awaiting: false, close: false, action: 'handoff', memory, handoff: { kind: 'soft', note: 'Pedido para entrar em jogo por telefone sem cadastro de sócio identificado.' } };
+  }
+  if (!slots.date) return ask('De que dia é esse jogo?');
+  if (!slots.start) return ask('Que horas é o jogo?');
+  const courts = (ctx.courts ?? []) as Court[];
+  const candidates = slots.court_label ? pickCourts(courts, 'Play', slots.court_label) : courts;
+  if (candidates.length === 0) return ask('Não encontrei essa quadra. Quer saibro ou rápida?');
+  const dur = slots.duration ?? 60;
+  const me = norm(String(profile.name));
+  const r = await resolve(db, (slots.participant_names ?? []).filter((n) => norm(n) !== me && norm(n) !== 'eu'), 'member');
+  if (r.ask) return ask(r.ask);
+  const payload: Record<string, unknown> = { type: 'Play', date: slots.date, start: slots.start, duration: dur, participant_ids: r.ids, guest_name: slots.guest_name ?? null };
+
+  const ini = toMin(slots.start);
+  let algum = false;
+  for (const c of candidates) {
+    const g = ((await db('conv_svc_ai_slot_games', { p_court: c.id, p_date: slots.date, p_start_min: ini, p_end_min: ini + dur, p_requester: profile.id })).data ?? []) as Game[];
+    if (g.length) { algum = true; break; }
+  }
+  if (!algum) {
+    const onde = candidates.length === 1 ? ` na ${candidates[0].name}` : '';
+    return ask(`Não há nenhum jogo marcado ${dayLabel(slots.date, today)} às ${slots.start}${onde}: o horário está livre. Quer que eu faça a reserva?`);
+  }
+  // Há jogo: a mesma lógica do horário ocupado (oferta de entrar, ou quem está + horários livres).
+  return failure('SLOT_TAKEN', undefined, i, memory, null, { candidates, payload });
+}
+
 /** Resolve nomes no cadastro. Ambíguo ou ausente vira PERGUNTA (nunca escolha por aproximação). */
 async function resolve(db: Db, names: string[], scope: 'member' | 'student' | 'professor') {
   const out = { ids: [] as string[], names: [] as string[], matches: [] as { id: string; name: string; kind: string }[], ask: null as string | null };
@@ -593,8 +641,14 @@ async function failure(code: string, message: string | undefined, i: DecideInput
       }
       const entrar = jogos.find((g) => g.joinable);
       if (entrar) {
-        const p = (await deps.db('conv_svc_ai_propose', { p_session: i.session, p: { action: 'join', reservation_id: entrar.reservation_id } })).data as { ok: boolean } | null;
-        if (p?.ok) return { ...base, bubbles: [joinOfferMessage(entrar, today)], action: 'proposed_join', memory };
+        // Entra o solicitante e quem ele disse que joga com ele (e o convidado, se houver).
+        const p = (await deps.db('conv_svc_ai_propose', { p_session: i.session, p: { action: 'join', reservation_id: entrar.reservation_id,
+          participant_ids: extra.payload.participant_ids ?? [], guest_name: extra.payload.guest_name ?? null } })).data as
+          { ok: boolean; code?: string; spots_left?: number; wanted?: number; summary?: Game & { add_names?: string[] } } | null;
+        if (p?.ok && p.summary) return { ...base, bubbles: [joinOfferMessage(entrar, today, p.summary.add_names ?? [])], action: 'proposed_join', memory };
+        if (p?.code === 'NOT_ENOUGH_SPOTS') return { ...base, bubbles: [notEnoughSpotsMessage(entrar, Number(p.spots_left ?? 0), Number(p.wanted ?? 1), today)], action: 'failed:NOT_ENOUGH_SPOTS' };
+        if (p?.code === 'GUEST_ALREADY') return { ...base, bubbles: ['Esse jogo já tem um convidado, então não consigo adicionar o seu. Quer entrar sem o convidado?'], action: 'failed:GUEST_ALREADY' };
+        if (p?.code === 'PARTICIPANT_NOT_MEMBER') return { ...base, bubbles: [CODE_TEXT.PARTICIPANT_NOT_MEMBER as string], action: 'failed:PARTICIPANT_NOT_MEMBER' };
       }
     }
     const linhas: string[] = [];
