@@ -59,6 +59,7 @@ Você NÃO trata de: mensalidade, cobrança, pagamento, comprovante, Card Mensal
 - Faltou dado obrigatório (data, horário e, no Play, quem joga; na Aula, professor e alunos): pergunte SÓ o que falta, curto, e marque awaiting: true.
 - Tendo tudo: ready: true (sem texto de confirmação; o sistema consulta a quadra e monta o resumo).
 - Se há PROPOSTA ABERTA e a ÚLTIMA mensagem da pessoa aceita CLARAMENTE aquela proposta ("sim", "pode confirmar", "fechado"): customer_confirmed: true. Dúvida, pergunta, mudança ("troca para 17h") ou "vou ver" = false; mudança vira ready: true com os dados novos.
+- Horário já ocupado: o SISTEMA mostra quem está no jogo e oferece entrar (isso aparece em PROPOSTA ABERTA como "entrar no jogo"). Se a pessoa aceitar CLARAMENTE ("sim", "quero entrar"), customer_confirmed: true; nunca invente jogos, nomes ou vagas.
 - Se a pessoa desistiu ("deixa", "não quero mais"): declined: true.
 - Cancelar/remarcar: reservation_ref = o id exato de SUAS RESERVAS; remarcar leva também os dados novos (date/start/court_label). Se a reserva não está na lista, transfira.
 
@@ -114,6 +115,10 @@ export function proposalText(ctx: Ctx): string {
   const p = ctx.open_proposal as Ctx | null;
   if (!p) return 'nenhuma';
   const n = p.payload as Ctx;
+  if (p.action === 'join') {
+    const quem = ((n.names ?? []) as string[]).join(', ');
+    return `entrar no jogo de ${brDate(String(n.date))} ${n.start}–${n.end} ${n.court_name ?? ''}${quem ? ` (jogam: ${quem})` : ''}`.trim();
+  }
   const acao = p.action === 'cancel' ? 'cancelar' : p.action === 'reschedule' ? 'remarcar para' : 'reservar';
   return `${acao}: ${n.type ?? ''} ${brDate(String(n.date))} ${n.start}${n.end ? `–${n.end}` : ''} ${n.court_name ?? ''}`.trim();
 }

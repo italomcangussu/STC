@@ -158,18 +158,18 @@ describe('conversa de reserva (individual)', () => {
     expect(p.sent[2].text).toContain('Zé Ninguém (convidado)');
   }, 120000);
 
-  it('horário ocupado: oferece só os horários que o motor de reservas diz que estão livres', async () => {
+  it('horário ocupado por aula (não dá para entrar): oferece só os horários que o motor de reservas diz que estão livres', async () => {
     const { w, date } = await setup();
     await w.db.exec(`insert into public.reservations(court_id, creator_id, date, start_time, end_time, type, participant_ids) values
-      ('${w.court1}', '${U.socioB}', '${date}', '16:00', '17:00', 'Play', '{}'), ('${w.court2}', '${U.socioB}', '${date}', '16:00', '19:00', 'Play', '{}')`);
+      ('${w.court1}', '${U.socioB}', '${date}', '16:00', '17:00', 'Aula', '{}'), ('${w.court2}', '${U.socioB}', '${date}', '16:00', '19:00', 'Aula', '{}')`);
     const p = provider();
     const m = await direct(w, 'amanhã 16h no saibro, só eu');
     await turn(w, m.message_id, script(answer({ ready: true, slots: { date, start: '16:00', court_label: 'saibro', participants_known: true } })).chat, p.uaz);
     const text = p.sent[0].text;
-    expect(text).toMatch(/^Esse horário não está livre\. Livres amanhã: /);
+    expect(text).toMatch(/^Esse horário está reservado para uma aula \(amanhã, 16:00–17:00 na Quadra 1\)\. Livres amanhã: /);
     expect(text).toContain('Quadra 1: 14:30, 15:00, 17:00, 17:30');   // os 4 mais próximos de 16:00 que cabem 60 min
     expect(text).toContain('Quadra 2: 13:30, 14:00, 14:30, 15:00');
-    expect(text).not.toContain('16:00');
+    expect(text.split('Livres')[1]).not.toContain('16:00');   // 16:00 aparece só ao dizer o que ocupa o horário, nunca entre os livres
     expect((await q(w.db, `select 1 from public.conv_booking_proposals where status = 'open'`)).length).toBe(0);
   }, 90000);
 
@@ -220,6 +220,110 @@ describe('conversa de reserva (individual)', () => {
     await turn(w, m3.message_id, script(answer({ intent: 'cancelar', ready: true, slots: { reservation_ref: ID(981) } })).chat, p.uaz);
     expect(p.sent[2].text).toMatch(/Qual reserva\?/);
     expect((await q<any>(w.db, `select status from public.reservations where id = '${ID(981)}'`))[0].status).toBe('active');
+  }, 120000);
+});
+
+describe('horário ocupado por um jogo: a IA mostra quem está e oferece entrar', () => {
+  /** Jogo de Play do Beto, amanhã 16:00–17:00 na Quadra 1. */
+  async function jogo(w: W, date: string, participants: string[], guest: string | null = null) {
+    const id = ID(7500 + ++n);
+    await w.db.exec(`insert into public.reservations(id, court_id, creator_id, date, start_time, end_time, type, participant_ids, guest_name)
+      values ('${id}', '${w.court1}', '${U.socioB}', '${date}', '16:00', '17:00', 'Play', '{${participants.join(',')}}', ${guest ? `'${guest}'` : 'null'})`);
+    return id;
+  }
+  const pedido = (date: string) => answer({ ready: true, slots: { date, start: '16:00', court_label: 'Quadra 1', participants_known: true } });
+  const participantes = async (w: W, id: string) => (await q<any>(w.db, `select participant_ids from public.reservations where id = '${id}'`))[0].participant_ids as string[];
+
+  it('pedido em horário com jogo: mostra os nomes e as vagas, pergunta se quer entrar; o "sim" acrescenta só a pessoa, sem criar outra reserva', async () => {
+    const { w, date } = await setup();
+    const id = await jogo(w, date, [U.socioB, U.prof]);
+    const p = provider();
+    const m1 = await direct(w, 'amanhã às 16h na quadra 1, só eu');
+    const s1 = script(pedido(date));
+    const r1 = await turn(w, m1.message_id, s1.chat, p.uaz);
+    expect(r1.action).toBe('proposed_join');
+    expect(p.sent[0].text).toBe('Esse horário já está reservado: amanhã, 16:00–17:00 na Quadra 1, com Beto Sócio e Paulo Professor (restam 6 vagas). Quer entrar nesse jogo? Responda "sim" que eu te adiciono.');
+    expect(await participantes(w, id)).toEqual([U.socioB, U.prof]);               // a pergunta não adiciona ninguém
+    expect((await q<any>(w.db, `select action, status from public.conv_booking_proposals`))[0]).toMatchObject({ action: 'join', status: 'open' });
+
+    await tick();
+    const m2 = await direct(w, 'sim, quero entrar');
+    const s2 = script(answer({ customer_confirmed: true, slots: { date, start: '16:00', court_label: 'Quadra 1', participants_known: true } }));
+    const r2 = await turn(w, m2.message_id, s2.chat, p.uaz);
+    expect(s2.calls[0].user).toContain('# PROPOSTA ABERTA\nentrar no jogo de');
+    expect(r2.action).toBe('joined');
+    expect(p.sent[1].text).toBe('Pronto, você entrou no jogo de amanhã, 16:00–17:00 na Quadra 1. Jogam: Beto Sócio, Paulo Professor e você.');
+    expect((await participantes(w, id)).sort()).toEqual([U.socioA, U.socioB, U.prof].sort());
+    expect((await reservations(w)).length).toBe(1);                               // nenhuma reserva nova
+    expect((await q<any>(w.db, `select status from public.conv_ai_sessions`))[0].status).toBe('done');
+  }, 120000);
+
+  it('o modelo diz que "entrou" sem o "sim": a frase não sai e ninguém é adicionado', async () => {
+    const { w, date } = await setup();
+    const id = await jogo(w, date, [U.socioB]);
+    const p = provider();
+    const m1 = await direct(w, 'amanhã às 16h na quadra 1, só eu');
+    await turn(w, m1.message_id, script(pedido(date)).chat, p.uaz);
+    await tick();
+    const m2 = await direct(w, 'hmm, deixa eu pensar');
+    await turn(w, m2.message_id, script(answer({ messages: ['Pronto, você já está marcado nesse jogo!'], awaiting: true })).chat, p.uaz);
+    expect(p.sent.some((x) => /Pronto, você já está marcado/.test(x.text))).toBe(false);
+    expect(await participantes(w, id)).toEqual([U.socioB]);
+  }, 120000);
+
+  it('desistiu da oferta: ninguém entra e a proposta fecha', async () => {
+    const { w, date } = await setup();
+    const id = await jogo(w, date, [U.socioB]);
+    const p = provider();
+    const m1 = await direct(w, 'amanhã às 16h na quadra 1, só eu');
+    await turn(w, m1.message_id, script(pedido(date)).chat, p.uaz);
+    await tick();
+    const m2 = await direct(w, 'não, deixa pra lá');
+    const r2 = await turn(w, m2.message_id, script(answer({ declined: true, messages: ['Tudo bem!'] })).chat, p.uaz);
+    expect(r2.action).toBe('declined');
+    expect(await participantes(w, id)).toEqual([U.socioB]);
+    expect((await q(w.db, `select 1 from public.conv_booking_proposals where status = 'open'`)).length).toBe(0);
+  }, 120000);
+
+  it('jogo lotado: diz quem está e que não há vaga, sem oferecer entrar; mostra os horários livres', async () => {
+    const { w, date } = await setup();
+    const ids = Array.from({ length: 4 }, (_, i) => ID(8201 + i));
+    await w.db.exec(`insert into auth.users(id) values ${ids.map((x) => `('${x}')`).join(',')};
+      insert into public.profiles(id, name, role, is_professor, is_active) values ${ids.map((x, k) => `('${x}', 'Extra ${k + 1}', 'socio', false, true)`).join(',')}`);
+    await jogo(w, date, [U.socioB, U.prof, U.profOther, ...ids], 'Zeca');
+    const p = provider();
+    const m = await direct(w, 'amanhã às 16h na quadra 1, só eu');
+    const r = await turn(w, m.message_id, script(pedido(date)).chat, p.uaz);
+    expect(r.action).toBe('failed:SLOT_TAKEN');
+    expect(p.sent[0].text).toMatch(/^Esse horário já tem jogo com 8 pessoas: amanhã, 16:00–17:00 na Quadra 1, com Beto Sócio, Paulo Professor, Olga Professora, Extra 1, Extra 2, Extra 3, Extra 4 e Zeca \(convidado\)\. Está lotado\. Livres amanhã: /);
+    expect(p.sent[0].text).not.toMatch(/Quer entrar/);
+    expect((await q(w.db, `select 1 from public.conv_booking_proposals`)).length).toBe(0);
+  }, 120000);
+
+  it('a pessoa já está no jogo: avisa, sem oferecer entrar de novo', async () => {
+    const { w, date } = await setup();
+    await jogo(w, date, [U.socioB, U.socioA]);
+    const p = provider();
+    const m = await direct(w, 'amanhã às 16h na quadra 1, só eu');
+    await turn(w, m.message_id, script(pedido(date)).chat, p.uaz);
+    expect(p.sent[0].text).toMatch(/^Você já está nesse jogo: amanhã, 16:00–17:00 na Quadra 1, com Beto Sócio e Ana Sócia\. Livres amanhã: /);
+  }, 120000);
+
+  it('no grupo também: quem marcou o STC recebe a oferta com os nomes e entra com o "sim"', async () => {
+    const { w, date } = await setup({ group: true });
+    const id = await jogo(w, date, [U.socioB]);
+    const p = provider();
+    const mention = { mention: { direct: true, evidence: 'mentioned_bot_phone' } };
+    const m1 = await grp(w, 'quero amanhã às 16h na quadra 1, só eu', mention);
+    const r1 = await turn(w, m1.message_id, script(pedido(date)).chat, p.uaz);
+    expect(r1.action).toBe('proposed_join');
+    expect(p.sent[0].number).toBe(GROUP);
+    expect(p.sent[0].text).toContain('com Beto Sócio (restam 7 vagas). Quer entrar nesse jogo?');
+    await tick();
+    const m2 = await grp(w, 'sim, quero entrar', mention);
+    const r2 = await turn(w, m2.message_id, script(answer({ customer_confirmed: true })).chat, p.uaz);
+    expect(r2.action).toBe('joined');
+    expect((await participantes(w, id)).sort()).toEqual([U.socioA, U.socioB].sort());
   }, 120000);
 });
 

@@ -207,7 +207,34 @@ export function proposalMessage(action: 'create' | 'cancel' | 'reschedule', n: S
   return `Verifiquei agora: o horário está livre. Seria ${describeReservation(n, today, names)}. Posso confirmar essa reserva?`;
 }
 
-export function successMessage(action: 'create' | 'cancel' | 'reschedule', n: Summary, today: string, names: string[]): string {
+/** Jogo que ocupa o horário, como o banco devolve (`conv_svc_ai_slot_games`). */
+export type Game = { reservation_id: string; type: string; date: string; start: string; end: string; court_name: string | null;
+  names: string[]; participants: number; spots_left: number; joinable: boolean; reason?: string | null };
+
+const jogoDe = (g: Pick<Game, 'date' | 'start' | 'end' | 'court_name'>, today: string) =>
+  `${dayLabel(String(g.date), today)}, ${g.start}–${g.end}${g.court_name ? ` na ${g.court_name}` : ''}`;
+
+/** Horário ocupado por um jogo com vaga: mostra quem está e oferece entrar (o "sim" é confirmado pelo banco). */
+export function joinOfferMessage(g: Game, today: string): string {
+  const quem = g.names.length ? `, com ${listaNomes(g.names)}` : '';
+  const vagas = g.spots_left === 1 ? 'resta 1 vaga' : `restam ${g.spots_left} vagas`;
+  return `Esse horário já está reservado: ${jogoDe(g, today)}${quem} (${vagas}). Quer entrar nesse jogo? Responda "sim" que eu te adiciono.`;
+}
+
+/** Horário ocupado por algo em que a pessoa não pode entrar (lotado, já está, aula, campeonato). */
+export function busyMessage(g: Game, today: string): string {
+  if (g.reason === 'ALREADY_IN') return `Você já está nesse jogo: ${jogoDe(g, today)}${g.names.length ? `, com ${listaNomes(g.names)}` : ''}.`;
+  if (g.reason === 'GAME_FULL') return `Esse horário já tem jogo com 8 pessoas: ${jogoDe(g, today)}, com ${listaNomes(g.names)}. Está lotado.`;
+  if (g.type === 'Aula') return `Esse horário está reservado para uma aula (${jogoDe(g, today)}).`;
+  if (g.type === 'Play') return `Esse horário já está reservado: ${jogoDe(g, today)}${g.names.length ? `, com ${listaNomes(g.names)}` : ''}.`;
+  return `Esse horário está ocupado (${jogoDe(g, today)}).`;
+}
+
+export function successMessage(action: 'create' | 'cancel' | 'reschedule' | 'join', n: Summary, today: string, names: string[], me?: string): string {
+  if (action === 'join') {
+    const ordem = [...((n.names ?? []) as string[]).filter((x) => x !== me), ...(me ? ['você'] : [])];
+    return `Pronto, você entrou no jogo de ${jogoDe(n as Game, today)}. Jogam: ${listaNomes(ordem)}.`;
+  }
   if (action === 'cancel') return `Pronto, a ${describeReservation(n, today)} foi cancelada.`;
   if (action === 'reschedule') return `Pronto, remarcado: ${describeReservation(n, today, names)}.`;
   return `Reserva confirmada: ${describeReservation(n, today, names)}.`;
@@ -418,10 +445,11 @@ async function decide(i: DecideInput): Promise<Decision> {
   if (hasProposal && answer.customer_confirmed) {
     if (!i.ultimaId) return plain({ bubbles: [CODE_TEXT.NOT_EXPLICIT as string], awaiting: true });
     const res = (await db('conv_svc_ai_confirm', { p_proposal: (ctx.open_proposal as Ctx).id, p_message: i.ultimaId })).data as
-      { ok: boolean; code?: string; message?: string; action?: 'create' | 'cancel' | 'reschedule'; summary?: Summary } | null;
+      { ok: boolean; code?: string; message?: string; action?: 'create' | 'cancel' | 'reschedule' | 'join'; summary?: Summary } | null;
     if (res?.ok && res.summary) {
       const names = (memory.proposal_names ?? []) as string[];
-      return { bubbles: [successMessage(res.action ?? 'create', res.summary, today, names)], awaiting: false, close: true, action: 'confirmed',
+      const me = String(((ctx.requester as Ctx | undefined)?.profile as Ctx | undefined)?.name ?? '') || undefined;
+      return { bubbles: [successMessage(res.action ?? 'create', res.summary, today, names, me)], awaiting: false, close: true, action: res.action === 'join' ? 'joined' : 'confirmed',
         memory: { intent: answer.intent, slots: {} } };
     }
     return failure(res?.code ?? 'UNKNOWN', res?.message, i, memory, ctx.open_proposal as Ctx);
@@ -554,15 +582,31 @@ async function failure(code: string, message: string | undefined, i: DecideInput
     const dur = Number(extra?.payload?.duration ?? (proposal?.payload as Ctx | undefined)?.duration ?? 60);
     const wanted = String(extra?.payload?.start ?? (proposal?.payload as Ctx | undefined)?.start ?? '');
     const cs = (extra?.candidates?.length ? extra.candidates : (ctx.courts as Court[]).filter((c) => c.id === (proposal?.payload as Ctx | undefined)?.court_id)) as Court[];
+    // Quem ocupa o horário? Se for um jogo de Play com vaga, a IA oferece entrar (pedido novo de Play, não na falha de uma confirmação).
+    const profile = ((ctx.requester as Ctx | undefined)?.profile ?? null) as Ctx | null;
+    let jogos: Game[] = [];
+    if (extra && String(extra.payload.type ?? 'Play') === 'Play' && profile?.id && /^\d{2}:\d{2}$/.test(wanted)) {
+      const ini = toMin(wanted);
+      for (const c of cs) {
+        const g = ((await deps.db('conv_svc_ai_slot_games', { p_court: c.id, p_date: date, p_start_min: ini, p_end_min: ini + dur, p_requester: profile.id })).data ?? []) as Game[];
+        jogos = jogos.concat(g);
+      }
+      const entrar = jogos.find((g) => g.joinable);
+      if (entrar) {
+        const p = (await deps.db('conv_svc_ai_propose', { p_session: i.session, p: { action: 'join', reservation_id: entrar.reservation_id } })).data as { ok: boolean } | null;
+        if (p?.ok) return { ...base, bubbles: [joinOfferMessage(entrar, today)], action: 'proposed_join', memory };
+      }
+    }
     const linhas: string[] = [];
     for (const c of cs) {
       const livres = ((await deps.db('conv_svc_available_slots', { p_date: date, p_court: c.id, p_duration: dur })).data ?? []) as string[];
       const perto = nearest(livres, wanted);
       if (perto.length) linhas.push(`${c.name}: ${perto.join(', ')}`);
     }
+    const ocupado = jogos.length ? busyMessage(jogos[0], today) : 'Esse horário não está livre.';
     return { ...base, bubbles: [linhas.length
-      ? `Esse horário não está livre. Livres ${dayLabel(date, today)}: ${linhas.join(' · ')}. Algum serve?`
-      : `Esse horário não está livre e não há outro disponível ${dayLabel(date, today)} para ${dur} min. Quer outro dia?`] };
+      ? `${ocupado} Livres ${dayLabel(date, today)}: ${linhas.join(' · ')}. Algum serve?`
+      : `${ocupado} Não há outro horário disponível ${dayLabel(date, today)} para ${dur} min. Quer outro dia?`] };
   }
   const texto = code in CODE_TEXT ? CODE_TEXT[code] : undefined;
   if (texto === null) {
