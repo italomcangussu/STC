@@ -154,12 +154,9 @@ export function mergeSlots(prev: Slots | undefined, next: Slots, reset = false):
 const MAX_BUBBLES = 4;
 const MAX_CHARS = 320;
 
-/** Quebra por IDEIA/frase antes de quebrar por tamanho: WhatsApp humano, não um parágrafo fatiado. */
+/** Cada item vindo do modelo já é uma microbolha. Só quebramos automaticamente linhas explícitas ou textos muito longos. */
 function naturalParts(message: string): string[] {
-  const t = message.trim();
-  if (!t) return [];
-  const frases = (t.match(/[^.!?…]+(?:[.!?…]+|$)/g) ?? [t]).map((x) => x.trim()).filter(Boolean);
-  const seeds = frases.length > 1 ? frases : [t];
+  const seeds = message.split(/\n+/).map((x) => x.trim()).filter(Boolean);
   const out: string[] = [];
   for (const seed of seeds) {
     let rest = seed;
@@ -249,9 +246,9 @@ export function describeReservation(n: Summary, today: string, names: string[] =
 }
 
 export function proposalMessage(action: 'create' | 'cancel' | 'reschedule', n: Summary, today: string, names: string[]): string {
-  if (action === 'cancel') return `Beleza. Vou cancelar a ${describeReservation(n, today)}. Posso confirmar?`;
-  if (action === 'reschedule') return `Achei. Dá para remarcar para ${describeReservation(n, today, names)}. Fecho assim?`;
-  return `Boa, achei horário. Seria ${describeReservation(n, today, names)}. Fecho?`;
+  if (action === 'cancel') return `Vou cancelar a ${describeReservation(n, today)}. Posso cancelar? Responda "sim" para confirmar.`;
+  if (action === 'reschedule') return `Verifiquei agora e dá para remarcar para ${describeReservation(n, today, names)}. A anterior será cancelada. Posso confirmar?`;
+  return `Verifiquei agora: o horário está livre. Seria ${describeReservation(n, today, names)}. Posso confirmar essa reserva?`;
 }
 
 /** Jogo que ocupa o horário, como o banco devolve (`conv_svc_ai_slot_games`). */
@@ -266,8 +263,10 @@ export function joinOfferMessage(g: Game, today: string, levando: string[] = [])
   const quem = g.names.length ? `, com ${listaNomes(g.names)}` : '';
   const vagas = g.spots_left === 1 ? 'resta 1 vaga' : `restam ${g.spots_left} vagas`;
   const junto = levando.length ? ` com ${listaNomes(levando)}` : '';
-  const abertura = g.participants >= 4 ? 'Rapaz, esse play já tá com uma galera, viu.' : 'Já tem play nesse horário.';
-  return `${abertura} ${jogoDe(g, today)}${quem}; ${vagas}. Quer entrar${junto}? Se quiser, eu coloco ${levando.length ? 'vocês' : 'você'}.`;
+  if (g.participants >= 4) {
+    return `Rapaz, esse play já tá com uma galera, viu: ${jogoDe(g, today)}${quem} (${vagas}). Se quiser entrar${junto}, cabe; ou eu vejo outra quadra/horário pra você.`;
+  }
+  return `Esse horário já está reservado: ${jogoDe(g, today)}${quem} (${vagas}). Quer entrar nesse jogo${junto}? Responda "sim" que eu ${levando.length ? 'adiciono vocês' : 'te adiciono'}.`;
 }
 
 /** O jogo tem vaga, mas não para todo mundo que a pessoa quer levar. */
@@ -279,7 +278,7 @@ export function notEnoughSpotsMessage(g: Game, spots: number, wanted: number, to
 /** Horário ocupado por algo em que a pessoa não pode entrar (lotado, já está, aula, campeonato). */
 export function busyMessage(g: Game, today: string): string {
   if (g.reason === 'ALREADY_IN') return `Você já está nesse jogo: ${jogoDe(g, today)}${g.names.length ? `, com ${listaNomes(g.names)}` : ''}.`;
-  if (g.reason === 'GAME_FULL') return `Esse play tá lotado mesmo: 8 pessoas em ${jogoDe(g, today)}, com ${listaNomes(g.names)}. Quer que eu veja outro horário?`;
+  if (g.reason === 'GAME_FULL') return `Esse horário já tem jogo com 8 pessoas: ${jogoDe(g, today)}, com ${listaNomes(g.names)}. Está lotado.`;
   if (g.type === 'Aula') return `Esse horário está reservado para uma aula (${jogoDe(g, today)}).`;
   if (g.type === 'Play') return `Esse horário já está reservado: ${jogoDe(g, today)}${g.names.length ? `, com ${listaNomes(g.names)}` : ''}.`;
   return `Esse horário está ocupado (${jogoDe(g, today)}).`;
@@ -302,7 +301,7 @@ export function participantsProposalMessage(n: Summary, today: string, me?: stri
   const poe = [...((n.add_names ?? []) as string[]), ...(n.add_guest ? [`${n.add_guest} (convidado)`] : [])];
   const partes = [tira.length ? `retirar ${listaNomes(tira)}` : '', poe.length ? `adicionar ${listaNomes(poe)}` : ''].filter(Boolean);
   const ficam = comVoce((n.after_names ?? []) as string[], me);
-  return `Fechado. Vou ${partes.join(' e ')} ${poe.length ? 'na' : 'da'} reserva de ${quando}. Ficam: ${listaNomes(ficam)}. Confirmo?`;
+  return `Vou ${partes.join(' e ')} ${poe.length ? 'na' : 'da'} reserva de ${quando}. Ficam: ${listaNomes(ficam)}. Posso confirmar?`;
 }
 
 export function successMessage(action: 'create' | 'cancel' | 'reschedule' | 'join' | 'participants', n: Summary, today: string, names: string[], me?: string): string {
@@ -318,9 +317,9 @@ export function successMessage(action: 'create' | 'cancel' | 'reschedule' | 'joi
     const ordem = [...((n.names ?? []) as string[]).filter((x) => x !== me), ...(me ? ['você'] : [])];
     return `Pronto, ${Number(n.added ?? 1) > 1 ? 'vocês entraram' : 'você entrou'} no jogo de ${jogoDe(n as Game, today)}. Jogam: ${listaNomes(ordem)}.`;
   }
-  if (action === 'cancel') return `Fechou. A ${describeReservation(n, today)} foi cancelada.`;
-  if (action === 'reschedule') return `Fechou. Remarcado: ${describeReservation(n, today, names)}.`;
-  return `Fechou. ${describeReservation(n, today, names)} confirmada.`;
+  if (action === 'cancel') return `Pronto, a ${describeReservation(n, today)} foi cancelada.`;
+  if (action === 'reschedule') return `Pronto, remarcado: ${describeReservation(n, today, names)}.`;
+  return `Reserva confirmada: ${describeReservation(n, today, names)}.`;
 }
 
 /** Mensagens para os códigos que o banco devolve. `null` = o caso pede transferência para a equipe. */
