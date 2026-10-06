@@ -99,7 +99,8 @@ const lit = (v: unknown): string => {
   if (v === null || v === undefined) return 'null';
   if (typeof v === 'number' || typeof v === 'boolean') return String(v);
   if (typeof v === 'string') return `'${v.replace(/'/g, "''")}'`;
-  if (Array.isArray(v)) return `array[${v.map(lit).join(', ')}]::text[]`;
+  // Lista de objetos = jsonb (como o supabase-js manda); lista de textos = text[].
+  if (Array.isArray(v)) return v.some((x) => x !== null && typeof x === 'object') ? `'${JSON.stringify(v).replace(/'/g, "''")}'::jsonb` : `array[${v.map(lit).join(', ')}]::text[]`;
   return `'${JSON.stringify(v).replace(/'/g, "''")}'::jsonb`;
 };
 
