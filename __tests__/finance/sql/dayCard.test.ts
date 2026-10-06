@@ -89,10 +89,15 @@ describe('os fluxos existentes continuam funcionando (sem FK financeira em reser
     await w.db.exec(`insert into public.student_payments(student_id, amount, valid_until) values ('${FX.students.dayCard}', 50, now())`);
     await w.db.exec(`update public.student_payments set status = 'cancelled', cancelled_reason = 'x' where id = '${FX.payments.dayCard}'`);
     await w.db.exec(`delete from public.student_payments where id = '${FX.payments.cardMensal}'`);
+    // Cada operação gera uma trilha. A ORDEM não é o que se testa: o Postgres em memória tem relógio de milissegundos, então operações
+    // seguidas podem empatar em `occurred_at` (e o desempate seria o `id`, aleatório). Por isso se confere o conjunto, por tipo de operação.
     const audit = await q<any>(w.db, `select action, record_id, old_data is not null as has_old, new_data is not null as has_new, metadata
-      from public.admin_audit_logs where table_name = 'student_payments' order by occurred_at, id`);
-    expect(audit.map((a) => a.metadata.op)).toEqual(['insert', 'update', 'delete']);
-    expect(audit[2]).toMatchObject({ has_old: true, has_new: false });
+      from public.admin_audit_logs where table_name = 'student_payments'`);
+    expect(audit.map((a) => a.metadata.op).sort()).toEqual(['delete', 'insert', 'update']);
+    const por = (op: string) => audit.find((a) => a.metadata.op === op);
+    expect(por('insert')).toMatchObject({ has_old: false, has_new: true });
+    expect(por('update')).toMatchObject({ has_old: true, has_new: true });
+    expect(por('delete')).toMatchObject({ has_old: true, has_new: false });
     // auditoria quebrada → o pagamento de aluno continua sendo gravado
     await w.db.exec(`alter table public.admin_audit_logs rename to admin_audit_logs_off`);
     await w.db.exec(`insert into public.student_payments(student_id, amount, valid_until) values ('${FX.students.dayCard}', 50, now())`);
