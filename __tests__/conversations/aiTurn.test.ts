@@ -11,7 +11,7 @@ import type { Chat } from '../../supabase/functions/_shared/aiAgent/llm';
 import type { UazCaller } from '../../supabase/functions/_shared/uazChat';
 
 type W = Awaited<ReturnType<typeof world>>;
-const GROUP = '120363025246125486@g.us';
+const GROUP = 'test-group@g.us';
 let n = 0;
 let groupInfoCalls = 0;
 
@@ -52,9 +52,9 @@ const provider = (fail = false, participants: Record<string, unknown>[] = []) =>
 async function setup(opts: { group?: boolean } = {}) {
   const w = await world();
   await rpc(w.db, U.admin, `public.conv_save_ai_settings('${key()}', ${j({ active: true, model: 'modelo-de-teste', buffer_seconds: 0, max_turns: 12 })})`);
-  await rpc(w.db, U.admin, `public.conv_save_channel('${key()}', ${j({ bot_phone: '5585988880099', ai_direct_enabled: true })})`);
+  await rpc(w.db, U.admin, `public.conv_save_channel('${key()}', ${j({ bot_phone: '15550000099', ai_direct_enabled: true })})`);
   if (opts.group) {
-    await svc(w.db, `public.conv_svc_ingest_message(${j({ provider_id: `SEED${++n}`, chat_kind: 'group', group_jid: GROUP, group_name: 'Sócios', phone: '5585988880002', name: 'Ana', body: 'oi' })})`);
+    await svc(w.db, `public.conv_svc_ingest_message(${j({ provider_id: `SEED${++n}`, chat_kind: 'group', group_jid: GROUP, group_name: 'Sócios', phone: '15550000002', name: 'Ana', body: 'oi' })})`);
     const [g] = await q<{ id: string }>(w.db, `select id from public.conv_groups`);
     await rpc(w.db, U.admin, `public.conv_set_group('${g.id}', 'allowed', false)`);
     await rpc(w.db, U.admin, `public.conv_set_mention_verified(true)`);
@@ -65,10 +65,10 @@ async function setup(opts: { group?: boolean } = {}) {
   return { w, date };
 }
 
-const direct = (w: W, body: string, phone = '5585988880002', extra: Record<string, unknown> = {}) =>
+const direct = (w: W, body: string, phone = '15550000002', extra: Record<string, unknown> = {}) =>
   svc<any>(w.db, `public.conv_svc_ingest_message(${j({ provider_id: `D${++n}${Math.random()}`, chat_kind: 'direct', phone, name: 'Ana', kind: 'text', body, ...extra })})`);
 const grp = (w: W, body: string, over: Record<string, unknown> = {}) =>
-  svc<any>(w.db, `public.conv_svc_ingest_message(${j({ provider_id: `G${++n}${Math.random()}`, chat_kind: 'group', group_jid: GROUP, phone: '5585988880002', name: 'Ana', kind: 'text', body, ...over })})`);
+  svc<any>(w.db, `public.conv_svc_ingest_message(${j({ provider_id: `G${++n}${Math.random()}`, chat_kind: 'group', group_jid: GROUP, phone: '15550000002', name: 'Ana', kind: 'text', body, ...over })})`);
 const reservations = (w: W) => q<any>(w.db, `select * from public.reservations order by created_at`);
 const turn = (w: W, messageId: string, chat: Chat | null, uaz: UazCaller | null): Promise<TurnResult> =>
   runTurn(messageId, { db: pgDb(w.db), chat, uaz, sleep: async () => undefined });
@@ -84,7 +84,7 @@ describe('conversa de reserva (individual)', () => {
     const r1 = await turn(w, m1.message_id, s1.chat, p.uaz);
     expect([r1.status, r1.bubbles]).toEqual(['replied', 1]);
     expect(p.sent.map((x) => x.text)).toEqual(['Claro! Quem vai jogar com você?']);
-    expect(p.sent[0].number).toBe('5585988880002');
+    expect(p.sent[0].number).toBe('15550000002');
     expect((await reservations(w)).length).toBe(0);
     // 2) "com o Beto" → o servidor resolve no cadastro, consulta a quadra e monta a PROPOSTA
     await tick();
@@ -612,7 +612,7 @@ describe('agenda e atletas: sair, retirar, adicionar, convidado, cancelar de qua
     const m1 = await direct(w, 'tira o Beto da reserva');
     await turn(w, m1.message_id, script(answer({ intent: 'participantes', ready: true, slots: { reservation_ref: 'a1', remove_names: ['Beto'] } })).chat, p.uaz);
     expect(p.sent[0].text).toBe('Só quem criou a reserva (ou um administrador) pode retirar o criador.');
-    const adm = await direct(w, 'tira o Beto da reserva', '5585988880001', { name: 'Admin' });
+    const adm = await direct(w, 'tira o Beto da reserva', '15550000001', { name: 'Admin' });
     const r = await turn(w, adm.message_id, script(answer({ intent: 'participantes', ready: true, slots: { reservation_ref: 'a1', remove_names: ['Beto'] } })).chat, p.uaz);
     expect(r.action).toBe('proposed_participants');
     expect(p.sent[1].text).toMatch(/^Vou retirar Beto Sócio da reserva/);
@@ -623,11 +623,11 @@ describe('agenda e atletas: sair, retirar, adicionar, convidado, cancelar de qua
     const { w, date } = await setup();
     const id = await jogo(w, date, [U.socioB, U.socioA]);
     const p = provider();
-    const adm = await direct(w, 'cancela a reserva das 16h de amanhã', '5585988880001', { name: 'Admin' });
+    const adm = await direct(w, 'cancela a reserva das 16h de amanhã', '15550000001', { name: 'Admin' });
     const r1 = await turn(w, adm.message_id, script(answer({ intent: 'cancelar', ready: true, slots: { reservation_ref: 'a1' } })).chat, p.uaz);
     expect(r1.action).toBe('proposed');
     await tick();
-    const yes = await direct(w, 'sim, cancela', '5585988880001', { name: 'Admin' });
+    const yes = await direct(w, 'sim, cancela', '15550000001', { name: 'Admin' });
     await turn(w, yes.message_id, script(answer({ intent: 'cancelar', customer_confirmed: true, slots: { reservation_ref: 'a1' } })).chat, p.uaz);
     expect((await part(w, id)).status).toBe('cancelled');
   }, 120000);
@@ -644,11 +644,11 @@ describe('agenda e atletas: sair, retirar, adicionar, convidado, cancelar de qua
   }, 120000);
 });
 
-describe('marcações viram nomes: o agente lê "@Emerson Souza", não "@61809058967781"', () => {
+describe('marcações viram nomes: o agente lê "@Emerson Souza", não "@81111111111111"', () => {
   const EM = ID(8801);
   const MENC = { mention: { direct: true, evidence: 'mentioned_bot_phone' } };
   async function reserva(w: W, date: string) {
-    await w.db.exec(`insert into auth.users(id) values ('${EM}'); insert into public.profiles(id, name, role, is_professor, is_active, phone) values ('${EM}', 'Emerson Souza', 'socio', false, true, '85988880077')`);
+    await w.db.exec(`insert into auth.users(id) values ('${EM}'); insert into public.profiles(id, name, role, is_professor, is_active, phone) values ('${EM}', 'Emerson Souza', 'socio', false, true, '5550000077')`);
     const id = ID(7900 + ++n);
     await w.db.exec(`insert into public.reservations(id, court_id, creator_id, date, start_time, end_time, type, participant_ids)
       values ('${id}', '${w.court1}', '${U.socioB}', '${date}', '16:00', '17:00', 'Play', '{${U.socioB},${U.socioA},${EM}}')`);
@@ -669,12 +669,12 @@ describe('marcações viram nomes: o agente lê "@Emerson Souza", não "@6180905
   it('a sua mensagem: "@STC eu e o @<LID> desistimos, retire nosso nome" — o LID é conciliado com o sócio pelo telefone que o grupo informa', async () => {
     const { w, date } = await setup({ group: true });
     const id = await reserva(w, date);
-    const p = provider(false, [{ LID: '61809058967781@lid', PhoneNumber: '5585988880077@s.whatsapp.net' }, { LID: '70000000000001@lid', PhoneNumber: '5585988880002@s.whatsapp.net' }]);
-    const m = await grp(w, '@5585988880099 eu e o @61809058967781 desistimos não vamos mais, retire nosso nome da reserva', MENC);
+    const p = provider(false, [{ LID: '81111111111111@lid', PhoneNumber: '15550000077@s.whatsapp.net' }, { LID: '82222222222222@lid', PhoneNumber: '15550000002@s.whatsapp.net' }]);
+    const m = await grp(w, '@15550000099 eu e o @81111111111111 desistimos não vamos mais, retire nosso nome da reserva', MENC);
     const s = script(answer({ intent: 'participantes', ready: true, slots: { reservation_ref: 'a1', remove_names: ['eu', 'Emerson Souza'] } }));
     const r = await turn(w, m.message_id, s.chat, p.uaz);
     expect(s.calls[0].user).toContain('@STC Institucional eu e o @Emerson Souza desistimos');       // o modelo lê nomes
-    expect(s.calls[0].user).not.toContain('61809058967781');
+    expect(s.calls[0].user).not.toContain('81111111111111');
     expect(r.action).toBe('proposed_participants');
     expect(p.sent[0].text).toBe('Vou retirar você e Emerson Souza da reserva de amanhã, 16:00–17:00 na Quadra 1. Ficam: Beto Sócio. Posso confirmar?');
     await tick();
@@ -687,23 +687,23 @@ describe('marcações viram nomes: o agente lê "@Emerson Souza", não "@6180905
     const { w, date } = await setup({ group: true });
     await reserva(w, date);
     const p = provider(false, []);                                   // o grupo não informou ninguém
-    const m = await grp(w, '@5585988880099 tira o @61809058967781 da reserva', MENC);
+    const m = await grp(w, '@15550000099 tira o @81111111111111 da reserva', MENC);
     const s = script(answer({ messages: ['Quem é a pessoa que você marcou? Me diga o nome.'], awaiting: true }));
     await turn(w, m.message_id, s.chat, p.uaz);
     expect(s.calls[0].user).toContain('@(pessoa não identificada)');
     expect(p.sent[0].text).toBe('Quem é a pessoa que você marcou? Me diga o nome.');
   }, 120000);
 
-  it('quando o cadastro já resolve (telefone no próprio número), a UazAPI nem é consultada', async () => {
+  it('quando o cadastro já resolve a menção, uma única consulta ao grupo basta para saber quem está presente', async () => {
     const { w, date } = await setup({ group: true });
     await reserva(w, date);
     const p = provider();
     groupInfoCalls = 0;
-    const m = await grp(w, '@5585988880099 tira o @5585988880077 da reserva', MENC);
+    const m = await grp(w, '@15550000099 tira o @15550000077 da reserva', MENC);
     const s = script(answer({ messages: ['Ok'], awaiting: true }));
     await turn(w, m.message_id, s.chat, p.uaz);
     expect(s.calls[0].user).toContain('tira o @Emerson Souza da reserva');
-    expect(groupInfoCalls).toBe(0);
+    expect(groupInfoCalls).toBe(1); // lista de presentes; a resolução da menção não precisa de uma segunda consulta
   }, 120000);
 });
 
@@ -738,7 +738,7 @@ describe('regras do turno que não dependem do modelo', () => {
     expect((await turn(w, m.message_id, calls.chat, p.uaz)).status).toBe('handoff');
     expect(calls.calls.length).toBe(0);
     const w2 = (await setup()).w;
-    const m2 = await direct(w2, '', '5585988880002', { kind: 'image', body: null });
+    const m2 = await direct(w2, '', '15550000002', { kind: 'image', body: null });
     expect((await turn(w2, m2.message_id, calls.chat, p.uaz)).status).toBe('handoff');
     expect(calls.calls.length).toBe(0);
   }, 120000);
@@ -773,13 +773,13 @@ describe('regras do turno que não dependem do modelo', () => {
   }, 90000);
 });
 
-describe('grupo: só quem chamou, só o seu contexto', () => {
+describe('grupo: só quem chamou responde, mas o João entende o papo recente do grupo', () => {
   const mention = { mention: { direct: true, evidence: 'mentioned_bot_phone' } };
 
-  it('menção direta abre o atendimento; a resposta cita a mensagem de quem pediu; o contexto não traz os outros', async () => {
+  it('menção direta abre o atendimento; responde a quem chamou e usa o papo recente do grupo como contexto', async () => {
     const { w, date } = await setup({ group: true });
     const p = provider();
-    await grp(w, 'segredo do Beto: meu CPF é 123.456.789-00', { phone: '5585988880003', name: 'Beto' });
+    await grp(w, 'Beto consegue jogar depois das 18h', { phone: '15550000003', name: 'Beto' });
     const m = await grp(w, 'quero amanhã às 16h no saibro', mention);
     const s = script(answer({ messages: ['Claro! Quem vai jogar com você?'], awaiting: true, slots: { date, start: '16:00', court_label: 'saibro' } }));
     const r = await turn(w, m.message_id, s.chat, p.uaz);
@@ -787,8 +787,9 @@ describe('grupo: só quem chamou, só o seu contexto', () => {
     expect(p.sent[0].number).toBe(GROUP);
     const [mine] = await q<any>(w.db, `select provider_message_id from public.conv_messages where id = '${m.message_id}'`);
     expect(p.sent[0].replyid).toBe(mine.provider_message_id);   // responde ao solicitante
-    expect(s.calls[0].user).not.toContain('CPF');
-    expect(s.calls[0].user).not.toContain('Beto');
+    expect(s.calls[0].user).toContain('# PAPO RECENTE DO GRUPO');
+    expect(s.calls[0].user).toContain('Beto: Beto consegue jogar depois das 18h');
+    expect(s.calls[0].user).not.toContain('15550000003');       // telefone não entra no prompt
     expect(s.calls[0].system).toContain('ESTA CONVERSA É UM GRUPO');
   }, 120000);
 
@@ -810,7 +811,7 @@ describe('grupo: só quem chamou, só o seu contexto', () => {
     expect((await q(w.db, `select 1 from public.conv_booking_proposals where status = 'open'`)).length).toBe(1);
     await tick();
     // outro participante responde "sim": não aciona (não é o solicitante e não citou a IA)
-    const intruder = await grp(w, 'sim', { phone: '5585988880003', name: 'Beto' });
+    const intruder = await grp(w, 'sim', { phone: '15550000003', name: 'Beto' });
     const calls = script();
     expect((await turn(w, intruder.message_id, calls.chat, p.uaz)).status).toBe('skip');
     expect(calls.calls.length).toBe(0);
