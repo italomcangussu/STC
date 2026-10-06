@@ -1,6 +1,6 @@
 import React from 'react';
 import { UserCheck, Swords, ChevronRight, Calendar, DollarSign, Vote } from 'lucide-react';
-import type { AdminTabId } from './adminNav';
+import type { AdminTabId } from './adminSections';
 import type { AdminCounts } from './useAdminPending';
 
 interface Props {

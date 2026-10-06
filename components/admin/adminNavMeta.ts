@@ -3,7 +3,7 @@ import {
     Megaphone, ScrollText, Sparkles, Swords, Trophy, UserCheck, Users, Vote,
     type LucideIcon,
 } from 'lucide-react';
-import { ALL_SECTIONS, type AdminSection, type AdminTabId } from './adminNav';
+import { ALL_SECTIONS, type AdminSection, type AdminTabId } from './adminSections';
 
 export type PendingBySection = Partial<Record<AdminTabId, number>>;
 

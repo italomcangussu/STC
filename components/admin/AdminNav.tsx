@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { LayoutDashboard, Search, X } from 'lucide-react';
-import { ADMIN_GROUPS, groupOf, searchSections, type AdminGroup, type AdminSection, type AdminTabId } from './adminNav';
+import { ADMIN_GROUPS, groupOf, searchSections, type AdminGroup, type AdminSection, type AdminTabId } from './adminSections';
 import { AREA_ICON, PANEL_DOM_ID, SECTION_ICON, tabDomId, type PendingBySection } from './adminNavMeta';
 
 const countOfGroup = (g: AdminGroup, pending: PendingBySection) =>

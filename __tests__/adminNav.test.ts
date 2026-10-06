@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { ADMIN_GROUPS, ALL_SECTIONS, searchSections, groupOf, isAdminTabId } from '../components/admin/adminNav';
+import { ADMIN_GROUPS, ALL_SECTIONS, searchSections, groupOf, isAdminTabId } from '../components/admin/adminSections';
 
 describe('adminNav', () => {
     it('cobre as 14 seções sem duplicar', () => {
