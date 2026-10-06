@@ -175,6 +175,27 @@ describe('conversa de reserva (individual)', () => {
     expect((await q(w.db, `select 1 from public.conv_booking_proposals where status = 'open'`)).length).toBe(0);
   }, 90000);
 
+  it('pergunta aberta de horários livres consulta o motor real e nunca cai em handoff genérico, mesmo se o modelo tentar transferir', async () => {
+    const { w } = await setup();
+    const p = provider();
+    const m = await direct(w, 'quais horários livres amanhã à noite para o play?');
+    const s = script(answer({
+      intent: 'outro',
+      transfer: true,
+      handoff_kind: 'hard',
+      handoff_note: 'não sei responder',
+      messages: [],
+      slots: {},
+    }));
+    const r = await turn(w, m.message_id, s.chat, p.uaz);
+    expect(r.status).toBe('replied');
+    expect(r.action).toBe('availability_listed');
+    expect(r.handoff).toBeNull();
+    expect(p.sent[0].text).toMatch(/^Amanhã à noite tem horário livre sim:/);
+    expect(p.sent[1].text).toContain('18:00');
+    expect(p.sent.join(' ')).not.toMatch(/alguém da equipe|te ajudar com isso por aqui/i);
+  }, 90000);
+
   it('data/horário passados, fora da grade ou depois do fechamento: o sistema explica; a IA não inventa', async () => {
     const { w, date } = await setup();
     const p = provider();
