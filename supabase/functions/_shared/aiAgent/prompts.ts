@@ -191,10 +191,29 @@ export function proposalText(ctx: Ctx): string {
 
 const fold = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 
-export function rankingText(ctx: Ctx): string {
+export function rankingText(ctx: Ctx, buffered = ''): string {
   const lista = (ctx.club_roster ?? []) as Ctx[];
   if (!lista.length) return '(ranking não disponível agora)';
-  return lista.map((r) =>
+
+  const contexto = fold([
+    buffered,
+    ...((ctx.transcript ?? []) as Ctx[]).map((x) => String(x.body ?? '')),
+    ...((ctx.group_context ?? []) as Ctx[]).flatMap((x) => [String(x.sender ?? ''), String(x.body ?? '')]),
+  ].join(' '));
+  const pediuRanking = /\b(ranking|rank|classe|classificacao|posição|posicao|pontos|lider|líder|top|desafio)\b/.test(contexto);
+  const presentes = new Set(((ctx.group_members ?? []) as string[]).map((x) => fold(String(x))));
+  const solicitante = fold(String(((ctx.requester ?? {}) as Ctx).profile?.name ?? ''));
+
+  const relevantes = pediuRanking ? lista : lista.filter((r) => {
+    const nome = fold(String(r.name ?? ''));
+    if (nome && (nome === solicitante || presentes.has(nome) || contexto.includes(nome))) return true;
+    return ((r.aliases ?? []) as string[]).some((a) => {
+      const alias = fold(String(a));
+      return alias.length >= 3 && contexto.includes(alias);
+    });
+  });
+  if (!relevantes.length) return '(ranking não necessário para este turno)';
+  return relevantes.map((r) =>
     `${r.global_position}G/${r.category_position}C ${r.name} | ${r.category} | ${r.points} pts${r.is_professor ? ' | professor' : ''}`
   ).join('\n');
 }
@@ -246,7 +265,7 @@ ${s.business_context?.trim() || '(nenhum texto cadastrado — não invente nada 
 
 # RANKING DO CLUBE (ATUAL, DINÂMICO)
 Formato: posição global/posição na classe, nome, classe, pontos. Use como fato atual; pode mudar depois.
-${rankingText(ctx)}
+${rankingText(ctx, buffered)}
 
 ${ctx.is_group ? `# PESSOAS PRESENTES NO GRUPO (confirmadas agora)
 ${groupMembersText(ctx)}
