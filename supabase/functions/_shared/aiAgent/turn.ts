@@ -546,9 +546,17 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
     ctx.group_members = membros;
   }
 
-  // "@61809058967781" vira o nome do sócio (conciliado pelo telefone) ANTES de o modelo ler a conversa.
-  const mencoes = await conciliarMencoes(deps, conversation, isGroup, ((ctx.transcript ?? []) as Ctx[]).map((t) => String(t.body ?? '')));
-  if (mencoes.size) ctx.transcript = ((ctx.transcript ?? []) as Ctx[]).map((t) => ({ ...t, body: substituirMencoes(String(t.body ?? ''), mencoes, String(ctx.institutional_name ?? 'STC')) }));
+  // "@61809058967781" vira nome ANTES de o modelo ler tanto a solicitação quanto o papo recente do grupo.
+  const textosComMencoes = [
+    ...((ctx.transcript ?? []) as Ctx[]).map((t) => String(t.body ?? '')),
+    ...((ctx.group_context ?? []) as Ctx[]).map((t) => String(t.body ?? '')),
+  ];
+  const mencoes = await conciliarMencoes(deps, conversation, isGroup, textosComMencoes);
+  if (mencoes.size) {
+    const conta = String(ctx.institutional_name ?? 'STC');
+    ctx.transcript = ((ctx.transcript ?? []) as Ctx[]).map((t) => ({ ...t, body: substituirMencoes(String(t.body ?? ''), mencoes, conta) }));
+    if (isGroup) ctx.group_context = ((ctx.group_context ?? []) as Ctx[]).map((t) => ({ ...t, body: substituirMencoes(String(t.body ?? ''), mencoes, conta) }));
+  }
   const trail = ((ctx.transcript ?? []) as Ctx[]).slice().reverse();
   const ultimaDaIa = trail.findIndex((t) => t.direction === 'outbound');
   const pendentes = (ultimaDaIa < 0 ? trail : trail.slice(0, ultimaDaIa)).filter((t) => t.direction === 'inbound').reverse();
