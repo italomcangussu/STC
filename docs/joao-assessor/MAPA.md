@@ -124,3 +124,6 @@ Prioridade: **A** alta (valor diário), **B** média, **C** baixa. Risco: N0–N
 
 ## Onda 6 (2026-10-07)
 Entregue: aprovar comprovante (valor lido, distribuído da cobrança mais antiga para a mais nova; ilegível ou sobra vão ao painel) e gerar cobranças do mês (idempotente). Ambos N2, com segundo passo a partir de R$ 400. Fora, sem função própria para reutilizar: aprovar/recusar acesso (borda cria o usuário), follow-up e bloquear horário; baixa em lote é coberta pela aprovação de comprovante.
+
+## Onda 7 (2026-10-07)
+Entregue: recusar pedido de acesso (N1); aprovar pedido de acesso e cadastrar sócio novo (N2). Regra do clube: sócio novo entra com a mensalidade do mês paga, comprovada por imagem enviada na conversa (sem comprovante o João não propõe; valor diferente do informado ou favorecido que não bate também travam). Depois do "sim" (e do segundo passo a partir de R$ 400): acesso criado no Auth (`_shared/athleteProvision.ts`, mesmo critério da função do painel), plano, cobrança do mês, comprovante movido para o sócio novo e aprovado, juros do mês de entrada dispensados. Boas-vindas com humor do João no(s) grupo(s) liberado(s) com IA ligada (`aiAgent/welcome.ts`). Telefone de professor/admin ou de sócio ativo é recusado. Duplicação conhecida: a lógica de criação de acesso existe aqui e em `admin-athlete-access`.

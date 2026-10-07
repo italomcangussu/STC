@@ -9,6 +9,8 @@ import { adminProposalMessage, parseSlots, runTurn, toCents } from '../../supaba
 import { adminPendencyRefs, financialContextText, isAdminAssistant } from '../../supabase/functions/_shared/aiAgent/prompts';
 import type { Chat } from '../../supabase/functions/_shared/aiAgent/llm';
 import type { UazCaller } from '../../supabase/functions/_shared/uazChat';
+import { composeWelcome } from '../../supabase/functions/_shared/aiAgent/welcome';
+import type { Provision } from '../../supabase/functions/_shared/athleteProvision';
 
 type W = Awaited<ReturnType<typeof world>>;
 const GROUP = 'adm-group@g.us';
@@ -438,7 +440,126 @@ describe('onda 6: aprovar comprovante e gerar cobranças (N2)', () => {
   }, 90000);
 });
 
+describe('onda 7: pedidos de acesso e sócio novo com mensalidade paga', () => {
+  let calls: string[] = [];
+  const fakeProvision = (w: W): Provision => async ({ name, phone }) => {
+    calls.push(name);
+    const id = crypto.randomUUID(); const local = phone.replace(/\D/g, '');
+    await w.db.exec(`insert into auth.users(id) values ('${id}'); insert into public.profiles(id, name, phone, role, is_active) values ('${id}', '${name}', '${local}', 'socio', true)`);
+    return { ok: true, profileId: id, alreadyProvisioned: false };
+  };
+  const turnP = (w: W, messageId: string, chat: Chat, uaz: UazCaller) => runTurn(messageId, { db: pgDb(w.db), chat, uaz, sleep: async () => undefined, provision: fakeProvision(w) });
+  const dizer = async (w: W, p: ReturnType<typeof provider>, texto: string, o: Record<string, unknown>) => {
+    const m = await direct(w, texto);
+    return turnP(w, m.message_id, script(answer({ intent: 'admin_acao', ...o })).chat, p.uaz);
+  };
+  const confirmar = (w: W, p: ReturnType<typeof provider>, texto = 'sim') => dizer(w, p, texto, { customer_confirmed: true });
+  const pedidos = (w: W) => q(w.db, `create table if not exists public.access_requests(id uuid primary key default gen_random_uuid(), phone text not null unique, status text not null default 'pending',
+    created_at timestamptz not null default now(), updated_at timestamptz not null default now(), name text not null, phone_normalized text not null, email text, rejection_reason text,
+    decided_by uuid references public.profiles(id), decided_at timestamptz)`);
+  /** O administrador manda a imagem do comprovante: o servidor guarda o envio ligado à mensagem. */
+  const comprovante = async (w: W, cents: number | null) => {
+    await pedidos(w);
+    const m = await direct(w, 'comprovante');
+    await q(w.db, `insert into public.fin_receipt_submissions(profile_id, status, storage_path, file_name, content_type, size_bytes, content_sha256, declared_amount_cents, ocr_status, request_id, source, source_message_id)
+      values ('${U.admin}', 'submitted', 'x/1/c.jpg', 'c.jpg', 'image/jpeg', 100, '${'d'.repeat(64)}', ${cents ?? 'null'}, 'ok', gen_random_uuid(), 'whatsapp', '${m.message_id}')`);
+  };
+  const criar = (o: Record<string, unknown> = {}) => ({ ready: true, slots: { adm_action: 'socio_criar', member_name: 'Carla Souza', phone: '88 99999-1234', amount: 150, ...o } });
+
+  it('sem comprovante não propõe: pede a imagem; pergunta o que falta (telefone, valor)', async () => {
+    calls = []; const w = await setup(); const p = provider();
+    await dizer(w, p, 'cadastra a Carla', criar({ phone: null, amount: null }));
+    expect(p.sent.at(-1)!.text).toMatch(/telefone/i);
+    await dizer(w, p, 'telefone 88 99999-1234', criar({ amount: null }));
+    expect(p.sent.at(-1)!.text).toMatch(/valor da mensalidade/i);
+    await dizer(w, p, 'mensalidade 150', criar());
+    expect(p.sent.at(-1)!.text).toMatch(/preciso do comprovante de pagamento da mensalidade/);
+    expect(await q(w.db, `select 1 from public.conv_booking_proposals`)).toHaveLength(0);
+    expect(calls).toHaveLength(0);
+  }, 90000);
+
+  it('cadastra o sócio com a mensalidade do mês paga pelo comprovante, sem pendência, e dá boas-vindas no grupo', async () => {
+    calls = []; const w = await setup({ group: true }); const p = provider();
+    await comprovante(w, 15000);
+    const r = await dizer(w, p, 'cadastra a Carla', criar());
+    expect(r.action).toBe('proposed_admin');
+    expect(p.sent.at(-1)!.text).toMatch(/^Vou cadastrar o sócio Carla Souza \(telefone \(88\) 99999-1234, e-mail gerado pelo sistema\), com mensalidade de R\$ 150,00\. A mensalidade de \d\d\/\d{4} fica paga com o comprovante/);
+    expect(calls).toHaveLength(0);
+    expect((await confirmar(w, p)).action).toBe('admin_confirmed');
+    expect(calls).toEqual(['Carla Souza']);
+    const [novo] = await q<any>(w.db, `select id from public.profiles where phone = '88999991234'`);
+    const cobr = await q<any>(w.db, `select status, competence_month::text m from public.fin_member_charges where profile_id = '${novo.id}' order by competence_month`);
+    expect(cobr[0].status).toBe('paid');
+    expect(cobr.slice(1).every((c: any) => c.status === 'open')).toBe(true);
+    const [sub] = await q<any>(w.db, `select status, profile_id from public.fin_receipt_submissions`);
+    expect(sub).toMatchObject({ status: 'approved', profile_id: novo.id });
+    expect(await q(w.db, `select 1 from public.fin_member_charges where profile_id = '${novo.id}' and status in ('open','partial') and due_date < current_date`)).toHaveLength(0);
+    expect(p.sent.at(-1)!.text).toMatch(/Pronto: Carla Souza agora é sócio e a mensalidade de \d\d\/\d{4} ficou paga \(R\$ 150,00\), sem pendência/);
+    const grupo = p.sent.filter((x) => x.number.endsWith('@g.us'));
+    expect(grupo).toHaveLength(1);
+    expect(grupo[0].text).toMatch(/Carla/); expect(grupo[0].text).toMatch(/João/);
+  }, 90000);
+
+  it('valor do comprovante diferente da mensalidade informada: não propõe', async () => {
+    calls = []; const w = await setup(); const p = provider();
+    await comprovante(w, 8000);
+    await dizer(w, p, 'cadastra a Carla', criar());
+    expect(p.sent.at(-1)!.text).toMatch(/O comprovante mostra R\$ 80,00, mas a mensalidade informada é R\$ 150,00/);
+    expect(await q(w.db, `select 1 from public.conv_booking_proposals`)).toHaveLength(0);
+  }, 90000);
+
+  it('mensalidade de R$ 500 pede o segundo passo antes de criar o acesso', async () => {
+    calls = []; const w = await setup(); const p = provider();
+    await comprovante(w, 50000);
+    await dizer(w, p, 'cadastra a Carla', criar({ amount: 500 }));
+    expect((await confirmar(w, p)).action).toBe('failed:CONFIRM_AMOUNT');
+    expect(calls).toHaveLength(0);
+    expect((await confirmar(w, p, 'confirmo R$ 500,00')).action).toBe('admin_confirmed');
+    expect(calls).toHaveLength(1);
+  }, 90000);
+
+  it('telefone de professor, ou de sócio ativo, é recusado no banco', async () => {
+    calls = []; const w = await setup(); const p = provider();
+    await comprovante(w, 15000);
+    await dizer(w, p, 'cadastra', criar({ phone: '99900000001' }));
+    expect(p.sent.at(-1)!.text).toMatch(/já é de .* \(admin\)/i);
+    await dizer(w, p, 'cadastra', criar({ phone: '99900000003' }));
+    expect(p.sent.at(-1)!.text).toMatch(/já é sócio ativo/);
+    expect(calls).toHaveLength(0);
+  }, 90000);
+
+  it('recusar pedido de acesso: por nome, com motivo, depois do "sim"', async () => {
+    const w = await setup(); const p = provider(); await pedidos(w);
+    await q(w.db, `insert into public.access_requests(name, phone, phone_normalized, status) values ('Zeca Pereira', '88988887777', '88988887777', 'pending')`);
+    const r = await dizer(w, p, 'recusa o acesso do Zeca', { ready: true, slots: { adm_action: 'acesso_recusar', member_name: 'Zeca', reason: 'não é do clube' } });
+    expect(r.action).toBe('proposed_admin');
+    expect(p.sent.at(-1)!.text).toMatch(/^Vou recusar o pedido de acesso de Zeca Pereira\. Motivo: não é do clube\. Confirma/);
+    expect((await q<any>(w.db, `select status from public.access_requests`))[0].status).toBe('pending');
+    expect((await confirmar(w, p)).action).toBe('admin_confirmed');
+    expect((await q<any>(w.db, `select status, rejection_reason, decided_by from public.access_requests`))[0]).toMatchObject({ status: 'rejected', rejection_reason: 'não é do clube', decided_by: U.admin });
+  }, 90000);
+
+  it('aprovar pedido de acesso: cria o sócio com a mensalidade paga e fecha o pedido', async () => {
+    calls = []; const w = await setup(); const p = provider(); await pedidos(w);
+    await q(w.db, `insert into public.access_requests(name, phone, phone_normalized, status) values ('Zeca Pereira', '88988887777', '88988887777', 'pending')`);
+    await comprovante(w, 15000);
+    await dizer(w, p, 'aprova o Zeca', { ready: true, slots: { adm_action: 'acesso_aprovar', member_name: 'Zeca', amount: 150 } });
+    expect(p.sent.at(-1)!.text).toMatch(/^Vou aprovar o pedido de acesso de Zeca Pereira \(telefone \(88\) 98888-7777/);
+    expect((await confirmar(w, p)).action).toBe('admin_confirmed');
+    expect((await q<any>(w.db, `select status, decided_by from public.access_requests`))[0]).toMatchObject({ status: 'approved', decided_by: U.admin });
+    expect(calls).toEqual(['Zeca Pereira']);
+  }, 90000);
+});
+
 describe('assessor: peças puras', () => {
+  it('boas-vindas: usa o primeiro nome, o João se apresenta, e a mesma proposta sempre dá a mesma mensagem', () => {
+    const a = composeWelcome('Carla Souza', 'proposta-1');
+    expect(a).toMatch(/Carla/); expect(a).not.toMatch(/Souza/); expect(a).toMatch(/Eu sou o João|eu sou o João/i);
+    expect(composeWelcome('Carla Souza', 'proposta-1')).toBe(a);
+    expect(new Set(['a', 'b', 'c', 'd', 'e', 'f'].map((x) => composeWelcome('Carla', x))).size).toBeGreaterThan(1);
+    expect(composeWelcome('5588999991234', 'x')).toMatch(/nosso novo sócio/);
+  });
+
   const admin = { is_group: false, requester: { profile: { id: 'A', name: 'Admin', is_admin: true } } };
   const pend = (id: string, member: string, status = 'open') => ({ id, member_id: member, member_name: member, description: `d${id}`, status, due_date: '2026-10-01', total_due_cents: 100 });
 

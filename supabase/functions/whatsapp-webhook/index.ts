@@ -6,6 +6,7 @@ import { recordInbound, type RecordDeps } from './record.ts';
 import { buildAdminPush } from './pushNotify.ts';
 import { chatClient } from '../_shared/aiAgent/llm.ts';
 import { runTurn } from '../_shared/aiAgent/turn.ts';
+import { makeProvision } from '../_shared/athleteProvision.ts';
 import { groqTranscriber } from '../_shared/audioTranscription.ts';
 
 const url = Deno.env.get('SUPABASE_URL');
@@ -82,6 +83,7 @@ const recordDeps: RecordDeps = {
         chat: aiChat,
         uaz,
         sleep: (ms) => new Promise((r) => setTimeout(r, ms)),
+        provision: makeProvision(service),
       }).catch((e) => console.error('ai-turn', e instanceof Error ? e.message : 'erro')),
       notifyAdminsPush(messageId),
     ]));

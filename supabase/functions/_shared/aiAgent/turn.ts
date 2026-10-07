@@ -16,6 +16,8 @@
 import { extrairObjeto, repararJson, stripCodeFence } from './jsonRepair.ts';
 import type { Chat } from './llm.ts';
 import { ADMIN_READS, n3Reply } from './capabilities.ts';
+import { sendWelcome } from './welcome.ts';
+import type { Provision, ProvisionResult } from '../athleteProvision.ts';
 import { isAdminReadDomain, renderAdminRead, type AdminReadDomain } from './adminReads.ts';
 import { receiptReceivedMessage, studentCardProposalMessage, studentCardSuccessMessage } from './studentCard.ts';
 import { hearAudios, unheardOnly, UNCLEAR_AUDIO_REPLY } from './audio.ts';
@@ -30,6 +32,8 @@ export type TurnDeps = {
   chat: Chat | null;
   uaz: UazCaller | null;
   sleep: (ms: number) => Promise<void>;
+  /** Cria o acesso do sócio novo no Auth + perfil (só a borda alcança o Auth). Sem isso o João não cadastra sócio. */
+  provision?: Provision;
 };
 
 export type Slots = {
@@ -79,6 +83,9 @@ export type Slots = {
   active?: boolean | null;
   doc_title?: string | null;
   by_name?: string | null;
+  /** Onda 7 (cadastro de sócio). */
+  phone?: string | null;
+  email?: string | null;
   read_domain?: AdminReadDomain | null;
   read_from?: string | null;
   read_to?: string | null;
@@ -90,7 +97,7 @@ type PendencyKind = 'day_card' | 'consumo' | 'evento' | 'multa' | 'dano_reposica
 type PayMethod = 'pix' | 'transfer' | 'cash' | 'card' | 'other';
 const FIN_ACTIONS: FinAction[] = ['lancar', 'cobrar', 'pausar', 'retomar', 'baixa', 'renovar_card',
   'cancelar_pendencia', 'ajustar', 'estornar', 'rejeitar_comprovante', 'despesa', 'receita', 'aprovar_comprovante', 'gerar_cobrancas'];
-export const ADM_ACTIONS = ['aviso', 'aviso_desativar', 'aluno_status', 'socio_status', 'assinatura_reenviar', 'reserva_cancelar'] as const;
+export const ADM_ACTIONS = ['aviso', 'aviso_desativar', 'aluno_status', 'socio_status', 'assinatura_reenviar', 'reserva_cancelar', 'acesso_aprovar', 'acesso_recusar', 'socio_criar'] as const;
 export type AdmAction = typeof ADM_ACTIONS[number];
 const ADJUST_KINDS = ['discount', 'increase', 'fee_waiver'] as const;
 const PENDENCY_KINDS: PendencyKind[] = ['day_card', 'consumo', 'evento', 'multa', 'dano_reposicao', 'outros'];
@@ -204,6 +211,8 @@ export function parseSlots(raw: unknown): Slots {
   if ('active' in o) out.active = typeof o.active === 'boolean' ? o.active : null;
   if ('doc_title' in o) out.doc_title = str(o.doc_title);
   if ('by_name' in o) out.by_name = str(o.by_name);
+  if ('phone' in o) out.phone = str(o.phone);
+  if ('email' in o) out.email = str(o.email);
   if ('read_domain' in o) out.read_domain = isAdminReadDomain(o.read_domain) ? o.read_domain : null;
   if ('read_from' in o) out.read_from = isoDate(o.read_from);
   if ('read_to' in o) out.read_to = isoDate(o.read_to);
@@ -1322,6 +1331,22 @@ async function decide(i: DecideInput): Promise<Decision> {
     if (!i.ultimaId) return plain({ bubbles: [CODE_TEXT.NOT_EXPLICIT as string], awaiting: true });
     const res = (await db('conv_svc_ai_confirm', { p_proposal: (ctx.open_proposal as Ctx).id, p_message: i.ultimaId })).data as
       { ok: boolean; code?: string; message?: string; action?: 'create' | 'cancel' | 'reschedule' | 'join' | 'participants'; summary?: Summary } | null;
+    if (res?.ok && (res as { needs_provision?: boolean }).needs_provision && res.summary) {
+      // Cadastro de sócio: o Auth só a borda alcança; depois o banco conclui plano, cobrança e baixa com o comprovante.
+      const sm = res.summary as unknown as Ctx;
+      const prov: ProvisionResult = deps.provision ? await deps.provision({ name: String(sm.name), phone: String(sm.phone), email: (sm.email as string | undefined) ?? null })
+        : { ok: false, error: 'indisponível' };
+      if (prov.ok === false) return { bubbles: [`Não consegui criar o acesso de ${sm.name} agora (${prov.error}). Pode repetir o "sim" daqui a pouco, ou use o painel (Acessos).`], awaiting: true, close: false, action: 'failed:PROVISION', memory };
+      const done = (await db('conv_svc_ai_admin_member_onboard', { p_proposal: (ctx.open_proposal as Ctx).id, p_profile: prov.profileId, p_message: i.ultimaId })).data as
+        { ok: boolean; code?: string; message?: string; action?: string; summary?: Summary } | null;
+      if (done?.ok && done.summary) {
+        // Boas-vindas no grupo do clube (só na primeira vez; o envio é idempotente pela proposta e nunca derruba o cadastro).
+        if (!(done as { replayed?: boolean }).replayed) await sendWelcome(db, deps.uaz, { name: String(sm.name), proposalId: String((ctx.open_proposal as Ctx).id) });
+        return { bubbles: [adminSuccessMessage(done.action as unknown as AdminAction, done.summary as unknown as Ctx)], awaiting: false, close: false,
+          action: 'admin_confirmed', memory: { intent: answer.intent, slots: {} } };
+      }
+      return { bubbles: [done?.message ?? 'Não consegui concluir o cadastro. Confira no painel.'], awaiting: true, close: false, action: `failed:${done?.code ?? 'ONBOARD'}`, memory };
+    }
     if (res?.ok && res.summary && isAdminProposalAction(res.action)) {
       return { bubbles: [adminSuccessMessage(res.action as unknown as AdminAction, res.summary as unknown as Ctx)], awaiting: false, close: false,
         action: 'admin_confirmed', memory: { intent: answer.intent, slots: {} } };
@@ -1627,7 +1652,8 @@ const isAdminProposalAction = (a: unknown) => String(a ?? '').startsWith('fin_')
 
 type AdminAction = 'fin_pendency_create' | 'fin_pendency_collection' | 'fin_pendency_send' | 'fin_payment' | 'student_card_renew'
   | 'fin_charge_cancel' | 'fin_charge_adjust' | 'fin_payment_reverse' | 'fin_receipt_reject' | 'fin_entry_create' | 'fin_receipt_approve' | 'fin_charges_generate'
-  | 'adm_announcement_create' | 'adm_announcement_deactivate' | 'adm_student_status' | 'adm_member_status' | 'adm_signature_resend' | 'adm_reservation_cancel';
+  | 'adm_announcement_create' | 'adm_announcement_deactivate' | 'adm_student_status' | 'adm_member_status' | 'adm_signature_resend' | 'adm_reservation_cancel'
+  | 'fin_member_create' | 'fin_access_approve' | 'adm_access_reject';
 
 const centsBR = (v: unknown) => `R$ ${(Number(v ?? 0) / 100).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`;
 const dateBR = (v: unknown) => String(v ?? '').slice(0, 10).split('-').reverse().join('/');
@@ -1640,6 +1666,15 @@ export function toCents(reais: number | null | undefined): number | null {
 
 export function adminProposalMessage(action: AdminAction, s: Ctx): string {
   if (action === 'student_card_renew') return studentCardProposalMessage(s);
+  if (action === 'fin_member_create' || action === 'fin_access_approve') {
+    const tel = String(s.phone ?? '').replace(/^(\d{2})(\d{4,5})(\d{4})$/, '($1) $2-$3');
+    const mes = `${String(s.month ?? '').slice(5, 7)}/${String(s.month ?? '').slice(0, 4)}`;
+    const quem = action === 'fin_access_approve' ? `Vou aprovar o pedido de acesso de ${s.name}` : `Vou cadastrar o sócio ${s.name}`;
+    const email = s.email ? `e-mail ${s.email}` : 'e-mail gerado pelo sistema';
+    const leitura = s.amount_read ? '' : ' Não consegui ler o valor do comprovante; vale o que você informou.';
+    return `${quem} (telefone ${tel}, ${email})${s.reactivate ? ', reativando o cadastro antigo' : ''}, com mensalidade de ${centsBR(s.amount_cents)}. A mensalidade de ${mes} fica paga com o comprovante que você mandou (${centsBR(s.amount_cents)}, pago em ${dateBR(s.paid_on)}, conta ${s.account_name}); ele entra sem pendência e os juros do mês de entrada são dispensados.${leitura} Confirma? Responda "sim".`;
+  }
+  if (action === 'adm_access_reject') return `Vou recusar o pedido de acesso de ${s.name}${s.reason ? `. Motivo: ${s.reason}` : ''}. Confirma? Responda "sim".`;
   if (action === 'adm_announcement_create') return `Vou publicar este aviso para todos os sócios no app:\n«${s.title}»\n${s.message}\n${s.expires_on ? `Fica no ar até ${dateBR(s.expires_on)}.` : 'Sem data para sair.'} Confirma? Responda "sim".`;
   if (action === 'adm_announcement_deactivate') return `Vou tirar do ar o aviso «${s.title}». Confirma? Responda "sim".`;
   if (action === 'adm_student_status') return `Vou ${s.status === 'paused' ? 'pausar' : 'reativar'} o aluno ${s.student_name}. Confirma? Responda "sim".`;
@@ -1680,6 +1715,8 @@ export function adminProposalMessage(action: AdminAction, s: Ctx): string {
 
 export function adminSuccessMessage(action: AdminAction, s: Ctx): string {
   if (action === 'student_card_renew') return studentCardSuccessMessage(s);
+  if (action === 'fin_member_create' || action === 'fin_access_approve') return `Pronto: ${s.name} agora é sócio e a mensalidade de ${String(s.month ?? '').slice(5, 7)}/${String(s.month ?? '').slice(0, 4)} ficou paga (${centsBR(s.amount_cents)}), sem pendência.`;
+  if (action === 'adm_access_reject') return `Pronto: pedido de acesso de ${s.name} recusado.`;
   if (action === 'adm_announcement_create') return `Pronto: aviso «${s.title}» publicado.`;
   if (action === 'adm_announcement_deactivate') return `Pronto: aviso «${s.title}» tirado do ar.`;
   if (action === 'adm_student_status') return `Pronto: aluno ${s.student_name} ${s.status === 'paused' ? 'pausado' : 'reativado'}.`;
@@ -1745,10 +1782,23 @@ async function adminAcao(i: DecideInput, memory: Memory): Promise<Decision> {
   } else if (a === 'reserva_cancelar') {
     if (!slots.date || !slots.start) return ask('Qual o dia e o horário de início da reserva?');
     p = { action: 'adm_reservation_cancel', date: slots.date, start: slots.start, court_label: slots.court_label ?? null, by_name: slots.by_name ?? null, reason: slots.reason ?? null };
+  } else if (a === 'acesso_recusar') {
+    p = { action: 'adm_access_reject', name: slots.member_name ?? null, reason: slots.reason ?? null };
+  } else if (a === 'acesso_aprovar' || a === 'socio_criar') {
+    if (!deps.provision) return ask('Não consigo cadastrar sócio por aqui agora. Use o painel (Acessos).', false);
+    if (a === 'socio_criar') {
+      if (!slots.member_name) return ask('Qual o nome completo do novo sócio?');
+      if (!slots.phone) return ask('Qual o telefone dele, com DDD?');
+    }
+    const cents = toCents(slots.amount);
+    if (!cents) return ask('Qual o valor da mensalidade dele? Preciso também do comprovante de pagamento do mês: mande a imagem ou o PDF aqui.');
+    p = { action: a === 'socio_criar' ? 'fin_member_create' : 'fin_access_approve', name: slots.member_name ?? null, phone: slots.phone ?? null,
+      email: slots.email ?? null, amount_cents: cents, account_name: slots.account_name ?? null };
   } else {
-    return ask('O que você quer fazer: publicar ou tirar um aviso, pausar/reativar aluno, inativar/reativar sócio, reenviar avisos de assinatura ou cancelar uma reserva?');
+    return ask('O que você quer fazer: publicar ou tirar um aviso, pausar/reativar aluno, inativar/reativar sócio, reenviar avisos de assinatura, cancelar uma reserva, aprovar ou recusar pedido de acesso ou cadastrar um sócio novo?');
   }
-  const res = (await deps.db('conv_svc_ai_admin_adm_propose', { p_session: session, p })).data as
+  const rpc = a === 'acesso_aprovar' || a === 'acesso_recusar' || a === 'socio_criar' ? 'conv_svc_ai_admin_access_propose' : 'conv_svc_ai_admin_adm_propose';
+  const res = (await deps.db(rpc, { p_session: session, p })).data as
     { ok: boolean; message?: string; action?: AdminAction; summary?: Ctx } | null;
   if (!res?.ok || !res.summary || !res.action) return ask(res?.message ?? 'Não consegui montar isso. Pode repetir os dados?');
   return { bubbles: [adminProposalMessage(res.action, res.summary)], awaiting: true, close: false, action: 'proposed_admin', memory, verbatim: true };
