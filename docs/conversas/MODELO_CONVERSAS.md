@@ -116,6 +116,30 @@ marcar “verificada”. **Enquanto não houver essa conferência, a IA não ate
   texto vão para a equipe sem gastar o modelo; JSON inválido do modelo vira transferência.
 - A IA **nunca** altera pagamento, comprovante, placar ou resultado e não fala de cobrança (transfere).
 
+### 6.1 O João como amigo da turma
+
+Tudo abaixo cabe no mesmo turno (uma chamada ao modelo) e **não dá ao modelo nenhuma ferramenta nova**.
+
+- **Jeito**: o prompt (`prompts.ts`, seções *JEITO DE AMIGO DO GRUPO* e *REAÇÃO COM EMOJI*) pede energia compatível com a conversa,
+  acolhimento quando alguém está mal, comemoração com a turma, papo de tênis sem inventar fato e **variar** (o modelo vê as próprias
+  últimas falas). `MOMENTO DO DIA` dá a saudação certa. Conversa solta de grupo usa temperatura 0,45; reserva, proposta aberta e
+  conversa direta ficam em 0,2 (`turnTemperature`).
+- **Reação** (`reaction`): um emoji de uma lista fixa (`REACTIONS`) que o servidor coloca na mensagem da pessoa pelo provedor
+  (`/message/react`, o WhatsApp é a fonte da verdade) e grava como reação da casa. Sozinha, só vale para conversa solta
+  (`informar`/`outro`, sem proposta aberta, sem pergunta pendente); em pedido operacional é só complemento e **nunca engole o turno**.
+- **Memória supervisionada em ciclo fechado**: o João sugere (`memory_candidates` → `conv_ai_memory_candidates`, sempre `pending`);
+  a diretoria aprova, corrige ou recusa em **Conversas → IA → “O que o João aprendeu sobre a turma”**
+  (`conv_list_ai_memory_candidates` / `conv_review_ai_memory_candidate`, só administrador, com auditoria `conv.ai_memory_review`);
+  **só o aprovado** volta ao prompt (*MEMÓRIA DO GRUPO*, filtrada por quem está na conversa; piada interna vem marcada “não é fato
+  literal”). Recusar uma aprovada a retira.
+- **Resultados recentes** (*RESULTADOS RECENTES DO CLUBE*): partidas `finished` dos últimos 21 dias com vencedor e perdedor conhecidos,
+  placar do ponto de vista de quem ganhou, W.O. sem placar. O João só comenta o que está na lista e nunca para humilhar.
+- **Anti-repetição**: as últimas 14 falas dele (IA e bom-dia) dos últimos 3 dias entram como *SUAS ÚLTIMAS FALAS*.
+- Tudo isso chega por **um** RPC de serviço, `conv_svc_ai_joao_pack(p_session)`. Se a função não existir ou falhar, o João segue sem esse
+  contexto (testado).
+- **Bom-dia diário** (`joao-daily-greeting`, 06:45 de Fortaleza): além do tênis profissional, recebe o pulso do clube
+  (`conv_svc_ai_club_pulse`: plays de hoje, horário do primeiro, resultados dos últimos 7 dias) e cita no máximo uma coisa do clube.
+
 ## 7. Automações
 
 | Automação | Fonte da verdade | Implementado | Depende de configuração |
