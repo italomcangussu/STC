@@ -252,6 +252,8 @@ type ProTennisMatch = {
   players: { name: string; country: string | null; score: number[] }[];
   broadcasts: string[];
   broadcast_regions: string[];
+  broadcast_source: 'ESPN' | '365Scores' | null;
+  broadcast_checked_365?: boolean;
   notes: string[];
 };
 
@@ -332,6 +334,7 @@ function parseProTennisBoard(data: any, fallbackTour: 'ATP' | 'WTA', wantedDate:
           players,
           broadcasts: bc.names,
           broadcast_regions: bc.regions,
+          broadcast_source: bc.names.length ? 'ESPN' : null,
           notes: (Array.isArray(c?.notes) ? c.notes : []).map((n: any) => String(n?.text ?? '').trim()).filter(Boolean).slice(0, 4),
         });
       }
@@ -344,11 +347,83 @@ function looksLikeProTennisQuestion(text: string, groupContext: Ctx[] = []): boo
   const t = norm(text).replace(/\s+/g, ' ').trim();
   const direct = /\b(atp|wta|masters|grand slam|roland garros|wimbledon|us open|australian open|china open|shanghai|circuito profissional|ranking mundial|torneio profissional)\b/.test(t);
   const liveData = /\b(transmissao|assistir|onde passa|onde assistir|canal|stream|streaming|que horas|horario|partida|placar|resultado|joga hoje|jogam hoje|comeca|comecou|terminou|ganhou|perdeu)\b/.test(t);
-  const transmission = /\\b(transmissao|assistir|onde passa|onde assistir|canal|stream|streaming)\\b/.test(t);
+  const transmission = /\b(transmissao|assistir|onde passa|onde assistir|canal|stream|streaming)\b/.test(t);
   if (direct || transmission) return true;
   if (!liveData) return false;
   const recent = norm(groupContext.slice(-8).map((m) => `${m.sender ?? ''} ${m.body ?? ''}`).join(' '));
   return /\b(atp|wta|masters|grand slam|roland garros|wimbledon|us open|australian open|china open|shanghai|tenis profissional|tênis profissional)\b/.test(recent);
+}
+
+type Scores365Game = {
+  id: number;
+  competitionId: number;
+  hasTVNetworks?: boolean;
+  homeCompetitor?: { id?: number; name?: string };
+  awayCompetitor?: { id?: number; name?: string };
+};
+
+function isoToDmy(iso: string): string {
+  return `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}`;
+}
+
+function sameTennisPair(match: ProTennisMatch, game: Scores365Game): boolean {
+  const a = match.players.map((p) => norm(p.name).replace(/[^a-z0-9 ]/g, '').trim()).sort();
+  const b = [game.homeCompetitor?.name, game.awayCompetitor?.name]
+    .map((x) => norm(String(x ?? '')).replace(/[^a-z0-9 ]/g, '').trim()).filter(Boolean).sort();
+  return a.length === 2 && b.length === 2 && a[0] === b[0] && a[1] === b[1];
+}
+
+async function enrichBroadcastsFrom365(matches: ProTennisMatch[], date: string, queryText: string): Promise<void> {
+  const q = norm(queryText);
+  if (!/\b(transmissao|assistir|onde passa|onde assistir|canal|stream|streaming)\b/.test(q)) return;
+
+  let games: Scores365Game[] = [];
+  try {
+    const dmy = isoToDmy(date);
+    const url = `https://webws.365scores.com/web/games/allscores/?appTypeId=5&langId=31&timezoneName=America/Sao_Paulo&userCountryId=21&sports=3&startDate=${dmy}&endDate=${dmy}&showOdds=false&withTop=true`;
+    const r = await fetch(url, {
+      headers: { accept: 'application/json', 'user-agent': 'Mozilla/5.0', referer: 'https://www.365scores.com/pt-br/' },
+      signal: AbortSignal.timeout(9000),
+    });
+    if (r.ok) {
+      const data = await r.json();
+      games = Array.isArray(data?.games) ? data.games : [];
+    }
+  } catch { return; }
+
+  // O match mais relevante para a pergunta já foi ordenado antes; consultar poucos detalhes
+  // reduz latência e evita chamadas desnecessárias.
+  for (const match of matches.slice(0, 5)) {
+    const game = games.find((g) => sameTennisPair(match, g));
+    if (!game) continue;
+    match.broadcast_checked_365 = true;
+    if (!game.hasTVNetworks) continue;
+
+    try {
+      const homeId = Number(game.homeCompetitor?.id);
+      const awayId = Number(game.awayCompetitor?.id);
+      const gameId = Number(game.id);
+      const competitionId = Number(game.competitionId);
+      if (![homeId, awayId, gameId, competitionId].every(Number.isFinite)) continue;
+      const matchupId = `${homeId}-${awayId}-${competitionId}`;
+      const url = `https://webws.365scores.com/web/game/?appTypeId=5&langId=31&timezoneName=America/Sao_Paulo&userCountryId=21&gameId=${gameId}&matchupId=${matchupId}`;
+      const r = await fetch(url, {
+        headers: { accept: 'application/json', 'user-agent': 'Mozilla/5.0', referer: 'https://www.365scores.com/pt-br/' },
+        signal: AbortSignal.timeout(9000),
+      });
+      if (!r.ok) continue;
+      const data = await r.json();
+      const networks = (Array.isArray(data?.game?.tvNetworks) ? data.game.tvNetworks : [])
+        .filter((n: any) => !n?.countryId || Number(n.countryId) === 21)
+        .map((n: any) => String(n?.name ?? '').trim())
+        .filter(Boolean);
+      if (networks.length) {
+        match.broadcasts = [...new Set([...match.broadcasts, ...networks])].slice(0, 8);
+        match.broadcast_regions = [...new Set([...match.broadcast_regions, 'Brasil'])].slice(0, 8);
+        match.broadcast_source = '365Scores';
+      }
+    } catch { /* sem transmissão confirmada: não inventa */ }
+  }
 }
 
 async function proTennisContext(nowLocal: string, queryText: string): Promise<Ctx> {
@@ -389,14 +464,66 @@ async function proTennisContext(nowLocal: string, queryText: string): Promise<Ct
     return s;
   };
   unique.sort((a, b) => score(b) - score(a) || a.start_utc.localeCompare(b.start_utc));
+  const selected = unique.slice(0, 18);
+  await enrichBroadcastsFrom365(selected, target, queryText);
   return {
-    source: 'ESPN',
+    source: 'ESPN + 365Scores',
     checked_at: new Date().toISOString(),
     timezone: 'America/Fortaleza',
     date: target,
-    matches: unique.slice(0, 18),
+    matches: selected,
   };
 }
+
+function proTennisDirectMessages(text: string, live: Ctx | null | undefined): string[] | null {
+  if (!live) return null;
+  const t = norm(text).replace(/\s+/g, ' ').trim();
+  const wantsBroadcast = /\b(transmissao|assistir|onde passa|onde assistir|canal|stream|streaming)\b/.test(t);
+  const wantsTime = /\b(que horas|horario|quando|comeca|vai ser)\b/.test(t);
+  const wantsScore = /\b(placar|resultado|quanto esta|quanto ficou|ganhou|perdeu|terminou)\b/.test(t);
+  const wantsPlace = /\b(onde joga|quadra|court|local|cidade)\b/.test(t);
+  const matches = Array.isArray(live.matches) ? live.matches as ProTennisMatch[] : [];
+  if (live.unavailable) return ['A fonte de jogos está indisponível agora. Não vou chutar essa informação.'];
+  if (!matches.length) return ['Não achei uma partida confirmada na fonte para essa consulta agora.'];
+
+  const m = matches[0];
+  const a = m.players[0]?.name ?? 'Jogador 1';
+  const b = m.players[1]?.name ?? 'Jogador 2';
+  const round = m.round ? `, ${m.round}` : '';
+  const out: string[] = [];
+
+  if (wantsTime || (!wantsBroadcast && !wantsScore && !wantsPlace)) {
+    out.push(`${a} x ${b} é hoje${m.local_time ? ' às ' + m.local_time : ''}, pelo ${m.tournament}${round}.`);
+  }
+  if (wantsBroadcast) {
+    if (m.broadcasts.length) {
+      const region = m.broadcast_regions.length ? ` (${m.broadcast_regions.join(', ')})` : '';
+      const source = m.broadcast_source === '365Scores' ? 'O 365Scores informa' : 'A ESPN informa';
+      out.push(`${source} transmissão por ${m.broadcasts.join(', ')}${region}.`);
+    } else if (m.broadcast_checked_365) {
+      out.push('Não encontrei transmissão confirmada para o Brasil nem na ESPN nem no 365Scores agora.');
+    } else {
+      out.push('A fonte atual não informa onde assistir a essa partida.');
+    }
+  }
+  if (wantsPlace) {
+    const place = [m.venue, m.court].filter(Boolean).join(' — ');
+    out.push(place ? `O jogo está marcado para ${place}.` : 'A fonte atual não informa a quadra/local dessa partida.');
+  }
+  if (wantsScore) {
+    if (m.state === 'in') {
+      const score = m.players.map((p) => `${p.name}: ${p.score.length ? p.score.join('-') : 'placar não detalhado'}`).join(' | ');
+      out.push(`Está em andamento. ${score}`);
+    } else if (m.state === 'post') {
+      const score = m.players.map((p) => `${p.name}: ${p.score.length ? p.score.join('-') : 'placar não detalhado'}`).join(' | ');
+      out.push(`A partida já terminou. ${score}`);
+    } else {
+      out.push('A partida ainda não começou.');
+    }
+  }
+  return out.slice(0, 3);
+}
+
 
 
 export function asksForHuman(text: string, keywords: string[]): boolean {
@@ -919,6 +1046,21 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
   if (soMidia && !isGroup) return transferir('hard', `Chegou ${[...new Set(pendentes.map((t) => t.kind))].join(', ')} sem texto; a IA não lê mídia.`, null);
 
   const memory = (ctx.session?.memory ?? {}) as Memory;
+
+  if (ctx.pro_tennis && looksLikeProTennisQuestion(buffered, (ctx.group_context ?? []) as Ctx[])) {
+    const messages = proTennisDirectMessages(tennisQueryContext, ctx.pro_tennis);
+    if (messages?.length) {
+      const sent = await entregar(cadence(messages));
+      await save(memory, 'pro_tennis_info', {
+        source: String(ctx.pro_tennis.source ?? 'ESPN'),
+        date: String(ctx.pro_tennis.date ?? today),
+        query: buffered.slice(0, 300),
+        bubbles: sent,
+      }, false, false);
+      return { status: 'replied', bubbles: sent, handoff: null } as TurnResult;
+    }
+  }
+
   let answer: Answer;
   try {
     const r = await deps.chat([

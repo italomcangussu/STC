@@ -439,7 +439,7 @@ export function ownLinesText(ctx: Ctx): string {
 export function proTennisText(ctx: Ctx): string {
   const t = (ctx.pro_tennis ?? null) as Ctx | null;
   if (!t) return '(não consultado neste turno — o assunto atual não pediu dados do circuito profissional)';
-  if (t.unavailable) return '(fonte ESPN temporariamente indisponível; não invente nenhum dado)';
+  if (t.unavailable) return '(fontes esportivas temporariamente indisponíveis; não invente nenhum dado)';
   const matches = (t.matches ?? []) as Ctx[];
   if (!matches.length) return `Fonte: ${t.source ?? 'ESPN'} | consulta: ${t.checked_at ?? 'agora'} | data local: ${t.date ?? ''} | nenhuma partida encontrada para a data.`;
   const lines = matches.map((m) => {
@@ -449,7 +449,8 @@ export function proTennisText(ctx: Ctx): string {
     }).join(' x ');
     const transmission = Array.isArray(m.broadcasts) && m.broadcasts.length ? m.broadcasts.join(', ') : 'não informada pela fonte';
     const region = Array.isArray(m.broadcast_regions) && m.broadcast_regions.length ? ` | região transmissão: ${m.broadcast_regions.join(', ')}` : '';
-    return `- ${m.tour} | ${m.tournament} | ${m.round ?? m.category ?? ''} | ${m.local_date} ${m.local_time} (America/Fortaleza) | ${m.status ?? m.state ?? ''} | ${players} | local: ${m.venue ?? 'não informado'}${m.court ? ' / ' + m.court : ''} | transmissão: ${transmission}${region}`;
+    const transmissionSource = m.broadcast_source ? ` | fonte transmissão: ${m.broadcast_source}` : '';
+    return `- ${m.tour} | ${m.tournament} | ${m.round ?? m.category ?? ''} | ${m.local_date} ${m.local_time} (America/Fortaleza) | ${m.status ?? m.state ?? ''} | ${players} | local: ${m.venue ?? 'não informado'}${m.court ? ' / ' + m.court : ''} | transmissão: ${transmission}${region}${transmissionSource}`;
   });
   return `Fonte atual: ${t.source ?? 'ESPN'} | consultado em ${t.checked_at ?? 'agora'}\n${lines.join('\n')}`;
 }
@@ -473,9 +474,9 @@ ${financialContextText(ctx, buffered)}
 # RANKING DO CLUBE (ATUAL, DINÂMICO)
 Formato: posição global/posição na classe, nome, classe, pontos. Use como fato atual; pode mudar depois.
 ${rankingText(ctx, buffered)}
-# TÊNIS PROFISSIONAL ATUAL (DINÂMICO, MESMA FONTE DA ROTINA DIÁRIA)
-Use esta seção como fonte de verdade para perguntas atuais de ATP/WTA: confronto, horário local, status/placar, torneio, rodada, local/quadra e transmissão.
-Se "transmissão" estiver como "não informada pela fonte", diga exatamente que a fonte atual não informa onde assistir; não chute canal/plataforma.
+# TÊNIS PROFISSIONAL ATUAL (DINÂMICO)
+A ESPN é a fonte principal para confronto, horário local, status/placar, torneio, rodada e local/quadra. Para transmissão no Brasil, o sistema tenta também o 365Scores como fonte complementar.
+Se nenhuma das fontes trouxer transmissão confirmada, diga isso claramente; nunca chute canal ou plataforma.
 ${proTennisText(ctx)}
 
 
