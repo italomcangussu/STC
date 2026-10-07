@@ -241,6 +241,11 @@ export const setPendencyCollection = (chargeId: string, enabled: boolean, reques
     p_request_id: requestId, p_charge: chargeId, p_enabled: enabled,
   });
 
+export const sendPendencyNow = (chargeId: string, requestId = newRequestId()) =>
+  call<{ id: string; automation_recipient_id: string | null }>('fin_send_pendency_now', {
+    p_request_id: requestId, p_charge: chargeId,
+  });
+
 export async function chargeHistory(chargeId: string): Promise<{ payments: ChargePaymentRow[]; adjustments: ChargeAdjustmentRow[] }> {
   const [p, a] = await Promise.all([
     supabase.from('fin_charge_payments').select('id, charge_id, kind, amount_cents, paid_on, fine_cents, interest_cents, principal_cents, excess_cents, method, note, created_at').eq('charge_id', chargeId).order('created_at'),
