@@ -12,6 +12,9 @@ const api = vi.hoisted(() => ({
 }));
 vi.mock('../../../lib/signatures/admin', async (importOriginal) => ({ ...(await importOriginal<typeof import('../../../lib/signatures/admin')>()), ...api }));
 
+const receipt = vi.hoisted(() => ({ downloadReceipt: vi.fn() }));
+vi.mock('../../../lib/signatures/receipt', async (importOriginal) => ({ ...(await importOriginal<typeof import('../../../lib/signatures/receipt')>()), ...receipt }));
+
 import { AdminDocuments } from '../../../components/signatures/admin/AdminDocuments';
 import { ConfirmProvider } from '../../../components/ui/ConfirmProvider';
 import type { OverviewRow, RecipientRow } from '../../../lib/signatures/admin';
@@ -32,7 +35,8 @@ const person = (id: string, name: string, over: Partial<RecipientRow> = {}): Rec
 const renderPage = () => render(<ConfirmProvider><AdminDocuments /></ConfirmProvider>);
 
 beforeEach(() => {
-  for (const f of Object.values(api)) f.mockReset();
+  for (const f of Object.values({ ...api, ...receipt })) f.mockReset();
+  receipt.downloadReceipt.mockResolvedValue(undefined);
   api.listAdminDocuments.mockResolvedValue([
     doc(A, 'Termo de Uso'),
     doc(B, 'Regimento (rascunho)', { status: 'draft', published_at: null, recipients: 0, signed: 0 }),
@@ -242,6 +246,15 @@ describe('detalhe de um documento publicado', () => {
     expect(list).toHaveTextContent('Aviso na fila');
     expect(screen.getByRole('region', { name: 'Resumo' })).toHaveTextContent('1 de 4 assinaram');
     expect(screen.getByRole('progressbar', { name: 'Assinaturas' })).toHaveAttribute('aria-valuenow', '1');
+  });
+
+  it('o administrador baixa o comprovante COMPLETO de quem assinou (e só de quem assinou)', async () => {
+    api.listRecipients.mockResolvedValue([person('p1', 'Ana', { signed_at: '2026-10-05T15:00:00Z', signature_id: 'SIG1' }), person('p2', 'Bruno')]);
+    await open();
+    await screen.findByText('Bruno');
+    expect(screen.queryByRole('button', { name: 'Comprovante de Bruno' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Comprovante de Ana' }));
+    await waitFor(() => expect(receipt.downloadReceipt).toHaveBeenCalledWith('SIG1', { full: true }));
   });
 
   it('o filtro "Faltam" esconde quem já assinou', async () => {

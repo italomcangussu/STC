@@ -80,3 +80,11 @@ export function endOfClubDay(dateInput: string): string | null {
 
 /** Menor data aceita no campo de prazo: hoje, no calendário do clube. */
 export const todayInput = (now: Date = new Date()): string => clubDay(now);
+
+/** `07/10/2026 às 14:32:08` no horário do clube; o comprovante precisa dos segundos. */
+export function formatDateTimeSeconds(iso: string | Date | null | undefined): string {
+  const d = toDate(iso);
+  if (!d) return '';
+  const p = parts(d, { hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' });
+  return `${formatDate(d)} às ${p.hour}:${p.minute}:${p.second}`;
+}

@@ -15,6 +15,7 @@ import { downloadDocumentFile } from '../../../lib/signatures/documents';
 import { dueInfo, endOfClubDay, formatDate, formatDateTime, toDateInput, todayInput } from '../../../lib/signatures/format';
 import { supabase } from '../../../lib/supabase';
 import { useConfirm } from '../../../hooks/useConfirm';
+import { ReceiptButton } from '../ReceiptButton';
 import { Badge, Notice, Spinner, btnGhost, btnPrimary, inputCls } from '../ui';
 
 type Props = {
@@ -254,6 +255,7 @@ export const DocumentDetail: React.FC<Props> = ({ doc, onBack, onChanged, onNewV
                       {!r.signed_at && r.notification_status === 'failed' && r.notification_error && <span className="block truncate text-[11px] text-red-700">{r.notification_error}</span>}
                     </span>
                     {r.signed_at ? <Badge tone="good">Assinou</Badge> : <Badge tone={n.tone}>{n.tone === 'good' ? 'Pendente' : n.text}</Badge>}
+                    {r.signed_at && r.signature_id && <ReceiptButton signatureId={r.signature_id} full compact label="Comprovante" ariaLabel={`Comprovante de ${r.name}`} />}
                     {published && !r.signed_at && (
                       <button type="button" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-stone-400 transition hover:bg-red-50 hover:text-red-600" aria-label={`Tirar ${r.name} da lista`} onClick={() => void removeOne(r)} disabled={busy !== null}>
                         <UserX size={18} aria-hidden />

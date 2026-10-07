@@ -10,6 +10,9 @@ vi.mock('../../../lib/signatures/documents', async (importOriginal) => ({ ...(aw
 const api = vi.hoisted(() => ({ requestSignatureCode: vi.fn(), confirmSignatureCode: vi.fn() }));
 vi.mock('../../../lib/signatures/api', async (importOriginal) => ({ ...(await importOriginal<typeof import('../../../lib/signatures/api')>()), ...api }));
 
+const receipt = vi.hoisted(() => ({ downloadReceipt: vi.fn() }));
+vi.mock('../../../lib/signatures/receipt', async (importOriginal) => ({ ...(await importOriginal<typeof import('../../../lib/signatures/receipt')>()), ...receipt }));
+
 // O leitor real tem teste próprio: aqui ele é um painel com botões que simulam o que o leitor informa.
 vi.mock('../../../components/signatures/PdfReader', async () => {
   const React = await import('react');
@@ -67,7 +70,8 @@ async function readyToSign() {
 }
 
 beforeEach(() => {
-  Object.values({ ...documents, ...api }).forEach((f) => f.mockReset());
+  Object.values({ ...documents, ...api, ...receipt }).forEach((f) => f.mockReset());
+  receipt.downloadReceipt.mockResolvedValue(undefined);
   documents.downloadDocumentFile.mockResolvedValue(BYTES);
   documents.getMyCpf.mockResolvedValue(null);
   documents.saveMyCpf.mockResolvedValue(undefined);
@@ -124,6 +128,8 @@ describe('assinar um documento: ler → concordar → CPF → código', () => {
     expect(api.confirmSignatureCode).toHaveBeenCalledWith('CH1', '123456', 'granted');
     expect(await screen.findByText('Documento assinado')).toBeInTheDocument();
     expect(screen.getByText(/assinatura nº 4/)).toBeInTheDocument();
+    await press('Baixar comprovante (PDF)');                 // recém-assinado: usa o id devolvido pela assinatura
+    expect(receipt.downloadReceipt).toHaveBeenCalledWith('S1', { full: false });
     expect(screen.queryByText('Digite o código do WhatsApp')).toBeNull();
     expect(changed).toHaveBeenCalledTimes(1);                // lista e selo do menu se atualizam
     window.removeEventListener(SIGNATURES_CHANGED_EVENT, changed);
@@ -315,6 +321,30 @@ describe('assinar um documento: ler → concordar → CPF → código', () => {
     await press('terminar leitura');
     expect(documents.logJourneyEvent).not.toHaveBeenCalled();
     expect(documents.getMyCpf).not.toHaveBeenCalled();
+  });
+
+  it('documento já assinado oferece o comprovante em PDF, na cópia do sócio (CPF e telefone mascarados)', async () => {
+    mount(doc({ signed_at: '2026-10-05T15:30:00Z', signature_id: 'S9' }));
+    await screen.findByTestId('reader');
+    await press('Baixar comprovante (PDF)');
+    expect(receipt.downloadReceipt).toHaveBeenCalledWith('S9', { full: false });
+  });
+
+  it('documento pendente não mostra comprovante (ainda não há assinatura)', async () => {
+    mount();
+    await screen.findByTestId('reader');
+    expect(screen.queryByRole('button', { name: /comprovante/i })).toBeNull();
+  });
+
+  it('falha ao gerar o comprovante mostra o motivo e permite tentar de novo', async () => {
+    receipt.downloadReceipt.mockRejectedValueOnce(new Error('Failed to fetch'));
+    mount(doc({ signed_at: '2026-10-05T15:30:00Z', signature_id: 'S9' }));
+    await screen.findByTestId('reader');
+    await press('Baixar comprovante (PDF)');
+    expect(await screen.findByRole('alert')).toHaveTextContent('conexão');
+    await press('Baixar comprovante (PDF)');
+    expect(receipt.downloadReceipt).toHaveBeenCalledTimes(2);
+    await waitFor(() => expect(screen.queryByRole('alert')).toBeNull());
   });
 
   it('mostra o prazo e o botão de voltar', async () => {

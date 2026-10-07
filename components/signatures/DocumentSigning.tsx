@@ -22,6 +22,7 @@ import { matchesSha256 } from '../../lib/signatures/hash';
 import { dueInfo, formatDateTime } from '../../lib/signatures/format';
 import { notifySignaturesChanged } from '../../lib/signatures/usePendingSignatures';
 import { PdfReader } from './PdfReader';
+import { ReceiptButton } from './ReceiptButton';
 import { CodeSheet, type ActiveChallenge } from './CodeSheet';
 import { Badge, Notice, Spinner, Step, btnGhost, btnPrimary, inputCls } from './ui';
 
@@ -202,6 +203,9 @@ export const DocumentSigning: React.FC<DocumentSigningProps> = ({ doc, currentUs
       {finished && (
         <Notice tone="good" title="Documento assinado">
           Você assinou em <b>{formatDateTime(signedAt)}</b>{signed ? ` (assinatura nº ${signed.seq})` : ''}. O registro ficou guardado com o dia, a hora e os dados do código confirmado.
+          {(signed?.signatureId ?? doc.signature_id) && (
+            <span className="mt-2 block"><ReceiptButton signatureId={(signed?.signatureId ?? doc.signature_id) as string} full={false} /></span>
+          )}
         </Notice>
       )}
 

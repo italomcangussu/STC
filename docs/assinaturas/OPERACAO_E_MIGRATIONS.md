@@ -1,12 +1,11 @@
 # Documentos e Assinaturas — modelo, migrations e contrato com a edge function
 
-> **Estado (fase 4 de 5):** banco e funções testados num Postgres em memória (PGlite, `__tests__/signatures/sql/`,
+> **Estado (fases 1 a 5 prontas):** banco e funções testados num Postgres em memória (PGlite, `__tests__/signatures/sql/`,
 > 91 testes) **e aplicados por inteiro no banco real (2026-10-07; as 4 funções com `delete from` entraram no mesmo dia, ver §6)**. Edge functions
 > `signature-operations` (código + WhatsApp + despacho) e `signature-dispatch` (avisos e lembretes) **escritas, testadas e PUBLICADAS no projeto real (2026-10-07), com cron a cada 5 min** (`__tests__/signatures/edge/`, 108 testes, incluindo um que liga a edge function ao SQL real).
 > **Telas do sócio prontas** (aba "Documentos e Assinaturas", ver §8) e **Painel Admin pronto** (seção "Documentos" em Clube: subir PDF,
-> publicar, acompanhar, reenviar falhas, prazo, nova versão, arquivar, integridade; ver §9). `__tests__/signatures/client/`, 14 arquivos.
-> Falta o teste de ponta a ponta com um documento real (publicar só para um admin, assinar com o código; roteiro no §5).
-> Fase seguinte: 5 comprovante em PDF e lembretes agendados (o código dos lembretes já existe; falta publicar a função e agendar o cron).
+> publicar, acompanhar, reenviar falhas, prazo, nova versão, arquivar, integridade; ver §9). `__tests__/signatures/client/`, 15 arquivos. **Comprovante em PDF pronto** (§10) e **lembretes agendados rodando** (cron conferido em 2026-10-07).
+> Falta só o teste de ponta a ponta com um documento real (publicar só para um admin, assinar com o código; roteiro no §5).
 
 ## 1. O que é
 
@@ -266,4 +265,30 @@ repete até `done`, para se `configured` for falso ou se uma volta não reclamar
 
 **Limites conhecidos:** CPF e telefone aparecem ao admin na lista (já eram visíveis a ele por RLS); "Ver PDF" abre o arquivo em nova aba (blob de 60 s);
 o formulário não permite trocar o público de um documento já publicado (use "Incluir sócios"); nada foi verificado no aparelho (login obrigatório).
+
+## 10. Comprovante em PDF e lembretes (fase 5)
+
+**Comprovante** (`lib/signatures/receipt.ts`, botão em `components/signatures/ReceiptButton.tsx`). Sai de UMA linha de `sig_signatures`
+(o dossiê gravado na hora da assinatura; o sócio lê a dele e o admin lê todas, por RLS). Nada é recalculado: só é mostrado o que foi
+gravado, no horário de Fortaleza e com segundos. Montado no navegador com o jsPDF (já usado nos relatórios do financeiro), carregado só
+quando alguém pede o arquivo.
+
+| Quem | Onde | Cópia |
+|---|---|---|
+| Sócio | tela do documento já assinado (e logo após assinar): "Baixar comprovante (PDF)" | CPF e telefone **mascarados** (`***.982.247-**`, `(85) *****-1234`), porque ele pode repassar o arquivo |
+| Administrador | Documentos → documento → botão "Comprovante" ao lado de quem assinou | **completa** (é a cópia do dossiê do clube) |
+
+Conteúdo: documento (título, versão, SHA-256 do arquivo) · assinante · cronologia (início e fim da leitura, páginas vistas e tempo, aceite, código
+enviado, código confirmado e nº de tentativas, assinatura) · texto do aceite · origem (IP, cidade pelo IP, GPS só se o sócio permitiu, ou o
+motivo de não haver; aparelho e navegador) · integridade (nº da assinatura, id do registro, hash da evidência, hash anterior e hash da cadeia)
+· observações (assinatura eletrônica **simples**, Lei 14.063/2020, não ICP-Brasil; leitura e aparelho informados pelo aparelho; registro
+inalterável e verificável em "Conferir integridade"). Nome do arquivo: `comprovante-assinatura-<titulo>-v<versao>-n<seq>.pdf`.
+
+Cuidados: só caracteres da fonte padrão do PDF (sem `−`, `→`, `•`, que sairiam trocados); sem linha de dossiê (RLS ou id errado) o botão mostra
+erro, nunca um comprovante vazio. **Limite:** o comprovante é um relatório do que está gravado; a verificação de que o registro não foi
+alterado é a "Conferir integridade" (hashes), não o PDF em si (o PDF não tem assinatura digital).
+
+**Lembretes:** `sig_svc_enqueue_reminders` roda dentro do `signature-dispatch` (3 dias antes e no dia do prazo, só para quem não assinou, uma vez
+por prazo). A função está publicada e o cron `signature-dispatch` (job 6, `*/5 * * * *`) executa desde 2026-10-07 10:40 (conferido em
+`cron.job_run_details` e `net._http_response`: HTTP 200, `configured: true`). Não há lembrete sem prazo no documento.
 
