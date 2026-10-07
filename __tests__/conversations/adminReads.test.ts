@@ -4,7 +4,7 @@ import { ADMIN_READ_DOMAINS, isAdminReadDomain, renderAdminRead } from '../../su
 
 describe('consultas do assessor: texto escrito pelo servidor', () => {
   it('só aceita os domínios do registro', () => {
-    expect(ADMIN_READ_DOMAINS).toHaveLength(8);
+    expect(ADMIN_READ_DOMAINS).toHaveLength(9);
     expect(isAdminReadDomain('caixa')).toBe(true);
     expect(isAdminReadDomain('apagar_tudo')).toBe(false);
     expect(isAdminReadDomain(null)).toBe(false);
@@ -28,6 +28,22 @@ describe('consultas do assessor: texto escrito pelo servidor', () => {
     expect(t).toContain('resultado R$ 632,00'.replace('R$ 632,00', 'R$ 6.320,00'));
     expect(t).toContain('Período anterior (mesma duração): receitas R$ 2.000,00, despesas R$ 5.000,00, resultado -R$ 3.000,00');
     expect(t).toContain('Aluguel: R$ 3.000,00');
+  });
+
+  it('comparativo: mostra variação contra o período anterior e as categorias que mais mudaram', () => {
+    const t = renderAdminRead('comparativo', {
+      from: '2026-10-01', to: '2026-10-07',
+      by_line: [{ line: 'revenue', amount_cents: 100000 }, { line: 'operational', amount_cents: 60000 }],
+      previous_by_line: [{ line: 'revenue', amount_cents: 200000 }, { line: 'operational', amount_cents: 50000 }],
+      changes: [{ line: 'revenue', name: 'Card Mensal', previous_cents: 150000, current_cents: 40000, delta_cents: -110000 },
+        { line: 'operational', name: 'Energia', previous_cents: 10000, current_cents: 20000, delta_cents: 10000 }],
+    });
+    expect(t).toContain('Receitas: R$ 1.000,00 contra R$ 2.000,00 (-50%)');
+    expect(t).toContain('Despesas: R$ 600,00 contra R$ 500,00 (+20%)');
+    expect(t).toContain('Resultado: R$ 400,00 contra R$ 1.500,00');
+    expect(t).toContain('Card Mensal: R$ 1.500,00 → R$ 400,00 (-R$ 1.100,00)');
+    expect(t).toContain('Energia (despesa): R$ 100,00 → R$ 200,00 (+R$ 100,00)');
+    expect(renderAdminRead('comparativo', { from: '2026-10-01', to: '2026-10-07' })).toContain('Nenhuma categoria mudou');
   });
 
   it('receber/pagar, receita de alunos, ocupação e assinaturas trazem os números do banco', () => {

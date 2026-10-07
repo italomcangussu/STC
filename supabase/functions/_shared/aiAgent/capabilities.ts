@@ -30,6 +30,7 @@ export const CAPABILITIES: readonly Capability[] = [
   { id: 'fin.cash', domain: 'financeiro', risk: 'N0', label: 'Caixa do período', panel: 'Financeiro', onDemand: 'caixa' },
   { id: 'fin.receivables', domain: 'financeiro', risk: 'N0', label: 'A receber e a pagar', panel: 'Financeiro', onDemand: 'receber_pagar' },
   { id: 'fin.dre', domain: 'financeiro', risk: 'N0', label: 'Resultado (DRE)', panel: 'Financeiro', onDemand: 'dre' },
+  { id: 'fin.comparativo', domain: 'financeiro', risk: 'N0', label: 'Comparativo com o período anterior (por que subiu/caiu)', panel: 'Financeiro', onDemand: 'comparativo' },
   { id: 'fin.student_revenue', domain: 'financeiro', risk: 'N0', label: 'Receita de alunos', panel: 'Financeiro', onDemand: 'receita_alunos' },
   { id: 'fin.receipts', domain: 'financeiro', risk: 'N0', label: 'Fila de comprovantes', panel: 'Financeiro', onDemand: 'comprovantes' },
   { id: 'people.access', domain: 'pessoas', risk: 'N0', label: 'Pedidos de acesso pendentes', panel: 'Acessos', onDemand: 'acessos' },

@@ -45,7 +45,12 @@ export function composeBriefing(name: string, d: Row): string {
   } else extras.push('🎾 Hoje: sem reservas.');
   if (extras.length) { linhas.push(''); linhas.push(...extras); }
 
-  linhas.push('', 'Quer detalhar algo? É só pedir aqui.');
+  // Sugestões: só apontam para consultas que o João já faz (nada é executado sem pedido do administrador).
+  const dicas: string[] = [];
+  if (n(r.overdue_cents) > 0) dicas.push('"a receber e a pagar"');
+  if (n(rec.total) > 0) dicas.push('"ver comprovantes"');
+  if (n(mes.net_cents) < 0) dicas.push('"comparativo com o mês passado"');
+  linhas.push('', dicas.length ? `💡 Posso detalhar: ${dicas.join(', ')}. É só pedir aqui.` : 'Quer detalhar algo? É só pedir aqui.');
   return linhas.join('\n');
 }
 

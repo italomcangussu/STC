@@ -1,7 +1,7 @@
 // Consultas do assessor (Onda 1): o servidor busca (RPC `conv_svc_ai_admin_read`, como o administrador) e escreve o texto.
 // O modelo só escolhe o domínio e o período; nenhum número passa pela cabeça dele.
 
-export const ADMIN_READ_DOMAINS = ['caixa', 'receber_pagar', 'dre', 'receita_alunos', 'comprovantes', 'acessos', 'assinaturas', 'ocupacao'] as const;
+export const ADMIN_READ_DOMAINS = ['caixa', 'receber_pagar', 'dre', 'receita_alunos', 'comprovantes', 'acessos', 'assinaturas', 'ocupacao', 'comparativo'] as const;
 export type AdminReadDomain = typeof ADMIN_READ_DOMAINS[number];
 type Row = Record<string, unknown>;
 
@@ -82,9 +82,25 @@ function renderOcupacao(d: Row): string {
   return `Reservas de ${dia(d.date)}:\n${[...por].map(([q, l]) => `${q}: ${l.join(' · ')}`).join('\n')}`;
 }
 
+function renderComparativo(d: Row): string {
+  const cur = sumLines(arr(d.by_line)); const prev = sumLines(arr(d.previous_by_line));
+  const sinal = (v: number) => `${v < 0 ? '-' : ''}${brl(Math.abs(v))}`;
+  const pct = (a: number, b: number) => (b === 0 ? '' : ` (${a >= b ? '+' : '-'}${Math.abs(Math.round(((a - b) / b) * 100))}%)`);
+  const rotulo = (l: Row) => `${l.name}${l.line === 'revenue' ? '' : ' (despesa)'}`;
+  const mudancas = arr(d.changes).slice(0, 6).map((c) => {
+    const delta = n(c.delta_cents);
+    return `  ${rotulo(c)}: ${brl(c.previous_cents)} → ${brl(c.current_cents)} (${delta > 0 ? '+' : '-'}${brl(Math.abs(delta))})`;
+  }).join('\n');
+  return `Comparativo de ${periodo(d)} com o período anterior (mesma duração):\n`
+    + `- Receitas: ${brl(cur.receitas)} contra ${brl(prev.receitas)}${pct(cur.receitas, prev.receitas)}\n`
+    + `- Despesas: ${brl(cur.despesas)} contra ${brl(prev.despesas)}${pct(cur.despesas, prev.despesas)}\n`
+    + `- Resultado: ${sinal(cur.resultado)} contra ${sinal(prev.resultado)}`
+    + (mudancas ? `\nO que mais mudou:\n${mudancas}` : '\nNenhuma categoria mudou de valor.');
+}
+
 const RENDER: Record<AdminReadDomain, (d: Row) => string> = {
   caixa: renderCaixa, receber_pagar: renderReceberPagar, dre: renderDre, receita_alunos: renderReceitaAlunos,
-  comprovantes: renderComprovantes, acessos: renderAcessos, assinaturas: renderAssinaturas, ocupacao: renderOcupacao,
+  comprovantes: renderComprovantes, acessos: renderAcessos, assinaturas: renderAssinaturas, ocupacao: renderOcupacao, comparativo: renderComparativo,
 };
 
 export const renderAdminRead = (domain: AdminReadDomain, data: unknown): string =>

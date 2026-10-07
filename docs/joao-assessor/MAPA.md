@@ -40,7 +40,7 @@ Próximo: Onda 4 (resumo proativo da manhã para Hermeson e Henrique).
 
 ## 1f. Onda 4 entregue (2026-10-07) — resumo da manhã
 Edge function `joao-admin-briefing` (sem JWT; só com `x-dispatch-secret`, igual às outras varreduras) chamada pelo cron `joao-admin-briefing` às **11:00 e 11:30 UTC (08h00 e 08h30 de Fortaleza; a segunda é só reenvio)**. Destinatários: tabela `conv_admin_briefing_recipients` (hoje **Hermeson Veras e Henrique Coelho**; para incluir/tirar alguém: inserir/apagar a linha ou `enabled = false`). Cada um recebe uma mensagem na conversa direta dele com o João (a resposta cai no mesmo fio), com: caixa e saldo, ontem e mês, a receber e a pagar (vencido), comprovantes parados, assinaturas incompletas com prazo, pedidos de acesso e reservas de hoje; o que está zerado some. Números lidos como o administrador (`conv_svc_admin_briefing_data`), texto montado sem IA (`_shared/adminBriefing.ts`). Idempotente por dia e administrador; só envia entre 08h e 12h de Fortaleza; respeita opt-out; `{"dry_run": true}` devolve os textos sem enviar.
-Próximo: Onda 5 (memória, comparativos e sugestões) — ver seção 4.
+**Onda 5 (parcial, 2026-10-07):** consulta `comparativo` ("por que a receita caiu?": período contra o anterior de mesma duração, com as categorias que mais mudaram, texto escrito pelo servidor) e sugestões no resumo da manhã (só apontam para consultas). **Fora:** memória de preferências do administrador (esperar uso real do resumo para saber o que guardar) e ações sugeridas pelo próprio João.
 
 ## 2. Arquitetura-alvo (um padrão só, para tudo)
 

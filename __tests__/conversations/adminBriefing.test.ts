@@ -24,7 +24,7 @@ describe('resumo da manhã do João', () => {
     expect(t).toContain('✍️ «Regimento»: 60 de 100 assinaram, prazo 20/10.');
     expect(t).toContain('🔑 1 pedido de acesso pendente.');
     expect(t).toContain('🎾 Hoje: 5 reservas (3 aula, 2 play).');
-    expect(t.endsWith('Quer detalhar algo? É só pedir aqui.')).toBe(true);
+    expect(t.endsWith('💡 Posso detalhar: "a receber e a pagar", "ver comprovantes". É só pedir aqui.')).toBe(true);
   });
 
   it('omite o que está zerado e não inventa nome', () => {
@@ -35,6 +35,8 @@ describe('resumo da manhã do João', () => {
     expect(t).toContain('🎾 Hoje: sem reservas.');
     expect(t).toContain('(A R$ 1,00 · B R$ 2,00)');
     expect(t).toContain('(-R$ 50,00)');
+    expect(t).toContain('"comparativo com o mês passado"');
+    expect(composeBriefing('Ana', { ...dados, receivables: { open_cents: 0 }, receipts: { total: 0 }, month: { net_cents: 100 } }).endsWith('Quer detalhar algo? É só pedir aqui.')).toBe(true);
   });
 
   it('chave estável por dia e administrador (UUID), diferente entre dias e pessoas', async () => {
