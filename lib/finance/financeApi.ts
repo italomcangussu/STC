@@ -178,11 +178,11 @@ export const generateCharges = (planId: string | null = null, requestId = newReq
   call<{ created: number; existing: number; missing_price: number }>('fin_generate_member_charges', { p_request_id: requestId, p_plan_id: planId, p_today: null });
 
 export interface ChargeFilters {
-  search?: string; status?: string; competenceFrom?: IsoDate; competenceTo?: IsoDate; dueFrom?: IsoDate; dueTo?: IsoDate; profileId?: string; planId?: string;
+  search?: string; status?: string; competenceFrom?: IsoDate; competenceTo?: IsoDate; dueFrom?: IsoDate; dueTo?: IsoDate; profileId?: string; planId?: string; chargeType?: 'membership' | 'member_pendency';
 }
 const filterJson = (f: ChargeFilters) => ({
   search: f.search ?? '', status: f.status ?? '', competence_from: f.competenceFrom ?? '', competence_to: f.competenceTo ?? '',
-  due_from: f.dueFrom ?? '', due_to: f.dueTo ?? '', profile_id: f.profileId ?? '', plan_id: f.planId ?? '',
+  due_from: f.dueFrom ?? '', due_to: f.dueTo ?? '', profile_id: f.profileId ?? '', plan_id: f.planId ?? '', charge_type: f.chargeType ?? '',
 });
 export const listCharges = (f: ChargeFilters = {}, limit = 200, offset = 0, asOf?: IsoDate) =>
   rows<ChargeStatementRow>('fin_charge_statements', { p_filters: filterJson(f), p_as_of: asOf ?? null, p_limit: limit, p_offset: offset });
