@@ -11,6 +11,7 @@ const api = vi.hoisted(() => ({
   listRecipients: vi.fn(), approveRun: vi.fn(), cancelRun: vi.fn(), retryFailed: vi.fn(), previewAutomation: vi.fn(), listChampionshipOptions: vi.fn(),
   getChannel: vi.fn(), listGroups: vi.fn(), aiHealth: vi.fn(), listMentionSamples: vi.fn(), instanceStatus: vi.fn(), setMentionVerified: vi.fn(),
   setAiChannel: vi.fn(), setGroup: vi.fn(), getAiSettings: vi.fn(), listProposals: vi.fn(), saveAiSettings: vi.fn(),
+  listMemoryCandidates: vi.fn(), reviewMemoryCandidate: vi.fn(),
 }));
 
 vi.mock('@/lib/supabase', () => ({
@@ -78,6 +79,8 @@ beforeEach(() => {
   api.instanceStatus.mockResolvedValue({ state: 'connected', qrcode: null, profileName: 'STC Institucional', phone: '5588999990000' });
   api.getAiSettings.mockResolvedValue({ version: 3, active: false, persona_name: 'Assistente do STC', model: '', instructions: '', business_context: '', buffer_seconds: 6, max_turns: 12, handoff_keywords: ['atendente'], daily_turn_budget: 300, proposal_ttl_minutes: 20 });
   api.listProposals.mockResolvedValue([]);
+  api.listMemoryCandidates.mockResolvedValue([]);
+  api.reviewMemoryCandidate.mockResolvedValue({ id: 'm1', status: 'approved' });
 });
 afterEach(() => cleanup());
 
@@ -337,6 +340,72 @@ describe('Conversas: IA', () => {
     expect(await screen.findByText('Confirmada e gravada')).toBeTruthy();
     expect(screen.getByText(/O sistema recusou: Horário já ocupado na hora de confirmar\./)).toBeTruthy();
     expect(screen.getAllByText(/Reservar · Play · 08\/10 às 18:00–19:00 · Saibro 1/).length).toBe(2);
+  });
+
+  describe('memória do João (a diretoria decide)', () => {
+    const sugestao = (o: Record<string, unknown> = {}) => ({ id: 'm1', subject_name: 'Beto Sócio', kind: 'recurring_preference', content: 'Prefere jogar cedo.', confidence: 0.82,
+      status: 'pending', created_at: '2026-10-06T12:00:00Z', reviewed_at: null, source_body: 'o Beto sempre joga cedo', ...o });
+
+    it('sem sugestão, diz que não há nada para revisar', async () => {
+      montar();
+      fireEvent.click(await screen.findByRole('tab', { name: 'IA' }));
+      expect(await screen.findByText('Nada para revisar')).toBeTruthy();
+      expect(screen.getByText('O que o João aprendeu sobre a turma')).toBeTruthy();
+    });
+
+    it('mostra quem, o quê, a confiança e a frase original; aprovar sem mexer manda só a decisão', async () => {
+      api.listMemoryCandidates.mockImplementation(async (st: string) => (st === 'pending' ? [sugestao()] : []));
+      montar();
+      fireEvent.click(await screen.findByRole('tab', { name: 'IA' }));
+      expect(await screen.findByText('Beto Sócio')).toBeTruthy();
+      expect(screen.getByText('Preferência')).toBeTruthy();
+      expect(screen.getByText('82% de confiança')).toBeTruthy();
+      expect(screen.getByText(/Na conversa: “o Beto sempre joga cedo”/)).toBeTruthy();
+      expect(screen.getByRole('tab', { name: 'Para revisar (1)' })).toBeTruthy();
+      fireEvent.click(screen.getByRole('button', { name: /Aprovar/ }));
+      await waitFor(() => expect(api.reviewMemoryCandidate).toHaveBeenCalledWith('m1', 'approved', undefined));
+    });
+
+    it('a diretoria corrige o texto antes de aprovar: o texto novo é o que vai', async () => {
+      api.listMemoryCandidates.mockImplementation(async (st: string) => (st === 'pending' ? [sugestao()] : []));
+      montar();
+      fireEvent.click(await screen.findByRole('tab', { name: 'IA' }));
+      const campo = await screen.findByLabelText('Texto da memória sobre Beto Sócio');
+      fireEvent.change(campo, { target: { value: 'Gosta de jogar antes do calor.' } });
+      fireEvent.click(screen.getByRole('button', { name: /Aprovar/ }));
+      await waitFor(() => expect(api.reviewMemoryCandidate).toHaveBeenCalledWith('m1', 'approved', 'Gosta de jogar antes do calor.'));
+    });
+
+    it('recusar descarta; texto curto demais não deixa aprovar', async () => {
+      api.listMemoryCandidates.mockImplementation(async (st: string) => (st === 'pending' ? [sugestao({ kind: 'inside_joke' })] : []));
+      montar();
+      fireEvent.click(await screen.findByRole('tab', { name: 'IA' }));
+      expect(await screen.findByText('Brincadeira interna')).toBeTruthy();
+      fireEvent.change(screen.getByLabelText('Texto da memória sobre Beto Sócio'), { target: { value: 'ok' } });
+      expect((screen.getByRole('button', { name: /Aprovar/ }) as HTMLButtonElement).disabled).toBe(true);
+      fireEvent.click(screen.getByRole('button', { name: /Recusar/ }));
+      await waitFor(() => expect(api.reviewMemoryCandidate).toHaveBeenCalledWith('m1', 'rejected', undefined));
+    });
+
+    it('aba Aprovadas lista o que o João já usa e permite retirar', async () => {
+      api.listMemoryCandidates.mockImplementation(async (st: string) => (st === 'approved' ? [sugestao({ status: 'approved', content: 'Gosta de jogar cedo.' })] : []));
+      montar();
+      fireEvent.click(await screen.findByRole('tab', { name: 'IA' }));
+      fireEvent.click(await screen.findByRole('tab', { name: 'Aprovadas' }));
+      expect(await screen.findByText('Gosta de jogar cedo.')).toBeTruthy();
+      expect(screen.queryByRole('button', { name: /Aprovar/ })).toBeNull();
+      fireEvent.click(screen.getByRole('button', { name: /Retirar/ }));
+      await waitFor(() => expect(api.reviewMemoryCandidate).toHaveBeenCalledWith('m1', 'rejected', undefined));
+    });
+
+    it('erro do servidor aparece em português e a lista continua', async () => {
+      api.listMemoryCandidates.mockImplementation(async (st: string) => (st === 'pending' ? [sugestao()] : []));
+      api.reviewMemoryCandidate.mockRejectedValueOnce({ message: 'CANDIDATE_NOT_FOUND' });
+      montar();
+      fireEvent.click(await screen.findByRole('tab', { name: 'IA' }));
+      fireEvent.click(await screen.findByRole('button', { name: /Aprovar/ }));
+      expect(await screen.findByText('Esta sugestão não existe mais. Atualize a lista.')).toBeTruthy();
+    });
   });
 
   it('avisa quando o servidor não tem a chave do provedor de IA', async () => {
