@@ -31,6 +31,7 @@ const AdminStudents = lazy(() => import('./components/AdminStudents').then(m => 
 const ChampionshipAdmin = lazy(() => import('./components/ChampionshipAdmin').then(m => ({ default: m.ChampionshipAdmin })));
 const ChampionshipCreator = lazy(() => import('./components/ChampionshipCreator').then(m => ({ default: m.ChampionshipCreator })));
 const AdminForms = lazy(() => import('./components/AdminForms').then(m => ({ default: m.AdminForms })));
+const AppSettings = lazy(() => import('./components/AppSettings').then(m => ({ default: m.AppSettings })));
 const ConversationsStandalonePage = lazy(() => import('./components/conversations/ConversationsStandalonePage').then(m => ({ default: m.ConversationsStandalonePage })));
 import { getPublicChampionshipRoute, PublicChampionshipRoute, selectPublicChampionship } from './lib/publicRoutes';
 
@@ -237,6 +238,7 @@ const AppContent: React.FC = () => {
             {view === 'meu-financeiro' && <MemberFinance currentUser={currentUser} />}
             {view === 'championship-admin' && <AdminProtect><ChampionshipAdmin currentUser={currentUser} /></AdminProtect>}
             {view === 'championship-creator' && <AdminProtect><ChampionshipCreator /></AdminProtect>}
+            {view === 'configuracoes' && <AppSettings currentUser={currentUser} />}
             {view === 'admin-forms' && <AdminProtect><AdminForms /></AdminProtect>}
           </div>
         </Suspense>

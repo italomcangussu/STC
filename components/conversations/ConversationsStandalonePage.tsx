@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
-import { getPermissionStatus, isPushSupported, subscribeToPush } from '../../lib/pushNotifications';
+import { getPermissionStatus, isInstalledPWA, isPushSupported, subscribeToPush } from '../../lib/pushNotifications';
 import AdminPushPermissionBanner from './AdminPushPermissionBanner';
 import { Spinner } from './ui';
 
@@ -172,9 +172,8 @@ export const ConversationsStandalonePage: React.FC = () => {
           {/* Link para Painel Completo do Clube */}
           <a
             href="/"
-            target="_blank"
-            rel="noopener noreferrer"
-            title="Abrir o STC Play em outra janela"
+            {...(isInstalledPWA() ? {} : { target: '_blank', rel: 'noopener noreferrer' })}
+            title="Abrir o STC Play"
             className="hidden h-9 items-center gap-1.5 rounded-xl border border-stone-200 bg-stone-50 px-3 text-xs font-semibold text-stone-700 transition hover:bg-stone-100 sm:flex"
           >
             <span>Clube</span>

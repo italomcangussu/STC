@@ -36,6 +36,7 @@ import { ChampionshipAdmin } from './ChampionshipAdmin';
 import { AdminForms } from './AdminForms';
 import { filterReservations, type ReservationPeriod, type ReservationRow } from '../lib/adminReservations';
 import { clearRankingCache } from '../lib/rankingService';
+import { isInstalledPWA } from '../lib/pushNotifications';
 import { buildAdminAuditQueryParams, describeAuditLog, type AdminAuditLog } from '../lib/adminAudit';
 
 // --- Helpers ---
@@ -1778,6 +1779,11 @@ export const AdminPanel: React.FC = () => {
 
     const go = (id: AdminTabId) => {
         if (id === 'conversas') {
+            // App instalado: nova janela abriria o Safari fora do app; navega na mesma.
+            if (isInstalledPWA()) {
+                window.location.assign('/conversas');
+                return;
+            }
             window.open('/conversas', '_blank');
         }
         setActiveTab(id);
@@ -1826,8 +1832,7 @@ export const AdminPanel: React.FC = () => {
                             <div className="flex flex-wrap items-center gap-3">
                                 <a
                                     href="/conversas"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
+                                    {...(isInstalledPWA() ? {} : { target: '_blank', rel: 'noopener noreferrer' })}
                                     className="inline-flex min-h-[46px] items-center gap-2 rounded-2xl bg-emerald-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-emerald-600/20 transition hover:bg-emerald-700 active:scale-95"
                                 >
                                     <span>Abrir Mensageiro em Nova Aba</span>

@@ -26,7 +26,20 @@ Deno.serve(async (req) => {
 
     try {
         const bodyData = await req.json()
-        const { user_id, admin_broadcast, title, body, url, data } = bodyData
+        const { user_id, admin_broadcast, title, body, url, tag, data } = bodyData
+
+        // O disparo para todos os admins só vale com a chave de serviço (webhook do WhatsApp):
+        // a anon key é pública e qualquer visitante poderia notificar os administradores.
+        if (admin_broadcast) {
+            const bearer = (req.headers.get('authorization') ?? '').replace(/^Bearer\s+/i, '')
+            const serviceKeys = [Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'), Deno.env.get('SUPABASE_SECRET_KEY')].filter(Boolean)
+            if (!bearer || !serviceKeys.includes(bearer)) {
+                return new Response(
+                    JSON.stringify({ error: 'admin_broadcast requires service role credentials' }),
+                    { status: 403, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
+                )
+            }
+        }
 
         if ((!user_id && !admin_broadcast) || !title || !body) {
             throw new Error('Missing required fields: user_id (or admin_broadcast), title, body')
@@ -69,6 +82,7 @@ Deno.serve(async (req) => {
             title,
             body,
             url, // Optional URL to open
+            tag, // Optional: notifications with the same tag replace each other (one per conversation)
             icon: '/android-chrome-192x192.png',
             badge: '/favicon-32.png',
             data // Arbitrary data

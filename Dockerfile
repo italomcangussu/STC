@@ -32,6 +32,12 @@ RUN printf 'server {\n\
   location / {\n\
     try_files $uri $uri/ /index.html;\n\
   }\n\
+  location = /sw.js {\n\
+    add_header Cache-Control "no-cache";\n\
+  }\n\
+  location = /manifest.json {\n\
+    add_header Cache-Control "no-cache";\n\
+  }\n\
   location ~* \\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {\n\
     expires 1y;\n\
     add_header Cache-Control "public, immutable";\n\

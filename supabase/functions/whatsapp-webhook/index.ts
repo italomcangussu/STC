@@ -50,6 +50,7 @@ async function notifyAdminsPush(messageId: string) {
         title: contactName,
         body: textBody,
         url: '/conversas',
+        tag: `conv-${msg.conversation_id}`,
         data: { conversationId: msg.conversation_id, messageId: msg.id },
       }),
     });

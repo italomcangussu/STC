@@ -66,7 +66,9 @@ AS $$
     WHERE p.role = 'admin';
 $$;
 
+-- Só o service_role (edge function send-push) lista endpoints e chaves: expor a RPC a
+-- authenticated/anon deixaria qualquer sócio logado ler as assinaturas de todos os admins.
+REVOKE ALL ON FUNCTION public.get_admin_push_subscriptions() FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.get_admin_push_subscriptions() TO service_role;
-GRANT EXECUTE ON FUNCTION public.get_admin_push_subscriptions() TO authenticated;
 
 COMMENT ON FUNCTION public.get_admin_push_subscriptions IS 'Retorna todas as assinaturas push ativas dos administradores do clube';

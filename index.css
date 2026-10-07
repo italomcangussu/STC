@@ -1920,3 +1920,38 @@ input[type="datetime-local"] {
         width: 2.5rem;
     }
 }
+
+/* ---- Modo app nativo (Configurações > Comportamento) ---- */
+html[data-native-feel="on"],
+html[data-native-feel="on"] body {
+    overscroll-behavior: none;
+}
+
+html[data-native-feel="on"] body {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+html[data-native-feel="on"] input,
+html[data-native-feel="on"] textarea,
+html[data-native-feel="on"] [contenteditable="true"],
+html[data-native-feel="on"] .selectable {
+    -webkit-user-select: text;
+    user-select: text;
+    -webkit-touch-callout: default;
+}
+
+html[data-reduce-motion="on"] *,
+html[data-reduce-motion="on"] *::before,
+html[data-reduce-motion="on"] *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+}
+
+html[data-native-feel="on"] .conv-shell {
+    -webkit-user-select: text;
+    user-select: text;
+}

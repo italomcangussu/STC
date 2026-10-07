@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
     Calendar, Trophy, LayoutDashboard,
-    Sandwich, Menu, X, LogOut, GraduationCap, Swords, Settings, Bell, Gamepad2, Shuffle, ChevronRight, Wallet
+    Sandwich, Menu, X, LogOut, GraduationCap, Swords, Settings, Bell, Gamepad2, Shuffle, ChevronRight, Wallet, MessagesSquare, ShieldCheck
 } from 'lucide-react';
 import { User } from '../types';
 import { supabase } from '../lib/supabase';
@@ -94,17 +94,22 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
     }, []);
 
     const handleEnablePush = async () => {
-        const subscription = await subscribeToPush();
+        // subscribeToPush já grava a assinatura em push_subscriptions (uma linha por aparelho).
+        const subscription = await subscribeToPush(currentUser.id);
         if (subscription) {
-            await supabase.from('push_subscriptions').upsert({
-                user_id: currentUser.id,
-                endpoint: subscription.endpoint,
-                keys: subscription.keys
-            }, { onConflict: 'user_id' });
-
             setPushEnabled(true);
             setShowPushBanner(false);
         }
+    };
+
+    // O mensageiro é uma página própria em tela cheia (/conversas), fora deste layout:
+    // navega na mesma janela para não abrir o Safari fora do app instalado.
+    const goTo = (id: string) => {
+        if (id === 'conversas') {
+            window.location.assign('/conversas');
+            return;
+        }
+        setView(id);
     };
 
     // Dynamic Navigation Items
@@ -128,9 +133,12 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
         // Tudo da administração mora em um só lugar: o Painel Admin (Alunos,
         // Professores, Financeiro, Formulários e Torneios são seções dele).
         // Só o criador de campeonatos segue separado, porque é um passo a passo.
-        navItems.push({ id: 'admin-panel', label: 'Painel Admin', icon: <Settings size={20} />, roles: ['admin'] });
+        navItems.push({ id: 'conversas', label: 'Conversas', icon: <MessagesSquare size={20} />, roles: ['admin'] });
+        navItems.push({ id: 'admin-panel', label: 'Painel Admin', icon: <ShieldCheck size={20} />, roles: ['admin'] });
         navItems.push({ id: 'championship-creator', label: 'Criador de Campeonatos', icon: <Shuffle size={20} />, roles: ['admin'] });
     }
+
+    navItems.push({ id: 'configuracoes', label: 'Configurações', icon: <Settings size={20} />, roles: ['admin', 'socio', 'lanchonete'] });
 
     const filteredNav = navItems.filter(item => (!item.roles || item.roles.includes(currentUser.role)));
 
@@ -253,10 +261,10 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
                             {/* Regular Navigation Items */}
                             <div className="space-y-1">
                                 <p className="text-[10px] font-extrabold tracking-wider uppercase text-stone-400 px-3 mb-1">Menu Principal</p>
-                                {filteredNav.filter(item => !item.id.startsWith('admin-') && item.id !== 'championship-admin' && item.id !== 'championship-creator' && item.id !== 'financeiro-admin').map(item => (
+                                {filteredNav.filter(item => !item.id.startsWith('admin-') && item.id !== 'championship-admin' && item.id !== 'championship-creator' && item.id !== 'financeiro-admin' && item.id !== 'conversas').map(item => (
                                     <button
                                         key={item.id}
-                                        onClick={() => { setView(item.id); setIsMenuOpen(false); }}
+                                        onClick={() => { goTo(item.id); setIsMenuOpen(false); }}
                                         className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all active:scale-[0.98] ${
                                             view === item.id
                                                 ? 'bg-sunset-gradient text-white shadow-md shadow-orange-200/50 font-bold'
@@ -278,10 +286,10 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
                                         <p className="text-[10px] font-extrabold tracking-wider uppercase text-saibro-700">Administração</p>
                                         <span className="text-[9px] font-bold bg-saibro-100 text-saibro-800 px-1.5 py-0.5 rounded">PAINEL</span>
                                     </div>
-                                    {filteredNav.filter(item => item.id.startsWith('admin-') || item.id === 'championship-admin' || item.id === 'championship-creator' || item.id === 'financeiro-admin').map(item => (
+                                    {filteredNav.filter(item => item.id.startsWith('admin-') || item.id === 'championship-admin' || item.id === 'championship-creator' || item.id === 'financeiro-admin' || item.id === 'conversas').map(item => (
                                         <button
                                             key={item.id}
-                                            onClick={() => { setView(item.id); setIsMenuOpen(false); }}
+                                            onClick={() => { goTo(item.id); setIsMenuOpen(false); }}
                                             className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all active:scale-[0.98] ${
                                                 view === item.id
                                                     ? 'bg-sunset-gradient text-white shadow-md shadow-orange-200/50 font-bold'
@@ -367,7 +375,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
                     {filteredNav.map(item => (
                         <button
                             key={item.id}
-                            onClick={() => setView(item.id)}
+                            onClick={() => goTo(item.id)}
                             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-smooth ${view === item.id
                                 ? 'bg-sunset-gradient text-white shadow-lg shadow-orange-200/50'
                                 : 'text-stone-600 hover:bg-saibro-100 hover:text-saibro-700'
@@ -398,7 +406,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
                 {filteredNav.slice(0, 5).map(item => (
                     <button
                         key={item.id}
-                        onClick={() => setView(item.id)}
+                        onClick={() => goTo(item.id)}
                         className={`flex flex-col items-center justify-center py-1 px-1 rounded-xl flex-1 transition-all duration-300 active:scale-75 ${view === item.id ? 'text-saibro-600 bg-saibro-50/50 shadow-inner' : 'text-stone-400 hover:text-stone-600'}`}
                     >
                         <div className={`transition-transform duration-300 ${view === item.id ? 'scale-110 drop-shadow-[0_0_8px_rgba(249,115,22,0.3)]' : ''}`}>
