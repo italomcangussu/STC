@@ -6,14 +6,14 @@
  * Enviar comprovante NÃO quita nada: o clube confere e confirma.
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Camera, ChevronDown, ChevronUp, FileText, Loader2, Receipt, Wallet } from 'lucide-react';
+import { Camera, Check, ChevronDown, ChevronUp, Copy, FileText, Loader2, Receipt, Wallet } from 'lucide-react';
 import { User } from '../../types';
 import { notify } from '../../lib/notifications';
 import { notifyFinanceError } from '../../lib/finance/errors';
 import {
-  chargeHistory, chargeStatementsByIds, getPublicSettings, listCredits, myCharges, myReceipts, newRequestId, submitReceipt,
+  chargeHistory, chargeStatementsByIds, getMemberPaymentSettings, getPublicSettings, listCredits, listPendencyMeta, myCharges, myReceipts, newRequestId, submitReceipt,
 } from '../../lib/finance/financeApi';
-import type { ChargeStatementRow, PublicSettings } from '../../lib/finance/types';
+import type { ChargeStatementRow, MemberPendencyMeta, PublicSettings } from '../../lib/finance/types';
 import { brDate, monthLabel, type IsoDate } from '../../lib/finance/dates';
 import { formatBRL } from '../../lib/finance/money';
 import { RECEIPT_MAX_BYTES, safeReceiptFileName, sha256Hex, validateReceiptFile, type ReceiptMime } from '../../lib/finance/receiptFile';
@@ -40,16 +40,19 @@ export function describeRules(s: PublicSettings): { due: string; fees: string } 
   return { due, fees: `Em caso de atraso: ${parts.join(' e ')}${s.grace_days ? `, após ${s.grace_days} dia(s) de carência` : ''}. Juros simples — encargos não geram novos juros.` };
 }
 
-const ChargeCard: React.FC<{ c: ChargeStatementRow; selected: boolean; selectable: boolean; onToggle: () => void }> = ({ c, selected, selectable, onToggle }) => {
+const ChargeCard: React.FC<{ c: ChargeStatementRow; meta?: MemberPendencyMeta | null; selected: boolean; selectable: boolean; onToggle: () => void }> = ({ c, meta, selected, selectable, onToggle }) => {
   const [open, setOpen] = useState(false);
   const hist = useAsync(() => (open ? chargeHistory(c.charge_id) : Promise.resolve(null)), [open, c.charge_id]);
   const payable = c.display_status !== 'paid' && c.display_status !== 'canceled';
+  const isPendency = c.plan_id === null && !!meta;
+  const title = isPendency ? meta!.description : `Mensalidade de ${monthLabel(c.competence_month)}`;
   return (
     <div className={`rounded-3xl border bg-white p-4 shadow-sm ${selected ? 'border-saibro-400 ring-2 ring-saibro-100' : 'border-stone-100'}`}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-sm font-black capitalize text-stone-800">Mensalidade de {monthLabel(c.competence_month)}</p>
-          <p className="text-xs text-stone-500">Vencimento em {brDate(c.due_date)}</p>
+          <p className="text-sm font-black text-stone-800">{title}</p>
+          <p className="text-xs text-stone-500">{isPendency ? `Pendência · competência ${monthLabel(c.competence_month)} · ` : ''}Vencimento em {brDate(c.due_date)}</p>
+          {isPendency && (meta!.guest_name || meta!.guest_date) && <p className="mt-1 text-xs text-stone-400">{meta!.guest_name ? `Convidado: ${meta!.guest_name}` : ''}{meta!.guest_name && meta!.guest_date ? ' · ' : ''}{meta!.guest_date ? `Visita: ${brDate(meta!.guest_date)}` : ''}</p>}
         </div>
         <ChargeStatusBadge status={c.display_status} />
       </div>
@@ -81,7 +84,7 @@ const ChargeCard: React.FC<{ c: ChargeStatementRow; selected: boolean; selectabl
       <div className="mt-3 flex flex-wrap gap-2">
         {selectable && payable && (
           <label className={`${selected ? btnPrimary : btnGhost} cursor-pointer`}>
-            <input type="checkbox" className="sr-only" checked={selected} onChange={onToggle} aria-label={`Incluir ${monthLabel(c.competence_month)} no comprovante`} />
+            <input type="checkbox" className="sr-only" checked={selected} onChange={onToggle} aria-label={`Incluir ${title} no comprovante`} />
             {selected ? 'Incluída no comprovante' : 'Pagar esta'}
           </label>
         )}
@@ -119,10 +122,11 @@ interface SendSheetProps {
   payable: ChargeStatementRow[];
   preselected: string[];
   replaces: string | null;
+  pendencyMeta: Map<string, MemberPendencyMeta>;
   onSent: () => void;
 }
 
-const SendReceiptSheet: React.FC<SendSheetProps> = ({ open, onClose, user, payable, preselected, replaces, onSent }) => {
+const SendReceiptSheet: React.FC<SendSheetProps> = ({ open, onClose, user, payable, preselected, replaces, pendencyMeta, onSent }) => {
   const today = useToday();
   const { key, renew } = useRequestKey();
   const submissionId = useRef(newRequestId());
@@ -196,7 +200,13 @@ const SendReceiptSheet: React.FC<SendSheetProps> = ({ open, onClose, user, payab
         chargeIds: chosen, declaredAmountCents: amount, declaredPaidOn: paidOn, reference: reference.trim() || null, note: note.trim() || null,
         ocrStatus: ocr.status === 'ok' ? 'ok' : ocr.status === 'unreadable' ? 'unreadable' : ocr.status === 'failed' ? 'failed' : 'not_run', ocr: ocr.stored, replaces,
       });
-      notify.success('Comprovante enviado!', { description: res.possible_duplicate ? 'Este arquivo já tinha sido enviado antes; o clube vai conferir.' : 'O clube vai conferir o pagamento e você será avisado.' });
+      notify.success(res.auto_approved ? 'Pagamento identificado e baixado!' : 'Comprovante enviado!', {
+        description: res.auto_approved
+          ? 'O OCR conferiu os dados e o financeiro atualizou automaticamente suas pendências.'
+          : res.possible_duplicate
+            ? 'Este arquivo já tinha sido enviado antes; o clube vai conferir.'
+            : 'O clube vai conferir o pagamento e você será avisado.',
+      });
       renew();
       onSent();
       onClose();
@@ -210,7 +220,7 @@ const SendReceiptSheet: React.FC<SendSheetProps> = ({ open, onClose, user, payab
   return (
     <Sheet
       open={open} onClose={onClose} title={replaces ? 'Enviar novo comprovante' : 'Enviar comprovante'}
-      subtitle="O clube confere o pagamento. Enviar não quita a cobrança por si só."
+      subtitle="O OCR pode confirmar automaticamente pendências quando valor, data e favorecido conferirem; qualquer dúvida vai para análise."
       footer={<><button className={btnGhost} onClick={onClose}>Cancelar</button><button className={btnPrimary} disabled={!canSend} onClick={send}>{busy ? <Loader2 className="animate-spin" size={16} /> : <Receipt size={16} />} Enviar comprovante</button></>}
     >
       <Field label="1. Quais cobranças você pagou?">
@@ -219,7 +229,7 @@ const SendReceiptSheet: React.FC<SendSheetProps> = ({ open, onClose, user, payab
           {payable.map((c) => (
             <label key={c.charge_id} className="flex min-h-11 cursor-pointer items-center gap-3 rounded-xl border border-stone-200 p-3 text-sm">
               <input type="checkbox" className="h-5 w-5 accent-orange-600" checked={chosen.includes(c.charge_id)} onChange={() => setChosen((s) => (s.includes(c.charge_id) ? s.filter((x) => x !== c.charge_id) : [...s, c.charge_id]))} />
-              <span className="flex-1 capitalize">{monthLabel(c.competence_month)}</span>
+              <span className="flex-1">{pendencyMeta.get(c.charge_id)?.description ?? `Mensalidade · ${monthLabel(c.competence_month)}`}</span>
               <span className="font-bold tabular-nums">{formatBRL(c.total_due_cents)}</span>
             </label>
           ))}
@@ -265,11 +275,14 @@ export const MemberFinance: React.FC<{ currentUser: User }> = ({ currentUser }) 
   const receipts = useAsync(() => myReceipts(), []);
   const credits = useAsync(() => listCredits(currentUser.id), [currentUser.id]);
   const settings = useAsync(() => getPublicSettings(), []);
+  const paySettings = useAsync(() => getMemberPaymentSettings(), []);
+  const pendencies = useAsync(() => listPendencyMeta(currentUser.id), [currentUser.id]);
   const [tab, setTab] = useState('pay');
   const [send, setSend] = useState<{ open: boolean; replaces: string | null; pre: string[] }>({ open: false, replaces: null, pre: [] });
   const [picked, setPicked] = useState<string[]>([]);
 
   const list = useMemo(() => charges.data ?? [], [charges.data]);
+  const pendencyById = useMemo(() => new Map((pendencies.data ?? []).map((p) => [p.id, p])), [pendencies.data]);
   const groups = useMemo(() => ({
     pay: list.filter((c) => ['overdue', 'open', 'partial', 'in_review'].includes(c.display_status)),
     forecast: list.filter((c) => c.display_status === 'forecast'),
@@ -281,8 +294,21 @@ export const MemberFinance: React.FC<{ currentUser: User }> = ({ currentUser }) 
   const overdue = groups.pay.filter((c) => c.display_status === 'overdue');
   const rules = settings.data ? describeRules(settings.data) : null;
   const openCredit = (credits.data ?? []).filter((c) => c.status === 'open').reduce((s, c) => s + c.remaining_cents, 0);
+  const openPendencyRows = list.filter((c) => pendencyById.has(c.charge_id) && !['paid', 'canceled'].includes(c.display_status));
+  const openPendencyCents = openPendencyRows.reduce((sum, c) => sum + c.total_due_cents, 0);
+  const [pixCopied, setPixCopied] = useState(false);
+  const copyPix = async () => {
+    const pix = paySettings.data?.pix_key;
+    if (!pix) return;
+    try {
+      await navigator.clipboard.writeText(pix);
+      setPixCopied(true);
+      notify.success('Chave PIX copiada.');
+      setTimeout(() => setPixCopied(false), 1600);
+    } catch { notify.info(`PIX: ${pix}`); }
+  };
 
-  const refresh = () => { charges.reload(); receipts.reload(); credits.reload(); };
+  const refresh = () => { charges.reload(); receipts.reload(); credits.reload(); pendencies.reload(); };
   const shown = tab === 'pay' ? groups.pay : tab === 'forecast' ? groups.forecast : tab === 'paid' ? groups.paid : groups.canceled;
 
   return (
@@ -296,6 +322,17 @@ export const MemberFinance: React.FC<{ currentUser: User }> = ({ currentUser }) 
           <Receipt size={16} /> Enviar comprovante{picked.length ? ` (${picked.length})` : ''}
         </button>
       </header>
+
+      {openPendencyRows.length > 0 && (
+        <Card title="Pendências financeiras" subtitle="Pendências lançadas pelo clube ficam aqui até a quitação.">
+          <div className="flex items-end justify-between gap-3 rounded-2xl bg-stone-50 p-3">
+            <div><p className="text-[10px] font-black uppercase tracking-wide text-stone-400">Saldo das pendências</p><p className="text-2xl font-black text-stone-900">{formatBRL(openPendencyCents)}</p></div>
+            {paySettings.data?.pix_key && <button className={btnGhost} onClick={copyPix}>{pixCopied ? <Check size={15} /> : <Copy size={15} />} {pixCopied ? 'Copiado' : 'Copiar PIX'}</button>}
+          </div>
+          {paySettings.data?.pix_key && <p className="mt-2 break-all text-xs text-stone-500">PIX do clube: <b className="text-stone-700">{paySettings.data.pix_key}</b></p>}
+          <p className="mt-2 text-xs text-stone-500">Você pode selecionar uma ou mais pendências abaixo e enviar um único comprovante. Pagamento parcial mantém o saldo; valor excedente vira crédito.</p>
+        </Card>
+      )}
 
       {rules && (
         <Card title="Como funciona" subtitle="Regras do clube para a sua mensalidade">
@@ -320,7 +357,7 @@ export const MemberFinance: React.FC<{ currentUser: User }> = ({ currentUser }) 
           ) : (
             <div className="space-y-3">
               {shown.map((c) => (
-                <ChargeCard key={c.charge_id} c={c} selectable={tab === 'pay' || tab === 'forecast'} selected={picked.includes(c.charge_id)}
+                <ChargeCard key={c.charge_id} c={c} meta={pendencyById.get(c.charge_id)} selectable={tab === 'pay' || tab === 'forecast'} selected={picked.includes(c.charge_id)}
                   onToggle={() => setPicked((p) => (p.includes(c.charge_id) ? p.filter((x) => x !== c.charge_id) : [...p, c.charge_id]))} />
               ))}
             </div>
@@ -354,7 +391,7 @@ export const MemberFinance: React.FC<{ currentUser: User }> = ({ currentUser }) 
       </Card>
 
       <SendReceiptSheet open={send.open} onClose={() => setSend((s) => ({ ...s, open: false }))} user={currentUser} payable={payable} preselected={send.pre} replaces={send.replaces}
-        onSent={() => { setPicked([]); refresh(); }} />
+        pendencyMeta={pendencyById} onSent={() => { setPicked([]); refresh(); }} />
     </div>
   );
 };
