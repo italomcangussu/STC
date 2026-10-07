@@ -12,7 +12,7 @@ describe('conciliar marcações com o cadastro', () => {
   it('pelo telefone: com DDI, sem DDI e com ou sem o nono dígito dão o mesmo sócio', async () => {
     const w = await world();
     // Beto: 99900000003 (cadastro, com o 9)
-    for (const id of ['5599900000003', '99900000003', '558588880003', '8588880003']) {
+    for (const id of ['5599900000003', '99900000003', '559900000003', '9900000003']) {   // com/sem DDI × com/sem o 9
       const [r] = await resolve(w, [{ id }]);
       expect([r.name, r.via, r.is_bot]).toEqual(['Beto Sócio', 'phone', false]);
       expect(r.profile_id).toBe(U.socioB);
@@ -21,7 +21,7 @@ describe('conciliar marcações com o cadastro', () => {
 
   it('LID + o telefone que a UazAPI informou para ele no grupo', async () => {
     const w = await world();
-    const [r] = await resolve(w, [{ id: '61809058967781@lid', phone: '5585988880004' }]);
+    const [r] = await resolve(w, [{ id: '61809058967781@lid', phone: '5599900000004' }]);
     expect(r).toMatchObject({ id: '61809058967781', name: 'Paulo Professor', via: 'phone', profile_id: U.prof });
   }, 60000);
 
