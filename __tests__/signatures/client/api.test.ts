@@ -114,3 +114,24 @@ describe('mensagens para a pessoa', () => {
     expect(signatureMessage(new SignatureError('algo_novo'))).toContain('Não foi possível concluir');
   });
 });
+
+describe('despacho dos avisos (só admin): a resposta é { summary }, sem "ok"', () => {
+  it('lê o resumo e manda a ação certa', async () => {
+    invoke.mockResolvedValue({ data: { summary: { configured: true, claimed: 3, sent: 2, failed: 1, reminders: 0, done: true } }, error: null });
+    const { dispatchNotifications } = await import('../../../lib/signatures/api');
+    expect(await dispatchNotifications(5)).toEqual({ configured: true, claimed: 3, sent: 2, failed: 1, reminders: 0, done: true });
+    expect(invoke).toHaveBeenCalledWith('signature-operations', { body: { action: 'dispatch', limit: 5 } });
+  });
+
+  it('resposta sem resumo vira erro (não um resumo vazio que pareceria sucesso)', async () => {
+    invoke.mockResolvedValue({ data: { error: 'FORBIDDEN' }, error: null });
+    const { dispatchNotifications } = await import('../../../lib/signatures/api');
+    await expect(dispatchNotifications()).rejects.toMatchObject({ name: 'SignatureError', reason: 'FORBIDDEN' });
+  });
+
+  it('não-admin (403) vira SignatureError FORBIDDEN', async () => {
+    invoke.mockResolvedValue(httpError(403, { error: 'FORBIDDEN' }));
+    const { dispatchNotifications } = await import('../../../lib/signatures/api');
+    await expect(dispatchNotifications()).rejects.toMatchObject({ reason: 'FORBIDDEN' });
+  });
+});

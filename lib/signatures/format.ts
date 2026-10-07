@@ -61,3 +61,22 @@ export function formatCountdown(totalSeconds: number): string {
   const m = Math.floor(s / 60);
   return `${m}:${String(s % 60).padStart(2, '0')}`;
 }
+
+/** `2026-10-07` para o `<input type="date">`, no calendário do clube (vazio se não houver prazo). */
+export function toDateInput(iso: string | null | undefined): string {
+  const d = toDate(iso);
+  return d ? clubDay(d) : '';
+}
+
+/**
+ * Prazo escolhido num `<input type="date">` → instante no fim daquele dia, no horário do clube
+ * (Fortaleza é UTC−3 o ano todo, sem horário de verão). Vazio ou inválido → `null` (sem prazo).
+ */
+export function endOfClubDay(dateInput: string): string | null {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateInput)) return null;
+  const d = new Date(`${dateInput}T23:59:00-03:00`);
+  return Number.isNaN(d.getTime()) ? null : d.toISOString();
+}
+
+/** Menor data aceita no campo de prazo: hoje, no calendário do clube. */
+export const todayInput = (now: Date = new Date()): string => clubDay(now);

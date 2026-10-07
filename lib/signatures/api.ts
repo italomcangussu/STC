@@ -21,7 +21,7 @@ export class SignatureError extends Error {
 
 type ServerBody = { ok?: boolean; reason?: string; error?: string; retry_in_seconds?: number; attempts_left?: number } & Record<string, unknown>;
 
-async function callSignatureOperation(body: Record<string, unknown>): Promise<ServerBody> {
+async function invokeSignatureOperation(body: Record<string, unknown>): Promise<ServerBody> {
   const { data, error } = await supabase.functions.invoke('signature-operations', { body });
   if (error) {
     const context = (error as { context?: unknown }).context;
@@ -32,9 +32,29 @@ async function callSignatureOperation(body: Record<string, unknown>): Promise<Se
     }
     throw new SignatureError('NETWORK');
   }
-  const ok = data as ServerBody | null;
-  if (!ok || ok.ok !== true) throw new SignatureError(ok?.reason ?? ok?.error ?? 'UNKNOWN');
+  return (data ?? {}) as ServerBody;
+}
+
+async function callSignatureOperation(body: Record<string, unknown>): Promise<ServerBody> {
+  const ok = await invokeSignatureOperation(body);
+  if (ok.ok !== true) throw new SignatureError(ok.reason ?? ok.error ?? 'UNKNOWN');
   return ok;
+}
+
+export type DispatchSummary = { configured: boolean; claimed: number; sent: number; failed: number; reminders: number; done: boolean };
+
+/**
+ * Só administrador: despacha agora a fila de avisos de WhatsApp (uma volta; chame até `done`).
+ * A resposta é `{ summary }` (sem `ok`), por isso não passa por `callSignatureOperation`.
+ */
+export async function dispatchNotifications(limit = 10): Promise<DispatchSummary> {
+  const r = await invokeSignatureOperation({ action: 'dispatch', limit });
+  const s = (r as { summary?: Partial<DispatchSummary> }).summary;
+  if (!s) throw new SignatureError(r.error ?? r.reason ?? 'UNKNOWN');
+  return {
+    configured: s.configured === true, claimed: Number(s.claimed) || 0, sent: Number(s.sent) || 0,
+    failed: Number(s.failed) || 0, reminders: Number(s.reminders) || 0, done: s.done === true,
+  };
 }
 
 export type CodeRequested = {

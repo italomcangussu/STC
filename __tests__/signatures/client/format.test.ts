@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { dueInfo, formatCountdown, formatDate, formatDateTime } from '../../../lib/signatures/format';
+import { dueInfo, endOfClubDay, formatCountdown, formatDate, formatDateTime, toDateInput, todayInput } from '../../../lib/signatures/format';
 import { cpfDigits, cpfValid, formatCpf, maskCpf } from '../../../lib/signatures/cpf';
 import { matchesSha256, sha256Hex } from '../../../lib/signatures/hash';
 
@@ -95,5 +95,26 @@ describe('hash do PDF', () => {
     expect(await matchesSha256(bytes, hash)).toBe(true);
     expect(await matchesSha256(bytes, hash.toUpperCase())).toBe(true);
     expect(await matchesSha256(new TextEncoder().encode('contrato2'), hash)).toBe(false);
+  });
+});
+
+describe('prazo no campo de data (calendário do clube)', () => {
+  it('endOfClubDay: fim do dia em Fortaleza, em UTC', () => {
+    expect(endOfClubDay('2026-10-20')).toBe('2026-10-21T02:59:00.000Z');
+  });
+  it('vazio ou fora do formato = sem prazo', () => {
+    expect(endOfClubDay('')).toBeNull();
+    expect(endOfClubDay('20/10/2026')).toBeNull();
+    expect(endOfClubDay('2026-13-45')).toBeNull();
+  });
+  it('toDateInput devolve o dia do clube, não o do UTC (02:30Z ainda é o dia anterior em Fortaleza)', () => {
+    expect(toDateInput('2026-10-07T02:30:00Z')).toBe('2026-10-06');
+    expect(toDateInput(null)).toBe('');
+  });
+  it('ida e volta: o prazo escolhido reaparece igual ao editar', () => {
+    expect(toDateInput(endOfClubDay('2026-12-31'))).toBe('2026-12-31');
+  });
+  it('todayInput usa o calendário do clube', () => {
+    expect(todayInput(new Date('2026-10-07T02:30:00Z'))).toBe('2026-10-06');
   });
 });
