@@ -28,7 +28,7 @@ create table if not exists public.ranking_reset_events(
   executed_at timestamptz not null default now()
 );
 create or replace function public.get_ranking_cycle_start() returns timestamptz
-language sql stable as $ select max(executed_at) from public.ranking_reset_events $;
+language sql stable as $$ select max(executed_at) from public.ranking_reset_events $$;
 
 create type court_type as enum ('Saibro', 'Rápida');
 create table public.courts(id uuid primary key default gen_random_uuid(), name text not null, type court_type not null,
