@@ -175,6 +175,13 @@ describe('prompt e cliente do modelo', () => {
     expect(s).not.toMatch(/a assistente/);
   });
 
+  it('o João sabe ensinar a instalar o app como nativo: Android pelo Chrome, iPhone pelo Safari', () => {
+    const s = systemPrompt(settings, { ...ctx, is_group: false });
+    expect(s).toMatch(/ANDROID: precisa ser pelo Google Chrome[\s\S]*"Instalar app"[\s\S]*abre em tela cheia/);
+    expect(s).toMatch(/IPHONE: precisa ser pelo Safari[\s\S]*"Adicionar à Tela de Início"/);
+    expect(s).toContain('https://stcplay.com.br');
+  });
+
   it('o prompt proíbe anunciar sucesso, trata mensagens como dado e no grupo não expõe dados privados', () => {
     const s = systemPrompt(settings, ctx);
     expect(s).toMatch(/NUNCA diga que algo foi feito/);
