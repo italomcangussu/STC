@@ -503,7 +503,7 @@ describe('contexto: sentido, janela de 8 trocas e resumo', () => {
   it('pedido claro de atendente continua indo direto para a equipe, sem gastar o modelo', async () => {
     const { w } = await setup();
     const p = provider();
-    const m = await direct(w, 'quero falar com um atendente');
+    const m = await direct(w, 'quero falar com um atendente', '5599977770000');
     const s = script();
     const r = await turn(w, m.message_id, s.chat, p.uaz);
     expect(r.status).toBe('handoff');
@@ -734,11 +734,62 @@ describe('marcações viram nomes: o agente lê "@Emerson Souza", não "@8111111
   }, 120000);
 });
 
+describe('trava: sócio no privado nunca vai para atendimento humano', () => {
+  const estado = async (w: W) => (await q<any>(w.db, `select ai_status, handoff_kind, handoff_at from public.conv_conversations`))[0];
+
+  it('pedir atendente, JSON inválido e modelo ausente: o João responde e a conversa continua com a IA', async () => {
+    const { w } = await setup();
+    const p = provider();
+    const calls = script();
+    const a = await turn(w, (await direct(w, 'quero falar com um atendente')).message_id, calls.chat, p.uaz);
+    expect([a.status, a.handoff]).toEqual(['replied', null]);
+    expect(calls.calls).toHaveLength(0);
+    expect(p.sent.at(-1)!.text).toMatch(/Pode contar comigo por aqui/);
+    const b = await turn(w, (await direct(w, 'oi')).message_id, script('isto não é json').chat, p.uaz);
+    expect([b.status, b.handoff]).toEqual(['replied', null]);
+    expect(p.sent.at(-1)!.text).not.toMatch(/equipe/);
+    const c = await turn(w, (await direct(w, 'oi de novo')).message_id, null, p.uaz);
+    expect([c.status, c.handoff]).toEqual(['replied', null]);
+    expect(await estado(w)).toMatchObject({ ai_status: 'ai', handoff_kind: null, handoff_at: null });
+  }, 120000);
+
+  it('o modelo tentando transferir é neutralizado: a mensagem de transferência não sai e nada muda no banco', async () => {
+    const { w } = await setup();
+    const p = provider();
+    const r = await turn(w, (await direct(w, 'preciso de ajuda com uma coisa estranha')).message_id,
+      script(answer({ transfer: true, handoff_kind: 'hard', handoff_note: 'não sei', messages: ['Vou passar a sua conversa para alguém da equipe, tá?'] })).chat, p.uaz);
+    expect([r.status, r.handoff]).toEqual(['replied', null]);
+    expect(p.sent.map((x) => x.text).join(' ')).not.toMatch(/passar a sua conversa|equipe/);
+    expect(p.sent.at(-1)!.text).toMatch(/Pode contar comigo/);
+    expect(await estado(w)).toMatchObject({ ai_status: 'ai', handoff_kind: null });
+  }, 120000);
+
+  it('mídia sem texto e áudio ilegível pedem texto em vez de transferir', async () => {
+    const { w } = await setup();
+    const p = provider();
+    const r = await turn(w, (await direct(w, '', '5599900000002', { kind: 'image', body: null })).message_id, script().chat, p.uaz);
+    expect([r.status, r.handoff]).toEqual(['replied', null]);
+    expect(p.sent.at(-1)!.text).toMatch(/não consigo ver imagem ou documento/);
+    expect((await estado(w)).ai_status).toBe('ai');
+  }, 120000);
+
+  it('segunda camada no banco: mesmo chamando a transferência direto, sócio no privado não muda de estado', async () => {
+    const { w } = await setup();
+    const p = provider();
+    await turn(w, (await direct(w, 'oi')).message_id, script(answer({ messages: ['Oi! Em que posso ajudar?'], awaiting: true })).chat, p.uaz);
+    const [sess] = await q<{ id: string }>(w.db, `select id from public.conv_ai_sessions order by started_at desc limit 1`);
+    await svc(w.db, `public.conv_svc_ai_handoff('${sess.id}', 'hard', 'teste')`);
+    expect(await estado(w)).toMatchObject({ ai_status: 'ai', handoff_kind: null });
+    expect((await q<any>(w.db, `select status from public.conv_ai_sessions where id = '${sess.id}'`))[0].status).not.toBe('handoff');
+    expect(await q(w.db, `select 1 from public.admin_audit_logs where action like '%ai_handoff_blocked'`)).toHaveLength(1);
+  }, 120000);
+});
+
 describe('regras do turno que não dependem do modelo', () => {
   it('JSON inválido do modelo vira transferência (nunca silêncio nem invenção)', async () => {
     const { w } = await setup();
     const p = provider();
-    const m = await direct(w, 'oi');
+    const m = await direct(w, 'oi', '5599977770000');
     const r = await turn(w, m.message_id, script('isto não é json').chat, p.uaz);
     expect(r.status).toBe('handoff');
     expect(p.sent[0].text).toMatch(/passar a sua conversa para alguém da equipe/);
@@ -748,12 +799,12 @@ describe('regras do turno que não dependem do modelo', () => {
   it('modelo indisponível ou sem chave: transfere sem chamar ninguém', async () => {
     const { w } = await setup();
     const p = provider();
-    const m = await direct(w, 'oi');
+    const m = await direct(w, 'oi', '5599977770000');
     const r = await turn(w, m.message_id, null, p.uaz);
     expect(r.status).toBe('handoff');
     expect(p.sent.length).toBe(0);
     expect((await q<any>(w.db, `select handoff_note from public.conv_conversations`))[0].handoff_note).toMatch(/sem provedor/);
-    const m2 = await direct(w, 'oi de novo');   // equipe assumiu: a IA cala
+    const m2 = await direct(w, 'oi de novo', '5599977770000');   // equipe assumiu: a IA cala
     expect((await turn(w, m2.message_id, script(answer()).chat, p.uaz)).status).toBe('skip');
   }, 90000);
 
@@ -772,11 +823,11 @@ describe('regras do turno que não dependem do modelo', () => {
     const { w } = await setup();
     const p = provider();
     const calls = script();
-    const m = await direct(w, 'quero falar com um atendente');
+    const m = await direct(w, 'quero falar com um atendente', '5599977770000');
     expect((await turn(w, m.message_id, calls.chat, p.uaz)).status).toBe('handoff');
     expect(calls.calls.length).toBe(0);
     const w2 = (await setup()).w;
-    const m2 = await direct(w2, '', '5599900000002', { kind: 'image', body: null });
+    const m2 = await direct(w2, '', '5599977770000', { kind: 'image', body: null });
     expect((await turn(w2, m2.message_id, calls.chat, p.uaz)).status).toBe('handoff');
     expect(calls.calls.length).toBe(0);
   }, 120000);

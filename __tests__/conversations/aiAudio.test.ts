@@ -76,15 +76,16 @@ describe('o João ouve áudio (turno completo)', () => {
     expect(c.ai_status).toBe('ai');
   }, 60000);
 
-  it('transcrição falhou no privado: vai para a equipe ouvir, com o motivo', async () => {
+  it('transcrição falhou no privado: sócio não é transferido, o João pede texto ou novo áudio', async () => {
     const w = await setup();
     const p = provider();
     const m = await voice(w);
     await hear(w, m.message_id, { status: 'failed', reason: 'http_500' });
     const r = await turn(w, m.message_id, script().chat, p.uaz);
-    expect(r).toMatchObject({ status: 'handoff', handoff: 'hard' });
-    const [c] = await q<any>(w.db, `select handoff_note from public.conv_conversations`);
-    expect(c.handoff_note).toMatch(/transcrição automática falhou/);
+    expect(r).toMatchObject({ status: 'replied', handoff: null });
+    expect(p.sent.at(-1)!).toMatch(/Não consegui ouvir seu áudio/);
+    const [c] = await q<any>(w.db, `select ai_status, handoff_kind from public.conv_conversations`);
+    expect(c).toEqual({ ai_status: 'ai', handoff_kind: null });
   }, 60000);
 });
 

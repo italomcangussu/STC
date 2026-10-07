@@ -680,6 +680,10 @@ export function claimsSuccess(text: string): boolean {
 }
 
 const TRANSFER_DIRECT = 'Vou passar a sua conversa para alguém da equipe, tá? Eles te respondem por aqui mesmo.';
+/** Sócio no privado nunca é transferido para a equipe: o João continua a conversa. */
+const MEMBER_KEEP = 'Pode contar comigo por aqui. Me conta o que você precisa que eu resolvo.';
+const MEMBER_FAIL = 'Não consegui concluir isso agora. Pode tentar de novo em instantes, ou me explicar de outro jeito?';
+const MEMBER_HANDOFF_TALK = /(vou|vamos|irei)\s+(te\s+)?(passar|encaminhar|transferir|pedir)|passar\s+(a|sua)\s+conversa|algu[eé]m\s+da\s+equipe\s+(te|vai)|atendente|transferi/i;
 const TRANSFER_GROUP = 'Vou pedir para alguém da equipe te ajudar com isso por aqui, tá?';
 
 /* ------------------------------- Textos escritos pelo servidor ------------------------------- */
@@ -1135,7 +1139,15 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
   const save = (memory: Memory | null, decision: string, payload: Record<string, unknown>, awaiting: boolean, close: boolean) =>
     db('conv_svc_ai_save_turn', { p_session: session, p_memory: memory, p_decision: decision, p_payload: payload, p_awaiting: awaiting, p_close: close });
 
-  const transferir = async (kind: 'soft' | 'hard', note: string, memory: Memory | null, falar = true) => {
+  // Trava: sócio (ou admin) no privado nunca vai para atendimento humano. O banco também recusa (ai_handoff).
+  const socioNoPrivado = !isGroup && ((ctx.requester as Ctx | undefined)?.profile as Ctx | undefined)?.is_member === true;
+
+  const transferir = async (kind: 'soft' | 'hard', note: string, memory: Memory | null, falar = true, opts: { texto?: string; fechar?: boolean } = {}) => {
+    if (socioNoPrivado) {
+      const enviadas = falar ? await entregar(cadence([opts.texto ?? MEMBER_KEEP])) : 0;
+      await save(memory, 'member_no_handoff', { reason: note.slice(0, 200), kind }, !opts.fechar, opts.fechar === true);
+      return { status: 'replied', bubbles: enviadas, handoff: null } as TurnResult;
+    }
     if (isGroup) {
       const bolhas = falar ? ['Não tenho essa informação confirmada.'] : [];
       const enviadas = bolhas.length ? await entregar(cadence(bolhas)) : 0;
@@ -1149,11 +1161,11 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
   };
 
   // Regras que não dependem do modelo.
-  if (!deps.chat || !settings.model) return transferir('hard', 'Agente de IA sem provedor ou modelo configurado.', null, false);
-  if (Number(ctx.session?.turns ?? 0) >= settings.max_turns) return transferir('hard', `Atendimento passou de ${settings.max_turns} turnos com a IA sem concluir.`, null);
+  if (!deps.chat || !settings.model) return transferir('hard', 'Agente de IA sem provedor ou modelo configurado.', null, socioNoPrivado);
+  if (Number(ctx.session?.turns ?? 0) >= settings.max_turns) return transferir('hard', `Atendimento passou de ${settings.max_turns} turnos com a IA sem concluir.`, null, true, { texto: 'Vamos recomeçar do zero? Me diz o que você precisa.', fechar: true });
   if (wantsHuman(buffered, settings.handoff_keywords ?? [])) return transferir('hard', 'A pessoa pediu atendimento humano.', null);
   const naoOuvido = unheardOnly(pendentes);
-  if (naoOuvido === 'failed' && !isGroup) return transferir('hard', 'Chegou áudio e a transcrição automática falhou; ouça na conversa.', null);
+  if (naoOuvido === 'failed' && !isGroup) return transferir('hard', 'Chegou áudio e a transcrição automática falhou; ouça na conversa.', null, true, { texto: 'Não consegui ouvir seu áudio. Pode escrever, ou mandar de novo?' });
   if (naoOuvido) {
     // Ruído/silêncio/fala inaudível: pedir de novo é o que um atendente faria, sem chamar o modelo nem a equipe.
     const sent = await entregar(cadence([UNCLEAR_AUDIO_REPLY]));
@@ -1176,7 +1188,7 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
     await save((ctx.session?.memory ?? {}) as Memory, 'admin_receipt_received', { found: lido?.found === true }, true, false);
     return { status: 'replied', bubbles: sent, handoff: null, action: 'admin_receipt_received' } as TurnResult;
   }
-  if (soMidia && !isGroup) return transferir('hard', `Chegou ${[...new Set(pendentes.map((t) => t.kind))].join(', ')} sem texto; a IA não lê mídia.`, null);
+  if (soMidia && !isGroup) return transferir('hard', `Chegou ${[...new Set(pendentes.map((t) => t.kind))].join(', ')} sem texto; a IA não lê mídia.`, null, true, { texto: 'Recebi, mas não consigo ver imagem ou documento por aqui. Pode me dizer em texto o que você precisa?' });
 
   // N3 (destrutivo ou de configuração): o assessor não executa por chat, só indica a tela do painel.
   const n3 = isAdminAssistant(ctx) ? n3Reply(buffered) : null;
@@ -1249,6 +1261,14 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
     }
   }
 
+  if (socioNoPrivado) {
+    const seguras = answer.messages.filter((m) => !MEMBER_HANDOFF_TALK.test(m));
+    if (answer.transfer || seguras.length !== answer.messages.length) {
+      answer = { ...answer, ...(answer.transfer ? { intent: 'outro' as Intent, ready: false, customer_confirmed: false, awaiting: true, transfer: false, handoff_kind: null, handoff_note: null, close: false } : {}),
+        messages: seguras.length ? seguras : [MEMBER_KEEP] };
+    }
+  }
+
   for (const candidate of answer.memory_candidates ?? []) {
     await Promise.resolve(deps.db('conv_svc_ai_memory_candidate', { p: { ...candidate, source_message_id: messageId } })).catch(() => undefined);
   }
@@ -1280,6 +1300,11 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
   const d = await decide({ deps, ctx, answer, slots, memory: nextMemory, session, ultimaId: ultima?.id as string | undefined, today });
   // Os fechamentos (confirmou, desistiu) zeram os dados do pedido, mas o resumo da conversa fica.
   if (summary && !d.memory.summary) d.memory = { ...d.memory, summary };
+  if (d.handoff && socioNoPrivado) {
+    const enviadas = await entregar(cadence([MEMBER_FAIL]));
+    await save(d.memory, 'member_no_handoff', { action: d.action, reason: d.handoff.note.slice(0, 200) }, false, false);
+    return { status: 'replied', bubbles: enviadas, handoff: null, action: d.action };
+  }
   if (d.handoff) {
     if (isGroup) {
       const enviadas = await entregar(cadence(['Não consegui concluir isso por aqui.']));
