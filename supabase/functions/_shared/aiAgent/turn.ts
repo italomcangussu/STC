@@ -15,6 +15,7 @@
 
 import { extrairObjeto, repararJson, stripCodeFence } from './jsonRepair.ts';
 import type { Chat } from './llm.ts';
+import { ADMIN_READS, n3Reply } from './capabilities.ts';
 import { hearAudios, unheardOnly, UNCLEAR_AUDIO_REPLY } from './audio.ts';
 import { adminPendencyRefs, isAdminAssistant, systemPrompt, userPrompt, type AiSettings, type Ctx } from './prompts.ts';
 import { buildChatRequest, providerIdFrom, uazError, type UazCaller } from '../uazChat.ts';
@@ -971,11 +972,15 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
   } catch {
     ctx.financial_context = { students: [], day_cards: [], member_pendencies: [] };
   }
-  // Saldo das contas do clube: o prompt só o mostra ao administrador no privado.
-  try {
-    const saldo = await db('conv_svc_ai_club_balances', {});
-    ctx.club_balances = saldo.data && typeof saldo.data === 'object' ? saldo.data : null;
-  } catch { ctx.club_balances = null; }
+  // Leituras do assessor (registro de capacidades): só para o administrador no privado.
+  if (isAdminAssistant(ctx)) {
+    for (const cap of ADMIN_READS) {
+      try {
+        const r = await db(cap.read!.rpc, {});
+        ctx[cap.read!.ctxKey] = r.data && typeof r.data === 'object' ? r.data : null;
+      } catch { ctx[cap.read!.ctxKey] = null; }
+    }
+  }
 
   if (isGroup) {
     try {
@@ -1113,6 +1118,14 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
     return { status: 'replied', bubbles: 0, handoff: null, action: 'sticker_ignored' } as TurnResult;
   }
   if (soMidia && !isGroup) return transferir('hard', `Chegou ${[...new Set(pendentes.map((t) => t.kind))].join(', ')} sem texto; a IA não lê mídia.`, null);
+
+  // N3 (destrutivo ou de configuração): o assessor não executa por chat, só indica a tela do painel.
+  const n3 = isAdminAssistant(ctx) ? n3Reply(buffered) : null;
+  if (n3) {
+    const sent = await entregar(cadence([n3]));
+    await save((ctx.session?.memory ?? {}) as Memory, 'admin_n3_refused', { bubbles: sent }, false, false);
+    return { status: 'replied', bubbles: sent, handoff: null, action: 'admin_n3_refused' } as TurnResult;
+  }
 
   const memory = (ctx.session?.memory ?? {}) as Memory;
 

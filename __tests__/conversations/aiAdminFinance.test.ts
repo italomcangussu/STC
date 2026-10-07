@@ -94,6 +94,62 @@ describe('assessor administrativo do João (turno completo)', () => {
     expect((await pendencies(w))[0].status).toBe('partial');
   }, 90000);
 
+  it('R$ 400 ou mais: o "sim" não basta; só grava depois de repetir o valor (regra no banco)', async () => {
+    const w = await setup();
+    const p = provider();
+    const lancar = { fin_action: 'lancar', member_name: 'Beto', description: 'Evento fechado', amount: 450 };
+    const m1 = await direct(w, 'lança 450 de evento pro Beto');
+    await turn(w, m1.message_id, script(answer({ ready: true, slots: lancar })).chat, p.uaz);
+    expect(p.sent.at(-1)!.text).toContain('R$ 450,00');
+
+    const confirmar = async (texto: string) => {
+      const m = await direct(w, texto);
+      return turn(w, m.message_id, script(answer({ customer_confirmed: true, slots: lancar })).chat, p.uaz);
+    };
+    expect((await confirmar('sim')).action).toBe('failed:CONFIRM_AMOUNT');
+    expect(p.sent.at(-1)!.text).toContain('confirmo R$ 450,00');
+    expect(await pendencies(w)).toHaveLength(0);
+
+    expect((await confirmar('sim')).action).toBe('failed:CONFIRM_AMOUNT');          // outro "sim" não vale
+    expect((await confirmar('confirmo 45')).action).toBe('failed:CONFIRM_AMOUNT');   // valor errado não vale
+    expect(await pendencies(w)).toHaveLength(0);
+
+    expect((await confirmar('confirmo R$ 450,00')).action).toBe('admin_confirmed');
+    const [ch] = await pendencies(w);
+    expect(ch).toMatchObject({ profile_id: U.socioB, original_amount_cents: 45000 });
+  }, 90000);
+
+  it('abaixo de R$ 400 segue com um "sim" só', async () => {
+    const w = await setup();
+    const p = provider();
+    const lancar = { fin_action: 'lancar', member_name: 'Beto', description: 'Consumo', amount: 399.99 };
+    const m1 = await direct(w, 'lança 399,99 pro Beto');
+    await turn(w, m1.message_id, script(answer({ ready: true, slots: lancar })).chat, p.uaz);
+    const m2 = await direct(w, 'sim');
+    expect((await turn(w, m2.message_id, script(answer({ customer_confirmed: true, slots: lancar })).chat, p.uaz)).action).toBe('admin_confirmed');
+  }, 90000);
+
+  it('N3 (apagar, zerar ranking…): o servidor recusa e indica o painel, sem chamar o modelo', async () => {
+    const w = await setup();
+    const p = provider();
+    const s = script();
+    const m = await direct(w, 'apaga a pendência do Beto');
+    const r = await turn(w, m.message_id, s.chat, p.uaz);
+    expect(r.action).toBe('admin_n3_refused');
+    expect(s.calls).toHaveLength(0);
+    expect(p.sent.at(-1)!.text).toMatch(/painel administrativo/);
+  }, 90000);
+
+  it('saldo do clube entra no prompt do administrador (e só dele)', async () => {
+    const w = await setup();
+    const p = provider();
+    const s = script(answer({ intent: 'consultar', messages: ['O saldo é R$ 0,00.'] }));
+    const m = await direct(w, 'qual o saldo do clube?');
+    await turn(w, m.message_id, s.chat, p.uaz);
+    expect(s.calls[0].user).toContain('SALDO DAS CONTAS DO CLUBE');
+    expect(s.calls[0].user).toContain('Banco do clube');
+  }, 90000);
+
   it('sócio comum: mesmo com o modelo pedindo a ação, nada é proposto nem gravado; não vê pendência de outro', async () => {
     const w = await setup();
     await rpc(w.db, U.admin, `public.fin_create_member_pendency('${key()}', ${j({ profile_id: U.socioB, description: 'Consumo do Beto', amount_cents: 1500, competence_month: '2026-10-01', due_date: '2026-10-07' })})`);

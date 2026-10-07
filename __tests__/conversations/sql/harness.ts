@@ -60,7 +60,7 @@ export async function newDb(): Promise<PGlite> {
     ...all.filter((f) => /^2026100710\d{4}_conversations_.*\.sql$/.test(f)).sort(),
     ...all.filter((f) => /^2026100[67]\d{6}_finance_.*\.sql$/.test(f) && PENDENCY_MIGRATION.test(f)).sort(),
     // Conversas que dependem das pendências (assessor administrativo do João).
-    ...all.filter((f) => /^202610071[5-9]\d{4}_conversations_.*\.sql$/.test(f)).sort(),
+    ...all.filter((f) => /^2026100(71[5-9]\d{2}|7[2-9]\d{3})\d{2}_conversations_.*\.sql$/.test(f)).sort(),
   ];
   for (const f of files) {
     try {

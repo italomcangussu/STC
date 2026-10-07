@@ -15,6 +15,14 @@
 
 Limite estrutural: despejar todo o contexto no prompt não escala (cada novo domínio incharia o prompt e o custo). A evolução precisa de **consulta por domínio**.
 
+## 1b. Onda 0 entregue (2026-10-07)
+- `supabase/functions/_shared/aiAgent/capabilities.ts`: registro (domínio, risco N0–N3, leitura, escrita), limite de R$ 400 e regras N3. Migradas as 5 ações + saldo.
+- Leituras do administrador carregadas pelo registro (`ADMIN_READS`), só para admin no privado.
+- N3: o servidor recusa e indica a seção do painel, sem chamar o modelo.
+- R$ 400 ou mais: segunda confirmação repetindo o valor, **no banco** (`20261007210000_conversations_admin_second_confirm.sql`; `ai_confirm` envolve o ramo financeiro).
+- Auditoria com origem WhatsApp já existia (`conv_private.audit('ai_admin_finance', …, source: 'whatsapp')`).
+- Ainda não feito da onda: leitura **sob demanda por domínio** do bloco financeiro (hoje segue inteiro no prompt); entra junto com a Onda 1, quando houver mais de uma leitura grande.
+
 ## 2. Arquitetura-alvo (um padrão só, para tudo)
 
 1. **Registro de capacidades** (`aiAgent/capabilities.ts`): cada capacidade é uma entrada `{ id, domínio, tipo, intenção, leitura (RPC), escrita (RPC), slots, nível de risco, texto do resumo }`. Criar capacidade nova = adicionar uma entrada + RPC + teste, sem mexer no fluxo do turno.

@@ -292,6 +292,8 @@ function adminSection(ctx: Ctx): string {
   - fin_action "baixa": registrar pagamento recebido. pendency_ref, amount em reais, paid_on (padrão hoje), method (pix padrão), account_name se ele disser a conta.
 - Faltou dado obrigatório: pergunte só o que falta (awaiting: true). Tendo tudo: ready: true e messages vazio.
 - Se há PROPOSTA ABERTA e ele aceitar: customer_confirmed: true, como nas reservas.
+- Valor alto (a partir de R$ 400): depois do primeiro "sim" o sistema pede para ele repetir o valor ("confirmo R$ 450,00"). Essa resposta também é customer_confirmed: true; não responda no lugar do sistema.
+- Pedidos de apagar, zerar ranking, trocar papel, encerrar plano ou mudar configuração: o sistema recusa e indica o painel; você não executa nem promete.
 
 `;
 }
