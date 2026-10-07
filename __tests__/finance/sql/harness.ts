@@ -83,7 +83,8 @@ create table public.reservations(
 create table public.student_profiles(
   id uuid primary key default gen_random_uuid(), profile_id uuid references public.profiles(id),
   non_socio_student_id uuid references public.non_socio_students(id), student_status text not null default 'active',
-  professor_id uuid references public.professors(id));
+  professor_id uuid references public.professors(id),
+  created_at timestamptz not null default now(), updated_at timestamptz not null default now());
 -- Políticas reais do STC que o financeiro NÃO muda (ver supabase/migrations/20260212105246).
 alter table public.student_payments enable row level security;
 grant select on public.student_payments to authenticated;
@@ -103,12 +104,18 @@ grant select on public.non_socio_students to authenticated;
 create policy students_read on public.non_socio_students for select using (true);
 `;
 
+/** Migrations do financeiro que exigem o módulo de Conversas já aplicado. */
+export const PENDENCY_MIGRATION = /_finance_member_pendenc/;
+
 export async function newDb(opts: { only?: string[] } = {}): Promise<PGlite> {
   const db = new PGlite();
   await db.exec(BASE);
   // Auditoria real do STC (cria admin_audit_logs e admin_audit_insert_log).
   await db.exec(await readFile(resolve(MIGRATIONS, '20260427134500_admin_audit_logs.sql'), 'utf8'));
-  const files = (await readdir(MIGRATIONS)).filter((f) => /^2026100[67]\d{6}_finance_.*\.sql$/.test(f)).sort();
+  // As migrations de pendência de sócio dependem de Conversas (automações, mídia do WhatsApp):
+  // sobem no harness de Conversas, depois das migrations dele.
+  const files = (await readdir(MIGRATIONS))
+    .filter((f) => /^2026100[67]\d{6}_finance_.*\.sql$/.test(f) && !PENDENCY_MIGRATION.test(f)).sort();
   for (const f of files) {
     if (opts.only && !opts.only.some((o) => f.includes(o))) continue;
     try {

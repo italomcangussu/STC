@@ -12,7 +12,7 @@
 import type { PGlite } from '@electric-sql/pglite';
 import { readdir, readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { newDb as newFinanceDb, ID, U, key, seedPeople, asUser, asUserError, q, rpc, rpcError, j } from '../../finance/sql/harness';
+import { newDb as newFinanceDb, PENDENCY_MIGRATION, ID, U, key, seedPeople, asUser, asUserError, q, rpc, rpcError, j } from '../../finance/sql/harness';
 
 export { ID, U, key, seedPeople, asUser, asUserError, q, rpc, rpcError, j };
 
@@ -55,7 +55,11 @@ create table public.matches(id uuid primary key default gen_random_uuid(), champ
 export async function newDb(): Promise<PGlite> {
   const db = await newFinanceDb();
   await db.exec(EXTRA);
-  const files = (await readdir(MIGRATIONS)).filter((f) => /^2026100710\d{4}_conversations_.*\.sql$/.test(f)).sort();
+  const all = await readdir(MIGRATIONS);
+  const files = [
+    ...all.filter((f) => /^2026100710\d{4}_conversations_.*\.sql$/.test(f)).sort(),
+    ...all.filter((f) => /^2026100[67]\d{6}_finance_.*\.sql$/.test(f) && PENDENCY_MIGRATION.test(f)).sort(),
+  ];
   for (const f of files) {
     try {
       await db.exec(await readFile(resolve(MIGRATIONS, f), 'utf8'));

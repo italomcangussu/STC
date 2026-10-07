@@ -67,7 +67,7 @@ describe('regra de automação: o que falta para ativar', () => {
     const a = await save(w, draft());
     const b = await save(w, draft({ message_body: 'Olá, {{nome}}! Mensalidade de {{competencia}} em aberto.' }), a.id);
     expect(b.version).toBe(2);
-    const versions = await q<any>(w.db, `select version, message_body from public.conv_automation_versions order by version`);
+    const versions = await q<any>(w.db, `select version, message_body from public.conv_automation_versions where automation_id = '${a.id}' order by version`);
     expect(versions.map((v) => v.version)).toEqual([1, 2]);
     expect(versions[0].message_body).toContain('{{total}}');
     await expect(w.db.exec(`update public.conv_automation_versions set message_body = 'x'`)).rejects.toThrow(/CONV_IMMUTABLE/);

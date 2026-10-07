@@ -39,7 +39,7 @@ describe('agendamento: horário e fuso configurados', () => {
     expect((await tickAt(w.db, '2026-10-19T13:00:00Z')).runs).toBe(1);     // segunda seguinte (a última)
     expect((await q<any>(w.db, `select count(*)::int n from public.conv_automation_recipients`))[0].n).toBe(8);   // 4 por execução, janelas diferentes
     await tickAt(w.db, '2026-10-20T13:00:00Z');                            // passou da data final
-    expect((await q<any>(w.db, `select status from public.conv_automations`))[0].status).toBe('ended');
+    expect((await q<any>(w.db, `select status from public.conv_automations where id = '${a.id}'`))[0].status).toBe('ended');
     expect((await recipients(w, `status = 'pending'`)).length).toBe(0);
   }, 90000);
 });
