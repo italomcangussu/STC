@@ -7,6 +7,7 @@ import { describe, expect, it } from 'vitest';
 import { U, j, key, pgDb, q, rpc, svc, world } from './sql/harness';
 import { adminProposalMessage, parseSlots, runTurn, toCents } from '../../supabase/functions/_shared/aiAgent/turn';
 import { adminPendencyRefs, financialContextText, isAdminAssistant } from '../../supabase/functions/_shared/aiAgent/prompts';
+import { dispatchFollowups } from '../../supabase/functions/_shared/dispatch';
 import type { Chat } from '../../supabase/functions/_shared/aiAgent/llm';
 import type { UazCaller } from '../../supabase/functions/_shared/uazChat';
 import { composeWelcome } from '../../supabase/functions/_shared/aiAgent/welcome';
@@ -675,6 +676,42 @@ describe('dependente de sócio pelo WhatsApp (N1)', () => {
     expect(await q(w.db, `select 1 from public.student_profiles sp join public.non_socio_students n on n.id = sp.non_socio_student_id where n.student_type = 'dependent'`)).toHaveLength(1);
     await dizer(w, p, 'cadastra de novo', dep({ dependent_name: 'jéssica lorraine gomes de morais', relationship: 'esposa' }));
     expect(p.sent.at(-1)!.text).toMatch(/já está cadastrado\(a\) como dependente de Beto Sócio/);
+  }, 90000);
+});
+
+describe('chamar sócio no privado e mandar mensagem (N1)', () => {
+  const dizer = async (w: W, p: ReturnType<typeof provider>, texto: string, o: Record<string, unknown>) => {
+    const m = await direct(w, texto);
+    return turn(w, m.message_id, script(answer(o)).chat, p.uaz);
+  };
+  const msg = (slots: Record<string, unknown> = {}) => ({ ready: true, intent: 'admin_acao', slots: { adm_action: 'mensagem_enviar', member_name: 'Beto', ...slots } });
+
+  it('pede o recado, mostra o texto exato, só enfileira depois do "sim" e abre a conversa do sócio', async () => {
+    const w = await setup(); const p = provider();
+    await q(w.db, `update public.profiles set phone = '88993412944' where id = '${U.socioB}'`);
+    await dizer(w, p, 'chama o Beto no privado', msg());
+    expect(p.sent.at(-1)!.text).toMatch(/O que eu digo para Beto\?/);
+    const texto = 'Beto, boas-vindas ao STC! Acesse o app por https://stcplay.com.br. Seu celular é iOS ou Android?';
+    const r = await dizer(w, p, 'manda o link e pergunta se é ios ou android', msg({ send_body: texto }));
+    expect(r.action).toBe('proposed_admin');
+    expect(p.sent.at(-1)!.text).toBe(`Vou chamar Beto Sócio no WhatsApp (5588993412944) e mandar esta mensagem:\n«${texto}»\nConfirma? Responda "sim".`);
+    expect(await q(w.db, `select 1 from public.conv_followups where send_body is not null`)).toHaveLength(0);
+    expect((await dizer(w, p, 'sim', { customer_confirmed: true })).action).toBe('admin_confirmed');
+    expect(p.sent.at(-1)!.text).toMatch(/Pronto: a mensagem para Beto Sócio está na fila/);
+    const [f] = await q<any>(w.db, `select f.send_body, f.status, c.kind, ct.phone from public.conv_followups f join public.conv_conversations c on c.id = f.conversation_id join public.conv_contacts ct on ct.id = c.contact_id where f.send_body is not null`);
+    expect(f).toMatchObject({ send_body: texto, status: 'pending', kind: 'direct', phone: '5588993412944' });
+    // o despacho dos retornos entrega a mensagem
+    const enviados: string[] = [];
+    const uaz: UazCaller = async ({ path, body }) => { if (path === '/send/text') enviados.push(`${body.number}|${body.text}`); return { ok: true, body: { messageid: `X${++n}` } }; };
+    await dispatchFollowups(pgDb(w.db), uaz);
+    expect(enviados).toEqual([`5588993412944|${texto}`]);
+  }, 120000);
+
+  it('sócio sem telefone válido: não propõe', async () => {
+    const w = await setup(); const p = provider();
+    await q(w.db, `update public.profiles set phone = null where id = '${U.socioB}'`);
+    await dizer(w, p, 'chama o Beto', msg({ send_body: 'Oi Beto, tudo bem?' }));
+    expect(p.sent.at(-1)!.text).toMatch(/não tem telefone válido/);
   }, 90000);
 });
 
