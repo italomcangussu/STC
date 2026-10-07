@@ -17,6 +17,7 @@ import { formatBRL, parseBRL } from '../../../lib/finance/money';
 import { useAsync, useRequestKey, useToday } from '../hooks';
 import { useFinance } from '../FinanceContext';
 import { Badge, Card, Empty, ErrorBlock, Field, MoneyInput, Notice, Row, SectionTabs, Spinner, btnGhost, btnPrimary, inputCls } from '../ui';
+import PendencyRulesSection from './PendencyRulesSection';
 
 /** "2" → 200 pontos-base; "0,033" → 3; vazio → null. `NaN` se inválido. */
 const percentToBps = (text: string): number | null => {
@@ -288,6 +289,7 @@ const SettingsTab: React.FC = () => {
         <>
           <DueSection s={settings} holidays={holidays.data ?? []} onSaved={reloadAll} />
           <FeesSection s={settings} onSaved={reloadAll} />
+          <PendencyRulesSection s={settings} onSaved={reloadAll} />
           <Notice tone="info"><span className="flex items-start gap-1.5"><Percent size={14} className="mt-0.5 shrink-0" />Descontos e dispensas de encargo são feitos cobrança a cobrança (aba Mensalidades), sempre com justificativa e registro de quem autorizou.</span></Notice>
         </>
       )}
