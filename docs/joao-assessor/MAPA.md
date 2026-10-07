@@ -38,6 +38,10 @@ Intent `admin_acao` + `conv_svc_ai_admin_adm_propose` (ações `adm_*`; mesmo pr
 **Ficam só no painel:** aprovar/recusar pedido de acesso (função de borda que cria o usuário) e criar follow-up (depende de conversa).
 Próximo: Onda 4 (resumo proativo da manhã para Hermeson e Henrique).
 
+## 1f. Onda 4 entregue (2026-10-07) — resumo da manhã
+Edge function `joao-admin-briefing` (sem JWT; só com `x-dispatch-secret`, igual às outras varreduras) chamada pelo cron `joao-admin-briefing` às **11:00 e 11:30 UTC (08h00 e 08h30 de Fortaleza; a segunda é só reenvio)**. Destinatários: tabela `conv_admin_briefing_recipients` (hoje **Hermeson Veras e Henrique Coelho**; para incluir/tirar alguém: inserir/apagar a linha ou `enabled = false`). Cada um recebe uma mensagem na conversa direta dele com o João (a resposta cai no mesmo fio), com: caixa e saldo, ontem e mês, a receber e a pagar (vencido), comprovantes parados, assinaturas incompletas com prazo, pedidos de acesso e reservas de hoje; o que está zerado some. Números lidos como o administrador (`conv_svc_admin_briefing_data`), texto montado sem IA (`_shared/adminBriefing.ts`). Idempotente por dia e administrador; só envia entre 08h e 12h de Fortaleza; respeita opt-out; `{"dry_run": true}` devolve os textos sem enviar.
+Próximo: Onda 5 (memória, comparativos e sugestões) — ver seção 4.
+
 ## 2. Arquitetura-alvo (um padrão só, para tudo)
 
 1. **Registro de capacidades** (`aiAgent/capabilities.ts`): cada capacidade é uma entrada `{ id, domínio, tipo, intenção, leitura (RPC), escrita (RPC), slots, nível de risco, texto do resumo }`. Criar capacidade nova = adicionar uma entrada + RPC + teste, sem mexer no fluxo do turno.
