@@ -8,7 +8,7 @@
     "public",
     "sig_private"
   ],
-  "ultima_migracao": "20261007140000",
+  "ultima_migracao": "20261007190000",
   "extensoes": [
     "pg_cron 1.6.4",
     "pg_net 0.19.5",
@@ -8649,7 +8649,7 @@
         {
           "nome": "conv_booking_proposals_action_check",
           "tipo": "c",
-          "def": "CHECK ((action = ANY (ARRAY['create'::text, 'cancel'::text, 'reschedule'::text, 'join'::text, 'participants'::text])))",
+          "def": "CHECK ((action = ANY (ARRAY['create'::text, 'cancel'::text, 'reschedule'::text, 'join'::text, 'participants'::text, 'fin_pendency_create'::text, 'fin_pendency_collection'::text, 'fin_pendency_send'::text, 'fin_payment'::text])))",
           "colunas": [
             "action"
           ],
@@ -9291,21 +9291,18 @@
           "gerada": null,
           "identidade": null,
           "comentario": null
+        },
+        {
+          "nome": "merged_into",
+          "tipo": "uuid",
+          "nulo": true,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
         }
       ],
       "restricoes": [
-        {
-          "nome": "conv_contacts_check",
-          "tipo": "c",
-          "def": "CHECK (((phone IS NOT NULL) OR (lid IS NOT NULL)))",
-          "colunas": [
-            "phone",
-            "lid"
-          ],
-          "ref": null,
-          "ref_colunas": null,
-          "ao_apagar": null
-        },
         {
           "nome": "conv_contacts_check1",
           "tipo": "c",
@@ -9313,6 +9310,19 @@
           "colunas": [
             "profile_id",
             "non_socio_student_id"
+          ],
+          "ref": null,
+          "ref_colunas": null,
+          "ao_apagar": null
+        },
+        {
+          "nome": "conv_contacts_has_identity",
+          "tipo": "c",
+          "def": "CHECK (((phone IS NOT NULL) OR (lid IS NOT NULL) OR (merged_into IS NOT NULL)))",
+          "colunas": [
+            "phone",
+            "lid",
+            "merged_into"
           ],
           "ref": null,
           "ref_colunas": null,
@@ -9363,6 +9373,19 @@
           "ao_apagar": null
         },
         {
+          "nome": "conv_contacts_merged_into_fkey",
+          "tipo": "f",
+          "def": "FOREIGN KEY (merged_into) REFERENCES conv_contacts(id)",
+          "colunas": [
+            "merged_into"
+          ],
+          "ref": "public.conv_contacts",
+          "ref_colunas": [
+            "id"
+          ],
+          "ao_apagar": "a"
+        },
+        {
           "nome": "conv_contacts_non_socio_student_id_fkey",
           "tipo": "f",
           "def": "FOREIGN KEY (non_socio_student_id) REFERENCES non_socio_students(id) ON DELETE SET NULL",
@@ -9409,6 +9432,22 @@
           "colunas": [
             "lid"
           ]
+        },
+        {
+          "nome": "conv_contacts_merged_idx",
+          "def": "CREATE INDEX conv_contacts_merged_idx ON public.conv_contacts USING btree (merged_into) WHERE (merged_into IS NOT NULL)",
+          "unico": false,
+          "pk": false,
+          "colunas": [
+            "merged_into"
+          ]
+        },
+        {
+          "nome": "conv_contacts_phone_key_idx",
+          "def": "CREATE INDEX conv_contacts_phone_key_idx ON public.conv_contacts USING btree (conv_private.phone_key(phone)) WHERE ((phone IS NOT NULL) AND (merged_into IS NULL))",
+          "unico": false,
+          "pk": false,
+          "colunas": null
         },
         {
           "nome": "conv_contacts_phone_uidx",
@@ -9654,6 +9693,15 @@
           "gerada": null,
           "identidade": null,
           "comentario": null
+        },
+        {
+          "nome": "merged_into",
+          "tipo": "uuid",
+          "nulo": true,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
         }
       ],
       "restricoes": [
@@ -9770,6 +9818,19 @@
             "group_id"
           ],
           "ref": "public.conv_groups",
+          "ref_colunas": [
+            "id"
+          ],
+          "ao_apagar": "a"
+        },
+        {
+          "nome": "conv_conversations_merged_into_fkey",
+          "tipo": "f",
+          "def": "FOREIGN KEY (merged_into) REFERENCES conv_conversations(id)",
+          "colunas": [
+            "merged_into"
+          ],
+          "ref": "public.conv_conversations",
           "ref_colunas": [
             "id"
           ],
@@ -15140,7 +15201,7 @@
       "rls_forcado": false,
       "linhas_est": "<100",
       "opcoes": null,
-      "comentario": null,
+      "comentario": "Mensalidades e pendencias financeiras de socios",
       "acesso": {
         "anon": "",
         "authenticated": "s"
@@ -15159,7 +15220,7 @@
         {
           "nome": "plan_id",
           "tipo": "uuid",
-          "nulo": false,
+          "nulo": true,
           "padrao": null,
           "gerada": null,
           "identidade": null,
@@ -15308,9 +15369,83 @@
           "gerada": null,
           "identidade": null,
           "comentario": null
+        },
+        {
+          "nome": "charge_type",
+          "tipo": "text",
+          "nulo": false,
+          "padrao": "'membership'::text",
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "description",
+          "tipo": "text",
+          "nulo": true,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "pendency_kind",
+          "tipo": "text",
+          "nulo": true,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "category_id",
+          "tipo": "uuid",
+          "nulo": true,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "guest_name",
+          "tipo": "text",
+          "nulo": true,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "guest_date",
+          "tipo": "date",
+          "nulo": true,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "collection_enabled",
+          "tipo": "boolean",
+          "nulo": false,
+          "padrao": "true",
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
         }
       ],
       "restricoes": [
+        {
+          "nome": "fin_member_charges_charge_type_check",
+          "tipo": "c",
+          "def": "CHECK ((charge_type = ANY (ARRAY['membership'::text, 'member_pendency'::text])))",
+          "colunas": [
+            "charge_type"
+          ],
+          "ref": null,
+          "ref_colunas": null,
+          "ao_apagar": null
+        },
         {
           "nome": "fin_member_charges_check",
           "tipo": "c",
@@ -15330,6 +15465,17 @@
           "def": "CHECK ((EXTRACT(day FROM competence_month) = (1)::numeric))",
           "colunas": [
             "competence_month"
+          ],
+          "ref": null,
+          "ref_colunas": null,
+          "ao_apagar": null
+        },
+        {
+          "nome": "fin_member_charges_guest_name_check",
+          "tipo": "c",
+          "def": "CHECK (((guest_name IS NULL) OR ((length(TRIM(BOTH FROM guest_name)) >= 2) AND (length(TRIM(BOTH FROM guest_name)) <= 120))))",
+          "colunas": [
+            "guest_name"
           ],
           "ref": null,
           "ref_colunas": null,
@@ -15358,11 +15504,37 @@
           "ao_apagar": null
         },
         {
+          "nome": "fin_member_charges_pendency_kind_check",
+          "tipo": "c",
+          "def": "CHECK (((pendency_kind IS NULL) OR (pendency_kind = ANY (ARRAY['day_card'::text, 'consumo'::text, 'evento'::text, 'multa'::text, 'dano_reposicao'::text, 'outros'::text]))))",
+          "colunas": [
+            "pendency_kind"
+          ],
+          "ref": null,
+          "ref_colunas": null,
+          "ao_apagar": null
+        },
+        {
           "nome": "fin_member_charges_period_months_check",
           "tipo": "c",
           "def": "CHECK ((period_months = ANY (ARRAY[1, 3, 6, 12])))",
           "colunas": [
             "period_months"
+          ],
+          "ref": null,
+          "ref_colunas": null,
+          "ao_apagar": null
+        },
+        {
+          "nome": "fin_member_charges_shape_check",
+          "tipo": "c",
+          "def": "CHECK ((((charge_type = 'membership'::text) AND (plan_id IS NOT NULL)) OR ((charge_type = 'member_pendency'::text) AND (plan_id IS NULL) AND (description IS NOT NULL) AND ((length(TRIM(BOTH FROM description)) >= 3) AND (length(TRIM(BOTH FROM description)) <= 300)) AND (pendency_kind IS NOT NULL) AND (category_id IS NOT NULL))))",
+          "colunas": [
+            "charge_type",
+            "plan_id",
+            "description",
+            "pendency_kind",
+            "category_id"
           ],
           "ref": null,
           "ref_colunas": null,
@@ -15398,6 +15570,19 @@
             "canceled_by"
           ],
           "ref": "public.profiles",
+          "ref_colunas": [
+            "id"
+          ],
+          "ao_apagar": "a"
+        },
+        {
+          "nome": "fin_member_charges_category_id_fkey",
+          "tipo": "f",
+          "def": "FOREIGN KEY (category_id) REFERENCES fin_categories(id)",
+          "colunas": [
+            "category_id"
+          ],
+          "ref": "public.fin_categories",
           "ref_colunas": [
             "id"
           ],
@@ -15525,6 +15710,17 @@
           "pk": false,
           "colunas": [
             "status"
+          ]
+        },
+        {
+          "nome": "fin_member_pendency_profile_status_idx",
+          "def": "CREATE INDEX fin_member_pendency_profile_status_idx ON public.fin_member_charges USING btree (profile_id, due_date, id) WHERE ((charge_type = 'member_pendency'::text) AND (status = ANY (ARRAY['open'::text, 'partial'::text])))",
+          "unico": false,
+          "pk": false,
+          "colunas": [
+            "profile_id",
+            "due_date",
+            "id"
           ]
         }
       ],
@@ -16701,7 +16897,7 @@
       "tipo": "r",
       "rls": true,
       "rls_forcado": false,
-      "linhas_est": "0",
+      "linhas_est": "<100",
       "opcoes": null,
       "comentario": null,
       "acesso": {
@@ -16934,17 +17130,36 @@
           "gerada": null,
           "identidade": null,
           "comentario": null
+        },
+        {
+          "nome": "source",
+          "tipo": "text",
+          "nulo": false,
+          "padrao": "'app'::text",
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "source_message_id",
+          "tipo": "uuid",
+          "nulo": true,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
         }
       ],
       "restricoes": [
         {
           "nome": "fin_receipt_submissions_check",
           "tipo": "c",
-          "def": "CHECK (((status <> ALL (ARRAY['approved'::text, 'rejected'::text])) OR ((reviewed_by IS NOT NULL) AND (reviewed_at IS NOT NULL))))",
+          "def": "CHECK (((status <> ALL (ARRAY['approved'::text, 'rejected'::text])) OR ((reviewed_at IS NOT NULL) AND ((reviewed_by IS NOT NULL) OR ((status = 'approved'::text) AND (decision_reason ~~ 'Baixa automática:%'::text))))))",
           "colunas": [
             "status",
+            "reviewed_at",
             "reviewed_by",
-            "reviewed_at"
+            "decision_reason"
           ],
           "ref": null,
           "ref_colunas": null,
@@ -17062,6 +17277,17 @@
           "ao_apagar": null
         },
         {
+          "nome": "fin_receipt_submissions_source_check",
+          "tipo": "c",
+          "def": "CHECK ((source = ANY (ARRAY['app'::text, 'whatsapp'::text])))",
+          "colunas": [
+            "source"
+          ],
+          "ref": null,
+          "ref_colunas": null,
+          "ao_apagar": null
+        },
+        {
           "nome": "fin_receipt_submissions_status_check",
           "tipo": "c",
           "def": "CHECK ((status = ANY (ARRAY['submitted'::text, 'in_review'::text, 'approved'::text, 'rejected'::text, 'superseded'::text])))",
@@ -17106,6 +17332,19 @@
             "reviewed_by"
           ],
           "ref": "public.profiles",
+          "ref_colunas": [
+            "id"
+          ],
+          "ao_apagar": "a"
+        },
+        {
+          "nome": "fin_receipt_submissions_source_message_id_fkey",
+          "tipo": "f",
+          "def": "FOREIGN KEY (source_message_id) REFERENCES conv_messages(id)",
+          "colunas": [
+            "source_message_id"
+          ],
+          "ref": "public.conv_messages",
           "ref_colunas": [
             "id"
           ],
@@ -17206,6 +17445,15 @@
           ]
         },
         {
+          "nome": "fin_receipt_submissions_source_message_uidx",
+          "def": "CREATE UNIQUE INDEX fin_receipt_submissions_source_message_uidx ON public.fin_receipt_submissions USING btree (source_message_id) WHERE (source_message_id IS NOT NULL)",
+          "unico": true,
+          "pk": false,
+          "colunas": [
+            "source_message_id"
+          ]
+        },
+        {
           "nome": "fin_receipt_submissions_storage_path_key",
           "def": "CREATE UNIQUE INDEX fin_receipt_submissions_storage_path_key ON public.fin_receipt_submissions USING btree (storage_path)",
           "unico": true,
@@ -17261,6 +17509,13 @@
         }
       ],
       "gatilhos": [
+        {
+          "nome": "fin_receipt_auto_paid_notice",
+          "def": "CREATE TRIGGER fin_receipt_auto_paid_notice AFTER UPDATE OF status ON public.fin_receipt_submissions FOR EACH ROW EXECUTE FUNCTION fin_private.receipt_auto_paid_notice()",
+          "funcao": "fin_private.receipt_auto_paid_notice",
+          "ativo": true,
+          "externo": false
+        },
         {
           "nome": "fin_receipt_submissions_audit",
           "def": "CREATE TRIGGER fin_receipt_submissions_audit AFTER INSERT OR UPDATE ON public.fin_receipt_submissions FOR EACH ROW EXECUTE FUNCTION fin_private.audit_row()",
@@ -18048,6 +18303,78 @@
           "gerada": null,
           "identidade": null,
           "comentario": null
+        },
+        {
+          "nome": "pix_key",
+          "tipo": "text",
+          "nulo": false,
+          "padrao": "'52.393.541/0001-20'::text",
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "pendency_automation_enabled",
+          "tipo": "boolean",
+          "nulo": false,
+          "padrao": "true",
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "pendency_reminder_days",
+          "tipo": "integer[]",
+          "nulo": false,
+          "padrao": "ARRAY[0, 3, 7, 14, 21]",
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "pendency_grace_days",
+          "tipo": "smallint",
+          "nulo": false,
+          "padrao": "0",
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "pendency_fine_fixed_cents",
+          "tipo": "bigint",
+          "nulo": false,
+          "padrao": "0",
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "pendency_fine_percent_bps",
+          "tipo": "integer",
+          "nulo": false,
+          "padrao": "0",
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "pendency_interest_daily_fixed_cents",
+          "tipo": "bigint",
+          "nulo": false,
+          "padrao": "0",
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "pendency_interest_daily_percent_bps",
+          "tipo": "integer",
+          "nulo": false,
+          "padrao": "0",
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
         }
       ],
       "restricoes": [
@@ -18167,6 +18494,72 @@
           "def": "CHECK ((non_business_rule = ANY (ARRAY['next_business_day'::text, 'previous_business_day'::text, 'keep'::text])))",
           "colunas": [
             "non_business_rule"
+          ],
+          "ref": null,
+          "ref_colunas": null,
+          "ao_apagar": null
+        },
+        {
+          "nome": "fin_settings_pendency_fine_fixed_check",
+          "tipo": "c",
+          "def": "CHECK (((pendency_fine_fixed_cents >= 0) AND (pendency_fine_fixed_cents <= 100000000)))",
+          "colunas": [
+            "pendency_fine_fixed_cents"
+          ],
+          "ref": null,
+          "ref_colunas": null,
+          "ao_apagar": null
+        },
+        {
+          "nome": "fin_settings_pendency_fine_pct_check",
+          "tipo": "c",
+          "def": "CHECK (((pendency_fine_percent_bps >= 0) AND (pendency_fine_percent_bps <= 10000)))",
+          "colunas": [
+            "pendency_fine_percent_bps"
+          ],
+          "ref": null,
+          "ref_colunas": null,
+          "ao_apagar": null
+        },
+        {
+          "nome": "fin_settings_pendency_grace_check",
+          "tipo": "c",
+          "def": "CHECK (((pendency_grace_days >= 0) AND (pendency_grace_days <= 60)))",
+          "colunas": [
+            "pendency_grace_days"
+          ],
+          "ref": null,
+          "ref_colunas": null,
+          "ao_apagar": null
+        },
+        {
+          "nome": "fin_settings_pendency_interest_fixed_check",
+          "tipo": "c",
+          "def": "CHECK (((pendency_interest_daily_fixed_cents >= 0) AND (pendency_interest_daily_fixed_cents <= 100000000)))",
+          "colunas": [
+            "pendency_interest_daily_fixed_cents"
+          ],
+          "ref": null,
+          "ref_colunas": null,
+          "ao_apagar": null
+        },
+        {
+          "nome": "fin_settings_pendency_interest_pct_check",
+          "tipo": "c",
+          "def": "CHECK (((pendency_interest_daily_percent_bps >= 0) AND (pendency_interest_daily_percent_bps <= 10000)))",
+          "colunas": [
+            "pendency_interest_daily_percent_bps"
+          ],
+          "ref": null,
+          "ref_colunas": null,
+          "ao_apagar": null
+        },
+        {
+          "nome": "fin_settings_pendency_reminders_check",
+          "tipo": "c",
+          "def": "CHECK (((cardinality(pendency_reminder_days) >= 1) AND (cardinality(pendency_reminder_days) <= 20)))",
+          "colunas": [
+            "pendency_reminder_days"
           ],
           "ref": null,
           "ref_colunas": null,
@@ -27745,6 +28138,32 @@
       "comentario": null
     },
     {
+      "nome": "conv_private.ai_admin_finance_propose",
+      "args": "p_session uuid, p jsonb",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.ai_admin_requester",
+      "args": "p_session uuid",
+      "retorno": "uuid",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
       "nome": "conv_private.ai_agenda",
       "args": "p_profile uuid",
       "retorno": "jsonb",
@@ -27760,6 +28179,19 @@
     {
       "nome": "conv_private.ai_approved_memories",
       "args": "",
+      "retorno": "jsonb",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.ai_audio_transcripts",
+      "args": "p_ids text[]",
       "retorno": "jsonb",
       "linguagem": "sql",
       "tipo": "f",
@@ -27798,6 +28230,19 @@
     },
     {
       "nome": "conv_private.ai_confirm",
+      "args": "p_proposal uuid, p_message uuid",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.ai_confirm_booking",
       "args": "p_proposal uuid, p_message uuid",
       "retorno": "jsonb",
       "linguagem": "plpgsql",
@@ -28065,8 +28510,8 @@
       "security_definer": true,
       "search_path": "search_path=\"\"",
       "volatilidade": "v",
-      "exec_anon": true,
-      "exec_authenticated": true,
+      "exec_anon": false,
+      "exec_authenticated": false,
       "comentario": null
     },
     {
@@ -28395,6 +28840,19 @@
       "comentario": null
     },
     {
+      "nome": "conv_private.can_merge",
+      "args": "a uuid, b uuid",
+      "retorno": "boolean",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
       "nome": "conv_private.channel_delivery",
       "args": "",
       "retorno": "TABLE(inbound_token_hash text, bot_phone text, bot_lids text[], ai_direct_enabled boolean, ai_group_enabled boolean, mention_verified_at timestamp with time zone, group_session_minutes smallint, institutional_name text)",
@@ -28457,6 +28915,19 @@
       "volatilidade": "i",
       "exec_anon": true,
       "exec_authenticated": true,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.dedupe_contact",
+      "args": "p_id uuid",
+      "retorno": "uuid",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
       "comentario": null
     },
     {
@@ -28535,6 +29006,19 @@
       "volatilidade": "i",
       "exec_anon": true,
       "exec_authenticated": true,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.fold_conversation",
+      "args": "p_keep uuid, p_drop uuid",
+      "retorno": "void",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
       "comentario": null
     },
     {
@@ -28720,6 +29204,32 @@
       "comentario": null
     },
     {
+      "nome": "conv_private.member_pendency_subject",
+      "args": "p_profile uuid, p_as_of date, p_include_future boolean",
+      "retorno": "jsonb",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
+      "exec_anon": true,
+      "exec_authenticated": true,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.merge_contacts",
+      "args": "p_keep uuid, p_drop uuid",
+      "retorno": "uuid",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
       "nome": "conv_private.message_target",
       "args": "p_message uuid",
       "retorno": "TABLE(provider_message_id text, destination text, direction text, created_at timestamp with time zone, conversation_id uuid, is_group boolean)",
@@ -28785,6 +29295,19 @@
       "comentario": null
     },
     {
+      "nome": "conv_private.older_of",
+      "args": "a uuid, b uuid",
+      "retorno": "uuid",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
       "nome": "conv_private.on_inbound_opt_out",
       "args": "",
       "retorno": "trigger",
@@ -28837,6 +29360,19 @@
       "comentario": null
     },
     {
+      "nome": "conv_private.pendency_paid_subject",
+      "args": "p_submission uuid",
+      "retorno": "jsonb",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
       "nome": "conv_private.phone_e164",
       "args": "p text",
       "retorno": "text",
@@ -28876,9 +29412,48 @@
       "comentario": null
     },
     {
+      "nome": "conv_private.queue_member_pendency_now",
+      "args": "p_profile uuid, p_charge uuid",
+      "retorno": "uuid",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
       "nome": "conv_private.queue_message",
       "args": "p_conversation uuid, p jsonb, p_author uuid, p_key uuid, p_origin text, p_session uuid, p_recipient uuid",
       "retorno": "TABLE(message_id uuid, destination text, already_sent boolean, reply_provider_id text, is_group boolean)",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.queue_pendency_paid_notice",
+      "args": "p_profile uuid, p_submission uuid",
+      "retorno": "uuid",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.queue_pendency_receipt_review_notice",
+      "args": "p_profile uuid, p_submission uuid",
+      "retorno": "uuid",
       "linguagem": "plpgsql",
       "tipo": "f",
       "security_definer": true,
@@ -28915,6 +29490,19 @@
       "comentario": null
     },
     {
+      "nome": "conv_private.resolve_contact",
+      "args": "p_phone text, p_lid text",
+      "retorno": "uuid",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
       "nome": "conv_private.resolve_undecryptable",
       "args": "p_provider_id text, p_body text, p_kind text",
       "retorno": "void",
@@ -28945,6 +29533,19 @@
       "args": "p_provider_id text, p_path text, p_mime text",
       "retorno": "uuid",
       "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.set_message_transcription",
+      "args": "p_message uuid, p jsonb",
+      "retorno": "boolean",
+      "linguagem": "plpgsql",
       "tipo": "f",
       "security_definer": true,
       "search_path": "search_path=\"\"",
@@ -29162,6 +29763,19 @@
       "comentario": null
     },
     {
+      "nome": "fin_private.auto_approve_pendency_receipt",
+      "args": "p_submission uuid",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
       "nome": "fin_private.begin_op",
       "args": "p_key uuid, p_action text, p_reason text",
       "retorno": "jsonb",
@@ -29357,6 +29971,19 @@
       "comentario": null
     },
     {
+      "nome": "fin_private.ensure_member_charges",
+      "args": "p_profile uuid, p_extend boolean",
+      "retorno": "integer",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
       "nome": "fin_private.entry_paid_cents",
       "args": "p_entry uuid",
       "retorno": "bigint",
@@ -29380,6 +30007,19 @@
       "volatilidade": "v",
       "exec_anon": true,
       "exec_authenticated": true,
+      "comentario": null
+    },
+    {
+      "nome": "fin_private.fold_text",
+      "args": "p_text text",
+      "retorno": "text",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": false,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "i",
+      "exec_anon": false,
+      "exec_authenticated": false,
       "comentario": null
     },
     {
@@ -29462,6 +30102,32 @@
     },
     {
       "nome": "fin_private.on_profile_membership_change",
+      "args": "",
+      "retorno": "trigger",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": true,
+      "exec_authenticated": true,
+      "comentario": null
+    },
+    {
+      "nome": "fin_private.payee_matches",
+      "args": "p_read text, p_expected text[]",
+      "retorno": "boolean",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": false,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "i",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "fin_private.receipt_auto_paid_notice",
       "args": "",
       "retorno": "trigger",
       "linguagem": "plpgsql",
@@ -30189,6 +30855,32 @@
       "comentario": null
     },
     {
+      "nome": "public.conv_svc_ai_admin_finance_propose",
+      "args": "p_session uuid, p jsonb",
+      "retorno": "jsonb",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "public.conv_svc_ai_audio_transcripts",
+      "args": "p_ids text[]",
+      "retorno": "jsonb",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
       "nome": "public.conv_svc_ai_cancel_proposal",
       "args": "p_session uuid",
       "retorno": "void",
@@ -30735,6 +31427,19 @@
       "comentario": null
     },
     {
+      "nome": "public.conv_svc_set_message_transcription",
+      "args": "p_message uuid, p jsonb",
+      "retorno": "boolean",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
       "nome": "public.conv_svc_staff_delete_message",
       "args": "p_message uuid",
       "retorno": "void",
@@ -30829,6 +31534,19 @@
       "nome": "public.fin_account_balances",
       "args": "p_at date",
       "retorno": "TABLE(id uuid, name text, kind text, active boolean, is_default_receipts boolean, balance_cents bigint)",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": true,
+      "comentario": null
+    },
+    {
+      "nome": "public.fin_active_members",
+      "args": "",
+      "retorno": "TABLE(id uuid, name text, phone text)",
       "linguagem": "plpgsql",
       "tipo": "f",
       "security_definer": true,
@@ -30944,6 +31662,19 @@
     },
     {
       "nome": "public.fin_create_entry",
+      "args": "p_request_id uuid, p_data jsonb",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": true,
+      "comentario": null
+    },
+    {
+      "nome": "public.fin_create_member_pendency",
       "args": "p_request_id uuid, p_data jsonb",
       "retorno": "jsonb",
       "linguagem": "plpgsql",
@@ -31076,6 +31807,32 @@
       "nome": "public.fin_is_active_member",
       "args": "p_profile uuid",
       "retorno": "boolean",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": true,
+      "comentario": null
+    },
+    {
+      "nome": "public.fin_link_receipt_charges",
+      "args": "p_request_id uuid, p_submission_id uuid, p_charge_ids uuid[]",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": true,
+      "comentario": null
+    },
+    {
+      "nome": "public.fin_member_payment_settings",
+      "args": "",
+      "retorno": "TABLE(pix_key text, pendency_automation_enabled boolean, pendency_reminder_days integer[], pendency_grace_days smallint, pendency_fine_fixed_cents bigint, pendency_fine_percent_bps integer, pendency_interest_daily_fixed_cents bigint, pendency_interest_daily_percent_bps integer)",
       "linguagem": "sql",
       "tipo": "f",
       "security_definer": true,
@@ -31346,6 +32103,32 @@
       "comentario": null
     },
     {
+      "nome": "public.fin_send_pendency_now",
+      "args": "p_request_id uuid, p_charge uuid",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": true,
+      "comentario": null
+    },
+    {
+      "nome": "public.fin_set_pendency_collection",
+      "args": "p_request_id uuid, p_charge uuid, p_enabled boolean",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": true,
+      "comentario": null
+    },
+    {
       "nome": "public.fin_set_plan_price",
       "args": "p_request_id uuid, p_plan_id uuid, p_effective_from date, p_amount_cents bigint, p_reason text",
       "retorno": "jsonb",
@@ -31395,6 +32178,19 @@
       "volatilidade": "v",
       "exec_anon": false,
       "exec_authenticated": true,
+      "comentario": null
+    },
+    {
+      "nome": "public.fin_submit_whatsapp_pendency_receipt",
+      "args": "p_message uuid, p_submission uuid, p_data jsonb",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
       "comentario": null
     },
     {
@@ -31957,6 +32753,19 @@
       "comentario": null
     },
     {
+      "nome": "public.sig_delete_draft",
+      "args": "p_id uuid",
+      "retorno": "text",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": true,
+      "comentario": null
+    },
+    {
       "nome": "public.sig_is_recipient",
       "args": "p_document uuid",
       "retorno": "boolean",
@@ -32022,6 +32831,32 @@
       "comentario": null
     },
     {
+      "nome": "public.sig_publish",
+      "args": "p_id uuid",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": true,
+      "comentario": null
+    },
+    {
+      "nome": "public.sig_remove_recipient",
+      "args": "p_id uuid, p_profile uuid",
+      "retorno": "void",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": true,
+      "comentario": null
+    },
+    {
       "nome": "public.sig_resend_failed",
       "args": "p_id uuid",
       "retorno": "integer",
@@ -32051,6 +32886,19 @@
       "nome": "public.sig_set_new_members",
       "args": "p_id uuid, p_value boolean",
       "retorno": "void",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": true,
+      "comentario": null
+    },
+    {
+      "nome": "public.sig_set_recipients",
+      "args": "p_id uuid, p_profiles uuid[]",
+      "retorno": "integer",
       "linguagem": "plpgsql",
       "tipo": "f",
       "security_definer": true,

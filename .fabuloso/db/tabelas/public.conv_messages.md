@@ -56,6 +56,7 @@
 - public.conv_automation_recipients.message_id
 - public.conv_booking_proposals.confirmed_message_id
 - public.conv_followups.message_id
+- public.fin_receipt_submissions.source_message_id
 
 ## Índices
 - conv_messages_conversation_idx: `btree (conversation_id, created_at DESC)`

@@ -37,7 +37,7 @@
 - [média] public.rollback_bootstrap_3_circuito — SECURITY DEFINER sem search_path fixo
 - [média] public.upsert_crm_lead — SECURITY DEFINER sem search_path fixo
 - [média] public.vw_familia_modelos_expandidos — view sem security_invoker legível por anon — ignora o RLS das tabelas de origem
-- [info] 94 funções — SECURITY DEFINER executáveis por anon (coluna anon em funcoes.md) — confirme quais RPCs devem ser públicas
+- [info] 95 funções — SECURITY DEFINER executáveis por anon (coluna anon em funcoes.md) — confirme quais RPCs devem ser públicas
 - [info] public.access_requests — FK (decided_by) → public.profiles sem índice
 - [info] public.alunos — RLS ligado sem políticas — ninguém acessa pela API (ok se for só service_role)
 - [info] public.aniversario_consulta — RLS ligado sem políticas — ninguém acessa pela API (ok se for só service_role)
@@ -86,6 +86,7 @@
 - [info] public.conv_channel — FK (mention_verified_by) → public.profiles sem índice
 - [info] public.conv_channel — FK (updated_by) → public.profiles sem índice
 - [info] public.conv_conversations — FK (assigned_to) → public.profiles sem índice
+- [info] public.conv_conversations — FK (merged_into) → public.conv_conversations sem índice
 - [info] public.conv_followups — FK (created_by) → public.profiles sem índice
 - [info] public.conv_followups — FK (message_id) → public.conv_messages sem índice
 - [info] public.conv_groups — FK (allowed_by) → public.profiles sem índice
@@ -112,6 +113,7 @@
 - [info] public.fin_holidays — FK (created_by) → public.profiles sem índice
 - [info] public.fin_holidays — FK (updated_by) → public.profiles sem índice
 - [info] public.fin_member_charges — FK (canceled_by) → public.profiles sem índice
+- [info] public.fin_member_charges — FK (category_id) → public.fin_categories sem índice
 - [info] public.fin_member_charges — FK (created_by) → public.profiles sem índice
 - [info] public.fin_member_charges — FK (updated_by) → public.profiles sem índice
 - [info] public.fin_member_credits — FK (refund_entry_id) → public.fin_entries sem índice

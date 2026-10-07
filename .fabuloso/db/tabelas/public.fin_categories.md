@@ -33,6 +33,7 @@
 ## Referenciada por
 - public.fin_categories.parent_id
 - public.fin_entries.category_id
+- public.fin_member_charges.category_id
 - public.fin_recurrences.category_id
 
 ## Índices

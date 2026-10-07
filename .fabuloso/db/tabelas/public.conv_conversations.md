@@ -23,12 +23,14 @@
 | handoff_note | text | sim |  |  |
 | handoff_at | timestamp with time zone | sim |  |  |
 | created_at | timestamp with time zone | não | `now()` |  |
+| merged_into | uuid | sim |  |  |
 
 ## Chaves e restrições
 - PK (id)
 - FK (assigned_to) → public.profiles(id)
 - FK (contact_id) → public.conv_contacts(id)
 - FK (group_id) → public.conv_groups(id)
+- FK (merged_into) → public.conv_conversations(id)
 - CHECK conv_conversations_ai_status_check: `CHECK ((ai_status = ANY (ARRAY['ai'::text, 'human'::text, 'paused'::text])))`
 - CHECK conv_conversations_check: `CHECK ((((kind = 'direct'::text) AND (contact_id IS NOT NULL) AND (group_id IS NULL)) OR ((kind = 'group'::text) AND (group_id IS NOT NULL) AND (contact_id IS NULL))))`
 - CHECK conv_conversations_handoff_kind_check: `CHECK ((handoff_kind = ANY (ARRAY['soft'::text, 'hard'::text])))`
@@ -41,6 +43,7 @@
 - public.conv_ai_decisions.conversation_id
 - public.conv_ai_sessions.conversation_id
 - public.conv_booking_proposals.conversation_id
+- public.conv_conversations.merged_into
 - public.conv_followups.conversation_id
 - public.conv_messages.conversation_id
 - public.conv_notes.conversation_id

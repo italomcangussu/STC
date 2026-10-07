@@ -1,5 +1,5 @@
 # public.fin_receipt_submissions
-> tabela · RLS on · ~0 linhas
+> tabela · RLS on · ~<100 linhas
 
 ## Colunas
 | Coluna | Tipo | Nulo | Padrão | Nota |
@@ -29,16 +29,19 @@
 | version | integer | não | `1` |  |
 | created_at | timestamp with time zone | não | `now()` |  |
 | updated_at | timestamp with time zone | não | `now()` |  |
+| source | text | não | `'app'::text` |  |
+| source_message_id | uuid | sim |  |  |
 
 ## Chaves e restrições
 - PK (id)
 - FK (duplicate_of) → public.fin_receipt_submissions(id)
 - FK (profile_id) → public.profiles(id)
 - FK (reviewed_by) → public.profiles(id)
+- FK (source_message_id) → public.conv_messages(id)
 - FK (superseded_by) → public.fin_receipt_submissions(id)
 - UNIQUE (request_id)
 - UNIQUE (storage_path)
-- CHECK fin_receipt_submissions_check: `CHECK (((status <> ALL (ARRAY['approved'::text, 'rejected'::text])) OR ((reviewed_by IS NOT NULL) AND (reviewed_at IS NOT NULL))))`
+- CHECK fin_receipt_submissions_check: `CHECK (((status <> ALL (ARRAY['approved'::text, 'rejected'::text])) OR ((reviewed_at IS NOT NULL) AND ((reviewed_by IS NOT NULL) OR ((status = 'approved'::text) AND (decision_reason ~~ 'Baixa automát…`
 - CHECK fin_receipt_submissions_check1: `CHECK (((status <> 'rejected'::text) OR ((decision_reason IS NOT NULL) AND (length(TRIM(BOTH FROM decision_reason)) >= 5))))`
 - CHECK fin_receipt_submissions_content_sha256_check: `CHECK ((content_sha256 ~ '^[0-9a-f]{64}$'::text))`
 - CHECK fin_receipt_submissions_content_type_check: `CHECK ((content_type = ANY (ARRAY['application/pdf'::text, 'image/jpeg'::text, 'image/png'::text, 'image/webp'::text, 'image/heic'::text])))`
@@ -49,6 +52,7 @@
 - CHECK fin_receipt_submissions_member_note_check: `CHECK (((member_note IS NULL) OR (length(member_note) <= 500)))`
 - CHECK fin_receipt_submissions_ocr_status_check: `CHECK ((ocr_status = ANY (ARRAY['not_run'::text, 'ok'::text, 'unreadable'::text, 'failed'::text])))`
 - CHECK fin_receipt_submissions_size_bytes_check: `CHECK (((size_bytes > 0) AND (size_bytes <= 10485760)))`
+- CHECK fin_receipt_submissions_source_check: `CHECK ((source = ANY (ARRAY['app'::text, 'whatsapp'::text])))`
 - CHECK fin_receipt_submissions_status_check: `CHECK ((status = ANY (ARRAY['submitted'::text, 'in_review'::text, 'approved'::text, 'rejected'::text, 'superseded'::text])))`
 
 ## Referenciada por
@@ -62,6 +66,7 @@
 - fin_receipt_submissions_pending_idx: `btree (created_at) WHERE (status = ANY (ARRAY['submitted'::text, 'in_review'::text]))`
 - fin_receipt_submissions_profile_idx: `btree (profile_id, created_at DESC)`
 - fin_receipt_submissions_request_id_key: `btree (request_id)` único
+- fin_receipt_submissions_source_message_uidx: `btree (source_message_id) WHERE (source_message_id IS NOT NULL)` único
 - fin_receipt_submissions_storage_path_key: `btree (storage_path)` único
 
 ## Políticas RLS
@@ -71,6 +76,7 @@
 - "fin_receipt_submissions_read" — SELECT para authenticated · using `(is_admin() OR (profile_id = ( SELECT auth.uid() AS uid)))`
 
 ## Gatilhos
+- fin_receipt_auto_paid_notice — AFTER UPDATE OF status → fin_private.receipt_auto_paid_notice()
 - fin_receipt_submissions_audit — AFTER INSERT OR UPDATE → fin_private.audit_row()
 - fin_receipt_submissions_no_delete — BEFORE DELETE → fin_private.no_delete()
 
