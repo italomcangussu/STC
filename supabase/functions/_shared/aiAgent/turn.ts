@@ -15,7 +15,7 @@
 
 import { extrairObjeto, repararJson, stripCodeFence } from './jsonRepair.ts';
 import type { Chat } from './llm.ts';
-import { systemPrompt, userPrompt, type AiSettings, type Ctx } from './prompts.ts';
+import { adminPendencyRefs, isAdminAssistant, systemPrompt, userPrompt, type AiSettings, type Ctx } from './prompts.ts';
 import { buildChatRequest, providerIdFrom, uazError, type UazCaller } from '../uazChat.ts';
 
 type RpcResult = { data: unknown; error: { message: string } | null };
@@ -47,9 +47,30 @@ export type Slots = {
   add_names?: string[];
   remove_names?: string[];
   remove_guest?: boolean;
+  /** Assessor administrativo (só administrador, no privado). */
+  fin_action?: FinAction | null;
+  member_name?: string | null;
+  description?: string | null;
+  /** Valor em reais, como a pessoa disse. */
+  amount?: number | null;
+  due_date?: string | null;
+  pendency_kind?: PendencyKind | null;
+  guest_date?: string | null;
+  send_now?: boolean;
+  pendency_ref?: string | null;
+  paid_on?: string | null;
+  method?: PayMethod | null;
+  account_name?: string | null;
 };
 
-export type Intent = 'reservar' | 'cancelar' | 'remarcar' | 'consultar' | 'consultar_disponibilidade' | 'informar' | 'entrar' | 'participantes' | 'outro';
+export type FinAction = 'lancar' | 'cobrar' | 'pausar' | 'retomar' | 'baixa';
+type PendencyKind = 'day_card' | 'consumo' | 'evento' | 'multa' | 'dano_reposicao' | 'outros';
+type PayMethod = 'pix' | 'transfer' | 'cash' | 'card' | 'other';
+const FIN_ACTIONS: FinAction[] = ['lancar', 'cobrar', 'pausar', 'retomar', 'baixa'];
+const PENDENCY_KINDS: PendencyKind[] = ['day_card', 'consumo', 'evento', 'multa', 'dano_reposicao', 'outros'];
+const PAY_METHODS: PayMethod[] = ['pix', 'transfer', 'cash', 'card', 'other'];
+
+export type Intent = 'reservar' | 'cancelar' | 'remarcar' | 'consultar' | 'consultar_disponibilidade' | 'informar' | 'entrar' | 'participantes' | 'admin_financeiro' | 'outro';
 
 export type Answer = {
   messages: string[];
@@ -104,7 +125,7 @@ function lerJson(output: string): Record<string, unknown> | null {
 
 const str = (v: unknown): string | null => (typeof v === 'string' && v.trim() ? v.trim() : null);
 const strList = (v: unknown): string[] => (Array.isArray(v) ? v.map((x) => String(x ?? '').trim()).filter(Boolean).slice(0, 8) : []);
-const INTENTS: Intent[] = ['reservar', 'cancelar', 'remarcar', 'consultar', 'consultar_disponibilidade', 'informar', 'entrar', 'participantes', 'outro'];
+const INTENTS: Intent[] = ['reservar', 'cancelar', 'remarcar', 'consultar', 'consultar_disponibilidade', 'informar', 'entrar', 'participantes', 'admin_financeiro', 'outro'];
 const ACTIONABLE: Intent[] = ['reservar', 'cancelar', 'remarcar'];
 
 /**
@@ -130,6 +151,22 @@ export function parseSlots(raw: unknown): Slots {
   if ('add_names' in o) out.add_names = strList(o.add_names);
   if ('remove_names' in o) out.remove_names = strList(o.remove_names);
   if ('remove_guest' in o) out.remove_guest = o.remove_guest === true;
+  const isoDate = (v: unknown) => (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null);
+  if ('fin_action' in o) out.fin_action = FIN_ACTIONS.includes(o.fin_action as FinAction) ? o.fin_action as FinAction : null;
+  if ('member_name' in o) out.member_name = str(o.member_name);
+  if ('description' in o) out.description = str(o.description)?.slice(0, 300) ?? null;
+  if ('amount' in o) {
+    const v = typeof o.amount === 'string' ? Number(o.amount.replace(/\./g, '').replace(',', '.')) : o.amount;
+    out.amount = typeof v === 'number' && Number.isFinite(v) && v > 0 ? v : null;
+  }
+  if ('due_date' in o) out.due_date = isoDate(o.due_date);
+  if ('pendency_kind' in o) out.pendency_kind = PENDENCY_KINDS.includes(o.pendency_kind as PendencyKind) ? o.pendency_kind as PendencyKind : null;
+  if ('guest_date' in o) out.guest_date = isoDate(o.guest_date);
+  if ('send_now' in o) out.send_now = o.send_now === true;
+  if ('pendency_ref' in o) out.pendency_ref = str(o.pendency_ref)?.toLowerCase() ?? null;
+  if ('paid_on' in o) out.paid_on = isoDate(o.paid_on);
+  if ('method' in o) out.method = PAY_METHODS.includes(o.method as PayMethod) ? o.method as PayMethod : null;
+  if ('account_name' in o) out.account_name = str(o.account_name);
   return out;
 }
 
@@ -1190,6 +1227,13 @@ async function decide(i: DecideInput): Promise<Decision> {
     if (!i.ultimaId) return plain({ bubbles: [CODE_TEXT.NOT_EXPLICIT as string], awaiting: true });
     const res = (await db('conv_svc_ai_confirm', { p_proposal: (ctx.open_proposal as Ctx).id, p_message: i.ultimaId })).data as
       { ok: boolean; code?: string; message?: string; action?: 'create' | 'cancel' | 'reschedule' | 'join' | 'participants'; summary?: Summary } | null;
+    if (res?.ok && res.summary && String(res.action ?? '').startsWith('fin_')) {
+      return { bubbles: [adminSuccessMessage(res.action as unknown as AdminAction, res.summary as unknown as Ctx)], awaiting: false, close: false,
+        action: 'admin_confirmed', memory: { intent: answer.intent, slots: {} } };
+    }
+    if (!res?.ok && String((ctx.open_proposal as Ctx).action ?? '').startsWith('fin_')) {
+      return { bubbles: [res?.message ?? 'Não consegui registrar. Quer que eu monte de novo?'], awaiting: true, close: false, action: `failed:${res?.code ?? 'UNKNOWN'}`, memory };
+    }
     if (res?.ok && res.summary) {
       const names = (memory.proposal_names ?? []) as string[];
       const me = String(((ctx.requester as Ctx | undefined)?.profile as Ctx | undefined)?.name ?? '') || undefined;
@@ -1207,6 +1251,9 @@ async function decide(i: DecideInput): Promise<Decision> {
 
   // 2c) "Tem quadra livre?", "quais horários livres?" — consulta real ao motor, sem exigir participantes e sem handoff.
   if (answer.intent === 'consultar_disponibilidade' && !answer.transfer) return consultarDisponibilidade(i, memory);
+
+  // 2d) Assessor administrativo: lançamento, cobrança, régua e baixa (o banco só aceita administrador no privado).
+  if (answer.intent === 'admin_financeiro' && answer.ready && !answer.transfer) return adminFinanceiro(i, memory);
 
   // 3) Pedido pronto: o servidor resolve pessoas, confere disponibilidade e monta a PROPOSTA.
   if (answer.ready && (answer.intent === 'reservar' || answer.intent === 'cancelar' || answer.intent === 'remarcar')) {
@@ -1474,6 +1521,99 @@ async function entrarNoJogo(i: DecideInput, memory: Memory): Promise<Decision> {
 }
 
 /** Resolve nomes no cadastro. Ambíguo ou ausente vira PERGUNTA (nunca escolha por aproximação). */
+/* ------------------------------- Assessor administrativo (financeiro) ------------------------------- */
+
+type AdminAction = 'fin_pendency_create' | 'fin_pendency_collection' | 'fin_pendency_send' | 'fin_payment';
+
+const centsBR = (v: unknown) => `R$ ${(Number(v ?? 0) / 100).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`;
+const dateBR = (v: unknown) => String(v ?? '').slice(0, 10).split('-').reverse().join('/');
+const METHOD_TEXT: Record<string, string> = { pix: 'PIX', transfer: 'transferência', cash: 'dinheiro', card: 'cartão', other: 'outro meio' };
+
+export function toCents(reais: number | null | undefined): number | null {
+  if (typeof reais !== 'number' || !Number.isFinite(reais) || reais <= 0) return null;
+  return Math.round(reais * 100);
+}
+
+export function adminProposalMessage(action: AdminAction, s: Ctx): string {
+  if (action === 'fin_pendency_create') {
+    const guest = s.guest_name ? ` (convidado ${s.guest_name}${s.guest_date ? ` em ${dateBR(s.guest_date)}` : ''})` : '';
+    const envio = s.send_now ? 'Já mando a cobrança no WhatsApp do sócio.' : 'Sem mandar cobrança agora; a régua segue normal.';
+    return `Vou lançar para ${s.member_name}: ${s.description}${guest}, ${centsBR(s.amount_cents)}, vencimento ${dateBR(s.due_date)}. ${envio} Confirma? Responda "sim".`;
+  }
+  if (action === 'fin_pendency_send') {
+    return `Vou mandar agora a cobrança para ${s.member_name}: ${s.open_count} pendência(s) em aberto, total ${centsBR(s.member_total_due_cents)}. Confirma? Responda "sim".`;
+  }
+  if (action === 'fin_pendency_collection') {
+    return `Vou ${s.enabled ? 'retomar' : 'pausar'} a cobrança de ${s.member_name}: ${s.description} (saldo ${centsBR(s.total_due_cents)}). Confirma? Responda "sim".`;
+  }
+  const sobra = Number(s.excess_cents ?? 0) > 0 ? ` Passa do saldo: ${centsBR(s.excess_cents)} viram crédito do sócio.` : '';
+  return `Vou dar baixa de ${centsBR(s.amount_cents)} para ${s.member_name}: ${s.description} (saldo ${centsBR(s.total_due_cents)}), pago em ${dateBR(s.paid_on)} via ${METHOD_TEXT[String(s.method)] ?? s.method}, conta ${s.account_name}.${sobra} Confirma? Responda "sim".`;
+}
+
+export function adminSuccessMessage(action: AdminAction, s: Ctx): string {
+  const r = (s.result ?? {}) as Ctx;
+  if (action === 'fin_pendency_create') {
+    const envio = r.automation_recipient_id ? ' A cobrança já está na fila de envio.' : '';
+    return `Pronto: pendência lançada para ${s.member_name}, ${s.description}, ${centsBR(s.amount_cents)}.${envio}`;
+  }
+  if (action === 'fin_pendency_send') {
+    return r.automation_recipient_id
+      ? `Pronto: cobrança para ${s.member_name} na fila de envio.`
+      : `Registrei o pedido, mas a cobrança de ${s.member_name} não entrou na fila (sem automação ativa ou sem telefone). Vale conferir em Conversas.`;
+  }
+  if (action === 'fin_pendency_collection') return `Pronto: cobrança de ${s.member_name} (${s.description}) ${s.enabled ? 'retomada' : 'pausada'}.`;
+  const status = String(r.charge_status ?? '');
+  const fim = status === 'paid' ? 'Pendência quitada.' : status === 'partial' ? 'Ficou parcial; o restante continua em aberto.' : '';
+  return `Pronto: baixa de ${centsBR(s.amount_cents)} registrada para ${s.member_name}. ${fim}`.trim();
+}
+
+async function adminFinanceiro(i: DecideInput, memory: Memory): Promise<Decision> {
+  const { deps, ctx, slots, session } = i;
+  const ask = (text: string): Decision => ({ bubbles: [text], awaiting: true, close: false, action: 'ask', memory });
+  if (!isAdminAssistant(ctx)) return ask('Essa parte do financeiro é só com a diretoria, pela conversa privada. Posso te ajudar com outra coisa?');
+  const refs = adminPendencyRefs(ctx);
+  const ref = slots.pendency_ref ? refs.find((r) => r.ref === slots.pendency_ref) : undefined;
+  if (slots.pendency_ref && !ref) return ask('Não achei essa pendência na lista. Qual é (sócio e descrição)?');
+  const member = async () => {
+    if (!slots.member_name) return { ask: 'De qual sócio?' };
+    const r = await resolve(deps.db, [slots.member_name], 'member');
+    return r.ask ? { ask: r.ask } : { id: r.ids[0] };
+  };
+
+  let p: Record<string, unknown>;
+  if (slots.fin_action === 'lancar') {
+    const m = await member();
+    if (m.ask) return ask(m.ask);
+    if (!slots.description) return ask('Qual a descrição da pendência?');
+    const cents = toCents(slots.amount);
+    if (!cents) return ask('Qual é o valor?');
+    p = { action: 'fin_pendency_create', profile_id: m.id, description: slots.description, amount_cents: cents, due_date: slots.due_date ?? null,
+      pendency_kind: slots.pendency_kind ?? null, guest_name: slots.guest_name ?? null, guest_date: slots.guest_date ?? null, send_now: slots.send_now === true };
+  } else if (slots.fin_action === 'cobrar') {
+    if (ref) p = { action: 'fin_pendency_send', charge_id: ref.id };
+    else {
+      const m = await member();
+      if (m.ask) return ask(m.ask);
+      p = { action: 'fin_pendency_send', profile_id: m.id };
+    }
+  } else if (slots.fin_action === 'pausar' || slots.fin_action === 'retomar') {
+    if (!ref) return ask(`Qual pendência você quer ${slots.fin_action}? Me diga o sócio e a descrição (ou o número da lista, tipo p1).`);
+    p = { action: 'fin_pendency_collection', charge_id: ref.id, enabled: slots.fin_action === 'retomar' };
+  } else if (slots.fin_action === 'baixa') {
+    if (!ref) return ask('Qual pendência foi paga? Me diga o sócio e a descrição (ou o número da lista, tipo p1).');
+    const cents = toCents(slots.amount);
+    if (!cents) return ask('Qual valor foi pago?');
+    p = { action: 'fin_payment', charge_id: ref.id, amount_cents: cents, paid_on: slots.paid_on ?? null, method: slots.method ?? null, account_name: slots.account_name ?? null };
+  } else {
+    return ask('O que você quer fazer: lançar pendência, cobrar agora, pausar/retomar a cobrança ou dar baixa?');
+  }
+
+  const res = (await deps.db('conv_svc_ai_admin_finance_propose', { p_session: session, p })).data as
+    { ok: boolean; code?: string; message?: string; action?: AdminAction; summary?: Ctx } | null;
+  if (!res?.ok || !res.summary || !res.action) return ask(res?.message ?? 'Não consegui montar esse lançamento. Pode repetir os dados?');
+  return { bubbles: [adminProposalMessage(res.action, res.summary)], awaiting: true, close: false, action: 'proposed_admin', memory };
+}
+
 async function resolve(db: Db, names: string[], scope: 'member' | 'student' | 'professor') {
   const out = { ids: [] as string[], names: [] as string[], matches: [] as { id: string; name: string; kind: string }[], ask: null as string | null };
   if (names.length === 0) return out;
