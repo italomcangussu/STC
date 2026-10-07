@@ -11,7 +11,7 @@ async function enable(w: W, opts: { group?: boolean } = {}) {
   await rpc(w.db, U.admin, `public.conv_save_ai_settings('${key()}', ${j({ active: true, model: 'modelo-de-teste', daily_turn_budget: 50 })})`);
   await rpc(w.db, U.admin, `public.conv_save_channel('${key()}', ${j({ bot_phone: '5585988880099', ai_direct_enabled: true, group_session_minutes: 10 })})`);
   if (opts.group) {
-    await svc(w.db, `public.conv_svc_ingest_message(${j({ provider_id: `SEED${++n}`, chat_kind: 'group', group_jid: GROUP, group_name: 'Sócios', phone: '5585988880002', name: 'Ana', body: 'oi' })})`);
+    await svc(w.db, `public.conv_svc_ingest_message(${j({ provider_id: `SEED${++n}`, chat_kind: 'group', group_jid: GROUP, group_name: 'Sócios', phone: '5599900000002', name: 'Ana', body: 'oi' })})`);
     const [g] = await q<{ id: string }>(w.db, `select id from public.conv_groups`);
     await rpc(w.db, U.admin, `public.conv_set_group('${g.id}', 'allowed', false)`);
     await rpc(w.db, U.admin, `public.conv_set_mention_verified(true)`);
@@ -20,10 +20,10 @@ async function enable(w: W, opts: { group?: boolean } = {}) {
   }
 }
 
-const direct = (w: W, body: string, phone = '5585988880002') =>
+const direct = (w: W, body: string, phone = '5599900000002') =>
   svc<any>(w.db, `public.conv_svc_ingest_message(${j({ provider_id: `D${++n}${Math.random()}`, chat_kind: 'direct', phone, name: 'Ana', kind: 'text', body })})`);
 const group = (w: W, over: Record<string, unknown> = {}) =>
-  svc<any>(w.db, `public.conv_svc_ingest_message(${j({ provider_id: `G${++n}${Math.random()}`, chat_kind: 'group', group_jid: GROUP, phone: '5585988880002', name: 'Ana', kind: 'text', body: 'oi', ...over })})`);
+  svc<any>(w.db, `public.conv_svc_ingest_message(${j({ provider_id: `G${++n}${Math.random()}`, chat_kind: 'group', group_jid: GROUP, phone: '5599900000002', name: 'Ana', kind: 'text', body: 'oi', ...over })})`);
 const trigger = (w: W, id: string) => svc<any>(w.db, `public.conv_svc_ai_trigger('${id}')`);
 /** A IA fala na sessão: grava a mensagem de saída ligada à sessão e finaliza o envio. */
 async function aiSays(w: W, conversation: string, session: string, body: string, providerId: string) {
@@ -129,7 +129,7 @@ describe('grupo: menção direta, continuação e isolamento de contexto', () =>
     expect((await trigger(w, loose.message_id)).reason).toBe('no_trigger');
     await svc(w.db, `public.conv_svc_ai_save_turn('${t1.session_id}', '{}'::jsonb, 'reply', '{}'::jsonb, true, false)`);
     // outro participante responde: ignorado
-    const other = await group(w, { phone: '5585988880003', name: 'Beto', body: 'eu também' });
+    const other = await group(w, { phone: '5599900000003', name: 'Beto', body: 'eu também' });
     expect((await trigger(w, other.message_id)).reason).toBe('no_trigger');
     // o solicitante responde: continua, na MESMA sessão
     const mine = await group(w, { body: 'amanhã mesmo' });
@@ -149,9 +149,9 @@ describe('grupo: menção direta, continuação e isolamento de contexto', () =>
     const t1 = await trigger(w, m1.message_id);
     await aiSays(w, m1.conversation_id, t1.session_id, 'Para quando?', 'AI-PROV-1');
     await svc(w.db, `public.conv_svc_ai_save_turn('${t1.session_id}', '{}'::jsonb, 'reply', '{}'::jsonb, false, false)`);   // não espera mais
-    const third = await group(w, { phone: '5585988880003', name: 'Beto', body: 'sábado', reply_to: 'AI-PROV-1' });
+    const third = await group(w, { phone: '5599900000003', name: 'Beto', body: 'sábado', reply_to: 'AI-PROV-1' });
     expect((await trigger(w, third.message_id)).reason).toBe('other_sender');
-    const admin = await group(w, { phone: '5585988880001', name: 'Admin', body: 'sábado', reply_to: 'AI-PROV-1' });
+    const admin = await group(w, { phone: '5599900000001', name: 'Admin', body: 'sábado', reply_to: 'AI-PROV-1' });
     const ta = await trigger(w, admin.message_id);
     expect([ta.run, ta.reason, ta.acting_admin]).toEqual([true, 'reply_to_ai', true]);
     const mine = await group(w, { body: 'sábado', reply_to: 'AI-PROV-1' });
@@ -161,7 +161,7 @@ describe('grupo: menção direta, continuação e isolamento de contexto', () =>
   it('o contexto do modelo em grupo só tem o solicitante e a IA: nada das conversas dos outros', async () => {
     const w = await world();
     await enable(w, { group: true });
-    await group(w, { phone: '5585988880003', name: 'Beto', body: 'segredo do Beto: meu CPF é 123' });
+    await group(w, { phone: '5599900000003', name: 'Beto', body: 'segredo do Beto: meu CPF é 123' });
     const m1 = await group(w, { body: 'quero marcar às 16h', mention: { direct: true, evidence: 'x' } });
     const t1 = await trigger(w, m1.message_id);
     await aiSays(w, m1.conversation_id, t1.session_id, 'Quem vai participar?', 'AI-2');

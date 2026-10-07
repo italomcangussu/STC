@@ -115,13 +115,13 @@ describe('proposta e confirmação de entrada', () => {
     await enable(w);
     const date = await dateAt(w.db, 3);
     const id = await betoGame(w, date);
-    const s = await session(w, '85988880002', 'Ana');
+    const s = await session(w, '99900000002', 'Ana');
     const p = await propose(w, s, { action: 'join', reservation_id: id });
     expect(p).toMatchObject({ ok: true, action: 'join' });
     expect(p.summary).toMatchObject({ start: '18:00', names: ['Beto Sócio'], spots_left: 7 });
     expect(await participants(w, id)).toEqual([U.socioB]);                       // proposta ≠ entrada
     await pause();
-    const yes = await say(w, '85988880002', 'Sim, quero entrar');
+    const yes = await say(w, '99900000002', 'Sim, quero entrar');
     const c = await confirm(w, p.proposal_id, yes.message_id);
     expect(c).toMatchObject({ ok: true, action: 'join', reservation_id: id });
     expect(c.summary.names).toEqual(['Beto Sócio', 'Ana Sócia']);
@@ -138,20 +138,20 @@ describe('proposta e confirmação de entrada', () => {
     await enable(w);
     const date = await dateAt(w.db, 3);
     const id = await betoGame(w, date);
-    const a = await session(w, '85988880002', 'Ana');
+    const a = await session(w, '99900000002', 'Ana');
     const pa = await propose(w, a, { action: 'join', reservation_id: id });
     await pause();
-    const yesA = await say(w, '85988880002', 'sim');
+    const yesA = await say(w, '99900000002', 'sim');
     expect((await confirm(w, pa.proposal_id, yesA.message_id)).ok).toBe(true);
     const again = await confirm(w, pa.proposal_id, yesA.message_id);
     expect(again).toMatchObject({ ok: true, replayed: true, reservation_id: id });
     expect((await participants(w, id)).filter((x) => x === U.socioA)).toHaveLength(1);
 
-    const adm = await session(w, '85988880001', 'Admin');
+    const adm = await session(w, '99900000001', 'Admin');
     const pb = await propose(w, adm, { action: 'join', reservation_id: id });
     expect(pb.ok).toBe(true);                                                   // o índice único de propostas não atrapalha o segundo
     await pause();
-    const yesB = await say(w, '85988880001', 'pode entrar');
+    const yesB = await say(w, '99900000001', 'pode entrar');
     expect((await confirm(w, pb.proposal_id, yesB.message_id)).ok).toBe(true);
     expect(await participants(w, id)).toHaveLength(3);
   }, 60000);
@@ -161,9 +161,9 @@ describe('proposta e confirmação de entrada', () => {
     await enable(w);
     const date = await dateAt(w.db, 3);
     const id = await betoGame(w, date);
-    const beto = await session(w, '85988880003', 'Beto');
+    const beto = await session(w, '99900000003', 'Beto');
     expect((await propose(w, beto, { action: 'join', reservation_id: id })).code).toBe('ALREADY_IN');
-    const ana = await session(w, '85988880002', 'Ana');
+    const ana = await session(w, '99900000002', 'Ana');
     expect((await propose(w, ana, { action: 'join', reservation_id: ID(9999) })).code).toBe('RESERVATION_NOT_FOUND');
     await w.db.exec(`update public.reservations set type = 'Aula' where id = '${id}'`);
     expect((await propose(w, ana, { action: 'join', reservation_id: id })).code).toBe('NOT_JOINABLE');
@@ -181,13 +181,13 @@ describe('proposta e confirmação de entrada', () => {
     await enable(w);
     const date = await dateAt(w.db, 3);
     const id = await betoGame(w, date);
-    const ana = await session(w, '85988880002', 'Ana');
+    const ana = await session(w, '99900000002', 'Ana');
     const p = await propose(w, ana, { action: 'join', reservation_id: id });
     expect(p.ok).toBe(true);
     const extra = await extraSocios(w, 5);
     await w.db.exec(`update public.reservations set participant_ids = '{${[U.socioB, U.prof, U.profOther, ...extra].join(',')}}' where id = '${id}'`);
     await pause();
-    const yes = await say(w, '85988880002', 'sim');
+    const yes = await say(w, '99900000002', 'sim');
     const c = await confirm(w, p.proposal_id, yes.message_id);
     expect([c.ok, c.code]).toEqual([false, 'GAME_FULL']);
     expect((await participants(w, id))).not.toContain(U.socioA);
@@ -199,10 +199,10 @@ describe('proposta e confirmação de entrada', () => {
     await enable(w);
     const date = await dateAt(w.db, 3);
     const id = await betoGame(w, date);
-    const ana = await session(w, '85988880002', 'Ana');
+    const ana = await session(w, '99900000002', 'Ana');
     const p = await propose(w, ana, { action: 'join', reservation_id: id });
     await pause();
-    const maybe = await say(w, '85988880002', 'talvez, vou ver');
+    const maybe = await say(w, '99900000002', 'talvez, vou ver');
     expect((await confirm(w, p.proposal_id, maybe.message_id)).code).toBe('NOT_EXPLICIT');
     expect(await participants(w, id)).toEqual([U.socioB]);
   }, 60000);
@@ -212,7 +212,7 @@ describe('proposta e confirmação de entrada', () => {
     await enable(w);
     const date = await dateAt(w.db, 3);
     await betoGame(w, date);
-    const ana = await session(w, '85988880002', 'Ana');
+    const ana = await session(w, '99900000002', 'Ana');
     const r = await propose(w, ana, { action: 'create', type: 'Play', date, start: '18:00', duration: 60, court_id: w.court1, participant_ids: [] });
     expect([r.ok, r.code]).toEqual([false, 'SLOT_TAKEN']);
   }, 60000);
@@ -226,14 +226,14 @@ describe('entrar com quem for junto (sócios mencionados e convidado)', () => {
     await enable(w);
     const date = await dateAt(w.db, 3);
     const id = await betoGame(w, date);
-    const ana = await session(w, '85988880002', 'Ana');
+    const ana = await session(w, '99900000002', 'Ana');
     const p = await propose(w, ana, party(id, [U.prof, U.profOther], 'Zeca'));
     expect(p.ok).toBe(true);
     expect(p.summary).toMatchObject({ adding: 4, spots_left: 7, add_names: ['Paulo Professor', 'Olga Professora', 'Zeca (convidado)'] });
     expect(p.summary.add_ids).toHaveLength(3);                                   // Ana + 2 sócios; o convidado não é perfil
     expect(await participants(w, id)).toEqual([U.socioB]);                       // proposta ≠ entrada
     await pause();
-    const yes = await say(w, '85988880002', 'sim');
+    const yes = await say(w, '99900000002', 'sim');
     const c = await confirm(w, p.proposal_id, yes.message_id);
     expect(c).toMatchObject({ ok: true, action: 'join', reservation_id: id });
     expect(c.summary).toMatchObject({ added: 4, participants: 5, spots_left: 3 });
@@ -249,12 +249,12 @@ describe('entrar com quem for junto (sócios mencionados e convidado)', () => {
     await enable(w);
     const date = await dateAt(w.db, 3);
     const id = await betoGame(w, date);
-    const ana = await session(w, '85988880002', 'Ana');
+    const ana = await session(w, '99900000002', 'Ana');
     const p = await propose(w, ana, party(id, [U.socioB, U.socioA, U.prof, U.prof]));
     expect(p.ok).toBe(true);
     expect(p.summary).toMatchObject({ adding: 2, add_names: ['Paulo Professor'] });
     await pause();
-    const yes = await say(w, '85988880002', 'sim');
+    const yes = await say(w, '99900000002', 'sim');
     expect((await confirm(w, p.proposal_id, yes.message_id)).ok).toBe(true);
     const ps = await participants(w, id);
     expect(ps.sort()).toEqual([U.socioA, U.socioB, U.prof].sort());
@@ -267,7 +267,7 @@ describe('entrar com quem for junto (sócios mencionados e convidado)', () => {
     const date = await dateAt(w.db, 3);
     const extra = await extraSocios(w, 5);
     const id = await betoGame(w, date, { participants: [U.socioB, ...extra] });  // 6 pessoas → restam 2
-    const ana = await session(w, '85988880002', 'Ana');
+    const ana = await session(w, '99900000002', 'Ana');
     const r = await propose(w, ana, party(id, [U.prof, U.profOther]));            // Ana + 2 = 3 > 2
     expect(r).toMatchObject({ ok: false, code: 'NOT_ENOUGH_SPOTS', spots_left: 2, wanted: 3 });
     expect((await q<any>(w.db, `select count(*)::int c from public.conv_booking_proposals`))[0].c).toBe(0);
@@ -279,7 +279,7 @@ describe('entrar com quem for junto (sócios mencionados e convidado)', () => {
     await enable(w);
     const date = await dateAt(w.db, 3);
     const id = await betoGame(w, date);
-    const ana = await session(w, '85988880002', 'Ana');
+    const ana = await session(w, '99900000002', 'Ana');
     expect((await propose(w, ana, party(id, [U.lanch]))).code).toBe('PARTICIPANT_NOT_MEMBER');
     expect((await propose(w, ana, party(id, [], 'X'))).code).toBe('INVALID_GUEST');
     await w.db.exec(`update public.reservations set guest_name = 'Zeca' where id = '${id}'`);
@@ -292,13 +292,13 @@ describe('entrar com quem for junto (sócios mencionados e convidado)', () => {
     await enable(w);
     const date = await dateAt(w.db, 3);
     const id = await betoGame(w, date);
-    const ana = await session(w, '85988880002', 'Ana');
+    const ana = await session(w, '99900000002', 'Ana');
     const p = await propose(w, ana, party(id, [U.prof, U.profOther]));
     expect(p.ok).toBe(true);
     const extra = await extraSocios(w, 5);
     await w.db.exec(`update public.reservations set participant_ids = '{${[U.socioB, ...extra].join(',')}}' where id = '${id}'`);   // 6 → restam 2 < 3
     await pause();
-    const yes = await say(w, '85988880002', 'sim');
+    const yes = await say(w, '99900000002', 'sim');
     const c = await confirm(w, p.proposal_id, yes.message_id);
     expect([c.ok, c.code]).toEqual([false, 'NOT_ENOUGH_SPOTS']);
     const ps = await participants(w, id);

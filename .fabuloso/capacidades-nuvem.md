@@ -17,5 +17,7 @@
 - migrations do financeiro são testadas offline em PGlite (`__tests__/finance/sql/`), sem tocar o remoto
 ### Qualidade de código
 - `code-review`, `simplify`, `security-review`
+### Engenharia (plugin `engineering`, ativado na conta)
+- `engineering:debug`, `engineering:testing-strategy`, `engineering:architecture` (ADR), `engineering:deploy-checklist`, `engineering:incident-response`, `engineering:documentation` — úteis em bug difícil, plano de testes, decisão de desenho e deploy de função de borda
 ### Outras (raramente relevantes)
-- docs, docx, pdf, pptx, xlsx, brand-guidelines, theme-factory, morning, skill-creator, import-memory, google-workspace
+- docs, docx, pdf, pptx, xlsx, brand-guidelines, theme-factory, morning, skill-creator, import-memory, google-workspace; plugins `data:*`, `marketing:*`, `operations:*`, `seo-google-specialist:*`, `productivity:*`, `enterprise-search:*` (não relevantes para o código do STC)

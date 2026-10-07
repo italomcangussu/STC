@@ -8,7 +8,7 @@ vi.mock('../../../lib/supabase', () => ({ supabase: { rpc: (...a: unknown[]) => 
 
 import {
   ConversationOperationError, describeConversationError, fillTemplate, kindForFile, listInbox, saveQuickReply, sendMessage,
-  setConversationMeta, setMentionVerified, toMessage, approveRun, saveAutomation, searchOpenTargets,
+  setConversationMeta, setMentionVerified, toMessage, approveRun, saveAutomation, searchOpenTargets, listMemoryCandidates, reviewMemoryCandidate,
 } from '@/lib/conversations/api';
 import { formatWhatsAppDisplay, maskPhone } from '@/lib/conversations/phone';
 import { OperationError } from '@/lib/conversations/edge';
@@ -83,6 +83,21 @@ describe('leitura e RPCs', () => {
     rpc.mockResolvedValue({ data: null, error: null });
     await setMentionVerified(true);
     expect(rpc).toHaveBeenCalledWith('conv_set_mention_verified', { p_verified: true });
+  });
+
+  it('memória do João: lista por status (nulo vira lista vazia) e revisa pelo RPC, sem texto quando não houve correção', async () => {
+    rpc.mockResolvedValueOnce({ data: null, error: null });
+    expect(await listMemoryCandidates()).toEqual([]);
+    expect(rpc).toHaveBeenCalledWith('conv_list_ai_memory_candidates', { p_status: 'pending' });
+    rpc.mockResolvedValueOnce({ data: [{ id: 'm1' }], error: null });
+    expect(await listMemoryCandidates('approved')).toEqual([{ id: 'm1' }]);
+    expect(rpc).toHaveBeenLastCalledWith('conv_list_ai_memory_candidates', { p_status: 'approved' });
+    rpc.mockResolvedValue({ data: { id: 'm1', status: 'approved' }, error: null });
+    await reviewMemoryCandidate('m1', 'approved');
+    expect(rpc).toHaveBeenLastCalledWith('conv_review_ai_memory_candidate', { p_id: 'm1', p_decision: 'approved', p_content: null });
+    await reviewMemoryCandidate('m1', 'approved', '  Texto corrigido.  ');
+    expect(rpc).toHaveBeenLastCalledWith('conv_review_ai_memory_candidate', { p_id: 'm1', p_decision: 'approved', p_content: 'Texto corrigido.' });
+    expect(describeConversationError({ message: 'CONTENT_TOO_SHORT' })).toContain('frase curta');
   });
 
   it('atalho de resposta rápida duplicado vira frase', async () => {

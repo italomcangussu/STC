@@ -149,3 +149,17 @@ sessões de IA vencidas. A coluna “última execução” da aba **Automações
 - Escolher o modelo de IA e preencher o “Contexto do clube”.
 - Confirmar a política de multa/juros no Financeiro **se** quiser usar `{{encargos}}`.
 - Decidir se o app (`Agenda`) passa a chamar a mesma função de validação de reserva (hoje as regras estão espelhadas).
+
+## 9. João: memória, reação e resultados (migration `20261007101300_conversations_joao_pack.sql`)
+
+Aditiva (só funções novas; nenhum dado é reescrito). Ordem para pôr no ar:
+
+1. Aplicar a migration (ela só cria `conv_list_ai_memory_candidates`, `conv_review_ai_memory_candidate`, `conv_svc_ai_joao_pack`
+   e as peças `conv_private.ai_*`). Conferir com `select conv_svc_ai_joao_pack('<id de uma sessão>')` como `service_role`.
+2. Publicar `whatsapp-webhook` (turno, prompt e reação). Se a função de borda subir **antes** da migration, nada quebra:
+   o João só fica sem memória/resultados até a migration entrar.
+3. Abrir **Conversas → IA**: a memória só começa a ter sugestões depois que o João ouvir algo no grupo; nada vira memória sem aprovação.
+
+Reverter: `drop function` das funções acima (a migration traz o roteiro no rodapé). O João volta ao comportamento anterior sem outra mudança.
+
+> Estado em 2026-10-07: migration aplicada no projeto do STC e `whatsapp-webhook` publicado (v27). Se for republicar, envie **todos** os arquivos da função: o conector não faz merge com a versão anterior.

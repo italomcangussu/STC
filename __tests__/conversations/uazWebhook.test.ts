@@ -35,7 +35,7 @@ describe('webhook da UazAPI → Conversas (conversa direta, herdado do North Jat
     const r = parseUazWebhook(bruto({ sender_pn: '5585999990001@s.whatsapp.net', text: 'esse', quoted: 'wa-0' }));
     expect(r.kind === 'message' && r.message.replyTo).toBe('wa-0');
     expect(parseUazWebhook(bruto({ type: 'reaction', reaction: 'wa-0', text: '👍' }))).toEqual({ kind: 'reaction', targetId: 'wa-0', emoji: '👍', fromMe: false });
-    expect(parseUazWebhook(bruto({ edited: 'wa-0', text: 'novo' }))).toEqual({ kind: 'edit', targetId: 'wa-0', body: 'novo' });
+    expect(parseUazWebhook(bruto({ edited: 'wa-0', text: 'novo' }))).toEqual({ kind: 'edit', targetId: 'wa-0', body: 'novo', mentions: null });   // conversa direta não tem marcação
     expect(parseUazWebhook(bruto({ content: { protocolMessage: { type: 'REVOKE', key: { id: 'wa-0' } } } }))).toEqual({ kind: 'delete', targetId: 'wa-0' });
     expect(parseUazWebhook({ EventType: 'messages_update', event: { Type: 'Read' }, data: { messageid: 'wa-9' } }))
       .toEqual({ kind: 'status', updates: [{ providerId: 'wa-9', status: 'read' }] });
@@ -63,6 +63,15 @@ describe('grupos: o NJ descartava; o STC identifica grupo, remetente e menções
   it('presença em grupo e grupo sem JID válido não viram sinal', () => {
     expect(parseUazWebhook({ EventType: 'presence', event: { Chat: GRUPO, State: 'composing' } })).toEqual({ kind: 'ignored', reason: 'presenca_invalida' });
     expect(parseUazWebhook(grupo({ chatid: 'abc', isGroup: true, text: 'oi' }))).toEqual({ kind: 'ignored', reason: 'grupo_sem_jid' });
+  });
+
+  it('edição em grupo leva a lista de menções (a IA reavalia a mensagem corrigida); a minha própria edição não', () => {
+    const marcado = { edited: 'wa-0', text: '@5585988880099 quero uma quadra', content: { contextInfo: { mentionedJid: ['5585988880099@s.whatsapp.net'] } } };
+    const e = parseUazWebhook(grupo(marcado));
+    expect(e).toMatchObject({ kind: 'edit', targetId: 'wa-0', body: '@5585988880099 quero uma quadra' });
+    expect((e as any).mentions).toMatchObject({ hasMetadata: true, ids: ['5585988880099'], allMarker: false });
+    expect((parseUazWebhook(grupo({ edited: 'wa-0', text: 'sem marcação' })) as any).mentions).toMatchObject({ hasMetadata: false, ids: [] });
+    expect(parseUazWebhook(grupo({ ...marcado, fromMe: true }))).toMatchObject({ kind: 'edit', mentions: null });
   });
 
   it('lista de menções é lida nos lugares conhecidos; sem lista = sem metadado', () => {

@@ -11,8 +11,8 @@ const resolve = (w: W, items: { id: string; phone?: string | null }[]) =>
 describe('conciliar marcações com o cadastro', () => {
   it('pelo telefone: com DDI, sem DDI e com ou sem o nono dígito dão o mesmo sócio', async () => {
     const w = await world();
-    // Beto: 85988880003 (cadastro, com o 9)
-    for (const id of ['5585988880003', '85988880003', '558588880003', '8588880003']) {
+    // Beto: 99900000003 (cadastro, com o 9)
+    for (const id of ['5599900000003', '99900000003', '559900000003', '9900000003']) {   // com/sem DDI × com/sem o 9
       const [r] = await resolve(w, [{ id }]);
       expect([r.name, r.via, r.is_bot]).toEqual(['Beto Sócio', 'phone', false]);
       expect(r.profile_id).toBe(U.socioB);
@@ -21,17 +21,17 @@ describe('conciliar marcações com o cadastro', () => {
 
   it('LID + o telefone que a UazAPI informou para ele no grupo', async () => {
     const w = await world();
-    const [r] = await resolve(w, [{ id: '61809058967781@lid', phone: '5585988880004' }]);
+    const [r] = await resolve(w, [{ id: '61809058967781@lid', phone: '5599900000004' }]);
     expect(r).toMatchObject({ id: '61809058967781', name: 'Paulo Professor', via: 'phone', profile_id: U.prof });
   }, 60000);
 
   it('LID de quem já escreveu no grupo: o contato do WhatsApp liga o LID ao sócio, sem precisar de telefone extra', async () => {
     const w = await world();
     const jid = '120363000000000001@g.us';
-    await svc(w.db, `public.conv_svc_ingest_message(${j({ provider_id: `ML${++n}`, chat_kind: 'group', group_jid: jid, group_name: 'Sócios', phone: '5585988880002', name: 'Ana', kind: 'text', body: 'oi' })})`);
+    await svc(w.db, `public.conv_svc_ingest_message(${j({ provider_id: `ML${++n}`, chat_kind: 'group', group_jid: jid, group_name: 'Sócios', phone: '5599900000002', name: 'Ana', kind: 'text', body: 'oi' })})`);
     const [g] = await q<{ id: string }>(w.db, `select id from public.conv_groups`);
     await rpc(w.db, U.admin, `public.conv_set_group('${g.id}', 'allowed', false)`);            // grupo permitido: o remetente passa a ser gravado
-    await svc(w.db, `public.conv_svc_ingest_message(${j({ provider_id: `ML${++n}`, chat_kind: 'group', group_jid: jid, phone: '5585988880003', lid: '90000000000001@lid', name: 'Beto', kind: 'text', body: 'oi' })})`);
+    await svc(w.db, `public.conv_svc_ingest_message(${j({ provider_id: `ML${++n}`, chat_kind: 'group', group_jid: jid, phone: '5599900000003', lid: '90000000000001@lid', name: 'Beto', kind: 'text', body: 'oi' })})`);
     const [r] = await resolve(w, [{ id: '90000000000001' }]);
     expect(r).toMatchObject({ name: 'Beto Sócio', via: 'lid', profile_id: U.socioB });
   }, 60000);
@@ -40,8 +40,8 @@ describe('conciliar marcações com o cadastro', () => {
     const w = await world();
     expect((await resolve(w, [{ id: '61809058967781' }]))[0]).toMatchObject({ name: null, profile_id: null, is_bot: false });
     // dois cadastros com o mesmo telefone: ambíguo
-    await w.db.exec(`update public.profiles set phone = '85988880003' where id = '${U.prof}'`);
-    expect((await resolve(w, [{ id: '5585988880003' }]))[0].name).toBeNull();
+    await w.db.exec(`update public.profiles set phone = '99900000003' where id = '${U.prof}'`);
+    expect((await resolve(w, [{ id: '5599900000003' }]))[0].name).toBeNull();
     // inativo e lanchonete (não é sócio)
     await w.db.exec(`update public.profiles set phone = '85988880004' where id = '${U.prof}'; update public.profiles set is_active = false where id = '${U.prof}'`);
     expect((await resolve(w, [{ id: '5585988880004' }]))[0].name).toBeNull();
@@ -52,7 +52,7 @@ describe('conciliar marcações com o cadastro', () => {
   it('reconhece a própria conta institucional (telefone ou LID cadastrados) e vários itens de uma vez', async () => {
     const w = await world();
     await rpc(w.db, U.admin, `public.conv_save_channel('${key()}', ${j({ bot_phone: '5585988880099', bot_lids: ['144539339767982@lid'] })})`);
-    const r = await resolve(w, [{ id: '144539339767982' }, { id: '5585988880099' }, { id: '5585988880002' }, { id: '61809058967781' }]);
+    const r = await resolve(w, [{ id: '144539339767982' }, { id: '5585988880099' }, { id: '5599900000002' }, { id: '61809058967781' }]);
     expect(r.map((x) => [x.is_bot, x.name])).toEqual([[true, null], [true, null], [false, 'Ana Sócia'], [false, null]]);
   }, 60000);
 

@@ -2,7 +2,7 @@
  * Rótulos e resumos da aba de IA. Puro: o que a tela mostra de uma proposta de reserva feita pelo
  * agente e por que ela falhou. Os códigos vêm de `conv_private.validate_reservation`/`ai_confirm`.
  */
-import type { BookingProposal } from './api';
+import type { BookingProposal, MemoryKind } from './api';
 
 export const PROPOSAL_STATUS_LABEL: Record<BookingProposal['status'], string> = {
   open: 'Aguardando confirmação', confirmed: 'Confirmada e gravada', failed: 'Não gravada', expired: 'Venceu sem confirmação', canceled: 'Cancelada',
@@ -53,3 +53,15 @@ export function proposalSummary(p: Pick<BookingProposal, 'payload'>): string {
   ].filter(Boolean);
   return partes.join(' · ') || 'Reserva';
 }
+
+/** Tipos de memória que o João pode sugerir (o banco só aceita estes quatro). */
+export const MEMORY_KIND_LABEL: Record<MemoryKind, string> = {
+  confirmed_fact: 'Fato confirmado', recurring_preference: 'Preferência', social_relation: 'Relação', inside_joke: 'Brincadeira interna',
+};
+
+export const MEMORY_KIND_HINT: Record<MemoryKind, string> = {
+  confirmed_fact: 'A própria pessoa disse.', recurring_preference: 'Costuma pedir ou preferir.', social_relation: 'Foi informada na conversa.',
+  inside_joke: 'O João usa como brincadeira, nunca como verdade literal.',
+};
+
+export const confidenceLabel = (c: number): string => `${Math.round(Math.max(0, Math.min(1, Number(c) || 0)) * 100)}% de confiança`;
