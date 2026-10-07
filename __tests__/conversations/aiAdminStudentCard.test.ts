@@ -139,14 +139,18 @@ describe('renovar o Card Mensal de aluno pelo João (turno completo)', () => {
     expect(p.sent.at(-1)!.text).toContain('não no Card Mensal');
   }, 90000);
 
-  it('valor a partir de R$ 400 não é registrado por aqui', async () => {
+  it('valor de R$ 400 ou mais também é registrado, só com o "sim"', async () => {
     const w = await setup();
     const p = provider();
-    await erick(w);
+    const id = await erick(w);
     const m1 = await direct(w, 'renova o Erick, 450');
     await turn(w, m1.message_id, script(answer({ ready: true, slots: { ...renovar, amount: 450 } })).chat, p.uaz);
-    expect(p.sent.at(-1)!.text).toContain('pelo painel');
-    expect(await payments(w)).toHaveLength(0);
+    expect(p.sent.at(-1)!.text).toContain('R$ 450,00');
+    const m2 = await direct(w, 'sim');
+    const r2 = await turn(w, m2.message_id, script(answer({ customer_confirmed: true, slots: renovar })).chat, p.uaz);
+    expect(r2.action).toBe('admin_confirmed');
+    expect(Number((await payments(w))[0].amount)).toBe(450);
+    expect((await payments(w))[0].student_id).toBe(id);
   }, 90000);
 
   it('administrador manda só o comprovante: o João responde com o que leu, sem chamar o modelo nem a equipe', async () => {
