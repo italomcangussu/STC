@@ -3,8 +3,8 @@
 Branch `feat/documentos-assinaturas` (PR #17). Leia primeiro `docs/assinaturas/OPERACAO_E_MIGRATIONS.md` e `.fabuloso/arquitetura.md`.
 
 ## Estado
-- Fase 1 (banco, bucket, RPCs, testes): pronta. Fase 2 (edge functions `signature-operations` e `signature-dispatch`): pronta no código, **não implantada**. Fase 3 (telas do sócio + link `#documentos/<id>`): pronta.
-- Faltam: **fase 4** (Painel Admin) e **fase 5** (recibo em PDF + lembretes agendados).
+- Fase 1 (banco, bucket, RPCs, testes): pronta. Fase 2 (edge functions `signature-operations` e `signature-dispatch`): pronta no código, **não implantada**. Fase 3 (telas do sócio + link `#documentos/<id>`): pronta. Fase 4 (Painel Admin, seção Documentos): pronta (ver `OPERACAO_E_MIGRATIONS.md` §9).
+- Faltam: **fase 5** (recibo em PDF + lembretes agendados), as **4 funções do banco** (§1) e **publicar as edge functions** (§2).
 
 ## 1. Banco (fazer antes de tudo)
 1. As migrations `supabase/migrations/2026100712*_signatures_*.sql` já foram aplicadas no projeto `smztsayzldjmkzmufqcz`, **exceto 4 funções com `delete from`** (o conector do Supabase trava nelas).
@@ -18,11 +18,9 @@ Branch `feat/documentos-assinaturas` (PR #17). Leia primeiro `docs/assinaturas/O
 - Segredos: `STC_PUBLIC_ORIGIN` (inclui `https://stcplay.com.br`); opcionais `STC_APP_URL`, `STC_GEOIP_URL`. UazAPI reutiliza a config de Conversas.
 - Agende o `signature-dispatch` com pg_cron (a cada 5–10 min).
 
-## 3. Fase 4 — Painel Admin (nova seção em `components/` do painel admin)
-- Upload de PDF (≤10 MB) para o bucket privado `sig-docs`, com SHA-256 (`lib/signatures/hash.ts`) e contagem de páginas (`lib/signatures/pdf.ts`).
-- Publicar com confirmação: chama a RPC de publicação e depois `dispatch` em laço até esvaziar a fila.
-- Status por sócio (assinou / pendente / falha de envio), reenviar falhas, arquivar, criar nova versão. Documento publicado é **imutável**.
-- Reuse `components/signatures/ui.tsx`, `lib/signatures/format.ts` e `documentErrorMessage`.
+## 3. Fase 4 — Painel Admin (pronta)
+Seção `documentos` no grupo Clube do painel (`components/signatures/admin/`, `lib/signatures/admin.ts`). Detalhes e decisões em `OPERACAO_E_MIGRATIONS.md` §9.
+Para o primeiro teste de ponta a ponta, **depois** de §1 e §2: publicar um documento só para um admin (modo "escolhidos"), conferir o WhatsApp, assinar e rodar "Conferir integridade".
 
 ## 4. Fase 5
 - Recibo em PDF com o dossiê (nome, telefone verificado, CPF declarado, IP/cidade, GPS se houver, hash, horários da jornada).

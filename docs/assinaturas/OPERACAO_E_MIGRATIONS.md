@@ -1,13 +1,13 @@
 # Documentos e Assinaturas — modelo, migrations e contrato com a edge function
 
-> **Estado (fase 3 de 5):** banco e funções testados num Postgres em memória (PGlite, `__tests__/signatures/sql/`,
+> **Estado (fase 4 de 5):** banco e funções testados num Postgres em memória (PGlite, `__tests__/signatures/sql/`,
 > 91 testes) **e aplicados no banco real (2026-10-07), exceto 4 funções** (ver §6). Edge functions
-> `signature-operations` (código + WhatsApp) e `signature-dispatch` (avisos e lembretes) **escritas e testadas, ainda NÃO
+> `signature-operations` (código + WhatsApp + despacho) e `signature-dispatch` (avisos e lembretes) **escritas e testadas, ainda NÃO
 > publicadas** (`__tests__/signatures/edge/`, 108 testes, incluindo um que liga a edge function ao SQL real).
-> **Telas do sócio prontas** (aba "Documentos e Assinaturas", leitor de PDF, aceite, CPF, folha do código, link `#documentos/<id>`,
-> selo de pendentes no menu): ver §8 (`__tests__/signatures/client/`, 12 arquivos). Falta o outro lado: o admin ainda não tem tela
-> para subir/publicar (fase 4); sem isso, o documento só nasce por SQL/RPC.
-> Fases seguintes: 4 Painel Admin · 5 comprovante em PDF e lembretes agendados.
+> **Telas do sócio prontas** (aba "Documentos e Assinaturas", ver §8) e **Painel Admin pronto** (seção "Documentos" em Clube: subir PDF,
+> publicar, acompanhar, reenviar falhas, prazo, nova versão, arquivar, integridade; ver §9). `__tests__/signatures/client/`, 14 arquivos.
+> **Enquanto as 4 funções do §6 não forem aplicadas no banco real, "Publicar" falha** (`sig_publish` não existe lá): o resto da tela funciona.
+> Fase seguinte: 5 comprovante em PDF e lembretes agendados (o código dos lembretes já existe; falta publicar a função e agendar o cron).
 
 ## 1. O que é
 
@@ -235,3 +235,36 @@ documento; botão e aceite desabilitados antes da leitura e depois de pular ao f
 `storage → viewed → read_started → read_completed → consent_checked → sig_save_my_cpf → request_code → confirm_code`; com permissão de
 GPS o pedido do código levou `{lat, lng, accuracy_m}` e `location: granted`; sem permissão, sem `geo`, `location: denied` e o aviso na folha;
 código errado mostrou "Restam 4 tentativas" e o certo assinou.
+
+## 9. Painel Admin (fase 4)
+
+Seção **Documentos** no grupo **Clube** do painel admin (`components/AdminPanel.tsx`, id `documentos`, carregada sob demanda). Código em
+`components/signatures/admin/` (`AdminDocuments`, `DocumentForm`, `DocumentDetail`) e `lib/signatures/admin.ts`. Só administrador: o
+banco confere o papel em cada função (esconder o botão não é a proteção).
+
+**Criar e publicar** (a ordem é a que o banco exige):
+
+| Passo | O que o app faz | Onde |
+|---|---|---|
+| 1. Escolher o PDF | confere cabeçalho `%PDF-`, ≤ 10 MB, abre no pdfjs (conta as páginas, 1…1000) e calcula o SHA-256 | `prepareFile` |
+| 2. Salvar rascunho | `sig_create_draft` (a linha e o caminho `<id>/<sha256>.pdf`) → **depois** envia o PDF ao bucket `sig-docs` (a política só aceita caminho de rascunho existente) → `sig_set_recipients` (só no modo "escolhidos") | `DocumentForm.persist` |
+| 3. Publicar | confirmação (nº de avisos, "não pode mais ser alterado", sócios sem telefone) → salva → `sig_publish` (enfileira 1 aviso por sócio) → `signature-operations` `dispatch` em voltas até `done` | `publishDocument`, `drainNotifications` |
+
+- **Falha no envio do PDF depois de criar o rascunho:** o rascunho fica; o próximo "Salvar" **atualiza o mesmo** (`sig_update_draft`), sem duplicar. Trocar o PDF muda o hash e o caminho; o arquivo antigo é apagado do bucket.
+- **Falha no despacho** (função de borda fora do ar ou WhatsApp sem configuração): o documento **continua publicado** e os avisos ficam na fila. A tela diz isso; saem pelo agendador (`signature-dispatch`) ou por "Enviar avisos agora".
+- **Prazo:** campo de data no calendário do clube; vira o fim daquele dia em Fortaleza (`23:59 −03:00`). Aceita a partir de hoje.
+- **Nova versão:** abre um rascunho com `replaces_id`; só ao **publicar** a versão anterior sai de circulação (as assinaturas dela continuam valendo e o sócio assina a nova).
+
+**Acompanhar** (`DocumentDetail`, usa `sig_admin_recipients` e a visão `sig_documents_overview`):
+
+- X de N assinaram, com barra; filtros Todos / Faltam / Assinaram; por sócio: assinou em… ou estado do aviso (enviado, na fila, falhou + motivo, sem telefone) e nº de lembretes.
+- **Reenviar N falhas** (`sig_resend_failed` + despacho), **Enviar N avisos agora** (despacho), **Prazo** (`sig_update_due`), **Incluir sócios** (`sig_add_recipients`, já avisa), **tirar da lista** só de quem não assinou (`sig_remove_recipient`), **Arquivar** (com confirmação; não reabre), **Ver PDF** (baixa do bucket com a política do admin), **Conferir integridade** (`sig_verify_integrity`: confere hash e cadeia de todas as assinaturas).
+- Rascunho: abre para edição; "Apagar rascunho" (`sig_delete_draft`, também remove o PDF). Documento publicado nunca é editado.
+
+**`dispatch` e o formato da resposta:** a borda responde `{ "summary": { configured, claimed, sent, failed, reminders, done } }`, **sem `ok`**
+(diferente de `request_code` e `confirm_code`). `dispatchNotifications` (`lib/signatures/api.ts`) trata isso à parte; `drainNotifications`
+repete até `done`, para se `configured` for falso ou se uma volta não reclamar nada, e nunca passa de 40 voltas.
+
+**Limites conhecidos:** CPF e telefone aparecem ao admin na lista (já eram visíveis a ele por RLS); "Ver PDF" abre o arquivo em nova aba (blob de 60 s);
+o formulário não permite trocar o público de um documento já publicado (use "Incluir sócios"); nada foi verificado no aparelho (login obrigatório).
+
