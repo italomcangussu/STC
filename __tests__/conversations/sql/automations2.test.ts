@@ -124,7 +124,7 @@ describe('envio manual: preparado, revisado, aprovado', () => {
     const w = await world();
     const a = await save(w, members({ name: 'Comunicado', trigger_type: 'manual', schedule: {} }));
     const t = await svc<any>(w.db, `public.conv_svc_automation_test_payload('${U.admin}', '${a.id}')`);
-    expect(t.phone).toBe('5585988880001');
+    expect(t.phone).toBe('5599900000001');
     expect(t.body).toMatch(/^\[TESTE/);
     await w.db.exec(`update public.profiles set phone = null where id = '${U.admin}'`);
     await expect(svc(w.db, `public.conv_svc_automation_test_payload('${U.admin}', '${a.id}')`)).rejects.toThrow(/ADMIN_WITHOUT_PHONE/);
