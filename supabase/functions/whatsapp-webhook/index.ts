@@ -24,6 +24,23 @@ const uaz = serverUrl && instanceToken ? uazCaller({ serverUrl, instanceToken })
 const waitUntil = (task) => { if (typeof EdgeRuntime !== 'undefined') EdgeRuntime.waitUntil(task); };
 
 // Push notifications para administradores (mensagens diretas de entrada, exceto grupos)
+async function processFinancialReceiptMedia(messageId: string) {
+  try {
+    const res = await fetch(`${url}/functions/v1/finance-receipt-whatsapp`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${secret}`,
+      },
+      body: JSON.stringify({ message_id: messageId }),
+      signal: AbortSignal.timeout(120000),
+    });
+    if (!res.ok) console.error('finance-receipt-whatsapp', res.status);
+  } catch (err) {
+    console.error('finance-receipt-whatsapp', err instanceof Error ? err.message : 'erro');
+  }
+}
+
 async function notifyAdminsPush(messageId: string) {
   try {
     const { data: msg, error } = await service
@@ -61,6 +78,9 @@ const recordDeps: RecordDeps = {
       }).catch((e) => console.error('ai-turn', e instanceof Error ? e.message : 'erro')),
       notifyAdminsPush(messageId),
     ]));
+  },
+  onMediaReady: (messageId) => {
+    waitUntil(processFinancialReceiptMedia(messageId));
   },
   store: async (path, fileUrl, mime) => {
     try {
