@@ -1663,6 +1663,11 @@ export function adminSuccessMessage(action: AdminAction, s: Ctx): string {
     return `Pronto: pendência lançada para ${s.member_name}, ${s.description}, ${centsBR(s.amount_cents)}.${envio}`;
   }
   if (action === 'fin_pendency_send') {
+    if (r.already) {
+      return r.already === 'sent'
+        ? `A cobrança de ${s.member_name} já foi enviada hoje às ${r.already_hhmm}. Não mandei de novo para não duplicar.`
+        : `A cobrança de ${s.member_name} já está na fila de envio. Não criei outra para não duplicar.`;
+    }
     return r.automation_recipient_id
       ? `Pronto: cobrança para ${s.member_name} na fila de envio.`
       : `Registrei o pedido, mas a cobrança de ${s.member_name} não entrou na fila (sem automação ativa ou sem telefone). Vale conferir em Conversas.`;
