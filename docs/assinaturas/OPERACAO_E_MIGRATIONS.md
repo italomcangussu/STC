@@ -1,8 +1,10 @@
 # Documentos e Assinaturas — modelo, migrations e contrato com a edge function
 
-> **Estado (fase 1 de 5):** banco, bucket e funções (RPC) escritos e testados num Postgres em memória
-> (PGlite, `__tests__/signatures/sql/`, 91 testes). **Ainda NÃO aplicado no banco real.**
-> Fases seguintes: 2 edge function (código + WhatsApp) · 3 telas do sócio · 4 Painel Admin · 5 comprovante em PDF.
+> **Estado (fase 2 de 5):** banco e funções testados num Postgres em memória (PGlite, `__tests__/signatures/sql/`,
+> 91 testes) **e aplicados no banco real (2026-10-07), exceto 4 funções** (ver §6). Edge functions
+> `signature-operations` (código + WhatsApp) e `signature-dispatch` (avisos e lembretes) **escritas e testadas, ainda NÃO
+> publicadas** (`__tests__/signatures/edge/`, 108 testes, incluindo um que liga a edge function ao SQL real).
+> Fases seguintes: 3 telas do sócio · 4 Painel Admin · 5 comprovante em PDF.
 
 ## 1. O que é
 
@@ -72,26 +74,90 @@ sócio   sig_my_documents → sig_log_event(viewed, read_started, read_completed
   `rate_limited`, `wrong_code` (+`attempts_left`), `locked`, `expired`, `superseded`, `failed`, `not_member`,
   `not_published`, `not_recipient`, `already_signed`, `not_found`.
 
-## 5. Contrato com a edge function (fase 2)
+## 5. Edge functions (fase 2)
 
-Só o `service_role` executa `sig_svc_*`. A edge function (a criar) faz:
+Só o `service_role` executa `sig_svc_*`. Quem fala com ele são duas funções de borda; a lógica fica em
+`supabase/functions/_shared/signature*.ts` (testável sem Deno) e os `index.ts` só ligam as pontas.
 
-1. **`request_code`** (JWT do sócio): gera 6 dígitos aleatórios seguros → `sig_svc_issue_challenge(profile, doc, code, evidence, ip, ua)`
-   → envia o texto pela UazAPI (`_shared/uazChat.ts`) → `sig_svc_mark_code_sent(challenge, provider_id, error)`.
-   `evidence` = `{geo:{lat,lng,accuracy_m}?, device:{timezone,language,screen,platform}?}` (opcional, validado no banco).
-2. **`confirm_code`**: `sig_svc_verify_code(challenge, profile, code, ip, ua, geo_do_ip, device)`.
-3. **Despachante** (agendado): `sig_svc_enqueue_reminders()` e depois, em laço, `sig_svc_claim_notifications(1)` →
-   monta a mensagem → envia **uma por vez com intervalo** (não derrubar a instância) → `sig_svc_finish_notification(id, sent, provider_id, error)`.
-   Falha volta à fila com espera de 5 e 10 min; na 3ª fica `failed` e o admin usa "Reenviar falhas".
-4. **Link do aviso:** `https://stcplay.com.br/#documentos/<id>` (domínio em configuração, não fixo no código).
+### `signature-operations` (exige JWT do usuário; confere o papel no banco)
 
-Texto do aviso de publicação e do código: ver fase 2. O aviso lembra que **o código só se digita no app**.
+| Ação | Quem | O que faz |
+|---|---|---|
+| `request_code` `{document_id, geo?, device?}` | sócio ativo ou admin | gera 6 dígitos (fonte criptográfica) → `sig_svc_issue_challenge` (só o **hash** fica no banco) → envia pelo WhatsApp **do cadastro** → `sig_svc_mark_code_sent`. Responde `{ok, challenge_id, phone_masked, expires_at}`. **O código nunca volta na resposta** |
+| `confirm_code` `{challenge_id, code, device?}` | sócio ativo ou admin | descobre a cidade pelo IP → `sig_svc_verify_code` → assinatura gravada. Responde `{ok, signature_id, signed_at, seq, replayed}` |
+| `dispatch` `{limit?}` | **só admin** | despacha agora a fila de avisos (o app chama logo após publicar, em voltas, até `done:true`) |
+
+Erros do usuário voltam como `{ok:false, reason}` com status HTTP (`wrong_code` 422 + `attempts_left`, `expired` 410,
+`locked` 423, `too_soon` 429 + `retry_in_seconds`, `rate_limited` 429, `cpf_required`/`read_required`/`consent_required` 409,
+`no_phone`/`invalid_phone` 422, `whatsapp_unavailable` 503, `send_failed` 502…). Exceção do banco vira `{error:'REJECTED'}`
+(nunca a mensagem crua do Postgres). Quem assina é sempre o dono do **token**; perfil ou telefone no corpo são ignorados.
+
+### `signature-dispatch` (sem JWT; autorizada pelo cabeçalho `x-dispatch-secret`, o mesmo de `conversations-dispatch`)
+
+Agendada a cada 5 min: `sig_svc_enqueue_reminders()` (3 dias antes e no dia do prazo, só para quem não assinou) e depois,
+**um aviso por vez** com intervalo aleatório de 1,5–3,5 s (não derrubar a instância), `sig_svc_claim_notifications(1)` →
+monta o texto → UazAPI → `sig_svc_finish_notification`. Falha volta à fila com espera de 5 e 10 min; na 3ª fica `failed`
+e o admin usa "Reenviar falhas". Sem WhatsApp configurado não pega nada da fila (não gasta tentativa).
+
+### Mensagens (`signatureMessages.ts`)
+
+- **Publicação / sócio novo:** título, prazo, **link `https://stcplay.com.br/#documentos/<id>`** e 4 passos (abrir o link ou
+  a aba *Documentos e Assinaturas*; ler até o fim; marcar *Li e concordo* e *Assinar digitalmente*; digitar o código de 6 dígitos).
+- **Lembretes:** "faltam 3 dias" e "hoje é o último dia (até HH:mm)", com o mesmo passo a passo.
+- **Código:** o número sozinho em uma linha (dá para copiar), validade de 10 min.
+- Todas dizem que **o código só se digita no app e não se passa a ninguém**. O link só leva ao app (exige login); quem assina é o código.
+- O telefone do cadastro (DDD + número) ganha o DDI `55` no envio, na mesma regra de `lib/phoneAuth.ts`.
+
+### Cidade aproximada pelo IP
+
+O IP é gravado sempre. A cidade é um complemento: consulta a um serviço de localização por IP (padrão `https://ipwho.is/{ip}`,
+HTTPS, sem chave), com 2,5 s de limite e cache; **falha ou IP privado = assinatura segue só com o IP**. Não usamos cabeçalhos
+de localização do Cloudflare (sem a regra ligada eles viriam do próprio cliente). ⚠️ Isto envia o **IP do sócio a um serviço
+de terceiros**; para desligar, `STC_GEOIP_URL=off`; para trocar de serviço, `STC_GEOIP_URL=https://…/{ip}`.
+
+### Segredos (Supabase → Edge Functions → Secrets)
+
+| Nome | Para quê | Obrigatório |
+|---|---|---|
+| `UAZAPI_SERVER_URL`, `STC_UAZAPI_INSTANCE_TOKEN` | WhatsApp do clube (**já existem** por causa de Conversas) | sim |
+| `STC_PUBLIC_ORIGIN` | origem(ns) do app permitidas (CORS). **Precisa incluir `https://stcplay.com.br`** | sim |
+| `STC_DISPATCH_SECRET` | segredo (≥ 24 caracteres) do agendador (**já existe** se Conversas está agendada) | sim, para lembretes |
+| `STC_APP_URL` | endereço do app no link das mensagens | não (padrão `https://stcplay.com.br`) |
+| `STC_GEOIP_URL` | serviço de cidade por IP, com `{ip}`; `off` desliga | não |
+
+### Publicar as funções e agendar
+
+```bash
+supabase functions deploy signature-operations                  # exige JWT do usuário
+supabase functions deploy signature-dispatch --no-verify-jwt    # autorização: cabeçalho x-dispatch-secret
+```
+
+```sql
+-- troque os dois valores entre <>; não versione o resultado (mesmo molde de conversations-dispatch)
+select cron.schedule('signature-dispatch', '*/5 * * * *', $$
+  select net.http_post(
+    url := 'https://<ref>.supabase.co/functions/v1/signature-dispatch',
+    headers := jsonb_build_object('x-dispatch-secret', '<STC_DISPATCH_SECRET>', 'content-type', 'application/json'),
+    body := '{}'::jsonb);
+$$);
+```
+
+**Teste de fumaça depois de publicar** (nessa ordem): (1) publicar um documento de teste só para o admin → chega o WhatsApp com o
+link e o passo a passo; (2) ler, aceitar, pedir o código → chega o código; (3) código errado → "tentativas restantes"; (4) código
+certo → assinatura gravada e `sig_verify_integrity` com `ok: true`; (5) repetir o disparo → nada é enviado de novo.
 
 ## 6. Aplicar no banco real
 
-Só com autorização do clube (como o financeiro). Recomendado: aplicar as 3 migrations em ordem, registrando-as em
-`supabase_migrations.schema_migrations` com as mesmas versões dos arquivos, e depois conferir `get_advisors` (segurança)
-e rodar o teste de fumaça dentro de transação que reverte.
+**Situação (2026-10-07, com autorização do clube):** migrations **1 e 3 aplicadas por inteiro** e registradas em
+`supabase_migrations.schema_migrations`. A **2 foi aplicada sem 4 funções** — `sig_set_recipients`, `sig_delete_draft`,
+`sig_publish` e `sig_remove_recipient` — porque o conector Supabase usado pelo assistente **trava (sem erro do banco) em
+qualquer SQL com `delete from`** (a sessão não consegue dar a confirmação que ele espera). Não contornamos o filtro: o trecho
+literal está em **`docs/assinaturas/PENDENTE_funcoes_com_delete.sql`**. **Rode esse arquivo inteiro, uma vez, no SQL Editor
+do Supabase.** Ele cria as 4 funções, refaz as permissões e registra a migration 2 (`20261007120100`).
+**Sem `sig_publish` nenhum documento pode ser publicado.**
+
+Depois de rodar: conferir `get_advisors` (segurança) e, dentro de uma transação que reverte, um teste de fumaça
+(rascunho → arquivo → publicar → assinar).
 
 **Desfazer** (nada é apagado de dado existente): `drop schema sig_private cascade; drop table public.sig_* cascade;
 drop function public.sig_*; drop trigger sig_profiles_new_member on public.profiles; delete from storage.buckets where id = 'sig-docs'`
@@ -100,6 +166,6 @@ drop function public.sig_*; drop trigger sig_profiles_new_member on public.profi
 ## 7. Limites conhecidos
 
 - A leitura até o fim e o aceite são informados pelo aparelho (mitigação: hora do servidor, ordem obrigatória, tempo de leitura, páginas).
-- O IP vem do cabeçalho do gateway (`cf-connecting-ip`, `x-real-ip` ou o 1º de `x-forwarded-for`); "cidade aproximada" depende de consulta de IP na fase 2.
+- O IP vem do cabeçalho do gateway (`cf-connecting-ip`, `x-real-ip` ou o 1º de `x-forwarded-for`); a "cidade aproximada" vem de um serviço de terceiros e pode faltar (o IP fica gravado de qualquer jeito).
 - CPF fica em texto no banco (criptografia em repouso é a do Supabase) e é visível ao próprio sócio e ao admin. Base legal e finalidade devem constar no termo.
 - Mensagem de WhatsApp pode não chegar mesmo com "enviado" (número trocado, aparelho desligado): por isso o admin acompanha quem não assinou.
