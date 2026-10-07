@@ -6,6 +6,7 @@ import { recordInbound, type RecordDeps } from './record.ts';
 import { buildAdminPush } from './pushNotify.ts';
 import { chatClient } from '../_shared/aiAgent/llm.ts';
 import { runTurn } from '../_shared/aiAgent/turn.ts';
+import { groqTranscriber } from '../_shared/audioTranscription.ts';
 
 const url = Deno.env.get('SUPABASE_URL');
 const secret = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_SECRET_KEY');
@@ -21,6 +22,12 @@ const MAX_MEDIA_BYTES = 16 * 1024 * 1024;
 const aiKey = Deno.env.get('STC_AI_API_KEY');
 const aiChat = aiKey ? chatClient({ apiKey: aiKey, baseUrl: Deno.env.get('STC_AI_BASE_URL') }) : null;
 const uaz = serverUrl && instanceToken ? uazCaller({ serverUrl, instanceToken }) : null;
+// Áudio → texto (Whisper no Groq). Sem a chave, o áudio segue sem transcrição e a equipe escuta.
+const groqKey = Deno.env.get('GROQ_API_KEY');
+const transcriber = groqKey ? groqTranscriber({
+  apiKey: groqKey,
+  models: (Deno.env.get('STC_TRANSCRIBE_MODELS') ?? '').split(',').map((x) => x.trim()).filter(Boolean),
+}) : null;
 const waitUntil = (task) => { if (typeof EdgeRuntime !== 'undefined') EdgeRuntime.waitUntil(task); };
 
 // Push notifications para administradores (mensagens diretas de entrada, exceto grupos)
@@ -106,6 +113,22 @@ const recordDeps: RecordDeps = {
       payload: { conversationId: conv.data.id, state: payload.state, at: payload.at } });
   },
   background: waitUntil,
+  transcribe: transcriber ? async ({ conversationId, path, mime, contactName, institutionalName }) => {
+    const file = await service.storage.from(MEDIA_BUCKET).download(path);
+    if (file.error || !file.data) return { status: 'failed', reason: 'download_bucket' };
+    // A última fala do clube na conversa orienta o Whisper ("Confirma a quadra 2?" → "sim, a 2").
+    const last = conversationId
+      ? await service.from('conv_messages').select('body').eq('conversation_id', conversationId).eq('direction', 'outbound')
+        .is('deleted_at', null).order('created_at', { ascending: false }).limit(1).maybeSingle()
+      : null;
+    return transcriber({
+      bytes: new Uint8Array(await file.data.arrayBuffer()),
+      mime,
+      fileName: path.split('/').pop() || 'audio.ogg',
+      previous: last?.data?.body ?? null,
+      names: [contactName, institutionalName],
+    });
+  } : undefined,
 };
 
 Deno.serve((request) => handleWhatsappWebhook(request, {

@@ -12,6 +12,7 @@
 import { parseUazWebhook } from '../_shared/uazWebhook.ts';
 import { buildChatRequest, inboundMediaPath, type UazCaller } from '../_shared/uazChat.ts';
 import { classifyMention, mentionId } from '../_shared/groupMention.ts';
+import type { Transcription } from '../_shared/audioTranscription.ts';
 import type { ChannelDelivery } from './handler.ts';
 
 type RpcResult = { data: unknown; error: { message: string } | null };
@@ -29,6 +30,8 @@ export type RecordDeps = {
   onMediaReady?(messageId: string): void;
   /** Tarefas assíncronas em segundo plano (retry de decifração, etc). */
   background?(task: Promise<unknown>): void;
+  /** Áudio de entrada já guardado em `path` → texto (Whisper). Sem isto, o áudio segue como hoje. */
+  transcribe?(input: { messageId: string; conversationId: string | null; path: string; mime: string; contactName: string; institutionalName: string }): Promise<Transcription>;
 };
 
 type Ingested = { message_id?: string; conversation_id?: string; duplicate?: boolean; ignored?: string; group_status?: string; from_me?: boolean };
@@ -58,21 +61,21 @@ export async function recordInbound(payload: Record<string, unknown>, channel: C
       const specializedMedia = m.hasMedia
         && (m.kind === 'image' || m.kind === 'document')
         && (!m.body || m.body === '📷 Foto' || m.body === '📄 Documento' || receiptCaption);
-      if (!m.fromMe && out.message_id && !specializedMedia) deps.onInbound?.(out.message_id);
-      if (m.hasMedia && deps.uaz && out.message_id) {
-        const pedido = buildChatRequest({ action: 'download', messageId: m.providerId });
-        const baixado = pedido ? await deps.uaz(pedido) : null;
-        const url = baixado?.ok ? String(baixado.body.fileURL ?? baixado.body.fileUrl ?? '') : '';
-        if (url) {
-          const mime = String(baixado?.ok ? baixado.body.mimetype ?? m.mime : m.mime) || 'application/octet-stream';
-          const path = inboundMediaPath(out.message_id, m.providerId, mime);
-          if (await deps.store(path, url, mime)) {
-            await deps.rpc('conv_svc_set_message_media', { p_provider_id: m.providerId, p_path: path, p_mime: mime });
-            deps.onMediaReady?.(out.message_id);
-            return 'mensagem_com_midia';
-          }
+      // Áudio para o João: a IA só é acionada depois da transcrição (ou da tentativa), para ler o que foi dito.
+      // No grupo, só o áudio que pode ser com ele (menção ou resposta): o resto do papo não sai do clube.
+      const listen = !m.fromMe && (m.kind === 'audio' || m.kind === 'ptt') && m.hasMedia && Boolean(deps.uaz && deps.transcribe)
+        && (m.chat.kind !== 'group' || verdict.direct || Boolean(m.replyTo));
+      if (!m.fromMe && out.message_id && !specializedMedia && !listen) deps.onInbound?.(out.message_id);
+      if (listen && out.message_id) {
+        const messageId = out.message_id;
+        try {
+          return await storeMedia(m, messageId, deps, (path, mime) => transcribeAndSave(messageId, out.conversation_id ?? null, path, mime, m.name, channel, deps));
+        } finally {
+          deps.onInbound?.(messageId);
         }
-        return 'mensagem_midia_pendente';
+      }
+      if (m.hasMedia && deps.uaz && out.message_id) {
+        return storeMedia(m, out.message_id, deps);
       }
       if (m.body?.includes('[Undecryptable]') && deps.uaz && deps.background) {
         deps.background((async () => {
@@ -131,5 +134,46 @@ export async function recordInbound(payload: Record<string, unknown>, channel: C
       // Evento desconhecido/inválido: nada é enviado a ninguém; fica um registro curto (sem conteúdo).
       if (!['evento_connection', 'status_irrelevante', 'enviada_pela_api', 'presenca_invalida'].includes(evento.reason)) await log('ignorado', evento.reason);
       return evento.reason;
+  }
+}
+
+type Incoming = { providerId: string; mime: string | null };
+
+/** Pede o arquivo já decifrado, guarda no bucket e liga à mensagem. `ready` roda com a mídia no lugar. */
+async function storeMedia(m: Incoming, messageId: string, deps: RecordDeps, ready?: (path: string, mime: string) => Promise<void>): Promise<string> {
+  const pedido = deps.uaz ? buildChatRequest({ action: 'download', messageId: m.providerId }) : null;
+  const baixado = pedido && deps.uaz ? await deps.uaz(pedido) : null;
+  const url = baixado?.ok ? String(baixado.body.fileURL ?? baixado.body.fileUrl ?? '') : '';
+  if (url) {
+    const mime = String(baixado?.ok ? baixado.body.mimetype ?? m.mime : m.mime) || 'application/octet-stream';
+    const path = inboundMediaPath(messageId, m.providerId, mime);
+    if (await deps.store(path, url, mime)) {
+      await deps.rpc('conv_svc_set_message_media', { p_provider_id: m.providerId, p_path: path, p_mime: mime });
+      deps.onMediaReady?.(messageId);
+      if (ready) await ready(path, mime);
+      return 'mensagem_com_midia';
+    }
+  }
+  if (ready) await saveTranscription(messageId, { status: 'failed', reason: 'midia_indisponivel' }, deps);
+  return 'mensagem_midia_pendente';
+}
+
+async function transcribeAndSave(messageId: string, conversationId: string | null, path: string, mime: string, contactName: string,
+  channel: ChannelDelivery, deps: RecordDeps): Promise<void> {
+  let result: Transcription;
+  try {
+    result = await deps.transcribe!({ messageId, conversationId, path, mime, contactName, institutionalName: channel.institutional_name });
+  } catch {
+    result = { status: 'failed', reason: 'erro_transcricao' };
+  }
+  await saveTranscription(messageId, result, deps);
+}
+
+async function saveTranscription(messageId: string, t: Transcription, deps: RecordDeps): Promise<void> {
+  const r = await Promise.resolve(deps.rpc('conv_svc_set_message_transcription', { p_message: messageId, p: t })).catch(() => null);
+  // Só o desfecho vai para o registro do webhook, nunca o que foi dito.
+  if (t.status !== 'ok' || !r || r.error) {
+    await Promise.resolve(deps.rpc('conv_svc_log_webhook', { p_event: 'message', p_outcome: `audio_${t.status}`, p_detail: r?.error ? 'erro_ao_gravar' : t.reason ?? null }))
+      .catch(() => undefined);
   }
 }

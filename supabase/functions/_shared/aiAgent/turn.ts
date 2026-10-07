@@ -15,6 +15,7 @@
 
 import { extrairObjeto, repararJson, stripCodeFence } from './jsonRepair.ts';
 import type { Chat } from './llm.ts';
+import { hearAudios, unheardOnly, UNCLEAR_AUDIO_REPLY } from './audio.ts';
 import { adminPendencyRefs, isAdminAssistant, systemPrompt, userPrompt, type AiSettings, type Ctx } from './prompts.ts';
 import { buildChatRequest, providerIdFrom, uazError, type UazCaller } from '../uazChat.ts';
 
@@ -1005,6 +1006,8 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
     ctx.transcript = ((ctx.transcript ?? []) as Ctx[]).map((t) => ({ ...t, body: substituirMencoes(String(t.body ?? ''), mencoes, conta) }));
     if (isGroup) ctx.group_context = ((ctx.group_context ?? []) as Ctx[]).map((t) => ({ ...t, body: substituirMencoes(String(t.body ?? ''), mencoes, conta) }));
   }
+  // Áudio: o João lê o que foi dito (transcrição do webhook), esperando um pouco pelo que ainda está chegando.
+  ctx.transcript = await hearAudios((ctx.transcript ?? []) as Ctx[], deps);
   const trail = ((ctx.transcript ?? []) as Ctx[]).slice().reverse();
   const ultimaDaIa = trail.findIndex((t) => t.direction === 'outbound');
   const pendentes = (ultimaDaIa < 0 ? trail : trail.slice(0, ultimaDaIa)).filter((t) => t.direction === 'inbound').reverse();
@@ -1091,6 +1094,14 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
   if (!deps.chat || !settings.model) return transferir('hard', 'Agente de IA sem provedor ou modelo configurado.', null, false);
   if (Number(ctx.session?.turns ?? 0) >= settings.max_turns) return transferir('hard', `Atendimento passou de ${settings.max_turns} turnos com a IA sem concluir.`, null);
   if (wantsHuman(buffered, settings.handoff_keywords ?? [])) return transferir('hard', 'A pessoa pediu atendimento humano.', null);
+  const naoOuvido = unheardOnly(pendentes);
+  if (naoOuvido === 'failed' && !isGroup) return transferir('hard', 'Chegou áudio e a transcrição automática falhou; ouça na conversa.', null);
+  if (naoOuvido) {
+    // Ruído/silêncio/fala inaudível: pedir de novo é o que um atendente faria, sem chamar o modelo nem a equipe.
+    const sent = await entregar(cadence([UNCLEAR_AUDIO_REPLY]));
+    await save((ctx.session?.memory ?? {}) as Memory, 'audio_unclear', { bubbles: sent }, true, false);
+    return { status: 'replied', bubbles: sent, handoff: null, action: 'audio_unclear' } as TurnResult;
+  }
   if (soMidia && !isGroup) return transferir('hard', `Chegou ${[...new Set(pendentes.map((t) => t.kind))].join(', ')} sem texto; a IA não lê mídia.`, null);
 
   const memory = (ctx.session?.memory ?? {}) as Memory;

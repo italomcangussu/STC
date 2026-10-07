@@ -24,6 +24,29 @@ const STATUS_LABEL: Record<MessageStatus, string> = {
   queued: 'Enviando', sent: 'Enviada', delivered: 'Entregue', read: 'Lida', failed: 'Não enviada', received: 'Recebida',
 };
 
+type AudioHeard = { status?: string; text?: string; low_confidence?: boolean };
+
+/** Transcrição automática do áudio recebido (feita no servidor). `null` = não há o que mostrar. */
+export function audioTranscription(m: Pick<ConversationMessage, 'kind' | 'direction' | 'meta'>): AudioHeard | null {
+  if ((m.kind !== 'audio' && m.kind !== 'ptt') || m.direction !== 'inbound') return null;
+  const t = m.meta?.transcription as AudioHeard | undefined;
+  return t && typeof t === 'object' && (t.status === 'ok' || t.status === 'unclear') ? t : null;
+}
+
+function Transcricao({ t }: { t: AudioHeard }) {
+  if (t.status !== 'ok' || !t.text) {
+    return <span className="text-xs italic text-slate-500">Transcrição: não deu para entender o áudio</span>;
+  }
+  return (
+    <div className="rounded-lg bg-white/50 px-2 py-1.5">
+      <span className="block text-[11px] font-semibold uppercase tracking-wide text-emerald-900/60">
+        Transcrição{t.low_confidence ? ' · pode ter erros' : ''}
+      </span>
+      <p className="whitespace-pre-wrap break-words text-sm text-slate-800">{t.text}</p>
+    </div>
+  );
+}
+
 function StatusIcon({ status, pending }: { status: MessageStatus; pending?: boolean }) {
   if (pending || status === 'queued') return <Clock className="h-3 w-3 text-gray-400" aria-hidden />;
   if (status === 'failed') return <AlertTriangle className="h-3 w-3 text-red-500" aria-hidden />;
@@ -127,7 +150,10 @@ function MessageBubble({ message: m, mediaUrl, highlight, canWrite, isGroup, ...
   const apagada = Boolean(m.deletedAt);
   const isUndecryptable = !apagada && Boolean(m.body?.includes('[Undecryptable]'));
   const failed = m.status === 'failed' && !m.pending;
-  const blocks = useMemo(() => parseWhatsAppTextBlocks(apagada || isUndecryptable ? '' : m.body || ''), [m.body, apagada, isUndecryptable]);
+  const ouvido = apagada ? null : audioTranscription(m);
+  // Com transcrição, o rótulo "🎤 Áudio" sob o player só repetiria o óbvio.
+  const textoVisivel = apagada || isUndecryptable || (ouvido && /^🎤\s*Áudio$/u.test((m.body ?? '').trim())) ? '' : m.body || '';
+  const blocks = useMemo(() => parseWhatsAppTextBlocks(textoVisivel), [textoVisivel]);
   const quando = hora.format(new Date(m.sentAt || m.createdAt));
   const temMidia = m.kind !== 'text' && m.kind !== 'other';
   const url = m.localUrl ?? mediaUrl ?? null;
@@ -254,6 +280,7 @@ function MessageBubble({ message: m, mediaUrl, highlight, canWrite, isGroup, ...
                 </div>
               )}
               {temMidia && <Midia m={m} url={url} isOutbound={isOutbound} onOpenImage={acoes.onOpenImage} />}
+              {ouvido && <Transcricao t={ouvido} />}
               {blocks.length > 0 && (
                 <div className="space-y-1 break-words">{renderWhatsAppTextBlocks(blocks, { tone: isOutbound ? 'agent' : 'customer' })}</div>
               )}
