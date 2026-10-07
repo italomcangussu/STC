@@ -35,7 +35,8 @@ function iso(y:number,m:number,d:number):string|null{
   return `${String(y).padStart(4,'0')}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
 }
 
-function parseReceiptText(text:string):Record<string,unknown>{
+/** Exportado só para teste: o texto bruto nunca sai daqui, só os campos estruturados. */
+export function parseReceiptText(text:string):Record<string,unknown>{
   const lines=text.replace(/\u00a0/g,' ').split(/\r?\n/).map(x=>x.trimEnd()).filter(x=>x.trim());
   const amounts:{value:number;priority:number}[]=[];
   lines.forEach((raw,idx)=>{
