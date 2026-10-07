@@ -1,5 +1,5 @@
 -- Push Subscriptions: Múltiplos dispositivos por usuário (mobile + desktop) e suporte a notificações para administradores
--- Migration: 20261007120000_push_subscriptions_multi_device_and_admin_notify.sql
+-- Migration: 20261007130000_push_subscriptions_multi_device_and_admin_notify.sql
 
 -- 1. Remove restrição de um único dispositivo por usuário para permitir notificações tanto no celular quanto no computador
 DO $$

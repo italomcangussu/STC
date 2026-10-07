@@ -2,8 +2,9 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 import webpush from 'npm:web-push'
 
-const VAPID_PUBLIC_KEY = Deno.env.get('VAPID_PUBLIC_KEY') || Deno.env.get('VITE_VAPID_PUBLIC_KEY') || 'BLnOCELBk2YT3FlawO9KimRA0lrWRMO98zFzttXdrK6L_lW9yUXTvsVHZWEPKKtle1jSPwlPU3e97w6qT06p8qQ'
-const VAPID_PRIVATE_KEY = Deno.env.get('VAPID_PRIVATE_KEY') || 'H-woFjW3qgPezjgtgyYVe8MAEpbHwq0htW3PibITtAs'
+const VAPID_PUBLIC_KEY = Deno.env.get('VAPID_PUBLIC_KEY') || Deno.env.get('VITE_VAPID_PUBLIC_KEY') || ''
+const VAPID_PRIVATE_KEY = Deno.env.get('VAPID_PRIVATE_KEY') || ''
+if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) throw new Error('Missing VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY secrets')
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? ''
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 
@@ -103,8 +104,8 @@ Deno.serve(async (req) => {
             } catch (error) {
                 console.error('Error sending push:', error)
 
-                // If subscription is invalid (404 or 410), delete it
-                if (error.statusCode === 404 || error.statusCode === 410) {
+                // Assinatura expirada (404/410) ou criada com outra chave VAPID (401/403): descarta, o app refaz
+                if ([401, 403, 404, 410].includes(error.statusCode)) {
                     await supabase.from('push_subscriptions').delete().eq('id', sub.id)
                     results.push({ id: sub.id, status: 'deleted' })
                 } else {

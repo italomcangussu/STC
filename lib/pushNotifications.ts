@@ -6,7 +6,7 @@ import { supabase } from './supabase';
 // VAPID public key - loaded from environment with secure fallback
 const VAPID_PUBLIC_KEY =
     import.meta.env.VITE_VAPID_PUBLIC_KEY ||
-    'BLnOCELBk2YT3FlawO9KimRA0lrWRMO98zFzttXdrK6L_lW9yUXTvsVHZWEPKKtle1jSPwlPU3e97w6qT06p8qQ';
+    'BA0QCMSR---YCCKzmIrtMpLEA7KADTzPc86aByzs_wBzGWhMovamWZoWoiz6piVmOFLsrGUttlD_Y7ql0rqQXEk';
 
 export interface PushSubscriptionData {
     endpoint: string;
@@ -129,6 +129,12 @@ export async function subscribeToPush(userId?: string): Promise<PushSubscription
         // Check if already subscribed
         let subscription = await registration.pushManager.getSubscription();
 
+        // Assinatura criada com outra chave VAPID (antes da rotação) nunca recebe push: refaz.
+        if (subscription && !subscriptionUsesCurrentKey(subscription)) {
+            await subscription.unsubscribe();
+            subscription = null;
+        }
+
         if (!subscription) {
             // Subscribe with VAPID key
             const convertedKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
@@ -201,10 +207,17 @@ export async function isSubscribed(): Promise<boolean> {
     try {
         const registration = await navigator.serviceWorker.ready;
         const subscription = await registration.pushManager.getSubscription();
-        return subscription !== null;
+        return subscription !== null && subscriptionUsesCurrentKey(subscription);
     } catch {
         return false;
     }
+}
+
+// Helper: a assinatura só funciona se foi criada com a chave VAPID pública atual
+function subscriptionUsesCurrentKey(subscription: PushSubscription): boolean {
+    const atual = subscription.options?.applicationServerKey;
+    if (!atual) return true;
+    return arrayBufferToBase64(atual).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '') === VAPID_PUBLIC_KEY;
 }
 
 // Helper: Convert VAPID key to Uint8Array

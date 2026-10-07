@@ -14,6 +14,7 @@ COPY . ./
 # Build args for Vite env vars (passed at build time)
 ARG VITE_SUPABASE_URL
 ARG VITE_SUPABASE_ANON_KEY
+ARG VITE_VAPID_PUBLIC_KEY
 ARG VITE_ENV=production
 ARG GEMINI_API_KEY
 
