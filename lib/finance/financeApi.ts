@@ -125,6 +125,9 @@ export async function listRecurrences(): Promise<FinRecurrence[]> {
 }
 export const saveRecurrence = (id: string | null, version: number | null, data: Record<string, unknown>, applyFrom: IsoDate | null, requestId = newRequestId()) =>
   call<{ id: string }>('fin_save_recurrence', { p_request_id: requestId, p_id: id, p_expected_version: version, p_data: data, p_apply_from: applyFrom });
+/** Apaga o modelo da recorrência: o pendente sem pagamento é cancelado e o que já foi pago fica como lançamento avulso. */
+export const deleteRecurrence = (id: string, version: number, requestId = newRequestId()) =>
+  call<{ id: string; canceled: number; kept: number }>('fin_delete_recurrence', { p_request_id: requestId, p_id: id, p_expected_version: version, p_data: {} });
 export const generateRecurrences = (requestId = newRequestId()) => call<{ created: number }>('fin_generate_recurrences', { p_request_id: requestId, p_until: null });
 
 export interface AttachmentRow { id: string; entry_id: string; storage_path: string; file_name: string; content_type: string; size_bytes: number; uploaded_at: string; removed_at: string | null }

@@ -108,7 +108,7 @@ export async function newDb(opts: { only?: string[] } = {}): Promise<PGlite> {
   await db.exec(BASE);
   // Auditoria real do STC (cria admin_audit_logs e admin_audit_insert_log).
   await db.exec(await readFile(resolve(MIGRATIONS, '20260427134500_admin_audit_logs.sql'), 'utf8'));
-  const files = (await readdir(MIGRATIONS)).filter((f) => /^202610061\d{5}_finance_.*\.sql$/.test(f)).sort();
+  const files = (await readdir(MIGRATIONS)).filter((f) => /^2026100[67]\d{6}_finance_.*\.sql$/.test(f)).sort();
   for (const f of files) {
     if (opts.only && !opts.only.some((o) => f.includes(o))) continue;
     try {

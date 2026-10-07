@@ -1,5 +1,5 @@
 # Funções
-> 366 funções nos schemas conv_private, fin_private, public, sig_private. Corpo completo sob demanda: `select pg_get_functiondef('<schema.nome>(<args>)'::regprocedure)`.
+> 369 funções nos schemas conv_private, fin_private, public, sig_private. Corpo completo sob demanda: `select pg_get_functiondef('<schema.nome>(<args>)'::regprocedure)`.
 
 | Função | Argumentos | Retorno | Ling. | Segurança | anon | Nota |
 |---|---|---|---|---|---|---|
@@ -135,6 +135,7 @@
 | fin_private.is_active_member | `p_profile uuid` | `boolean` | sql | DEFINER | sim |  |
 | fin_private.is_business_day | `p_date date` | `boolean` | sql | invoker | sim |  |
 | fin_private.no_delete | — | `trigger` | plpgsql | invoker | sim |  |
+| fin_private.no_delete_recurrence | — | `trigger` | plpgsql | invoker | sim |  |
 | fin_private.on_profile_membership_change | — | `trigger` | plpgsql | DEFINER | sim |  |
 | fin_private.recurrence_due_date | `p_competence date, p_day integer, p_offset integer` | `date` | sql | invoker | sim |  |
 | fin_private.refresh_charge_status | `p_charge uuid` | `text` | plpgsql | DEFINER | sim |  |
@@ -252,6 +253,7 @@
 | public.fin_create_entry | `p_request_id uuid, p_data jsonb` | `jsonb` | plpgsql | DEFINER | não |  |
 | public.fin_create_member_plan | `p_request_id uuid, p_data jsonb` | `jsonb` | plpgsql | DEFINER | não |  |
 | public.fin_day_card_rows | `p_from date, p_to date` | `TABLE(reservation_id uuid, occurred_on date, guest_name tex…` | plpgsql | DEFINER | não |  |
+| public.fin_delete_recurrence | `p_request_id uuid, p_id uuid, p_expected_version integer, p_data jsonb` | `jsonb` | plpgsql | DEFINER | não |  |
 | public.fin_dre_detail | `p_from date, p_to date, p_category uuid` | `TABLE(category_id uuid, category_name text, source_type tex…` | plpgsql | DEFINER | não |  |
 | public.fin_dre_lines | `p_from date, p_to date` | `TABLE(period text, line text, category_id uuid, name text, …` | plpgsql | DEFINER | não |  |
 | public.fin_dre_memo | `p_from date, p_to date` | `TABLE(contributions_cents bigint, withdrawals_cents bigint)` | plpgsql | DEFINER | não |  |
@@ -287,6 +289,7 @@
 | public.fin_update_member_plan | `p_request_id uuid, p_plan_id uuid, p_expected_version integer, p_data jsonb` | `jsonb` | plpgsql | DEFINER | não |  |
 | public.finish_championship | `p_championship_id uuid` | `jsonb` | plpgsql | DEFINER | sim |  |
 | public.get_active_user_points | — | `TABLE(user_id uuid, total_points bigint)` | plpgsql | invoker | sim |  |
+| public.get_admin_push_subscriptions | — | `TABLE(id uuid, user_id uuid, endpoint text, keys jsonb)` | sql | DEFINER | não | Retorna todas as assinaturas push ativas dos administradores do clube |
 | public.get_championship_phase_points | `p_phase text` | `integer` | sql | DEFINER ⚠ sem search_path | sim |  |
 | public.get_form_live_results | `p_form_id uuid` | `jsonb` | plpgsql | DEFINER | sim |  |
 | public.get_group_standings | `p_group_id uuid` | `TABLE(standing_position integer, registration_id uuid, poin…` | sql | DEFINER | sim |  |

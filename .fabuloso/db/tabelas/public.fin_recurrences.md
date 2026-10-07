@@ -53,8 +53,8 @@
 - "fin_recurrences_no_update" — UPDATE para anon, authenticated · using `false` · check `false`
 
 ## Gatilhos
-- fin_recurrences_audit — AFTER INSERT OR UPDATE → fin_private.audit_row()
-- fin_recurrences_no_delete — BEFORE DELETE → fin_private.no_delete()
+- fin_recurrences_audit — AFTER INSERT OR DELETE OR UPDATE → fin_private.audit_row()
+- fin_recurrences_no_delete — BEFORE DELETE → fin_private.no_delete_recurrence()
 
 ## Grants
 - anon: — · authenticated: s (s=select i=insert u=update d=delete)
