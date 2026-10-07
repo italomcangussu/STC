@@ -87,9 +87,9 @@ Prioridade: **A** alta (valor diário), **B** média, **C** baixa. Risco: N0–N
 - **Onda 4 — proativo:** resumo diário/semanal enviado ao administrador (fechamento de caixa, inadimplência, comprovantes parados, documentos vencendo), alertas por regra (saldo abaixo do mínimo, cobrança vencida há N dias). Usa o motor de automações que já existe.
 - **Onda 5 — memória e inteligência:** preferências do administrador (formato do relatório, contas padrão), comparativos mês a mês, "por que a receita caiu?", sugestão de ação com confirmação.
 
-## 5. Decisões que são suas
-1. **Quem é "administrador" para o João?** Hoje é `is_admin` do telefone vinculado. Haverá níveis (ex.: tesoureiro só financeiro, secretário só pessoas)? Recomendo permissões por domínio desde a Onda 0.
-2. **O que é N3 (nunca por chat)?** Proposta: apagar qualquer coisa, reset de ranking, trocar papel de sócio, editar configurações, encerrar plano. Diga o que sai ou entra.
-3. **Limite de valor:** acima de R$ X o João exige confirmação em dois passos ou manda para o painel?
-4. **Resumos proativos:** quais, em que horário, para quais administradores.
-5. **Grupo de administradores:** o assessor deve funcionar também num grupo só de admins ou só no privado (hoje só privado)?
+## 5. Decisões do clube (2026-10-07)
+1. **Um único nível de administrador.** Todo `is_admin` tem o mesmo acesso; perde as funções do João assim que deixa de ser administrador (a checagem é feita a cada turno, sem lista própria). Sem permissões por domínio.
+2. **N3 (nunca por chat) confirmado:** apagar qualquer coisa, reset de ranking, trocar papel de sócio, editar configurações, encerrar plano. O João só entrega o link da tela do painel.
+3. **Limite de valor: R$ 400.** Operação N2 de R$ 400 ou mais exige confirmação em dois passos (resumo + "sim", depois confirmação do valor por extenso). A regra vale por operação e também para a soma de um lote.
+4. **Resumo proativo pela manhã** para **Hermeson** e **Henrique** (horário a fixar na Onda 4; sugestão 08h00 de Fortaleza). Conteúdo inicial: caixa e saldo das contas, a receber vencido, comprovantes parados, documentos sem assinatura vencendo.
+5. **Só no privado.** O assessor não funciona em grupo, nem de administradores.
