@@ -137,8 +137,6 @@ Tudo abaixo cabe no mesmo turno (uma chamada ao modelo) e **não dá ao modelo n
 - **Anti-repetição**: as últimas 14 falas dele (IA e bom-dia) dos últimos 3 dias entram como *SUAS ÚLTIMAS FALAS*.
 - Tudo isso chega por **um** RPC de serviço, `conv_svc_ai_joao_pack(p_session)`. Se a função não existir ou falhar, o João segue sem esse
   contexto (testado).
-- **Bom-dia diário** (`joao-daily-greeting`, 06:45 de Fortaleza): além do tênis profissional, recebe o pulso do clube
-  (`conv_svc_ai_club_pulse`: plays de hoje, horário do primeiro, resultados dos últimos 7 dias) e cita no máximo uma coisa do clube.
 
 ## 7. Automações
 

@@ -127,25 +127,13 @@ language sql stable security definer set search_path = '' as $$
     'results', conv_private.ai_recent_results(21),
     'own_lines', conv_private.ai_own_lines(p_session)) $$;
 
--- Pulso do clube para o bom-dia (sem sessão): resultados recentes e o movimento de plays de hoje.
-create function conv_private.ai_club_pulse() returns jsonb
-language sql stable security definer set search_path = '' as $$
-  select jsonb_build_object(
-    'results', conv_private.ai_recent_results(7),
-    'plays_today', (select count(*) from public.reservations r
-                    where r.status::text = 'active' and r.type = 'Play' and r.date = conv_private.today()),
-    'first_play_today', (select to_char(min(r.start_time), 'HH24:MI') from public.reservations r
-                         where r.status::text = 'active' and r.type = 'Play' and r.date = conv_private.today())) $$;
-
 revoke all on function conv_private.ai_approved_memories(), conv_private.ai_recent_results(integer), conv_private.ai_own_lines(uuid),
-  conv_private.ai_joao_pack(uuid), conv_private.ai_club_pulse() from public, anon, authenticated;
+  conv_private.ai_joao_pack(uuid) from public, anon, authenticated;
 
 create function public.conv_svc_ai_joao_pack(p_session uuid) returns jsonb
 language sql stable security definer set search_path = '' as $$ select conv_private.ai_joao_pack(p_session) $$;
-create function public.conv_svc_ai_club_pulse() returns jsonb
-language sql stable security definer set search_path = '' as $$ select conv_private.ai_club_pulse() $$;
-revoke all on function public.conv_svc_ai_joao_pack(uuid), public.conv_svc_ai_club_pulse() from public, anon, authenticated;
-grant execute on function public.conv_svc_ai_joao_pack(uuid), public.conv_svc_ai_club_pulse() to service_role;
+revoke all on function public.conv_svc_ai_joao_pack(uuid) from public, anon, authenticated;
+grant execute on function public.conv_svc_ai_joao_pack(uuid) to service_role;
 
--- Rollback: drop das funções conv_svc_ai_joao_pack, conv_svc_ai_club_pulse, conv_private.ai_{approved_memories,recent_results,
--- own_lines,joao_pack,club_pulse} e public.conv_{list,review}_ai_memory_candidates. Nenhum dado é alterado por esta migration.
+-- Rollback: drop das funções conv_svc_ai_joao_pack, conv_private.ai_{approved_memories,recent_results,own_lines,joao_pack}
+-- e public.conv_{list,review}_ai_memory_candidates. Nenhum dado é alterado por esta migration.

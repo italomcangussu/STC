@@ -1,220 +1,180 @@
-// João Fonseca — bom dia diário do grupo oficial do STC.
-// Consulta tênis atual (ATP/WTA) e o pulso do próprio clube, gera uma mensagem curta e envia pelo mesmo canal institucional.
-// Protegida pelo mesmo segredo do dispatcher; idempotente por data local. Agendada por pg_cron (45 9 * * * UTC = 06:45 em Fortaleza).
 
-import { createClient } from 'npm:@supabase/supabase-js@2.89.0';
-import { cleanGreeting, clubFacts, fallbackGreeting, GREETING_SYSTEM_PROMPT, isValidGreeting } from '../_shared/joaoGreeting.ts';
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "npm:@supabase/supabase-js@2.89.0";
 
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
-const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_SECRET_KEY') || '';
-const UAZ_URL = (Deno.env.get('UAZAPI_SERVER_URL') || '').replace(/\/+$/, '');
-const UAZ_TOKEN = Deno.env.get('STC_UAZAPI_INSTANCE_TOKEN') || '';
-const AI_KEY = Deno.env.get('STC_AI_API_KEY') || '';
-const AI_BASE = (Deno.env.get('STC_AI_BASE_URL') || 'https://openrouter.ai/api/v1').replace(/\/+$/, '');
-const DISPATCH_SECRET = Deno.env.get('STC_DISPATCH_SECRET') || '';
-const db = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
+const URL=Deno.env.get("SUPABASE_URL");
+const SERVICE=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")||Deno.env.get("SUPABASE_SECRET_KEY")||"";
+const UAZ_RAW=Deno.env.get("UAZAPI_SERVER_URL")||"";
+const UAZ=UAZ_RAW.endsWith("/")?UAZ_RAW.slice(0,-1):UAZ_RAW;
+const TOKEN=Deno.env.get("STC_UAZAPI_INSTANCE_TOKEN")||"";
+const AIKEY=Deno.env.get("STC_AI_API_KEY")||"";
+const AIBASE_RAW=Deno.env.get("STC_AI_BASE_URL")||"https://openrouter.ai/api/v1";
+const AIBASE=AIBASE_RAW.endsWith("/")?AIBASE_RAW.slice(0,-1):AIBASE_RAW;
+if(!URL) throw new Error("NO_SUPABASE_URL");
+const db=createClient(URL,SERVICE,{auth:{persistSession:false}});
+const GROUP="Sócios Sobral Tênis Clube";
+const TZ="America/Fortaleza";
+const stars=["carlos alcaraz","jannik sinner","novak djokovic","alexander zverev","daniil medvedev","taylor fritz","alex de minaur","holger rune","ben shelton","jack draper","lorenzo musetti","casper ruud","felix auger-aliassime","joao fonseca","thiago seyboth wild","thiago monteiro","aryna sabalenka","iga swiatek","coco gauff","elena rybakina","jessica pegula","mirra andreeva","madison keys","qinwen zheng","beatriz haddad maia","bia haddad maia","laura pigossi"];
+const br=["joao fonseca","thiago seyboth wild","thiago monteiro","beatriz haddad maia","bia haddad maia","laura pigossi"];
 
-const GROUP_NAME = 'Sócios Sobral Tênis Clube';
+const js=(s,b)=>new Response(JSON.stringify(b),{status:s,headers:{"content-type":"application/json; charset=utf-8"}});
+const norm=s=>String(s||"").normalize("NFD").toLowerCase();
 
-function json(status: number, body: unknown) {
-  return new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json; charset=utf-8' } });
+async function auth(req){
+  const secret=req.headers.get("x-joao-secret")||"";
+  if(!secret||!SERVICE)return false;
+  const r=await db.rpc("joao_daily_secret_ok",{p_secret:secret});
+  return !r.error&&r.data===true;
 }
-async function sha256(s: string) {
-  return new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)));
+function parts(){
+  const p=new Intl.DateTimeFormat("en-US",{timeZone:TZ,year:"numeric",month:"2-digit",day:"2-digit",weekday:"long"}).formatToParts(new Date());
+  const g=t=>p.find(x=>x.type===t)?.value||"";
+  const iso=g("year")+"-"+g("month")+"-"+g("day");
+  return {iso,espn:iso.split("-").join(""),weekday:g("weekday")};
 }
-async function authorized(req: Request) {
-  const given = req.headers.get('x-dispatch-secret') || '';
-  if (!given || !DISPATCH_SECRET || DISPATCH_SECRET.length < 24) return false;
-  const [a, b] = await Promise.all([sha256(given), sha256(DISPATCH_SECRET)]);
-  if (a.length !== b.length) return false;
-  let diff = 0; for (let i = 0; i < a.length; i++) diff |= a[i] ^ b[i];
-  return diff === 0;
+function localIso(v){
+  const d=new Date(v); if(!Number.isFinite(d.getTime()))return "";
+  const p=new Intl.DateTimeFormat("en-US",{timeZone:TZ,year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(d);
+  const g=t=>p.find(x=>x.type===t)?.value||"";
+  return g("year")+"-"+g("month")+"-"+g("day");
 }
-function localDateParts() {
-  const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'America/Fortaleza', year: 'numeric', month: '2-digit', day: '2-digit',
-  }).formatToParts(new Date());
-  const get = (t: string) => parts.find((x) => x.type === t)?.value || '';
-  return { iso: `${get('year')}-${get('month')}-${get('day')}`, espn: `${get('year')}${get('month')}${get('day')}` };
+async function getjson(u){
+  try{
+    const r=await fetch(u,{headers:{accept:"application/json","user-agent":"STC-Joao-Daily/2.1"},signal:AbortSignal.timeout(12000)});
+    return r.ok?await r.json():null;
+  }catch{return null}
 }
-function weekdayName() {
-  return new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Fortaleza', weekday: 'long' }).format(new Date());
-}
-function normalizeName(s: string) {
-  return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ').trim();
-}
-function playerName(c: any): string {
-  return String(c?.athlete?.displayName || c?.athlete?.fullName || c?.athlete?.shortName || c?.team?.displayName || c?.displayName || '').trim();
-}
-function country(c: any): string | null {
-  const raw = c?.athlete?.flag?.alt || c?.athlete?.country?.name || c?.athlete?.country || c?.flag?.alt || c?.country?.name || null;
-  return raw ? String(raw) : null;
-}
-function rankingMap(data: any) {
-  const map = new Map<string, number>();
-  const ranks = Array.isArray(data?.rankings?.[0]?.ranks) ? data.rankings[0].ranks : [];
-  for (const r of ranks) {
-    const name = String(r?.athlete?.displayName || r?.athlete?.fullName || r?.team?.displayName || r?.displayName || '').trim();
-    const rank = Number(r?.current ?? r?.rank ?? r?.ranking ?? r?.position);
-    if (name && Number.isFinite(rank) && rank > 0) map.set(normalizeName(name), rank);
-  }
-  return map;
-}
-function localIsoFromUtc(value: string) {
-  if (!value) return null;
-  const d = new Date(value);
-  if (!Number.isFinite(d.getTime())) return null;
-  const parts = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Fortaleza', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(d);
-  const get = (t: string) => parts.find((x) => x.type === t)?.value || '';
-  return `${get('year')}-${get('month')}-${get('day')}`;
-}
-function boardFacts(data: any, tour: string, ranks: Map<string, number>, wantedIso: string) {
-  const events = Array.isArray(data?.events) ? data.events : [];
-  const out: any[] = [];
-  for (const e of events) {
-    const comps = Array.isArray(e?.competitions) ? e.competitions : [];
-    for (const c of comps) {
-      const competitors = Array.isArray(c?.competitors) ? c.competitors : [];
-      const players = competitors.map((x: any) => {
-        const name = playerName(x); if (!name) return null;
-        return { name, rank: ranks.get(normalizeName(name)) ?? null, country: country(x) };
-      }).filter(Boolean);
-      const date = String(c?.date || '').trim();
-      if (!date || localIsoFromUtc(date) !== wantedIso || players.length < 2) continue;
-      const status = c?.status?.type || {};
-      const state = String(status?.state || '').toLowerCase();
-      const description = String(status?.description || status?.detail || '').trim();
-      const tournament = String(e?.name || e?.shortName || e?.tournament?.displayName || e?.tournament?.name || '').trim();
-      const match = String(c?.name || c?.shortName || '').trim()
-        || `${players[0]?.name || ''} x ${players[1]?.name || ''}`;
-      out.push({ tour, tournament: tournament || null, event: match || null, date, state: state || null, status: description || null, players });
+function parse(data,fallback,wanted){
+  const out=[];
+  for(const e of Array.isArray(data?.events)?data.events:[]){
+    for(const gr of Array.isArray(e?.groupings)?e.groupings:[]){
+      const group=String(gr?.grouping?.displayName||"");
+      const tour=/women/i.test(group)?"WTA":/men/i.test(group)?"ATP":fallback;
+      for(const c of Array.isArray(gr?.competitions)?gr.competitions:[]){
+        const date=String(c?.date||c?.startDate||"");
+        if(!date||localIso(date)!==wanted)continue;
+        const players=(Array.isArray(c?.competitors)?c.competitors:[]).map(x=>{
+          const name=String(x?.athlete?.displayName||x?.athlete?.fullName||x?.roster?.displayName||"").trim();
+          const n=Number(x?.curatedRank?.current??x?.seed);
+          return {name,seed:Number.isFinite(n)&&n>0?n:null,country:String(x?.athlete?.flag?.alt||x?.roster?.athletes?.[0]?.flag?.alt||"")||null};
+        }).filter(x=>x.name&&x.name!=="TBD");
+        if(players.length<2)continue;
+        out.push({
+          id:String(c?.id||e?.id+":"+date+":"+players.map(x=>x.name).join("|")),
+          tour,tournament:String(e?.name||e?.shortName||tour),group:group||null,
+          round:String(c?.round?.displayName||"")||null,date,
+          state:String(c?.status?.type?.state||"").toLowerCase()||null,
+          status:String(c?.status?.type?.description||c?.status?.type?.detail||"")||null,
+          players
+        });
+      }
     }
   }
   return out;
 }
-function idempotencyUuid(iso: string) {
-  // UUID determinístico simples a partir da data; suficiente para a chave de idempotência do próprio fluxo.
-  const enc = new TextEncoder().encode('joao-daily-greeting:' + iso);
-  return crypto.subtle.digest('SHA-256', enc).then((buf) => {
-    const b = new Uint8Array(buf).slice(0, 16);
-    b[6] = (b[6] & 0x0f) | 0x50; b[8] = (b[8] & 0x3f) | 0x80;
-    const h = [...b].map((x) => x.toString(16).padStart(2, '0')).join('');
-    return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
-  });
+function score(f){
+  let s=f.state==="in"?400:f.state==="pre"?350:-200;
+  if(/final|semifinal|quarter/i.test(f.round||""))s+=25;
+  if(/singles/i.test(f.group||""))s+=15;
+  for(const p of f.players||[]){
+    const n=norm(p.name);
+    if(br.some(x=>n.includes(x)))s+=220;
+    if(stars.some(x=>n.includes(x)))s+=100;
+    if(p.seed&&p.seed<=10)s+=25;else if(p.seed&&p.seed<=20)s+=12;
+  }
+  return s;
 }
-async function fetchJson(url: string) {
-  try {
-    const r = await fetch(url, { headers: { 'accept': 'application/json', 'user-agent': 'STC-Joao/1.0' }, signal: AbortSignal.timeout(12000) });
-    if (!r.ok) return null;
-    return await r.json();
-  } catch { return null; }
-}
-async function tennisContext(espnDate: string) {
-  const [atp, wta, atpRank, wtaRank] = await Promise.all([
-    fetchJson(`https://site.api.espn.com/apis/site/v2/sports/tennis/atp/scoreboard?dates=${espnDate}`),
-    fetchJson(`https://site.api.espn.com/apis/site/v2/sports/tennis/wta/scoreboard?dates=${espnDate}`),
-    fetchJson('https://site.web.api.espn.com/apis/site/v2/sports/tennis/atp/rankings?region=us&lang=en'),
-    fetchJson('https://site.web.api.espn.com/apis/site/v2/sports/tennis/wta/rankings?region=us&lang=en'),
+async function facts(d){
+  const [a,w]=await Promise.all([
+    getjson("https://site.api.espn.com/apis/site/v2/sports/tennis/atp/scoreboard?dates="+d.espn),
+    getjson("https://site.api.espn.com/apis/site/v2/sports/tennis/wta/scoreboard?dates="+d.espn)
   ]);
-  const ar = rankingMap(atpRank), wr = rankingMap(wtaRank);
-  const all = [...boardFacts(atp, 'ATP', ar, localDateParts().iso), ...boardFacts(wta, 'WTA', wr, localDateParts().iso)];
-  // Mantém primeiro partidas não encerradas e depois as que têm atleta mais bem ranqueado.
-  all.sort((a, b) => {
-    const ap = a.state === 'post' ? 1 : 0, bp = b.state === 'post' ? 1 : 0;
-    if (ap !== bp) return ap - bp;
-    const ra = Math.min(...(a.players || []).map((p: any) => p.rank || 9999), 9999);
-    const rb = Math.min(...(b.players || []).map((p: any) => p.rank || 9999), 9999);
-    return ra - rb;
-  });
-  return all.slice(0, 32);
+  const raw=[...parse(a,"ATP",d.iso),...parse(w,"WTA",d.iso)];
+  const uniq=[...new Map(raw.map(f=>[f.id,f])).values()];
+  return uniq.sort((x,y)=>score(y)-score(x)).slice(0,24);
 }
-/** Pulso do clube (plays de hoje, resultados recentes). Sem a função no banco ou com erro, o bom-dia segue só com o tênis. */
-async function clubPulse() {
-  try {
-    const r = await db.rpc('conv_svc_ai_club_pulse');
-    return r.error ? clubFacts(null) : clubFacts(r.data);
-  } catch { return clubFacts(null); }
+async function group(){
+  const g=await db.from("conv_groups").select("id,group_jid").eq("name",GROUP).eq("status","allowed").eq("ai_enabled",true).maybeSingle();
+  if(g.error||!g.data)throw new Error("GROUP_NOT_FOUND");
+  const c=await db.from("conv_conversations").select("id").eq("group_id",g.data.id).eq("kind","group").eq("status","open").maybeSingle();
+  if(c.error||!c.data)throw new Error("GROUP_CONVERSATION_NOT_FOUND");
+  return {cid:c.data.id,jid:g.data.group_jid};
 }
-async function groupConversation() {
-  const g = await db.from('conv_groups').select('id,group_jid,name').eq('name', GROUP_NAME).eq('status', 'allowed').eq('ai_enabled', true).maybeSingle();
-  if (g.error || !g.data) throw new Error('GROUP_NOT_FOUND');
-  const c = await db.from('conv_conversations').select('id').eq('group_id', g.data.id).eq('kind', 'group').eq('status', 'open').maybeSingle();
-  if (c.error || !c.data) throw new Error('GROUP_CONVERSATION_NOT_FOUND');
-  return { conversationId: c.data.id, groupJid: g.data.group_jid };
+async function history(cid){
+  const since=new Date(Date.now()-30*86400000).toISOString();
+  const r=await db.from("conv_messages").select("body").eq("conversation_id",cid).eq("direction","outbound").in("origin",["ai","system"]).gte("created_at",since).order("created_at",{ascending:false}).limit(30);
+  return (r.data||[]).map(x=>String(x.body||"")).filter(Boolean);
 }
-async function recentGreetings(conversationId: string) {
-  const since = new Date(Date.now() - 30 * 86400000).toISOString();
-  const r = await db.from('conv_messages').select('body,created_at')
-    .eq('conversation_id', conversationId).eq('direction', 'outbound')
-    .gte('created_at', since).ilike('body', 'Bom dia%').order('created_at', { ascending: false }).limit(30);
-  return (r.data || []).map((x: any) => String(x.body || '')).filter(Boolean);
+async function model(){
+  const r=await db.from("conv_ai_settings").select("model").eq("active",true).order("version",{ascending:false}).limit(1).maybeSingle();
+  return String(r.data?.model||"openai/gpt-6-luna");
 }
-async function currentModel() {
-  const r = await db.from('conv_ai_settings').select('model').eq('active', true).order('version', { ascending: false }).limit(1).maybeSingle();
-  return String(r.data?.model || 'openai/gpt-6-luna');
+function hasCompleteMatch(text,fs){
+  const t=norm(text);
+  return fs.slice(0,12).some(f=>f?.players?.length>=2&&
+    t.includes(norm(f.players[0].name))&&t.includes(norm(f.players[1].name)));
 }
-async function generateGreeting(iso: string, facts: any[], club: ReturnType<typeof clubFacts>, history: string[]) {
-  if (!AI_KEY) return fallbackGreeting(iso);
-  const user = JSON.stringify({ date: iso, weekday: weekdayName(), tennis_facts: facts, club, recent_greetings: history.slice(0, 30) });
-  try {
-    const model = await currentModel();
-    const r = await fetch(AI_BASE + '/chat/completions', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + AI_KEY, 'x-title': 'STC João Bom Dia' },
-      body: JSON.stringify({ model, messages: [{ role: 'system', content: GREETING_SYSTEM_PROMPT }, { role: 'user', content: user }], temperature: 0.85, max_tokens: 190 }),
-      signal: AbortSignal.timeout(30000),
-    });
-    if (!r.ok) throw new Error('AI_' + r.status);
-    const j = await r.json();
-    const t = cleanGreeting(j?.choices?.[0]?.message?.content);
-    if (!isValidGreeting(t)) throw new Error('AI_BAD_TEXT');
+function fallback(fs){
+  const f=fs[0];
+  if(f?.players?.length>=2)return "Bom dia, tenistas! 🎾 Hoje tem "+f.players[0].name+" x "+f.players[1].name+" no "+f.tournament+". Enquanto eles brigam no circuito, por aqui a discussão continua sendo se a bola pegou ou não na linha. 😂";
+  return "Bom dia, tenistas! 🎾 Café tomado, raquete na mão e discussão sobre bola dentro ou fora oficialmente liberada.";
+}
+async function greeting(d,fs,h){
+  const fb=fallback(fs); if(!AIKEY)return fb;
+  const clean=fs.slice(0,12).map(f=>({circuito:f.tour,torneio:f.tournament,categoria:f.group,rodada:f.round,estado:f.state,status:f.status,jogadores:f.players.map(p=>({nome:p.name,cabeca_de_chave:p.seed,pais:p.country}))}));
+  const sys=[
+    "Você é João Fonseca, assistente do Sobral Tênis Clube, escrevendo no grupo de sócios.",
+    "Crie UM bom dia curto, de 1 a 3 frases, natural, brasileiro, espontâneo e com resenha leve de tênis.",
+    "Priorize primeiro partidas ainda PROGRAMADAS ou EM ANDAMENTO hoje. Só use jogo já encerrado se não houver confronto futuro relevante.",
+    "Se houver ao menos uma partida confirmada, seja específico: cite o torneio e PELO MENOS UM confronto completo realmente programado hoje, dizendo os dois jogadores (ex.: Jogador A x Jogador B ou Jogador A enfrenta Jogador B). No máximo dois confrontos.",
+    "Dê preferência a brasileiros, nomes muito conhecidos, cabeças de chave altos e fases decisivas.",
+    "Nunca invente confronto, ranking mundial, horário, resultado, lesão ou notícia.",
+    "Não transforme em boletim esportivo. Não use markdown, hashtags nem pergunta obrigatória.",
+    "Evite repetir piadas, aberturas e estruturas das mensagens recentes.",
+    "Se não houver fato interessante, mande apenas um bom dia de tênis bem-humorado."
+  ].join("\n");
+  try{
+    const r=await fetch(AIBASE+"/chat/completions",{method:"POST",headers:{"content-type":"application/json",authorization:"Bearer "+AIKEY},body:JSON.stringify({model:await model(),temperature:.9,max_tokens:180,messages:[{role:"system",content:sys},{role:"user",content:JSON.stringify({data:d.iso,dia:d.weekday,fatos_confirmados:clean,mensagens_recentes:h.slice(0,20)})}]}),signal:AbortSignal.timeout(18000)});
+    if(!r.ok)return fb;
+    const j=await r.json().catch(()=>null);
+    const t=String(j?.choices?.[0]?.message?.content||"").trim();
+    if(!t||t.length>700)return fb;
+    if(fs.length&& !hasCompleteMatch(t,fs))return fb;
     return t;
-  } catch {
-    return fallbackGreeting(iso);
-  }
+  }catch{return fb}
 }
-async function sendUaz(number: string, text: string) {
-  if (!UAZ_URL || !UAZ_TOKEN) return { ok: false, error: 'WHATSAPP_NOT_CONFIGURED', providerId: null };
-  try {
-    const r = await fetch(UAZ_URL + '/send/text', {
-      method: 'POST', headers: { 'content-type': 'application/json', 'token': UAZ_TOKEN },
-      body: JSON.stringify({ number, text }), signal: AbortSignal.timeout(20000),
-    });
-    const j = await r.json().catch(() => ({}));
-    const providerId = r.ok ? (j?.messageid || j?.messageId || j?.id || j?.key?.id || null) : null;
-    return { ok: r.ok, error: r.ok ? null : 'HTTP_' + r.status, providerId: typeof providerId === 'string' ? providerId : null };
-  } catch (e) {
-    return { ok: false, error: e instanceof Error && e.name === 'TimeoutError' ? 'TIMEOUT' : 'NETWORK_ERROR', providerId: null };
-  }
+async function idkey(iso){
+  const b=new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode("joao-daily-greeting:"+iso))).slice(0,16);
+  b[6]=(b[6]&15)|80;b[8]=(b[8]&63)|128;
+  const h=[...b].map(x=>x.toString(16).padStart(2,"0")).join("");
+  return h.slice(0,8)+"-"+h.slice(8,12)+"-"+h.slice(12,16)+"-"+h.slice(16,20)+"-"+h.slice(20);
 }
-
-Deno.serve(async (req: Request) => {
-  if (req.method !== 'POST') return json(405, { error: 'METHOD_NOT_ALLOWED' });
-  if (!(await authorized(req))) return json(401, { error: 'UNAUTHORIZED' });
-  if (!SERVICE_KEY) return json(503, { error: 'SERVER_NOT_CONFIGURED' });
-  const body = await req.json().catch(() => ({}));
-  const dryRun = body?.dry_run === true;
-  try {
-    const d = localDateParts();
-    const group = await groupConversation();
-    const [facts, club, history] = await Promise.all([tennisContext(d.espn), clubPulse(), recentGreetings(group.conversationId)]);
-    const text = await generateGreeting(d.iso, facts, club, history);
-    if (dryRun) return json(200, { ok: true, dry_run: true, date: d.iso, text, facts_count: facts.length, club, top_facts: facts.slice(0, 5) });
-    const key = await idempotencyUuid(d.iso);
-    const q = await db.rpc('conv_svc_queue_message', {
-      p_conversation: group.conversationId,
-      p: { kind: 'text', body: text },
-      p_author: null, p_key: key, p_origin: 'system', p_session: null,
-    });
-    const row = Array.isArray(q.data) ? q.data[0] : q.data;
-    if (q.error || !row) return json(500, { error: 'QUEUE_FAILED' });
-    if (row.already_sent) return json(200, { ok: true, date: d.iso, already_sent: true, text });
-    const sent = await sendUaz(String(row.destination || group.groupJid), text);
-    await db.rpc('conv_svc_finish_message', {
-      p_message: row.message_id, p_sent: sent.ok, p_provider_id: sent.providerId, p_error: sent.error,
-    });
-    return json(sent.ok ? 200 : 503, { ok: sent.ok, date: d.iso, text, error: sent.error });
-  } catch (e) {
-    return json(500, { error: e instanceof Error ? e.message : 'UNKNOWN' });
-  }
+function pid(j){const x=j?.messageid??j?.messageId??j?.id??j?.key?.id;return typeof x==="string"&&x?x:null}
+async function send(number,text){
+  if(!UAZ||!TOKEN)return {ok:false,provider:null,error:"WHATSAPP_NOT_CONFIGURED"};
+  try{
+    const r=await fetch(UAZ+"/send/text",{method:"POST",headers:{"content-type":"application/json",token:TOKEN},body:JSON.stringify({number,text}),signal:AbortSignal.timeout(20000)});
+    const j=await r.json().catch(()=>({}));
+    return {ok:r.ok,provider:r.ok?pid(j):null,error:r.ok?null:"HTTP_"+r.status};
+  }catch(e){return {ok:false,provider:null,error:e instanceof Error&&e.name==="TimeoutError"?"TIMEOUT":"NETWORK_ERROR"}}
+}
+Deno.serve(async req=>{
+  if(req.method!=="POST")return js(405,{error:"METHOD_NOT_ALLOWED"});
+  if(!(await auth(req)))return js(401,{error:"UNAUTHORIZED"});
+  if(!SERVICE)return js(503,{error:"SERVER_NOT_CONFIGURED"});
+  const body=await req.json().catch(()=>({}));
+  try{
+    const d=parts(),g=await group();
+    const [fs,h]=await Promise.all([facts(d),history(g.cid)]);
+    const text=await greeting(d,fs,h);
+    const info={date:d.iso,text,facts_count:fs.length,top_facts:fs.slice(0,5)};
+    if(body?.dry_run===true)return js(200,{ok:true,dry_run:true,...info});
+    const q=await db.rpc("conv_svc_queue_message",{p_conversation:g.cid,p:{kind:"text",body:text},p_author:null,p_key:await idkey(d.iso+(body?.force_today===true?":forced-today-v1":"")),p_origin:"ai",p_session:null,p_recipient:null});
+    const row=Array.isArray(q.data)?q.data[0]:q.data;
+    if(q.error||!row)return js(500,{error:"QUEUE_FAILED"});
+    if(row.already_sent)return js(200,{ok:true,already_sent:true,...info});
+    const s=await send(String(row.destination||g.jid),text);
+    await db.rpc("conv_svc_finish_message",{p_message:row.message_id,p_sent:s.ok,p_provider_id:s.provider,p_error:s.error});
+    return js(s.ok?200:503,{ok:s.ok,error:s.error,...info});
+  }catch(e){return js(500,{error:e instanceof Error?e.message:"UNKNOWN"})}
 });

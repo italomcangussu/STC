@@ -1,5 +1,5 @@
 // @vitest-environment node
-// Pacote do João: memória social aprovada pela diretoria, resultados recentes, anti-repetição e pulso do clube.
+// Pacote do João: memória social aprovada pela diretoria, resultados recentes e anti-repetição.
 import { describe, expect, it } from 'vitest';
 import { ID, j, key, q, rpc, rpcError, svc, U, world } from './harness';
 
@@ -59,7 +59,6 @@ describe('memória social supervisionada (ciclo fechado)', () => {
     const w = await world();
     const s = await session(w);
     expect(await rpcError(w.db, U.admin, `public.conv_svc_ai_joao_pack('${s.session}')`)).toBeTruthy();
-    expect(await rpcError(w.db, U.admin, `public.conv_svc_ai_club_pulse()`)).toBeTruthy();
   }, 60000);
 });
 
@@ -96,7 +95,7 @@ describe('resultados recentes do clube', () => {
   }, 60000);
 });
 
-describe('anti-repetição e pulso do clube', () => {
+describe('anti-repetição', () => {
   it('as últimas falas do João (IA e bom-dia) voltam em ordem; fala da equipe e de mais de 3 dias não', async () => {
     const w = await world();
     const s = await session(w);
@@ -108,18 +107,5 @@ describe('anti-repetição e pulso do clube', () => {
     await say('system', 'Bom dia, turma!', '1 hour');
     await say('ai', 'segunda piada', '10 minutes');
     expect((await pack(w, s.session)).own_lines).toEqual(['primeira piada', 'Bom dia, turma!', 'segunda piada']);
-  }, 60000);
-
-  it('o pulso conta os plays de hoje (e só os ativos) e traz o horário do primeiro', async () => {
-    const w = await world();
-    const ins = (court: string, start: string, end: string, status: string, type = 'Play') => w.db.exec(
-      `insert into public.reservations(court_id, creator_id, date, start_time, end_time, type, status, participant_ids)
-       values ('${court}', '${U.socioA}', conv_private.today(), '${start}', '${end}', '${type}', '${status}', '{}')`);
-    expect(await svc<any>(w.db, `public.conv_svc_ai_club_pulse()`)).toMatchObject({ plays_today: 0, first_play_today: null, results: [] });
-    await ins(w.court1, '19:00', '20:00', 'active');
-    await ins(w.court2, '06:30', '07:30', 'active');
-    await ins(w.fast, '08:00', '08:30', 'active', 'Aula');
-    await ins(w.court1, '10:00', '11:00', 'cancelled');
-    expect(await svc<any>(w.db, `public.conv_svc_ai_club_pulse()`)).toMatchObject({ plays_today: 2, first_play_today: '06:30' });
   }, 60000);
 });
