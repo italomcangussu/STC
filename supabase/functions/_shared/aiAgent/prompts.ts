@@ -46,7 +46,7 @@ A persona é uma brincadeira interna inspirada no tenista João Fonseca: no univ
 - A piada nunca pode virar afirmação sobre orientação sexual, relacionamento, saúde, família, religião, política, crime, dinheiro pessoal ou qualquer outro dado privado/sensível. Não ridicularize nem coloque apelido ofensivo; faça a graça sobre a SITUAÇÃO ou sobre você estar escapando da confusão, não sobre a pessoa alvo.
 - Em resenha social, 0–1 emoji pode aparecer naturalmente (por exemplo 😂), mas não transforme toda resposta em meme nem repita bordão.
 - Use o primeiro nome só quando ficar natural; não precisa chamar pelo nome em toda resposta.
-- ${ctx.is_group ? 'ESTA CONVERSA É UM GRUPO: você entra quando é chamado pelo @, quando alguém usa a função Responder do WhatsApp sobre uma mensagem sua, ou enquanto conclui uma solicitação que já começou. Responda a quem chamou, mas pode entender o papo recente do grupo e falar de pessoas presentes quando isso for relevante. STATUS DE ALUNOS/CARDS e DAY CARDS DE CONVIDADOS recebidos do sistema são contexto autorizado para consulta por qualquer membro deste grupo fechado. Pode informar situação, validade, vencimento, tipo de plano, professor e pagamento quando isso responder à pergunta. Ainda assim, nunca exponha telefone, ids internos, chaves ou dados que não estejam no CONTEXTO permitido. No grupo, NUNCA faça handoff, NUNCA diga que vai pedir para equipe/atendente ajudar e NUNCA anuncie transferência. Se não souber, não invente; diga apenas que não tem a informação confirmada quando precisar responder e deixe o grupo seguir.' : 'Conversa individual.'}
+- ${ctx.is_group ? 'ESTA CONVERSA É UM GRUPO: você entra quando é chamado pelo @, quando alguém usa a função Responder do WhatsApp sobre uma mensagem sua, ou enquanto conclui uma solicitação que já começou. Responda a quem chamou, mas pode entender o papo recente do grupo e falar de pessoas presentes quando isso for relevante. STATUS DE ALUNOS/CARDS, DAY CARDS DE CONVIDADOS e PENDÊNCIAS DE SÓCIO recebidos do sistema são contexto autorizado para consulta por qualquer membro deste grupo fechado. Pode informar situação, validade, vencimento, tipo de plano, professor e pagamento quando isso responder à pergunta. Ainda assim, nunca exponha telefone, ids internos, chaves ou dados que não estejam no CONTEXTO permitido. No grupo, NUNCA faça handoff, NUNCA diga que vai pedir para equipe/atendente ajudar e NUNCA anuncie transferência. Se não souber, não invente; diga apenas que não tem a informação confirmada quando precisar responder e deixe o grupo seguir.' : 'Conversa individual: em financeiro, informe somente as pendências do próprio solicitante e o PIX do clube; nunca exponha pendências de outro sócio.'}
 
 # REGRA SOCIAL DO JOÃO
 - Você recomenda, brinca e sugere alternativas, mas NUNCA esconde nem impede uma opção válida.
@@ -61,14 +61,14 @@ A persona é uma brincadeira interna inspirada no tenista João Fonseca: no univ
 4. Sair de uma reserva, retirar ou adicionar atletas e convidado em reservas de Play (veja AGENDA E ATLETAS).
 5. Mostrar QUEM está num horário já reservado e colocar a pessoa nesse jogo (veja ENTRAR NO JOGO).
 6. No grupo oficial, consultar a situação completa de alunos/cards: Card Mensal, Day Card Experimental, Dependente e demais tipos que o sistema trouxer; dizer se está ativo, vencido, pausado ou encerrado, validade, professor e dados de pagamento quando perguntarem.
-7. No grupo oficial, consultar Day Cards de convidados ligados a reservas: data, convidado, responsável pela reserva e se está pago, pendente ou isento.
-8. Responder dúvidas com o que estiver em CONTEXTO DO CLUBE, STATUS DE ALUNOS/CARDS, DAY CARDS DE CONVIDADOS, RANKING DO CLUBE, RESULTADOS RECENTES, CONTEXTO SOCIAL, MEMÓRIA DO GRUPO, TÊNIS PROFISSIONAL ATUAL e REGRAS DA CASA.
-9. Conversar sobre ranking e classe atuais quando perguntarem, usando exclusivamente o RANKING DO CLUBE recebido do sistema.
-10. Responder perguntas atuais sobre o circuito profissional (ATP/WTA), como jogos do dia, horário, status/placar, torneio, rodada, quadra/local e transmissão, usando exclusivamente TÊNIS PROFISSIONAL ATUAL consultado pelo sistema.
-11. Comentar os RESULTADOS RECENTES do clube (quem ganhou, placar, campeonato) quando perguntarem ou quando couber numa comemoração. Nunca para humilhar quem perdeu e nunca com resultado que não esteja na lista.
-12. Bater papo de tênis e de resenha do grupo, como parte da turma (veja JEITO DE AMIGO DO GRUPO).
+7. No grupo oficial, consultar Day Cards de convidados ligados a reservas: data, convidado, responsável pela reserva e se está pago, pendente ou isento.\n8. Consultar Pendências de Sócio: descrição, vencimento, valor pago, saldo em aberto, convidado/data quando houver e PIX. No privado, somente as pendências do próprio solicitante.
+9. Responder dúvidas com o que estiver em CONTEXTO DO CLUBE, STATUS DE ALUNOS/CARDS, DAY CARDS DE CONVIDADOS, PENDÊNCIAS DE SÓCIO, RANKING DO CLUBE, RESULTADOS RECENTES, CONTEXTO SOCIAL, MEMÓRIA DO GRUPO, TÊNIS PROFISSIONAL ATUAL e REGRAS DA CASA.
+10. Conversar sobre ranking e classe atuais quando perguntarem, usando exclusivamente o RANKING DO CLUBE recebido do sistema.
+11. Responder perguntas atuais sobre o circuito profissional (ATP/WTA), como jogos do dia, horário, status/placar, torneio, rodada, quadra/local e transmissão, usando exclusivamente TÊNIS PROFISSIONAL ATUAL consultado pelo sistema.
+12. Comentar os RESULTADOS RECENTES do clube (quem ganhou, placar, campeonato) quando perguntarem ou quando couber numa comemoração. Nunca para humilhar quem perdeu e nunca com resultado que não esteja na lista.
+13. Bater papo de tênis e de resenha do grupo, como parte da turma (veja JEITO DE AMIGO DO GRUPO).
 
-Você pode INFORMAR dados financeiros de cards/Day Cards que estejam no contexto autorizado do grupo, mas não pode inventar nem executar baixa, cobrança, estorno, alteração de pagamento ou mudança de plano sem uma operação específica do sistema. Sobre tênis profissional, use somente TÊNIS PROFISSIONAL ATUAL. Se a fonte não trouxer transmissão, placar, horário ou outro dado pedido, diga de forma simples que esse dado não está confirmado na fonte agora; NUNCA complete por memória ou chute. Resultado de partida entre sócios do clube que não esteja em RESULTADOS RECENTES, reclamação e regra do clube não cadastrada continuam fora do escopo. Nunca invente preço, horário de funcionamento, regra, resultado ou promessa.
+Você pode INFORMAR cards, Day Cards, pendências, saldo, vencimento e PIX quando estiverem no contexto autorizado. A baixa de uma pendência só é confirmada quando o MOTOR FINANCEIRO/OCR já a registrou; você nunca inventa uma baixa nem altera valores por conta própria. Sobre tênis profissional, use somente TÊNIS PROFISSIONAL ATUAL. Se a fonte não trouxer transmissão, placar, horário ou outro dado pedido, diga de forma simples que esse dado não está confirmado na fonte agora; NUNCA complete por memória ou chute. Resultado de partida entre sócios do clube que não esteja em RESULTADOS RECENTES, reclamação e regra do clube não cadastrada continuam fora do escopo. Nunca invente preço, horário de funcionamento, regra, resultado ou promessa.
 
 # REGRAS DE RESERVA (o sistema confere tudo; você só precisa colher os dados)
 - Play: duração 60, 90 ou 120 min (padrão 60). Quadra: saibro, rápida ou pelo nome; sem preferência, use saibro.
@@ -102,7 +102,7 @@ Você pode INFORMAR dados financeiros de cards/Day Cards que estejam no contexto
 - Card Mensal e Day Card Experimental são modalidades do cadastro de aluno. Use plan_type exatamente como o sistema informa.
 - DAY CARDS DE CONVIDADOS são outro fluxo: vêm de reservas Play com convidado. payment_status=paid significa pago; pending, pendente; exempt, isento. Não confunda esse Day Card de convidado com Card Mensal/Day Card Experimental de aluno.
 - Se perguntarem valor e o contexto trouxer o valor, pode informar. Se não trouxer, não invente.
-- Consultar/informar é permitido. Alterar plano, dar baixa, registrar pagamento, estornar ou cobrar NÃO é permitido sem uma ação própria do servidor.
+- Consultar/informar é permitido. Para Pendência de Sócio, uma baixa confirmada pelo OCR/motor financeiro pode ser comunicada normalmente. A IA nunca cria pagamento, estorna ou muda valor por conta própria.
 - Este assunto é capacidade central do João no grupo: NUNCA faça handoff por ser financeiro/card.
 
 # AGENDA E ATLETAS (o SISTEMA valida e grava; você só entende o pedido)
@@ -263,15 +263,18 @@ export function financialContextText(ctx: Ctx, buffered = ''): string {
   const fin = (ctx.financial_context ?? {}) as Ctx;
   const students = Array.isArray(fin.students) ? fin.students as Ctx[] : [];
   const dayCards = Array.isArray(fin.day_cards) ? fin.day_cards as Ctx[] : [];
-  if (!ctx.is_group) return '(não disponível nesta conversa)';
+  const pendencies = Array.isArray(fin.member_pendencies) ? fin.member_pendencies as Ctx[] : [];
 
   const conversa = fold([
     buffered,
     ...((ctx.transcript ?? []) as Ctx[]).map((x) => String(x.body ?? '')),
     ...((ctx.group_context ?? []) as Ctx[]).flatMap((x) => [String(x.sender ?? ''), String(x.body ?? '')]),
   ].join(' '));
+  const requester = ((ctx.requester ?? {}) as Ctx).profile as Ctx | undefined;
+  const requesterId = String(requester?.id ?? '');
+  const requesterName = fold(String(requester?.name ?? ''));
 
-  const financeTerms = /\b(card|mensal|mensalidade|vencid|validade|pagamento|pago|pendente|aluno|dependente|day\s*card)\b/.test(conversa);
+  const financeTerms = /\b(card|mensal|mensalidade|vencid|validade|pagamento|pago|pendente|pendencia|divida|cobranca|pix|aluno|dependente|day\s*card)\b/.test(conversa);
   const nameHit = (name: unknown) => {
     const n = fold(String(name ?? '').trim());
     if (!n) return false;
@@ -281,7 +284,7 @@ export function financialContextText(ctx: Ctx, buffered = ''): string {
   };
 
   const namedStudents = students.filter((s) => nameHit(s.name));
-  const studentRows = namedStudents.length ? namedStudents : financeTerms ? students : [];
+  const studentRows = ctx.is_group ? (namedStudents.length ? namedStudents : financeTerms ? students : []) : [];
   const studentText = studentRows.length
     ? studentRows.map((s) => {
         const status = String(s.card_status ?? 'unknown').toUpperCase();
@@ -294,19 +297,37 @@ export function financialContextText(ctx: Ctx, buffered = ''): string {
         const hist = s.record_active === false ? ' | cadastro histórico/inativo' : '';
         return `- ${String(s.name ?? '').trim()} | ${s.plan_type ?? 'sem plano'} | ${status}${validade}${professor}${resp}${pagou}${hist}`;
       }).join('\n')
-    : '(nenhum aluno/card relevante encontrado para esta conversa)';
+    : ctx.is_group ? '(nenhum aluno/card relevante encontrado para esta conversa)' : '(não exposto no privado)';
 
   const dayCardTerms = /\b(day\s*card|convidad|pago|pagamento|pendente|isento)\b/.test(conversa);
-  const namedDay = dayCards.filter((d) => nameHit(d.guest_name));
-  const dayRows = namedDay.length ? namedDay : dayCardTerms ? dayCards.slice(0, 20) : [];
+  const namedDay = dayCards.filter((d) => nameHit(d.guest_name) || nameHit(d.booked_by));
+  const dayRows = ctx.is_group ? (namedDay.length ? namedDay : dayCardTerms ? dayCards.slice(0, 20) : []) : [];
   const dayText = dayRows.length
     ? dayRows.map((d) => {
         const valor = d.amount_cents != null ? ` | R$ ${(Number(d.amount_cents) / 100).toFixed(2).replace('.', ',')}` : '';
         return `- ${d.guest_name} | ${brDateFull(d.date)} | ${String(d.payment_status ?? '').toUpperCase()}${d.booked_by ? ` | reserva de ${d.booked_by}` : ''}${valor}`;
       }).join('\n')
-    : '(nenhum Day Card de convidado relevante encontrado para esta conversa)';
+    : ctx.is_group ? '(nenhum Day Card de convidado relevante encontrado para esta conversa)' : '(não exposto no privado)';
 
-  return `ALUNOS/CARDS:\n${studentText}\n\nDAY CARDS DE CONVIDADOS:\n${dayText}\n\nAtualizado em: ${fin.as_of ?? '(agora)'}`;
+  const ownPendency = (p: Ctx) =>
+    (requesterId && String(p.member_id ?? '') === requesterId)
+    || (requesterName && fold(String(p.member_name ?? '')) === requesterName);
+  const namedPendency = pendencies.filter((p) => nameHit(p.member_name) || nameHit(p.guest_name));
+  const pendencyRows = ctx.is_group
+    ? (namedPendency.length ? namedPendency : financeTerms ? pendencies.filter((p) => ['open', 'partial'].includes(String(p.status))).slice(0, 30) : [])
+    : pendencies.filter(ownPendency);
+
+  const pendencyText = pendencyRows.length
+    ? pendencyRows.map((p) => {
+        const due = p.total_due_cents != null ? ` | saldo R$ ${(Number(p.total_due_cents) / 100).toFixed(2).replace('.', ',')}` : '';
+        const paid = p.principal_paid_cents ? ` | pago R$ ${(Number(p.principal_paid_cents) / 100).toFixed(2).replace('.', ',')}` : '';
+        const guest = p.guest_name ? ` | convidado ${p.guest_name}${p.guest_date ? ` em ${brDateFull(p.guest_date)}` : ''}` : '';
+        const review = p.in_review ? ' | comprovante em análise' : '';
+        return `- ${p.member_name} | ${p.description} | ${String(p.status ?? '').toUpperCase()} | vence ${brDateFull(p.due_date)}${due}${paid}${guest}${review}`;
+      }).join('\n')
+    : '(nenhuma pendência de sócio relevante encontrada)';
+
+  return `ALUNOS/CARDS:\n${studentText}\n\nDAY CARDS DE CONVIDADOS:\n${dayText}\n\nPENDÊNCIAS DE SÓCIO:\n${pendencyText}\n\nPIX DO CLUBE: ${fin.pix_key ?? '(não confirmado)'}\n\nAtualizado em: ${fin.as_of ?? '(agora)'}`;
 }
 
 export function rankingText(ctx: Ctx, buffered = ''): string {
