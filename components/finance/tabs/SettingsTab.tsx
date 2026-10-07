@@ -188,7 +188,7 @@ const OptionsSection: React.FC<{ s: FinSettings; onSaved: () => void }> = ({ s, 
       <div className="space-y-3">
         <Field label="Valor do Day Card (R$)" hint="Taxa do convidado de um sócio (acesso ao clube por um dia). Vale por reserva com convidado. Card Mensal e Aula avulsa dos alunos valem o que foi pago e registrado no cadastro do aluno."><MoneyInput value={price} onChange={setPrice} /></Field>
         <label className="flex min-h-11 items-start gap-2 text-sm font-bold text-stone-700"><input type="checkbox" className="mt-0.5 h-5 w-5" checked={inCash} onChange={(e) => setInCash(e.target.checked)} />Contar o Day Card como entrada no fluxo de caixa <span className="font-normal text-stone-400">(desligado: o Day Card é derivado da reserva, sem pagamento registrado, e só conta no DRE)</span></label>
-        <Field label="Nomes do clube em comprovantes (um por linha)" hint="Usado só para avisar se o favorecido lido no comprovante parece outro. Vazio = não conferir."><textarea className={inputCls} rows={3} value={payees} onChange={(e) => setPayees(e.target.value)} /></Field>
+        <Field label="Nomes do clube em comprovantes (um por linha)" hint="O favorecido lido no comprovante precisa conter um destes nomes inteiro para haver baixa automática. Vazio = nenhum comprovante é baixado automaticamente; todos vão para análise."><textarea className={inputCls} rows={3} value={payees} onChange={(e) => setPayees(e.target.value)} /></Field>
         <button className={btnPrimary} disabled={busy || price === null} onClick={save}>Salvar</button>
       </div>
     </Card>

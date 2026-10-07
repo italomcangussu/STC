@@ -3,7 +3,7 @@
  * mensalidades com valor original, dias de atraso, multa e juros separados e
  * total atualizado; pagamentos; e o envio/acompanhamento de comprovantes.
  *
- * Comprovantes de pendência podem gerar baixa automática quando OCR e regras financeiras conferem; os demais seguem para revisão.
+ * Comprovantes de mensalidade e de pendência podem gerar baixa automática quando OCR e regras financeiras conferem; os demais seguem para revisão.
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Camera, Check, ChevronDown, ChevronUp, Copy, FileText, Loader2, Receipt, Wallet } from 'lucide-react';
@@ -202,7 +202,7 @@ const SendReceiptSheet: React.FC<SendSheetProps> = ({ open, onClose, user, payab
       });
       notify.success(res.auto_approved ? 'Pagamento identificado e baixado!' : 'Comprovante enviado!', {
         description: res.auto_approved
-          ? 'O OCR conferiu os dados e o financeiro atualizou automaticamente suas pendências.'
+          ? 'O OCR conferiu os dados e o financeiro foi atualizado automaticamente.'
           : res.possible_duplicate
             ? 'Este arquivo já tinha sido enviado antes; o clube vai conferir.'
             : 'O clube vai conferir o pagamento e você será avisado.',
@@ -220,7 +220,7 @@ const SendReceiptSheet: React.FC<SendSheetProps> = ({ open, onClose, user, payab
   return (
     <Sheet
       open={open} onClose={onClose} title={replaces ? 'Enviar novo comprovante' : 'Enviar comprovante'}
-      subtitle="O OCR pode confirmar automaticamente pendências quando valor, data e favorecido conferirem; qualquer dúvida vai para análise."
+      subtitle="O OCR pode confirmar automaticamente mensalidades e pendências quando valor, data e favorecido conferirem; qualquer dúvida vai para análise."
       footer={<><button className={btnGhost} onClick={onClose}>Cancelar</button><button className={btnPrimary} disabled={!canSend} onClick={send}>{busy ? <Loader2 className="animate-spin" size={16} /> : <Receipt size={16} />} Enviar comprovante</button></>}
     >
       <Field label="1. Quais cobranças você pagou?">

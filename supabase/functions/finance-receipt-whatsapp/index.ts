@@ -51,9 +51,10 @@ Deno.serve(async(req)=>{
   if(!contact?.profile_id||!['linked','manual'].includes(String(contact.link_status))) return json(200,{skipped:true,reason:'CONTACT_NOT_LINKED'});
 
   const {data:openCharges,error:chargeErr}=await service.from('fin_member_charges')
-    .select('id').eq('profile_id',contact.profile_id).eq('charge_type','member_pendency').in('status',['open','partial']).limit(1);
-  if(chargeErr) return json(500,{error:'PENDENCY_QUERY_FAILED'});
-  if(!openCharges?.length) return json(200,{skipped:true,reason:'NO_OPEN_PENDENCIES'});
+    // Mensalidade ou pendência em aberto: o banco confere de novo e decide entre baixa automática e análise.
+    .select('id').eq('profile_id',contact.profile_id).in('charge_type',['membership','member_pendency']).in('status',['open','partial']).limit(1);
+  if(chargeErr) return json(500,{error:'CHARGE_QUERY_FAILED'});
+  if(!openCharges?.length) return json(200,{skipped:true,reason:'NO_OPEN_CHARGES'});
 
   const {data:file,error:downErr}=await service.storage.from(SOURCE_BUCKET).download(msg.media_path);
   if(downErr||!file) return json(500,{error:'MEDIA_DOWNLOAD_FAILED'});
