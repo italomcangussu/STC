@@ -9,13 +9,15 @@ let n = 0;
 const SETTINGS_VERSION = '(select version from public.fin_settings)';
 
 /** Sócia A com mensalidades de R$ 100 vencidas, conta padrão e nome do clube cadastrado. */
-async function scene(payees: string[] = ['Sobral Tênis Clube']) {
+async function scene(payees: string[] = ['Sobral Tênis Clube'], opts: { plan?: boolean; generate?: boolean } = {}) {
   const w = await world();
   const today = await dbToday(w.db);
   await rpc(w.db, U.admin, `public.fin_save_account('${key()}', null, null, ${j({ name: 'Banco do clube', kind: 'bank', opening_balance_cents: 0, opening_date: '2020-01-01', is_default_receipts: true })})`);
   await rpc(w.db, U.admin, `public.fin_save_settings('${key()}', ${SETTINGS_VERSION}, ${j({ payee_names: payees })})`);
-  await rpc(w.db, U.admin, `public.fin_create_member_plan('${key()}', ${j({ profile_id: U.socioA, start_on: addMonths(firstOfMonth(today), -2), amount_cents: 10000 })})`);
-  await rpc(w.db, U.admin, `public.fin_generate_member_charges('${key()}', null, '${today}')`);
+  if (opts.plan !== false) {
+    await rpc(w.db, U.admin, `public.fin_create_member_plan('${key()}', ${j({ profile_id: U.socioA, start_on: addMonths(firstOfMonth(today), -2), amount_cents: 10000 })})`);
+    if (opts.generate !== false) await rpc(w.db, U.admin, `public.fin_generate_member_charges('${key()}', null, '${today}')`);
+  }
   const charges = await q<{ id: string; due_date: string }>(w.db,
     `select id, due_date::text from public.fin_member_charges where profile_id = '${U.socioA}' order by due_date`);
   return { w, today, charges };
@@ -29,7 +31,7 @@ async function photo(w: W) {
 }
 
 /** O que a edge function manda depois do OCR (declarado = lido). */
-function receipt(w: W, message: string, ocr: { amount_cents: number; paid_on: string; payee?: string | null; identifier?: string }) {
+function receipt(w: W, message: string, ocr: { amount_cents: number; paid_on: string; payee?: string | null; identifier?: string }, ocrStatus = 'ok') {
   const sub = `00000000-0000-4000-9000-${String(++n).padStart(12, '0')}`;
   const stored = {
     engine: 'tesseract-server', identifier: ocr.identifier ?? `E${n}`, payee: 'SOBRAL TENIS CLUBE LTDA', ...ocr,
@@ -40,7 +42,7 @@ function receipt(w: W, message: string, ocr: { amount_cents: number; paid_on: st
     lateral (select public.fin_submit_whatsapp_pendency_receipt('${message}', '${sub}', ${j({
     storage_path: `${U.socioA}/${sub}/comprovante.jpg`, file_name: 'comprovante.jpg', content_type: 'image/jpeg', size_bytes: 1234,
     content_sha256: String(n).padStart(64, 'b'), declared_amount_cents: stored.amount_cents, declared_paid_on: stored.paid_on,
-    declared_reference: stored.identifier, ocr_status: 'ok', ocr: stored })}) r) x)`);
+    declared_reference: stored.identifier, ocr_status: ocrStatus, ocr: ocrStatus === 'ok' ? stored : null })}) r) x)`);
 }
 
 const status = async (w: W, id: string) =>
@@ -94,10 +96,49 @@ describe('baixa automática do comprovante de mensalidade', () => {
     expect(await q(w.db, `select 1 from public.fin_charge_payments`)).toHaveLength(1);
   }, 60000);
 
-  it('sem nenhuma cobrança em aberto, o comprovante é ignorado', async () => {
-    const w = await world();
-    const r = await receipt(w, await photo(w), { amount_cents: 10000, paid_on: await dbToday(w.db) });
+  it('sócio em dia com a mensalidade do mês ainda não gerada: gera na hora e baixa', async () => {
+    const { w, today } = await scene(undefined, { generate: false });
+    expect(await q(w.db, `select 1 from public.fin_member_charges`)).toHaveLength(0);
+    const r = await receipt(w, await photo(w), { amount_cents: 10000, paid_on: today });
+    expect(r).toMatchObject({ auto_approved: true, status: 'approved' });
+    expect(r.generated_charges).toBeGreaterThan(0);
+    expect(await notices(w, 'paid')).toHaveLength(1);
+  }, 60000);
+
+  it('sócio que já pagou tudo e manda o próximo mês adiantado: gera a próxima mensalidade e baixa', async () => {
+    const { w, today, charges } = await scene();
+    const acc = (await q<{ id: string }>(w.db, `select id from public.fin_accounts where is_default_receipts`))[0].id;
+    for (const c of charges) await rpc(w.db, U.admin, `public.fin_register_payment('${key()}', '${c.id}', 10000, '${addDays(today, -3)}', 'pix', '${acc}', null)`);
+    const r = await receipt(w, await photo(w), { amount_cents: 10000, paid_on: today });
+    expect(r).toMatchObject({ auto_approved: true, generated_charges: 1 });
+    const all = await q<{ status: string }>(w.db, `select status from public.fin_member_charges order by competence_month`);
+    expect(all).toHaveLength(charges.length + 1);
+    expect(all.every((c) => c.status === 'paid')).toBe(true);
+  }, 60000);
+
+  it('mesmo valor e data já baixados à mão pelo administrador: não baixa de novo', async () => {
+    const { w, today, charges } = await scene();
+    const acc = (await q<{ id: string }>(w.db, `select id from public.fin_accounts where is_default_receipts`))[0].id;
+    await rpc(w.db, U.admin, `public.fin_register_payment('${key()}', '${charges[0].id}', 10000, '${today}', 'pix', '${acc}', null)`);
+    const r = await receipt(w, await photo(w), { amount_cents: 10000, paid_on: today });
+    expect(r).toMatchObject({ auto_approved: false, auto_reason: 'DUPLICATE_PAYMENT' });
+    expect(await notices(w, 'receipt_review')).toHaveLength(1);
+  }, 60000);
+
+  it('sócio sem plano e sem pendência: comprovante legível vai para análise e ele recebe resposta', async () => {
+    const { w, today } = await scene(undefined, { plan: false });
+    const r = await receipt(w, await photo(w), { amount_cents: 10000, paid_on: today });
+    expect(r).toMatchObject({ auto_approved: false, auto_reason: 'NO_CHARGES_SELECTED', status: 'submitted' });
+    expect(await notices(w, 'receipt_review')).toHaveLength(1);
+  }, 60000);
+
+  it('sem nada em aberto e arquivo ilegível (foto qualquer): ignorado, sem gerar mensalidade', async () => {
+    const { w, today, charges } = await scene();
+    const acc = (await q<{ id: string }>(w.db, `select id from public.fin_accounts where is_default_receipts`))[0].id;
+    for (const c of charges) await rpc(w.db, U.admin, `public.fin_register_payment('${key()}', '${c.id}', 10000, '${addDays(today, -3)}', 'pix', '${acc}', null)`);
+    const r = await receipt(w, await photo(w), { amount_cents: 10000, paid_on: today }, 'unreadable');
     expect(r).toMatchObject({ skipped: true, reason: 'NO_OPEN_CHARGES' });
+    expect(await q(w.db, `select 1 from public.fin_member_charges`)).toHaveLength(charges.length);
   }, 60000);
 
   it('pelo app, comprovante da mensalidade escolhida também é baixado automaticamente', async () => {
