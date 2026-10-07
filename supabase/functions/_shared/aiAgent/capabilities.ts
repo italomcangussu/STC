@@ -19,7 +19,7 @@ export type Capability = {
   /** Consulta sob demanda: domínio de `conv_svc_ai_admin_read` (o servidor busca e escreve o texto). */
   onDemand?: string;
   /** Ação de escrita (`fin_action` do modelo → proposta no banco). */
-  write?: { finAction: string };
+  write?: { finAction: string } | { admAction: string };
 };
 
 /** Valor (centavos) a partir do qual uma operação financeira exige a segunda confirmação. Igual ao do banco. */
@@ -46,6 +46,12 @@ export const CAPABILITIES: readonly Capability[] = [
   { id: 'fin.receipt.reject', domain: 'financeiro', risk: 'N2', label: 'Recusar comprovante', panel: 'Financeiro', write: { finAction: 'rejeitar_comprovante' } },
   { id: 'fin.entry.expense', domain: 'financeiro', risk: 'N2', label: 'Lançar despesa', panel: 'Financeiro', write: { finAction: 'despesa' } },
   { id: 'fin.entry.revenue', domain: 'financeiro', risk: 'N2', label: 'Lançar receita', panel: 'Financeiro', write: { finAction: 'receita' } },
+  { id: 'adm.announcement.create', domain: 'clube', risk: 'N1', label: 'Publicar aviso', panel: 'Avisos', write: { admAction: 'aviso' } },
+  { id: 'adm.announcement.deactivate', domain: 'clube', risk: 'N1', label: 'Tirar aviso do ar', panel: 'Avisos', write: { admAction: 'aviso_desativar' } },
+  { id: 'adm.student.status', domain: 'pessoas', risk: 'N1', label: 'Pausar/reativar aluno', panel: 'Alunos', write: { admAction: 'aluno_status' } },
+  { id: 'adm.member.status', domain: 'pessoas', risk: 'N1', label: 'Inativar/reativar sócio', panel: 'Sócios', write: { admAction: 'socio_status' } },
+  { id: 'adm.signature.resend', domain: 'clube', risk: 'N1', label: 'Reenviar avisos de assinatura com falha', panel: 'Documentos', write: { admAction: 'assinatura_reenviar' } },
+  { id: 'adm.reservation.cancel', domain: 'quadra', risk: 'N1', label: 'Cancelar reserva', panel: 'Reservas', write: { admAction: 'reserva_cancelar' } },
   { id: 'fin.payment.register', domain: 'financeiro', risk: 'N2', label: 'Dar baixa em pagamento', panel: 'Financeiro', write: { finAction: 'baixa' } },
 ];
 
@@ -53,7 +59,7 @@ export const CAPABILITIES: readonly Capability[] = [
 export const ADMIN_READS = CAPABILITIES.filter((c) => c.read);
 
 export const capabilityByFinAction = (finAction: string | null | undefined) =>
-  CAPABILITIES.find((c) => c.write?.finAction === finAction);
+  CAPABILITIES.find((c) => c.write && 'finAction' in c.write && c.write.finAction === finAction);
 
 export const needsSecondConfirm = (amountCents: number | null | undefined) =>
   Number.isFinite(amountCents) && Number(amountCents) >= SECOND_CONFIRM_CENTS;

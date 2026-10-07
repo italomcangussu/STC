@@ -33,6 +33,11 @@ Novas ações em `admin_financeiro` (proposta com resumo → "sim" → segunda c
 **Ficam só no painel (decisão técnica):** aprovar comprovante (exige alocar cobranças e conta) e gerar cobranças do mês (por plano). O João indica o painel.
 Próximo: Onda 3 (administrativo, N1).
 
+## 1e. Onda 3 entregue (2026-10-07) — administrativo (N1, reversível)
+Intent `admin_acao` + `conv_svc_ai_admin_adm_propose` (ações `adm_*`; mesmo protocolo: resumo → "sim" → grava como o administrador, auditoria `ai_admin_action`): `aviso` (publica no app, mostra o texto inteiro antes), `aviso_desativar`, `aluno_status` (pausar/reativar), `socio_status` (inativar/reativar; acha inativo pelo nome; **administrador é protegido**), `assinatura_reenviar` (`sig_resend_failed`), `reserva_cancelar` (por dia, horário, quadra e quem reservou; ambígua pede detalhe). A CHECK de `conv_booking_proposals.action` agora é lida do banco e só acrescentada (nunca mais apaga ação de outra migration).
+**Ficam só no painel:** aprovar/recusar pedido de acesso (função de borda que cria o usuário) e criar follow-up (depende de conversa).
+Próximo: Onda 4 (resumo proativo da manhã para Hermeson e Henrique).
+
 ## 2. Arquitetura-alvo (um padrão só, para tudo)
 
 1. **Registro de capacidades** (`aiAgent/capabilities.ts`): cada capacidade é uma entrada `{ id, domínio, tipo, intenção, leitura (RPC), escrita (RPC), slots, nível de risco, texto do resumo }`. Criar capacidade nova = adicionar uma entrada + RPC + teste, sem mexer no fluxo do turno.

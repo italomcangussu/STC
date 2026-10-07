@@ -259,6 +259,93 @@ describe('assessor administrativo do João (turno completo)', () => {
     }, 90000);
   });
 
+  describe('onda 3: ações administrativas (N1)', () => {
+    const dizer = async (w: W, p: ReturnType<typeof provider>, texto: string, o: Record<string, unknown>) => {
+      const m = await direct(w, texto);
+      return turn(w, m.message_id, script(answer({ intent: 'admin_acao', ...o })).chat, p.uaz);
+    };
+    const sim = async (w: W, p: ReturnType<typeof provider>) => {
+      const m = await direct(w, 'sim');
+      return turn(w, m.message_id, script(answer({ intent: 'admin_acao', customer_confirmed: true })).chat, p.uaz);
+    };
+    const acao = (adm_action: string, extra: Record<string, unknown> = {}) => ({ ready: true, slots: { adm_action, ...extra } });
+
+    it('aviso: pede o que falta, mostra o texto inteiro e só publica depois do "sim"; depois tira do ar', async () => {
+      const w = await setup(); const p = provider();
+      await w.db.exec(`create table if not exists public.announcements(id uuid primary key default gen_random_uuid(), title text not null, message text not null, image_url text,
+        is_active boolean default true, show_once boolean default false, created_at timestamptz default now(), expires_at timestamptz, updated_at timestamptz default now())`);
+      expect((await dizer(w, p, 'publica um aviso', acao('aviso'))).action).toBe('ask');
+      await dizer(w, p, 'aviso: quadra fechada sábado', acao('aviso', { ann_title: 'Quadra fechada', ann_message: 'A quadra rápida fica fechada sábado para manutenção.' }));
+      expect(p.sent.at(-1)!.text).toMatch(/«Quadra fechada»\nA quadra rápida fica fechada sábado para manutenção\.\nSem data para sair\. Confirma/);
+      expect(await q(w.db, `select 1 from public.announcements`)).toHaveLength(0);
+      expect((await sim(w, p)).action).toBe('admin_confirmed');
+      expect((await q<any>(w.db, `select title, is_active from public.announcements`))[0]).toEqual({ title: 'Quadra fechada', is_active: true });
+      await dizer(w, p, 'tira o aviso da quadra do ar', acao('aviso_desativar', { ann_title: 'quadra fechada' }));
+      expect(p.sent.at(-1)!.text).toMatch(/Vou tirar do ar o aviso «Quadra fechada»/);
+      expect((await sim(w, p)).action).toBe('admin_confirmed');
+      expect((await q<any>(w.db, `select is_active from public.announcements`))[0].is_active).toBe(false);
+    }, 90000);
+
+    it('sócio: inativa e reativa (acha inativo pelo nome); administrador é protegido; já no estado pedido é recusado', async () => {
+      const w = await setup(); const p = provider();
+      const ativo = async () => (await q<any>(w.db, `select is_active from public.profiles where id = '${U.socioB}'`))[0].is_active;
+      expect(await ativo()).toBe(true);
+      await dizer(w, p, 'inativa o Beto', acao('socio_status', { member_name: 'Beto', active: false }));
+      expect(p.sent.at(-1)!.text).toMatch(/^Vou inativar o sócio Beto Sócio\./);
+      expect(await ativo()).toBe(true);
+      expect((await sim(w, p)).action).toBe('admin_confirmed');
+      expect(await ativo()).toBe(false);
+      await dizer(w, p, 'inativa o Beto de novo', acao('socio_status', { member_name: 'Beto', active: false }));
+      expect(p.sent.at(-1)!.text).toMatch(/já está inativo/);
+      await dizer(w, p, 'reativa o Beto', acao('socio_status', { member_name: 'Beto', active: true }));
+      expect((await sim(w, p)).action).toBe('admin_confirmed');
+      expect(await ativo()).toBe(true);
+      await dizer(w, p, 'inativa o administrador', acao('socio_status', { member_name: 'Admin Clube', active: false }));
+      expect(p.sent.at(-1)!.text).toMatch(/Administrador não é alterado por aqui/);
+      expect((await q<any>(w.db, `select is_active from public.profiles where id = '${U.admin}'`))[0].is_active).toBe(true);
+    }, 90000);
+
+    it('aluno: pausa e reativa pelo nome', async () => {
+      const w = await setup(); const p = provider();
+      const [ns] = await q<{ id: string }>(w.db, `insert into public.non_socio_students(name, plan_type, plan_status) values ('Diana Lima', 'Day Card', 'active') returning id`);
+      if (!(await q(w.db, `select 1 from public.student_profiles where non_socio_student_id = '${ns.id}'`)).length)
+        await q(w.db, `insert into public.student_profiles(non_socio_student_id, student_status) values ('${ns.id}', 'active')`);
+      const st = async () => (await q<any>(w.db, `select student_status from public.student_profiles`))[0].student_status;
+      await dizer(w, p, 'pausa a Diana', acao('aluno_status', { student_names: ['Diana'], active: false }));
+      expect(p.sent.at(-1)!.text).toMatch(/^Vou pausar o aluno Diana Lima\./);
+      expect((await sim(w, p)).action).toBe('admin_confirmed');
+      expect(await st()).toBe('paused');
+      await dizer(w, p, 'pausa a Diana', acao('aluno_status', { student_names: ['Diana'], active: false }));
+      expect(p.sent.at(-1)!.text).toMatch(/já está pausado/);
+      await dizer(w, p, 'pausa a Zuleide', acao('aluno_status', { student_names: ['Zuleide'], active: false }));
+      expect(p.sent.at(-1)!.text).toMatch(/Não achei esse aluno/);
+    }, 90000);
+
+    it('reserva: cancela pelo dia e horário; ambígua pede a quadra; inexistente é recusada', async () => {
+      const w = await setup(); const p = provider();
+      const date = '2026-10-20';
+      await w.db.exec(`insert into public.reservations(court_id, creator_id, date, start_time, end_time, type, participant_ids) values
+        ('${w.court1}', '${U.socioB}', '${date}', '19:00', '20:00', 'Play', '{}'), ('${w.court2}', '${U.socioB}', '${date}', '19:00', '20:00', 'Play', '{}')`);
+      await dizer(w, p, 'cancela a das 19h', acao('reserva_cancelar', { date, start: '19:00' }));
+      expect(p.sent.at(-1)!.text).toMatch(/Há 2 reservas nesse horário/);
+      await dizer(w, p, 'cancela a das 19h do saibro', acao('reserva_cancelar', { date, start: '19:00', court_label: 'quadra 1', reason: 'chuva' }));
+      expect(p.sent.at(-1)!.text).toMatch(/^Vou cancelar a reserva .*20\/10\/2026 19:00-20:00 \(Play, de Beto Sócio\)\. Motivo: chuva\. Confirma/);
+      expect((await sim(w, p)).action).toBe('admin_confirmed');
+      expect((await q<any>(w.db, `select count(*)::int c from public.reservations where status = 'cancelled'`))[0].c).toBe(1);
+      expect((await q<any>(w.db, `select count(*)::int c from public.reservations where status = 'active'`))[0].c).toBe(1);
+      await dizer(w, p, 'cancela a das 7h', acao('reserva_cancelar', { date, start: '07:00' }));
+      expect(p.sent.at(-1)!.text).toMatch(/Não achei reserva ativa/);
+    }, 90000);
+
+    it('sócio comum e grupo: a ação administrativa nem é proposta', async () => {
+      const w = await setup(); const p = provider();
+      const m = await direct(w, 'inativa o Beto', '5599900000002');
+      const r = await turn(w, m.message_id, script(answer({ intent: 'admin_acao', ...acao('socio_status', { member_name: 'Beto', active: false }) })).chat, p.uaz);
+      expect(r.action).not.toBe('proposed_admin');
+      expect(await q(w.db, `select 1 from public.conv_booking_proposals where action like 'adm\\_%'`)).toHaveLength(0);
+    }, 90000);
+  });
+
   it('sócio comum: mesmo com o modelo pedindo a ação, nada é proposto nem gravado; não vê pendência de outro', async () => {
     const w = await setup();
     await rpc(w.db, U.admin, `public.fin_create_member_pendency('${key()}', ${j({ profile_id: U.socioB, description: 'Consumo do Beto', amount_cents: 1500, competence_month: '2026-10-01', due_date: '2026-10-07' })})`);

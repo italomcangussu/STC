@@ -72,6 +72,13 @@ export type Slots = {
   category_name?: string | null;
   receipt_date?: string | null;
   entry_status?: 'paid' | 'pending' | null;
+  /** Onda 3 (administrativo N1). */
+  adm_action?: AdmAction | null;
+  ann_title?: string | null;
+  ann_message?: string | null;
+  active?: boolean | null;
+  doc_title?: string | null;
+  by_name?: string | null;
   read_domain?: AdminReadDomain | null;
   read_from?: string | null;
   read_to?: string | null;
@@ -83,11 +90,13 @@ type PendencyKind = 'day_card' | 'consumo' | 'evento' | 'multa' | 'dano_reposica
 type PayMethod = 'pix' | 'transfer' | 'cash' | 'card' | 'other';
 const FIN_ACTIONS: FinAction[] = ['lancar', 'cobrar', 'pausar', 'retomar', 'baixa', 'renovar_card',
   'cancelar_pendencia', 'ajustar', 'estornar', 'rejeitar_comprovante', 'despesa', 'receita'];
+export const ADM_ACTIONS = ['aviso', 'aviso_desativar', 'aluno_status', 'socio_status', 'assinatura_reenviar', 'reserva_cancelar'] as const;
+export type AdmAction = typeof ADM_ACTIONS[number];
 const ADJUST_KINDS = ['discount', 'increase', 'fee_waiver'] as const;
 const PENDENCY_KINDS: PendencyKind[] = ['day_card', 'consumo', 'evento', 'multa', 'dano_reposicao', 'outros'];
 const PAY_METHODS: PayMethod[] = ['pix', 'transfer', 'cash', 'card', 'other'];
 
-export type Intent = 'reservar' | 'cancelar' | 'remarcar' | 'consultar' | 'consultar_disponibilidade' | 'informar' | 'entrar' | 'participantes' | 'admin_financeiro' | 'admin_consulta' | 'outro';
+export type Intent = 'reservar' | 'cancelar' | 'remarcar' | 'consultar' | 'consultar_disponibilidade' | 'informar' | 'entrar' | 'participantes' | 'admin_financeiro' | 'admin_consulta' | 'admin_acao' | 'outro';
 
 export type Answer = {
   messages: string[];
@@ -142,7 +151,7 @@ function lerJson(output: string): Record<string, unknown> | null {
 
 const str = (v: unknown): string | null => (typeof v === 'string' && v.trim() ? v.trim() : null);
 const strList = (v: unknown): string[] => (Array.isArray(v) ? v.map((x) => String(x ?? '').trim()).filter(Boolean).slice(0, 8) : []);
-const INTENTS: Intent[] = ['reservar', 'cancelar', 'remarcar', 'consultar', 'consultar_disponibilidade', 'informar', 'entrar', 'participantes', 'admin_financeiro', 'admin_consulta', 'outro'];
+const INTENTS: Intent[] = ['reservar', 'cancelar', 'remarcar', 'consultar', 'consultar_disponibilidade', 'informar', 'entrar', 'participantes', 'admin_financeiro', 'admin_consulta', 'admin_acao', 'outro'];
 const ACTIONABLE: Intent[] = ['reservar', 'cancelar', 'remarcar'];
 
 /**
@@ -189,6 +198,12 @@ export function parseSlots(raw: unknown): Slots {
   if ('category_name' in o) out.category_name = str(o.category_name);
   if ('receipt_date' in o) out.receipt_date = isoDate(o.receipt_date);
   if ('entry_status' in o) out.entry_status = o.entry_status === 'paid' || o.entry_status === 'pending' ? o.entry_status : null;
+  if ('adm_action' in o) out.adm_action = (ADM_ACTIONS as readonly unknown[]).includes(o.adm_action) ? o.adm_action as AdmAction : null;
+  if ('ann_title' in o) out.ann_title = str(o.ann_title)?.slice(0, 80) ?? null;
+  if ('ann_message' in o) out.ann_message = str(o.ann_message)?.slice(0, 600) ?? null;
+  if ('active' in o) out.active = typeof o.active === 'boolean' ? o.active : null;
+  if ('doc_title' in o) out.doc_title = str(o.doc_title);
+  if ('by_name' in o) out.by_name = str(o.by_name);
   if ('read_domain' in o) out.read_domain = isAdminReadDomain(o.read_domain) ? o.read_domain : null;
   if ('read_from' in o) out.read_from = isoDate(o.read_from);
   if ('read_to' in o) out.read_to = isoDate(o.read_to);
@@ -1335,6 +1350,7 @@ async function decide(i: DecideInput): Promise<Decision> {
   // 2d) Assessor administrativo: lançamento, cobrança, régua e baixa (o banco só aceita administrador no privado).
   if (answer.intent === 'admin_financeiro' && answer.ready && !answer.transfer) return adminFinanceiro(i, memory);
   if (answer.intent === 'admin_consulta' && !answer.transfer) return adminConsulta(i, memory);
+  if (answer.intent === 'admin_acao' && answer.ready && !answer.transfer) return adminAcao(i, memory);
 
   // 3) Pedido pronto: o servidor resolve pessoas, confere disponibilidade e monta a PROPOSTA.
   if (answer.ready && (answer.intent === 'reservar' || answer.intent === 'cancelar' || answer.intent === 'remarcar')) {
@@ -1607,10 +1623,11 @@ async function entrarNoJogo(i: DecideInput, memory: Memory): Promise<Decision> {
 /** Resolve nomes no cadastro. Ambíguo ou ausente vira PERGUNTA (nunca escolha por aproximação). */
 /* ------------------------------- Assessor administrativo (financeiro) ------------------------------- */
 
-const isAdminProposalAction = (a: unknown) => String(a ?? '').startsWith('fin_') || a === 'student_card_renew';
+const isAdminProposalAction = (a: unknown) => String(a ?? '').startsWith('fin_') || String(a ?? '').startsWith('adm_') || a === 'student_card_renew';
 
 type AdminAction = 'fin_pendency_create' | 'fin_pendency_collection' | 'fin_pendency_send' | 'fin_payment' | 'student_card_renew'
-  | 'fin_charge_cancel' | 'fin_charge_adjust' | 'fin_payment_reverse' | 'fin_receipt_reject' | 'fin_entry_create';
+  | 'fin_charge_cancel' | 'fin_charge_adjust' | 'fin_payment_reverse' | 'fin_receipt_reject' | 'fin_entry_create'
+  | 'adm_announcement_create' | 'adm_announcement_deactivate' | 'adm_student_status' | 'adm_member_status' | 'adm_signature_resend' | 'adm_reservation_cancel';
 
 const centsBR = (v: unknown) => `R$ ${(Number(v ?? 0) / 100).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`;
 const dateBR = (v: unknown) => String(v ?? '').slice(0, 10).split('-').reverse().join('/');
@@ -1623,6 +1640,12 @@ export function toCents(reais: number | null | undefined): number | null {
 
 export function adminProposalMessage(action: AdminAction, s: Ctx): string {
   if (action === 'student_card_renew') return studentCardProposalMessage(s);
+  if (action === 'adm_announcement_create') return `Vou publicar este aviso para todos os sócios no app:\n«${s.title}»\n${s.message}\n${s.expires_on ? `Fica no ar até ${dateBR(s.expires_on)}.` : 'Sem data para sair.'} Confirma? Responda "sim".`;
+  if (action === 'adm_announcement_deactivate') return `Vou tirar do ar o aviso «${s.title}». Confirma? Responda "sim".`;
+  if (action === 'adm_student_status') return `Vou ${s.status === 'paused' ? 'pausar' : 'reativar'} o aluno ${s.student_name}. Confirma? Responda "sim".`;
+  if (action === 'adm_member_status') return `Vou ${s.active ? 'reativar' : 'inativar'} o sócio ${s.member_name}. ${s.active ? '' : 'Ele deixa de aparecer nas listas e nas cobranças automáticas. '}Confirma? Responda "sim".`;
+  if (action === 'adm_signature_resend') return `Vou reenviar os avisos com falha do documento «${s.title}» (${s.failed_count}). Confirma? Responda "sim".`;
+  if (action === 'adm_reservation_cancel') return `Vou cancelar a reserva ${s.court}, ${dateBR(s.date)} ${s.start}-${s.end} (${s.type}${s.by ? `, de ${s.by}` : ''})${s.reason ? `. Motivo: ${s.reason}` : ''}. Confirma? Responda "sim".`;
   if (action === 'fin_charge_cancel') return `Vou cancelar a pendência de ${s.member_name}: ${s.description} (saldo ${centsBR(s.total_due_cents)}). Motivo: ${s.reason}. Confirma? Responda "sim".`;
   if (action === 'fin_charge_adjust') {
     const o = s.adjust_kind === 'discount' ? 'desconto de' : s.adjust_kind === 'increase' ? 'acréscimo de' : 'perdão de juros/multa de';
@@ -1652,6 +1675,12 @@ export function adminProposalMessage(action: AdminAction, s: Ctx): string {
 
 export function adminSuccessMessage(action: AdminAction, s: Ctx): string {
   if (action === 'student_card_renew') return studentCardSuccessMessage(s);
+  if (action === 'adm_announcement_create') return `Pronto: aviso «${s.title}» publicado.`;
+  if (action === 'adm_announcement_deactivate') return `Pronto: aviso «${s.title}» tirado do ar.`;
+  if (action === 'adm_student_status') return `Pronto: aluno ${s.student_name} ${s.status === 'paused' ? 'pausado' : 'reativado'}.`;
+  if (action === 'adm_member_status') return `Pronto: sócio ${s.member_name} ${s.active ? 'reativado' : 'inativado'}.`;
+  if (action === 'adm_signature_resend') return `Pronto: avisos de «${s.title}» reenviados (${Number((s.result as Ctx | undefined)?.resent ?? 0)} na fila).`;
+  if (action === 'adm_reservation_cancel') return `Pronto: reserva ${s.court}, ${dateBR(s.date)} ${s.start}, cancelada.`;
   if (action === 'fin_charge_cancel') return `Pronto: pendência de ${s.member_name} (${s.description}) cancelada.`;
   if (action === 'fin_charge_adjust') return `Pronto: ajuste de ${centsBR(s.amount_cents)} aplicado na pendência de ${s.member_name} (${s.description}).`;
   if (action === 'fin_payment_reverse') return `Pronto: pagamento de ${centsBR(s.amount_cents)} de ${s.member_name} estornado; a pendência voltou a ficar em aberto.`;
@@ -1676,6 +1705,43 @@ export function adminSuccessMessage(action: AdminAction, s: Ctx): string {
   const status = String(r.charge_status ?? '');
   const fim = status === 'paid' ? 'Pendência quitada.' : status === 'partial' ? 'Ficou parcial; o restante continua em aberto.' : '';
   return `Pronto: baixa de ${centsBR(s.amount_cents)} registrada para ${s.member_name}. ${fim}`.trim();
+}
+
+/** Ações administrativas reversíveis (N1): o servidor valida e propõe; só grava depois do "sim" do administrador. */
+async function adminAcao(i: DecideInput, memory: Memory): Promise<Decision> {
+  const { deps, ctx, slots, session } = i;
+  const ask = (text: string, awaiting = true): Decision => ({ bubbles: [text], awaiting, close: false, action: 'ask', memory });
+  if (!isAdminAssistant(ctx)) return ask('Essa parte é só com a diretoria, pela conversa privada. Posso te ajudar com outra coisa?', false);
+  const a = slots.adm_action;
+  let p: Record<string, unknown>;
+  if (a === 'aviso') {
+    if (!slots.ann_title) return ask('Qual o título do aviso?');
+    if (!slots.ann_message) return ask('E o texto do aviso?');
+    p = { action: 'adm_announcement_create', title: slots.ann_title, message: slots.ann_message, expires_on: slots.due_date ?? null };
+  } else if (a === 'aviso_desativar') {
+    if (!slots.ann_title) return ask('Qual aviso tirar do ar? Me diga o título.');
+    p = { action: 'adm_announcement_deactivate', title: slots.ann_title };
+  } else if (a === 'aluno_status') {
+    const nome = slots.student_names?.[0];
+    if (!nome) return ask('Qual aluno?');
+    if (typeof slots.active !== 'boolean') return ask('É para pausar ou reativar?');
+    p = { action: 'adm_student_status', student_name: nome, status: slots.active ? 'active' : 'paused' };
+  } else if (a === 'socio_status') {
+    if (!slots.member_name) return ask('Qual sócio?');
+    if (typeof slots.active !== 'boolean') return ask('É para inativar ou reativar?');
+    p = { action: 'adm_member_status', member_name: slots.member_name, active: slots.active };
+  } else if (a === 'assinatura_reenviar') {
+    p = { action: 'adm_signature_resend', title: slots.doc_title ?? '' };
+  } else if (a === 'reserva_cancelar') {
+    if (!slots.date || !slots.start) return ask('Qual o dia e o horário de início da reserva?');
+    p = { action: 'adm_reservation_cancel', date: slots.date, start: slots.start, court_label: slots.court_label ?? null, by_name: slots.by_name ?? null, reason: slots.reason ?? null };
+  } else {
+    return ask('O que você quer fazer: publicar ou tirar um aviso, pausar/reativar aluno, inativar/reativar sócio, reenviar avisos de assinatura ou cancelar uma reserva?');
+  }
+  const res = (await deps.db('conv_svc_ai_admin_adm_propose', { p_session: session, p })).data as
+    { ok: boolean; message?: string; action?: AdminAction; summary?: Ctx } | null;
+  if (!res?.ok || !res.summary || !res.action) return ask(res?.message ?? 'Não consegui montar isso. Pode repetir os dados?');
+  return { bubbles: [adminProposalMessage(res.action, res.summary)], awaiting: true, close: false, action: 'proposed_admin', memory, verbatim: true };
 }
 
 /** Consulta do assessor: o servidor busca como o administrador e escreve o texto; o modelo só escolheu domínio e período. */
