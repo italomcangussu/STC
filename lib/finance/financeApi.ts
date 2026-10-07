@@ -10,7 +10,7 @@ import { supabase } from '../supabase';
 import type {
   AccountBalance, AuditRow, CashFlowBucket, ChargeAdjustmentRow, ChargePaymentRow, ChargeStatementRow, DreDetailRow, DreLineRow, FinAccount,
   DayCardRow, FinCategory, FinEntry, FinHoliday, FinRecurrence, FinSettings, MemberCreditRow, MemberPlanRow, MonthlyTrendRow, MovementRow,
-  PayablesSummary, PlanPriceRow, PublicSettings, ReceiptQueueRow, ReceiptRow, ReceivablesSummary,
+  MemberPaymentSettings, MemberPendencyMeta, PayablesSummary, PlanPriceRow, PublicSettings, ReceiptQueueRow, ReceiptRow, ReceivablesSummary,
 } from './types';
 import type { IsoDate } from './dates';
 import { RECEIPT_TYPES, receiptStoragePath, type ReceiptMime } from './receiptFile';
@@ -189,6 +189,58 @@ export const listCharges = (f: ChargeFilters = {}, limit = 200, offset = 0, asOf
 export const chargeStatementsByIds = (ids: string[], asOf?: IsoDate) => rows<ChargeStatementRow>('fin_charge_statements_by_ids', { p_ids: ids, p_as_of: asOf ?? null });
 export const myCharges = (asOf?: IsoDate) => rows<ChargeStatementRow>('fin_my_charges', { p_as_of: asOf ?? null });
 
+export const getMemberPaymentSettings = async (): Promise<MemberPaymentSettings> =>
+  (await rows<MemberPaymentSettings>('fin_member_payment_settings'))[0];
+
+export const listActiveMembers = () => rows<{ id: string; name: string; phone: string | null }>('fin_active_members');
+
+export async function listPendencyMeta(profileId?: string): Promise<MemberPendencyMeta[]> {
+  let q = supabase.from('fin_member_charges')
+    .select('id, profile_id, charge_type, description, pendency_kind, category_id, guest_name, guest_date, collection_enabled, competence_month, due_date, original_amount_cents, status, version')
+    .eq('charge_type', 'member_pendency')
+    .order('due_date', { ascending: true });
+  if (profileId) q = q.eq('profile_id', profileId);
+  const { data, error } = await q;
+  if (error) throw error;
+  return (data ?? []) as MemberPendencyMeta[];
+}
+
+export interface CreateMemberPendencyInput {
+  profileId: string;
+  description: string;
+  amountCents: number;
+  competenceMonth: IsoDate;
+  dueDate: IsoDate;
+  pendencyKind: MemberPendencyMeta['pendency_kind'];
+  categoryId?: string | null;
+  guestName?: string | null;
+  guestDate?: IsoDate | null;
+  collectionEnabled?: boolean;
+  sendNow?: boolean;
+  alreadyPaid?: boolean;
+  paidOn?: IsoDate | null;
+  method?: string | null;
+  accountId?: string | null;
+  notes?: string | null;
+}
+export const createMemberPendency = (i: CreateMemberPendencyInput, requestId = newRequestId()) =>
+  call<{ id: string; status: string; automation_recipient_id?: string | null }>('fin_create_member_pendency', {
+    p_request_id: requestId,
+    p_data: {
+      profile_id: i.profileId, description: i.description, amount_cents: i.amountCents,
+      competence_month: i.competenceMonth, due_date: i.dueDate, pendency_kind: i.pendencyKind,
+      category_id: i.categoryId ?? null, guest_name: i.guestName ?? null, guest_date: i.guestDate ?? null,
+      collection_enabled: i.collectionEnabled ?? true, send_now: i.sendNow ?? false,
+      already_paid: i.alreadyPaid ?? false, paid_on: i.paidOn ?? null,
+      method: i.method ?? null, account_id: i.accountId ?? null, notes: i.notes ?? null,
+    },
+  });
+
+export const setPendencyCollection = (chargeId: string, enabled: boolean, requestId = newRequestId()) =>
+  call<{ id: string; collection_enabled: boolean }>('fin_set_pendency_collection', {
+    p_request_id: requestId, p_charge: chargeId, p_enabled: enabled,
+  });
+
 export async function chargeHistory(chargeId: string): Promise<{ payments: ChargePaymentRow[]; adjustments: ChargeAdjustmentRow[] }> {
   const [p, a] = await Promise.all([
     supabase.from('fin_charge_payments').select('id, charge_id, kind, amount_cents, paid_on, fine_cents, interest_cents, principal_cents, excess_cents, method, note, created_at').eq('charge_id', chargeId).order('created_at'),
@@ -251,8 +303,8 @@ export interface SubmitReceiptInput {
   replaces?: string | null;
 }
 
-/** Envia o arquivo (bucket privado, pasta do próprio sócio) e registra o envio. Nunca quita nada. */
-export async function submitReceipt(i: SubmitReceiptInput): Promise<{ id: string; possible_duplicate: boolean }> {
+/** Envia o arquivo e registra o comprovante. Pendências podem ser baixadas automaticamente quando OCR e regras conferirem. */
+export async function submitReceipt(i: SubmitReceiptInput): Promise<{ id: string; possible_duplicate: boolean; auto_approved: boolean; auto_reason: string | null; payment_ids: string[] }> {
   if (!(RECEIPT_TYPES as readonly string[]).includes(i.type)) throw new Error('INVALID_ATTACHMENT');
   const path = receiptStoragePath(i.userId, i.submissionId, i.safeName);
   const up = await supabase.storage.from(RECEIPTS_BUCKET).upload(path, i.file, { contentType: i.type, upsert: false });
