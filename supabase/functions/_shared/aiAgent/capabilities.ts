@@ -16,6 +16,8 @@ export type Capability = {
   panel: string;
   /** Leitura que o servidor carrega no contexto do administrador antes do modelo responder. */
   read?: { rpc: string; ctxKey: string };
+  /** Consulta sob demanda: domínio de `conv_svc_ai_admin_read` (o servidor busca e escreve o texto). */
+  onDemand?: string;
   /** Ação de escrita (`fin_action` do modelo → proposta no banco). */
   write?: { finAction: string };
 };
@@ -25,6 +27,14 @@ export const SECOND_CONFIRM_CENTS = 40000;
 
 export const CAPABILITIES: readonly Capability[] = [
   { id: 'fin.balances', domain: 'financeiro', risk: 'N0', label: 'Saldo das contas do clube', panel: 'Financeiro', read: { rpc: 'conv_svc_ai_club_balances', ctxKey: 'club_balances' } },
+  { id: 'fin.cash', domain: 'financeiro', risk: 'N0', label: 'Caixa do período', panel: 'Financeiro', onDemand: 'caixa' },
+  { id: 'fin.receivables', domain: 'financeiro', risk: 'N0', label: 'A receber e a pagar', panel: 'Financeiro', onDemand: 'receber_pagar' },
+  { id: 'fin.dre', domain: 'financeiro', risk: 'N0', label: 'Resultado (DRE)', panel: 'Financeiro', onDemand: 'dre' },
+  { id: 'fin.student_revenue', domain: 'financeiro', risk: 'N0', label: 'Receita de alunos', panel: 'Financeiro', onDemand: 'receita_alunos' },
+  { id: 'fin.receipts', domain: 'financeiro', risk: 'N0', label: 'Fila de comprovantes', panel: 'Financeiro', onDemand: 'comprovantes' },
+  { id: 'people.access', domain: 'pessoas', risk: 'N0', label: 'Pedidos de acesso pendentes', panel: 'Acessos', onDemand: 'acessos' },
+  { id: 'club.signatures', domain: 'clube', risk: 'N0', label: 'Assinaturas pendentes', panel: 'Documentos', onDemand: 'assinaturas' },
+  { id: 'court.occupancy', domain: 'quadra', risk: 'N0', label: 'Reservas do dia', panel: 'Reservas', onDemand: 'ocupacao' },
   { id: 'fin.pendency.create', domain: 'financeiro', risk: 'N2', label: 'Lançar pendência de sócio', panel: 'Financeiro', write: { finAction: 'lancar' } },
   { id: 'fin.pendency.send', domain: 'financeiro', risk: 'N1', label: 'Cobrar agora', panel: 'Financeiro', write: { finAction: 'cobrar' } },
   { id: 'fin.pendency.pause', domain: 'financeiro', risk: 'N1', label: 'Pausar cobrança', panel: 'Financeiro', write: { finAction: 'pausar' } },

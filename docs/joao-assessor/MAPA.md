@@ -23,6 +23,11 @@ Limite estrutural: despejar todo o contexto no prompt não escala (cada novo dom
 - Auditoria com origem WhatsApp já existia (`conv_private.audit('ai_admin_finance', …, source: 'whatsapp')`).
 - Ainda não feito da onda: leitura **sob demanda por domínio** do bloco financeiro (hoje segue inteiro no prompt); entra junto com a Onda 1, quando houver mais de uma leitura grande.
 
+## 1c. Onda 1 entregue (2026-10-07) — ver tudo, só leitura (N0)
+Intent `admin_consulta` + `conv_svc_ai_admin_read(session, domínio, args)`: roda como o administrador (mesmas funções do painel), só no privado com admin, audita (`ai_admin_read`). O servidor escreve o texto (`aiAgent/adminReads.ts`); o modelo só escolhe domínio e período. Resposta numa mensagem só (`verbatim`).
+Domínios: `caixa`, `receber_pagar`, `dre` (com período anterior), `receita_alunos`, `comprovantes`, `acessos`, `assinaturas`, `ocupacao`. Todos verificados contra o banco real. Limite de período: 731 dias.
+Próximo: Onda 2 (financeiro completo, N2).
+
 ## 2. Arquitetura-alvo (um padrão só, para tudo)
 
 1. **Registro de capacidades** (`aiAgent/capabilities.ts`): cada capacidade é uma entrada `{ id, domínio, tipo, intenção, leitura (RPC), escrita (RPC), slots, nível de risco, texto do resumo }`. Criar capacidade nova = adicionar uma entrada + RPC + teste, sem mexer no fluxo do turno.

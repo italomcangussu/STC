@@ -16,6 +16,7 @@
 import { extrairObjeto, repararJson, stripCodeFence } from './jsonRepair.ts';
 import type { Chat } from './llm.ts';
 import { ADMIN_READS, n3Reply } from './capabilities.ts';
+import { isAdminReadDomain, renderAdminRead, type AdminReadDomain } from './adminReads.ts';
 import { hearAudios, unheardOnly, UNCLEAR_AUDIO_REPLY } from './audio.ts';
 import { adminPendencyRefs, isAdminAssistant, systemPrompt, userPrompt, type AiSettings, type Ctx } from './prompts.ts';
 import { buildChatRequest, providerIdFrom, uazError, type UazCaller } from '../uazChat.ts';
@@ -63,6 +64,10 @@ export type Slots = {
   paid_on?: string | null;
   method?: PayMethod | null;
   account_name?: string | null;
+  /** Consultas do assessor (Onda 1): domínio e período. */
+  read_domain?: AdminReadDomain | null;
+  read_from?: string | null;
+  read_to?: string | null;
 };
 
 export type FinAction = 'lancar' | 'cobrar' | 'pausar' | 'retomar' | 'baixa';
@@ -72,7 +77,7 @@ const FIN_ACTIONS: FinAction[] = ['lancar', 'cobrar', 'pausar', 'retomar', 'baix
 const PENDENCY_KINDS: PendencyKind[] = ['day_card', 'consumo', 'evento', 'multa', 'dano_reposicao', 'outros'];
 const PAY_METHODS: PayMethod[] = ['pix', 'transfer', 'cash', 'card', 'other'];
 
-export type Intent = 'reservar' | 'cancelar' | 'remarcar' | 'consultar' | 'consultar_disponibilidade' | 'informar' | 'entrar' | 'participantes' | 'admin_financeiro' | 'outro';
+export type Intent = 'reservar' | 'cancelar' | 'remarcar' | 'consultar' | 'consultar_disponibilidade' | 'informar' | 'entrar' | 'participantes' | 'admin_financeiro' | 'admin_consulta' | 'outro';
 
 export type Answer = {
   messages: string[];
@@ -127,7 +132,7 @@ function lerJson(output: string): Record<string, unknown> | null {
 
 const str = (v: unknown): string | null => (typeof v === 'string' && v.trim() ? v.trim() : null);
 const strList = (v: unknown): string[] => (Array.isArray(v) ? v.map((x) => String(x ?? '').trim()).filter(Boolean).slice(0, 8) : []);
-const INTENTS: Intent[] = ['reservar', 'cancelar', 'remarcar', 'consultar', 'consultar_disponibilidade', 'informar', 'entrar', 'participantes', 'admin_financeiro', 'outro'];
+const INTENTS: Intent[] = ['reservar', 'cancelar', 'remarcar', 'consultar', 'consultar_disponibilidade', 'informar', 'entrar', 'participantes', 'admin_financeiro', 'admin_consulta', 'outro'];
 const ACTIONABLE: Intent[] = ['reservar', 'cancelar', 'remarcar'];
 
 /**
@@ -169,6 +174,9 @@ export function parseSlots(raw: unknown): Slots {
   if ('paid_on' in o) out.paid_on = isoDate(o.paid_on);
   if ('method' in o) out.method = PAY_METHODS.includes(o.method as PayMethod) ? o.method as PayMethod : null;
   if ('account_name' in o) out.account_name = str(o.account_name);
+  if ('read_domain' in o) out.read_domain = isAdminReadDomain(o.read_domain) ? o.read_domain : null;
+  if ('read_from' in o) out.read_from = isoDate(o.read_from);
+  if ('read_to' in o) out.read_to = isoDate(o.read_to);
   return out;
 }
 
@@ -935,7 +943,8 @@ export type TurnResult = { status: string; reason?: string; bubbles?: number; ha
 
 type Memory = { intent?: Intent; slots?: Slots; proposal_names?: string[]; pending_guest?: string | null; summary?: string; [k: string]: unknown };
 
-type Decision = { bubbles: string[]; awaiting: boolean; close: boolean; action: string | null; memory: Memory; handoff?: { kind: 'soft' | 'hard'; note: string } };
+type Decision = { bubbles: string[]; awaiting: boolean; close: boolean; action: string | null; memory: Memory; handoff?: { kind: 'soft' | 'hard'; note: string };
+  /** Relatório do servidor: vai numa mensagem só, com as quebras de linha (sem picotar em microbolhas). */ verbatim?: boolean };
 
 export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnResult> {
   const { db } = deps;
@@ -1232,7 +1241,7 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
     await save(d.memory, `handoff_${d.handoff.kind}`, { action: d.action, reason: d.handoff.note.slice(0, 200) }, false, d.handoff.kind === 'hard');
     return { status: 'handoff', handoff: d.handoff.kind, action: d.action };
   }
-  const enviadas = await entregar(cadence(d.bubbles));
+  const enviadas = await entregar(d.verbatim ? [{ text: d.bubbles.join('\n\n'), delayMs: 900 }] : cadence(d.bubbles));
   if (answer.transfer && !isGroup) {
     await db('conv_svc_ai_handoff', { p_session: session, p_kind: answer.handoff_kind ?? 'hard', p_note: answer.handoff_note || 'Transferida pela IA' });
   }
@@ -1299,6 +1308,7 @@ async function decide(i: DecideInput): Promise<Decision> {
 
   // 2d) Assessor administrativo: lançamento, cobrança, régua e baixa (o banco só aceita administrador no privado).
   if (answer.intent === 'admin_financeiro' && answer.ready && !answer.transfer) return adminFinanceiro(i, memory);
+  if (answer.intent === 'admin_consulta' && !answer.transfer) return adminConsulta(i, memory);
 
   // 3) Pedido pronto: o servidor resolve pessoas, confere disponibilidade e monta a PROPOSTA.
   if (answer.ready && (answer.intent === 'reservar' || answer.intent === 'cancelar' || answer.intent === 'remarcar')) {
@@ -1613,6 +1623,19 @@ export function adminSuccessMessage(action: AdminAction, s: Ctx): string {
   const status = String(r.charge_status ?? '');
   const fim = status === 'paid' ? 'Pendência quitada.' : status === 'partial' ? 'Ficou parcial; o restante continua em aberto.' : '';
   return `Pronto: baixa de ${centsBR(s.amount_cents)} registrada para ${s.member_name}. ${fim}`.trim();
+}
+
+/** Consulta do assessor: o servidor busca como o administrador e escreve o texto; o modelo só escolheu domínio e período. */
+async function adminConsulta(i: DecideInput, memory: Memory): Promise<Decision> {
+  const { deps, ctx, slots, session } = i;
+  const ask = (text: string, awaiting = true): Decision => ({ bubbles: [text], awaiting, close: false, action: 'ask', memory });
+  if (!isAdminAssistant(ctx)) return ask('Essa consulta é só com a diretoria, pela conversa privada. Posso te ajudar com outra coisa?', false);
+  if (!slots.read_domain) return ask('O que você quer ver: caixa, a receber/a pagar, resultado (DRE), receita de alunos, comprovantes, pedidos de acesso, assinaturas ou reservas do dia?');
+  const args: Record<string, unknown> = { from: slots.read_from ?? null, to: slots.read_to ?? null, date: slots.date ?? null };
+  const res = (await deps.db('conv_svc_ai_admin_read', { p_session: session, p_domain: slots.read_domain, p_args: args })).data as
+    { ok: boolean; message?: string; data?: unknown } | null;
+  if (!res?.ok) return ask(res?.message ?? 'Não consegui consultar isso agora. Tenta de novo daqui a pouco?', false);
+  return { bubbles: [renderAdminRead(slots.read_domain, res.data)], awaiting: false, close: false, action: `admin_read:${slots.read_domain}`, memory, verbatim: true };
 }
 
 async function adminFinanceiro(i: DecideInput, memory: Memory): Promise<Decision> {

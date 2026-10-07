@@ -1,16 +1,21 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
+import { ADMIN_READ_DOMAINS } from '../../supabase/functions/_shared/aiAgent/adminReads';
 import { ADMIN_READS, CAPABILITIES, SECOND_CONFIRM_CENTS, capabilityByFinAction, n3Reply, needsSecondConfirm } from '../../supabase/functions/_shared/aiAgent/capabilities';
 
 describe('registro de capacidades do assessor', () => {
   it('ids únicos; toda capacidade tem leitura ou escrita; N3 nunca tem escrita', () => {
     expect(new Set(CAPABILITIES.map((c) => c.id)).size).toBe(CAPABILITIES.length);
     for (const c of CAPABILITIES) {
-      expect(Boolean(c.read) || Boolean(c.write)).toBe(true);
+      expect(Boolean(c.read) || Boolean(c.write) || Boolean(c.onDemand)).toBe(true);
       if (c.risk === 'N3') expect(c.write).toBeUndefined();
-      if (c.read) expect(c.risk).toBe('N0');
+      if (c.read || c.onDemand) expect(c.risk).toBe('N0');
     }
     expect(ADMIN_READS.map((c) => c.read!.ctxKey)).toContain('club_balances');
+  });
+
+  it('todo domínio de consulta está no registro e vice-versa', () => {
+    expect([...ADMIN_READ_DOMAINS].sort()).toEqual(CAPABILITIES.filter((c) => c.onDemand).map((c) => c.onDemand!).sort());
   });
 
   it('as 5 ações financeiras atuais estão registradas, baixa e lançamento como N2', () => {

@@ -140,6 +140,30 @@ describe('assessor administrativo do João (turno completo)', () => {
     expect(p.sent.at(-1)!.text).toMatch(/painel administrativo/);
   }, 90000);
 
+  it('consulta: caixa, a receber/pagar e reservas do dia saem do banco, escritas pelo servidor (modelo não escreve números)', async () => {
+    const w = await setup();
+    await rpc(w.db, U.admin, `public.fin_create_member_pendency('${key()}', ${j({ profile_id: U.socioB, description: 'Consumo do Beto', amount_cents: 15000, competence_month: '2026-10-01', due_date: '2026-10-01' })})`);
+    const p = provider();
+    for (const [domain, esperado] of [['receber_pagar', /^A receber: R\$ 1\d\d,\d\d em aberto[\s\S]*\nA pagar: /], ['caixa', /Caixa de \d\d\/\d\d\/\d{4} a \d\d\/\d\d\/\d{4}:/], ['ocupacao', /^(Reservas de|Sem reservas em) \d\d\/\d\d\/\d{4}/]] as const) {
+      const m = await direct(w, `me mostra ${domain}`);
+      const r = await turn(w, m.message_id, script(answer({ intent: 'admin_consulta', ready: true, slots: { read_domain: domain } })).chat, p.uaz);
+      expect(r.action, domain).toBe(`admin_read:${domain}`);
+      expect(p.sent.at(-1)!.text, domain).toMatch(esperado);
+    }
+  }, 90000);
+
+  it('consulta sem domínio pergunta o que ver; período inválido é recusado pelo banco', async () => {
+    const w = await setup();
+    const p = provider();
+    const m1 = await direct(w, 'quero ver uns números');
+    const r1 = await turn(w, m1.message_id, script(answer({ intent: 'admin_consulta', ready: true, slots: {} })).chat, p.uaz);
+    expect(r1.action).toBe('ask');
+    expect(p.sent.at(-1)!.text).toMatch(/O que você quer ver/);
+    const m2 = await direct(w, 'caixa de 2020 a 2026');
+    await turn(w, m2.message_id, script(answer({ intent: 'admin_consulta', ready: true, slots: { read_domain: 'caixa', read_from: '2020-01-01', read_to: '2026-10-07' } })).chat, p.uaz);
+    expect(p.sent.at(-1)!.text).toMatch(/período não vale/);
+  }, 90000);
+
   it('saldo do clube entra no prompt do administrador (e só dele)', async () => {
     const w = await setup();
     const p = provider();
