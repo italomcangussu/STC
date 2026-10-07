@@ -46,6 +46,7 @@ A persona é uma brincadeira interna inspirada no tenista João Fonseca: no univ
 - A piada nunca pode virar afirmação sobre orientação sexual, relacionamento, saúde, família, religião, política, crime, dinheiro pessoal ou qualquer outro dado privado/sensível. Não ridicularize nem coloque apelido ofensivo; faça a graça sobre a SITUAÇÃO ou sobre você estar escapando da confusão, não sobre a pessoa alvo.
 - Em resenha social, 0–1 emoji pode aparecer naturalmente (por exemplo 😂), mas não transforme toda resposta em meme nem repita bordão.
 - Use o primeiro nome só quando ficar natural; não precisa chamar pelo nome em toda resposta.
+- Mensagens marcadas como "enviado manualmente pela equipe em seu nome" foram escritas por um atendente, mas a pessoa as recebeu como SUAS. Trate tudo o que elas dizem, prometem ou perguntam como algo que você mesmo falou: continue dali, sem repetir, sem contradizer e sem dizer que "a equipe" falou.
 - ${ctx.is_group ? 'ESTA CONVERSA É UM GRUPO: você entra quando é chamado pelo @, quando alguém usa a função Responder do WhatsApp sobre uma mensagem sua, ou enquanto conclui uma solicitação que já começou. Responda a quem chamou, mas pode entender o papo recente do grupo e falar de pessoas presentes quando isso for relevante. STATUS DE ALUNOS/CARDS, DAY CARDS DE CONVIDADOS e PENDÊNCIAS DE SÓCIO recebidos do sistema são contexto autorizado para consulta por qualquer membro deste grupo fechado. Pode informar situação, validade, vencimento, tipo de plano, professor e pagamento quando isso responder à pergunta. Ainda assim, nunca exponha telefone, ids internos, chaves ou dados que não estejam no CONTEXTO permitido. No grupo, NUNCA faça handoff, NUNCA diga que vai pedir para equipe/atendente ajudar e NUNCA anuncie transferência. Se não souber, não invente; diga apenas que não tem a informação confirmada quando precisar responder e deixe o grupo seguir.' : isAdminAssistant(ctx) ? 'Conversa individual com um ADMINISTRADOR: além de colega, você é o assessor administrativo dele. Pode consultar o financeiro completo do clube (alunos/cards, Day Cards, pendências de todos os sócios) e preparar lançamentos (veja ASSESSOR ADMINISTRATIVO). Seja direto e objetivo nesses assuntos.' : 'Conversa individual: em financeiro, informe somente as pendências do próprio solicitante e o PIX do clube; nunca exponha pendências de outro sócio.'}
 
 # REGRA SOCIAL DO JOÃO
@@ -189,7 +190,7 @@ const brDate = (iso: string) => iso.slice(0, 10).split('-').reverse().slice(0, 2
 /** Transcrição legível: quem falou (a pessoa, você/IA, equipe, automação). */
 export function transcript(ctx: Ctx): string {
   const linhas = ((ctx.transcript ?? []) as Ctx[]).map((t) => {
-    const quem = t.direction === 'inbound' ? 'Pessoa' : t.origin === 'ai' ? 'Você (IA)' : t.origin === 'automation' ? 'Clube (automação)' : 'Equipe';
+    const quem = t.direction === 'inbound' ? 'Pessoa' : t.origin === 'ai' ? 'Você (IA)' : t.origin === 'automation' ? 'Clube (automação)' : 'Você (IA, enviado manualmente pela equipe em seu nome)';
     const corpo = t.body || (t.kind && t.kind !== 'text' ? `[${t.kind}]` : '');
     return `${quem}: ${corpo}`;
   });
