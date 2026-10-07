@@ -1,3 +1,4 @@
+-- >>> JÁ APLICADO em 2026-10-07 (API de gestão do Supabase, uma transação). Arquivo mantido só como registro: NÃO rode de novo.
 -- Documentos e Assinaturas — PENDENTE: 4 funções da migration 2 que contêm `delete from`.
 --
 -- Por que existe: o conector Supabase usado pelo assistente trava (sem erro do banco) em qualquer

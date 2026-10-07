@@ -1,12 +1,11 @@
 # Documentos e Assinaturas — modelo, migrations e contrato com a edge function
 
 > **Estado (fase 4 de 5):** banco e funções testados num Postgres em memória (PGlite, `__tests__/signatures/sql/`,
-> 91 testes) **e aplicados no banco real (2026-10-07), exceto 4 funções** (ver §6). Edge functions
-> `signature-operations` (código + WhatsApp + despacho) e `signature-dispatch` (avisos e lembretes) **escritas e testadas, ainda NÃO
-> publicadas** (`__tests__/signatures/edge/`, 108 testes, incluindo um que liga a edge function ao SQL real).
+> 91 testes) **e aplicados por inteiro no banco real (2026-10-07; as 4 funções com `delete from` entraram no mesmo dia, ver §6)**. Edge functions
+> `signature-operations` (código + WhatsApp + despacho) e `signature-dispatch` (avisos e lembretes) **escritas, testadas e PUBLICADAS no projeto real (2026-10-07), com cron a cada 5 min** (`__tests__/signatures/edge/`, 108 testes, incluindo um que liga a edge function ao SQL real).
 > **Telas do sócio prontas** (aba "Documentos e Assinaturas", ver §8) e **Painel Admin pronto** (seção "Documentos" em Clube: subir PDF,
 > publicar, acompanhar, reenviar falhas, prazo, nova versão, arquivar, integridade; ver §9). `__tests__/signatures/client/`, 14 arquivos.
-> **Enquanto as 4 funções do §6 não forem aplicadas no banco real, "Publicar" falha** (`sig_publish` não existe lá): o resto da tela funciona.
+> Falta o teste de ponta a ponta com um documento real (publicar só para um admin, assinar com o código; roteiro no §5).
 > Fase seguinte: 5 comprovante em PDF e lembretes agendados (o código dos lembretes já existe; falta publicar a função e agendar o cron).
 
 ## 1. O que é
@@ -167,16 +166,16 @@ certo → assinatura gravada e `sig_verify_integrity` com `ok: true`; (5) repeti
 
 ## 6. Aplicar no banco real
 
-**Situação (2026-10-07, com autorização do clube):** migrations **1 e 3 aplicadas por inteiro** e registradas em
-`supabase_migrations.schema_migrations`. A **2 foi aplicada sem 4 funções** — `sig_set_recipients`, `sig_delete_draft`,
+**Situação (2026-10-07, com autorização do clube): TUDO aplicado.** As migrations **1 e 3** foram por inteiro e a **2** ficou sem 4 funções — `sig_set_recipients`, `sig_delete_draft`,
 `sig_publish` e `sig_remove_recipient` — porque o conector Supabase usado pelo assistente **trava (sem erro do banco) em
-qualquer SQL com `delete from`** (a sessão não consegue dar a confirmação que ele espera). Não contornamos o filtro: o trecho
-literal está em **`docs/assinaturas/PENDENTE_funcoes_com_delete.sql`**. **Rode esse arquivo inteiro, uma vez, no SQL Editor
-do Supabase.** Ele cria as 4 funções, refaz as permissões e registra a migration 2 (`20261007120100`).
-**Sem `sig_publish` nenhum documento pode ser publicado.**
+qualquer SQL com `delete from`** (a sessão não consegue dar a confirmação que ele espera). O trecho literal ficou em
+**`docs/assinaturas/PENDENTE_funcoes_com_delete.sql`** e **foi aplicado no mesmo dia, a pedido do clube, pela API de gestão do Supabase**
+(`POST /v1/projects/<ref>/database/query`, em uma transação, com o token do `.env.local`; não é o conector que trava). Conferido depois:
+as 4 funções existem, `authenticated` executa e `anon` não, e a migration 2 (`20261007120100`) está registrada. O arquivo fica como
+registro; **não rode de novo** (`create function` falharia).
 
-Depois de rodar: conferir `get_advisors` (segurança) e, dentro de uma transação que reverte, um teste de fumaça
-(rascunho → arquivo → publicar → assinar).
+Advisors de segurança conferidos depois: sem achado novo (as 22 funções `sig_*` chamáveis por `authenticated` conferem o papel por dentro;
+`sig_private.challenges` sem política é de propósito). Falta o teste de ponta a ponta com documento real (§5, roteiro de fumaça).
 
 **Desfazer** (nada é apagado de dado existente): `drop schema sig_private cascade; drop table public.sig_* cascade;
 drop function public.sig_*; drop trigger sig_profiles_new_member on public.profiles; delete from storage.buckets where id = 'sig-docs'`

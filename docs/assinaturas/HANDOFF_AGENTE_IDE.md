@@ -3,20 +3,17 @@
 Branch `feat/documentos-assinaturas` (PR #17). Leia primeiro `docs/assinaturas/OPERACAO_E_MIGRATIONS.md` e `.fabuloso/arquitetura.md`.
 
 ## Estado
-- Fase 1 (banco, bucket, RPCs, testes): pronta. Fase 2 (edge functions `signature-operations` e `signature-dispatch`): pronta no código, **não implantada**. Fase 3 (telas do sócio + link `#documentos/<id>`): pronta. Fase 4 (Painel Admin, seção Documentos): pronta (ver `OPERACAO_E_MIGRATIONS.md` §9).
-- Faltam: **fase 5** (recibo em PDF + lembretes agendados), as **4 funções do banco** (§1) e **publicar as edge functions** (§2).
+- Fase 1 (banco, bucket, RPCs, testes): pronta. Fase 2 (edge functions `signature-operations` e `signature-dispatch`): **implantadas** em 2026-10-07 (cron `signature-dispatch` a cada 5 min, job 6). Fase 3 (telas do sócio + link `#documentos/<id>`): pronta. Fase 4 (Painel Admin, seção Documentos): pronta (ver `OPERACAO_E_MIGRATIONS.md` §9).
+- Faltam: **fase 5** (recibo em PDF) e o **teste de ponta a ponta** com um documento real (roteiro no `OPERACAO_E_MIGRATIONS.md` §5).
 
-## 1. Banco (fazer antes de tudo)
-1. As migrations `supabase/migrations/2026100712*_signatures_*.sql` já foram aplicadas no projeto `smztsayzldjmkzmufqcz`, **exceto 4 funções com `delete from`** (o conector do Supabase trava nelas).
-2. Rode `docs/assinaturas/PENDENTE_funcoes_com_delete.sql` no SQL Editor (ou `psql`/`supabase db push`). Sem `sig_publish` nada é publicado.
-3. Confira: `select proname from pg_proc where proname like 'sig\_%';` deve listar todas as funções `sig_*` do documento de operação.
-4. Rode os testes SQL das migrations (veja §banco do doc de operação) contra um banco real.
+## 1. Banco (feito em 2026-10-07)
+As 3 migrations estão aplicadas por inteiro no projeto `smztsayzldjmkzmufqcz`. As 4 funções com `delete from` (`sig_set_recipients`, `sig_delete_draft`, `sig_publish`, `sig_remove_recipient`) foram aplicadas pela API de gestão a partir de `PENDENTE_funcoes_com_delete.sql` (arquivo só de registro; não rode de novo). O conector MCP do Supabase continua travando em SQL com `delete from`; para esse caso use a API de gestão com o token do `.env.local`, por referência.
 
-## 2. Edge functions e segredos
-- `supabase functions deploy signature-operations`
-- `supabase functions deploy signature-dispatch --no-verify-jwt`
-- Segredos: `STC_PUBLIC_ORIGIN` (inclui `https://stcplay.com.br`); opcionais `STC_APP_URL`, `STC_GEOIP_URL`. UazAPI reutiliza a config de Conversas.
-- Agende o `signature-dispatch` com pg_cron (a cada 5–10 min).
+## 2. Edge functions e segredos (feito em 2026-10-07)
+- Publicadas com `supabase functions deploy <nome> --use-api` (sem Docker): `signature-operations` (JWT) e `signature-dispatch --no-verify-jwt`.
+- Segredos já existiam (`STC_PUBLIC_ORIGIN` aceita `https://stcplay.com.br`, `STC_DISPATCH_SECRET`, UazAPI de Conversas). Opcionais: `STC_APP_URL`, `STC_GEOIP_URL`.
+- Cron `signature-dispatch` (`*/5 * * * *`) criado clonando o comando do job de Conversas (o segredo nunca passa pelo terminal).
+- Verificado: preflight CORS ok, 401 sem JWT/segredo, e o despacho real respondeu `configured: true` com a fila vazia.
 
 ## 3. Fase 4 — Painel Admin (pronta)
 Seção `documentos` no grupo Clube do painel (`components/signatures/admin/`, `lib/signatures/admin.ts`). Detalhes e decisões em `OPERACAO_E_MIGRATIONS.md` §9.
