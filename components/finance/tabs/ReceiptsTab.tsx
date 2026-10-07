@@ -5,12 +5,12 @@
  * exige motivo e deixa as cobranças em aberto. Tudo auditado.
  */
 import React, { useEffect, useMemo, useState } from 'react';
-import { CheckCheck, CheckCircle2, FileText, ShieldAlert } from 'lucide-react';
+import { CheckCheck, CheckCircle2, FileText, Link2, ShieldAlert } from 'lucide-react';
 import { notify } from '../../../lib/notifications';
 import { useConfirm } from '../../../hooks/useConfirm';
 import { notifyFinanceError } from '../../../lib/finance/errors';
 import {
-  approveReceipt, chargeStatementsByIds, rejectReceipt, receiptDetail, receiptQueue, signedUrl, startReceiptReview, RECEIPTS_BUCKET,
+  approveReceipt, chargeStatementsByIds, linkReceiptCharges, listCharges, rejectReceipt, receiptDetail, receiptQueue, signedUrl, startReceiptReview, RECEIPTS_BUCKET,
 } from '../../../lib/finance/financeApi';
 import type { ReceiptQueueRow } from '../../../lib/finance/types';
 import { receiptStatusInfo, type ReceiptFlag } from '../../../lib/finance/receipts';
@@ -27,6 +27,57 @@ const FILTERS = [['pending', 'Pendentes'], ['approved', 'Aprovados'], ['rejected
 type Filter = (typeof FILTERS)[number][0];
 
 const flagTone = (f: ReceiptFlag) => (f.severity === 'block' ? 'bad' : f.severity === 'warn' ? 'warn' : 'info');
+
+/** Cobranças em aberto do sócio que ainda não estão ligadas ao comprovante; o administrador escolhe e liga. */
+const LinkChargesPanel: React.FC<{ submissionId: string; profileId: string; linked: string[]; onLinked: () => void }> = ({ submissionId, profileId, linked, onLinked }) => {
+  const [open, setOpen] = useState(linked.length === 0);
+  const [chosen, setChosen] = useState<string[]>([]);
+  const [busy, setBusy] = useState(false);
+  const { key, renew } = useRequestKey();
+  const list = useAsync(async () => {
+    if (!open) return null;
+    const all = await listCharges({ profileId }, 100, 0);
+    return all.filter((c) => (c.stored_status === 'open' || c.stored_status === 'partial') && !linked.includes(c.charge_id));
+  }, [open, profileId, linked.join(',')]);
+
+  const link = async () => {
+    if (!chosen.length) return;
+    setBusy(true);
+    try {
+      await linkReceiptCharges(submissionId, chosen, key);
+      notify.success(chosen.length === 1 ? 'Cobrança ligada ao comprovante.' : 'Cobranças ligadas ao comprovante.');
+      setChosen([]); renew(); onLinked();
+    } catch (e) { notifyFinanceError(e, 'Não foi possível ligar a cobrança.', 'finance_receipt_link_failed'); }
+    finally { setBusy(false); }
+  };
+
+  if (!open) return <button className={btnGhost} onClick={() => setOpen(true)}><Link2 size={16} /> Ligar outra cobrança do sócio</button>;
+  return (
+    <div className="space-y-2 rounded-2xl border border-stone-200 p-3">
+      <p className="text-[11px] font-black uppercase tracking-wider text-stone-400">Ligar cobrança ao comprovante</p>
+      {linked.length === 0 && <Notice tone="warn">Este comprovante chegou sem cobrança ligada. Escolha a que ele paga para poder aprovar.</Notice>}
+      {list.error ? <ErrorBlock error={list.error} onRetry={list.reload} /> : list.loading || !list.data ? <Spinner /> : list.data.length === 0 ? (
+        <p className="text-sm text-stone-500">Este sócio não tem outra cobrança em aberto. Crie a pendência ou a mensalidade em Cobranças e volte aqui.</p>
+      ) : (
+        <>
+          <ul className="space-y-1.5">
+            {list.data.map((c) => (
+              <li key={c.charge_id}>
+                <label className="flex min-h-11 items-center gap-3 rounded-xl border border-stone-200 px-3 py-2 text-sm">
+                  <input type="checkbox" className="h-5 w-5" checked={chosen.includes(c.charge_id)}
+                    onChange={(e) => setChosen((x) => e.target.checked ? [...x, c.charge_id] : x.filter((y) => y !== c.charge_id))} />
+                  <span className="flex-1"><b className="capitalize">{monthLabel(c.competence_month)}</b> <span className="text-xs text-stone-500">· vence {brDate(c.due_date)}</span></span>
+                  <span className="font-black tabular-nums">{formatBRL(c.total_due_cents)}</span>
+                </label>
+              </li>
+            ))}
+          </ul>
+          <button className={btnPrimary} disabled={busy || chosen.length === 0} onClick={link}>Ligar ao comprovante</button>
+        </>
+      )}
+    </div>
+  );
+};
 
 interface ReviewProps { id: string | null; queue: ReceiptQueueRow[]; onClose: () => void; onDone: () => void }
 
@@ -73,7 +124,7 @@ const ReviewSheet: React.FC<ReviewProps> = ({ id, queue, onClose, onDone }) => {
     if (!d || d.charge_ids.length === 0) return null;
     const [atPaid, now] = await Promise.all([chargeStatementsByIds(d.charge_ids, paidOn), chargeStatementsByIds(d.charge_ids)]);
     return { atPaid, now };
-  }, [detail.data?.id, paidOn]);
+  }, [detail.data?.id, detail.data?.charge_ids.join(','), paidOn]);
 
   const analysis = useMemo(() => {
     const d = detail.data;
@@ -203,6 +254,8 @@ const ReviewSheet: React.FC<ReviewProps> = ({ id, queue, onClose, onDone }) => {
                   {analysis && analysis.excessCents > 0 && <Notice tone="info">A sobra de {formatBRL(analysis.excessCents)} foi somada à última cobrança e ficará como <b>crédito do sócio</b>.</Notice>}
                 </div>
               )}
+
+              <LinkChargesPanel submissionId={d.id} profileId={d.profile_id} linked={d.charge_ids} onLinked={detail.reload} />
 
               <Field label="Observação interna (opcional)"><input className={inputCls} value={note} maxLength={500} onChange={(e) => setNote(e.target.value)} /></Field>
 

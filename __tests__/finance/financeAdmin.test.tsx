@@ -6,7 +6,7 @@ import type { ChargeStatementRow, FinAccount, FinSettings, ReceiptQueueRow } fro
 const api = vi.hoisted(() => ({
   RECEIPTS_BUCKET: 'fin-receipts', DOCS_BUCKET: 'fin-docs',
   newRequestId: () => globalThis.crypto.randomUUID(),
-  receiptQueue: vi.fn(), receiptDetail: vi.fn(), startReceiptReview: vi.fn(), chargeStatementsByIds: vi.fn(), approveReceipt: vi.fn(), rejectReceipt: vi.fn(),
+  receiptQueue: vi.fn(), receiptDetail: vi.fn(), startReceiptReview: vi.fn(), chargeStatementsByIds: vi.fn(), approveReceipt: vi.fn(), rejectReceipt: vi.fn(), listCharges: vi.fn(), linkReceiptCharges: vi.fn(),
   signedUrl: vi.fn(), saveSettings: vi.fn(), listHolidays: vi.fn(), saveHoliday: vi.fn(), seedHolidays: vi.fn(), listAudit: vi.fn(),
 }));
 vi.mock('../../lib/finance/financeApi', () => api);
@@ -96,6 +96,28 @@ describe('Comprovantes — a leitura sugere, o administrador decide', () => {
     const dlg = await openReview();
     expect(await within(dlg).findByText(/já está quitada/i)).toBeInTheDocument();
     expect(api.approveReceipt).not.toHaveBeenCalled();
+  });
+
+  it('comprovante sem cobrança: o administrador liga uma cobrança em aberto do sócio e então pode aprovar', async () => {
+    api.receiptDetail.mockResolvedValueOnce({ ...detail, charge_ids: [] }).mockResolvedValue({ ...detail, charge_ids: ['c9'] });
+    api.chargeStatementsByIds.mockResolvedValue([stm({ charge_id: 'c9', competence_month: '2026-10-01' })]);
+    api.listCharges.mockResolvedValue([
+      stm({ charge_id: 'c9', competence_month: '2026-10-01', due_date: '2026-10-05' }),
+      stm({ charge_id: 'c8', stored_status: 'paid', total_due_cents: 0 }),
+    ]);
+    api.linkReceiptCharges.mockResolvedValue({ id: 's1', linked: 1, charge_ids: ['c9'] });
+    const dlg = await openReview();
+    expect(await within(dlg).findByText(/chegou sem cobrança ligada/i)).toBeInTheDocument();
+    expect(api.listCharges).toHaveBeenCalledWith({ profileId: 'u1' }, 100, 0);
+    const box = await within(dlg).findByRole('checkbox');
+    expect(within(dlg).getAllByRole('checkbox')).toHaveLength(1); // a quitada não aparece
+    const linkBtn = within(dlg).getByRole('button', { name: 'Ligar ao comprovante' });
+    expect(linkBtn).toBeDisabled();
+    fireEvent.click(box);
+    fireEvent.click(linkBtn);
+    await waitFor(() => expect(api.linkReceiptCharges).toHaveBeenCalledWith('s1', ['c9'], expect.any(String)));
+    expect(api.approveReceipt).not.toHaveBeenCalled();
+    await waitFor(() => expect(within(screen.getByRole('dialog')).getByRole('button', { name: /Aprovar e registrar pagamento/i })).toBeEnabled());
   });
 
   it('recusar exige motivo (mínimo de 5 caracteres) e avisa o sócio pelo id do perfil', async () => {

@@ -347,6 +347,10 @@ export async function receiptDetail(id: string): Promise<ReceiptRow & { storage_
   return { ...rest, charge_ids: (links ?? []).map((l) => l.charge_id) };
 }
 
+/** Liga cobranças em aberto do mesmo sócio a um comprovante pendente (não paga nada; só a aprovação paga). */
+export const linkReceiptCharges = (id: string, chargeIds: string[], requestId = newRequestId()) =>
+  call<{ id: string; linked: number; charge_ids: string[] }>('fin_link_receipt_charges', { p_request_id: requestId, p_submission_id: id, p_charge_ids: chargeIds });
+
 export const startReceiptReview = (id: string, requestId = newRequestId()) => call('fin_start_receipt_review', { p_request_id: requestId, p_submission_id: id });
 
 export interface ApproveReceiptInput {
