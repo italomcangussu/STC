@@ -108,6 +108,22 @@ e o admin usa "Reenviar falhas". Sem WhatsApp configurado não pega nada da fila
 - Todas dizem que **o código só se digita no app e não se passa a ninguém**. O link só leva ao app (exige login); quem assina é o código.
 - O telefone do cadastro (DDD + número) ganha o DDI `55` no envio, na mesma regra de `lib/phoneAuth.ts`.
 
+### Localização no clique de "Assinar digitalmente" (cliente, `lib/signatures/`)
+
+O botão **Assinar digitalmente** deve chamar `requestSignatureCode(documentId)` (`lib/signatures/api.ts`). Essa função:
+
+1. **abre primeiro a tela do sistema** que pede permissão de localização (`navigator.geolocation.getCurrentPosition`, com GPS e 12 s de
+   limite), se o sócio ainda não decidiu;
+2. **depois** pede o código à `signature-operations`, mandando no mesmo pedido o GPS (`geo`) e o aparelho (`device`, incluindo
+   `device.location` = `granted | denied | unavailable | timeout | unsupported`);
+3. devolve `{challengeId, phoneMasked, expiresAt, location}`. "Reenviar código" chama a mesma função.
+
+Regras: **a localização é opcional e nunca bloqueia** (negar, falhar ou demorar → a assinatura segue só com o IP, e o resultado fica
+no dossiê). Uma rede de segurança de 45 s libera o fluxo se o navegador nunca responder o pedido. O app **não consegue pedir de novo**
+depois de "Não permitir": a tela deve mostrar `locationHint(status)`, que orienta a liberar nos ajustes do celular. Mostre
+`LOCATION_NOTICE` ao lado do botão (por que pedimos e que é opcional). Exige **HTTPS** (contexto seguro). GPS é dado pessoal: a base
+legal e a finalidade devem constar no termo.
+
 ### Cidade aproximada pelo IP
 
 O IP é gravado sempre. A cidade é um complemento: consulta a um serviço de localização por IP (padrão `https://ipwho.is/{ip}`,

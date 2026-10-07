@@ -195,12 +195,16 @@ describe('assinar de ponta a ponta pela edge function', () => {
     const e = edge(db);
     await readAndConsent(db, U.socioB, doc.id);
     await saveCpf(db, U.socioB, cpfOf(U.socioB));
-    const pedido = await e.call(U.socioB, { action: 'request_code', document_id: doc.id }, { 'cf-connecting-ip': '198.51.100.9' });
+    // o sócio negou a localização no pedido do sistema: o app segue sem GPS e informa o resultado no aparelho
+    const pedido = await e.call(U.socioB, { action: 'request_code', document_id: doc.id, device: { location: 'denied', timezone: 'America/Fortaleza' } }, { 'cf-connecting-ip': '198.51.100.9' });
     const ok = await e.call(U.socioB, { action: 'confirm_code', challenge_id: pedido.body.challenge_id, code: e.codeFromLastMessage() }, { 'cf-connecting-ip': '198.51.100.9' });
     expect(ok.status).toBe(200);
-    const s = (await q<Record<string, any>>(db, `select ip, geo from public.sig_signatures`))[0];
+    const s = (await q<Record<string, any>>(db, `select ip, geo, device from public.sig_signatures`))[0];
     expect(s.ip).toBe('198.51.100.9');
     expect(s.geo).toEqual({ source: 'ip' });
+    // o comprovante diz que o GPS foi negado (e isso entra no hash de integridade)
+    expect(s.device).toMatchObject({ location: 'denied', timezone: 'America/Fortaleza' });
+    expect(await rpc(db, U.admin, `public.sig_verify_integrity('${doc.id}')`)).toMatchObject({ checked: 1, ok: true });
   });
 
   it('as regras do banco chegam ao app como motivos claros', async () => {
