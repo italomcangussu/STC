@@ -59,6 +59,8 @@ export async function newDb(): Promise<PGlite> {
   const files = [
     ...all.filter((f) => /^2026100710\d{4}_conversations_.*\.sql$/.test(f)).sort(),
     ...all.filter((f) => /^2026100[67]\d{6}_finance_.*\.sql$/.test(f) && PENDENCY_MIGRATION.test(f)).sort(),
+    // Conversas que dependem das pendências (assessor administrativo do João).
+    ...all.filter((f) => /^2026100715\d{4}_conversations_.*\.sql$/.test(f)).sort(),
   ];
   for (const f of files) {
     try {
