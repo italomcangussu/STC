@@ -1,5 +1,5 @@
 import {
-    Briefcase, Building2, CalendarDays, ClipboardList, Contact, GraduationCap, Landmark, LayoutDashboard,
+    Briefcase, Building2, CalendarDays, ClipboardList, Contact, FileSignature, GraduationCap, Landmark, LayoutDashboard,
     Megaphone, MessagesSquare, ScrollText, Sparkles, Swords, Trophy, UserCheck, Users, Vote,
     type LucideIcon,
 } from 'lucide-react';
@@ -15,7 +15,7 @@ export const SECTION_ICON: Record<AdminTabId, LucideIcon> = {
     dashboard: LayoutDashboard, reservas: CalendarDays, desafios: Swords, lancamentos: ClipboardList,
     superset: Sparkles, torneios: Trophy, formularios: Vote, acessos: UserCheck, socios: Contact,
     alunos: GraduationCap, professores: Briefcase, financeiro: Landmark, avisos: Megaphone, regras: ScrollText,
-    conversas: MessagesSquare,
+    conversas: MessagesSquare, documentos: FileSignature,
 };
 
 export const tabDomId = (id: AdminTabId) => `admin-tab-${id}`;

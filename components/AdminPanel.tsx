@@ -28,6 +28,7 @@ import { StandardModal } from './StandardModal';
 import { SuperSet } from './SuperSet';
 
 const FinanceHub = lazy(() => import('./finance/FinanceHub').then(m => ({ default: m.FinanceHub })));
+const AdminDocuments = lazy(() => import('./signatures/admin/AdminDocuments'));
 const ConversationsHub = lazy(() => import('./conversations/ConversationsHub').then(m => ({ default: m.ConversationsHub })));
 import { AdminProfessors } from './AdminProfessors';
 import { AdminRules } from './AdminRules';
@@ -1851,6 +1852,7 @@ export const AdminPanel: React.FC = () => {
                     </div>
                 </div>
             );
+            case 'documentos': return <Suspense fallback={<div className="flex items-center justify-center py-16"><Loader2 className="animate-spin text-saibro-600" size={28} /></div>}><AdminDocuments /></Suspense>;
             case 'professores': return <AdminProfessors />;
             case 'regras': return <AdminRules />;
             case 'avisos': return <AnunciosTab />;

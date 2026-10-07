@@ -1,23 +1,27 @@
 {
   "versao": 2,
-  "geradoEm": "2026-10-07T11:23:47.942Z",
-  "commit": "b4cc6664",
+  "geradoEm": "2026-10-07T13:47:24.631Z",
+  "commit": "1d8042e9",
   "pastas": [
     "__tests__",
     "__tests__/admin",
     "__tests__/conversations",
     "__tests__/finance",
+    "__tests__/pwa",
+    "__tests__/signatures",
     "components",
     "components/TenisProPlayer",
     "components/admin",
     "components/conversations",
     "components/creator",
     "components/finance",
+    "components/signatures",
     "components/ui",
     "contexts",
     "design",
     "design/tabela-confrontos",
     "docs",
+    "docs/assinaturas",
     "docs/conversas",
     "docs/financeiro",
     "docs/superpowers",
@@ -26,6 +30,7 @@
     "lib/championship",
     "lib/conversations",
     "lib/finance",
+    "lib/signatures",
     "lib/students",
     "migrations",
     "public",
@@ -35,22 +40,7 @@
     "supabase/migrations",
     "tasks"
   ],
-  "agentmap": {
-    "arquivos": 357,
-    "sha": "a0e72eb",
-    "hubs": [
-      "lib/supabase.ts",
-      "types.ts",
-      "lib/finance/dates.ts",
-      "__tests__/finance/sql/harness.ts",
-      "lib/logger.ts",
-      "__tests__/conversations/sql/harness.ts",
-      "components/finance/ui.tsx",
-      "lib/finance/money.ts",
-      "utils.ts",
-      "components/TenisProPlayer/constants.ts"
-    ]
-  },
+  "agentmap": null,
   "skillsPorPerfil": {
     "nuvem": [
       {
@@ -397,6 +387,353 @@
         "name": "xlsx",
         "origem": "global",
         "hash": "54069c5dd7f8"
+      }
+    ],
+    "local": [
+      {
+        "name": "Agent Development",
+        "origem": "plugin",
+        "hash": "24c8e83f9ebf"
+      },
+      {
+        "name": "brainstorming",
+        "origem": "global",
+        "hash": "5e8776e26d81"
+      },
+      {
+        "name": "brandkit",
+        "origem": "global",
+        "hash": "629f7041aeb5"
+      },
+      {
+        "name": "chat-best-practices",
+        "origem": "global",
+        "hash": "923b860713ae"
+      },
+      {
+        "name": "claude-opus-4-5-migration",
+        "origem": "plugin",
+        "hash": "ec58cf49eecf"
+      },
+      {
+        "name": "Command Development",
+        "origem": "plugin",
+        "hash": "daa4512e8a19"
+      },
+      {
+        "name": "dark-mode-design-expert",
+        "origem": "global",
+        "hash": "1d409d06f865"
+      },
+      {
+        "name": "design-critique",
+        "origem": "global",
+        "hash": "c01d729a7373"
+      },
+      {
+        "name": "design-taste-frontend",
+        "origem": "global",
+        "hash": "1e9d5cbba92b"
+      },
+      {
+        "name": "design-taste-frontend-v1",
+        "origem": "global",
+        "hash": "f099b0e743e7"
+      },
+      {
+        "name": "dispatching-parallel-agents",
+        "origem": "global",
+        "hash": "0f55be8a3617"
+      },
+      {
+        "name": "executing-plans",
+        "origem": "global",
+        "hash": "a8cd575556bb"
+      },
+      {
+        "name": "fabuloso",
+        "origem": "global",
+        "hash": "6cecb4a8af79"
+      },
+      {
+        "name": "fabuloso-codex",
+        "origem": "global",
+        "hash": "d28238a7ab33"
+      },
+      {
+        "name": "finishing-a-development-branch",
+        "origem": "global",
+        "hash": "96c1ce5a8aa1"
+      },
+      {
+        "name": "frontend-design",
+        "origem": "global",
+        "hash": "e4971c4ff27b"
+      },
+      {
+        "name": "frontend-design-anchors",
+        "origem": "global",
+        "hash": "b1fd117c0811"
+      },
+      {
+        "name": "full-output-enforcement",
+        "origem": "global",
+        "hash": "c12a3654ef75"
+      },
+      {
+        "name": "gpt-taste",
+        "origem": "global",
+        "hash": "484015bc0216"
+      },
+      {
+        "name": "hig",
+        "origem": "global",
+        "hash": "2ce1880c235e"
+      },
+      {
+        "name": "high-end-visual-design",
+        "origem": "global",
+        "hash": "7e45487fb52b"
+      },
+      {
+        "name": "Hook Development",
+        "origem": "plugin",
+        "hash": "ceb5948fc4c0"
+      },
+      {
+        "name": "humanizer",
+        "origem": "global",
+        "hash": "46062c360543"
+      },
+      {
+        "name": "image-to-code",
+        "origem": "global",
+        "hash": "f4889a977f09"
+      },
+      {
+        "name": "imagegen",
+        "origem": "global",
+        "hash": "a947514072cf"
+      },
+      {
+        "name": "imagegen-frontend-mobile",
+        "origem": "global",
+        "hash": "0b7d8186c12e"
+      },
+      {
+        "name": "imagegen-frontend-web",
+        "origem": "global",
+        "hash": "0adffb5195bc"
+      },
+      {
+        "name": "impeccable",
+        "origem": "global",
+        "hash": "31c00df7082e"
+      },
+      {
+        "name": "industrial-brutalist-ui",
+        "origem": "global",
+        "hash": "07a17b920f9a"
+      },
+      {
+        "name": "MCP Integration",
+        "origem": "plugin",
+        "hash": "144d8525277c"
+      },
+      {
+        "name": "minimalist-ui",
+        "origem": "global",
+        "hash": "1ae4d8676d5b"
+      },
+      {
+        "name": "n8n-code-javascript",
+        "origem": "global",
+        "hash": "9009fb93df96"
+      },
+      {
+        "name": "n8n-code-python",
+        "origem": "global",
+        "hash": "b78d1cdeca53"
+      },
+      {
+        "name": "n8n-code-tool",
+        "origem": "global",
+        "hash": "903f993098d2"
+      },
+      {
+        "name": "n8n-expression-syntax",
+        "origem": "global",
+        "hash": "63a449f5a199"
+      },
+      {
+        "name": "n8n-mcp-tools-expert",
+        "origem": "global",
+        "hash": "0d7d93c78f99"
+      },
+      {
+        "name": "n8n-node-configuration",
+        "origem": "global",
+        "hash": "92a0cf3104b9"
+      },
+      {
+        "name": "n8n-validation-expert",
+        "origem": "global",
+        "hash": "a6de5aa55011"
+      },
+      {
+        "name": "n8n-workflow-patterns",
+        "origem": "global",
+        "hash": "c15e27527039"
+      },
+      {
+        "name": "openai-docs",
+        "origem": "global",
+        "hash": "cc539af365c7"
+      },
+      {
+        "name": "performance-profiler",
+        "origem": "global",
+        "hash": "dcd86c4f6408"
+      },
+      {
+        "name": "playwright",
+        "origem": "global",
+        "hash": "4ece24b77ba8"
+      },
+      {
+        "name": "Plugin Settings",
+        "origem": "plugin",
+        "hash": "e83d861322aa"
+      },
+      {
+        "name": "Plugin Structure",
+        "origem": "plugin",
+        "hash": "c269e921160e"
+      },
+      {
+        "name": "plugin-creator",
+        "origem": "global",
+        "hash": "329d2e945e2e"
+      },
+      {
+        "name": "push-validator",
+        "origem": "global",
+        "hash": "427e9a390c35"
+      },
+      {
+        "name": "pwa-design-debug",
+        "origem": "global",
+        "hash": "197b79fcbf0c"
+      },
+      {
+        "name": "receiving-code-review",
+        "origem": "global",
+        "hash": "d41b990ad753"
+      },
+      {
+        "name": "redesign-existing-projects",
+        "origem": "global",
+        "hash": "0713bbfa0337"
+      },
+      {
+        "name": "refatorar-ui",
+        "origem": "global",
+        "hash": "466d76ee483e"
+      },
+      {
+        "name": "requesting-code-review",
+        "origem": "global",
+        "hash": "d3795655c9b3"
+      },
+      {
+        "name": "simulador-ios",
+        "origem": "global",
+        "hash": "ea7006f7bdfb"
+      },
+      {
+        "name": "Skill Development",
+        "origem": "plugin",
+        "hash": "4c74111b8049"
+      },
+      {
+        "name": "skill-creator",
+        "origem": "global",
+        "hash": "e6b443a863e3"
+      },
+      {
+        "name": "skill-installer",
+        "origem": "global",
+        "hash": "4224e29f4718"
+      },
+      {
+        "name": "stitch-design-taste",
+        "origem": "global",
+        "hash": "f23a81668693"
+      },
+      {
+        "name": "subagent-driven-development",
+        "origem": "global",
+        "hash": "30b1e796ed9d"
+      },
+      {
+        "name": "supabase",
+        "origem": "global",
+        "hash": "9845b5a7d0ef"
+      },
+      {
+        "name": "supabase-postgres-best-practices",
+        "origem": "global",
+        "hash": "3e015d0d931b"
+      },
+      {
+        "name": "systematic-debugging",
+        "origem": "global",
+        "hash": "3f62d80ed6a2"
+      },
+      {
+        "name": "test-driven-development",
+        "origem": "global",
+        "hash": "ddb28bf4e27c"
+      },
+      {
+        "name": "uncle-bob",
+        "origem": "global",
+        "hash": "22d582b74de4"
+      },
+      {
+        "name": "using-git-worktrees",
+        "origem": "global",
+        "hash": "6d5e4344c0aa"
+      },
+      {
+        "name": "using-superpowers",
+        "origem": "global",
+        "hash": "9f00ca481600"
+      },
+      {
+        "name": "vercel-react-best-practices",
+        "origem": "global",
+        "hash": "848870574f33"
+      },
+      {
+        "name": "verification-before-completion",
+        "origem": "global",
+        "hash": "4521d2476a17"
+      },
+      {
+        "name": "Writing Hookify Rules",
+        "origem": "plugin",
+        "hash": "258babaec7f8"
+      },
+      {
+        "name": "writing-plans",
+        "origem": "global",
+        "hash": "74753b16450b"
+      },
+      {
+        "name": "writing-skills",
+        "origem": "global",
+        "hash": "415af45c3baa"
       }
     ]
   }

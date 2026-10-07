@@ -98,17 +98,26 @@ async function sha256(value: string): Promise<Uint8Array> {
   return new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value)));
 }
 
+/**
+ * O agendador se identifica com o cabeçalho `x-dispatch-secret`. Sem segredo configurado (ou curto
+ * demais), ninguém passa. Comparação por resumo SHA-256, em tempo constante. Compartilhada pelas
+ * varreduras de Conversas e de Assinaturas: a checagem existe em um lugar só.
+ */
+export async function authorizedBySecret(request: Request, secret: string | undefined): Promise<boolean> {
+  const given = request.headers.get('x-dispatch-secret') ?? '';
+  if (!secret || secret.length < 24 || !given) return false;
+  const [a, b] = await Promise.all([sha256(given), sha256(secret)]);
+  let diff = 0;
+  for (let i = 0; i < a.length; i += 1) diff |= a[i] ^ b[i];
+  return diff === 0;
+}
+
 export type DispatchHttpDeps = { secret: string | undefined; run(): Promise<DispatchResult> };
 
 /** Só o agendador, com o segredo, dispara a varredura. Sem segredo configurado, ninguém dispara. */
 export async function handleDispatchRequest(request: Request, deps: DispatchHttpDeps): Promise<Response> {
   const json = (status: number, body: unknown) => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json; charset=utf-8' } });
   if (request.method !== 'POST') return json(405, { error: 'METHOD_NOT_ALLOWED' });
-  const given = request.headers.get('x-dispatch-secret') ?? '';
-  if (!deps.secret || deps.secret.length < 24 || !given) return json(401, { error: 'UNAUTHORIZED' });
-  const [a, b] = await Promise.all([sha256(given), sha256(deps.secret)]);
-  let diff = 0;
-  for (let i = 0; i < a.length; i += 1) diff |= a[i] ^ b[i];
-  if (diff !== 0) return json(401, { error: 'UNAUTHORIZED' });
+  if (!(await authorizedBySecret(request, deps.secret))) return json(401, { error: 'UNAUTHORIZED' });
   return json(200, await deps.run());
 }
