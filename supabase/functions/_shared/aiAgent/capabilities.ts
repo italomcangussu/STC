@@ -39,6 +39,7 @@ export const CAPABILITIES: readonly Capability[] = [
   { id: 'fin.pendency.send', domain: 'financeiro', risk: 'N1', label: 'Cobrar agora', panel: 'Financeiro', write: { finAction: 'cobrar' } },
   { id: 'fin.pendency.pause', domain: 'financeiro', risk: 'N1', label: 'Pausar cobrança', panel: 'Financeiro', write: { finAction: 'pausar' } },
   { id: 'fin.pendency.resume', domain: 'financeiro', risk: 'N1', label: 'Retomar cobrança', panel: 'Financeiro', write: { finAction: 'retomar' } },
+  { id: 'student.card.renew', domain: 'pessoas', risk: 'N2', label: 'Renovar Card Mensal de aluno', panel: 'Alunos', write: { finAction: 'renovar_card' } },
   { id: 'fin.payment.register', domain: 'financeiro', risk: 'N2', label: 'Dar baixa em pagamento', panel: 'Financeiro', write: { finAction: 'baixa' } },
 ];
 

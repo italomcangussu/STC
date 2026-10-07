@@ -68,7 +68,7 @@ begin
       if v_amount is null then v_amount := rc.declared_amount_cents; end if;
       if v_paid_on is null then v_paid_on := rc.declared_paid_on; end if;
       if rc.declared_amount_cents is not null and v_amount is not null and rc.declared_amount_cents <> v_amount then
-        v_warn := v_warn || 'O comprovante mostra R$ ' || to_char(rc.declared_amount_cents / 100.0, 'FM999990D00') || ', diferente do valor informado.';
+        v_warn := v_warn || 'O comprovante mostra R$ ' || replace(to_char(rc.declared_amount_cents / 100.0, 'FM999990.00'), '.', ',') || ', diferente do valor informado.';
       end if;
     end if;
     if rc.possible_duplicate or (v_ident is not null and exists (
@@ -93,7 +93,7 @@ begin
   select max(valid_until::date) into v_prev_exp from public.student_payments where student_id = st.id and status = 'active';
   if exists (select 1 from public.student_payments x where x.student_id = st.id and x.status = 'active'
              and (x.payment_date at time zone 'America/Fortaleza')::date = v_paid_on and round(x.amount * 100) = v_amount) then
-    return conv_private.vfail('ALREADY_RECORDED', 'O Card de ' || st.name || ' já tem um pagamento de R$ ' || to_char(v_amount / 100.0, 'FM999990D00')
+    return conv_private.vfail('ALREADY_RECORDED', 'O Card de ' || st.name || ' já tem um pagamento de R$ ' || replace(to_char(v_amount / 100.0, 'FM999990.00'), '.', ',')
       || ' em ' || to_char(v_paid_on, 'DD/MM/YYYY') || ' (válido até ' || to_char(coalesce(v_prev_exp, v_paid_on), 'DD/MM/YYYY') || '). Não registro em duplicidade.');
   end if;
   v_new_exp := (v_paid_on + interval '1 month')::date;
@@ -194,8 +194,35 @@ end $$;
 create or replace function public.conv_svc_ai_student_card_propose(p_session uuid, p jsonb) returns jsonb
 language sql security definer set search_path = '' as $$ select conv_private.ai_student_card_propose(p_session, p) $$;
 
+-- O que o servidor leu do comprovante que o administrador acabou de mandar (para o João responder sem chamar o modelo).
+create or replace function conv_private.ai_admin_receipt(p_session uuid, p_message uuid) returns jsonb
+language plpgsql stable security definer set search_path = '' as $$
+declare sess public.conv_ai_sessions%rowtype; r public.fin_receipt_submissions%rowtype; fs public.fin_settings%rowtype; v_payee text;
+begin
+  select * into sess from public.conv_ai_sessions where id = p_session and status = 'open';
+  if not found or conv_private.ai_admin_requester(p_session) is null then
+    return conv_private.vfail('ADMIN_ONLY_PRIVATE', 'Isso só um administrador faz, e só na conversa privada comigo.');
+  end if;
+  select r2.* into r from public.fin_receipt_submissions r2
+    join public.conv_messages m on m.id = r2.source_message_id
+   where r2.source_message_id = p_message and m.conversation_id = sess.conversation_id;
+  if not found then return jsonb_build_object('ok', true, 'found', false); end if;
+  select * into fs from public.fin_settings where id;
+  v_payee := nullif(trim(coalesce(r.ocr->>'payee', '')), '');
+  return jsonb_build_object('ok', true, 'found', true, 'status', r.status, 'ocr_status', r.ocr_status,
+    'amount_cents', r.declared_amount_cents, 'paid_on', r.declared_paid_on, 'payee', v_payee,
+    'payee_ok', case when v_payee is null then null else fin_private.payee_matches(v_payee, fs.payee_names) end,
+    'duplicate', r.possible_duplicate);
+end $$;
+
+create or replace function public.conv_svc_ai_admin_receipt(p_session uuid, p_message uuid) returns jsonb
+language sql security definer set search_path = '' as $$ select conv_private.ai_admin_receipt(p_session, p_message) $$;
+
 revoke all on function conv_private.ai_student_card_propose(uuid, jsonb) from public, anon, authenticated;
 revoke all on function conv_private.ai_confirm_before_student_card(uuid, uuid) from public, anon, authenticated;
 revoke all on function conv_private.ai_confirm(uuid, uuid) from public, anon, authenticated;
 revoke all on function public.conv_svc_ai_student_card_propose(uuid, jsonb) from public, anon, authenticated;
 grant execute on function public.conv_svc_ai_student_card_propose(uuid, jsonb) to service_role;
+revoke all on function conv_private.ai_admin_receipt(uuid, uuid) from public, anon, authenticated;
+revoke all on function public.conv_svc_ai_admin_receipt(uuid, uuid) from public, anon, authenticated;
+grant execute on function public.conv_svc_ai_admin_receipt(uuid, uuid) to service_role;

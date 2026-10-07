@@ -244,6 +244,8 @@ export function proposalText(ctx: Ctx): string {
     const levando = ((n.add_names ?? []) as string[]).join(', ');
     return `entrar no jogo de ${brDate(String(n.date))} ${n.start}–${n.end} ${n.court_name ?? ''}${quem ? ` (jogam: ${quem})` : ''}${levando ? `, levando: ${levando}` : ''}`.trim();
   }
+  if (p.action === 'student_card_renew') return `renovar o Card Mensal de ${n.student_name ?? 'aluno'} (${moneyBR(Number(n.amount_cents ?? 0) / 100)}, nova validade ${brDateFull(n.new_valid_until)})`;
+  if (String(p.action ?? '').startsWith('fin_')) return 'um lançamento financeiro do administrador (aguardando o "sim")';
   const acao = p.action === 'cancel' ? 'cancelar' : p.action === 'reschedule' ? 'remarcar para' : 'reservar';
   return `${acao}: ${n.type ?? ''} ${brDate(String(n.date))} ${n.start}${n.end ? `–${n.end}` : ''} ${n.court_name ?? ''}`.trim();
 }
@@ -279,7 +281,7 @@ export function adminPendencyRefs(ctx: Ctx): AdminPendencyRef[] {
   }));
 }
 
-const ADMIN_SLOTS = ',"fin_action":"lancar|cobrar|pausar|retomar|baixa|null","member_name":null,"description":null,"amount":null,"due_date":"YYYY-MM-DD|null","pendency_kind":"day_card|consumo|evento|multa|dano_reposicao|outros|null","guest_date":null,"send_now":false,"pendency_ref":null,"paid_on":"YYYY-MM-DD|null","method":"pix|transfer|cash|card|other|null","account_name":null,"read_domain":"caixa|receber_pagar|dre|receita_alunos|comprovantes|acessos|assinaturas|ocupacao|null","read_from":"YYYY-MM-DD|null","read_to":"YYYY-MM-DD|null"';
+const ADMIN_SLOTS = ',"fin_action":"lancar|cobrar|pausar|retomar|baixa|renovar_card|null","member_name":null,"description":null,"amount":null,"due_date":"YYYY-MM-DD|null","pendency_kind":"day_card|consumo|evento|multa|dano_reposicao|outros|null","guest_date":null,"send_now":false,"pendency_ref":null,"paid_on":"YYYY-MM-DD|null","method":"pix|transfer|cash|card|other|null","account_name":null,"read_domain":"caixa|receber_pagar|dre|receita_alunos|comprovantes|acessos|assinaturas|ocupacao|null","read_from":"YYYY-MM-DD|null","read_to":"YYYY-MM-DD|null"';
 
 function adminSection(ctx: Ctx): string {
   if (!isAdminAssistant(ctx)) return '';
@@ -289,6 +291,7 @@ function adminSection(ctx: Ctx): string {
   - fin_action "lancar": nova pendência. member_name (sócio), description, amount em REAIS (ex.: 50 ou 37.5), due_date (padrão hoje), pendency_kind (Day Card de convidado → day_card, com guest_name e guest_date), send_now true se ele pedir para já cobrar.
   - fin_action "cobrar": enviar agora a cobrança consolidada. pendency_ref (p1, p2…) ou member_name.
   - fin_action "pausar" / "retomar": a régua de cobrança de uma pendência. pendency_ref.
+  - fin_action "renovar_card": renovar o Card Mensal de um ALUNO (cadastro de aluno, não sócio). student_names ["Nome"]; amount em reais só se ele disser (o padrão é R$ 200 ou o valor do comprovante); paid_on só se ele disser. O comprovante que ele manda na conversa é LIDO pelo servidor (valor, data, favorecido): nunca peça nem repita esses dados. Se ele só avisar que quer renovar e vai mandar o comprovante, responda curto "Pode mandar o comprovante aqui e me diz o nome do aluno." (ready false, awaiting true, sem dizer que registrou). Tendo o nome do aluno: ready: true e messages vazio.
   - fin_action "baixa": registrar pagamento recebido. pendency_ref, amount em reais, paid_on (padrão hoje), method (pix padrão), account_name se ele disser a conta.
 - Faltou dado obrigatório: pergunte só o que falta (awaiting: true). Tendo tudo: ready: true e messages vazio.
 - Se há PROPOSTA ABERTA e ele aceitar: customer_confirmed: true, como nas reservas.

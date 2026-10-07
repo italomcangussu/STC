@@ -17,6 +17,7 @@ import { extrairObjeto, repararJson, stripCodeFence } from './jsonRepair.ts';
 import type { Chat } from './llm.ts';
 import { ADMIN_READS, n3Reply } from './capabilities.ts';
 import { isAdminReadDomain, renderAdminRead, type AdminReadDomain } from './adminReads.ts';
+import { receiptReceivedMessage, studentCardProposalMessage, studentCardSuccessMessage } from './studentCard.ts';
 import { hearAudios, unheardOnly, UNCLEAR_AUDIO_REPLY } from './audio.ts';
 import { adminPendencyRefs, isAdminAssistant, systemPrompt, userPrompt, type AiSettings, type Ctx } from './prompts.ts';
 import { buildChatRequest, providerIdFrom, uazError, type UazCaller } from '../uazChat.ts';
@@ -70,10 +71,10 @@ export type Slots = {
   read_to?: string | null;
 };
 
-export type FinAction = 'lancar' | 'cobrar' | 'pausar' | 'retomar' | 'baixa';
+export type FinAction = 'lancar' | 'cobrar' | 'pausar' | 'retomar' | 'baixa' | 'renovar_card';
 type PendencyKind = 'day_card' | 'consumo' | 'evento' | 'multa' | 'dano_reposicao' | 'outros';
 type PayMethod = 'pix' | 'transfer' | 'cash' | 'card' | 'other';
-const FIN_ACTIONS: FinAction[] = ['lancar', 'cobrar', 'pausar', 'retomar', 'baixa'];
+const FIN_ACTIONS: FinAction[] = ['lancar', 'cobrar', 'pausar', 'retomar', 'baixa', 'renovar_card'];
 const PENDENCY_KINDS: PendencyKind[] = ['day_card', 'consumo', 'evento', 'multa', 'dano_reposicao', 'outros'];
 const PAY_METHODS: PayMethod[] = ['pix', 'transfer', 'cash', 'card', 'other'];
 
@@ -1126,6 +1127,17 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
     await save((ctx.session?.memory ?? {}) as Memory, 'sticker_ignored', {}, false, false);
     return { status: 'replied', bubbles: 0, handoff: null, action: 'sticker_ignored' } as TurnResult;
   }
+  // Administrador manda o comprovante: o servidor já leu (valor, data, favorecido); o João responde com o que leu, sem equipe.
+  if (soMidia && !isGroup && isAdminAssistant(ctx) && ultima?.id && pendentes.every((t) => t.kind === 'image' || t.kind === 'document')) {
+    let lido: Ctx | null = null;
+    for (let tentativa = 0; tentativa < 6 && !lido?.found; tentativa++) {
+      if (tentativa) await deps.sleep(2000);
+      lido = (await db('conv_svc_ai_admin_receipt', { p_session: session, p_message: ultima.id as string })).data as Ctx | null;
+    }
+    const sent = await entregar(cadence([receiptReceivedMessage(lido)]));
+    await save((ctx.session?.memory ?? {}) as Memory, 'admin_receipt_received', { found: lido?.found === true }, true, false);
+    return { status: 'replied', bubbles: sent, handoff: null, action: 'admin_receipt_received' } as TurnResult;
+  }
   if (soMidia && !isGroup) return transferir('hard', `Chegou ${[...new Set(pendentes.map((t) => t.kind))].join(', ')} sem texto; a IA não lê mídia.`, null);
 
   // N3 (destrutivo ou de configuração): o assessor não executa por chat, só indica a tela do painel.
@@ -1281,11 +1293,11 @@ async function decide(i: DecideInput): Promise<Decision> {
     if (!i.ultimaId) return plain({ bubbles: [CODE_TEXT.NOT_EXPLICIT as string], awaiting: true });
     const res = (await db('conv_svc_ai_confirm', { p_proposal: (ctx.open_proposal as Ctx).id, p_message: i.ultimaId })).data as
       { ok: boolean; code?: string; message?: string; action?: 'create' | 'cancel' | 'reschedule' | 'join' | 'participants'; summary?: Summary } | null;
-    if (res?.ok && res.summary && String(res.action ?? '').startsWith('fin_')) {
+    if (res?.ok && res.summary && isAdminProposalAction(res.action)) {
       return { bubbles: [adminSuccessMessage(res.action as unknown as AdminAction, res.summary as unknown as Ctx)], awaiting: false, close: false,
         action: 'admin_confirmed', memory: { intent: answer.intent, slots: {} } };
     }
-    if (!res?.ok && String((ctx.open_proposal as Ctx).action ?? '').startsWith('fin_')) {
+    if (!res?.ok && isAdminProposalAction((ctx.open_proposal as Ctx).action)) {
       return { bubbles: [res?.message ?? 'Não consegui registrar. Quer que eu monte de novo?'], awaiting: true, close: false, action: `failed:${res?.code ?? 'UNKNOWN'}`, memory };
     }
     if (res?.ok && res.summary) {
@@ -1581,7 +1593,9 @@ async function entrarNoJogo(i: DecideInput, memory: Memory): Promise<Decision> {
 /** Resolve nomes no cadastro. Ambíguo ou ausente vira PERGUNTA (nunca escolha por aproximação). */
 /* ------------------------------- Assessor administrativo (financeiro) ------------------------------- */
 
-type AdminAction = 'fin_pendency_create' | 'fin_pendency_collection' | 'fin_pendency_send' | 'fin_payment';
+const isAdminProposalAction = (a: unknown) => String(a ?? '').startsWith('fin_') || a === 'student_card_renew';
+
+type AdminAction = 'fin_pendency_create' | 'fin_pendency_collection' | 'fin_pendency_send' | 'fin_payment' | 'student_card_renew';
 
 const centsBR = (v: unknown) => `R$ ${(Number(v ?? 0) / 100).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`;
 const dateBR = (v: unknown) => String(v ?? '').slice(0, 10).split('-').reverse().join('/');
@@ -1593,6 +1607,7 @@ export function toCents(reais: number | null | undefined): number | null {
 }
 
 export function adminProposalMessage(action: AdminAction, s: Ctx): string {
+  if (action === 'student_card_renew') return studentCardProposalMessage(s);
   if (action === 'fin_pendency_create') {
     const guest = s.guest_name ? ` (convidado ${s.guest_name}${s.guest_date ? ` em ${dateBR(s.guest_date)}` : ''})` : '';
     const envio = s.send_now ? 'Já mando a cobrança no WhatsApp do sócio.' : 'Sem mandar cobrança agora; a régua segue normal.';
@@ -1609,6 +1624,7 @@ export function adminProposalMessage(action: AdminAction, s: Ctx): string {
 }
 
 export function adminSuccessMessage(action: AdminAction, s: Ctx): string {
+  if (action === 'student_card_renew') return studentCardSuccessMessage(s);
   const r = (s.result ?? {}) as Ctx;
   if (action === 'fin_pendency_create') {
     const envio = r.automation_recipient_id ? ' A cobrança já está na fila de envio.' : '';
@@ -1638,10 +1654,28 @@ async function adminConsulta(i: DecideInput, memory: Memory): Promise<Decision> 
   return { bubbles: [renderAdminRead(slots.read_domain, res.data)], awaiting: false, close: false, action: `admin_read:${slots.read_domain}`, memory, verbatim: true };
 }
 
+/** Renovar o Card Mensal de um aluno: o servidor acha o aluno, junta o comprovante lido e monta o resumo; grava só no "sim". */
+async function adminRenovarCard(i: DecideInput, memory: Memory): Promise<Decision> {
+  const { deps, slots, session } = i;
+  const ask = (text: string): Decision => ({ bubbles: [text], awaiting: true, close: false, action: 'ask', memory });
+  const nome = slots.student_names?.[0] ?? slots.member_name;
+  if (!nome) return ask('Qual aluno? Me diga o nome. Se tiver o comprovante, pode mandar aqui que eu leio.');
+  const r = await resolve(deps.db, [nome], 'student');
+  if (r.ask) return ask(r.ask);
+  const aluno = r.matches[0];
+  if (aluno.kind !== 'non_socio') return ask(`${aluno.name} é sócio e não tem Card Mensal de aluno para renovar. Era outro aluno?`);
+  const res = (await deps.db('conv_svc_ai_student_card_propose', { p_session: session,
+    p: { student_id: aluno.id, amount_cents: toCents(slots.amount), paid_on: slots.paid_on ?? null } })).data as
+    { ok: boolean; message?: string; summary?: Ctx } | null;
+  if (!res?.ok || !res.summary) return ask(res?.message ?? 'Não consegui montar essa renovação. Pode repetir os dados?');
+  return { bubbles: [adminProposalMessage('student_card_renew', res.summary)], awaiting: true, close: false, action: 'proposed_admin', memory };
+}
+
 async function adminFinanceiro(i: DecideInput, memory: Memory): Promise<Decision> {
   const { deps, ctx, slots, session } = i;
   const ask = (text: string): Decision => ({ bubbles: [text], awaiting: true, close: false, action: 'ask', memory });
   if (!isAdminAssistant(ctx)) return ask('Essa parte do financeiro é só com a diretoria, pela conversa privada. Posso te ajudar com outra coisa?');
+  if (slots.fin_action === 'renovar_card') return adminRenovarCard(i, memory);
   const refs = adminPendencyRefs(ctx);
   const ref = slots.pendency_ref ? refs.find((r) => r.ref === slots.pendency_ref) : undefined;
   if (slots.pendency_ref && !ref) return ask('Não achei essa pendência na lista. Qual é (sócio e descrição)?');
