@@ -4,7 +4,7 @@
  * (inclusive a escolha "não cobrar encargos"), nenhuma multa ou juro é calculada.
  */
 import React, { useEffect, useMemo, useState } from 'react';
-import { BellRing, CalendarDays, History, Percent, Settings2 } from 'lucide-react';
+import { CalendarDays, History, Percent, Settings2 } from 'lucide-react';
 import { notify } from '../../../lib/notifications';
 import { useConfirm } from '../../../hooks/useConfirm';
 import { notifyFinanceError } from '../../../lib/finance/errors';
