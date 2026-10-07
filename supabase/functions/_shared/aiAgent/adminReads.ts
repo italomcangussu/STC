@@ -1,7 +1,7 @@
 // Consultas do assessor (Onda 1): o servidor busca (RPC `conv_svc_ai_admin_read`, como o administrador) e escreve o texto.
 // O modelo só escolhe o domínio e o período; nenhum número passa pela cabeça dele.
 
-export const ADMIN_READ_DOMAINS = ['caixa', 'receber_pagar', 'dre', 'receita_alunos', 'comprovantes', 'acessos', 'assinaturas', 'ocupacao', 'comparativo'] as const;
+export const ADMIN_READ_DOMAINS = ['caixa', 'receber_pagar', 'dre', 'receita_alunos', 'comprovantes', 'acessos', 'assinaturas', 'ocupacao', 'comparativo', 'followups', 'preferencias'] as const;
 export type AdminReadDomain = typeof ADMIN_READ_DOMAINS[number];
 type Row = Record<string, unknown>;
 
@@ -98,9 +98,22 @@ function renderComparativo(d: Row): string {
     + (mudancas ? `\nO que mais mudou:\n${mudancas}` : '\nNenhuma categoria mudou de valor.');
 }
 
+function renderFollowups(d: Row): string {
+  const itens = arr(d.items);
+  if (!itens.length) return 'Nenhum retorno pendente.';
+  const quando = (v: unknown) => new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Fortaleza', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(String(v)));
+  return `${itens.length} retorno${itens.length > 1 ? 's' : ''} pendente${itens.length > 1 ? 's' : ''}:\n${itens.map((i) => `- ${quando(i.due_at)} · ${i.who}${i.note ? `: ${i.note}` : ''}${i.sends ? ' (manda mensagem)' : ''}`).join('\n')}`;
+}
+
+function renderPreferencias(d: Row): string {
+  const sn = (v: unknown) => (v ? 'ligado' : 'desligado');
+  return `Suas preferências:\n- Resumo da manhã: ${sn(d.briefing_enabled)} (${d.briefing_style})\n- Alertas: ${sn(d.alerts_enabled)}; cobrança vencida a partir de ${n(d.overdue_days)} dias; `
+    + `${d.min_balance_cents != null ? `caixa abaixo de ${brl(d.min_balance_cents)}` : 'sem aviso de caixa baixo'}\n- Conta padrão: ${d.default_account ?? 'nenhuma'}`;
+}
+
 const RENDER: Record<AdminReadDomain, (d: Row) => string> = {
   caixa: renderCaixa, receber_pagar: renderReceberPagar, dre: renderDre, receita_alunos: renderReceitaAlunos,
-  comprovantes: renderComprovantes, acessos: renderAcessos, assinaturas: renderAssinaturas, ocupacao: renderOcupacao, comparativo: renderComparativo,
+  comprovantes: renderComprovantes, acessos: renderAcessos, assinaturas: renderAssinaturas, ocupacao: renderOcupacao, comparativo: renderComparativo, followups: renderFollowups, preferencias: renderPreferencias,
 };
 
 export const renderAdminRead = (domain: AdminReadDomain, data: unknown): string =>

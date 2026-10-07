@@ -551,6 +551,100 @@ describe('onda 7: pedidos de acesso e sócio novo com mensalidade paga', () => {
   }, 90000);
 });
 
+describe('onda 8: retornos, bloqueio de quadra e preferências', () => {
+  const dizer = async (w: W, p: ReturnType<typeof provider>, texto: string, o: Record<string, unknown>) => {
+    const m = await direct(w, texto);
+    return turn(w, m.message_id, script(answer({ intent: 'admin_acao', ...o })).chat, p.uaz);
+  };
+  const confirmar = (w: W, p: ReturnType<typeof provider>, texto = 'sim') => dizer(w, p, texto, { customer_confirmed: true });
+  const amanha = () => new Date(Date.now() + 36 * 3600 * 1000).toISOString().slice(0, 10);
+
+  it('lembrete para si: sem nome vale a própria conversa e o texto vira a mensagem do horário', async () => {
+    const w = await setup(); const p = provider();
+    await dizer(w, p, 'me lembra amanhã', { ready: true, slots: { adm_action: 'followup_criar', date: amanha() } });
+    expect(p.sent.at(-1)!.text).toMatch(/O que é para lembrar/);
+    const r = await dizer(w, p, 'de cobrar o Beto', { ready: true, slots: { adm_action: 'followup_criar', date: amanha(), start: '09:00', note: 'cobrar o Beto' } });
+    expect(r.action).toBe('proposed_admin');
+    expect(p.sent.at(-1)!.text).toMatch(/^Vou te lembrar em \d\d\/\d\d,? \d\d:\d\d: «cobrar o Beto»\. Confirma/);
+    expect(await q(w.db, `select 1 from public.conv_followups`)).toHaveLength(0);
+    expect((await confirmar(w, p)).action).toBe('admin_confirmed');
+    expect((await q<any>(w.db, `select status, note, send_body, created_by from public.conv_followups`))[0]).toMatchObject({ status: 'pending', note: 'cobrar o Beto', send_body: 'Lembrete: cobrar o Beto', created_by: U.admin });
+  }, 90000);
+
+  it('retorno com sócio que tem conversa; data no passado é recusada; concluir acha o retorno', async () => {
+    const w = await setup(); const p = provider();
+    await direct(w, 'oi', '5599900000003');
+    await dizer(w, p, 'retorno com o Beto', { ready: true, slots: { adm_action: 'followup_criar', member_name: 'Beto', date: '2020-01-01', note: 'x' } });
+    expect(p.sent.at(-1)!.text).toMatch(/já passou/);
+    await dizer(w, p, 'retorno com o Beto', { ready: true, slots: { adm_action: 'followup_criar', member_name: 'Beto', date: amanha(), note: 'confirmar mensalidade' } });
+    expect(p.sent.at(-1)!.text).toMatch(/^Vou criar um retorno com Beto Sócio para .*: confirmar mensalidade\. Confirma/);
+    await confirmar(w, p);
+    expect(await q(w.db, `select 1 from public.conv_followups where status = 'pending'`)).toHaveLength(1);
+    await dizer(w, p, 'conclui o retorno do Beto', { ready: true, slots: { adm_action: 'followup_concluir', member_name: 'Beto' } });
+    expect(p.sent.at(-1)!.text).toMatch(/^Vou dar por concluído o retorno com Beto Sócio/);
+    expect((await confirmar(w, p)).action).toBe('admin_confirmed');
+    expect((await q<any>(w.db, `select status from public.conv_followups`))[0].status).toBe('done');
+  }, 90000);
+
+  it('bloquear quadra: cria a reserva de bloqueio; horário ocupado é recusado com quem ocupa', async () => {
+    const w = await setup(); const p = provider();
+    const bloqueio = (o: Record<string, unknown> = {}) => ({ ready: true, slots: { adm_action: 'quadra_bloquear', court_label: 'Quadra 1', date: amanha(), start: '08:00', duration: 120, reason: 'manutenção do saibro', ...o } });
+    const r = await dizer(w, p, 'bloqueia a quadra 1', bloqueio());
+    expect(r.action).toBe('proposed_admin');
+    expect(p.sent.at(-1)!.text).toMatch(/^Vou bloquear a Quadra 1 em \d\d\/\d\d\/\d{4}, das 08:00 às 10:00 \(manutenção do saibro\)/);
+    expect((await confirmar(w, p)).action).toBe('admin_confirmed');
+    const [res] = await q<any>(w.db, `select start_time::text s, end_time::text e, observation, creator_id, status::text st from public.reservations`);
+    expect(res).toMatchObject({ s: '08:00:00', e: '10:00:00', observation: 'Bloqueio: manutenção do saibro', creator_id: U.admin, st: 'active' });
+    await dizer(w, p, 'bloqueia de novo', bloqueio({ start: '09:00', duration: 60 }));
+    expect(p.sent.at(-1)!.text).toMatch(/Já há reserva nesse horário: 08:00-10:00 Play \(Admin/i);
+    await dizer(w, p, 'bloqueia a quadra x', bloqueio({ court_label: 'Quadra X' }));
+    expect(p.sent.at(-1)!.text).toMatch(/Não achei a quadra/);
+  }, 90000);
+
+  it('preferências: valida, grava depois do "sim" e a leitura mostra o que ficou', async () => {
+    const w = await setup(); const p = provider();
+    await dizer(w, p, 'muda', { ready: true, slots: { adm_action: 'preferencia' } });
+    expect(p.sent.at(-1)!.text).toMatch(/O que você quer ajustar/);
+    await dizer(w, p, 'resumo curto', { ready: true, slots: { adm_action: 'preferencia', pref: 'estilo', pref_value: 'enorme' } });
+    expect(p.sent.at(-1)!.text).toMatch(/curto" ou "completo/);
+    await dizer(w, p, 'resumo curto', { ready: true, slots: { adm_action: 'preferencia', pref: 'estilo', pref_value: 'curto' } });
+    expect(p.sent.at(-1)!.text).toMatch(/^Vou deixar o seu resumo da manhã curto\. Confirma/);
+    await confirmar(w, p);
+    await dizer(w, p, 'avisa se o caixa passar de baixo de 3 mil', { ready: true, slots: { adm_action: 'preferencia', pref: 'saldo_minimo', amount: 3000 } });
+    await confirmar(w, p);
+    await dizer(w, p, 'não quero o resumo', { ready: true, slots: { adm_action: 'preferencia', pref: 'resumo', active: false } });
+    await confirmar(w, p);
+    expect((await q<any>(w.db, `select briefing_style, min_balance_cents, briefing_enabled from public.conv_admin_prefs`))[0]).toMatchObject({ briefing_style: 'curto', min_balance_cents: 300000, briefing_enabled: false });
+    const [sess] = await q<{ id: string }>(w.db, `select id from public.conv_ai_sessions limit 1`);
+    const lido = await svc<any>(w.db, `public.conv_svc_ai_admin_prefs('${sess.id}')`);
+    expect(lido.prefs).toMatchObject({ briefing_enabled: false, briefing_style: 'curto', min_balance_cents: 300000, overdue_days: 7 });
+  }, 90000);
+
+  it('conta padrão: usada na despesa quando o administrador não diz a conta', async () => {
+    const w = await setup(); const p = provider();
+    await rpc(w.db, U.admin, `public.fin_save_account('${key()}', null, null, ${j({ name: 'Caixa pequeno', kind: 'cash', opening_balance_cents: 0, opening_date: '2020-01-01' })})`);
+    await dizer(w, p, 'conta padrão caixa pequeno', { ready: true, slots: { adm_action: 'preferencia', pref: 'conta_padrao', account_name: 'Caixa pequeno' } });
+    expect(p.sent.at(-1)!.text).toMatch(/^Vou usar Caixa pequeno como a sua conta padrão/);
+    await confirmar(w, p);
+    await dizer(w, p, 'lança despesa', { intent: 'admin_financeiro', ready: true, slots: { fin_action: 'despesa', description: 'Gelo', amount: 40, category_name: 'energia' } });
+    expect(p.sent.at(-1)!.text).toMatch(/conta Caixa pequeno/);
+  }, 90000);
+
+  it('alertas com o banco real: cobrança vencida há mais de N dias aparece e respeita as preferências', async () => {
+    const w = await setup();
+    await q(w.db, `create table if not exists public.access_requests(id uuid primary key default gen_random_uuid(), status text)`);
+    await direct(w, 'oi');
+    await q(w.db, `insert into public.conv_admin_briefing_recipients(profile_id) values ('${U.admin}') on conflict do nothing`);
+    await rpc(w.db, U.admin, `public.fin_create_member_pendency('${key()}', ${j({ profile_id: U.socioB, description: 'Consumo antigo', amount_cents: 20000, competence_month: '2026-08-01', due_date: '2026-08-10' })})`);
+    const dados = (await svc<any>(w.db, `public.conv_svc_admin_alert_data('${U.admin}')`)).data;
+    expect(dados.overdue.count).toBe(1);
+    expect(Number(dados.overdue.cents)).toBeGreaterThanOrEqual(20000);
+    expect(dados.receipts_waiting.count).toBe(0);
+    await q(w.db, `insert into public.conv_admin_prefs(profile_id, alerts_enabled) values ('${U.admin}', false)`);
+    expect(await q(w.db, `select 1 from public.conv_svc_admin_alert_targets()`)).toHaveLength(0);
+  }, 90000);
+});
+
 describe('assessor: peças puras', () => {
   it('boas-vindas: usa o primeiro nome, o João se apresenta, e a mesma proposta sempre dá a mesma mensagem', () => {
     const a = composeWelcome('Carla Souza', 'proposta-1');

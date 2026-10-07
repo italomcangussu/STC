@@ -31,15 +31,17 @@ export function composeBriefing(name: string, d: Row): string {
   linhas.push(`📥 A receber: ${brl(r.open_cents)} em aberto; ${n(r.overdue_cents) > 0 ? `vencido ${brl(r.overdue_cents)} (${plural(n(r.overdue_count), 'cobrança', 'cobranças')}, ${plural(n(r.overdue_members), 'sócio', 'sócios')})` : 'nada vencido'}.`);
   linhas.push(`📤 A pagar: ${brl(p.payable_open_cents)} em aberto; ${n(p.payable_overdue_cents) > 0 ? `vencido ${brl(p.payable_overdue_cents)}` : 'nada vencido'}${n(p.payable_due_7d_cents) > 0 ? `, ${brl(p.payable_due_7d_cents)} vencem em 7 dias` : ''}.`);
 
+  const curto = d.style === 'curto';
   const extras: string[] = [];
   const rec = (d.receipts ?? {}) as Row;
   if (n(rec.total) > 0) extras.push(`🧾 ${plural(n(rec.total), 'comprovante aguardando análise', 'comprovantes aguardando análise')}${rec.oldest_at ? ` (o mais antigo de ${dm(rec.oldest_at)})` : ''}.`);
-  for (const s of (Array.isArray(d.signatures) ? d.signatures as Row[] : []).slice(0, 3))
+  for (const s of curto ? [] : (Array.isArray(d.signatures) ? d.signatures as Row[] : []).slice(0, 3))
     extras.push(`✍️ «${s.title}»: ${n(s.signed)} de ${n(s.recipients)} assinaram${s.due_at ? `, prazo ${dm(s.due_at)}` : ''}.`);
   const acc = (d.access ?? {}) as Row;
-  if (n(acc.total) > 0) extras.push(`🔑 ${plural(n(acc.total), 'pedido de acesso pendente', 'pedidos de acesso pendentes')}.`);
+  if (!curto && n(acc.total) > 0) extras.push(`🔑 ${plural(n(acc.total), 'pedido de acesso pendente', 'pedidos de acesso pendentes')}.`);
   const res = (d.reservations ?? {}) as Row;
-  if (n(res.total) > 0) {
+  if (curto) { /* resumo curto: sem reservas, assinaturas e acessos */ }
+  else if (n(res.total) > 0) {
     const tipos = Object.entries((res.by_type ?? {}) as Record<string, number>).map(([t, q]) => `${q} ${t.toLowerCase()}`).join(', ');
     extras.push(`🎾 Hoje: ${plural(n(res.total), 'reserva', 'reservas')}${tipos ? ` (${tipos})` : ''}.`);
   } else extras.push('🎾 Hoje: sem reservas.');

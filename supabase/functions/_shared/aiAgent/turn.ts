@@ -86,6 +86,11 @@ export type Slots = {
   /** Onda 7 (cadastro de sócio). */
   phone?: string | null;
   email?: string | null;
+  /** Onda 8 (retornos, bloqueio de quadra, preferências). */
+  note?: string | null;
+  send_body?: string | null;
+  pref?: 'resumo' | 'estilo' | 'alertas' | 'saldo_minimo' | 'dias_atraso' | 'conta_padrao' | null;
+  pref_value?: string | null;
   read_domain?: AdminReadDomain | null;
   read_from?: string | null;
   read_to?: string | null;
@@ -97,7 +102,8 @@ type PendencyKind = 'day_card' | 'consumo' | 'evento' | 'multa' | 'dano_reposica
 type PayMethod = 'pix' | 'transfer' | 'cash' | 'card' | 'other';
 const FIN_ACTIONS: FinAction[] = ['lancar', 'cobrar', 'pausar', 'retomar', 'baixa', 'renovar_card',
   'cancelar_pendencia', 'ajustar', 'estornar', 'rejeitar_comprovante', 'despesa', 'receita', 'aprovar_comprovante', 'gerar_cobrancas'];
-export const ADM_ACTIONS = ['aviso', 'aviso_desativar', 'aluno_status', 'socio_status', 'assinatura_reenviar', 'reserva_cancelar', 'acesso_aprovar', 'acesso_recusar', 'socio_criar'] as const;
+export const ADM_ACTIONS = ['aviso', 'aviso_desativar', 'aluno_status', 'socio_status', 'assinatura_reenviar', 'reserva_cancelar', 'acesso_aprovar', 'acesso_recusar', 'socio_criar',
+  'followup_criar', 'followup_concluir', 'quadra_bloquear', 'preferencia'] as const;
 export type AdmAction = typeof ADM_ACTIONS[number];
 const ADJUST_KINDS = ['discount', 'increase', 'fee_waiver'] as const;
 const PENDENCY_KINDS: PendencyKind[] = ['day_card', 'consumo', 'evento', 'multa', 'dano_reposicao', 'outros'];
@@ -213,6 +219,10 @@ export function parseSlots(raw: unknown): Slots {
   if ('by_name' in o) out.by_name = str(o.by_name);
   if ('phone' in o) out.phone = str(o.phone);
   if ('email' in o) out.email = str(o.email);
+  if ('note' in o) out.note = str(o.note);
+  if ('send_body' in o) out.send_body = str(o.send_body);
+  if ('pref' in o) out.pref = ['resumo', 'estilo', 'alertas', 'saldo_minimo', 'dias_atraso', 'conta_padrao'].includes(o.pref as string) ? o.pref as Slots['pref'] : null;
+  if ('pref_value' in o) out.pref_value = str(o.pref_value);
   if ('read_domain' in o) out.read_domain = isAdminReadDomain(o.read_domain) ? o.read_domain : null;
   if ('read_from' in o) out.read_from = isoDate(o.read_from);
   if ('read_to' in o) out.read_to = isoDate(o.read_to);
@@ -1678,7 +1688,8 @@ const isAdminProposalAction = (a: unknown) => String(a ?? '').startsWith('fin_')
 type AdminAction = 'fin_pendency_create' | 'fin_pendency_collection' | 'fin_pendency_send' | 'fin_payment' | 'student_card_renew'
   | 'fin_charge_cancel' | 'fin_charge_adjust' | 'fin_payment_reverse' | 'fin_receipt_reject' | 'fin_entry_create' | 'fin_receipt_approve' | 'fin_charges_generate'
   | 'adm_announcement_create' | 'adm_announcement_deactivate' | 'adm_student_status' | 'adm_member_status' | 'adm_signature_resend' | 'adm_reservation_cancel'
-  | 'fin_member_create' | 'fin_access_approve' | 'adm_access_reject';
+  | 'fin_member_create' | 'fin_access_approve' | 'adm_access_reject'
+  | 'adm_followup_create' | 'adm_followup_done' | 'adm_court_block' | 'adm_pref_set';
 
 const centsBR = (v: unknown) => `R$ ${(Number(v ?? 0) / 100).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`;
 const dateBR = (v: unknown) => String(v ?? '').slice(0, 10).split('-').reverse().join('/');
@@ -1687,6 +1698,22 @@ const METHOD_TEXT: Record<string, string> = { pix: 'PIX', transfer: 'transferên
 export function toCents(reais: number | null | undefined): number | null {
   if (typeof reais !== 'number' || !Number.isFinite(reais) || reais <= 0) return null;
   return Math.round(reais * 100);
+}
+
+
+const hhmm = (v: unknown) => new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Fortaleza', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(String(v)));
+function prefText(s: Ctx, done: boolean): string {
+  const on = (v: unknown) => (v ? 'ligado' : 'desligado');
+  switch (s.pref) {
+    case 'resumo': return done ? `Pronto: resumo da manhã ${on(s.active)}.` : `Vou ${s.active ? 'ligar' : 'desligar'} o seu resumo da manhã.`;
+    case 'alertas': return done ? `Pronto: alertas ${on(s.active)}.` : `Vou ${s.active ? 'ligar' : 'desligar'} os seus alertas (cobrança vencida, comprovante parado, conta vencida e caixa baixo).`;
+    case 'estilo': return done ? `Pronto: resumo da manhã agora é ${s.value}.` : `Vou deixar o seu resumo da manhã ${s.value}.`;
+    case 'saldo_minimo': return s.cents == null ? (done ? 'Pronto: sem aviso de caixa baixo.' : 'Vou tirar o aviso de caixa baixo.')
+      : (done ? `Pronto: aviso quando o caixa ficar abaixo de ${centsBR(s.cents)}.` : `Vou te avisar quando o caixa ficar abaixo de ${centsBR(s.cents)}.`);
+    case 'dias_atraso': return done ? `Pronto: aviso de cobrança vencida a partir de ${s.value} dias.` : `Vou te avisar de cobrança vencida a partir de ${s.value} dias de atraso.`;
+    default: return s.account_name ? (done ? `Pronto: conta padrão agora é ${s.account_name}.` : `Vou usar ${s.account_name} como a sua conta padrão quando você não disser a conta.`)
+      : (done ? 'Pronto: sem conta padrão.' : 'Vou tirar a sua conta padrão.');
+  }
 }
 
 export function adminProposalMessage(action: AdminAction, s: Ctx): string {
@@ -1699,6 +1726,14 @@ export function adminProposalMessage(action: AdminAction, s: Ctx): string {
     const leitura = s.amount_read ? '' : ' Não consegui ler o valor do comprovante; vale o que você informou.';
     return `${quem} (telefone ${tel}, ${email})${s.reactivate ? ', reativando o cadastro antigo' : ''}, com mensalidade de ${centsBR(s.amount_cents)}. A mensalidade de ${mes} fica paga com o comprovante que você mandou (${centsBR(s.amount_cents)}, pago em ${dateBR(s.paid_on)}, conta ${s.account_name}); ele entra sem pendência e os juros do mês de entrada são dispensados.${leitura} Confirma? Responda "sim".`;
   }
+  if (action === 'adm_pref_set') return `${prefText(s, false)} Confirma? Responda "sim".`;
+  if (action === 'adm_followup_create') {
+    const quando = hhmm(s.due_at);
+    if (s.self) return `Vou te lembrar em ${quando}: «${s.note ?? s.send_body}». Confirma? Responda "sim".`;
+    return `Vou criar um retorno com ${s.member_name} para ${quando}${s.note ? `: ${s.note}` : ''}.${s.send_body ? ` Nesse horário mando para ele(a): «${s.send_body}».` : ''} Confirma? Responda "sim".`;
+  }
+  if (action === 'adm_followup_done') return `Vou ${s.new_status === 'canceled' ? 'cancelar' : 'dar por concluído'} o retorno${s.member_name ? ` com ${s.member_name}` : ''} de ${hhmm(s.due_at)}${s.note ? ` («${s.note}»)` : ''}. Confirma? Responda "sim".`;
+  if (action === 'adm_court_block') return `Vou bloquear a ${s.court} em ${dateBR(s.date)}, das ${s.start} às ${s.end}${s.reason ? ` (${s.reason})` : ''}. Ninguém consegue reservar nesse horário. Confirma? Responda "sim".`;
   if (action === 'adm_access_reject') return `Vou recusar o pedido de acesso de ${s.name}${s.reason ? `. Motivo: ${s.reason}` : ''}. Confirma? Responda "sim".`;
   if (action === 'adm_announcement_create') return `Vou publicar este aviso para todos os sócios no app:\n«${s.title}»\n${s.message}\n${s.expires_on ? `Fica no ar até ${dateBR(s.expires_on)}.` : 'Sem data para sair.'} Confirma? Responda "sim".`;
   if (action === 'adm_announcement_deactivate') return `Vou tirar do ar o aviso «${s.title}». Confirma? Responda "sim".`;
@@ -1741,6 +1776,10 @@ export function adminProposalMessage(action: AdminAction, s: Ctx): string {
 export function adminSuccessMessage(action: AdminAction, s: Ctx): string {
   if (action === 'student_card_renew') return studentCardSuccessMessage(s);
   if (action === 'fin_member_create' || action === 'fin_access_approve') return `Pronto: ${s.name} agora é sócio e a mensalidade de ${String(s.month ?? '').slice(5, 7)}/${String(s.month ?? '').slice(0, 4)} ficou paga (${centsBR(s.amount_cents)}), sem pendência.`;
+  if (action === 'adm_pref_set') return prefText(s, true);
+  if (action === 'adm_followup_create') return s.self ? `Pronto: te lembro em ${hhmm(s.due_at)}.` : `Pronto: retorno com ${s.member_name} criado para ${hhmm(s.due_at)}.`;
+  if (action === 'adm_followup_done') return `Pronto: retorno ${s.new_status === 'canceled' ? 'cancelado' : 'concluído'}.`;
+  if (action === 'adm_court_block') return `Pronto: ${s.court} bloqueada em ${dateBR(s.date)}, ${s.start}-${s.end}. Para liberar, é só pedir para cancelar essa reserva de bloqueio.`;
   if (action === 'adm_access_reject') return `Pronto: pedido de acesso de ${s.name} recusado.`;
   if (action === 'adm_announcement_create') return `Pronto: aviso «${s.title}» publicado.`;
   if (action === 'adm_announcement_deactivate') return `Pronto: aviso «${s.title}» tirado do ar.`;
@@ -1807,6 +1846,21 @@ async function adminAcao(i: DecideInput, memory: Memory): Promise<Decision> {
   } else if (a === 'reserva_cancelar') {
     if (!slots.date || !slots.start) return ask('Qual o dia e o horário de início da reserva?');
     p = { action: 'adm_reservation_cancel', date: slots.date, start: slots.start, court_label: slots.court_label ?? null, by_name: slots.by_name ?? null, reason: slots.reason ?? null };
+  } else if (a === 'followup_criar') {
+    if (!slots.date) return ask('Para qual dia? (e a hora, se quiser; senão uso 09h)');
+    if (!slots.note && !slots.send_body) return ask('O que é para lembrar nesse retorno?');
+    p = { action: 'adm_followup_create', member_name: slots.member_name ?? null, date: slots.date, start: slots.start ?? null, note: slots.note ?? null, send_body: slots.send_body ?? null };
+  } else if (a === 'followup_concluir') {
+    p = { action: 'adm_followup_done', member_name: slots.member_name ?? null, date: slots.date ?? null, active: slots.active ?? null };
+  } else if (a === 'quadra_bloquear') {
+    if (!slots.court_label) return ask('Qual quadra?');
+    if (!slots.date || !slots.start) return ask('Qual o dia e a hora de início do bloqueio?');
+    if (!slots.duration) return ask('Por quanto tempo (em minutos ou horas)?');
+    p = { action: 'adm_court_block', court_label: slots.court_label, date: slots.date, start: slots.start, duration: slots.duration, reason: slots.reason ?? null };
+  } else if (a === 'preferencia') {
+    if (!slots.pref) return ask('O que você quer ajustar: resumo da manhã (ligar/desligar), estilo do resumo (curto ou completo), alertas, aviso de caixa baixo, dias de atraso para cobrança vencida ou conta padrão?');
+    const cents = toCents(slots.amount);
+    p = { action: 'adm_pref_set', pref: slots.pref, active: slots.active ?? null, value: slots.pref_value ?? null, amount_cents: cents, account_name: slots.account_name ?? null };
   } else if (a === 'acesso_recusar') {
     p = { action: 'adm_access_reject', name: slots.member_name ?? null, reason: slots.reason ?? null };
   } else if (a === 'acesso_aprovar' || a === 'socio_criar') {
@@ -1822,7 +1876,8 @@ async function adminAcao(i: DecideInput, memory: Memory): Promise<Decision> {
   } else {
     return ask('O que você quer fazer: publicar ou tirar um aviso, pausar/reativar aluno, inativar/reativar sócio, reenviar avisos de assinatura, cancelar uma reserva, aprovar ou recusar pedido de acesso ou cadastrar um sócio novo?');
   }
-  const rpc = a === 'acesso_aprovar' || a === 'acesso_recusar' || a === 'socio_criar' ? 'conv_svc_ai_admin_access_propose' : 'conv_svc_ai_admin_adm_propose';
+  const rpc = a === 'acesso_aprovar' || a === 'acesso_recusar' || a === 'socio_criar' ? 'conv_svc_ai_admin_access_propose'
+    : a === 'followup_criar' || a === 'followup_concluir' || a === 'quadra_bloquear' || a === 'preferencia' ? 'conv_svc_ai_admin_wave8_propose' : 'conv_svc_ai_admin_adm_propose';
   const res = (await deps.db(rpc, { p_session: session, p })).data as
     { ok: boolean; message?: string; action?: AdminAction; summary?: Ctx } | null;
   if (!res?.ok || !res.summary || !res.action) return ask(res?.message ?? 'Não consegui montar isso. Pode repetir os dados?');
@@ -1934,6 +1989,11 @@ async function adminFinanceiro(i: DecideInput, memory: Memory): Promise<Decision
     return ask('O que você quer fazer: lançar pendência, cobrar agora, pausar/retomar a cobrança, dar baixa, cancelar ou ajustar uma pendência, estornar um pagamento, aprovar ou recusar um comprovante, gerar as cobranças do mês ou lançar uma despesa/receita?');
   }
 
+  // Conta padrão do administrador (preferência), quando ele não disse a conta.
+  if (p.account_name == null && ['fin_payment', 'fin_entry_create', 'fin_receipt_approve'].includes(String(p.action))) {
+    const pf = (await deps.db('conv_svc_ai_admin_prefs', { p_session: session })).data as { ok?: boolean; prefs?: { default_account?: string | null } } | null;
+    if (pf?.ok && pf.prefs?.default_account) p.account_name = pf.prefs.default_account;
+  }
   const res = (await deps.db('conv_svc_ai_admin_finance_propose', { p_session: session, p })).data as
     { ok: boolean; code?: string; message?: string; action?: AdminAction; summary?: Ctx } | null;
   if (!res?.ok || !res.summary || !res.action) return ask(res?.message ?? 'Não consegui montar esse lançamento. Pode repetir os dados?');

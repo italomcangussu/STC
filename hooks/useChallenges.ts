@@ -13,6 +13,7 @@ import { Challenge, User } from '../types';
 import { PlayerStats, fetchRanking, canChallenge, checkMonthlyChallengeLimit } from '../lib/rankingService';
 import { logger } from '../lib/logger';
 import { notify } from '../lib/notifications';
+import { useLiveRefresh } from './useLiveRefresh';
 
 // --- STATE TYPES ---
 interface ChallengeState {
@@ -166,6 +167,12 @@ export function useChallenges(currentUser: User) {
 // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser.id]);
 
+  // Tempo real: outro jogador propôs/aceitou/cancelou; relê sem piscar o loading.
+  useLiveRefresh(['challenges'], () => {
+    void fetchChallenges(true);
+    void fetchMonthlyLimits();
+  });
+
   // Calculate eligible opponents when ranking changes
   useEffect(() => {
     if (state.ranking.length > 0) {
@@ -174,9 +181,9 @@ export function useChallenges(currentUser: User) {
 // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.ranking, currentUser.id]);
 
-  const fetchChallenges = async () => {
+  const fetchChallenges = async (silent = false) => {
     try {
-      dispatch({ type: 'SET_LOADING', payload: true });
+      if (!silent) dispatch({ type: 'SET_LOADING', payload: true });
 
       const { data, error } = await supabase
         .from('challenges')
@@ -419,7 +426,7 @@ export function useChallenges(currentUser: User) {
     acceptChallenge,
     declineChallenge,
     cancelChallenge,
-    refetch: fetchChallenges,
+    refetch: () => fetchChallenges(),
   };
 
   return {

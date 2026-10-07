@@ -5,7 +5,7 @@
 // limite, segunda confirmação repetindo o valor, imposta no banco) · N3 nunca por chat (o João só indica a tela).
 
 export type Risk = 'N0' | 'N1' | 'N2' | 'N3';
-export type Domain = 'financeiro' | 'pessoas' | 'quadra' | 'competicoes' | 'clube';
+export type Domain = 'financeiro' | 'pessoas' | 'quadra' | 'competicoes' | 'clube' | 'conversas';
 
 export type Capability = {
   id: string;
@@ -31,6 +31,8 @@ export const CAPABILITIES: readonly Capability[] = [
   { id: 'fin.receivables', domain: 'financeiro', risk: 'N0', label: 'A receber e a pagar', panel: 'Financeiro', onDemand: 'receber_pagar' },
   { id: 'fin.dre', domain: 'financeiro', risk: 'N0', label: 'Resultado (DRE)', panel: 'Financeiro', onDemand: 'dre' },
   { id: 'fin.comparativo', domain: 'financeiro', risk: 'N0', label: 'Comparativo com o período anterior (por que subiu/caiu)', panel: 'Financeiro', onDemand: 'comparativo' },
+  { id: 'conv.followups', domain: 'conversas', risk: 'N0', label: 'Retornos pendentes', panel: 'Conversas', onDemand: 'followups' },
+  { id: 'adm.prefs.read', domain: 'clube', risk: 'N0', label: 'Minhas preferências do assessor', panel: 'João', onDemand: 'preferencias' },
   { id: 'fin.student_revenue', domain: 'financeiro', risk: 'N0', label: 'Receita de alunos', panel: 'Financeiro', onDemand: 'receita_alunos' },
   { id: 'fin.receipts', domain: 'financeiro', risk: 'N0', label: 'Fila de comprovantes', panel: 'Financeiro', onDemand: 'comprovantes' },
   { id: 'people.access', domain: 'pessoas', risk: 'N0', label: 'Pedidos de acesso pendentes', panel: 'Acessos', onDemand: 'acessos' },
@@ -55,6 +57,10 @@ export const CAPABILITIES: readonly Capability[] = [
   { id: 'adm.access.approve', domain: 'pessoas', risk: 'N2', label: 'Aprovar pedido de acesso (sócio novo com mensalidade paga)', panel: 'Acessos', write: { admAction: 'acesso_aprovar' } },
   { id: 'adm.access.reject', domain: 'pessoas', risk: 'N1', label: 'Recusar pedido de acesso', panel: 'Acessos', write: { admAction: 'acesso_recusar' } },
   { id: 'adm.member.create', domain: 'pessoas', risk: 'N2', label: 'Cadastrar sócio novo (com mensalidade paga)', panel: 'Sócios', write: { admAction: 'socio_criar' } },
+  { id: 'adm.followup.create', domain: 'conversas', risk: 'N1', label: 'Criar retorno (follow-up) ou lembrete', panel: 'Conversas', write: { admAction: 'followup_criar' } },
+  { id: 'adm.followup.done', domain: 'conversas', risk: 'N1', label: 'Concluir ou cancelar retorno', panel: 'Conversas', write: { admAction: 'followup_concluir' } },
+  { id: 'adm.court.block', domain: 'clube', risk: 'N1', label: 'Bloquear horário de quadra', panel: 'Agenda', write: { admAction: 'quadra_bloquear' } },
+  { id: 'adm.prefs.set', domain: 'clube', risk: 'N1', label: 'Ajustar preferências, alertas e resumo da manhã', panel: 'João', write: { admAction: 'preferencia' } },
   { id: 'adm.member.status', domain: 'pessoas', risk: 'N1', label: 'Inativar/reativar sócio', panel: 'Sócios', write: { admAction: 'socio_status' } },
   { id: 'adm.signature.resend', domain: 'clube', risk: 'N1', label: 'Reenviar avisos de assinatura com falha', panel: 'Documentos', write: { admAction: 'assinatura_reenviar' } },
   { id: 'adm.reservation.cancel', domain: 'quadra', risk: 'N1', label: 'Cancelar reserva', panel: 'Reservas', write: { admAction: 'reserva_cancelar' } },

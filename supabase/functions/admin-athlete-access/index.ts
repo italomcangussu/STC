@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { makeProvision, normalizePhoneBr } from '../_shared/athleteProvision.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
@@ -9,29 +10,6 @@ const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
-
-const normalizePhoneDigits = (phone: string): string => (phone || '').replace(/\D/g, '');
-
-const normalizePhoneBr = (phone: string): string => {
-    const digits = normalizePhoneDigits(phone);
-    if (!digits) return '';
-
-    let local = digits;
-
-    if (local.startsWith('55') && local.length >= 12) {
-        local = local.slice(2);
-    }
-
-    if (local.length > 11) {
-        local = local.slice(-11);
-    }
-
-    return local;
-};
-
-const generateLegacyEmailFromPhone = (phone: string): string => `${normalizePhoneBr(phone)}@reserva.com`;
-const generateLegacyPasswordFromPhone = (phone: string): string => `sct${normalizePhoneBr(phone)}2024`;
-const isDuplicateAuthEmailError = (error: any): boolean => /already|duplicate|exists/i.test(String(error?.message || ''));
 
 const json = (status: number, body: Record<string, unknown>) =>
     new Response(JSON.stringify(body), {
@@ -80,165 +58,11 @@ const getAdminContext = async (req: Request) => {
     return { adminClient, adminUserId: user.id };
 };
 
-const buildEmailCandidates = (preferredEmail: string, normalizedPhone: string): string[] => {
-    const fallback = generateLegacyEmailFromPhone(normalizedPhone);
-    const alias = `legacy.${normalizedPhone}@reserva.com`;
-    return Array.from(
-        new Set(
-            [preferredEmail, fallback, alias]
-                .map((value) => String(value || '').trim().toLowerCase())
-                .filter(Boolean)
-        )
-    );
-};
-
-const ensureLegacyAuthUser = async ({
-    adminClient,
-    existingProfileId,
-    name,
-    normalizedPhone,
-    preferredEmail,
-    authPassword,
-}: {
-    adminClient: any;
-    existingProfileId?: string;
-    name: string;
-    normalizedPhone: string;
-    preferredEmail: string;
-    authPassword: string;
-}) => {
-    const emailCandidates = buildEmailCandidates(preferredEmail, normalizedPhone);
-    const basePayload = {
-        password: authPassword,
-        email_confirm: true,
-        user_metadata: {
-            name,
-            phone: normalizedPhone,
-        },
-    };
-
-    if (existingProfileId) {
-        const { data: profileAuthUser, error: getUserError } = await adminClient.auth.admin.getUserById(existingProfileId);
-        if (getUserError && getUserError.status !== 404) {
-            throw new Error(getUserError.message || 'Falha ao buscar usuário existente no Auth.');
-        }
-
-        if (profileAuthUser?.user?.id) {
-            for (const candidateEmail of emailCandidates) {
-                const { error: updateError } = await adminClient.auth.admin.updateUserById(existingProfileId, {
-                    ...basePayload,
-                    email: candidateEmail,
-                });
-
-                if (!updateError) {
-                    return { userId: existingProfileId, created: false, authEmail: candidateEmail };
-                }
-
-                if (!isDuplicateAuthEmailError(updateError)) {
-                    throw new Error(updateError.message || 'Falha ao atualizar credenciais do Auth.');
-                }
-            }
-
-            throw new Error('Não foi possível atualizar usuário Auth: todos os emails candidatos já estão em uso.');
-        }
-    }
-
-    for (const candidateEmail of emailCandidates) {
-        const { data: createdUserData, error: createUserError } = await adminClient.auth.admin.createUser({
-            ...basePayload,
-            email: candidateEmail,
-        });
-
-        if (!createUserError && createdUserData?.user?.id) {
-            return { userId: createdUserData.user.id, created: true, authEmail: candidateEmail };
-        }
-
-        if (!isDuplicateAuthEmailError(createUserError)) {
-            throw new Error(createUserError?.message || 'Falha ao criar usuário no Auth.');
-        }
-    }
-
-    throw new Error('Não foi possível criar usuário Auth: todos os emails candidatos já estão em uso.');
-};
-
-const provisionAthlete = async ({
-    adminClient,
-    name,
-    phone,
-    email,
-}: {
-    adminClient: any;
-    name: string;
-    phone: string;
-    email?: string | null;
-}) => {
-    const normalizedPhone = normalizePhoneBr(phone);
-    if (!normalizedPhone) {
-        throw new Error('Telefone inválido.');
-    }
-    const preferredEmail = (email && String(email).trim()) || generateLegacyEmailFromPhone(normalizedPhone);
-    const authPassword = generateLegacyPasswordFromPhone(normalizedPhone);
-
-    const { data: existingProfile } = await adminClient
-        .from('profiles')
-        .select('id, is_active')
-        .eq('phone', normalizedPhone)
-        .order('is_active', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-    const authUser = await ensureLegacyAuthUser({
-        adminClient,
-        existingProfileId: existingProfile?.id,
-        name,
-        normalizedPhone,
-        preferredEmail,
-        authPassword,
-    });
-
-    if (existingProfile?.id) {
-        const { error: updateProfileError } = await adminClient
-            .from('profiles')
-            .update({
-                name,
-                email: authUser.authEmail,
-                phone: normalizedPhone,
-                role: 'socio',
-                is_active: true,
-            })
-            .eq('id', existingProfile.id);
-
-        if (updateProfileError) {
-            throw new Error(updateProfileError.message || 'Falha ao atualizar perfil do atleta.');
-        }
-
-        return {
-            profileId: existingProfile.id,
-            authUserId: authUser.userId,
-            alreadyProvisioned: Boolean(existingProfile.is_active && !authUser.created),
-        };
-    }
-
-    const { error: upsertProfileError } = await adminClient
-        .from('profiles')
-        .upsert({
-            id: authUser.userId,
-            name,
-            email: authUser.authEmail,
-            phone: normalizedPhone,
-            role: 'socio',
-            is_active: true,
-        });
-
-    if (upsertProfileError) {
-        throw new Error(upsertProfileError.message || 'Falha ao criar perfil do atleta.');
-    }
-
-    return {
-        profileId: authUser.userId,
-        authUserId: authUser.userId,
-        alreadyProvisioned: false,
-    };
+// A criação do acesso (Auth + perfil) é a MESMA do assessor João: `_shared/athleteProvision.ts`.
+const provisionAthlete = async ({ adminClient, name, phone, email }: { adminClient: any; name: string; phone: string; email?: string | null }) => {
+    const result = await makeProvision(adminClient)({ name, phone, email });
+    if (result.ok === false) throw new Error(result.error);
+    return { profileId: result.profileId, authUserId: result.profileId, alreadyProvisioned: result.alreadyProvisioned };
 };
 
 Deno.serve(async (req) => {

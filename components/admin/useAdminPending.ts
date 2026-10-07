@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { getNowInFortaleza, formatDate } from '../../utils';
 import type { AdminTabId } from './adminSections';
+import { useLiveRefresh } from '../../hooks/useLiveRefresh';
 
 export interface AdminCounts {
     access: number;
@@ -52,6 +53,9 @@ export const useAdminPending = () => {
         void load();
         return () => { alive.current = false; };
     }, [load]);
+
+    // Selos em tempo real: o debounce do hook e a releitura única evitam rajada de contagens.
+    useLiveRefresh(['access_requests', 'challenges', 'reservations', 'club_forms'], () => { void load(); }, { debounceMs: 1000 });
 
     const refresh = useCallback(() => {
         if (Date.now() - loadedAt.current >= REFRESH_AFTER_MS) void load();

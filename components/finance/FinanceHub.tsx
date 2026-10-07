@@ -12,6 +12,7 @@ import { listAccounts, listCategories, getSettings, receiptQueue } from '../../l
 import { FinanceProvider } from './FinanceContext';
 import { ErrorBlock, SectionTabs, Spinner } from './ui';
 import { useAsync } from './hooks';
+import { useLiveRefresh } from '../../hooks/useLiveRefresh';
 import { useAdminEmbedded } from '../admin/AdminEmbedContext';
 
 const OverviewTab = lazy(() => import('./tabs/OverviewTab'));
@@ -57,6 +58,7 @@ export const FinanceHub: React.FC = () => {
     return { accounts, categories, settings };
   }, []);
   const pending = useAsync(() => receiptQueue('pending', 100, 0), [tab === 'receipts']);
+  useLiveRefresh(['fin_receipt_submissions'], pending.reload);
 
   useEffect(() => { try { localStorage.setItem(KEY, tab); } catch { /* ignore */ } }, [tab]);
 

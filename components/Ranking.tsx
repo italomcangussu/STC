@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useLiveRefresh } from '../hooks/useLiveRefresh';
 import { Trophy, Info, Crown, Loader2, ChevronRight, Target } from 'lucide-react';
 import { fetchRanking, fetchRankingByCategory, PlayerStats, CLASS_ORDER } from '../lib/rankingService';
 
@@ -148,9 +149,8 @@ export const Ranking: React.FC<RankingProps> = ({ onSelectProfile }) => {
   const tabs = [...CLASS_ORDER, 'Geral'];
 
   // Fetch ranking on mount
-  useEffect(() => {
-    const loadRanking = async () => {
-      setLoading(true);
+  const loadRanking = useCallback(async (silent = false) => {
+      if (!silent) setLoading(true);
       try {
         const [byCategory, all] = await Promise.all([
           fetchRankingByCategory(),
@@ -163,9 +163,10 @@ export const Ranking: React.FC<RankingProps> = ({ onSelectProfile }) => {
       } finally {
         setLoading(false);
       }
-    };
-    loadRanking();
   }, []);
+
+  useEffect(() => { void loadRanking(); }, [loadRanking]);
+  useLiveRefresh(['matches', 'challenges'], () => { void loadRanking(true); });
 
   if (loading) {
     return (
