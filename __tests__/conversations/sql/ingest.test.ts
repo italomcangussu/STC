@@ -156,7 +156,7 @@ describe('envio e estados: só o provedor muda o que "enviada/entregue/lida" sig
     expect((await msgs(w, `id = '${q1.message_id}'`))[0].status).toBe('sent');
   }, 60000);
 
-  it('resposta MANUAL do administrador assume a conversa direta; IA, automação e retorno não', async () => {
+  it('resposta MANUAL do administrador NÃO tira a conversa direta da IA; só conv_set_ai_status assume', async () => {
     const w = await world();
     const a = await inbound(w.db, { phone: '5585999990001', name: 'Maria', body: 'Oi' });
     const send = async (author: string | null, origin: string) => {
@@ -167,7 +167,9 @@ describe('envio e estados: só o provedor muda o que "enviada/entregue/lida" sig
     await send(null, 'automation');
     expect((await q<any>(w.db, `select ai_status, handled_by_human from public.conv_conversations`))[0]).toEqual({ ai_status: 'ai', handled_by_human: false });
     await send(U.admin, 'staff');
-    expect((await q<any>(w.db, `select ai_status, handled_by_human from public.conv_conversations`))[0]).toEqual({ ai_status: 'human', handled_by_human: true });
+    expect((await q<any>(w.db, `select ai_status, handled_by_human from public.conv_conversations`))[0]).toEqual({ ai_status: 'ai', handled_by_human: false });
+    await rpc(w.db, U.admin, `public.conv_set_ai_status('${a.conversation_id}', 'human')`);
+    expect((await q<any>(w.db, `select ai_status from public.conv_conversations`))[0].ai_status).toBe('human');
     await rpc(w.db, U.admin, `public.conv_set_ai_status('${a.conversation_id}', 'ai')`);
     expect((await q<any>(w.db, `select ai_status from public.conv_conversations`))[0].ai_status).toBe('ai');
     expect(await rpcError(w.db, U.admin, `public.conv_set_ai_status('${a.conversation_id}', 'xyz')`)).toMatch(/INVALID_STATUS/);
