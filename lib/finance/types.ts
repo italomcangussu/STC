@@ -27,6 +27,14 @@ export interface FinSettings extends Omit<PublicSettings, 'late_fee_confirmed'> 
   day_card_price_cents: number;
   day_card_in_cash: boolean;
   payee_names: string[];
+  pix_key: string;
+  pendency_automation_enabled: boolean;
+  pendency_reminder_days: number[];
+  pendency_grace_days: number;
+  pendency_fine_fixed_cents: number;
+  pendency_fine_percent_bps: number;
+  pendency_interest_daily_fixed_cents: number;
+  pendency_interest_daily_percent_bps: number;
   version: number;
   updated_at: string;
 }
@@ -133,7 +141,7 @@ export interface PlanPriceRow {
 
 export interface ChargeStatementRow {
   charge_id: string;
-  plan_id: string;
+  plan_id: string | null;
   profile_id: string;
   profile_name: string;
   competence_month: string;
@@ -158,6 +166,36 @@ export interface ChargeStatementRow {
   last_payment_on: string | null;
   cancel_reason: string | null;
   total_count: number;
+}
+
+export type MemberPendencyKind = 'day_card' | 'consumo' | 'evento' | 'multa' | 'dano_reposicao' | 'outros';
+
+export interface MemberPendencyMeta {
+  id: string;
+  profile_id: string;
+  charge_type: 'member_pendency';
+  description: string;
+  pendency_kind: MemberPendencyKind;
+  category_id: string;
+  guest_name: string | null;
+  guest_date: string | null;
+  collection_enabled: boolean;
+  competence_month: string;
+  due_date: string;
+  original_amount_cents: number;
+  status: 'open' | 'partial' | 'paid' | 'canceled';
+  version: number;
+}
+
+export interface MemberPaymentSettings {
+  pix_key: string;
+  pendency_automation_enabled: boolean;
+  pendency_reminder_days: number[];
+  pendency_grace_days: number;
+  pendency_fine_fixed_cents: number;
+  pendency_fine_percent_bps: number;
+  pendency_interest_daily_fixed_cents: number;
+  pendency_interest_daily_percent_bps: number;
 }
 
 export interface ChargePaymentRow {
