@@ -757,6 +757,17 @@ describe('regras do turno que não dependem do modelo', () => {
     expect((await turn(w, m2.message_id, script(answer()).chat, p.uaz)).status).toBe('skip');
   }, 90000);
 
+  it('figurinha sozinha no privado não chama a equipe nem o modelo', async () => {
+    const { w } = await setup();
+    const p = provider();
+    const calls = script();
+    const m = await direct(w, '', '5599900000002', { kind: 'sticker', body: null });
+    const r = await turn(w, m.message_id, calls.chat, p.uaz);
+    expect([r.status, r.bubbles, r.handoff, r.action]).toEqual(['replied', 0, null, 'sticker_ignored']);
+    expect(calls.calls.length).toBe(0);
+    expect((await q<any>(w.db, `select handoff_kind from public.conv_conversations`))[0].handoff_kind).toBeNull();
+  }, 120000);
+
   it('palavra de transferência e mídia sem texto vão para a equipe sem gastar o modelo', async () => {
     const { w } = await setup();
     const p = provider();

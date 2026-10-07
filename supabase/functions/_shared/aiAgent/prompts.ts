@@ -295,6 +295,14 @@ function adminSection(ctx: Ctx): string {
 
 `;
 }
+function clubBalancesText(ctx: Ctx): string {
+  const b = (ctx.club_balances ?? null) as Ctx | null;
+  const contas = Array.isArray(b?.accounts) ? b!.accounts as Ctx[] : [];
+  if (!b || !contas.length) return '\n\nSALDO DAS CONTAS DO CLUBE: (não disponível agora)';
+  const linhas = contas.map((c) => `- ${c.name} (${c.kind}): ${moneyBR(Number(c.balance_cents) / 100)}`).join('\n');
+  return `\n\nSALDO DAS CONTAS DO CLUBE (caixa, banco etc.; "saldo do clube" = total):\n${linhas}\nTOTAL: ${moneyBR(Number(b.total_cents) / 100)}`;
+}
+
 export function financialContextText(ctx: Ctx, buffered = ''): string {
   const fin = (ctx.financial_context ?? {}) as Ctx;
   const students = Array.isArray(fin.students) ? fin.students as Ctx[] : [];
@@ -375,7 +383,7 @@ export function financialContextText(ctx: Ctx, buffered = ''): string {
       }).join('\n')
     : '(nenhuma pendência de sócio relevante encontrada)';
 
-  return `ALUNOS/CARDS:\n${studentText}\n\nDAY CARDS DE CONVIDADOS:\n${dayText}\n\nPENDÊNCIAS DE SÓCIO:\n${pendencyText}\n\nPIX DO CLUBE: ${fin.pix_key ?? '(não confirmado)'}\n\nAtualizado em: ${fin.as_of ?? '(agora)'}`;
+  return `ALUNOS/CARDS:\n${studentText}\n\nDAY CARDS DE CONVIDADOS:\n${dayText}\n\nPENDÊNCIAS DE SÓCIO:\n${pendencyText}${admin ? clubBalancesText(ctx) : ''}\n\nPIX DO CLUBE: ${fin.pix_key ?? '(não confirmado)'}\n\nAtualizado em: ${fin.as_of ?? '(agora)'}`;
 }
 
 export function rankingText(ctx: Ctx, buffered = ''): string {

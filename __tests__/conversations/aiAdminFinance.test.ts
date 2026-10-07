@@ -145,6 +145,17 @@ describe('assessor: peças puras', () => {
     expect(t).not.toContain('d2');
   });
 
+  it('saldo das contas do clube só aparece para o administrador no privado', () => {
+    const club_balances = { total_cents: 123450, accounts: [{ name: 'Banco do clube', kind: 'bank', balance_cents: 123450 }] };
+    const ver = financialContextText({ ...admin, club_balances, financial_context: {} });
+    expect(ver).toContain('Banco do clube (bank): R$ 1234,50');
+    expect(ver).toContain('TOTAL: R$ 1234,50');
+    const socio = financialContextText({ is_group: false, requester: { profile: { id: 'X', is_admin: false } }, club_balances, financial_context: {} });
+    expect(socio).not.toContain('SALDO DAS CONTAS');
+    const grupo = financialContextText({ ...admin, is_group: true, club_balances, financial_context: {} });
+    expect(grupo).not.toContain('SALDO DAS CONTAS');
+  });
+
   it('valor em reais vira centavos; lixo vira nulo', () => {
     expect(toCents(37.5)).toBe(3750);
     expect(toCents(0.1 + 0.2)).toBe(30);

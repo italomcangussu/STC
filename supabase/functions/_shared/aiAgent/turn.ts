@@ -971,6 +971,11 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
   } catch {
     ctx.financial_context = { students: [], day_cards: [], member_pendencies: [] };
   }
+  // Saldo das contas do clube: o prompt só o mostra ao administrador no privado.
+  try {
+    const saldo = await db('conv_svc_ai_club_balances', {});
+    ctx.club_balances = saldo.data && typeof saldo.data === 'object' ? saldo.data : null;
+  } catch { ctx.club_balances = null; }
 
   if (isGroup) {
     try {
@@ -1101,6 +1106,11 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
     const sent = await entregar(cadence([UNCLEAR_AUDIO_REPLY]));
     await save((ctx.session?.memory ?? {}) as Memory, 'audio_unclear', { bubbles: sent }, true, false);
     return { status: 'replied', bubbles: sent, handoff: null, action: 'audio_unclear' } as TurnResult;
+  }
+  // Figurinha sozinha é reação, não pedido: não chama a equipe nem responde.
+  if (soMidia && !isGroup && pendentes.every((t) => t.kind === 'sticker')) {
+    await save((ctx.session?.memory ?? {}) as Memory, 'sticker_ignored', {}, false, false);
+    return { status: 'replied', bubbles: 0, handoff: null, action: 'sticker_ignored' } as TurnResult;
   }
   if (soMidia && !isGroup) return transferir('hard', `Chegou ${[...new Set(pendentes.map((t) => t.kind))].join(', ')} sem texto; a IA não lê mídia.`, null);
 
