@@ -62,6 +62,7 @@ export const CAPABILITIES: readonly Capability[] = [
   { id: 'adm.court.block', domain: 'clube', risk: 'N1', label: 'Bloquear horário de quadra', panel: 'Agenda', write: { admAction: 'quadra_bloquear' } },
   { id: 'adm.prefs.set', domain: 'clube', risk: 'N1', label: 'Ajustar preferências, alertas e resumo da manhã', panel: 'João', write: { admAction: 'preferencia' } },
   { id: 'adm.member.status', domain: 'pessoas', risk: 'N1', label: 'Inativar/reativar sócio', panel: 'Sócios', write: { admAction: 'socio_status' } },
+  { id: 'adm.dependent.create', domain: 'pessoas', risk: 'N1', label: 'Cadastrar dependente de sócio', panel: 'Alunos', write: { admAction: 'dependente_criar' } },
   { id: 'adm.signature.resend', domain: 'clube', risk: 'N1', label: 'Reenviar avisos de assinatura com falha', panel: 'Documentos', write: { admAction: 'assinatura_reenviar' } },
   { id: 'adm.reservation.cancel', domain: 'quadra', risk: 'N1', label: 'Cancelar reserva', panel: 'Reservas', write: { admAction: 'reserva_cancelar' } },
   { id: 'fin.payment.register', domain: 'financeiro', risk: 'N2', label: 'Dar baixa em pagamento', panel: 'Financeiro', write: { finAction: 'baixa' } },

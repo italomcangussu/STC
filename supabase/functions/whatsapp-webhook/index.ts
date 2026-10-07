@@ -72,24 +72,26 @@ async function notifyAdminsPush(messageId: string) {
   }
 }
 
+// O turno espera o buffer e a chamada ao modelo: roda em segundo plano, a UazAPI já recebeu o 200.
+const runAiTurn = (messageId: string, mediaOnly = false) => runTurn(messageId, {
+  db: (name, args) => service.rpc(name, args),
+  chat: aiChat,
+  uaz,
+  sleep: (ms) => new Promise((r) => setTimeout(r, ms)),
+  provision: makeProvision(service),
+  mediaOnly,
+}).catch((e) => console.error('ai-turn', e instanceof Error ? e.message : 'erro'));
+
 const recordDeps: RecordDeps = {
   rpc: (name, args) => service.rpc(name, args),
   uaz,
   // O turno espera o buffer e a chamada ao modelo: roda em segundo plano, a UazAPI já recebeu o 200.
   onInbound: (messageId) => {
-    waitUntil(Promise.all([
-      runTurn(messageId, {
-        db: (name, args) => service.rpc(name, args),
-        chat: aiChat,
-        uaz,
-        sleep: (ms) => new Promise((r) => setTimeout(r, ms)),
-        provision: makeProvision(service),
-      }).catch((e) => console.error('ai-turn', e instanceof Error ? e.message : 'erro')),
-      notifyAdminsPush(messageId),
-    ]));
+    waitUntil(Promise.all([runAiTurn(messageId), notifyAdminsPush(messageId)]));
   },
-  onMediaReady: (messageId) => {
-    waitUntil(processFinancialReceiptMedia(messageId));
+  // Comprovante já guardado: o financeiro lê, e só então o João responde (administrador no privado), para não ficar mudo.
+  onMediaReady: (messageId, aiPending) => {
+    waitUntil(processFinancialReceiptMedia(messageId).then(() => (aiPending ? runAiTurn(messageId, true) : undefined)));
   },
   store: async (path, fileUrl, mime) => {
     try {

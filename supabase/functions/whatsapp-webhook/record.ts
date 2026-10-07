@@ -27,7 +27,7 @@ export type RecordDeps = {
   /** Mensagem de entrada nova gravada: a IA decide (no banco) se responde. */
   onInbound?(messageId: string): void;
   /** Mídia de entrada já persistida: consumidores especializados podem processá-la. */
-  onMediaReady?(messageId: string): void;
+  onMediaReady?(messageId: string, aiPending?: boolean): void;
   /** Tarefas assíncronas em segundo plano (retry de decifração, etc). */
   background?(task: Promise<unknown>): void;
   /** Áudio de entrada já guardado em `path` → texto (Whisper). Sem isto, o áudio segue como hoje. */
@@ -75,7 +75,8 @@ export async function recordInbound(payload: Record<string, unknown>, channel: C
         }
       }
       if (m.hasMedia && deps.uaz && out.message_id) {
-        return storeMedia(m, out.message_id, deps);
+        // Imagem/documento tratado como comprovante não aciona o João na entrada: ele responde depois da leitura (onMediaReady).
+        return storeMedia(m, out.message_id, deps, undefined, specializedMedia && !m.fromMe && m.chat.kind !== 'group');
       }
       if (m.body?.includes('[Undecryptable]') && deps.uaz && deps.background) {
         deps.background((async () => {
@@ -140,7 +141,7 @@ export async function recordInbound(payload: Record<string, unknown>, channel: C
 type Incoming = { providerId: string; mime: string | null };
 
 /** Pede o arquivo já decifrado, guarda no bucket e liga à mensagem. `ready` roda com a mídia no lugar. */
-async function storeMedia(m: Incoming, messageId: string, deps: RecordDeps, ready?: (path: string, mime: string) => Promise<void>): Promise<string> {
+async function storeMedia(m: Incoming, messageId: string, deps: RecordDeps, ready?: (path: string, mime: string) => Promise<void>, aiPending = false): Promise<string> {
   const pedido = deps.uaz ? buildChatRequest({ action: 'download', messageId: m.providerId }) : null;
   const baixado = pedido && deps.uaz ? await deps.uaz(pedido) : null;
   const url = baixado?.ok ? String(baixado.body.fileURL ?? baixado.body.fileUrl ?? '') : '';
@@ -149,7 +150,7 @@ async function storeMedia(m: Incoming, messageId: string, deps: RecordDeps, read
     const path = inboundMediaPath(messageId, m.providerId, mime);
     if (await deps.store(path, url, mime)) {
       await deps.rpc('conv_svc_set_message_media', { p_provider_id: m.providerId, p_path: path, p_mime: mime });
-      deps.onMediaReady?.(messageId);
+      deps.onMediaReady?.(messageId, aiPending);
       if (ready) await ready(path, mime);
       return 'mensagem_com_midia';
     }

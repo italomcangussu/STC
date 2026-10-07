@@ -34,6 +34,8 @@ export type TurnDeps = {
   sleep: (ms: number) => Promise<void>;
   /** Cria o acesso do sócio novo no Auth + perfil (só a borda alcança o Auth). Sem isso o João não cadastra sócio. */
   provision?: Provision;
+  /** Turno disparado pela mídia (comprovante já lido): só vale para administrador no privado; o resto não responde por aqui. */
+  mediaOnly?: boolean;
 };
 
 export type Slots = {
@@ -86,6 +88,9 @@ export type Slots = {
   /** Onda 7 (cadastro de sócio). */
   phone?: string | null;
   email?: string | null;
+  /** Dependente de sócio: nome do dependente e parentesco (member_name = sócio responsável). */
+  dependent_name?: string | null;
+  relationship?: 'esposa' | 'esposo' | 'filho' | 'filha' | 'outro' | null;
   /** Onda 8 (retornos, bloqueio de quadra, preferências). */
   note?: string | null;
   send_body?: string | null;
@@ -103,7 +108,7 @@ type PayMethod = 'pix' | 'transfer' | 'cash' | 'card' | 'other';
 const FIN_ACTIONS: FinAction[] = ['lancar', 'cobrar', 'pausar', 'retomar', 'baixa', 'renovar_card',
   'cancelar_pendencia', 'ajustar', 'estornar', 'rejeitar_comprovante', 'despesa', 'receita', 'aprovar_comprovante', 'gerar_cobrancas'];
 export const ADM_ACTIONS = ['aviso', 'aviso_desativar', 'aluno_status', 'socio_status', 'assinatura_reenviar', 'reserva_cancelar', 'acesso_aprovar', 'acesso_recusar', 'socio_criar',
-  'followup_criar', 'followup_concluir', 'quadra_bloquear', 'preferencia'] as const;
+  'followup_criar', 'followup_concluir', 'quadra_bloquear', 'preferencia', 'dependente_criar'] as const;
 export type AdmAction = typeof ADM_ACTIONS[number];
 const ADJUST_KINDS = ['discount', 'increase', 'fee_waiver'] as const;
 const PENDENCY_KINDS: PendencyKind[] = ['day_card', 'consumo', 'evento', 'multa', 'dano_reposicao', 'outros'];
@@ -221,6 +226,8 @@ export function parseSlots(raw: unknown): Slots {
   if ('email' in o) out.email = str(o.email);
   if ('note' in o) out.note = str(o.note);
   if ('send_body' in o) out.send_body = str(o.send_body);
+  if ('dependent_name' in o) out.dependent_name = str(o.dependent_name)?.slice(0, 120) ?? null;
+  if ('relationship' in o) out.relationship = ['esposa', 'esposo', 'filho', 'filha', 'outro'].includes(o.relationship as string) ? o.relationship as Slots['relationship'] : null;
   if ('pref' in o) out.pref = ['resumo', 'estilo', 'alertas', 'saldo_minimo', 'dias_atraso', 'conta_padrao'].includes(o.pref as string) ? o.pref as Slots['pref'] : null;
   if ('pref_value' in o) out.pref_value = str(o.pref_value);
   if ('read_domain' in o) out.read_domain = isAdminReadDomain(o.read_domain) ? o.read_domain : null;
@@ -1018,6 +1025,7 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
   if (!(await latest())) return { status: 'superseded' };
 
   const ctx = ((await db('conv_svc_ai_context', { p_session: session })).data ?? ctx0) as Ctx;
+  if (deps.mediaOnly && (isGroup || !isAdminAssistant(ctx))) return { status: 'skip', reason: 'media_only' };
 
   // Contexto extra continua barato: SQL compacto + uma única chamada ao modelo por turno.
   try {
@@ -1689,7 +1697,7 @@ type AdminAction = 'fin_pendency_create' | 'fin_pendency_collection' | 'fin_pend
   | 'fin_charge_cancel' | 'fin_charge_adjust' | 'fin_payment_reverse' | 'fin_receipt_reject' | 'fin_entry_create' | 'fin_receipt_approve' | 'fin_charges_generate'
   | 'adm_announcement_create' | 'adm_announcement_deactivate' | 'adm_student_status' | 'adm_member_status' | 'adm_signature_resend' | 'adm_reservation_cancel'
   | 'fin_member_create' | 'fin_access_approve' | 'adm_access_reject'
-  | 'adm_followup_create' | 'adm_followup_done' | 'adm_court_block' | 'adm_pref_set';
+  | 'adm_followup_create' | 'adm_followup_done' | 'adm_court_block' | 'adm_pref_set' | 'adm_dependent_create';
 
 const centsBR = (v: unknown) => `R$ ${(Number(v ?? 0) / 100).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`;
 const dateBR = (v: unknown) => String(v ?? '').slice(0, 10).split('-').reverse().join('/');
@@ -1727,6 +1735,7 @@ export function adminProposalMessage(action: AdminAction, s: Ctx): string {
     return `${quem} (telefone ${tel}, ${email})${s.reactivate ? ', reativando o cadastro antigo' : ''}, com mensalidade de ${centsBR(s.amount_cents)}. A mensalidade de ${mes} fica paga com o comprovante que você mandou (${centsBR(s.amount_cents)}, pago em ${dateBR(s.paid_on)}, conta ${s.account_name}); ele entra sem pendência e os juros do mês de entrada são dispensados.${leitura} Confirma? Responda "sim".`;
   }
   if (action === 'adm_pref_set') return `${prefText(s, false)} Confirma? Responda "sim".`;
+  if (action === 'adm_dependent_create') return `Vou cadastrar ${s.dependent_name} como ${s.relationship} de ${s.member_name} (dependente, sem cobrança${s.phone ? `, telefone ${s.phone}` : ''}). Confirma? Responda "sim".`;
   if (action === 'adm_followup_create') {
     const quando = hhmm(s.due_at);
     if (s.self) return `Vou te lembrar em ${quando}: «${s.note ?? s.send_body}». Confirma? Responda "sim".`;
@@ -1777,6 +1786,7 @@ export function adminSuccessMessage(action: AdminAction, s: Ctx): string {
   if (action === 'student_card_renew') return studentCardSuccessMessage(s);
   if (action === 'fin_member_create' || action === 'fin_access_approve') return `Pronto: ${s.name} agora é sócio e a mensalidade de ${String(s.month ?? '').slice(5, 7)}/${String(s.month ?? '').slice(0, 4)} ficou paga (${centsBR(s.amount_cents)}), sem pendência.`;
   if (action === 'adm_pref_set') return prefText(s, true);
+  if (action === 'adm_dependent_create') return `Pronto: ${s.dependent_name} cadastrado(a) como ${s.relationship} de ${s.member_name}.`;
   if (action === 'adm_followup_create') return s.self ? `Pronto: te lembro em ${hhmm(s.due_at)}.` : `Pronto: retorno com ${s.member_name} criado para ${hhmm(s.due_at)}.`;
   if (action === 'adm_followup_done') return `Pronto: retorno ${s.new_status === 'canceled' ? 'cancelado' : 'concluído'}.`;
   if (action === 'adm_court_block') return `Pronto: ${s.court} bloqueada em ${dateBR(s.date)}, ${s.start}-${s.end}. Para liberar, é só pedir para cancelar essa reserva de bloqueio.`;
@@ -1846,6 +1856,13 @@ async function adminAcao(i: DecideInput, memory: Memory): Promise<Decision> {
   } else if (a === 'reserva_cancelar') {
     if (!slots.date || !slots.start) return ask('Qual o dia e o horário de início da reserva?');
     p = { action: 'adm_reservation_cancel', date: slots.date, start: slots.start, court_label: slots.court_label ?? null, by_name: slots.by_name ?? null, reason: slots.reason ?? null };
+  } else if (a === 'dependente_criar') {
+    if (!slots.member_name) return ask('Claro, posso cadastrar o dependente. De qual sócio ele(a) é dependente?');
+    if (!slots.dependent_name) return ask(`Posso cadastrar sim. Me passa o nome completo do dependente e o telefone, se tiver (o telefone é opcional; CPF não é necessário no cadastro).`);
+    if (!slots.relationship) return ask(`Qual o parentesco de ${slots.dependent_name} com ${slots.member_name}: esposa, esposo, filho, filha ou outro?`);
+    const r = await resolve(deps.db, [slots.member_name], 'member');
+    if (r.ask) return ask(r.ask);
+    p = { action: 'adm_dependent_create', profile_id: r.ids[0], dependent_name: slots.dependent_name, relationship: slots.relationship, phone: slots.phone ?? null };
   } else if (a === 'followup_criar') {
     if (!slots.date) return ask('Para qual dia? (e a hora, se quiser; senão uso 09h)');
     if (!slots.note && !slots.send_body) return ask('O que é para lembrar nesse retorno?');
@@ -1876,7 +1893,8 @@ async function adminAcao(i: DecideInput, memory: Memory): Promise<Decision> {
   } else {
     return ask('O que você quer fazer: publicar ou tirar um aviso, pausar/reativar aluno, inativar/reativar sócio, reenviar avisos de assinatura, cancelar uma reserva, aprovar ou recusar pedido de acesso ou cadastrar um sócio novo?');
   }
-  const rpc = a === 'acesso_aprovar' || a === 'acesso_recusar' || a === 'socio_criar' ? 'conv_svc_ai_admin_access_propose'
+  const rpc = a === 'dependente_criar' ? 'conv_svc_ai_admin_dependent_propose'
+    : a === 'acesso_aprovar' || a === 'acesso_recusar' || a === 'socio_criar' ? 'conv_svc_ai_admin_access_propose'
     : a === 'followup_criar' || a === 'followup_concluir' || a === 'quadra_bloquear' || a === 'preferencia' ? 'conv_svc_ai_admin_wave8_propose' : 'conv_svc_ai_admin_adm_propose';
   const res = (await deps.db(rpc, { p_session: session, p })).data as
     { ok: boolean; message?: string; action?: AdminAction; summary?: Ctx } | null;

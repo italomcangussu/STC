@@ -645,6 +645,65 @@ describe('onda 8: retornos, bloqueio de quadra e preferências', () => {
   }, 90000);
 });
 
+describe('dependente de sócio pelo WhatsApp (N1)', () => {
+  const dizer = async (w: W, p: ReturnType<typeof provider>, texto: string, o: Record<string, unknown>) => {
+    const m = await direct(w, texto);
+    return turn(w, m.message_id, script(answer(o)).chat, p.uaz);
+  };
+  const dep = (slots: Record<string, unknown> = {}) => ({ ready: true, intent: 'admin_acao', slots: { adm_action: 'dependente_criar', member_name: 'Beto', ...slots } });
+
+  it('sem os dados, o João diz que pode cadastrar e pede nome e parentesco (sem pedir CPF)', async () => {
+    const w = await setup(); const p = provider();
+    await dizer(w, p, 'cadastra a esposa do Beto como dependente', dep());
+    expect(p.sent.at(-1)!.text).toMatch(/Posso cadastrar sim\. Me passa o nome completo do dependente.*CPF não é necessário/);
+    await dizer(w, p, 'Jessica Lorraine Gomes', dep({ dependent_name: 'Jessica Lorraine Gomes de Morais' }));
+    expect(p.sent.at(-1)!.text).toMatch(/Qual o parentesco de Jessica Lorraine Gomes de Morais com Beto: esposa/);
+    expect(await q(w.db, `select 1 from public.non_socio_students where student_type = 'dependent'`)).toHaveLength(0);
+  }, 90000);
+
+  it('com tudo: resume, só grava depois do "sim", cria o dependente sem cobrança e não duplica', async () => {
+    const w = await setup(); const p = provider();
+    const r = await dizer(w, p, 'a esposa dele é Jessica', dep({ dependent_name: 'Jessica Lorraine Gomes de Morais', relationship: 'esposa', phone: '(88) 99999-1234' }));
+    expect(r.action).toBe('proposed_admin');
+    expect(p.sent.at(-1)!.text).toMatch(/^Vou cadastrar Jessica Lorraine Gomes de Morais como esposa de Beto Sócio \(dependente, sem cobrança, telefone 88999991234\)\. Confirma/);
+    expect(await q(w.db, `select 1 from public.non_socio_students where student_type = 'dependent'`)).toHaveLength(0);
+    const c = await dizer(w, p, 'sim', { customer_confirmed: true });
+    expect(c.action).toBe('admin_confirmed');
+    expect(p.sent.at(-1)!.text).toBe('Pronto: Jessica Lorraine Gomes de Morais cadastrado(a) como esposa de Beto Sócio.');
+    const [d] = await q<any>(w.db, `select name, student_type, relationship_type, plan_type, plan_status, responsible_socio_id from public.non_socio_students where student_type = 'dependent'`);
+    expect(d).toMatchObject({ name: 'Jessica Lorraine Gomes de Morais', relationship_type: 'esposa', plan_type: 'Dependente', plan_status: 'active', responsible_socio_id: U.socioB });
+    expect(await q(w.db, `select 1 from public.student_profiles sp join public.non_socio_students n on n.id = sp.non_socio_student_id where n.student_type = 'dependent'`)).toHaveLength(1);
+    await dizer(w, p, 'cadastra de novo', dep({ dependent_name: 'jéssica lorraine gomes de morais', relationship: 'esposa' }));
+    expect(p.sent.at(-1)!.text).toMatch(/já está cadastrado\(a\) como dependente de Beto Sócio/);
+  }, 90000);
+});
+
+describe('comprovante enviado logo depois do texto: o João não fica mudo', () => {
+  const imagem = (w: W, phone: string) => svc<any>(w.db, `public.conv_svc_ingest_message(${j({ provider_id: `I${++n}${Math.random()}`, chat_kind: 'direct', phone, name: 'X', kind: 'image', body: '📷 Foto' })})`);
+  const turnoMidia = (w: W, id: string, chat: Chat, uaz: UazCaller) => runTurn(id, { db: pgDb(w.db), chat, uaz, sleep: async () => undefined, mediaOnly: true });
+
+  it('administrador: texto e foto seguidos; o turno da foto (já lida) responde lendo os dois', async () => {
+    const w = await setup(); const p = provider();
+    const t = await direct(w, 'o valor é 400,00');
+    const m = await imagem(w, '5599900000001');
+    const s = script(answer({ intent: 'outro', messages: ['Recebi o comprovante e o valor.'], awaiting: true }));
+    expect((await turn(w, t.message_id, s.chat, p.uaz)).status).toBe('superseded');   // o turno do texto cede à foto
+    expect(p.sent).toHaveLength(0);
+    const r = await turnoMidia(w, m.message_id, s.chat, p.uaz);
+    expect(r.status).toBe('replied');
+    expect(p.sent.at(-1)!.text).toMatch(/Recebi o comprovante/);
+    expect(s.calls[0].user).toContain('400,00');
+  }, 90000);
+
+  it('quem não é administrador: a foto de comprovante segue só pelo financeiro, o João não responde', async () => {
+    const w = await setup(); const p = provider();
+    const m = await imagem(w, '5599900000002');
+    const s = script();
+    expect(await turnoMidia(w, m.message_id, s.chat, p.uaz)).toMatchObject({ status: 'skip', reason: 'media_only' });
+    expect(p.sent).toHaveLength(0); expect(s.calls).toHaveLength(0);
+  }, 90000);
+});
+
 describe('assessor: peças puras', () => {
   it('boas-vindas: usa o primeiro nome, o João se apresenta, e a mesma proposta sempre dá a mesma mensagem', () => {
     const a = composeWelcome('Carla Souza', 'proposta-1');
