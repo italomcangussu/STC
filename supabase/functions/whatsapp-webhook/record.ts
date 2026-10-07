@@ -25,6 +25,8 @@ export type RecordDeps = {
   broadcast(event: string, payload: Record<string, unknown>): Promise<void>;
   /** Mensagem de entrada nova gravada: a IA decide (no banco) se responde. */
   onInbound?(messageId: string): void;
+  /** Mídia de entrada já persistida: consumidores especializados podem processá-la. */
+  onMediaReady?(messageId: string): void;
   /** Tarefas assíncronas em segundo plano (retry de decifração, etc). */
   background?(task: Promise<unknown>): void;
 };
@@ -61,6 +63,7 @@ export async function recordInbound(payload: Record<string, unknown>, channel: C
           const path = inboundMediaPath(out.message_id, m.providerId, mime);
           if (await deps.store(path, url, mime)) {
             await deps.rpc('conv_svc_set_message_media', { p_provider_id: m.providerId, p_path: path, p_mime: mime });
+            deps.onMediaReady?.(out.message_id);
             return 'mensagem_com_midia';
           }
         }
