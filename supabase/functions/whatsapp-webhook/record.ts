@@ -53,7 +53,12 @@ export async function recordInbound(payload: Record<string, unknown>, channel: C
       if (r.error || !out) { await log('erro_ao_gravar', r.error?.message?.slice(0, 120)); return 'erro_ao_gravar'; }
       if (out.ignored) return 'grupo_nao_permitido';          // grupo detectado/bloqueado: nada foi gravado
       if (out.duplicate) return 'duplicada';                    // webhook repetido: nem mídia nem IA de novo
-      if (!m.fromMe && out.message_id) deps.onInbound?.(out.message_id);
+      const receiptCaption = /\b(comprovante|pagamento|paguei|pago|pix|transferencia|recibo)\b/i
+        .test((m.body ?? '').normalize('NFD').replace(/[̀-ͯ]/g, ''));
+      const specializedMedia = m.hasMedia
+        && (m.kind === 'image' || m.kind === 'document')
+        && (!m.body || m.body === '📷 Foto' || m.body === '📄 Documento' || receiptCaption);
+      if (!m.fromMe && out.message_id && !specializedMedia) deps.onInbound?.(out.message_id);
       if (m.hasMedia && deps.uaz && out.message_id) {
         const pedido = buildChatRequest({ action: 'download', messageId: m.providerId });
         const baixado = pedido ? await deps.uaz(pedido) : null;
