@@ -299,7 +299,7 @@ const CreditsPanel: React.FC = () => {
   const { accounts } = useFinance();
   const credits = useAsync(() => listCredits(), []);
   const names = useAsync(async () => {
-    const rows = await listCharges({}, 500);
+    const rows = await listCharges({ chargeType: 'membership' }, 500);
     return rows;
   }, []);
   const [sel, setSel] = useState<MemberCreditRow | null>(null);
@@ -365,7 +365,7 @@ const MembersTab: React.FC = () => {
   // Com busca ativa a tela traz o máximo de linhas de uma vez e filtra aqui, sem acento e sem maiúsculas;
   // digitar mais letras não refaz a consulta.
   const searching = search.trim() !== '';
-  const filters = { status, competenceFrom: compFrom ? `${compFrom}-01` : undefined, competenceTo: compTo ? `${compTo}-01` : undefined, dueFrom: dueFrom || undefined, dueTo: dueTo || undefined };
+  const filters = { status, competenceFrom: compFrom ? `${compFrom}-01` : undefined, competenceTo: compTo ? `${compTo}-01` : undefined, dueFrom: dueFrom || undefined, dueTo: dueTo || undefined, chargeType: 'membership' as const };
   const charges = useAsync(() => listCharges(filters, searching ? SEARCH_LIMIT : LIST_LIMIT), [searching, status, compFrom, compTo, dueFrom, dueTo]);
   const plans = useAsync(() => listPlans(), []);
 
