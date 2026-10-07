@@ -1,7 +1,7 @@
 {
   "versao": 2,
-  "geradoEm": "2026-10-07T10:44:53.264Z",
-  "commit": "75006bf1",
+  "geradoEm": "2026-10-07T11:35:13.826Z",
+  "commit": "29cc940e",
   "pastas": [
     "__tests__",
     "__tests__/admin",
