@@ -72,7 +72,7 @@ export type Answer = {
 };
 
 /** Reações que o João pode dar. O modelo escolhe; o servidor só aceita estas (e nunca reage em nome de outro assunto). */
-export const REACTIONS = ['👍', '😂', '🎾', '🔥', '👏', '❤️', '🙌', '💪', '😅', '🤝'] as const;
+export const REACTIONS = ['👍', '😂', '🎾', '🔥', '👏', '\u2764\uFE0F', '🙌', '💪', '😅', '🤝'] as const;
 const stripVs = (e: string) => e.replace(/\uFE0F/g, '');
 export function parseReaction(v: unknown): string | null {
   const e = typeof v === 'string' ? stripVs(v.trim()) : '';
@@ -231,7 +231,7 @@ export function cadence(messages: string[]): { text: string; delayMs: number }[]
 
 /* ------------------------------- Regras que não dependem do modelo ------------------------------- */
 
-const norm = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const norm = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 
 /* ------------------------------- Tênis profissional atual (ESPN) ------------------------------- */
 
