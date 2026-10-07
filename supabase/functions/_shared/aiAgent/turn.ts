@@ -652,17 +652,28 @@ const listaNomes = (nomes: string[]) => (nomes.length <= 1 ? nomes.join('') : `$
 
 type Summary = Record<string, any>; // payload normalizado de `validate_reservation`
 
-export function describeReservation(n: Summary, today: string, names: string[] = []): string {
+/** Quem solicitou vira "você" e vai primeiro; nome repetido (ex.: "Carlos" e "Carlos Carneiro") aparece uma vez só. */
+function nomesParaFalar(names: string[], me?: string): string[] {
+  const visto = new Set<string>();
+  const lista = names.filter((x) => { const k = norm(x); if (visto.has(k)) return false; visto.add(k); return true; });
+  if (!me) return lista;
+  const eu = norm(me);
+  const outros = lista.filter((x) => norm(x) !== eu);
+  return outros.length === lista.length ? lista : ['você', ...outros];
+}
+
+export function describeReservation(n: Summary, today: string, names: string[] = [], me?: string): string {
   const quando = `${dayLabel(String(n.date), today)}, ${n.start}${n.end ? `–${n.end}` : ''}`;
   const onde = n.court_name ? ` na ${n.court_name}` : '';
-  const quem = names.length ? ` para ${listaNomes(names)}` : '';
+  const falar = nomesParaFalar(names, me);
+  const quem = falar.length ? ` para ${listaNomes(falar)}` : '';
   return `${n.type === 'Aula' ? 'aula' : 'reserva'} ${quando}${onde}${quem}`;
 }
 
-export function proposalMessage(action: 'create' | 'cancel' | 'reschedule', n: Summary, today: string, names: string[]): string {
+export function proposalMessage(action: 'create' | 'cancel' | 'reschedule', n: Summary, today: string, names: string[], me?: string): string {
   if (action === 'cancel') return `Vou cancelar a ${describeReservation(n, today)}. Posso cancelar? Responda "sim" para confirmar.`;
-  if (action === 'reschedule') return `Verifiquei agora e dá para remarcar para ${describeReservation(n, today, names)}. A anterior será cancelada. Posso confirmar?`;
-  return `Verifiquei agora: o horário está livre. Seria ${describeReservation(n, today, names)}. Posso confirmar essa reserva?`;
+  if (action === 'reschedule') return `Dá pra remarcar sim: ${describeReservation(n, today, names, me)}. A anterior eu cancelo. Posso fechar assim?`;
+  return `Tá livre! Seria ${describeReservation(n, today, names, me)}. Posso confirmar?`;
 }
 
 /** Jogo que ocupa o horário, como o banco devolve (`conv_svc_ai_slot_games`). */
@@ -732,8 +743,8 @@ export function successMessage(action: 'create' | 'cancel' | 'reschedule' | 'joi
     return `Pronto, ${Number(n.added ?? 1) > 1 ? 'vocês entraram' : 'você entrou'} no jogo de ${jogoDe(n as Game, today)}. Jogam: ${listaNomes(ordem)}.`;
   }
   if (action === 'cancel') return `Pronto, a ${describeReservation(n, today)} foi cancelada.`;
-  if (action === 'reschedule') return `Pronto, remarcado: ${describeReservation(n, today, names)}.`;
-  return `Reserva confirmada: ${describeReservation(n, today, names)}.`;
+  if (action === 'reschedule') return `Pronto, remarcado: ${describeReservation(n, today, names, me)}. Bom jogo!`;
+  return `Fechado, tá reservado: ${describeReservation(n, today, names, me)}. Bom jogo!`;
 }
 
 /** Mensagens para os códigos que o banco devolve. `null` = o caso pede transferência para a equipe. */
@@ -1390,6 +1401,9 @@ async function propose(i: DecideInput, memory: Memory): Promise<Decision> {
       const pedidos = (slots.participant_names ?? []).filter((n) => norm(n) !== me && norm(n) !== 'eu');
       const r = await resolve(db, pedidos, 'member');
       if (r.ask) return ask(r.ask);
+      // "Carlos" na frase pode resolver para o próprio solicitante: ele já está na reserva, não entra de novo.
+      const outros = r.matches.filter((m) => m.id !== String(profile.id ?? '') && norm(m.name) !== me);
+      r.ids = outros.map((m) => m.id); r.names = outros.map((m) => m.name);
       payload.participant_ids = r.ids;
       payload.guest_name = slots.guest_name ?? null;
       names = [String(profile.name), ...r.names, ...(slots.guest_name ? [`${slots.guest_name} (convidado)`] : [])];
@@ -1421,7 +1435,7 @@ async function propose(i: DecideInput, memory: Memory): Promise<Decision> {
   if (res?.ok && res.summary) {
     memory.proposal_names = names;
     memory.pending_guest = null;
-    return { bubbles: [proposalMessage(((res.action as 'create' | 'cancel' | 'reschedule' | undefined) ?? action), res.summary, today, names)], awaiting: true, close: false, action: 'proposed', memory };
+    return { bubbles: [proposalMessage(((res.action as 'create' | 'cancel' | 'reschedule' | undefined) ?? action), res.summary, today, names, String(profile?.name ?? '') || undefined)], awaiting: true, close: false, action: 'proposed', memory };
   }
   return failure(res?.code ?? 'UNKNOWN', res?.message, i, memory, null, { candidates, payload });
 }

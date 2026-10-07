@@ -72,9 +72,12 @@ describe('textos escritos pelo servidor', () => {
     const n = { type: 'Play', date: '2026-10-07', start: '16:00', end: '17:00', court_name: 'Quadra 1' };
     expect(describeReservation(n, hoje, ['Ana', 'Beto', 'Carla'])).toBe('reserva amanhã, 16:00–17:00 na Quadra 1 para Ana, Beto e Carla');
     expect(describeReservation({ ...n, type: 'Aula' }, hoje)).toBe('aula amanhã, 16:00–17:00 na Quadra 1');
-    expect(proposalMessage('create', n, hoje, ['Ana'])).toMatch(/^Verifiquei agora: o horário está livre\. .* Posso confirmar essa reserva\?$/);
+    expect(proposalMessage('create', n, hoje, ['Ana'])).toMatch(/^Tá livre! Seria .* Posso confirmar\?$/);
+    expect(proposalMessage('create', n, hoje, ['Carlos Carneiro', 'Carlos Carneiro', 'Ealber Luna'], 'Carlos Carneiro'))
+      .toBe('Tá livre! Seria reserva amanhã, 16:00–17:00 na Quadra 1 para você e Ealber Luna. Posso confirmar?');
     expect(proposalMessage('cancel', n, hoje, [])).toMatch(/Posso cancelar\?/);
-    expect(successMessage('create', n, hoje, ['Ana'])).toBe('Reserva confirmada: reserva amanhã, 16:00–17:00 na Quadra 1 para Ana.');
+    expect(successMessage('create', n, hoje, ['Ana'])).toBe('Fechado, tá reservado: reserva amanhã, 16:00–17:00 na Quadra 1 para Ana. Bom jogo!');
+    expect(successMessage('create', n, hoje, ['Carlos Carneiro', 'Ealber Luna'], 'Carlos Carneiro')).toContain('para você e Ealber Luna');
     expect(successMessage('cancel', n, hoje, [])).toMatch(/foi cancelada\.$/);
   });
 

@@ -98,7 +98,7 @@ describe('conversa de reserva (individual)', () => {
     const s2 = script(answer({ ready: true, slots: { date, start: '16:00', court_label: 'saibro', participant_names: ['Beto'] }, messages: ['Reservado! Pode ir jogar.'] }));
     const r2 = await turn(w, m2.message_id, s2.chat, p.uaz);
     expect(r2.action).toBe('proposed');
-    expect(p.sent[1].text).toMatch(/^Verifiquei agora: o horário está livre\. Seria reserva amanhã, 16:00–17:00 na Quadra 1 para Ana Sócia e Beto Sócio\. Posso confirmar essa reserva\?$/);
+    expect(p.sent[1].text).toMatch(/^Tá livre! Seria reserva amanhã, 16:00–17:00 na Quadra 1 para você e Beto Sócio\. Posso confirmar\?$/);
     expect(p.sent.some((x) => /Reservado/.test(x.text))).toBe(false);   // o texto do modelo NÃO sai
     expect((await reservations(w)).length).toBe(0);                       // proposta ≠ reserva
     expect(s2.calls[0].user).toContain('# PROPOSTA ABERTA\nnenhuma');
@@ -111,7 +111,7 @@ describe('conversa de reserva (individual)', () => {
     expect(s3.calls[0].user).toContain('# PROPOSTA ABERTA\nreservar: Play');
     const [res] = await reservations(w);
     expect(res).toMatchObject({ type: 'Play', status: 'active', creator_id: U.socioA, court_id: w.court1, observation: 'Reserva via WhatsApp (IA)' });
-    expect(p.sent[2].text).toBe('Reserva confirmada: reserva amanhã, 16:00–17:00 na Quadra 1 para Ana Sócia e Beto Sócio.');
+    expect(p.sent[2].text).toBe('Fechado, tá reservado: reserva amanhã, 16:00–17:00 na Quadra 1 para você e Beto Sócio. Bom jogo!');
     // as mensagens da IA entram no MESMO histórico da conversa, marcadas como IA
     const history = await q<any>(w.db, `select direction, origin, status, ai_session_id is not null as in_session from public.conv_messages order by created_at`);
     expect(history.filter((h) => h.origin === 'ai').length).toBe(3);
@@ -851,7 +851,7 @@ describe('grupo: só quem chamou responde, mas o João entende o papo recente do
     const [res] = await reservations(w);
     expect(res.creator_id).toBe(U.socioA);
     expect(p.sent[p.sent.length - 1].number).toBe(GROUP);
-    expect(p.sent[p.sent.length - 1].text).toMatch(/^Reserva confirmada: reserva amanhã, 17:00–18:00 na Quadra 1 para Ana Sócia\.$/);
+    expect(p.sent[p.sent.length - 1].text).toMatch(/^Fechado, tá reservado: reserva amanhã, 17:00–18:00 na Quadra 1 para você\. Bom jogo!$/);
     const [a] = await q<any>(w.db, `select metadata from public.admin_audit_logs where action = 'conv.ai_reservation_created'`);
     expect(a.metadata).toMatchObject({ source: 'whatsapp', requester_profile_id: U.socioA });
     expect(a.metadata.group_id).toBeTruthy();
@@ -924,7 +924,7 @@ describe('João mais gente: reação, memória aprovada, resultados e falas rece
     const r = await turn(w, m.message_id, script(answer({ ready: true, reaction: '👍', slots: { date, start: '16:00', court_label: 'saibro', participant_names: ['Beto'] } })).chat, p.uaz);
     expect(r.action).toBe('proposed');
     expect(p.reacts).toEqual([{ number: '5599900000002', id: await providerIdOf(w, m.message_id), text: '👍' }]);
-    expect(p.sent[0].text).toMatch(/Posso confirmar essa reserva\?$/);
+    expect(p.sent[0].text).toMatch(/Posso confirmar\?$/);
     expect((await reservations(w)).length).toBe(0);
 
     // reservar sem texto e sem dados nem com reação vira "não entendi", como antes (a reação só cobre conversa solta)
