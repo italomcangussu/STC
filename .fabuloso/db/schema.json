@@ -8,7 +8,7 @@
     "public",
     "sig_private"
   ],
-  "ultima_migracao": "20261007120200",
+  "ultima_migracao": "20261007140000",
   "extensoes": [
     "pg_cron 1.6.4",
     "pg_net 0.19.5",
@@ -13578,7 +13578,7 @@
       "tipo": "r",
       "rls": true,
       "rls_forcado": false,
-      "linhas_est": "0",
+      "linhas_est": "<100",
       "opcoes": null,
       "comentario": null,
       "acesso": {
@@ -15138,7 +15138,7 @@
       "tipo": "r",
       "rls": true,
       "rls_forcado": false,
-      "linhas_est": "0",
+      "linhas_est": "<100",
       "opcoes": null,
       "comentario": null,
       "acesso": {
@@ -17697,15 +17697,15 @@
       "gatilhos": [
         {
           "nome": "fin_recurrences_audit",
-          "def": "CREATE TRIGGER fin_recurrences_audit AFTER INSERT OR UPDATE ON public.fin_recurrences FOR EACH ROW EXECUTE FUNCTION fin_private.audit_row()",
+          "def": "CREATE TRIGGER fin_recurrences_audit AFTER INSERT OR DELETE OR UPDATE ON public.fin_recurrences FOR EACH ROW EXECUTE FUNCTION fin_private.audit_row()",
           "funcao": "fin_private.audit_row",
           "ativo": true,
           "externo": false
         },
         {
           "nome": "fin_recurrences_no_delete",
-          "def": "CREATE TRIGGER fin_recurrences_no_delete BEFORE DELETE ON public.fin_recurrences FOR EACH ROW EXECUTE FUNCTION fin_private.no_delete()",
-          "funcao": "fin_private.no_delete",
+          "def": "CREATE TRIGGER fin_recurrences_no_delete BEFORE DELETE ON public.fin_recurrences FOR EACH ROW EXECUTE FUNCTION fin_private.no_delete_recurrence()",
+          "funcao": "fin_private.no_delete_recurrence",
           "ativo": true,
           "externo": false
         }
@@ -17717,7 +17717,7 @@
       "tipo": "r",
       "rls": true,
       "rls_forcado": false,
-      "linhas_est": "0",
+      "linhas_est": "<100",
       "opcoes": null,
       "comentario": null,
       "acesso": {
@@ -22216,7 +22216,7 @@
       "tipo": "r",
       "rls": true,
       "rls_forcado": false,
-      "linhas_est": "0",
+      "linhas_est": "<100",
       "opcoes": null,
       "comentario": "Stores Web Push notification subscription data for iOS PWA and other browsers",
       "acesso": {
@@ -22306,11 +22306,11 @@
           "ao_apagar": null
         },
         {
-          "nome": "push_subscriptions_user_id_key",
+          "nome": "push_subscriptions_endpoint_key",
           "tipo": "u",
-          "def": "UNIQUE (user_id)",
+          "def": "UNIQUE (endpoint)",
           "colunas": [
-            "user_id"
+            "endpoint"
           ],
           "ref": null,
           "ref_colunas": null,
@@ -22318,6 +22318,15 @@
         }
       ],
       "indices": [
+        {
+          "nome": "idx_push_subscriptions_endpoint",
+          "def": "CREATE INDEX idx_push_subscriptions_endpoint ON public.push_subscriptions USING btree (endpoint)",
+          "unico": false,
+          "pk": false,
+          "colunas": [
+            "endpoint"
+          ]
+        },
         {
           "nome": "idx_push_subscriptions_user_id",
           "def": "CREATE INDEX idx_push_subscriptions_user_id ON public.push_subscriptions USING btree (user_id)",
@@ -22328,6 +22337,25 @@
           ]
         },
         {
+          "nome": "idx_push_subscriptions_user_updated",
+          "def": "CREATE INDEX idx_push_subscriptions_user_updated ON public.push_subscriptions USING btree (user_id, updated_at DESC)",
+          "unico": false,
+          "pk": false,
+          "colunas": [
+            "user_id",
+            "updated_at"
+          ]
+        },
+        {
+          "nome": "push_subscriptions_endpoint_key",
+          "def": "CREATE UNIQUE INDEX push_subscriptions_endpoint_key ON public.push_subscriptions USING btree (endpoint)",
+          "unico": true,
+          "pk": false,
+          "colunas": [
+            "endpoint"
+          ]
+        },
+        {
           "nome": "push_subscriptions_pkey",
           "def": "CREATE UNIQUE INDEX push_subscriptions_pkey ON public.push_subscriptions USING btree (id)",
           "unico": true,
@@ -22335,18 +22363,19 @@
           "colunas": [
             "id"
           ]
-        },
-        {
-          "nome": "push_subscriptions_user_id_key",
-          "def": "CREATE UNIQUE INDEX push_subscriptions_user_id_key ON public.push_subscriptions USING btree (user_id)",
-          "unico": true,
-          "pk": false,
-          "colunas": [
-            "user_id"
-          ]
         }
       ],
       "politicas": [
+        {
+          "nome": "Service role can all",
+          "comando": "ALL",
+          "permissiva": true,
+          "papeis": [
+            "service_role"
+          ],
+          "using": "true",
+          "check": "true"
+        },
         {
           "nome": "Service role can read all",
           "comando": "SELECT",
@@ -22362,7 +22391,7 @@
           "comando": "ALL",
           "permissiva": true,
           "papeis": [
-            "public"
+            "authenticated"
           ],
           "using": "(auth.uid() = user_id)",
           "check": "(auth.uid() = user_id)"
@@ -29419,6 +29448,19 @@
       "comentario": null
     },
     {
+      "nome": "fin_private.no_delete_recurrence",
+      "args": "",
+      "retorno": "trigger",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": false,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": true,
+      "exec_authenticated": true,
+      "comentario": null
+    },
+    {
       "nome": "fin_private.on_profile_membership_change",
       "args": "",
       "retorno": "trigger",
@@ -30940,6 +30982,19 @@
       "comentario": null
     },
     {
+      "nome": "public.fin_delete_recurrence",
+      "args": "p_request_id uuid, p_id uuid, p_expected_version integer, p_data jsonb",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": true,
+      "comentario": null
+    },
+    {
       "nome": "public.fin_dre_detail",
       "args": "p_from date, p_to date, p_category uuid",
       "retorno": "TABLE(category_id uuid, category_name text, source_type text, source_id text, occurred_on date, description text, amount_cents bigint, profile_id uuid)",
@@ -31393,6 +31448,19 @@
       "exec_anon": true,
       "exec_authenticated": true,
       "comentario": null
+    },
+    {
+      "nome": "public.get_admin_push_subscriptions",
+      "args": "",
+      "retorno": "TABLE(id uuid, user_id uuid, endpoint text, keys jsonb)",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=public",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": "Retorna todas as assinaturas push ativas dos administradores do clube"
     },
     {
       "nome": "public.get_championship_phase_points",

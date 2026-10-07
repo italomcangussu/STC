@@ -5,17 +5,17 @@
  * pendente e sem pagamento — o que já foi pago não muda.
  */
 import React, { useState } from 'react';
-import { Plus, Repeat, RefreshCw } from 'lucide-react';
+import { Plus, Repeat, RefreshCw, Trash2 } from 'lucide-react';
 import { notify } from '../../../lib/notifications';
 import { useConfirm } from '../../../hooks/useConfirm';
 import { notifyFinanceError } from '../../../lib/finance/errors';
-import { generateRecurrences, listRecurrences, saveRecurrence } from '../../../lib/finance/financeApi';
+import { deleteRecurrence, generateRecurrences, listRecurrences, saveRecurrence } from '../../../lib/finance/financeApi';
 import type { FinRecurrence } from '../../../lib/finance/types';
 import { firstOfMonth, monthLabel, type IsoDate } from '../../../lib/finance/dates';
 import { formatBRL } from '../../../lib/finance/money';
 import { useAsync, useRequestKey, useToday } from '../hooks';
 import { categoryLabel, useFinance } from '../FinanceContext';
-import { Badge, Card, Empty, ErrorBlock, Field, MoneyInput, Notice, Row, Sheet, Spinner, btnGhost, btnPrimary, inputCls } from '../ui';
+import { Badge, Card, Empty, ErrorBlock, Field, MoneyInput, Notice, Row, Sheet, Spinner, btnDanger, btnGhost, btnPrimary, inputCls } from '../ui';
 
 const FREQ_LABEL = { monthly: 'Mensal', quarterly: 'Trimestral', yearly: 'Anual' } as const;
 
@@ -60,6 +60,22 @@ const RecurrenceSheet: React.FC<{ rec: FinRecurrence | 'new' | null; onClose: ()
     finally { setBusy(false); }
   };
 
+  const remove = async () => {
+    if (!editing) return;
+    if (!await confirm({
+      tone: 'danger', title: `Excluir "${editing.description}"?`,
+      description: 'Os lançamentos pendentes e sem pagamento serão cancelados. O que já foi pago continua no caixa, nos relatórios e em Contas a pagar, como lançamento avulso. A recorrência deixa de existir e não volta a gerar lançamentos.',
+      confirmLabel: 'Excluir recorrência',
+    })) return;
+    setBusy(true);
+    try {
+      const r = await deleteRecurrence(editing.id, editing.version, key);
+      notify.success(r.canceled ? `Recorrência excluída. ${r.canceled} lançamento(s) pendente(s) cancelado(s).` : 'Recorrência excluída.');
+      renew(); onDone(); onClose();
+    } catch (e) { notifyFinanceError(e, 'Não foi possível excluir a recorrência.', 'finance_recurrence_delete_failed'); }
+    finally { setBusy(false); }
+  };
+
   return (
     <Sheet open onClose={onClose} title={editing ? 'Editar recorrência' : 'Nova recorrência'} subtitle="Despesa que se repete"
       footer={<><button className={btnGhost} onClick={onClose}>Cancelar</button><button className={btnPrimary} disabled={busy || !valid} onClick={save}>Salvar</button></>}>
@@ -78,6 +94,12 @@ const RecurrenceSheet: React.FC<{ rec: FinRecurrence | 'new' | null; onClose: ()
       <Field label="Observações"><textarea className={inputCls} rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} /></Field>
       <label className="flex min-h-11 items-center gap-2 text-sm font-bold text-stone-700"><input type="checkbox" className="h-5 w-5" checked={active} onChange={(e) => setActive(e.target.checked)} />Ativa (gera lançamentos)</label>
       {editing && <Field label="Mudança vale a partir de" hint="Competências anteriores e já pagas não mudam."><input type="month" className={inputCls} value={applyFrom.slice(0, 7)} onChange={(e) => e.target.value && setApplyFrom(`${e.target.value}-01`)} /></Field>}
+      {editing && (
+        <div className="mt-2 border-t border-stone-200 pt-4">
+          <p className="mb-2 text-xs text-stone-500">Conta que varia todo mês (energia, água)? Exclua a recorrência e lance cada conta como despesa avulsa. O histórico pago não se perde.</p>
+          <button type="button" className={btnDanger} disabled={busy} onClick={remove}><Trash2 size={16} /> Excluir recorrência</button>
+        </div>
+      )}
     </Sheet>
   );
 };
@@ -98,7 +120,7 @@ const RecurrencesTab: React.FC = () => {
 
   return (
     <div className="space-y-4">
-      <Notice tone="info" title="Como funciona">Cada recorrência cria lançamentos pendentes (em Contas a pagar) para os próximos meses. Gerar de novo não duplica. Para encerrar, defina o mês final ou desative.</Notice>
+      <Notice tone="info" title="Como funciona">Cada recorrência cria lançamentos pendentes (em Contas a pagar) para os próximos meses. Gerar de novo não duplica. Para encerrar, defina o mês final, desative ou exclua (o que já foi pago fica).</Notice>
       <Card title="Recorrências" right={<div className="flex gap-2"><button className={btnGhost} disabled={busy} onClick={generate}><RefreshCw size={16} /> Gerar lançamentos</button><button className={btnPrimary} onClick={() => setSheet('new')}><Plus size={16} /> Nova</button></div>}>
         {data.error ? <ErrorBlock error={data.error} onRetry={data.reload} /> : data.loading ? <Spinner /> : (data.data ?? []).length === 0 ? (
           <Empty icon={<Repeat size={28} />} title="Nenhuma despesa recorrente" hint="Cadastre aluguel, folha, energia, internet…" />

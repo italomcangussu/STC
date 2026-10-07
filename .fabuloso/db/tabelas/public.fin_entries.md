@@ -1,5 +1,5 @@
 # public.fin_entries
-> tabela · RLS on · ~0 linhas
+> tabela · RLS on · ~<100 linhas
 
 ## Colunas
 | Coluna | Tipo | Nulo | Padrão | Nota |
