@@ -9,6 +9,8 @@ type Confidence = 'high' | 'low' | 'none';
 export type ServerReceiptOcr = {
   status: 'ok' | 'unreadable' | 'failed';
   stored: Record<string, unknown> | null;
+  /** Só quando `failed`: a mensagem do erro do motor (nunca o conteúdo do comprovante). */
+  reason?: string;
 };
 
 const MONTHS: Record<string, number> = {
@@ -59,11 +61,12 @@ export function parseReceiptText(text:string):Record<string,unknown>{
   const dates:{value:string;priority:number}[]=[];
   lines.forEach((raw,idx)=>{
     const line=strip(raw),near=`${idx?strip(lines[idx-1]):''} ${line}`;
+    const stamped=/\b\d{1,2}[/. ](?:\d{2}|[a-z]{3,9})[/. ]\d{4}\s*(?:[-–,]|[àa]s)?\s*\d{1,2}:\d{2}/.test(line);
     const push=(v:string|null)=>{
       if(!v)return;
       let priority=1;
       if(/vencimento|vence |validade|agendad/.test(line))priority=0;
-      else if(/pago em|data do pagamento|data da transfer|realizad|efetivad|data\b|hora|concluid/.test(near))priority=3;
+      else if(/pago em|data do pagamento|data da transfer|realizad|efetivad|data\b|hora|concluid/.test(near)||stamped)priority=3;
       dates.push({value:v,priority});
     };
     for(const m of raw.matchAll(/\b(\d{2})[/.](\d{2})[/.](\d{4})\b/g))push(iso(Number(m[3]),Number(m[2]),Number(m[1])));
@@ -84,11 +87,13 @@ export function parseReceiptText(text:string):Record<string,unknown>{
   for(let i=0;i<lines.length&&!payee;i++){
     const m=PAYEE_LABEL.exec(clean(lines[i])); if(!m)continue;
     let candidate=clean(m[1]);
+    const rotulo=(c:string)=>clean(c.replace(/^nome(?:\s+(?:do|da)\s+\w+)?\s*[:-]?\s+(?=\S)/i,''));
     if(!candidate){
       for(let j=i+1;j<Math.min(i+4,lines.length);j++){
         const next=clean(lines[j]); if(!next||/^nome$/i.test(next))continue; candidate=next; break;
       }
     }
+    candidate=rotulo(candidate);
     if(candidate.length>=3&&candidate.length<=80&&!NOT_NAME.test(candidate)&&/[A-Za-zÀ-ÿ]{3}/.test(candidate))payee=candidate;
   }
 
@@ -113,13 +118,38 @@ async function pdfText(bytes:Uint8Array):Promise<string>{
   return pages.join('\n');
 }
 
+const LANG_PATH = 'https://tessdata.projectnaptha.com/4.0.0';
+
+/**
+ * Tesseract SEM `worker_threads`: o runtime das Edge Functions do Supabase não implementa `Worker`
+ * (`ERR_NOT_IMPLEMENTED: Worker.prototype.constructor`), então `createWorker` do tesseract.js falha sempre.
+ * O script do worker é só um despachante de mensagens; aqui ele roda no próprio processo, com o mesmo protocolo
+ * do `createWorker` (load → loadLanguage → initialize → recognize). Sem cache em disco: o dado de idioma
+ * (português, 2,4 MB) baixa na primeira leitura de cada instância; `STC_OCR_LANG_PATH` aponta para outro endereço.
+ */
 async function imageText(bytes:Uint8Array):Promise<string>{
-  const {createWorker}=await import('npm:tesseract.js@6.0.1');
-  const worker=await createWorker(['por','eng']);
-  try{
-    const out=await worker.recognize(bytes);
-    return out.data.text??'';
-  }finally{await worker.terminate();}
+  // Especificadores literais: o empacotador das Edge Functions só resolve `npm:` escrito por extenso.
+  const dflt=(m:any)=>m.default??m;
+  const worker=dflt(await import('npm:tesseract.js@6.0.1/src/worker-script/index.js'));
+  const getCore=dflt(await import('npm:tesseract.js@6.0.1/src/worker-script/node/getCore.js'));
+  const gunzip=dflt(await import('npm:tesseract.js@6.0.1/src/worker-script/node/gunzip.js'));
+  worker.setAdapter({
+    getCore,gunzip,fetch,
+    readCache:async()=>undefined,writeCache:async()=>undefined,deleteCache:async()=>undefined,checkCache:async()=>false,
+  });
+  let n=0;
+  const call=(action:string,payload:Record<string,unknown>)=>new Promise<any>((resolve,reject)=>{
+    worker.dispatchHandlers({workerId:'receipt-ocr',jobId:`j${++n}`,action,payload},(m:any)=>{
+      if(m.status==='resolve')resolve(m.data);
+      else if(m.status==='reject')reject(new Error(String(m.data)));
+    });
+  });
+  const langPath=Deno.env.get('STC_OCR_LANG_PATH')||LANG_PATH;
+  await call('load',{options:{lstmOnly:true,logging:false}});
+  await call('loadLanguage',{langs:['por'],options:{langPath,cacheMethod:'none',gzip:true,lstmOnly:true}});
+  await call('initialize',{langs:'por',oem:1,config:{}});
+  const out=await call('recognize',{image:bytes,options:{},output:{text:true}});
+  return String(out?.text??'');
 }
 
 export async function readReceiptServer(bytes:Uint8Array,mime:string):Promise<ServerReceiptOcr>{
@@ -131,7 +161,7 @@ export async function readReceiptServer(bytes:Uint8Array,mime:string):Promise<Se
       return {status:'unreadable',stored:null};
     }
     return {status:'ok',stored:{engine:mime==='application/pdf'?'pdfjs-server':'tesseract-server',...stored}};
-  }catch{
-    return {status:'failed',stored:null};
+  }catch(e){
+    return {status:'failed',stored:null,reason:String((e as Error)?.message??e).slice(0,200)};
   }
 }

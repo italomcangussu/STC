@@ -64,4 +64,27 @@ describe('OCR de comprovante no servidor', () => {
     expect(Object.keys(r).sort()).toEqual(['amount_cents', 'confidence', 'identifier', 'paid_on', 'payee']);
     expect(JSON.stringify(r)).not.toContain('Comprovante de transferência');
   });
+
+  it('comprovante do Nubank (duas colunas): rótulo "Nome" some do favorecido e a data com hora vale', () => {
+    const r = parseReceiptText(`Comprovante de
+transferência
+07 OUT 2026 - 16:11:33
+Valor R$ 200,00
+Tipo de transferência Pix
+Destino
+Nome Sobral Tenis Clube
+CNPJ 52393541000120
+Instituição CORA SCFI
+Origem
+Nome Diego Memória Braga Paiva
+ID da transação:
+E18236120202610071911s058335b68b`) as any;
+    expect(r).toMatchObject({ amount_cents: 20000, paid_on: '2026-10-07', payee: 'Sobral Tenis Clube', identifier: 'E18236120202610071911s058335b68b' });
+    expect(r.confidence).toEqual({ amount: 'high', date: 'high', identifier: 'high', payee: 'high' });
+  });
+
+  it('o favorecido é o do Destino, nunca o da Origem', () => {
+    const r = parseReceiptText(`Origem\nNome Fulano de Tal\nDestino\nNome Sobral Tenis Clube`) as any;
+    expect(r.payee).toBe('Sobral Tenis Clube');
+  });
 });

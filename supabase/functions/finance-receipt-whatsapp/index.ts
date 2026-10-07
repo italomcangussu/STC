@@ -40,6 +40,8 @@ Deno.serve(async(req)=>{
     .eq('id',messageId).maybeSingle();
   if(msgErr) return json(500,{error:'MESSAGE_QUERY_FAILED'});
   if(!msg?.media_path||msg.direction!=='inbound') return json(200,{skipped:true,reason:'NO_INBOUND_MEDIA'});
+  // Figurinha não é comprovante: antes virava um envio "em análise" com leitura falha.
+  if(msg.kind==='sticker') return json(200,{skipped:true,reason:'STICKER'});
 
   const mime=String(msg.media_mime||'').split(';')[0].trim().toLowerCase();
   if(!allowed.has(mime)) return json(200,{skipped:true,reason:'UNSUPPORTED_MEDIA'});
@@ -66,6 +68,7 @@ Deno.serve(async(req)=>{
   if(up.error) return json(500,{error:'RECEIPT_UPLOAD_FAILED'});
 
   const ocr=await readReceiptServer(bytes,mime);
+  if(ocr.status==='failed') console.error('receipt_ocr_failed',ocr.reason);
   const stored=ocr.stored as any;
   const payload={
     storage_path:storagePath,
