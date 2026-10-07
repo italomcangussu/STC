@@ -226,7 +226,7 @@ const PendenciesTab: React.FC = () => {
       <div className="mt-4 space-y-3">
         <AdminSearch value={search} onChange={setSearch} placeholder="Buscar sócio, descrição ou convidado…" label="Buscar pendência"/>
         <SectionTabs label="Situação" value={status} onChange={setStatus} items={STATUS.map(([id,label])=>({id,label}))}/>
-        {statements.loading||meta.loading?<Spinner/>:statements.error||meta.error?<Notice tone="warn">Não foi possível carregar as pendências.</Notice>:rows.length===0?<Empty title="Nenhuma pendência neste filtro" subtitle="Use “Nova pendência” para lançar uma cobrança manual para um sócio."/>:
+        {statements.loading||meta.loading?<Spinner/>:statements.error||meta.error?<Notice tone="warn">Não foi possível carregar as pendências.</Notice>:rows.length===0?<Empty title="Nenhuma pendência neste filtro" hint="Use “Nova pendência” para lançar uma cobrança manual para um sócio."/>:
           <div className="space-y-2">{rows.map((r)=><Row key={r.charge_id} onClick={()=>setSelected(r)}>
             <div className="flex flex-wrap items-start justify-between gap-2">
               <div><p className="font-black text-stone-800">{r.profile_name}</p><p className="text-sm text-stone-600">{r.meta.description}</p><p className="mt-1 text-xs text-stone-400">{KINDS.find(([k])=>k===r.meta.pendency_kind)?.[1]??r.meta.pendency_kind} · competência {monthLabel(r.competence_month)} · vence {brDate(r.due_date)}</p></div>

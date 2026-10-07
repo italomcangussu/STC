@@ -21,7 +21,9 @@ const account = (over: Partial<FinAccount> = {}): FinAccount => ({ id: 'a1', nam
 const baseSettings = (over: Partial<FinSettings> = {}): FinSettings => ({
   id: true, due_day: 5, due_month_offset: 1, non_business_rule: 'next_business_day', saturday_is_business: false, horizon_months: 1, grace_days: 0,
   fine_fixed_cents: null, fine_percent_bps: null, interest_daily_fixed_cents: null, interest_daily_percent_bps: null, late_fee_confirmed_at: null,
-  late_fee_confirmed_by: null, day_card_price_cents: 5000, day_card_in_cash: false, payee_names: [], version: 3, updated_at: '2026-10-01T00:00:00Z', ...over,
+  late_fee_confirmed_by: null, day_card_price_cents: 5000, day_card_in_cash: false, payee_names: [], pix_key: '', pendency_automation_enabled: true, pendency_reminder_days: [0, 3, 7, 14, 21], pendency_grace_days: 0,
+  pendency_fine_fixed_cents: 0, pendency_fine_percent_bps: 0, pendency_interest_daily_fixed_cents: 0, pendency_interest_daily_percent_bps: 0,
+  version: 3, updated_at: '2026-10-01T00:00:00Z', ...over,
 });
 
 const stm = (over: Partial<ChargeStatementRow> = {}): ChargeStatementRow => ({
@@ -211,7 +213,7 @@ describe('Configurações — nenhum valor inventado', () => {
     mount(<SettingsTab />);
     expect(await screen.findByText('Não configurada')).toBeInTheDocument();
     expect(screen.getByText(/não recebem multa nem juros/i)).toBeInTheDocument();
-    for (const label of [/^Multa fixa/, /^Multa \(%/, /^Juros fixos por dia/, /^Juros por dia \(%\)/]) {
+    for (const label of [/^Multa fixa \(/, /^Multa \(%/, /^Juros fixos por dia \(/, /^Juros por dia \(%\)/]) {
       expect(screen.getByLabelText(label)).toHaveValue('');
     }
   });

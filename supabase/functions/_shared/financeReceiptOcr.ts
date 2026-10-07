@@ -1,3 +1,4 @@
+// @ts-nocheck — função Deno (imports `npm:`).
 // Server-side OCR for WhatsApp financial receipts.
 // Reuses the same extraction contract as lib/finance/receiptText.ts:
 // raw OCR text is never persisted or logged, only structured fields.

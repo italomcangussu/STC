@@ -31,7 +31,9 @@ import StudentsTab from '../../components/finance/tabs/StudentsTab';
 const settings = (over: Partial<FinSettings> = {}): FinSettings => ({
   id: true, due_day: 5, due_month_offset: 1, non_business_rule: 'next_business_day', saturday_is_business: false, horizon_months: 1, grace_days: 0,
   fine_fixed_cents: null, fine_percent_bps: null, interest_daily_fixed_cents: null, interest_daily_percent_bps: null, late_fee_confirmed_at: null,
-  late_fee_confirmed_by: null, day_card_price_cents: 5000, day_card_in_cash: false, payee_names: [], version: 1, updated_at: '2026-10-01T00:00:00Z', ...over,
+  late_fee_confirmed_by: null, day_card_price_cents: 5000, day_card_in_cash: false, payee_names: [], pix_key: '', pendency_automation_enabled: true, pendency_reminder_days: [0, 3, 7, 14, 21], pendency_grace_days: 0,
+  pendency_fine_fixed_cents: 0, pendency_fine_percent_bps: 0, pendency_interest_daily_fixed_cents: 0, pendency_interest_daily_percent_bps: 0,
+  version: 1, updated_at: '2026-10-01T00:00:00Z', ...over,
 });
 const account: FinAccount = { id: 'a1', name: 'Banco do clube', kind: 'bank', opening_balance_cents: 0, opening_date: '2026-01-01', is_default_receipts: true, active: true, position: 0, version: 1 };
 const cat = (over: Partial<FinCategory>): FinCategory => ({ id: 'x', parent_id: null, name: 'x', kind: 'expense', dre_line: 'operational', system_key: null, active: true, position: 0, version: 1, ...over });

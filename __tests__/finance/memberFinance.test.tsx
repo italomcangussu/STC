@@ -5,7 +5,7 @@ import type { ChargeStatementRow, MemberCreditRow, PublicSettings } from '../../
 
 const api = vi.hoisted(() => ({
   myCharges: vi.fn(), myReceipts: vi.fn(), listCredits: vi.fn(), getPublicSettings: vi.fn(), chargeHistory: vi.fn(),
-  chargeStatementsByIds: vi.fn(), submitReceipt: vi.fn(),
+  chargeStatementsByIds: vi.fn(), submitReceipt: vi.fn(), getMemberPaymentSettings: vi.fn(), listPendencyMeta: vi.fn(),
   // Nada que quite cobrança existe para o sócio: se a tela tentasse, o teste falharia por função inexistente.
   newRequestId: () => globalThis.crypto.randomUUID(),
 }));
@@ -34,6 +34,9 @@ beforeEach(() => {
   Object.values(api).forEach((f) => { if (typeof f === 'function' && 'mockReset' in f) (f as ReturnType<typeof vi.fn>).mockReset(); });
   api.myCharges.mockResolvedValue([charge()]);
   api.myReceipts.mockResolvedValue([]);
+  api.getMemberPaymentSettings.mockResolvedValue({ pix_key: '52.393.541/0001-20', pendency_automation_enabled: true, pendency_reminder_days: [0, 3, 7, 14, 21],
+    pendency_grace_days: 0, pendency_fine_fixed_cents: 0, pendency_fine_percent_bps: 0, pendency_interest_daily_fixed_cents: 0, pendency_interest_daily_percent_bps: 0 });
+  api.listPendencyMeta.mockResolvedValue([]);
   api.listCredits.mockResolvedValue([]);
   api.getPublicSettings.mockResolvedValue(settings());
   api.chargeHistory.mockResolvedValue({ payments: [], adjustments: [] });
@@ -94,7 +97,8 @@ describe('MemberFinance — envio de comprovante', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /Enviar comprovante/i }));
     const sheet = await screen.findByRole('dialog');
-    expect(within(sheet).getByText(/Enviar não quita a cobrança por si só/i)).toBeInTheDocument();
+    // Mensalidade continua indo para a conferência do clube; só pendência pode baixar sozinha (OCR + regras).
+    expect(within(sheet).getByText(/qualquer dúvida vai para análise/i)).toBeInTheDocument();
 
     fireEvent.click(within(sheet).getAllByRole('checkbox')[0]);
     const input = sheet.querySelector('input[type="file"][accept="image/*,application/pdf"]') as HTMLInputElement;
@@ -128,7 +132,7 @@ describe('MemberFinance — envio de comprovante', () => {
   it('só quem tem cobrança em aberto consegue abrir o envio', async () => {
     api.myCharges.mockResolvedValue([]);
     render(<MemberFinance currentUser={user} />);
-    await screen.findByText(/ainda não tem mensalidade cadastrada/i);
+    await screen.findByText(/não tem cobranças financeiras cadastradas/i);
     expect(screen.getByRole('button', { name: /Enviar comprovante/i })).toBeDisabled();
   });
 });

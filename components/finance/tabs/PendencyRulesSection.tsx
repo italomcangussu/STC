@@ -104,14 +104,14 @@ export const PendencyRulesSection: React.FC<{ s: FinSettings; onSaved: () => voi
         </Notice>
 
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Carência (dias)">
+          <Field label="Carência da pendência (dias)">
             <input inputMode="numeric" className={inputCls} value={grace} onChange={(e) => setGrace(e.target.value.replace(/[^0-9]/g, '').slice(0, 3))} />
           </Field>
           <div />
-          <Field label="Multa fixa (R$)"><MoneyInput value={fineFixed} onChange={setFineFixed} /></Field>
-          <Field label="Multa (%)"><input inputMode="decimal" className={inputCls} value={finePct} placeholder="0" onChange={(e) => setFinePct(e.target.value)} aria-invalid={Number.isNaN(fineBps)} /></Field>
-          <Field label="Juros fixos por dia (R$)"><MoneyInput value={intFixed} onChange={setIntFixed} /></Field>
-          <Field label="Juros por dia (%)"><input inputMode="decimal" className={inputCls} value={intPct} placeholder="0" onChange={(e) => setIntPct(e.target.value)} aria-invalid={Number.isNaN(intBps)} /></Field>
+          <Field label="Multa fixa da pendência (R$)"><MoneyInput value={fineFixed} onChange={setFineFixed} /></Field>
+          <Field label="Multa da pendência (%)"><input inputMode="decimal" className={inputCls} value={finePct} placeholder="0" onChange={(e) => setFinePct(e.target.value)} aria-invalid={Number.isNaN(fineBps)} /></Field>
+          <Field label="Juros fixos por dia da pendência (R$)"><MoneyInput value={intFixed} onChange={setIntFixed} /></Field>
+          <Field label="Juros por dia da pendência (%)"><input inputMode="decimal" className={inputCls} value={intPct} placeholder="0" onChange={(e) => setIntPct(e.target.value)} aria-invalid={Number.isNaN(intBps)} /></Field>
         </div>
 
         <p className="text-xs text-stone-500">O padrão é zero de multa e juros. Valores só são aplicados depois de configurados aqui.</p>
