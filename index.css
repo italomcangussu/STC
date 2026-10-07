@@ -1851,11 +1851,16 @@ input[type="datetime-local"] {
 }
 
 .conv-shell.is-standalone {
+    border: none !important;
+    border-radius: 0 !important;
+}
+
+/* A altura 100% da página dedicada NÃO vale para a conversa em tela cheia: ali a casca segue a área visível
+   (senão o campo de resposta fica atrás do teclado — o `!important` antigo anulava --chat-vv-height). */
+.conv-shell.is-standalone:not(.is-chat-overlay) {
     height: 100% !important;
     min-height: 100% !important;
     max-height: none !important;
-    border: none !important;
-    border-radius: 0 !important;
 }
 
 @media (min-width: 768px) {
@@ -1887,6 +1892,7 @@ input[type="datetime-local"] {
         top: 0;
         left: 0;
         right: 0;
+        transform: translateY(var(--chat-vv-offset-top, 0px));
         z-index: 61;
         background: #ffffff;
         box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
@@ -1918,6 +1924,34 @@ input[type="datetime-local"] {
     html[data-keyboard='open'] .is-chat-overlay .chat-composer-form button {
         height: 2.5rem;
         width: 2.5rem;
+    }
+}
+
+/* Página dedicada /conversas: o documento não rola nem é deslocado pelo teclado (a rolagem é só das listas). */
+body.conv-standalone-locked {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
+}
+
+/* Comportamento de app: nada de rolagem horizontal nem rubber-band lateral; só as listas rolam, na vertical. */
+.conv-shell,
+.conv-standalone-root {
+    overscroll-behavior-x: none;
+}
+
+.conv-shell {
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* iOS dá zoom ao focar campo com fonte < 16px; no toque o campo precisa de 16px para a tela ficar parada. */
+@media (pointer: coarse) {
+    .conv-shell input:not([type='checkbox']):not([type='radio']),
+    .conv-shell textarea,
+    .conv-shell select {
+        font-size: 16px;
     }
 }
 

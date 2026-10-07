@@ -10,7 +10,6 @@ import {
   Zap,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { supabase } from '../../lib/supabase';
 import { getPermissionStatus, isInstalledPWA, isPushSupported, subscribeToPush } from '../../lib/pushNotifications';
 import AdminPushPermissionBanner from './AdminPushPermissionBanner';
 import { Spinner } from './ui';
@@ -34,6 +33,12 @@ export const ConversationsStandalonePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<StandaloneTab>('inbox');
   const [pushStatus, setPushStatus] = useState<NotificationPermission>('default');
   const [pushLoading, setPushLoading] = useState(false);
+
+  useEffect(() => {
+    // A página é um app inteiro: o documento fica parado e só as listas rolam (o teclado não desloca o cabeçalho).
+    document.body.classList.add('conv-standalone-locked');
+    return () => document.body.classList.remove('conv-standalone-locked');
+  }, []);
 
   useEffect(() => {
     // Sincroniza status de notificações
@@ -69,7 +74,7 @@ export const ConversationsStandalonePage: React.FC = () => {
   };
 
   return (
-    <div className="flex h-[100dvh] w-screen flex-col overflow-hidden bg-stone-100 antialiased select-none">
+    <div className="conv-standalone-root fixed inset-0 flex flex-col overflow-hidden bg-stone-100 antialiased select-none">
       {/* ----------------- Top Header Estilo Mensageiro Nativo Desktop/Mobile ----------------- */}
       <header
         role="banner"
@@ -109,11 +114,11 @@ export const ConversationsStandalonePage: React.FC = () => {
           </div>
         </div>
 
-        {/* Abas Centrais: Mensagens, Automações, IA, Canal */}
+        {/* Abas centrais (tablet/desktop). No celular as seções ficam na barra de abas inferior. */}
         <nav
           role="tablist"
           aria-label="Seções de Conversas"
-          className="flex items-center gap-1 rounded-2xl bg-stone-100/90 p-1"
+          className="hidden items-center gap-1 rounded-2xl bg-stone-100/90 p-1 md:flex"
         >
           {TABS.map((tab) => {
             const Icon = tab.icon;
@@ -132,7 +137,7 @@ export const ConversationsStandalonePage: React.FC = () => {
                 }`}
               >
                 <Icon size={15} aria-hidden="true" />
-                <span className="hidden min-[480px]:inline">{tab.label}</span>
+                <span className="hidden lg:inline">{tab.label}</span>
               </button>
             );
           })}
@@ -212,7 +217,7 @@ export const ConversationsStandalonePage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setActiveTab('inbox')}
-                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-saibro-600 hover:underline"
+                    className="hidden items-center gap-1.5 text-xs font-semibold text-saibro-600 hover:underline md:inline-flex"
                   >
                     <ArrowLeft size={14} /> Voltar para o Chat
                   </button>
@@ -230,7 +235,7 @@ export const ConversationsStandalonePage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setActiveTab('inbox')}
-                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-saibro-600 hover:underline"
+                    className="hidden items-center gap-1.5 text-xs font-semibold text-saibro-600 hover:underline md:inline-flex"
                   >
                     <ArrowLeft size={14} /> Voltar para o Chat
                   </button>
@@ -248,7 +253,7 @@ export const ConversationsStandalonePage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setActiveTab('inbox')}
-                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-saibro-600 hover:underline"
+                    className="hidden items-center gap-1.5 text-xs font-semibold text-saibro-600 hover:underline md:inline-flex"
                   >
                     <ArrowLeft size={14} /> Voltar para o Chat
                   </button>
@@ -259,6 +264,34 @@ export const ConversationsStandalonePage: React.FC = () => {
           )}
         </Suspense>
       </main>
+
+      {/* Barra de abas inferior (HIG: navegação de primeiro nível no iPhone) — sem rolagem horizontal. */}
+      <nav
+        role="tablist"
+        aria-label="Seções de Conversas"
+        className="z-30 grid shrink-0 grid-cols-4 border-t border-stone-200/90 bg-white/95 backdrop-blur-md md:hidden"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+      >
+        {TABS.map((tab) => {
+          const Icon = tab.icon;
+          const isSelected = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              role="tab"
+              type="button"
+              aria-selected={isSelected}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex min-h-[49px] flex-col items-center justify-center gap-0.5 px-1 pt-1.5 pb-1 text-[10px] font-semibold transition-colors active:bg-stone-100 ${
+                isSelected ? 'text-saibro-600' : 'text-stone-500'
+              }`}
+            >
+              <Icon size={22} strokeWidth={isSelected ? 2.4 : 1.9} aria-hidden="true" />
+              <span className="max-w-full truncate">{tab.label}</span>
+            </button>
+          );
+        })}
+      </nav>
     </div>
   );
 };

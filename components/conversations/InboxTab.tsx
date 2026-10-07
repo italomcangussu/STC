@@ -47,6 +47,9 @@ const FILTROS: { id: InboxFilter; label: string }[] = [
   { id: 'closed', label: 'Encerradas' },
 ];
 
+const FILTROS_PRINCIPAIS = FILTROS.slice(0, 3);
+const FILTROS_MAIS = FILTROS.slice(3);
+
 const VAZIO: Record<InboxFilter, string> = {
   open: 'Quando alguém mandar mensagem para o WhatsApp do clube, ela aparece aqui.',
   unread: 'Tudo lido. 🎉',
@@ -530,14 +533,26 @@ export default function InboxTab({ currentUserId, standalone = false }: { curren
                 <MessageCirclePlus size={18} aria-hidden />
               </button>
             </div>
-            <div className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-0.5" role="group" aria-label="Filtro">
-              {FILTROS.map((f) => (
-                <button key={f.id} type="button" aria-pressed={filtro === f.id} onClick={() => setFiltro(f.id)}
-                  className={cx('min-h-8 shrink-0 rounded-full px-3 text-xs font-semibold outline-hidden transition-colors focus-visible:ring-2 focus-visible:ring-saibro-300',
-                    filtro === f.id ? 'bg-saibro-600 text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200')}>
-                  {f.label}
-                </button>
-              ))}
+            {/* Controle segmentado com os 3 filtros principais + seletor nativo para os demais: nada rola na horizontal. */}
+            <div className="flex items-center gap-1.5">
+              <div className="grid min-w-0 flex-1 grid-cols-3 gap-0.5 rounded-xl bg-stone-100 p-0.5" role="group" aria-label="Filtro">
+                {FILTROS_PRINCIPAIS.map((f) => (
+                  <button key={f.id} type="button" aria-pressed={filtro === f.id} onClick={() => setFiltro(f.id)}
+                    className={cx('min-h-9 truncate rounded-[10px] px-1 text-xs font-semibold outline-hidden transition-colors focus-visible:ring-2 focus-visible:ring-saibro-300',
+                      filtro === f.id ? 'bg-white text-stone-900 shadow-xs' : 'text-stone-500 active:bg-stone-200')}>
+                    {f.label}
+                  </button>
+                ))}
+              </div>
+              <label className="shrink-0">
+                <span className="sr-only">Mais filtros</span>
+                <select value={FILTROS_MAIS.some((f) => f.id === filtro) ? filtro : ''} onChange={(e) => { if (e.target.value) setFiltro(e.target.value as InboxFilter); }}
+                  className={cx('h-10 max-w-[8.5rem] rounded-xl border px-2 text-xs font-semibold outline-hidden focus-visible:ring-2 focus-visible:ring-saibro-300',
+                    FILTROS_MAIS.some((f) => f.id === filtro) ? 'border-saibro-300 bg-saibro-50 text-saibro-700' : 'border-stone-200 bg-stone-50 text-stone-600')}>
+                  <option value="" disabled>Mais</option>
+                  {FILTROS_MAIS.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
+                </select>
+              </label>
             </div>
           </div>
 

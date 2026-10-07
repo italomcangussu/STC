@@ -18,7 +18,8 @@ export type OperationBody = Record<string, unknown> & { action: string };
 
 export async function callEdgeOperation<T>(functionName: string, body: OperationBody, key: keyof T & string): Promise<T[typeof key]> {
   // Garante envio explícito do token da sessão se existir (evita descompasso em PWAs móveis recém-abertos)
-  const session = (await supabase.auth.getSession().catch(() => null))?.data?.session;
+  let session: { access_token?: string } | null | undefined = null;
+  try { session = (await supabase.auth.getSession())?.data?.session; } catch { /* sem sessão legível: o invoke manda o que tiver */ }
   const headers: Record<string, string> = {};
   if (session?.access_token) {
     headers.Authorization = `Bearer ${session.access_token}`;

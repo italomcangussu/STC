@@ -111,7 +111,7 @@ describe('função de borda (conversation-operations)', () => {
     invoke.mockResolvedValue({ data: { message: { id: 'm1', status: 'sent' } }, error: null });
     const r = await sendMessage({ conversationId: 'c1', idempotencyKey: 'k1', body: 'oi' });
     expect(r).toEqual({ id: 'm1', status: 'sent' });
-    expect(invoke).toHaveBeenCalledWith('conversation-operations', { body: expect.objectContaining({ action: 'send', conversationId: 'c1', idempotencyKey: 'k1', kind: 'text', body: 'oi' }) });
+    expect(invoke).toHaveBeenCalledWith('conversation-operations', { body: expect.objectContaining({ action: 'send', conversationId: 'c1', idempotencyKey: 'k1', kind: 'text', body: 'oi' }), headers: {} });
   });
 
   it('abre o corpo do erro HTTP e expõe só o código', async () => {
