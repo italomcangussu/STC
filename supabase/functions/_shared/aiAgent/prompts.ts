@@ -281,7 +281,7 @@ export function adminPendencyRefs(ctx: Ctx): AdminPendencyRef[] {
   }));
 }
 
-const ADMIN_SLOTS = ',"fin_action":"lancar|cobrar|pausar|retomar|baixa|renovar_card|null","member_name":null,"description":null,"amount":null,"due_date":"YYYY-MM-DD|null","pendency_kind":"day_card|consumo|evento|multa|dano_reposicao|outros|null","guest_date":null,"send_now":false,"pendency_ref":null,"paid_on":"YYYY-MM-DD|null","method":"pix|transfer|cash|card|other|null","account_name":null,"read_domain":"caixa|receber_pagar|dre|receita_alunos|comprovantes|acessos|assinaturas|ocupacao|null","read_from":"YYYY-MM-DD|null","read_to":"YYYY-MM-DD|null"';
+const ADMIN_SLOTS = ',"fin_action":"lancar|cobrar|pausar|retomar|baixa|renovar_card|cancelar_pendencia|ajustar|estornar|rejeitar_comprovante|despesa|receita|null","member_name":null,"description":null,"amount":null,"due_date":"YYYY-MM-DD|null","pendency_kind":"day_card|consumo|evento|multa|dano_reposicao|outros|null","guest_date":null,"send_now":false,"pendency_ref":null,"paid_on":"YYYY-MM-DD|null","method":"pix|transfer|cash|card|other|null","account_name":null,"reason":null,"adjust_kind":"discount|increase|fee_waiver|null","category_name":null,"receipt_date":"YYYY-MM-DD|null","entry_status":"paid|pending|null","read_domain":"caixa|receber_pagar|dre|receita_alunos|comprovantes|acessos|assinaturas|ocupacao|null","read_from":"YYYY-MM-DD|null","read_to":"YYYY-MM-DD|null"';
 
 function adminSection(ctx: Ctx): string {
   if (!isAdminAssistant(ctx)) return '';
@@ -293,6 +293,11 @@ function adminSection(ctx: Ctx): string {
   - fin_action "pausar" / "retomar": a régua de cobrança de uma pendência. pendency_ref.
   - fin_action "renovar_card": renovar o Card Mensal de um ALUNO (cadastro de aluno, não sócio). student_names ["Nome"]; amount em reais só se ele disser (o padrão é R$ 200 ou o valor do comprovante); paid_on só se ele disser. O comprovante que ele manda na conversa é LIDO pelo servidor (valor, data, favorecido): nunca peça nem repita esses dados. Se ele só avisar que quer renovar e vai mandar o comprovante, responda curto "Pode mandar o comprovante aqui e me diz o nome do aluno." (ready false, awaiting true, sem dizer que registrou). Tendo o nome do aluno: ready: true e messages vazio.
   - fin_action "baixa": registrar pagamento recebido. pendency_ref, amount em reais, paid_on (padrão hoje), method (pix padrão), account_name se ele disser a conta.
+  - fin_action "cancelar_pendencia": cancela uma pendência SEM pagamento. pendency_ref (p1…), reason (frase curta obrigatória).
+  - fin_action "ajustar": pendency_ref, adjust_kind (discount = desconto, increase = acréscimo, fee_waiver = perdoar juros/multa), amount em reais, reason obrigatório.
+  - fin_action "estornar": desfaz o ÚLTIMO pagamento de uma pendência (pendency_ref) ou do último pagamento do sócio (member_name). reason obrigatório.
+  - fin_action "rejeitar_comprovante": recusa o comprovante pendente do sócio (member_name; receipt_date se houver mais de um). reason obrigatório (o sócio pode ver).
+  - fin_action "despesa" ou "receita": lançamento do caixa. description, amount em reais, category_name, account_name (se disser), entry_status "paid" (padrão, paid_on padrão hoje) ou "pending" (com due_date). Aprovar comprovante e gerar cobranças do mês NÃO são feitos por aqui: indique o painel (Financeiro).
 - Faltou dado obrigatório: pergunte só o que falta (awaiting: true). Tendo tudo: ready: true e messages vazio.
 - Se há PROPOSTA ABERTA e ele aceitar: customer_confirmed: true, como nas reservas.
 - Consultas (intent "admin_consulta"): o SISTEMA busca no banco e escreve a resposta com os números; você NÃO escreve números: messages vazio e ready: true. Escolha read_domain:

@@ -174,6 +174,91 @@ describe('assessor administrativo do João (turno completo)', () => {
     expect(s.calls[0].user).toContain('Banco do clube');
   }, 90000);
 
+  describe('onda 2: financeiro completo', () => {
+    const pend = (w: W, cents = 15000, desc = 'Consumo do Beto') => rpc(w.db, U.admin, `public.fin_create_member_pendency('${key()}', ${j({ profile_id: U.socioB, description: desc, amount_cents: cents, competence_month: '2026-10-01', due_date: '2026-10-07' })})`);
+    const dizer = async (w: W, p: ReturnType<typeof provider>, texto: string, o: Record<string, unknown>) => {
+      const m = await direct(w, texto);
+      return turn(w, m.message_id, script(answer(o)).chat, p.uaz);
+    };
+    const confirmar = (w: W, p: ReturnType<typeof provider>, texto = 'sim') => dizer(w, p, texto, { customer_confirmed: true });
+    const charge = async (w: W) => (await pendencies(w))[0];
+
+    it('cancelar pendência: exige motivo, resume, e só cancela depois do "sim"', async () => {
+      const w = await setup(); const p = provider(); await pend(w);
+      const r0 = await dizer(w, p, 'cancela a pendência p1', { ready: true, slots: { fin_action: 'cancelar_pendencia', pendency_ref: 'p1' } });
+      expect(r0.action).toBe('ask'); expect(p.sent.at(-1)!.text).toMatch(/motivo/i);
+      const r1 = await dizer(w, p, 'foi lançada errada', { ready: true, slots: { fin_action: 'cancelar_pendencia', pendency_ref: 'p1', reason: 'lançada errada' } });
+      expect(r1.action).toBe('proposed_admin');
+      expect(p.sent.at(-1)!.text).toMatch(/^Vou cancelar a pendência de Beto Sócio: Consumo do Beto \(saldo R\$ 150,00\)\. Motivo: lançada errada\. Confirma/);
+      expect((await charge(w)).status).toBe('open');
+      expect((await confirmar(w, p)).action).toBe('admin_confirmed');
+      expect(await charge(w)).toMatchObject({ status: 'canceled', cancel_reason: 'lançada errada' });
+    }, 90000);
+
+    it('ajustar: desconto reduz o saldo; desconto maior que o saldo é recusado no banco', async () => {
+      const w = await setup(); const p = provider(); await pend(w);
+      const ajuste = (amount: number) => ({ ready: true, slots: { fin_action: 'ajustar', pendency_ref: 'p1', adjust_kind: 'discount', amount, reason: 'combinado com a diretoria' } });
+      await dizer(w, p, 'dá 200 de desconto', ajuste(200));
+      expect(p.sent.at(-1)!.text).toMatch(/passa do valor em aberto/);
+      await dizer(w, p, 'dá 50 de desconto', ajuste(50));
+      expect(p.sent.at(-1)!.text).toMatch(/^Vou aplicar desconto de R\$ 50,00 na pendência de Beto Sócio/);
+      expect((await confirmar(w, p)).action).toBe('admin_confirmed');
+      const [adj] = await q<any>(w.db, `select kind, amount_cents, reason, actor_id from public.fin_charge_adjustments`);
+      expect(adj).toMatchObject({ kind: 'discount', amount_cents: 5000, actor_id: U.admin });
+      expect((await charge(w)).status).toBe('open');
+    }, 90000);
+
+    it('estornar o último pagamento do sócio: pendência volta a ficar em aberto', async () => {
+      const w = await setup(); const p = provider(); await pend(w);
+      const [acc] = await q<{ id: string }>(w.db, `select id from public.fin_accounts limit 1`);
+      await rpc(w.db, U.admin, `public.fin_register_payment('${key()}', '${(await charge(w)).id}', 15000, '2026-10-06', 'pix', '${acc.id}', 'teste')`);
+      expect((await charge(w)).status).toBe('paid');
+      const r = await dizer(w, p, 'estorna o pagamento do Beto', { ready: true, slots: { fin_action: 'estornar', member_name: 'Beto', reason: 'pix voltou' } });
+      expect(r.action).toBe('proposed_admin');
+      expect(p.sent.at(-1)!.text).toMatch(/^Vou estornar o pagamento de R\$ 150,00 de Beto Sócio \(Consumo do Beto\), feito em 06\/10\/2026/);
+      expect((await confirmar(w, p)).action).toBe('admin_confirmed');
+      expect((await charge(w)).status).toBe('open');
+    }, 90000);
+
+    it('rejeitar comprovante: pelo sócio, com motivo; ambíguo pede o dia', async () => {
+      const w = await setup(); const p = provider();
+      const sub = (n: number) => q(w.db, `insert into public.fin_receipt_submissions(profile_id, status, storage_path, file_name, content_type, size_bytes, content_sha256, declared_amount_cents, ocr_status, request_id)
+        values ('${U.socioB}', 'submitted', 'x/${n}/c.jpg', 'c.jpg', 'image/jpeg', 100, '${'b'.repeat(63)}${n}', 8000, 'not_run', gen_random_uuid())`);
+      await sub(1);
+      const r = await dizer(w, p, 'recusa o comprovante do Beto, ilegível', { ready: true, slots: { fin_action: 'rejeitar_comprovante', member_name: 'Beto', reason: 'imagem ilegível' } });
+      expect(r.action).toBe('proposed_admin');
+      expect(p.sent.at(-1)!.text).toMatch(/^Vou recusar o comprovante de Beto Sócio, enviado em \d\d\/\d\d\/\d{4} \(R\$ 80,00\)\. Motivo: imagem ilegível/);
+      expect((await confirmar(w, p)).action).toBe('admin_confirmed');
+      expect((await q<any>(w.db, `select status, decision_reason from public.fin_receipt_submissions`))[0]).toMatchObject({ status: 'rejected', decision_reason: 'imagem ilegível' });
+      await sub(2); await sub(3);
+      await dizer(w, p, 'recusa o do Beto', { ready: true, slots: { fin_action: 'rejeitar_comprovante', member_name: 'Beto', reason: 'sem valor visível' } });
+      expect(p.sent.at(-1)!.text).toMatch(/2 comprovantes pendentes/);
+    }, 90000);
+
+    it('despesa e receita: categoria e conta pelo nome; sem categoria o banco lista as opções', async () => {
+      const w = await setup(); const p = provider();
+      const d = (o: Record<string, unknown> = {}) => ({ ready: true, slots: { fin_action: 'despesa', description: 'Conta de luz', amount: 300, ...o } });
+      await dizer(w, p, 'lança conta de luz de 300', d());
+      expect(p.sent.at(-1)!.text).toMatch(/Em qual categoria\?.*Energia/);
+      const r = await dizer(w, p, 'categoria energia', d({ category_name: 'energia' }));
+      expect(r.action).toBe('proposed_admin');
+      expect(p.sent.at(-1)!.text).toMatch(/^Vou lançar a despesa: Conta de luz, R\$ 300,00, categoria Energia, conta Banco do clube, paga em \d\d\/\d\d\/\d{4}\. Confirma/);
+      expect((await confirmar(w, p)).action).toBe('admin_confirmed');
+      expect((await q<any>(w.db, `select kind, status, amount_cents from public.fin_entries`))[0]).toMatchObject({ kind: 'expense', amount_cents: 30000 });
+      await dizer(w, p, 'lança receita de 80 de aluguel de quadra', { ready: true, slots: { fin_action: 'receita', description: 'Aluguel de quadra', amount: 80, category_name: 'zzzz inexistente' } });
+      expect(p.sent.at(-1)!.text).toMatch(/Em qual categoria\?/);
+    }, 90000);
+
+    it('valor alto continua exigindo o segundo passo também nas ações novas (despesa de R$ 500)', async () => {
+      const w = await setup(); const p = provider();
+      await dizer(w, p, 'lança despesa de 500', { ready: true, slots: { fin_action: 'despesa', description: 'Manutenção da quadra', amount: 500, category_name: 'energia' } });
+      expect((await confirmar(w, p)).action).toBe('failed:CONFIRM_AMOUNT');
+      expect(await q(w.db, `select 1 from public.fin_entries`)).toHaveLength(0);
+      expect((await confirmar(w, p, 'confirmo R$ 500,00')).action).toBe('admin_confirmed');
+      expect(await q(w.db, `select 1 from public.fin_entries`)).toHaveLength(1);
+    }, 90000);
+  });
+
   it('sócio comum: mesmo com o modelo pedindo a ação, nada é proposto nem gravado; não vê pendência de outro', async () => {
     const w = await setup();
     await rpc(w.db, U.admin, `public.fin_create_member_pendency('${key()}', ${j({ profile_id: U.socioB, description: 'Consumo do Beto', amount_cents: 1500, competence_month: '2026-10-01', due_date: '2026-10-07' })})`);

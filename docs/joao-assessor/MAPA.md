@@ -28,6 +28,11 @@ Intent `admin_consulta` + `conv_svc_ai_admin_read(session, domínio, args)`: rod
 Domínios: `caixa`, `receber_pagar`, `dre` (com período anterior), `receita_alunos`, `comprovantes`, `acessos`, `assinaturas`, `ocupacao`. Todos verificados contra o banco real. Limite de período: 731 dias.
 Próximo: Onda 2 (financeiro completo, N2).
 
+## 1d. Onda 2 entregue (2026-10-07) — financeiro completo (N2)
+Novas ações em `admin_financeiro` (proposta com resumo → "sim" → segunda confirmação a partir de R$ 400 → grava pelas funções do painel, como o administrador, com auditoria): `cancelar_pendencia` (`fin_cancel_charge`; o banco recusa se já há pagamento), `ajustar` (`fin_adjust_charge`: desconto, acréscimo ou perdão de juros/multa), `estornar` (`fin_reverse_payment`: último pagamento da pendência ou do sócio), `rejeitar_comprovante` (`fin_reject_receipt`: por sócio e dia) e `despesa`/`receita` (`fin_create_entry`: categoria e conta pelo nome). Motivo é obrigatório em cancelar, ajustar, estornar e recusar. Migration `20261007240000` (encadeia com a de renovar Card: `ai_confirm` → … → `ai_confirm_single_step` → `ai_confirm_pendency_step`).
+**Ficam só no painel (decisão técnica):** aprovar comprovante (exige alocar cobranças e conta) e gerar cobranças do mês (por plano). O João indica o painel.
+Próximo: Onda 3 (administrativo, N1).
+
 ## 2. Arquitetura-alvo (um padrão só, para tudo)
 
 1. **Registro de capacidades** (`aiAgent/capabilities.ts`): cada capacidade é uma entrada `{ id, domínio, tipo, intenção, leitura (RPC), escrita (RPC), slots, nível de risco, texto do resumo }`. Criar capacidade nova = adicionar uma entrada + RPC + teste, sem mexer no fluxo do turno.

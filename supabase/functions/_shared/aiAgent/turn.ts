@@ -66,15 +66,24 @@ export type Slots = {
   method?: PayMethod | null;
   account_name?: string | null;
   /** Consultas do assessor (Onda 1): domínio e período. */
+  /** Onda 2 (financeiro N2). */
+  reason?: string | null;
+  adjust_kind?: typeof ADJUST_KINDS[number] | null;
+  category_name?: string | null;
+  receipt_date?: string | null;
+  entry_status?: 'paid' | 'pending' | null;
   read_domain?: AdminReadDomain | null;
   read_from?: string | null;
   read_to?: string | null;
 };
 
-export type FinAction = 'lancar' | 'cobrar' | 'pausar' | 'retomar' | 'baixa' | 'renovar_card';
+export type FinAction = 'lancar' | 'cobrar' | 'pausar' | 'retomar' | 'baixa' | 'renovar_card'
+  | 'cancelar_pendencia' | 'ajustar' | 'estornar' | 'rejeitar_comprovante' | 'despesa' | 'receita';
 type PendencyKind = 'day_card' | 'consumo' | 'evento' | 'multa' | 'dano_reposicao' | 'outros';
 type PayMethod = 'pix' | 'transfer' | 'cash' | 'card' | 'other';
-const FIN_ACTIONS: FinAction[] = ['lancar', 'cobrar', 'pausar', 'retomar', 'baixa', 'renovar_card'];
+const FIN_ACTIONS: FinAction[] = ['lancar', 'cobrar', 'pausar', 'retomar', 'baixa', 'renovar_card',
+  'cancelar_pendencia', 'ajustar', 'estornar', 'rejeitar_comprovante', 'despesa', 'receita'];
+const ADJUST_KINDS = ['discount', 'increase', 'fee_waiver'] as const;
 const PENDENCY_KINDS: PendencyKind[] = ['day_card', 'consumo', 'evento', 'multa', 'dano_reposicao', 'outros'];
 const PAY_METHODS: PayMethod[] = ['pix', 'transfer', 'cash', 'card', 'other'];
 
@@ -175,6 +184,11 @@ export function parseSlots(raw: unknown): Slots {
   if ('paid_on' in o) out.paid_on = isoDate(o.paid_on);
   if ('method' in o) out.method = PAY_METHODS.includes(o.method as PayMethod) ? o.method as PayMethod : null;
   if ('account_name' in o) out.account_name = str(o.account_name);
+  if ('reason' in o) out.reason = str(o.reason)?.slice(0, 200) ?? null;
+  if ('adjust_kind' in o) out.adjust_kind = (ADJUST_KINDS as readonly unknown[]).includes(o.adjust_kind) ? o.adjust_kind as typeof ADJUST_KINDS[number] : null;
+  if ('category_name' in o) out.category_name = str(o.category_name);
+  if ('receipt_date' in o) out.receipt_date = isoDate(o.receipt_date);
+  if ('entry_status' in o) out.entry_status = o.entry_status === 'paid' || o.entry_status === 'pending' ? o.entry_status : null;
   if ('read_domain' in o) out.read_domain = isAdminReadDomain(o.read_domain) ? o.read_domain : null;
   if ('read_from' in o) out.read_from = isoDate(o.read_from);
   if ('read_to' in o) out.read_to = isoDate(o.read_to);
@@ -1595,7 +1609,8 @@ async function entrarNoJogo(i: DecideInput, memory: Memory): Promise<Decision> {
 
 const isAdminProposalAction = (a: unknown) => String(a ?? '').startsWith('fin_') || a === 'student_card_renew';
 
-type AdminAction = 'fin_pendency_create' | 'fin_pendency_collection' | 'fin_pendency_send' | 'fin_payment' | 'student_card_renew';
+type AdminAction = 'fin_pendency_create' | 'fin_pendency_collection' | 'fin_pendency_send' | 'fin_payment' | 'student_card_renew'
+  | 'fin_charge_cancel' | 'fin_charge_adjust' | 'fin_payment_reverse' | 'fin_receipt_reject' | 'fin_entry_create';
 
 const centsBR = (v: unknown) => `R$ ${(Number(v ?? 0) / 100).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`;
 const dateBR = (v: unknown) => String(v ?? '').slice(0, 10).split('-').reverse().join('/');
@@ -1608,6 +1623,18 @@ export function toCents(reais: number | null | undefined): number | null {
 
 export function adminProposalMessage(action: AdminAction, s: Ctx): string {
   if (action === 'student_card_renew') return studentCardProposalMessage(s);
+  if (action === 'fin_charge_cancel') return `Vou cancelar a pendência de ${s.member_name}: ${s.description} (saldo ${centsBR(s.total_due_cents)}). Motivo: ${s.reason}. Confirma? Responda "sim".`;
+  if (action === 'fin_charge_adjust') {
+    const o = s.adjust_kind === 'discount' ? 'desconto de' : s.adjust_kind === 'increase' ? 'acréscimo de' : 'perdão de juros/multa de';
+    return `Vou aplicar ${o} ${centsBR(s.amount_cents)} na pendência de ${s.member_name}: ${s.description} (saldo hoje ${centsBR(s.total_due_cents)}). Motivo: ${s.reason}. Confirma? Responda "sim".`;
+  }
+  if (action === 'fin_payment_reverse') return `Vou estornar o pagamento de ${centsBR(s.amount_cents)} de ${s.member_name} (${s.description}), feito em ${dateBR(s.paid_on)}. Motivo: ${s.reason}. A pendência volta a ficar em aberto. Confirma? Responda "sim".`;
+  if (action === 'fin_receipt_reject') return `Vou recusar o comprovante de ${s.member_name}, enviado em ${dateBR(s.sent_on)}${s.amount_cents != null ? ` (${centsBR(s.amount_cents)})` : ''}. Motivo: ${s.reason}. Confirma? Responda "sim".`;
+  if (action === 'fin_entry_create') {
+    const tipo = s.entry_kind === 'expense' ? 'despesa' : 'receita';
+    const quando = s.entry_status === 'pending' ? `a pagar até ${dateBR(s.due_date)}` : `paga em ${dateBR(s.paid_on)}`;
+    return `Vou lançar a ${tipo}: ${s.description}, ${centsBR(s.amount_cents)}, categoria ${s.category_name}, conta ${s.account_name}, ${quando}. Confirma? Responda "sim".`;
+  }
   if (action === 'fin_pendency_create') {
     const guest = s.guest_name ? ` (convidado ${s.guest_name}${s.guest_date ? ` em ${dateBR(s.guest_date)}` : ''})` : '';
     const envio = s.send_now ? 'Já mando a cobrança no WhatsApp do sócio.' : 'Sem mandar cobrança agora; a régua segue normal.';
@@ -1625,6 +1652,11 @@ export function adminProposalMessage(action: AdminAction, s: Ctx): string {
 
 export function adminSuccessMessage(action: AdminAction, s: Ctx): string {
   if (action === 'student_card_renew') return studentCardSuccessMessage(s);
+  if (action === 'fin_charge_cancel') return `Pronto: pendência de ${s.member_name} (${s.description}) cancelada.`;
+  if (action === 'fin_charge_adjust') return `Pronto: ajuste de ${centsBR(s.amount_cents)} aplicado na pendência de ${s.member_name} (${s.description}).`;
+  if (action === 'fin_payment_reverse') return `Pronto: pagamento de ${centsBR(s.amount_cents)} de ${s.member_name} estornado; a pendência voltou a ficar em aberto.`;
+  if (action === 'fin_receipt_reject') return `Pronto: comprovante de ${s.member_name} recusado.`;
+  if (action === 'fin_entry_create') return `Pronto: ${s.entry_kind === 'expense' ? 'despesa' : 'receita'} lançada: ${s.description}, ${centsBR(s.amount_cents)}.`;
   const r = (s.result ?? {}) as Ctx;
   if (action === 'fin_pendency_create') {
     const envio = r.automation_recipient_id ? ' A cobrança já está na fila de envio.' : '';
@@ -1709,8 +1741,34 @@ async function adminFinanceiro(i: DecideInput, memory: Memory): Promise<Decision
     const cents = toCents(slots.amount);
     if (!cents) return ask('Qual valor foi pago?');
     p = { action: 'fin_payment', charge_id: ref.id, amount_cents: cents, paid_on: slots.paid_on ?? null, method: slots.method ?? null, account_name: slots.account_name ?? null };
+  } else if (slots.fin_action === 'cancelar_pendencia') {
+    if (!ref) return ask('Qual pendência cancelar? Me diga o sócio e a descrição (ou o número da lista, tipo p1).');
+    p = { action: 'fin_charge_cancel', charge_id: ref.id, reason: slots.reason ?? null };
+  } else if (slots.fin_action === 'ajustar') {
+    if (!ref) return ask('Em qual pendência? Me diga o sócio e a descrição (ou o número da lista, tipo p1).');
+    const cents = toCents(slots.amount);
+    if (!cents) return ask('Qual o valor do ajuste?');
+    p = { action: 'fin_charge_adjust', charge_id: ref.id, adjust_kind: slots.adjust_kind ?? null, amount_cents: cents, reason: slots.reason ?? null };
+  } else if (slots.fin_action === 'estornar') {
+    if (ref) p = { action: 'fin_payment_reverse', charge_id: ref.id, reason: slots.reason ?? null };
+    else {
+      const m = await member();
+      if (m.ask) return ask(m.ask);
+      p = { action: 'fin_payment_reverse', profile_id: m.id, reason: slots.reason ?? null };
+    }
+  } else if (slots.fin_action === 'rejeitar_comprovante') {
+    const m = await member();
+    if (m.ask) return ask(m.ask);
+    p = { action: 'fin_receipt_reject', profile_id: m.id, receipt_date: slots.receipt_date ?? null, reason: slots.reason ?? null };
+  } else if (slots.fin_action === 'despesa' || slots.fin_action === 'receita') {
+    if (!slots.description) return ask(`Qual a descrição da ${slots.fin_action}?`);
+    const cents = toCents(slots.amount);
+    if (!cents) return ask('Qual o valor?');
+    p = { action: 'fin_entry_create', entry_kind: slots.fin_action === 'despesa' ? 'expense' : 'revenue', description: slots.description, amount_cents: cents,
+      entry_status: slots.entry_status ?? null, due_date: slots.due_date ?? null, paid_on: slots.paid_on ?? null,
+      category_name: slots.category_name ?? null, account_name: slots.account_name ?? null };
   } else {
-    return ask('O que você quer fazer: lançar pendência, cobrar agora, pausar/retomar a cobrança ou dar baixa?');
+    return ask('O que você quer fazer: lançar pendência, cobrar agora, pausar/retomar a cobrança, dar baixa, cancelar ou ajustar uma pendência, estornar um pagamento, recusar um comprovante ou lançar uma despesa/receita?');
   }
 
   const res = (await deps.db('conv_svc_ai_admin_finance_propose', { p_session: session, p })).data as

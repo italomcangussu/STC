@@ -40,6 +40,12 @@ export const CAPABILITIES: readonly Capability[] = [
   { id: 'fin.pendency.pause', domain: 'financeiro', risk: 'N1', label: 'Pausar cobrança', panel: 'Financeiro', write: { finAction: 'pausar' } },
   { id: 'fin.pendency.resume', domain: 'financeiro', risk: 'N1', label: 'Retomar cobrança', panel: 'Financeiro', write: { finAction: 'retomar' } },
   { id: 'student.card.renew', domain: 'pessoas', risk: 'N2', label: 'Renovar Card Mensal de aluno', panel: 'Alunos', write: { finAction: 'renovar_card' } },
+  { id: 'fin.charge.cancel', domain: 'financeiro', risk: 'N2', label: 'Cancelar pendência', panel: 'Financeiro', write: { finAction: 'cancelar_pendencia' } },
+  { id: 'fin.charge.adjust', domain: 'financeiro', risk: 'N2', label: 'Ajustar cobrança (desconto, acréscimo, perdão de encargos)', panel: 'Financeiro', write: { finAction: 'ajustar' } },
+  { id: 'fin.payment.reverse', domain: 'financeiro', risk: 'N2', label: 'Estornar último pagamento', panel: 'Financeiro', write: { finAction: 'estornar' } },
+  { id: 'fin.receipt.reject', domain: 'financeiro', risk: 'N2', label: 'Recusar comprovante', panel: 'Financeiro', write: { finAction: 'rejeitar_comprovante' } },
+  { id: 'fin.entry.expense', domain: 'financeiro', risk: 'N2', label: 'Lançar despesa', panel: 'Financeiro', write: { finAction: 'despesa' } },
+  { id: 'fin.entry.revenue', domain: 'financeiro', risk: 'N2', label: 'Lançar receita', panel: 'Financeiro', write: { finAction: 'receita' } },
   { id: 'fin.payment.register', domain: 'financeiro', risk: 'N2', label: 'Dar baixa em pagamento', panel: 'Financeiro', write: { finAction: 'baixa' } },
 ];
 
