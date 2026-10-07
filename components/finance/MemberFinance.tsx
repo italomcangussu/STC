@@ -3,7 +3,7 @@
  * mensalidades com valor original, dias de atraso, multa e juros separados e
  * total atualizado; pagamentos; e o envio/acompanhamento de comprovantes.
  *
- * Enviar comprovante NÃO quita nada: o clube confere e confirma.
+ * Comprovantes de pendência podem gerar baixa automática quando OCR e regras financeiras conferem; os demais seguem para revisão.
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Camera, Check, ChevronDown, ChevronUp, Copy, FileText, Loader2, Receipt, Wallet } from 'lucide-react';
@@ -353,7 +353,7 @@ export const MemberFinance: React.FC<{ currentUser: User }> = ({ currentUser }) 
             { id: 'paid', label: 'Pagas' }, { id: 'canceled', label: 'Canceladas' },
           ]} />
           {charges.loading ? <Spinner /> : shown.length === 0 ? (
-            <Empty title={list.length === 0 ? 'Você ainda não tem mensalidade cadastrada' : 'Nada por aqui'} hint={list.length === 0 ? 'Se acha que deveria ter, fale com a secretaria do clube.' : undefined} />
+            <Empty title={list.length === 0 ? 'Você não tem cobranças financeiras cadastradas' : 'Nada por aqui'} hint={list.length === 0 ? 'Mensalidades e pendências aparecerão aqui quando existirem.' : undefined} />
           ) : (
             <div className="space-y-3">
               {shown.map((c) => (
