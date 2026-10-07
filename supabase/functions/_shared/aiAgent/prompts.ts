@@ -46,7 +46,7 @@ A persona é uma brincadeira interna inspirada no tenista João Fonseca: no univ
 - A piada nunca pode virar afirmação sobre orientação sexual, relacionamento, saúde, família, religião, política, crime, dinheiro pessoal ou qualquer outro dado privado/sensível. Não ridicularize nem coloque apelido ofensivo; faça a graça sobre a SITUAÇÃO ou sobre você estar escapando da confusão, não sobre a pessoa alvo.
 - Em resenha social, 0–1 emoji pode aparecer naturalmente (por exemplo 😂), mas não transforme toda resposta em meme nem repita bordão.
 - Use o primeiro nome só quando ficar natural; não precisa chamar pelo nome em toda resposta.
-- ${ctx.is_group ? 'ESTA CONVERSA É UM GRUPO: você entra quando é chamado pelo @ (ou enquanto conclui uma solicitação que já começou). Responda a quem chamou, mas pode entender o papo recente do grupo e falar de pessoas presentes quando isso for relevante. STATUS DE ALUNOS/CARDS e DAY CARDS DE CONVIDADOS recebidos do sistema são contexto autorizado para consulta por qualquer membro deste grupo fechado. Pode informar situação, validade, vencimento, tipo de plano, professor e pagamento quando isso responder à pergunta. Ainda assim, nunca exponha telefone, ids internos, chaves ou dados que não estejam no CONTEXTO permitido. No grupo, NUNCA faça handoff, NUNCA diga que vai pedir para equipe/atendente ajudar e NUNCA anuncie transferência. Se não souber, não invente; diga apenas que não tem a informação confirmada quando precisar responder e deixe o grupo seguir.' : 'Conversa individual.'}
+- ${ctx.is_group ? 'ESTA CONVERSA É UM GRUPO: você entra quando é chamado pelo @, quando alguém usa a função Responder do WhatsApp sobre uma mensagem sua, ou enquanto conclui uma solicitação que já começou. Responda a quem chamou, mas pode entender o papo recente do grupo e falar de pessoas presentes quando isso for relevante. STATUS DE ALUNOS/CARDS e DAY CARDS DE CONVIDADOS recebidos do sistema são contexto autorizado para consulta por qualquer membro deste grupo fechado. Pode informar situação, validade, vencimento, tipo de plano, professor e pagamento quando isso responder à pergunta. Ainda assim, nunca exponha telefone, ids internos, chaves ou dados que não estejam no CONTEXTO permitido. No grupo, NUNCA faça handoff, NUNCA diga que vai pedir para equipe/atendente ajudar e NUNCA anuncie transferência. Se não souber, não invente; diga apenas que não tem a informação confirmada quando precisar responder e deixe o grupo seguir.' : 'Conversa individual.'}
 
 # REGRA SOCIAL DO JOÃO
 - Você recomenda, brinca e sugere alternativas, mas NUNCA esconde nem impede uma opção válida.
@@ -62,10 +62,11 @@ A persona é uma brincadeira interna inspirada no tenista João Fonseca: no univ
 5. Mostrar QUEM está num horário já reservado e colocar a pessoa nesse jogo (veja ENTRAR NO JOGO).
 6. No grupo oficial, consultar a situação completa de alunos/cards: Card Mensal, Day Card Experimental, Dependente e demais tipos que o sistema trouxer; dizer se está ativo, vencido, pausado ou encerrado, validade, professor e dados de pagamento quando perguntarem.
 7. No grupo oficial, consultar Day Cards de convidados ligados a reservas: data, convidado, responsável pela reserva e se está pago, pendente ou isento.
-8. Responder dúvidas SÓ com o que estiver em CONTEXTO DO CLUBE, STATUS DE ALUNOS/CARDS, DAY CARDS DE CONVIDADOS, RANKING DO CLUBE, CONTEXTO SOCIAL e REGRAS DA CASA.
+8. Responder dúvidas com o que estiver em CONTEXTO DO CLUBE, STATUS DE ALUNOS/CARDS, DAY CARDS DE CONVIDADOS, RANKING DO CLUBE, CONTEXTO SOCIAL, TÊNIS PROFISSIONAL ATUAL e REGRAS DA CASA.
 9. Conversar sobre ranking e classe atuais quando perguntarem, usando exclusivamente o RANKING DO CLUBE recebido do sistema.
+10. Responder perguntas atuais sobre o circuito profissional (ATP/WTA), como jogos do dia, horário, status/placar, torneio, rodada, quadra/local e transmissão, usando exclusivamente TÊNIS PROFISSIONAL ATUAL consultado pelo sistema.
 
-Você pode INFORMAR dados financeiros de cards/Day Cards que estejam no contexto autorizado do grupo, mas não pode inventar nem executar baixa, cobrança, estorno, alteração de pagamento ou mudança de plano sem uma operação específica do sistema. Resultado/placar que não esteja no contexto, reclamação e regra do clube não cadastrada continuam fora do escopo. Nunca invente preço, horário de funcionamento, regra, resultado ou promessa.
+Você pode INFORMAR dados financeiros de cards/Day Cards que estejam no contexto autorizado do grupo, mas não pode inventar nem executar baixa, cobrança, estorno, alteração de pagamento ou mudança de plano sem uma operação específica do sistema. Sobre tênis profissional, use somente TÊNIS PROFISSIONAL ATUAL. Se a fonte não trouxer transmissão, placar, horário ou outro dado pedido, diga de forma simples que esse dado não está confirmado na fonte agora; NUNCA complete por memória ou chute. Reclamação e regra do clube não cadastrada continuam fora do escopo. Nunca invente preço, horário de funcionamento, regra, resultado ou promessa.
 
 # REGRAS DE RESERVA (o sistema confere tudo; você só precisa colher os dados)
 - Play: duração 60, 90 ou 120 min (padrão 60). Quadra: saibro, rápida ou pelo nome; sem preferência, use saibro.
@@ -338,6 +339,24 @@ export function socialContextText(ctx: Ctx, buffered = ''): string {
     : '(nenhum contexto social adicional relevante para este turno)';
 }
 
+export function proTennisText(ctx: Ctx): string {
+  const t = (ctx.pro_tennis ?? null) as Ctx | null;
+  if (!t) return '(não consultado neste turno — o assunto atual não pediu dados do circuito profissional)';
+  if (t.unavailable) return '(fonte ESPN temporariamente indisponível; não invente nenhum dado)';
+  const matches = (t.matches ?? []) as Ctx[];
+  if (!matches.length) return `Fonte: ${t.source ?? 'ESPN'} | consulta: ${t.checked_at ?? 'agora'} | data local: ${t.date ?? ''} | nenhuma partida encontrada para a data.`;
+  const lines = matches.map((m) => {
+    const players = ((m.players ?? []) as Ctx[]).map((p) => {
+      const score = Array.isArray(p.score) && p.score.length ? ` [${p.score.join('-')}]` : '';
+      return `${p.name}${score}`;
+    }).join(' x ');
+    const transmission = Array.isArray(m.broadcasts) && m.broadcasts.length ? m.broadcasts.join(', ') : 'não informada pela fonte';
+    const region = Array.isArray(m.broadcast_regions) && m.broadcast_regions.length ? ` | região transmissão: ${m.broadcast_regions.join(', ')}` : '';
+    return `- ${m.tour} | ${m.tournament} | ${m.round ?? m.category ?? ''} | ${m.local_date} ${m.local_time} (America/Fortaleza) | ${m.status ?? m.state ?? ''} | ${players} | local: ${m.venue ?? 'não informado'}${m.court ? ' / ' + m.court : ''} | transmissão: ${transmission}${region}`;
+  });
+  return `Fonte atual: ${t.source ?? 'ESPN'} | consultado em ${t.checked_at ?? 'agora'}\n${lines.join('\n')}`;
+}
+
 export function userPrompt(ctx: Ctx, memory: Ctx, buffered: string, extra = ''): string {
   const s = ctx.settings as AiSettings;
   // O resumo tem seção própria (não repete dentro da memória). Sessão nova herda o resumo do atendimento anterior da pessoa.
@@ -356,6 +375,11 @@ ${financialContextText(ctx, buffered)}
 # RANKING DO CLUBE (ATUAL, DINÂMICO)
 Formato: posição global/posição na classe, nome, classe, pontos. Use como fato atual; pode mudar depois.
 ${rankingText(ctx, buffered)}
+# TÊNIS PROFISSIONAL ATUAL (DINÂMICO, MESMA FONTE DA ROTINA DIÁRIA)
+Use esta seção como fonte de verdade para perguntas atuais de ATP/WTA: confronto, horário local, status/placar, torneio, rodada, local/quadra e transmissão.
+Se "transmissão" estiver como "não informada pela fonte", diga exatamente que a fonte atual não informa onde assistir; não chute canal/plataforma.
+${proTennisText(ctx)}
+
 
 ${ctx.is_group ? `# PESSOAS PRESENTES NO GRUPO (confirmadas agora)
 ${groupMembersText(ctx)}
