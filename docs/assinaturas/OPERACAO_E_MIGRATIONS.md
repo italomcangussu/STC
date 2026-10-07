@@ -1,10 +1,13 @@
 # Documentos e Assinaturas — modelo, migrations e contrato com a edge function
 
-> **Estado (fase 2 de 5):** banco e funções testados num Postgres em memória (PGlite, `__tests__/signatures/sql/`,
+> **Estado (fase 3 de 5):** banco e funções testados num Postgres em memória (PGlite, `__tests__/signatures/sql/`,
 > 91 testes) **e aplicados no banco real (2026-10-07), exceto 4 funções** (ver §6). Edge functions
 > `signature-operations` (código + WhatsApp) e `signature-dispatch` (avisos e lembretes) **escritas e testadas, ainda NÃO
 > publicadas** (`__tests__/signatures/edge/`, 108 testes, incluindo um que liga a edge function ao SQL real).
-> Fases seguintes: 3 telas do sócio · 4 Painel Admin · 5 comprovante em PDF.
+> **Telas do sócio prontas** (aba "Documentos e Assinaturas", leitor de PDF, aceite, CPF, folha do código, link `#documentos/<id>`,
+> selo de pendentes no menu): ver §8 (`__tests__/signatures/client/`, 14 arquivos). Falta o outro lado: o admin ainda não tem tela
+> para subir/publicar (fase 4); sem isso, o documento só nasce por SQL/RPC.
+> Fases seguintes: 4 Painel Admin · 5 comprovante em PDF e lembretes agendados.
 
 ## 1. O que é
 
@@ -185,3 +188,50 @@ drop function public.sig_*; drop trigger sig_profiles_new_member on public.profi
 - O IP vem do cabeçalho do gateway (`cf-connecting-ip`, `x-real-ip` ou o 1º de `x-forwarded-for`); a "cidade aproximada" vem de um serviço de terceiros e pode faltar (o IP fica gravado de qualquer jeito).
 - CPF fica em texto no banco (criptografia em repouso é a do Supabase) e é visível ao próprio sócio e ao admin. Base legal e finalidade devem constar no termo.
 - Mensagem de WhatsApp pode não chegar mesmo com "enviado" (número trocado, aparelho desligado): por isso o admin acompanha quem não assinou.
+
+## 8. Telas do sócio (fase 3)
+
+Aba **"Documentos e Assinaturas"** no menu (sócios e administradores, que também assinam; lanchonete não vê). Código em
+`components/signatures/` e `lib/signatures/`; a aba carrega sob demanda (`React.lazy`), e o pdfjs só é baixado quando alguém abre um documento.
+
+**Link do aviso:** `https://stcplay.com.br/#documentos/<id>` (`lib/signatures/routes.ts`). Fica no `#`: não depende de roteador, sobrevive
+ao login (o estado da aba nasce antes da tela de login) e, com o app já aberto, `hashchange` troca de aba sem recarregar. Id malformado ou
+de documento que não é do sócio abre a lista com o aviso "Documento indisponível". Sair da aba limpa o `#`.
+
+**Selo de pendentes:** `sig_my_pending_count` alimenta o número no item do menu (celular e desktop) e um ponto vermelho no botão do menu
+do celular. Atualiza ao abrir o app, ao voltar o foco, a cada 5 min e quando o sócio assina (`stc:signatures-changed`). Se a consulta
+falha, o selo mantém o último valor, sem erro na tela.
+
+**Jornada (a ordem é a que o servidor exige, e cada passo leva a hora DELE):**
+
+| Passo na tela | Libera quando | Grava no servidor (`sig_log_event`) |
+|---|---|---|
+| 1. Ler até o fim | **todas** as páginas apareceram na tela **e** o fim da última foi alcançado | `viewed` + `read_started` (ao desenhar a 1ª página); `read_completed` com `pages_seen/pages_total` |
+| 2. "Li e concordo" | a leitura foi **registrada** no servidor | `consent_checked` (a caixa só marca depois que o servidor confirma) |
+| 3. CPF | digita 11 dígitos válidos (a tela confere os dígitos como o banco) e confirma | `sig_save_my_cpf` (travado depois da 1ª assinatura) |
+| 4. "Assinar digitalmente" | passos 1–3 feitos e o PDF abriu sem erro | `request_code` → folha do código → `confirm_code` |
+
+- **"Leia até o fim":** `lib/signatures/reading.ts`. Uma página conta como vista com ≥ 40% do que cabe dela na tela e **já desenhada**
+  (página em branco não conta). Pular direto para o fim não vale: as páginas do meio nunca aparecem. Girar o aparelho não perde o
+  progresso. Conferido no Chromium real (PDF de 6 páginas): começa em 1/6; pular ao fim dá 2/6 sem concluir; rolar até o fim conclui.
+- **Arquivo conferido:** o PDF baixado do bucket privado tem o SHA-256 comparado ao `content_sha256` publicado; se não bater, o documento
+  **não abre** para leitura. O número de páginas do arquivo também precisa bater com o cadastro (senão a leitura nunca fecharia).
+- **Memória do celular:** as páginas são desenhadas só perto da tela (margem de 150%) e liberadas ao se afastar; resolução limitada a 2×.
+- **Trilha em fila:** os eventos saem um por vez, na ordem (`lib/signatures/journey.ts`); se um falhar, o seguinte tenta de novo e a tela
+  oferece "Tentar registrar de novo". Cada passo só é enviado uma vez com sucesso.
+- **Clique em "Assinar digitalmente":** a primeira coisa é `requestSignatureCode`, que abre o pedido de localização do sistema e só depois
+  pede o código (a localização nunca bloqueia; ver §5). O CPF é salvo no passo 3, justamente para o clique já abrir o pedido de localização.
+- **Folha do código:** 6 dígitos (aceita colar "123 456"), `autocomplete="one-time-code"`, contagem de validade (10 min) e do reenvio (60 s),
+  tentativas restantes, mensagem para localização negada. Tocar fora da folha **não** a fecha. Código errado/expirado/bloqueado explica e
+  manda pedir outro.
+- **Documento já assinado:** só consulta (sem passos, sem eventos, sem rastrear leitura) e mostra data/hora no horário de Fortaleza.
+- **Prazo:** "Vence em N dias", "Vence hoje", "Prazo venceu há N dias" (calendário do clube; não bloqueia assinar depois do prazo).
+
+**O que NÃO mudou no banco:** nenhuma migration nova na fase 3. Tudo usa `sig_my_documents`, `sig_my_pending_count`, `sig_log_event`,
+`sig_save_my_cpf`, leitura de `sig_member_identities` (só a própria linha, filtrada por id) e o bucket `sig-docs`.
+
+**Teste no navegador real (Chromium + Playwright, backend simulado por interceptação de rede):** link `#documentos/<id>` abriu direto o
+documento; botão e aceite desabilitados antes da leitura e depois de pular ao fim; ordem das chamadas
+`storage → viewed → read_started → read_completed → consent_checked → sig_save_my_cpf → request_code → confirm_code`; com permissão de
+GPS o pedido do código levou `{lat, lng, accuracy_m}` e `location: granted`; sem permissão, sem `geo`, `location: denied` e o aviso na folha;
+código errado mostrou "Restam 4 tentativas" e o certo assinou.

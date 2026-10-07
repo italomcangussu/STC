@@ -1,19 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import {
     Calendar, Trophy, LayoutDashboard,
-    Sandwich, Menu, X, LogOut, GraduationCap, Swords, Settings, Bell, Gamepad2, Shuffle, ChevronRight, Wallet, MessagesSquare, ShieldCheck
+    Sandwich, Menu, X, LogOut, GraduationCap, Swords, Settings, Bell, Gamepad2, Shuffle, ChevronRight, Wallet, MessagesSquare, ShieldCheck, FileSignature
 } from 'lucide-react';
 import { User } from '../types';
 import { supabase } from '../lib/supabase';
 import { isPushSupported, isInstalledPWA, isIOS, getPermissionStatus, subscribeToPush, isSubscribed } from '../lib/pushNotifications';
 import { PushPermissionPrompt } from './PushPermissionPrompt';
 import { AdminLogin } from './AdminLogin';
+import { usePendingSignatures } from '../lib/signatures/usePendingSignatures';
 
 interface NavItem {
     id: string;
     label: string;
     icon: React.ReactNode;
     roles: string[];
+    /** Selo numérico (ex.: documentos pendentes de assinatura). */
+    badge?: number;
 }
 
 interface LayoutProps {
@@ -24,6 +27,18 @@ interface LayoutProps {
     onLogout: () => void;
 }
 
+/** Selo numérico do item de menu (some quando não há nada pendente). */
+const NavBadge: React.FC<{ count?: number; active: boolean }> = ({ count, active }) => (
+    count && count > 0 ? (
+        <span
+            className={`ml-auto min-w-5 h-5 px-1.5 rounded-full text-[11px] font-black flex items-center justify-center ${active ? 'bg-white text-saibro-700' : 'bg-red-500 text-white'}`}
+            aria-label={`${count} pendente(s)`}
+        >
+            {count > 99 ? '99+' : count}
+        </span>
+    ) : null
+);
+
 export const Layout: React.FC<LayoutProps> = ({ children, view, setView, currentUser, onLogout }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [_hasActiveChamps, setHasActiveChamps] = useState(false);
@@ -31,6 +46,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
     const [showPushBanner, setShowPushBanner] = useState(false);
     const [showAdminLogin, setShowAdminLogin] = useState(false);
     const [logoClicks, setLogoClicks] = useState(0);
+    // Selo "documentos para assinar" (sócios e administradores, que também assinam).
+    const pendingSignatures = usePendingSignatures(currentUser.role === 'admin' || currentUser.role === 'socio');
 
     // Secret Admin Trigger
     const handleLogoClick = (e: React.MouseEvent) => {
@@ -123,6 +140,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
         { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} />, roles: ['admin', 'socio'] },
         { id: 'klanches', label: 'Klanches', icon: <Sandwich size={20} />, roles: ['admin', 'socio', 'lanchonete'] },
         { id: 'meu-financeiro', label: 'Meu financeiro', icon: <Wallet size={20} />, roles: ['admin', 'socio'] },
+        { id: 'documentos', label: 'Documentos e Assinaturas', icon: <FileSignature size={20} />, roles: ['admin', 'socio'], badge: pendingSignatures },
     ];
 
     if (currentUser.isProfessor) {
@@ -188,6 +206,9 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
                             />
                             {currentUser.role === 'admin' && (
                                 <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-saibro-600 border border-white rounded-full" />
+                            )}
+                            {pendingSignatures > 0 && (
+                                <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-red-500 border-2 border-white rounded-full" role="status" aria-label={`${pendingSignatures} documento(s) para assinar`} />
                             )}
                         </div>
                         {isMenuOpen ? (
@@ -275,6 +296,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
                                             {item.icon}
                                         </div>
                                         <span>{item.label}</span>
+                                        <NavBadge count={item.badge} active={view === item.id} />
                                     </button>
                                 ))}
                             </div>
@@ -383,6 +405,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
                         >
                             {item.icon}
                             {item.label}
+                            <NavBadge count={item.badge} active={view === item.id} />
                         </button>
                     ))}
 

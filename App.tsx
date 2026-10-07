@@ -32,8 +32,10 @@ const ChampionshipAdmin = lazy(() => import('./components/ChampionshipAdmin').th
 const ChampionshipCreator = lazy(() => import('./components/ChampionshipCreator').then(m => ({ default: m.ChampionshipCreator })));
 const AdminForms = lazy(() => import('./components/AdminForms').then(m => ({ default: m.AdminForms })));
 const AppSettings = lazy(() => import('./components/AppSettings').then(m => ({ default: m.AppSettings })));
+const DocumentsPage = lazy(() => import('./components/signatures/DocumentsPage').then(m => ({ default: m.DocumentsPage })));
 const ConversationsStandalonePage = lazy(() => import('./components/conversations/ConversationsStandalonePage').then(m => ({ default: m.ConversationsStandalonePage })));
 import { getPublicChampionshipRoute, PublicChampionshipRoute, selectPublicChampionship } from './lib/publicRoutes';
+import { clearDocumentsHash, parseDocumentsHash, showDocumentsList, viewFromHash } from './lib/signatures/routes';
 
 import { OnboardingModal } from './components/OnboardingModal';
 import { ChallengeNotificationPopup } from './components/ChallengeNotificationPopup';
@@ -177,8 +179,9 @@ const AnnouncementPopup: React.FC<{ user: User, onClose: () => void }> = ({ user
 // -- MAIN CONTENT WRAPPER --
 const AppContent: React.FC = () => {
   const { currentUser, loading, signOut } = useAuth();
-  // O aviso de comprovante decidido abre direto em "Meu financeiro" (`/#meu-financeiro`).
-  const [view, setView] = useState(() => (typeof window !== 'undefined' && window.location.hash === '#meu-financeiro' ? 'meu-financeiro' : 'agenda'));
+  // Links com `#` abrem direto na aba certa: o aviso de comprovante (`/#meu-financeiro`) e o
+  // WhatsApp de assinatura (`/#documentos/<id>`). O estado nasce antes do login e sobrevive a ele.
+  const [view, setView] = useState(() => (typeof window !== 'undefined' ? viewFromHash(window.location.hash) : 'agenda'));
   const [showAnnouncement, setShowAnnouncement] = useState(true);
   const [targetAthleteId, setTargetAthleteId] = useState<string | null>(null);
   const [showChallengeNotification, setShowChallengeNotification] = useState(true);
@@ -189,9 +192,22 @@ const AppContent: React.FC = () => {
     enableBroadcast: true // Listen to Supabase broadcasts
   });
 
+  // App já aberto e o sócio toca num link de documento: troca de aba sem recarregar.
+  useEffect(() => {
+    const onHash = () => { if (parseDocumentsHash(window.location.hash)) setView('documentos'); };
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
+
+  // Saiu da aba de documentos: o `#documentos/…` não pode reabri-la depois; tocar nela de novo volta à lista.
+  const changeView = (next: string) => {
+    if (next === 'documentos') showDocumentsList(); else clearDocumentsHash();
+    setView(next);
+  };
+
   const handleOpenProfile = (userId: string) => {
     setTargetAthleteId(userId);
-    setView('atletas');
+    changeView('atletas');
   };
 
   if (loading) {
@@ -211,7 +227,7 @@ const AppContent: React.FC = () => {
 
   return (
     <>
-      <Layout view={view} setView={setView} currentUser={currentUser} onLogout={signOut}>
+      <Layout view={view} setView={changeView} currentUser={currentUser} onLogout={signOut}>
         <Suspense fallback={
           <div className="min-h-[50vh] flex flex-col items-center justify-center gap-3">
             <Loader2 className="animate-spin text-saibro-600" size={36} />
@@ -236,6 +252,7 @@ const AppContent: React.FC = () => {
             {view === 'admin-panel' && <AdminProtect><AdminPanel /></AdminProtect>}
             {view === 'financeiro-admin' && <AdminProtect><FinanceHub /></AdminProtect>}
             {view === 'meu-financeiro' && <MemberFinance currentUser={currentUser} />}
+            {view === 'documentos' && <DocumentsPage currentUser={currentUser} />}
             {view === 'championship-admin' && <AdminProtect><ChampionshipAdmin currentUser={currentUser} /></AdminProtect>}
             {view === 'championship-creator' && <AdminProtect><ChampionshipCreator /></AdminProtect>}
             {view === 'configuracoes' && <AppSettings currentUser={currentUser} />}
