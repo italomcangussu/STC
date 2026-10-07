@@ -68,7 +68,7 @@ function otimista(input: Partial<ConversationMessage> & { requestId: string }): 
   };
 }
 
-export default function InboxTab({ currentUserId }: { currentUserId: string }) {
+export default function InboxTab({ currentUserId, standalone = false }: { currentUserId: string; standalone?: boolean }) {
   const confirm = useConfirm();
   const [filtro, setFiltro] = useState<InboxFilter>('open');
   const [busca, setBusca] = useState('');
@@ -513,7 +513,7 @@ export default function InboxTab({ currentUserId }: { currentUserId: string }) {
   return (
     <>
       {telaCheia && renderTopBar()}
-      <div className={cx('conv-shell relative flex overflow-hidden rounded-3xl border border-stone-200 bg-stone-50', telaCheia && 'is-chat-overlay')}>
+      <div className={cx('conv-shell relative flex overflow-hidden bg-stone-50', standalone ? 'is-standalone h-full w-full' : 'rounded-3xl border border-stone-200', telaCheia && 'is-chat-overlay')}>
         {/* ------------------------------ Lista ------------------------------ */}
         <section aria-label="Conversas"
           className={cx('flex min-w-0 flex-col border-stone-200 md:w-[21rem] md:shrink-0 md:border-r lg:w-[23rem]', selecionada ? 'hidden md:flex' : 'flex w-full')}>
@@ -568,10 +568,20 @@ export default function InboxTab({ currentUserId }: { currentUserId: string }) {
           onDrop={(e) => { if (!atual) return; e.preventDefault(); setArrastando(false); setSoltos(Array.from(e.dataTransfer.files)); }}
         >
           {!atual ? (
-            <div className="m-auto max-w-xs px-6 text-center">
-              <MessageCircle size={32} className="mx-auto text-stone-400" aria-hidden />
-              <p className="mt-2 text-sm font-semibold text-stone-700">Escolha uma conversa</p>
-              <p className="mt-1 text-xs text-stone-500">As mensagens do WhatsApp do clube chegam aqui em tempo real, junto com o que a IA e as automações enviam.</p>
+            <div className="m-auto max-w-sm px-6 py-12 text-center select-none">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-linear-to-br from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/20">
+                <MessageCircle size={32} aria-hidden />
+              </div>
+              <h3 className="text-base font-bold text-stone-800 md:text-lg">STC Conversas & WhatsApp</h3>
+              <p className="mt-1.5 text-xs leading-relaxed text-stone-500">
+                Selecione uma conversa ao lado para visualizar as mensagens, responder aos sócios e interagir em tempo real pelo canal do clube.
+              </p>
+              <div className="mt-4 flex items-center justify-center gap-2">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50/80 px-3 py-1 text-[11px] font-semibold text-emerald-800">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" aria-hidden />
+                  WhatsApp Integrado
+                </span>
+              </div>
             </div>
           ) : (
             <>

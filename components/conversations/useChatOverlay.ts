@@ -58,11 +58,13 @@ export function useChatOverlay(open: boolean) {
       quadro = 0;
       manterTopo();
       const altura = vv?.height ?? window.innerHeight;
+      const offsetTop = Math.max(0, vv?.offsetTop ?? 0);
       if (!campoEditavelEmFoco()) base = Math.max(window.innerHeight, altura);
       base = Math.max(base, window.innerHeight);
       root.style.setProperty('--chat-vv-height', `${altura}px`);
+      root.style.setProperty('--chat-vv-offset-top', `${offsetTop}px`);
       // Teclado só existe com um campo em foco: a perda de foco libera mesmo se o iOS não devolver a área visível na hora.
-      if (campoEditavelEmFoco() && base - altura > TECLADO_MIN) root.dataset.keyboard = 'open';
+      if (campoEditavelEmFoco() && (base - altura > TECLADO_MIN || offsetTop > 40)) root.dataset.keyboard = 'open';
       else delete root.dataset.keyboard;
     };
     const agendar = () => { if (!quadro) quadro = requestAnimationFrame(medir); };
@@ -80,6 +82,12 @@ export function useChatOverlay(open: boolean) {
         remedir();
       }
     };
+    const aoDesfocar = () => {
+      // pwa-design-debug Fix #2: a perda de foco de edição é o gatilho seguro de fechamento do teclado
+      delete root.dataset.keyboard;
+      root.style.setProperty('--chat-vv-offset-top', '0px');
+      remedir();
+    };
 
     root.dataset.chatOverlay = 'open';
     medir();
@@ -88,7 +96,7 @@ export function useChatOverlay(open: boolean) {
     window.addEventListener('resize', agendar);
     window.addEventListener('scroll', manterTopo, { passive: true });
     window.addEventListener('focusin', aoFocar, { passive: true });
-    window.addEventListener('focusout', remedir, { passive: true });
+    window.addEventListener('focusout', aoDesfocar, { passive: true });
 
     return () => {
       if (quadro) cancelAnimationFrame(quadro);
@@ -98,10 +106,11 @@ export function useChatOverlay(open: boolean) {
       window.removeEventListener('resize', agendar);
       window.removeEventListener('scroll', manterTopo);
       window.removeEventListener('focusin', aoFocar);
-      window.removeEventListener('focusout', remedir);
+      window.removeEventListener('focusout', aoDesfocar);
       delete root.dataset.chatOverlay;
       delete root.dataset.keyboard;
       root.style.removeProperty('--chat-vv-height');
+      root.style.removeProperty('--chat-vv-offset-top');
     };
   }, [ativo]);
 

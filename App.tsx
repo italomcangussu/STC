@@ -31,6 +31,7 @@ const AdminStudents = lazy(() => import('./components/AdminStudents').then(m => 
 const ChampionshipAdmin = lazy(() => import('./components/ChampionshipAdmin').then(m => ({ default: m.ChampionshipAdmin })));
 const ChampionshipCreator = lazy(() => import('./components/ChampionshipCreator').then(m => ({ default: m.ChampionshipCreator })));
 const AdminForms = lazy(() => import('./components/AdminForms').then(m => ({ default: m.AdminForms })));
+const ConversationsStandalonePage = lazy(() => import('./components/conversations/ConversationsStandalonePage').then(m => ({ default: m.ConversationsStandalonePage })));
 import { getPublicChampionshipRoute, PublicChampionshipRoute, selectPublicChampionship } from './lib/publicRoutes';
 
 import { OnboardingModal } from './components/OnboardingModal';
@@ -258,6 +259,41 @@ const AppContent: React.FC = () => {
 
 // -- MAIN APP --
 export default function App() {
+  const isConversationsRoute = typeof window !== 'undefined' && (
+    window.location.pathname === '/conversas' ||
+    window.location.pathname === '/admin/conversas' ||
+    window.location.hash === '#conversas' ||
+    window.location.hash === '#/conversas'
+  );
+
+  if (isConversationsRoute) {
+    return (
+      <AuthProvider>
+        <Toaster
+          position="top-center"
+          richColors
+          expand={false}
+          closeButton
+          toastOptions={{
+            style: { fontFamily: 'inherit' },
+            className: 'toast-custom',
+          }}
+        />
+        <ConfirmProvider>
+          <AdminProtect>
+            <Suspense fallback={
+              <div className="flex h-screen w-screen items-center justify-center bg-stone-100">
+                <Loader2 className="animate-spin text-saibro-600" size={36} />
+              </div>
+            }>
+              <ConversationsStandalonePage />
+            </Suspense>
+          </AdminProtect>
+        </ConfirmProvider>
+      </AuthProvider>
+    );
+  }
+
   const publicRoute = typeof window !== 'undefined'
     ? getPublicChampionshipRoute(window.location.pathname, window.location.hostname)
     : { type: 'none' as const };

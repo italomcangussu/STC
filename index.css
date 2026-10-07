@@ -1850,8 +1850,16 @@ input[type="datetime-local"] {
     min-height: 26rem;
 }
 
+.conv-shell.is-standalone {
+    height: 100% !important;
+    min-height: 100% !important;
+    max-height: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+}
+
 @media (min-width: 768px) {
-    .conv-shell {
+    .conv-shell:not(.is-standalone) {
         height: calc(100dvh - 12rem);
         max-height: 56rem;
     }
@@ -1864,6 +1872,7 @@ input[type="datetime-local"] {
         position: fixed;
         inset: 0 0 auto 0;
         top: 0;
+        transform: translateY(var(--chat-vv-offset-top, 0px));
         height: var(--chat-vv-height, 100dvh);
         min-height: 0;
         max-height: none;

@@ -2,8 +2,8 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 import webpush from 'npm:web-push'
 
-const VAPID_PUBLIC_KEY = 'BLnOCELBk2YT3FlawO9KimRA0lrWRMO98zFzttXdrK6L_lW9yUXTvsVHZWEPKKtle1jSPwlPU3e97w6qT06p8qQ'
-const VAPID_PRIVATE_KEY = 'H-woFjW3qgPezjgtgyYVe8MAEpbHwq0htW3PibITtAs'
+const VAPID_PUBLIC_KEY = Deno.env.get('VAPID_PUBLIC_KEY') || Deno.env.get('VITE_VAPID_PUBLIC_KEY') || 'BLnOCELBk2YT3FlawO9KimRA0lrWRMO98zFzttXdrK6L_lW9yUXTvsVHZWEPKKtle1jSPwlPU3e97w6qT06p8qQ'
+const VAPID_PRIVATE_KEY = Deno.env.get('VAPID_PRIVATE_KEY') || 'H-woFjW3qgPezjgtgyYVe8MAEpbHwq0htW3PibITtAs'
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? ''
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 
@@ -25,22 +25,38 @@ Deno.serve(async (req) => {
     }
 
     try {
-        const { user_id, title, body, url, data } = await req.json()
+        const bodyData = await req.json()
+        const { user_id, admin_broadcast, title, body, url, data } = bodyData
 
-        if (!user_id || !title || !body) {
-            throw new Error('Missing required fields: user_id, title, body')
+        if ((!user_id && !admin_broadcast) || !title || !body) {
+            throw new Error('Missing required fields: user_id (or admin_broadcast), title, body')
         }
 
         // Initialize Supabase client
         const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
-        // Get user subscriptions
-        const { data: subscriptions, error: dbError } = await supabase
-            .from('push_subscriptions')
-            .select('*')
-            .eq('user_id', user_id)
-
-        if (dbError) throw dbError
+        // Get target subscriptions
+        let subscriptions = []
+        if (admin_broadcast) {
+            const { data: rpcSubs, error: rpcError } = await supabase.rpc('get_admin_push_subscriptions')
+            if (!rpcError && rpcSubs && rpcSubs.length > 0) {
+                subscriptions = rpcSubs
+            } else {
+                const { data: adminProfiles } = await supabase.from('profiles').select('id').eq('role', 'admin')
+                const adminIds = adminProfiles?.map((p) => p.id) || []
+                if (adminIds.length > 0) {
+                    const { data: subData } = await supabase.from('push_subscriptions').select('*').in('user_id', adminIds)
+                    subscriptions = subData || []
+                }
+            }
+        } else {
+            const { data: userSubs, error: dbError } = await supabase
+                .from('push_subscriptions')
+                .select('*')
+                .eq('user_id', user_id)
+            if (dbError) throw dbError
+            subscriptions = userSubs || []
+        }
 
         if (!subscriptions || subscriptions.length === 0) {
             return new Response(
