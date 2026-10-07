@@ -321,7 +321,8 @@ function looksLikeProTennisQuestion(text: string, groupContext: Ctx[] = []): boo
   const t = norm(text).replace(/\s+/g, ' ').trim();
   const direct = /\b(atp|wta|masters|grand slam|roland garros|wimbledon|us open|australian open|china open|shanghai|circuito profissional|ranking mundial|torneio profissional)\b/.test(t);
   const liveData = /\b(transmissao|assistir|onde passa|onde assistir|canal|stream|streaming|que horas|horario|partida|placar|resultado|joga hoje|jogam hoje|comeca|comecou|terminou|ganhou|perdeu)\b/.test(t);
-  if (direct) return true;
+  const transmission = /\\b(transmissao|assistir|onde passa|onde assistir|canal|stream|streaming)\\b/.test(t);
+  if (direct || transmission) return true;
   if (!liveData) return false;
   const recent = norm(groupContext.slice(-8).map((m) => `${m.sender ?? ''} ${m.body ?? ''}`).join(' '));
   return /\b(atp|wta|masters|grand slam|roland garros|wimbledon|us open|australian open|china open|shanghai|tenis profissional|tênis profissional)\b/.test(recent);
