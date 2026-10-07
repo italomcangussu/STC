@@ -360,7 +360,8 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
         const studentData = {
             name: studentForm.name.trim(),
             phone: studentForm.phone || null,
-            professor_id: studentForm.studentType === 'regular' ? professorRecord.id : null,
+            // Dependente também fica sob o professor que o cadastrou: a RLS e a lista dele filtram por professor_id.
+            professor_id: professorRecord.id,
             student_type: studentForm.studentType,
             responsible_socio_id: studentForm.studentType === 'dependent' ? studentForm.responsibleSocioId : null,
             relationship_type: studentForm.studentType === 'dependent' ? studentForm.relationshipType : null,
