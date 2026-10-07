@@ -1850,8 +1850,21 @@ input[type="datetime-local"] {
     min-height: 26rem;
 }
 
+.conv-shell.is-standalone {
+    border: none !important;
+    border-radius: 0 !important;
+}
+
+/* A altura 100% da página dedicada NÃO vale para a conversa em tela cheia: ali a casca segue a área visível
+   (senão o campo de resposta fica atrás do teclado — o `!important` antigo anulava --chat-vv-height). */
+.conv-shell.is-standalone:not(.is-chat-overlay) {
+    height: 100% !important;
+    min-height: 100% !important;
+    max-height: none !important;
+}
+
 @media (min-width: 768px) {
-    .conv-shell {
+    .conv-shell:not(.is-standalone) {
         height: calc(100dvh - 12rem);
         max-height: 56rem;
     }
@@ -1864,6 +1877,7 @@ input[type="datetime-local"] {
         position: fixed;
         inset: 0 0 auto 0;
         top: 0;
+        transform: translateY(var(--chat-vv-offset-top, 0px));
         height: var(--chat-vv-height, 100dvh);
         min-height: 0;
         max-height: none;
@@ -1878,6 +1892,7 @@ input[type="datetime-local"] {
         top: 0;
         left: 0;
         right: 0;
+        transform: translateY(var(--chat-vv-offset-top, 0px));
         z-index: 61;
         background: #ffffff;
         box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
@@ -1910,4 +1925,67 @@ input[type="datetime-local"] {
         height: 2.5rem;
         width: 2.5rem;
     }
+}
+
+/* Página dedicada /conversas: o documento não rola nem é deslocado pelo teclado (a rolagem é só das listas). */
+body.conv-standalone-locked {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
+}
+
+/* Comportamento de app: nada de rolagem horizontal nem rubber-band lateral; só as listas rolam, na vertical. */
+.conv-shell,
+.conv-standalone-root {
+    overscroll-behavior-x: none;
+}
+
+.conv-shell {
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* iOS dá zoom ao focar campo com fonte < 16px; no toque o campo precisa de 16px para a tela ficar parada. */
+@media (pointer: coarse) {
+    .conv-shell input:not([type='checkbox']):not([type='radio']),
+    .conv-shell textarea,
+    .conv-shell select {
+        font-size: 16px;
+    }
+}
+
+/* ---- Modo app nativo (Configurações > Comportamento) ---- */
+html[data-native-feel="on"],
+html[data-native-feel="on"] body {
+    overscroll-behavior: none;
+}
+
+html[data-native-feel="on"] body {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+html[data-native-feel="on"] input,
+html[data-native-feel="on"] textarea,
+html[data-native-feel="on"] [contenteditable="true"],
+html[data-native-feel="on"] .selectable {
+    -webkit-user-select: text;
+    user-select: text;
+    -webkit-touch-callout: default;
+}
+
+html[data-reduce-motion="on"] *,
+html[data-reduce-motion="on"] *::before,
+html[data-reduce-motion="on"] *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+}
+
+html[data-native-feel="on"] .conv-shell {
+    -webkit-user-select: text;
+    user-select: text;
 }

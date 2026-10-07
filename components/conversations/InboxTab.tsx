@@ -47,6 +47,9 @@ const FILTROS: { id: InboxFilter; label: string }[] = [
   { id: 'closed', label: 'Encerradas' },
 ];
 
+const FILTROS_PRINCIPAIS = FILTROS.slice(0, 3);
+const FILTROS_MAIS = FILTROS.slice(3);
+
 const VAZIO: Record<InboxFilter, string> = {
   open: 'Quando alguém mandar mensagem para o WhatsApp do clube, ela aparece aqui.',
   unread: 'Tudo lido. 🎉',
@@ -68,7 +71,7 @@ function otimista(input: Partial<ConversationMessage> & { requestId: string }): 
   };
 }
 
-export default function InboxTab({ currentUserId }: { currentUserId: string }) {
+export default function InboxTab({ currentUserId, standalone = false }: { currentUserId: string; standalone?: boolean }) {
   const confirm = useConfirm();
   const [filtro, setFiltro] = useState<InboxFilter>('open');
   const [busca, setBusca] = useState('');
@@ -513,7 +516,7 @@ export default function InboxTab({ currentUserId }: { currentUserId: string }) {
   return (
     <>
       {telaCheia && renderTopBar()}
-      <div className={cx('conv-shell relative flex overflow-hidden rounded-3xl border border-stone-200 bg-stone-50', telaCheia && 'is-chat-overlay')}>
+      <div className={cx('conv-shell relative flex overflow-hidden bg-stone-50', standalone ? 'is-standalone h-full w-full' : 'rounded-3xl border border-stone-200', telaCheia && 'is-chat-overlay')}>
         {/* ------------------------------ Lista ------------------------------ */}
         <section aria-label="Conversas"
           className={cx('flex min-w-0 flex-col border-stone-200 md:w-[21rem] md:shrink-0 md:border-r lg:w-[23rem]', selecionada ? 'hidden md:flex' : 'flex w-full')}>
@@ -530,14 +533,26 @@ export default function InboxTab({ currentUserId }: { currentUserId: string }) {
                 <MessageCirclePlus size={18} aria-hidden />
               </button>
             </div>
-            <div className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-0.5" role="group" aria-label="Filtro">
-              {FILTROS.map((f) => (
-                <button key={f.id} type="button" aria-pressed={filtro === f.id} onClick={() => setFiltro(f.id)}
-                  className={cx('min-h-8 shrink-0 rounded-full px-3 text-xs font-semibold outline-hidden transition-colors focus-visible:ring-2 focus-visible:ring-saibro-300',
-                    filtro === f.id ? 'bg-saibro-600 text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200')}>
-                  {f.label}
-                </button>
-              ))}
+            {/* Controle segmentado com os 3 filtros principais + seletor nativo para os demais: nada rola na horizontal. */}
+            <div className="flex items-center gap-1.5">
+              <div className="grid min-w-0 flex-1 grid-cols-3 gap-0.5 rounded-xl bg-stone-100 p-0.5" role="group" aria-label="Filtro">
+                {FILTROS_PRINCIPAIS.map((f) => (
+                  <button key={f.id} type="button" aria-pressed={filtro === f.id} onClick={() => setFiltro(f.id)}
+                    className={cx('min-h-9 truncate rounded-[10px] px-1 text-xs font-semibold outline-hidden transition-colors focus-visible:ring-2 focus-visible:ring-saibro-300',
+                      filtro === f.id ? 'bg-white text-stone-900 shadow-xs' : 'text-stone-500 active:bg-stone-200')}>
+                    {f.label}
+                  </button>
+                ))}
+              </div>
+              <label className="shrink-0">
+                <span className="sr-only">Mais filtros</span>
+                <select value={FILTROS_MAIS.some((f) => f.id === filtro) ? filtro : ''} onChange={(e) => { if (e.target.value) setFiltro(e.target.value as InboxFilter); }}
+                  className={cx('h-10 max-w-[8.5rem] rounded-xl border px-2 text-xs font-semibold outline-hidden focus-visible:ring-2 focus-visible:ring-saibro-300',
+                    FILTROS_MAIS.some((f) => f.id === filtro) ? 'border-saibro-300 bg-saibro-50 text-saibro-700' : 'border-stone-200 bg-stone-50 text-stone-600')}>
+                  <option value="" disabled>Mais</option>
+                  {FILTROS_MAIS.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
+                </select>
+              </label>
             </div>
           </div>
 
@@ -568,10 +583,20 @@ export default function InboxTab({ currentUserId }: { currentUserId: string }) {
           onDrop={(e) => { if (!atual) return; e.preventDefault(); setArrastando(false); setSoltos(Array.from(e.dataTransfer.files)); }}
         >
           {!atual ? (
-            <div className="m-auto max-w-xs px-6 text-center">
-              <MessageCircle size={32} className="mx-auto text-stone-400" aria-hidden />
-              <p className="mt-2 text-sm font-semibold text-stone-700">Escolha uma conversa</p>
-              <p className="mt-1 text-xs text-stone-500">As mensagens do WhatsApp do clube chegam aqui em tempo real, junto com o que a IA e as automações enviam.</p>
+            <div className="m-auto max-w-sm px-6 py-12 text-center select-none">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-linear-to-br from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/20">
+                <MessageCircle size={32} aria-hidden />
+              </div>
+              <h3 className="text-base font-bold text-stone-800 md:text-lg">STC Conversas & WhatsApp</h3>
+              <p className="mt-1.5 text-xs leading-relaxed text-stone-500">
+                Selecione uma conversa ao lado para visualizar as mensagens, responder aos sócios e interagir em tempo real pelo canal do clube.
+              </p>
+              <div className="mt-4 flex items-center justify-center gap-2">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50/80 px-3 py-1 text-[11px] font-semibold text-emerald-800">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" aria-hidden />
+                  WhatsApp Integrado
+                </span>
+              </div>
             </div>
           ) : (
             <>

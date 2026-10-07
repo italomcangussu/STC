@@ -17,11 +17,23 @@ export class OperationError extends Error {
 export type OperationBody = Record<string, unknown> & { action: string };
 
 export async function callEdgeOperation<T>(functionName: string, body: OperationBody, key: keyof T & string): Promise<T[typeof key]> {
-  const { data, error } = await supabase.functions.invoke(functionName, { body });
+  // Garante envio explícito do token da sessão se existir (evita descompasso em PWAs móveis recém-abertos)
+  let session: { access_token?: string } | null | undefined = null;
+  try { session = (await supabase.auth.getSession())?.data?.session; } catch { /* sem sessão legível: o invoke manda o que tiver */ }
+  const headers: Record<string, string> = {};
+  if (session?.access_token) {
+    headers.Authorization = `Bearer ${session.access_token}`;
+  }
+
+  const { data, error } = await supabase.functions.invoke(functionName, { body, headers });
   if (error) {
     const context = (error as { context?: unknown }).context;
     if (typeof Response !== 'undefined' && context instanceof Response) {
       const corpo = await context.json().catch(() => null) as { error?: string } | null;
+      throw new OperationError(corpo?.error ?? 'UNKNOWN', error.message);
+    }
+    if (context && typeof (context as { json?: () => Promise<unknown> }).json === 'function') {
+      const corpo = await (context as { json: () => Promise<unknown> }).json().catch(() => null) as { error?: string } | null;
       throw new OperationError(corpo?.error ?? 'UNKNOWN', error.message);
     }
     throw new OperationError('NETWORK', error.message);

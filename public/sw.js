@@ -28,6 +28,7 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('push', (event) => {
     console.log('[SW] Push received:', event);
 
+    let payload = null;
     let data = {
         title: 'STC Play',
         body: 'Você tem uma nova notificação!',
@@ -39,7 +40,7 @@ self.addEventListener('push', (event) => {
 
     if (event.data) {
         try {
-            const payload = event.data.json();
+            payload = event.data.json();
             data = { ...data, ...payload };
         } catch {
             data.body = event.data.text();
@@ -51,15 +52,27 @@ self.addEventListener('push', (event) => {
         icon: data.icon,
         badge: data.badge,
         tag: data.tag,
-        data: data.data,
+        // Reavisa quando outra mensagem da mesma conversa substitui a anterior.
+        renotify: Boolean(payload && payload.tag),
+        // O servidor manda `url` na raiz do payload; o clique lê de data.url.
+        data: { ...(data.data || {}), url: data.url || (data.data && data.data.url) || '/' },
         vibrate: [100, 50, 100],
         actions: data.actions || [],
         requireInteraction: false
     };
 
-    event.waitUntil(
-        self.registration.showNotification(data.title, options)
-    );
+    // iOS exige uma notificação visível por push; o selo do ícone é um extra.
+    const mostrar = self.registration.showNotification(data.title, options).then(async () => {
+        if (!self.navigator || !('setAppBadge' in self.navigator)) return;
+        try {
+            const abertas = await self.registration.getNotifications();
+            await self.navigator.setAppBadge(abertas.length);
+        } catch {
+            // Selo é opcional.
+        }
+    });
+
+    event.waitUntil(mostrar);
 });
 
 // Notification click event - handle user interaction
@@ -73,12 +86,20 @@ self.addEventListener('notificationclick', (event) => {
 
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true })
-            .then((clientList) => {
+            .then(async (clientList) => {
+                if ('clearAppBadge' in self.navigator) {
+                    self.navigator.clearAppBadge().catch(() => {});
+                }
                 // Check if app is already open
                 for (const client of clientList) {
                     if (client.url.includes(self.location.origin) && 'focus' in client) {
-                        client.navigate(urlToOpen);
-                        return client.focus();
+                        // navigate() falha se o cliente não for controlado; cai para openWindow.
+                        try {
+                            await client.navigate(urlToOpen);
+                            return client.focus();
+                        } catch {
+                            break;
+                        }
                     }
                 }
                 // Open new window if not

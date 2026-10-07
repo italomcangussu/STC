@@ -29,8 +29,8 @@ describe('webhook: entrada idempotente', () => {
 
   it('o telefone liga ao sócio só quando o candidato é único (tolera o nono dígito); ambíguo não liga', async () => {
     const w = await world();
-    // socioA tem 85988880002; o WhatsApp entrega sem o nono dígito: 558588880002
-    const a = await inbound(w.db, { phone: '558588880002', name: 'Ana no zap', body: 'Oi' });
+    // socioA tem 99900000002 (DDD 99 + 9 + 00000002); o WhatsApp entrega sem o nono dígito: 559900000002
+    const a = await inbound(w.db, { phone: '559900000002', name: 'Ana no zap', body: 'Oi' });
     const [ca] = await q<any>(w.db, `select * from public.conv_contacts where id = '${a.contact_id}'`);
     expect(ca.link_status).toBe('linked');
     expect(ca.profile_id).toBe(U.socioA);
@@ -64,7 +64,7 @@ describe('webhook: entrada idempotente', () => {
 
 describe('grupos: só se grava o que um administrador permitiu', () => {
   const GROUP = '120363025246125486@g.us';
-  const ev = (over: Record<string, unknown> = {}) => ({ chat_kind: 'group', group_jid: GROUP, group_name: 'Sócios', phone: '5585988880002', name: 'Ana', kind: 'text', body: 'bom dia', from_me: false,
+  const ev = (over: Record<string, unknown> = {}) => ({ chat_kind: 'group', group_jid: GROUP, group_name: 'Sócios', phone: '5599900000002', name: 'Ana', kind: 'text', body: 'bom dia', from_me: false,
     payload_shape: { message: ['chatid', 'isGroup', 'sender'] }, ...over });
   let n = 0;
   const grp = (w: W, over: Record<string, unknown> = {}) => svc<any>(w.db, `public.conv_svc_ingest_message(${j({ provider_id: `G${++n}${Math.random()}`, ...ev(over) })})`);

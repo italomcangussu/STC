@@ -1,0 +1,175 @@
+# Alertas do banco
+- [alta] public.avaliacoes_semanais — RLS desligado e com grant para anon/authenticated — exposto pela API
+- [alta] public.championship_participants — RLS desligado e com grant para anon/authenticated — exposto pela API
+- [alta] public.championship_winners — política "Admin insert" (INSERT) libera escrita para public com expressão true
+- [alta] public.championship_winners — política "Admin update" (UPDATE) libera escrita para public com expressão true
+- [alta] public.courts — RLS desligado e com grant para anon/authenticated — exposto pela API
+- [alta] public.documentos_contexto — RLS desligado e com grant para anon/authenticated — exposto pela API
+- [alta] public.familia_compat_produto — RLS desligado e com grant para anon/authenticated — exposto pela API
+- [alta] public.historico_conversas — RLS desligado e com grant para anon/authenticated — exposto pela API
+- [alta] public.historico_treino — RLS desligado e com grant para anon/authenticated — exposto pela API
+- [alta] public.iatende_conversas — RLS desligado e com grant para anon/authenticated — exposto pela API
+- [alta] public.n8n_chat_histories — RLS desligado e com grant para anon/authenticated — exposto pela API
+- [alta] public.n8n_chat_histories_duplicate — RLS desligado e com grant para anon/authenticated — exposto pela API
+- [alta] public.n8n_vectors — RLS desligado e com grant para anon/authenticated — exposto pela API
+- [alta] public.n8n_vectors_treinador — RLS desligado e com grant para anon/authenticated — exposto pela API
+- [alta] public.n8n_vectors2 — RLS desligado e com grant para anon/authenticated — exposto pela API
+- [alta] public.patients_ebm — RLS desligado e com grant para anon/authenticated — exposto pela API
+- [alta] public.planos_treino — RLS desligado e com grant para anon/authenticated — exposto pela API
+- [alta] public.point_history — RLS desligado e com grant para anon/authenticated — exposto pela API
+- [alta] public.reservation_participants — RLS desligado e com grant para anon/authenticated — exposto pela API
+- [alta] public.servicos — RLS desligado e com grant para anon/authenticated — exposto pela API
+- [alta] public.stores — RLS desligado e com grant para anon/authenticated — exposto pela API
+- [alta] public.students — RLS desligado e com grant para anon/authenticated — exposto pela API
+- [alta] public.subcategorias — RLS desligado e com grant para anon/authenticated — exposto pela API
+- [alta] public.support_messages — política "Anyone can submit support messages" (INSERT) libera escrita para public com expressão true
+- [alta] public.tbl_embedding_valid — RLS desligado e com grant para anon/authenticated — exposto pela API
+- [média] public.apply_championship_edition_points — SECURITY DEFINER sem search_path fixo
+- [média] public.bootstrap_ranking_from_3_circuito — SECURITY DEFINER sem search_path fixo
+- [média] public.des — sem chave primária
+- [média] public.get_championship_phase_points — SECURITY DEFINER sem search_path fixo
+- [média] public.get_user_h2h_points — SECURITY DEFINER sem search_path fixo
+- [média] public.on_profile_class_change — SECURITY DEFINER sem search_path fixo
+- [média] public.process_head_to_head_points — SECURITY DEFINER sem search_path fixo
+- [média] public.reservas — sem chave primária
+- [média] public.reservas2 — sem chave primária
+- [média] public.revert_championship_edition_points — SECURITY DEFINER sem search_path fixo
+- [média] public.rollback_bootstrap_3_circuito — SECURITY DEFINER sem search_path fixo
+- [média] public.upsert_crm_lead — SECURITY DEFINER sem search_path fixo
+- [média] public.vw_familia_modelos_expandidos — view sem security_invoker legível por anon — ignora o RLS das tabelas de origem
+- [info] 94 funções — SECURITY DEFINER executáveis por anon (coluna anon em funcoes.md) — confirme quais RPCs devem ser públicas
+- [info] public.access_requests — FK (decided_by) → public.profiles sem índice
+- [info] public.alunos — RLS ligado sem políticas — ninguém acessa pela API (ok se for só service_role)
+- [info] public.aniversario_consulta — RLS ligado sem políticas — ninguém acessa pela API (ok se for só service_role)
+- [info] public.challenges — FK (challenger_id) → public.profiles sem índice
+- [info] public.challenges — FK (court_id) → public.courts sem índice
+- [info] public.challenges — FK (match_id) → public.matches sem índice
+- [info] public.challenges — FK (reservation_id) → public.reservations sem índice
+- [info] public.championship_admin_audit_logs — FK (actor_user_id) → public.profiles sem índice
+- [info] public.championship_groups — FK (seed_registration_id) → public.championship_registrations sem índice
+- [info] public.championship_participants — FK (user_id) → public.profiles sem índice
+- [info] public.championship_registrations — FK (registered_by) → public.profiles sem índice
+- [info] public.championship_registrations — FK (student_id) → public.non_socio_students sem índice
+- [info] public.championship_registrations — FK (user_id) → public.profiles sem índice
+- [info] public.championship_series — FK (created_by) → public.profiles sem índice
+- [info] public.championship_winners — FK (winner_id) → public.profiles sem índice
+- [info] public.class_change_events — FK (changed_by) → public.profiles sem índice
+- [info] public.Cliente_CRM — RLS ligado sem políticas — ninguém acessa pela API (ok se for só service_role)
+- [info] public.club_form_responses — FK (option_id) → public.club_form_options sem índice
+- [info] public.club_form_responses — FK (question_id) → public.club_form_questions sem índice
+- [info] public.club_form_responses — FK (user_id) → public.profiles sem índice
+- [info] public.club_form_voter_receipts — FK (user_id) → public.profiles sem índice
+- [info] public.club_forms — FK (created_by) → public.profiles sem índice
+- [info] public.consumptions — FK (product_id) → public.products sem índice
+- [info] public.consumptions — FK (user_id) → public.profiles sem índice
+- [info] public.conv_ai_decisions — FK (session_id) → public.conv_ai_sessions sem índice
+- [info] public.conv_ai_decisions — FK (settings_version) → public.conv_ai_settings sem índice
+- [info] public.conv_ai_memory_candidates — RLS ligado sem políticas — ninguém acessa pela API (ok se for só service_role)
+- [info] public.conv_ai_memory_candidates — FK (reviewed_by) → auth.users sem índice
+- [info] public.conv_ai_memory_candidates — FK (source_message_id) → public.conv_messages sem índice
+- [info] public.conv_ai_sessions — FK (requester_contact_id) → public.conv_contacts sem índice
+- [info] public.conv_ai_sessions — FK (trigger_message_id) → public.conv_messages sem índice
+- [info] public.conv_ai_settings — FK (created_by) → public.profiles sem índice
+- [info] public.conv_automation_recipients — FK (automation_id) → public.conv_automations sem índice
+- [info] public.conv_automation_recipients — FK (message_id) → public.conv_messages sem índice
+- [info] public.conv_automation_recipients — FK (profile_id) → public.profiles sem índice
+- [info] public.conv_automation_recipients — FK (student_id) → public.non_socio_students sem índice
+- [info] public.conv_automation_runs — FK (created_by) → public.profiles sem índice
+- [info] public.conv_automation_settings — FK (updated_by) → public.profiles sem índice
+- [info] public.conv_automation_versions — FK (created_by) → public.profiles sem índice
+- [info] public.conv_automations — FK (created_by) → public.profiles sem índice
+- [info] public.conv_automations — FK (updated_by) → public.profiles sem índice
+- [info] public.conv_booking_proposals — FK (confirmed_by_contact_id) → public.conv_contacts sem índice
+- [info] public.conv_booking_proposals — FK (confirmed_message_id) → public.conv_messages sem índice
+- [info] public.conv_booking_proposals — FK (requester_contact_id) → public.conv_contacts sem índice
+- [info] public.conv_booking_proposals — FK (requester_profile_id) → public.profiles sem índice
+- [info] public.conv_channel — FK (mention_verified_by) → public.profiles sem índice
+- [info] public.conv_channel — FK (updated_by) → public.profiles sem índice
+- [info] public.conv_conversations — FK (assigned_to) → public.profiles sem índice
+- [info] public.conv_followups — FK (created_by) → public.profiles sem índice
+- [info] public.conv_followups — FK (message_id) → public.conv_messages sem índice
+- [info] public.conv_groups — FK (allowed_by) → public.profiles sem índice
+- [info] public.conv_messages — FK (author_id) → public.profiles sem índice
+- [info] public.conv_messages — FK (automation_recipient_id) → public.conv_automation_recipients sem índice
+- [info] public.conv_notes — FK (author_id) → public.profiles sem índice
+- [info] public.conv_quick_replies — FK (created_by) → public.profiles sem índice
+- [info] public.conv_requests — RLS ligado sem políticas — ninguém acessa pela API (ok se for só service_role)
+- [info] public.des — RLS ligado sem políticas — ninguém acessa pela API (ok se for só service_role)
+- [info] public.fin_accounts — FK (created_by) → public.profiles sem índice
+- [info] public.fin_accounts — FK (updated_by) → public.profiles sem índice
+- [info] public.fin_attachments — FK (removed_by) → public.profiles sem índice
+- [info] public.fin_attachments — FK (uploaded_by) → public.profiles sem índice
+- [info] public.fin_categories — FK (created_by) → public.profiles sem índice
+- [info] public.fin_categories — FK (updated_by) → public.profiles sem índice
+- [info] public.fin_charge_adjustments — FK (actor_id) → public.profiles sem índice
+- [info] public.fin_charge_payments — FK (account_id) → public.fin_accounts sem índice
+- [info] public.fin_charge_payments — FK (actor_id) → public.profiles sem índice
+- [info] public.fin_charge_payments — FK (credit_id) → public.fin_member_credits sem índice
+- [info] public.fin_entries — FK (canceled_by) → public.profiles sem índice
+- [info] public.fin_entries — FK (created_by) → public.profiles sem índice
+- [info] public.fin_entries — FK (updated_by) → public.profiles sem índice
+- [info] public.fin_entry_payments — FK (actor_id) → public.profiles sem índice
+- [info] public.fin_holidays — FK (created_by) → public.profiles sem índice
+- [info] public.fin_holidays — FK (updated_by) → public.profiles sem índice
+- [info] public.fin_member_charges — FK (canceled_by) → public.profiles sem índice
+- [info] public.fin_member_charges — FK (created_by) → public.profiles sem índice
+- [info] public.fin_member_charges — FK (updated_by) → public.profiles sem índice
+- [info] public.fin_member_credits — FK (refund_entry_id) → public.fin_entries sem índice
+- [info] public.fin_member_credits — FK (resolved_by) → public.profiles sem índice
+- [info] public.fin_member_credits — FK (source_payment_id) → public.fin_charge_payments sem índice
+- [info] public.fin_member_plan_prices — FK (created_by) → public.profiles sem índice
+- [info] public.fin_member_plans — FK (created_by) → public.profiles sem índice
+- [info] public.fin_member_plans — FK (updated_by) → public.profiles sem índice
+- [info] public.fin_receipt_submissions — FK (duplicate_of) → public.fin_receipt_submissions sem índice
+- [info] public.fin_receipt_submissions — FK (reviewed_by) → public.profiles sem índice
+- [info] public.fin_receipt_submissions — FK (superseded_by) → public.fin_receipt_submissions sem índice
+- [info] public.fin_recurrences — FK (created_by) → public.profiles sem índice
+- [info] public.fin_recurrences — FK (updated_by) → public.profiles sem índice
+- [info] public.fin_settings — FK (late_fee_confirmed_by) → public.profiles sem índice
+- [info] public.fin_settings — FK (updated_by) → public.profiles sem índice
+- [info] public.head_to_head_points — FK (invalidated_by_match_id) → public.matches sem índice
+- [info] public.head_to_head_points — FK (loser_id) → public.profiles sem índice
+- [info] public.head_to_head_points — FK (match_id) → public.matches sem índice
+- [info] public.matches — FK (court_id) → public.courts sem índice
+- [info] public.matches — FK (player_a_id) → public.profiles sem índice
+- [info] public.matches — FK (player_b_id) → public.profiles sem índice
+- [info] public.matches — FK (registration_a_id) → public.championship_registrations sem índice
+- [info] public.matches — FK (registration_b_id) → public.championship_registrations sem índice
+- [info] public.matches — FK (result_set_by) → public.profiles sem índice
+- [info] public.matches — FK (walkover_winner_id) → public.profiles sem índice
+- [info] public.matches — FK (walkover_winner_registration_id) → public.championship_registrations sem índice
+- [info] public.matches — FK (winner_id) → public.profiles sem índice
+- [info] public.matches — FK (winner_registration_id) → public.championship_registrations sem índice
+- [info] public.Memory Long — RLS ligado sem políticas — ninguém acessa pela API (ok se for só service_role)
+- [info] public.Memory Long_jp — RLS ligado sem políticas — ninguém acessa pela API (ok se for só service_role)
+- [info] public.Memory Test — RLS ligado sem políticas — ninguém acessa pela API (ok se for só service_role)
+- [info] public.n8n_chat_histories_evento — RLS ligado sem políticas — ninguém acessa pela API (ok se for só service_role)
+- [info] public.non_socio_students — FK (professor_id) → public.professors sem índice
+- [info] public.point_history — FK (series_id) → public.championship_series sem índice
+- [info] public.professors — FK (user_id) → public.profiles sem índice
+- [info] public.ranking_reset_events — FK (executed_by) → public.profiles sem índice
+- [info] public.reservas — RLS ligado sem políticas — ninguém acessa pela API (ok se for só service_role)
+- [info] public.reservas2 — RLS ligado sem políticas — ninguém acessa pela API (ok se for só service_role)
+- [info] public.reservation_participants — FK (user_id) → public.profiles sem índice
+- [info] public.reservations — FK (court_id) → public.courts sem índice
+- [info] public.reservations — FK (creator_id) → public.profiles sem índice
+- [info] public.reservations — FK (guest_responsible_id) → public.profiles sem índice
+- [info] public.reservations — FK (professor_id) → public.professors sem índice
+- [info] public.reservations — FK (student_id) → public.students sem índice
+- [info] public.servicos — FK (subcategoria_id) → public.subcategorias sem índice
+- [info] public.sig_documents — FK (archived_by) → public.profiles sem índice
+- [info] public.sig_documents — FK (created_by) → public.profiles sem índice
+- [info] public.sig_documents — FK (published_by) → public.profiles sem índice
+- [info] public.sig_notifications — FK (profile_id) → public.profiles sem índice
+- [info] public.sig_recipients — FK (signature_id) → public.sig_signatures sem índice
+- [info] public.student_level_history — FK (changed_by) → public.profiles sem índice
+- [info] public.student_payments — FK (approved_by) → public.profiles sem índice
+- [info] public.student_payments — FK (related_payment_id) → public.student_payments sem índice
+- [info] public.student_payments — FK (student_id) → public.non_socio_students sem índice
+- [info] public.students — FK (professor_id) → public.professors sem índice
+- [info] public.tabela_familia_iphone_map — RLS ligado sem políticas — ninguém acessa pela API (ok se for só service_role)
+- [info] public.tabela_modelos — RLS ligado sem políticas — ninguém acessa pela API (ok se for só service_role)
+- [info] public.tabela_sinonimo_modelo — RLS ligado sem políticas — ninguém acessa pela API (ok se for só service_role)
+- [info] public.tbl_embedding — RLS ligado sem políticas — ninguém acessa pela API (ok se for só service_role)
+- [info] sig_private.challenges — RLS ligado sem políticas — ninguém acessa pela API (ok se for só service_role)
+- [info] sig_private.challenges — FK (document_id) → public.sig_documents sem índice

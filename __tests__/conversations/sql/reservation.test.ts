@@ -167,12 +167,12 @@ describe('proposta → confirmação → reserva (a IA nunca grava sozinha)', ()
   it('fluxo completo: proposta não cria reserva; "sim" do solicitante cria pelo mesmo registro do app, com origem rastreável', async () => {
     const w = await world();
     await enable(w);
-    const s = await session(w, '85988880002', 'Ana');
+    const s = await session(w, '99900000002', 'Ana');
     const p = await propose(w, s, await play(w));
     expect(p.ok).toBe(true);
     expect((await reservations(w)).length).toBe(0);                       // proposta ≠ reserva
     await pause();
-    const yes = await say(w, s.conversation, '85988880002', 'Sim, pode confirmar');
+    const yes = await say(w, s.conversation, '99900000002', 'Sim, pode confirmar');
     const c = await confirm(w, p.proposal_id, yes.message_id);
     expect(c.ok).toBe(true);
     const [r] = await reservations(w);
@@ -192,12 +192,12 @@ describe('proposta → confirmação → reserva (a IA nunca grava sozinha)', ()
   it('confirmação repetida (webhook/retry/"sim" duplicado) não cria segunda reserva', async () => {
     const w = await world();
     await enable(w);
-    const s = await session(w, '85988880002', 'Ana');
+    const s = await session(w, '99900000002', 'Ana');
     const p = await propose(w, s, await play(w));
     await pause();
-    const yes = await say(w, s.conversation, '85988880002', 'sim');
+    const yes = await say(w, s.conversation, '99900000002', 'sim');
     const a = await confirm(w, p.proposal_id, yes.message_id);
-    const yes2 = await say(w, s.conversation, '85988880002', 'sim');
+    const yes2 = await say(w, s.conversation, '99900000002', 'sim');
     const b = await confirm(w, p.proposal_id, yes2.message_id);
     const c = await confirm(w, p.proposal_id, yes.message_id);
     expect([a.ok, b.ok, c.ok]).toEqual([true, true, true]);
@@ -209,14 +209,14 @@ describe('proposta → confirmação → reserva (a IA nunca grava sozinha)', ()
   it('só confirmação clara vale: "talvez", "sim, mas…", pergunta e mensagem ANTERIOR à proposta não criam nada', async () => {
     const w = await world();
     await enable(w);
-    const s = await session(w, '85988880002', 'Ana');
-    const early = await say(w, s.conversation, '85988880002', 'sim');   // antes da proposta
+    const s = await session(w, '99900000002', 'Ana');
+    const early = await say(w, s.conversation, '99900000002', 'sim');   // antes da proposta
     await pause();
     const p = await propose(w, s, await play(w));
     expect((await confirm(w, p.proposal_id, early.message_id)).code).toBe('CONFIRMATION_NOT_AFTER_PROPOSAL');
     await pause();
     for (const t of ['talvez', 'sim, mas troca para 17h', 'pode ser outro dia?', 'não']) {
-      const m = await say(w, s.conversation, '85988880002', t);
+      const m = await say(w, s.conversation, '99900000002', t);
       expect((await confirm(w, p.proposal_id, m.message_id)).code).toBe('NOT_EXPLICIT');
     }
     expect((await reservations(w)).length).toBe(0);
@@ -226,12 +226,12 @@ describe('proposta → confirmação → reserva (a IA nunca grava sozinha)', ()
   it('confirmação de outra pessoa não vale; de administrador vale e fica registrada', async () => {
     const w = await world();
     await enable(w);
-    const s = await session(w, '85988880002', 'Ana');
+    const s = await session(w, '99900000002', 'Ana');
     const p = await propose(w, s, await play(w));
     await pause();
     // em conversa direta a mensagem é do próprio contato; simulamos outra pessoa na mesma conversa de grupo
     const g = '120363025246125486@g.us';
-    await svc(w.db, `public.conv_svc_ingest_message(${j({ provider_id: `GSEED${++n}`, chat_kind: 'group', group_jid: g, phone: '5585988880003', name: 'Beto', body: 'oi' })})`);
+    await svc(w.db, `public.conv_svc_ingest_message(${j({ provider_id: `GSEED${++n}`, chat_kind: 'group', group_jid: g, phone: '5599900000003', name: 'Beto', body: 'oi' })})`);
     const [grp] = await q<any>(w.db, `select id from public.conv_groups`);
     await rpc(w.db, U.admin, `public.conv_set_group('${grp.id}', 'allowed', false)`);
     // proposta em sessão de grupo
@@ -239,16 +239,16 @@ describe('proposta → confirmação → reserva (a IA nunca grava sozinha)', ()
     await rpc(w.db, U.admin, `public.conv_set_mention_verified(true)`);
     await rpc(w.db, U.admin, `public.conv_set_ai_channel(true, true)`);
     await rpc(w.db, U.admin, `public.conv_set_group('${grp.id}', 'allowed', true)`);
-    const gm = await svc<any>(w.db, `public.conv_svc_ingest_message(${j({ provider_id: `GM${++n}`, chat_kind: 'group', group_jid: g, phone: '5585988880002', name: 'Ana', body: 'quero quadra', mention: { direct: true, evidence: 'x' } })})`);
+    const gm = await svc<any>(w.db, `public.conv_svc_ingest_message(${j({ provider_id: `GM${++n}`, chat_kind: 'group', group_jid: g, phone: '5599900000002', name: 'Ana', body: 'quero quadra', mention: { direct: true, evidence: 'x' } })})`);
     const gt = await svc<any>(w.db, `public.conv_svc_ai_trigger('${gm.message_id}')`);
     const gp = await propose(w, { session: gt.session_id }, await play(w, 4));
     expect(gp.ok).toBe(true);
     await pause();
-    const beto = await svc<any>(w.db, `public.conv_svc_ingest_message(${j({ provider_id: `GB${++n}`, chat_kind: 'group', group_jid: g, phone: '5585988880003', name: 'Beto', body: 'sim' })})`);
+    const beto = await svc<any>(w.db, `public.conv_svc_ingest_message(${j({ provider_id: `GB${++n}`, chat_kind: 'group', group_jid: g, phone: '5599900000003', name: 'Beto', body: 'sim' })})`);
     const denied = await confirm(w, gp.proposal_id, beto.message_id);
     expect([denied.ok, denied.code]).toEqual([false, 'NOT_AUTHORIZED_TO_CONFIRM']);
     expect((await reservations(w)).length).toBe(0);
-    const adm = await svc<any>(w.db, `public.conv_svc_ingest_message(${j({ provider_id: `GA${++n}`, chat_kind: 'group', group_jid: g, phone: '5585988880001', name: 'Admin', body: 'sim, pode confirmar' })})`);
+    const adm = await svc<any>(w.db, `public.conv_svc_ingest_message(${j({ provider_id: `GA${++n}`, chat_kind: 'group', group_jid: g, phone: '5599900000001', name: 'Admin', body: 'sim, pode confirmar' })})`);
     const ok = await confirm(w, gp.proposal_id, adm.message_id);
     expect(ok.ok).toBe(true);
     expect((await reservations(w)).length).toBe(1);
@@ -262,13 +262,13 @@ describe('proposta → confirmação → reserva (a IA nunca grava sozinha)', ()
   it('disponibilidade é revalidada na gravação: se o horário foi ocupado depois da proposta, nada é criado e ninguém ouve "reservado"', async () => {
     const w = await world();
     await enable(w);
-    const s = await session(w, '85988880002', 'Ana');
+    const s = await session(w, '99900000002', 'Ana');
     const cfg = await play(w);
     const p = await propose(w, s, cfg);
     await w.db.exec(`insert into public.reservations(court_id, creator_id, date, start_time, end_time, type, participant_ids)
       values ('${w.court1}', '${U.socioB}', '${cfg.date}', '16:00', '17:00', 'Play', '{}')`);
     await pause();
-    const yes = await say(w, s.conversation, '85988880002', 'sim');
+    const yes = await say(w, s.conversation, '99900000002', 'sim');
     const c = await confirm(w, p.proposal_id, yes.message_id);
     expect([c.ok, c.code]).toEqual([false, 'SLOT_TAKEN']);
     expect((await reservations(w)).length).toBe(1);   // só a que já existia
@@ -280,13 +280,13 @@ describe('proposta → confirmação → reserva (a IA nunca grava sozinha)', ()
   it('dois pedidos para o mesmo horário: o primeiro "sim" ocupa, o segundo é recusado', async () => {
     const w = await world();
     await enable(w);
-    const a = await session(w, '85988880002', 'Ana');
-    const b = await session(w, '85988880003', 'Beto');
+    const a = await session(w, '99900000002', 'Ana');
+    const b = await session(w, '99900000003', 'Beto');
     const cfg = await play(w, 3, '18:00', { participant_ids: [] });
     const pa = await propose(w, a, cfg), pb = await propose(w, b, cfg);
     expect([pa.ok, pb.ok]).toEqual([true, true]);        // na hora de propor, estava livre para os dois
     await pause();
-    const ya = await say(w, a.conversation, '85988880002', 'sim'), yb = await say(w, b.conversation, '85988880003', 'sim');
+    const ya = await say(w, a.conversation, '99900000002', 'sim'), yb = await say(w, b.conversation, '99900000003', 'sim');
     expect((await confirm(w, pa.proposal_id, ya.message_id)).ok).toBe(true);
     expect((await confirm(w, pb.proposal_id, yb.message_id)).code).toBe('SLOT_TAKEN');
     expect((await reservations(w)).length).toBe(1);
@@ -295,11 +295,11 @@ describe('proposta → confirmação → reserva (a IA nunca grava sozinha)', ()
   it('proposta vencida, telefone sem cadastro e sócio inativo não geram reserva', async () => {
     const w = await world();
     await enable(w);
-    const s = await session(w, '85988880002', 'Ana');
+    const s = await session(w, '99900000002', 'Ana');
     const p = await propose(w, s, await play(w));
     await w.db.exec(`update public.conv_booking_proposals set expires_at = now() - interval '1 minute'`);
     await pause();
-    const yes = await say(w, s.conversation, '85988880002', 'sim');
+    const yes = await say(w, s.conversation, '99900000002', 'sim');
     expect((await confirm(w, p.proposal_id, yes.message_id)).code).toBe('PROPOSAL_EXPIRED');
     // telefone que não é de nenhum sócio
     const stranger = await session(w, '5511912345678', 'Estranho');
@@ -315,17 +315,17 @@ describe('proposta → confirmação → reserva (a IA nunca grava sozinha)', ()
   it('cancelar: só a própria reserva (ou admin), futura, e só depois de confirmação', async () => {
     const w = await world();
     await enable(w);
-    const s = await session(w, '85988880002', 'Ana');
+    const s = await session(w, '99900000002', 'Ana');
     const cfg = await play(w);
     const p = await propose(w, s, cfg);
     await pause();
-    await confirm(w, p.proposal_id, (await say(w, s.conversation, '85988880002', 'sim')).message_id);
+    await confirm(w, p.proposal_id, (await say(w, s.conversation, '99900000002', 'sim')).message_id);
     const [res] = await reservations(w);
     const cp = await propose(w, s, { action: 'cancel', reservation_id: res.id });
     expect(cp.ok).toBe(true);
     expect((await reservations(w))[0].status).toBe('active');              // proposta ≠ cancelamento
     await pause();
-    const c = await confirm(w, cp.proposal_id, (await say(w, s.conversation, '85988880002', 'confirmo')).message_id);
+    const c = await confirm(w, cp.proposal_id, (await say(w, s.conversation, '99900000002', 'confirmo')).message_id);
     expect(c.ok).toBe(true);
     expect((await reservations(w))[0].status).toBe('cancelled');
     // reserva de outra pessoa
@@ -342,18 +342,18 @@ describe('proposta → confirmação → reserva (a IA nunca grava sozinha)', ()
   it('remarcar: troca atômica (nova reserva + antiga cancelada), sem conflito com a própria reserva', async () => {
     const w = await world();
     await enable(w);
-    const s = await session(w, '85988880002', 'Ana');
+    const s = await session(w, '99900000002', 'Ana');
     const cfg = await play(w, 3, '16:00');
     const p = await propose(w, s, cfg);
     await pause();
-    await confirm(w, p.proposal_id, (await say(w, s.conversation, '85988880002', 'sim')).message_id);
+    await confirm(w, p.proposal_id, (await say(w, s.conversation, '99900000002', 'sim')).message_id);
     const [old] = await reservations(w);
     // 16:30 sobrepõe a própria reserva (16:00–17:00): deve poder, porque ela sai
     const rp = await propose(w, s, { action: 'reschedule', reservation_id: old.id, date: cfg.date, start: '16:30' });
     expect(rp.ok).toBe(true);
     expect(rp.summary).toMatchObject({ start: '16:30', end: '17:30', court_id: w.court1 });
     await pause();
-    const c = await confirm(w, rp.proposal_id, (await say(w, s.conversation, '85988880002', 'pode marcar')).message_id);
+    const c = await confirm(w, rp.proposal_id, (await say(w, s.conversation, '99900000002', 'pode marcar')).message_id);
     expect(c.ok).toBe(true);
     const all = await reservations(w);
     expect(all.length).toBe(2);

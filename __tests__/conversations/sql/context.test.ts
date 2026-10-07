@@ -5,7 +5,7 @@ import { j, key, q, rpc, svc, U, world } from './harness';
 
 let n = 0;
 const pause = () => new Promise((r) => setTimeout(r, 12));
-const PHONE = '85988880002';
+const PHONE = '99900000002';
 
 async function enable(w: Awaited<ReturnType<typeof world>>) {
   await rpc(w.db, U.admin, `public.conv_save_ai_settings('${key()}', ${j({ active: true, model: 'modelo-de-teste' })})`);
@@ -75,7 +75,7 @@ describe('janela de contexto (8 trocas) e resumo', () => {
     expect(t2.session_id).not.toBe(t1.session_id);
     expect((await context(w, t2.session_id)).prior_summary).toBe('Prefere saibro à noite, joga com o Beto.');
     // outra pessoa não herda o resumo de ninguém
-    const other = await svc<any>(w.db, `public.conv_svc_ingest_message(${j({ provider_id: `Y${++n}`, chat_kind: 'direct', phone: '85988880003', name: 'Beto', kind: 'text', body: 'oi' })})`);
+    const other = await svc<any>(w.db, `public.conv_svc_ingest_message(${j({ provider_id: `Y${++n}`, chat_kind: 'direct', phone: '99900000003', name: 'Beto', kind: 'text', body: 'oi' })})`);
     const t3 = await trigger(w, other.message_id);
     expect((await context(w, t3.session_id)).prior_summary).toBeNull();
     expect((await q<any>(w.db, `select count(*)::int c from public.conv_ai_sessions`))[0].c).toBe(3);

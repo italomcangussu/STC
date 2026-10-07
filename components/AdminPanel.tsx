@@ -1,7 +1,8 @@
 import React, { Suspense, lazy, useState, useEffect, useRef } from 'react';
 import { Trophy, Swords, Calendar, Megaphone, UserCheck,
     Search, XCircle,
-    ChevronRight, Trash2, Edit, Plus, AlertCircle, Loader2, Save, Zap, History
+    ChevronRight, Trash2, Edit, Plus, AlertCircle, Loader2, Save, Zap, History,
+    ExternalLink, MessagesSquare
 } from 'lucide-react';
 import { Dashboard } from './Dashboard';
 import { AdminPending } from './admin/AdminPending';
@@ -35,6 +36,7 @@ import { ChampionshipAdmin } from './ChampionshipAdmin';
 import { AdminForms } from './AdminForms';
 import { filterReservations, type ReservationPeriod, type ReservationRow } from '../lib/adminReservations';
 import { clearRankingCache } from '../lib/rankingService';
+import { isInstalledPWA } from '../lib/pushNotifications';
 import { buildAdminAuditQueryParams, describeAuditLog, type AdminAuditLog } from '../lib/adminAudit';
 
 // --- Helpers ---
@@ -1776,6 +1778,14 @@ export const AdminPanel: React.FC = () => {
     const hasSectionTabs = groupOf(activeTab).sections.length > 1;
 
     const go = (id: AdminTabId) => {
+        if (id === 'conversas') {
+            // App instalado: nova janela abriria o Safari fora do app; navega na mesma.
+            if (isInstalledPWA()) {
+                window.location.assign('/conversas');
+                return;
+            }
+            window.open('/conversas', '_blank');
+        }
         setActiveTab(id);
         saveLastTab(id);
         refresh();
@@ -1799,7 +1809,48 @@ export const AdminPanel: React.FC = () => {
             case 'reservas': return <ReservasTab />;
             case 'desafios': return <DesafiosTab />;
             case 'financeiro': return <Suspense fallback={<div className="flex items-center justify-center py-16"><Loader2 className="animate-spin text-saibro-600" size={28} /></div>}><FinanceHub /></Suspense>;
-            case 'conversas': return <Suspense fallback={<div className="flex items-center justify-center py-16"><Loader2 className="animate-spin text-saibro-600" size={28} /></div>}><ConversationsHub /></Suspense>;
+            case 'conversas': return (
+                <div className="space-y-6">
+                    <div className="relative overflow-hidden rounded-3xl border border-emerald-100 bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-white p-6 shadow-lg shadow-emerald-900/5 md:p-8">
+                        <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="flex items-start gap-4">
+                                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/25">
+                                    <MessagesSquare size={28} />
+                                </div>
+                                <div className="space-y-1">
+                                    <div className="flex items-center gap-2">
+                                        <h2 className="text-xl font-black text-stone-900 md:text-2xl">Central de Conversas</h2>
+                                        <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-bold text-emerald-800">
+                                            Nova Aba & Fullscreen
+                                        </span>
+                                    </div>
+                                    <p className="max-w-xl text-sm text-stone-600">
+                                        O chat foi aberto em uma aba exclusiva em modo mensageiro nativo fullscreen (desktop e mobile), com teclado sincronizado e notificações push para administradores.
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="flex flex-wrap items-center gap-3">
+                                <a
+                                    href="/conversas"
+                                    {...(isInstalledPWA() ? {} : { target: '_blank', rel: 'noopener noreferrer' })}
+                                    className="inline-flex min-h-[46px] items-center gap-2 rounded-2xl bg-emerald-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-emerald-600/20 transition hover:bg-emerald-700 active:scale-95"
+                                >
+                                    <span>Abrir Mensageiro em Nova Aba</span>
+                                    <ExternalLink size={16} />
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="border-t border-stone-200 pt-4">
+                        <div className="mb-4 flex items-center justify-between">
+                            <h3 className="text-sm font-bold text-stone-700">Visualização Integrada no Painel</h3>
+                        </div>
+                        <Suspense fallback={<div className="flex items-center justify-center py-16"><Loader2 className="animate-spin text-saibro-600" size={28} /></div>}>
+                            <ConversationsHub />
+                        </Suspense>
+                    </div>
+                </div>
+            );
             case 'professores': return <AdminProfessors />;
             case 'regras': return <AdminRules />;
             case 'avisos': return <AnunciosTab />;

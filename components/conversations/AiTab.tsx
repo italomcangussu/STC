@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { Bot, CalendarCheck, ShieldCheck } from 'lucide-react';
+import { Bot, Brain, CalendarCheck, Check, ShieldCheck, X } from 'lucide-react';
 import { cx } from '../../lib/conversations/cx';
 import { useAsync } from '../finance/hooks';
 import { notify } from '../../lib/notifications';
-import { aiHealth, describeConversationError, getAiSettings, listProposals, saveAiSettings, type AiSettings, type BookingProposal } from '../../lib/conversations/api';
-import { ACTION_LABEL, PROPOSAL_STATUS_LABEL, describeFailure, proposalSummary } from '../../lib/conversations/aiModel';
+import { aiHealth, describeConversationError, getAiSettings, listMemoryCandidates, listProposals, reviewMemoryCandidate, saveAiSettings, type AiSettings, type BookingProposal, type MemoryCandidate, type MemoryStatus } from '../../lib/conversations/api';
+import { ACTION_LABEL, MEMORY_KIND_HINT, MEMORY_KIND_LABEL, PROPOSAL_STATUS_LABEL, confidenceLabel, describeFailure, proposalSummary } from '../../lib/conversations/aiModel';
 import { Badge, Button, Card, Empty, Field, InlineAlert, Notice, Spinner, fieldCls } from './ui';
 
 /**
@@ -34,6 +34,7 @@ export default function AiTab() {
         <Notice tone="warn" title="Provedor de IA sem chave no servidor">Defina <code>STC_AI_API_KEY</code> nos segredos das funções. Sem ela, o agente transfere tudo para a equipe.</Notice>
       )}
       <Guardrails />
+      <MemoryCard />
       <SettingsCard settings={ajustes.data} onSaved={ajustes.reload} />
       <Card title="Reservas propostas pelo agente" subtitle="Cada reserva exige confirmação explícita; o sistema revalida na hora de gravar." right={<Button size="sm" variant="secondary" onClick={propostas.reload}>Atualizar</Button>}>
         {propostas.loading && !propostas.data ? <Spinner /> : (propostas.data ?? []).length === 0 ? (
@@ -70,6 +71,7 @@ function Guardrails() {
             <li>Reservar quadra (Play) e, para professor ou administrador, aula.</li>
             <li>Consultar, cancelar e remarcar reservas da própria pessoa.</li>
             <li>Responder dúvidas só com o texto “Contexto do clube” abaixo.</li>
+            <li>Bater papo de tênis e de resenha, comentar resultados recentes e reagir com emoji.</li>
             <li>Transferir para a equipe quando não souber ou pedirem.</li>
           </ul>
         </div>
@@ -80,10 +82,84 @@ function Guardrails() {
             <li>Dizer que reservou antes de o sistema gravar.</li>
             <li>Mexer em pagamentos, comprovantes, placares ou resultados.</li>
             <li>Falar de dados, cobranças ou resultados de outras pessoas, sobretudo em grupo.</li>
+            <li>Guardar algo sobre alguém sem a sua aprovação aqui.</li>
           </ul>
         </div>
       </div>
     </Card>
+  );
+}
+
+/**
+ * Memória supervisionada: o João SUGERE o que aprendeu sobre a turma (preferência, relação, brincadeira
+ * interna) e a diretoria decide. Só o aprovado volta ao contexto dele; recusar uma aprovada a retira.
+ */
+function MemoryCard() {
+  const [aba, setAba] = useState<Extract<MemoryStatus, 'pending' | 'approved'>>('pending');
+  const lista = useAsync(() => listMemoryCandidates(aba), [aba]);
+  const pendentes = useAsync(() => listMemoryCandidates('pending'), []);
+  const [erro, setErro] = useState<string | null>(null);
+  const aviso = (pendentes.data ?? []).length;
+
+  async function revisar(c: MemoryCandidate, decisao: 'approved' | 'rejected', texto: string) {
+    setErro(null);
+    try {
+      await reviewMemoryCandidate(c.id, decisao, decisao === 'approved' && texto.trim() !== c.content ? texto : undefined);
+      notify.success(decisao === 'approved' ? 'Memória aprovada: o João já pode usar.' : c.status === 'approved' ? 'Memória retirada do João.' : 'Sugestão recusada.');
+      lista.reload();
+      pendentes.reload();
+    } catch (e) { setErro(describeConversationError(e)); }
+  }
+
+  return (
+    <Card title="O que o João aprendeu sobre a turma" subtitle="Ele sugere; nada vira memória dele até você aprovar. Recusar uma memória aprovada a retira."
+      right={<Brain size={20} className="text-saibro-600" aria-hidden />}>
+      {erro && <InlineAlert tone="error" title={erro} onDismiss={() => setErro(null)} />}
+      <div role="tablist" aria-label="Memória do João" className="mb-3 flex gap-1 rounded-xl bg-stone-100 p-1 text-xs font-bold">
+        {([['pending', aviso ? `Para revisar (${aviso})` : 'Para revisar'], ['approved', 'Aprovadas']] as const).map(([id, nome]) => (
+          <button key={id} type="button" role="tab" aria-selected={aba === id} onClick={() => setAba(id)}
+            className={cx('min-h-9 flex-1 rounded-lg px-3', aba === id ? 'bg-white text-stone-800 shadow-sm' : 'text-stone-500')}>{nome}</button>
+        ))}
+      </div>
+      {lista.error ? <Notice tone="bad" title="Não foi possível carregar">{describeConversationError(lista.error)}</Notice>
+        : lista.loading && !lista.data ? <Spinner />
+        : (lista.data ?? []).length === 0 ? (
+          <Empty icon={<Brain size={26} />} title={aba === 'pending' ? 'Nada para revisar' : 'Nenhuma memória aprovada ainda'}
+            hint={aba === 'pending' ? 'Quando o João perceber um fato útil sobre alguém da turma, ele aparece aqui para você decidir.' : 'As memórias que você aprovar aparecem aqui e podem ser retiradas a qualquer momento.'} />
+        ) : (
+          <ul className="grid gap-2">
+            {(lista.data ?? []).map((c) => <MemoryItem key={c.id} c={c} onReview={revisar} />)}
+          </ul>
+        )}
+    </Card>
+  );
+}
+
+function MemoryItem({ c, onReview }: { c: MemoryCandidate; onReview: (c: MemoryCandidate, d: 'approved' | 'rejected', texto: string) => Promise<void> }) {
+  const [texto, setTexto] = useState(c.content);
+  const [ocupado, setOcupado] = useState(false);
+  const pendente = c.status === 'pending';
+  const agir = async (d: 'approved' | 'rejected') => { setOcupado(true); try { await onReview(c, d, texto); } finally { setOcupado(false); } };
+
+  return (
+    <li className="rounded-2xl border border-stone-100 p-3 text-sm">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="font-bold text-stone-800">{c.subject_name}</p>
+        <div className="flex items-center gap-1.5">
+          <Badge tone={c.kind === 'inside_joke' ? 'warn' : 'info'}>{MEMORY_KIND_LABEL[c.kind]}</Badge>
+          <span className="text-[11px] text-stone-400">{confidenceLabel(c.confidence)}</span>
+        </div>
+      </div>
+      <p className="text-[11px] text-stone-400">{MEMORY_KIND_HINT[c.kind]} · {dataHora.format(new Date(c.created_at))}</p>
+      {pendente ? (
+        <input className={cx(fieldCls, 'mt-2')} value={texto} maxLength={500} onChange={(e) => setTexto(e.target.value)} aria-label={`Texto da memória sobre ${c.subject_name}`} />
+      ) : <p className="mt-2 text-stone-700">{c.content}</p>}
+      {c.source_body && <p className="mt-1 text-[11px] italic text-stone-400">Na conversa: “{c.source_body}”</p>}
+      <div className="mt-2 flex flex-wrap gap-2">
+        {pendente && <Button size="sm" variant="primary" loading={ocupado} disabled={texto.trim().length < 3} onClick={() => void agir('approved')}><Check size={14} aria-hidden /> Aprovar</Button>}
+        <Button size="sm" variant="secondary" loading={ocupado && !pendente} disabled={ocupado} onClick={() => void agir('rejected')}><X size={14} aria-hidden /> {pendente ? 'Recusar' : 'Retirar'}</Button>
+      </div>
+    </li>
   );
 }
 

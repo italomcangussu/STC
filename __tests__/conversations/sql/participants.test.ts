@@ -24,9 +24,9 @@ const confirm = (w: W, proposal: string, message: string) => svc<any>(w.db, `pub
 const pause = () => new Promise((r) => setTimeout(r, 15));
 const row = async (w: W, id: string) => (await q<any>(w.db, `select participant_ids, status, guest_name, guest_responsible_id from public.reservations where id = '${id}'`))[0];
 
-const ANA = '85988880002';
-const BETO = '85988880003';
-const ADMIN = '85988880001';
+const ANA = '99900000002';
+const BETO = '99900000003';
+const ADMIN = '99900000001';
 
 /** Play criado pelo Beto, `plus` dias à frente, 18:00–19:00 na Quadra 1. */
 async function game(w: W, date: string, participants: string[], over: { guest?: string; type?: string; start?: string; end?: string; creator?: string } = {}) {

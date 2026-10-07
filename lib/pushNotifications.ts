@@ -1,11 +1,14 @@
+import { supabase } from './supabase';
+
 // Push Notifications Library for STC Play
 // Handles subscription and permission for Web Push on iOS/Android PWAs
 
-// VAPID public key - generated for this project
-// Private key (store securely for backend): H-woFjW3qgPezjgtgyYVe8MAEpbHwq0htW3PibITtAs
-const VAPID_PUBLIC_KEY = 'BLnOCELBk2YT3FlawO9KimRA0lrWRMO98zFzttXdrK6L_lW9yUXTvsVHZWEPKKtle1jSPwlPU3e97w6qT06p8qQ';
+// VAPID public key - loaded from environment with secure fallback
+const VAPID_PUBLIC_KEY =
+    import.meta.env.VITE_VAPID_PUBLIC_KEY ||
+    'BA0QCMSR---YCCKzmIrtMpLEA7KADTzPc86aByzs_wBzGWhMovamWZoWoiz6piVmOFLsrGUttlD_Y7ql0rqQXEk';
 
-interface PushSubscriptionData {
+export interface PushSubscriptionData {
     endpoint: string;
     keys: {
         p256dh: string;
@@ -18,6 +21,7 @@ interface PushSubscriptionData {
  */
 export function isPushSupported(): boolean {
     return (
+        typeof window !== 'undefined' &&
         'serviceWorker' in navigator &&
         'PushManager' in window &&
         'Notification' in window
@@ -28,12 +32,9 @@ export function isPushSupported(): boolean {
  * Check if running as installed PWA (home screen)
  */
 export function isInstalledPWA(): boolean {
-    // Check for iOS standalone mode
+    if (typeof window === 'undefined') return false;
     const isIOSStandalone = (window.navigator as any).standalone === true;
-
-    // Check for other browsers' display-mode
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-
     return isIOSStandalone || isStandalone;
 }
 
@@ -41,6 +42,7 @@ export function isInstalledPWA(): boolean {
  * Check if running on iOS
  */
 export function isIOS(): boolean {
+    if (typeof navigator === 'undefined') return false;
     return /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
 }
 
@@ -48,15 +50,65 @@ export function isIOS(): boolean {
  * Get the current notification permission status
  */
 export function getPermissionStatus(): NotificationPermission {
-    if (!('Notification' in window)) return 'denied';
+    if (typeof window === 'undefined' || !('Notification' in window)) return 'denied';
     return Notification.permission;
+}
+
+/**
+ * Persists subscription into Supabase push_subscriptions table
+ */
+export async function saveSubscriptionToDatabase(subscriptionData: PushSubscriptionData, userId?: string): Promise<boolean> {
+    try {
+        let targetUserId = userId;
+        if (!targetUserId) {
+            const { data } = await supabase.auth.getUser();
+            targetUserId = data.user?.id;
+        }
+
+        if (!targetUserId) {
+            console.warn('[Push] Cannot save subscription: user not authenticated');
+            return false;
+        }
+
+        const { error } = await supabase
+            .from('push_subscriptions')
+            .upsert({
+                user_id: targetUserId,
+                endpoint: subscriptionData.endpoint,
+                keys: subscriptionData.keys,
+                updated_at: new Date().toISOString(),
+            }, { onConflict: 'endpoint' });
+
+        if (error) {
+            // Se falhar por constraint de user_id legado, tenta upsert por user_id
+            console.warn('[Push] Upsert on endpoint failed, trying fallback upsert:', error.message);
+            const { error: fallbackError } = await supabase
+                .from('push_subscriptions')
+                .upsert({
+                    user_id: targetUserId,
+                    endpoint: subscriptionData.endpoint,
+                    keys: subscriptionData.keys,
+                    updated_at: new Date().toISOString(),
+                });
+            if (fallbackError) {
+                console.error('[Push] Failed to persist subscription in database:', fallbackError);
+                return false;
+            }
+        }
+
+        console.log('[Push] Subscription saved to Supabase successfully');
+        return true;
+    } catch (err) {
+        console.error('[Push] Unexpected error saving subscription:', err);
+        return false;
+    }
 }
 
 /**
  * Request permission and subscribe to push notifications
  * Must be called from a user gesture (button click)
  */
-export async function subscribeToPush(): Promise<PushSubscriptionData | null> {
+export async function subscribeToPush(userId?: string): Promise<PushSubscriptionData | null> {
     if (!isPushSupported()) {
         console.warn('[Push] Push notifications not supported');
         return null;
@@ -67,7 +119,7 @@ export async function subscribeToPush(): Promise<PushSubscriptionData | null> {
         const permission = await Notification.requestPermission();
 
         if (permission !== 'granted') {
-            console.log('[Push] Permission denied');
+            console.log('[Push] Permission not granted:', permission);
             return null;
         }
 
@@ -76,6 +128,12 @@ export async function subscribeToPush(): Promise<PushSubscriptionData | null> {
 
         // Check if already subscribed
         let subscription = await registration.pushManager.getSubscription();
+
+        // Assinatura criada com outra chave VAPID (antes da rotação) nunca recebe push: refaz.
+        if (subscription && !subscriptionUsesCurrentKey(subscription)) {
+            await subscription.unsubscribe();
+            subscription = null;
+        }
 
         if (!subscription) {
             // Subscribe with VAPID key
@@ -97,6 +155,10 @@ export async function subscribeToPush(): Promise<PushSubscriptionData | null> {
         };
 
         console.log('[Push] Subscribed successfully:', subscriptionData.endpoint);
+
+        // Persist to Supabase
+        await saveSubscriptionToDatabase(subscriptionData, userId);
+
         return subscriptionData;
 
     } catch (error) {
@@ -114,6 +176,16 @@ export async function unsubscribeFromPush(): Promise<boolean> {
         const subscription = await registration.pushManager.getSubscription();
 
         if (subscription) {
+            // Remover do Supabase
+            try {
+                await supabase
+                    .from('push_subscriptions')
+                    .delete()
+                    .eq('endpoint', subscription.endpoint);
+            } catch {
+                // ignore
+            }
+
             await subscription.unsubscribe();
             console.log('[Push] Unsubscribed successfully');
             return true;
@@ -135,10 +207,17 @@ export async function isSubscribed(): Promise<boolean> {
     try {
         const registration = await navigator.serviceWorker.ready;
         const subscription = await registration.pushManager.getSubscription();
-        return subscription !== null;
+        return subscription !== null && subscriptionUsesCurrentKey(subscription);
     } catch {
         return false;
     }
+}
+
+// Helper: a assinatura só funciona se foi criada com a chave VAPID pública atual
+function subscriptionUsesCurrentKey(subscription: PushSubscription): boolean {
+    const atual = subscription.options?.applicationServerKey;
+    if (!atual) return true;
+    return arrayBufferToBase64(atual).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '') === VAPID_PUBLIC_KEY;
 }
 
 // Helper: Convert VAPID key to Uint8Array

@@ -14,6 +14,7 @@ COPY . ./
 # Build args for Vite env vars (passed at build time)
 ARG VITE_SUPABASE_URL
 ARG VITE_SUPABASE_ANON_KEY
+ARG VITE_VAPID_PUBLIC_KEY
 ARG VITE_ENV=production
 ARG GEMINI_API_KEY
 
@@ -31,6 +32,12 @@ RUN printf 'server {\n\
   index index.html;\n\
   location / {\n\
     try_files $uri $uri/ /index.html;\n\
+  }\n\
+  location = /sw.js {\n\
+    add_header Cache-Control "no-cache";\n\
+  }\n\
+  location = /manifest.json {\n\
+    add_header Cache-Control "no-cache";\n\
   }\n\
   location ~* \\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {\n\
     expires 1y;\n\

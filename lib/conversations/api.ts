@@ -126,6 +126,8 @@ const MESSAGES: Record<string, string> = {
   MENTION_NOT_VERIFIED: 'A IA em grupos só liga depois de a menção direta ser verificada com uma mensagem real.',
   GROUP_AI_NOT_ALLOWED: 'Para a IA atender este grupo, ele precisa estar permitido e a IA em grupos precisa estar ligada.',
   GROUP_NOT_FOUND: 'Este grupo não existe mais. Atualize a lista.',
+  CANDIDATE_NOT_FOUND: 'Esta sugestão não existe mais. Atualize a lista.',
+  CONTENT_TOO_SHORT: 'Escreva ao menos uma frase curta para a memória.',
   CONVERSATION_OPERATION_REJECTED: 'O servidor não aceitou a operação. Atualize a tela e tente de novo.',
 };
 
@@ -436,6 +438,18 @@ export type AiSettings = {
 
 export const getAiSettings = () => rpc<AiSettings | null>('conv_get_ai_settings');
 export const saveAiSettings = (p: Partial<AiSettings>) => rpc<{ version: number }>('conv_save_ai_settings', { p_request: newRequest(), p });
+
+/** O que o João sugeriu aprender sobre a turma; só o que a diretoria aprova volta ao contexto dele. */
+export type MemoryKind = 'confirmed_fact' | 'recurring_preference' | 'social_relation' | 'inside_joke';
+export type MemoryStatus = 'pending' | 'approved' | 'rejected' | 'superseded';
+export type MemoryCandidate = {
+  id: string; subject_name: string; kind: MemoryKind; content: string; confidence: number; status: MemoryStatus;
+  created_at: string; reviewed_at: string | null; source_body: string | null;
+};
+
+export const listMemoryCandidates = (status: MemoryStatus = 'pending') => rpc<MemoryCandidate[] | null>('conv_list_ai_memory_candidates', { p_status: status }).then((d) => d ?? []);
+export const reviewMemoryCandidate = (id: string, decision: 'approved' | 'rejected', content?: string) =>
+  rpc<{ id: string; status: MemoryStatus }>('conv_review_ai_memory_candidate', { p_id: id, p_decision: decision, p_content: content?.trim() || null });
 
 export type BookingProposal = {
   id: string; conversation_id: string; action: 'create' | 'cancel' | 'reschedule';

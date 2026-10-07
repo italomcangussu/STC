@@ -5,13 +5,14 @@ interface NotificationPayload {
     title: string;
     body: string;
     url?: string;
+    tag?: string;
     data?: any;
 }
 
 /**
  * Sends a push notification to a user via the 'send-push' Edge Function.
  */
-export async function sendPushNotification({ userId, title, body, url, data }: NotificationPayload): Promise<boolean> {
+export async function sendPushNotification({ userId, title, body, url, tag, data }: NotificationPayload): Promise<boolean> {
     try {
         const { data: result, error } = await supabase.functions.invoke('send-push', {
             body: {
@@ -19,6 +20,7 @@ export async function sendPushNotification({ userId, title, body, url, data }: N
                 title,
                 body,
                 url,
+                tag,
                 data
             }
         });

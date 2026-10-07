@@ -239,7 +239,7 @@ describe('varredura, dedupe, pausa e fila de envio', () => {
     // opt-out: ao voltar a janela, o contato é pulado
     await openWindow(w);
     await w.db.exec(`update public.conv_automation_recipients set due_at = now() - interval '1 minute'`);
-    const ana = await svc<any>(w.db, `public.conv_svc_ingest_message(${j({ provider_id: `OPT${Math.random()}`, chat_kind: 'direct', phone: '85988880002', kind: 'text', body: 'parar' })})`);
+    const ana = await svc<any>(w.db, `public.conv_svc_ingest_message(${j({ provider_id: `OPT${Math.random()}`, chat_kind: 'direct', phone: '99900000002', kind: 'text', body: 'parar' })})`);
     expect(ana.duplicate).toBe(false);
     const got = await claim(w);
     expect(got.length).toBe(1);   // só o Beto
