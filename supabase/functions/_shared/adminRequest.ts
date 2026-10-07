@@ -56,21 +56,71 @@ export function text(value: unknown): string {
   return typeof value === 'string' ? value.trim() : '';
 }
 
+/**
+ * Normaliza e resolve se uma origem é permitida para o painel de Conversas.
+ * Permite:
+ * 1. Origens declaradas em `STC_PUBLIC_ORIGIN` (separadas por vírgula).
+ * 2. Qualquer subdomínio ou domínio próprio do STC (*.stcplay.com.br, stcplay.com.br).
+ * 3. Ambientes de desenvolvimento locais e IPs de rede local (localhost, 127.0.0.1, 192.168.*.*, etc.)
+ *    para permitir testes simultâneos no celular e desktop na mesma rede Wi-Fi.
+ */
+export function resolveAllowedOrigin(requestedOrReferer: string | null, envOrigin: string): string | null {
+  if (!requestedOrReferer) return null;
+  const raw = requestedOrReferer.trim();
+  let candidate: string;
+  try {
+    const url = new URL(raw);
+    candidate = url.origin.toLowerCase();
+  } catch {
+    candidate = raw.replace(/\/+$/, "").toLowerCase();
+  }
+
+  const allowedList = envOrigin
+    .split(",")
+    .map((o) => {
+      const trimmed = o.trim();
+      try {
+        return new URL(trimmed).origin.toLowerCase();
+      } catch {
+        return trimmed.replace(/\/+$/, "").toLowerCase();
+      }
+    })
+    .filter(Boolean);
+
+  if (allowedList.includes(candidate)) {
+    return candidate;
+  }
+
+  // Domínios oficiais do STC (com ou sem www/subdomínio, https ou http)
+  if (/^https?:\/\/(?:[a-z0-9-]+\.)*stcplay\.com\.br(?::\d+)?$/i.test(candidate)) {
+    return candidate;
+  }
+
+  // Hosts locais e IPs de rede para depuração em dispositivos móveis
+  if (/^https?:\/\/(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(?:1[6-9]|2\d|3[0-1])\.\d+\.\d+)(?::\d+)?$/i.test(candidate)) {
+    return candidate;
+  }
+
+  return null;
+}
+
 export async function handleAdminRequest(request: Request, deps: AdminDeps, env: AdminEnvironment, route: AdminRoute): Promise<Response> {
-  // `STC_PUBLIC_ORIGIN` pode listar várias origens separadas por vírgula (produção, rede local, localhost).
-  // A resposta devolve só a origem que bateu: o navegador recusa `Access-Control-Allow-Origin` com lista.
-  const allowed = env.origin.split(',').map((o) => o.trim()).filter(Boolean);
-  const requested = request.headers.get('origin');
-  const origin = requested && allowed.includes(requested) ? requested : null;
-  if (!origin) return response(403, { error: 'ORIGIN_FORBIDDEN' }, allowed[0] || 'null');
-  if (request.method === 'OPTIONS') {
+  const requested = request.headers.get("origin") || request.headers.get("referer");
+  const origin = resolveAllowedOrigin(requested, env.origin);
+  const fallbackOrigin = env.origin.split(",")[0]?.trim() || "https://stcplay.com.br";
+
+  if (request.method === "OPTIONS") {
+    if (!origin) {
+      return response(403, { error: "ORIGIN_FORBIDDEN" }, fallbackOrigin);
+    }
     return new Response(null, { status: 204, headers: {
-      'access-control-allow-origin': origin,
-      'access-control-allow-methods': 'POST, OPTIONS',
-      'access-control-allow-headers': 'authorization, content-type, apikey, x-client-info',
-      'vary': 'Origin',
+      "access-control-allow-origin": origin,
+      "access-control-allow-methods": "POST, OPTIONS",
+      "access-control-allow-headers": "authorization, content-type, apikey, x-client-info",
+      "vary": "Origin",
     } });
   }
+  if (!origin) return response(403, { error: "ORIGIN_FORBIDDEN" }, fallbackOrigin);
   if (request.method !== 'POST') return response(405, { error: 'METHOD_NOT_ALLOWED' }, origin);
 
   const raw = await request.text();

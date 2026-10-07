@@ -43,3 +43,6 @@ Aplicada no projeto `smztsayzldjmkzmufqcz` a migration `conversations_joao_pack`
 - Menu principal: Conversas (só admin, abre /conversas na mesma janela) e Configurações (todos); AppSettings + lib/appPreferences.
 - Push PWA: migration 20261007120000 NÃO estava aplicada no remoto (UNIQUE(user_id) ainda ativo, sem UNIQUE(endpoint) nem RPC); RPC passou a ser só service_role; send-push exige service role para admin_broadcast; sw.js corrigido (url no clique, tag por conversa, selo).
 - Mapa do banco gerado em .fabuloso/db/.
+
+## 2026-10-07 (3) — celular não conectava ao painel de Conversas (CORS)
+Causa: `conversation-operations` só aceitava as origens literais de `STC_PUBLIC_ORIGIN`; o celular abre o app pelo IP da rede local em outra porta (`http://192.168.x.x:3000`) e recebia `ORIGIN_FORBIDDEN`, enquanto o desktop (`localhost:3000`) passava. `resolveAllowedOrigin` agora aceita também `*.stcplay.com.br`, localhost e IPs privados em qualquer porta (a autorização continua no JWT + papel admin). Função republicada (v4) e coberta por `allowedOrigin.test.ts`.
