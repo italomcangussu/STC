@@ -912,18 +912,18 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
     const roster = await db('conv_svc_ai_club_roster', {});
     ctx.club_roster = Array.isArray(roster.data) ? roster.data : [];
   } catch { ctx.club_roster = []; }
-  if (isGroup) {
-    // No grupo oficial, cards/alunos e Day Cards são contexto autorizado pela regra do clube.
-    // A RPC é service-role only; os dados não ficam expostos ao cliente/app.
-    try {
-      const fin = await db('conv_svc_ai_financial_context', {});
-      ctx.financial_context = fin.data && typeof fin.data === 'object'
-        ? fin.data
-        : { students: [], day_cards: [] };
-    } catch {
-      ctx.financial_context = { students: [], day_cards: [] };
-    }
+  // Financeiro é carregado via service role. No privado o prompt filtra rigorosamente
+  // para o próprio solicitante; no grupo fechado aplica as permissões da casa.
+  try {
+    const fin = await db('conv_svc_ai_financial_context', {});
+    ctx.financial_context = fin.data && typeof fin.data === 'object'
+      ? fin.data
+      : { students: [], day_cards: [], member_pendencies: [] };
+  } catch {
+    ctx.financial_context = { students: [], day_cards: [], member_pendencies: [] };
+  }
 
+  if (isGroup) {
     try {
       const gc = await db('conv_svc_ai_group_context', { p_session: session });
       ctx.group_context = Array.isArray(gc.data) ? gc.data : [];
