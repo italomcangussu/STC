@@ -120,3 +120,7 @@ Prioridade: **A** alta (valor diário), **B** média, **C** baixa. Risco: N0–N
 3. **Limite de valor: R$ 400.** Operação N2 de R$ 400 ou mais exige confirmação em dois passos (resumo + "sim", depois confirmação do valor por extenso). A regra vale por operação e também para a soma de um lote.
 4. **Resumo proativo pela manhã** para **Hermeson** e **Henrique** (horário a fixar na Onda 4; sugestão 08h00 de Fortaleza). Conteúdo inicial: caixa e saldo das contas, a receber vencido, comprovantes parados, documentos sem assinatura vencendo.
 5. **Só no privado.** O assessor não funciona em grupo, nem de administradores.
+
+
+## Onda 6 (2026-10-07)
+Entregue: aprovar comprovante (valor lido, distribuído da cobrança mais antiga para a mais nova; ilegível ou sobra vão ao painel) e gerar cobranças do mês (idempotente). Ambos N2, com segundo passo a partir de R$ 400. Fora, sem função própria para reutilizar: aprovar/recusar acesso (borda cria o usuário), follow-up e bloquear horário; baixa em lote é coberta pela aprovação de comprovante.

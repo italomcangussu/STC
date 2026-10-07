@@ -44,6 +44,8 @@ export const CAPABILITIES: readonly Capability[] = [
   { id: 'fin.charge.cancel', domain: 'financeiro', risk: 'N2', label: 'Cancelar pendência', panel: 'Financeiro', write: { finAction: 'cancelar_pendencia' } },
   { id: 'fin.charge.adjust', domain: 'financeiro', risk: 'N2', label: 'Ajustar cobrança (desconto, acréscimo, perdão de encargos)', panel: 'Financeiro', write: { finAction: 'ajustar' } },
   { id: 'fin.payment.reverse', domain: 'financeiro', risk: 'N2', label: 'Estornar último pagamento', panel: 'Financeiro', write: { finAction: 'estornar' } },
+  { id: 'fin.receipt.approve', domain: 'financeiro', risk: 'N2', label: 'Aprovar comprovante', panel: 'Financeiro', write: { finAction: 'aprovar_comprovante' } },
+  { id: 'fin.charges.generate', domain: 'financeiro', risk: 'N2', label: 'Gerar cobranças do mês', panel: 'Financeiro', write: { finAction: 'gerar_cobrancas' } },
   { id: 'fin.receipt.reject', domain: 'financeiro', risk: 'N2', label: 'Recusar comprovante', panel: 'Financeiro', write: { finAction: 'rejeitar_comprovante' } },
   { id: 'fin.entry.expense', domain: 'financeiro', risk: 'N2', label: 'Lançar despesa', panel: 'Financeiro', write: { finAction: 'despesa' } },
   { id: 'fin.entry.revenue', domain: 'financeiro', risk: 'N2', label: 'Lançar receita', panel: 'Financeiro', write: { finAction: 'receita' } },

@@ -85,11 +85,11 @@ export type Slots = {
 };
 
 export type FinAction = 'lancar' | 'cobrar' | 'pausar' | 'retomar' | 'baixa' | 'renovar_card'
-  | 'cancelar_pendencia' | 'ajustar' | 'estornar' | 'rejeitar_comprovante' | 'despesa' | 'receita';
+  | 'cancelar_pendencia' | 'ajustar' | 'estornar' | 'rejeitar_comprovante' | 'despesa' | 'receita' | 'aprovar_comprovante' | 'gerar_cobrancas';
 type PendencyKind = 'day_card' | 'consumo' | 'evento' | 'multa' | 'dano_reposicao' | 'outros';
 type PayMethod = 'pix' | 'transfer' | 'cash' | 'card' | 'other';
 const FIN_ACTIONS: FinAction[] = ['lancar', 'cobrar', 'pausar', 'retomar', 'baixa', 'renovar_card',
-  'cancelar_pendencia', 'ajustar', 'estornar', 'rejeitar_comprovante', 'despesa', 'receita'];
+  'cancelar_pendencia', 'ajustar', 'estornar', 'rejeitar_comprovante', 'despesa', 'receita', 'aprovar_comprovante', 'gerar_cobrancas'];
 export const ADM_ACTIONS = ['aviso', 'aviso_desativar', 'aluno_status', 'socio_status', 'assinatura_reenviar', 'reserva_cancelar'] as const;
 export type AdmAction = typeof ADM_ACTIONS[number];
 const ADJUST_KINDS = ['discount', 'increase', 'fee_waiver'] as const;
@@ -1626,7 +1626,7 @@ async function entrarNoJogo(i: DecideInput, memory: Memory): Promise<Decision> {
 const isAdminProposalAction = (a: unknown) => String(a ?? '').startsWith('fin_') || String(a ?? '').startsWith('adm_') || a === 'student_card_renew';
 
 type AdminAction = 'fin_pendency_create' | 'fin_pendency_collection' | 'fin_pendency_send' | 'fin_payment' | 'student_card_renew'
-  | 'fin_charge_cancel' | 'fin_charge_adjust' | 'fin_payment_reverse' | 'fin_receipt_reject' | 'fin_entry_create'
+  | 'fin_charge_cancel' | 'fin_charge_adjust' | 'fin_payment_reverse' | 'fin_receipt_reject' | 'fin_entry_create' | 'fin_receipt_approve' | 'fin_charges_generate'
   | 'adm_announcement_create' | 'adm_announcement_deactivate' | 'adm_student_status' | 'adm_member_status' | 'adm_signature_resend' | 'adm_reservation_cancel';
 
 const centsBR = (v: unknown) => `R$ ${(Number(v ?? 0) / 100).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`;
@@ -1652,6 +1652,11 @@ export function adminProposalMessage(action: AdminAction, s: Ctx): string {
     return `Vou aplicar ${o} ${centsBR(s.amount_cents)} na pendência de ${s.member_name}: ${s.description} (saldo hoje ${centsBR(s.total_due_cents)}). Motivo: ${s.reason}. Confirma? Responda "sim".`;
   }
   if (action === 'fin_payment_reverse') return `Vou estornar o pagamento de ${centsBR(s.amount_cents)} de ${s.member_name} (${s.description}), feito em ${dateBR(s.paid_on)}. Motivo: ${s.reason}. A pendência volta a ficar em aberto. Confirma? Responda "sim".`;
+  if (action === 'fin_receipt_approve') {
+    const itens = (Array.isArray(s.allocations) ? s.allocations as Ctx[] : []).map((a) => `- ${a.description} (venc. ${dateBR(a.due_date)}): ${centsBR(a.amount_cents)}`).join('\n');
+    return `Vou aprovar o comprovante de ${s.member_name}, enviado em ${dateBR(s.sent_on)}: ${centsBR(s.amount_cents)}, pago em ${dateBR(s.paid_on)} via ${METHOD_TEXT[String(s.method)] ?? s.method}, conta ${s.account_name}. Baixa nas cobranças, da mais antiga para a mais nova:\n${itens}\nConfirma? Responda "sim".`;
+  }
+  if (action === 'fin_charges_generate') return `Vou gerar as cobranças que faltam dos ${s.plans_count} planos de sócios ativos (não duplica as que já existem; mês sem preço fica de fora). Confirma? Responda "sim".`;
   if (action === 'fin_receipt_reject') return `Vou recusar o comprovante de ${s.member_name}, enviado em ${dateBR(s.sent_on)}${s.amount_cents != null ? ` (${centsBR(s.amount_cents)})` : ''}. Motivo: ${s.reason}. Confirma? Responda "sim".`;
   if (action === 'fin_entry_create') {
     const tipo = s.entry_kind === 'expense' ? 'despesa' : 'receita';
@@ -1684,6 +1689,11 @@ export function adminSuccessMessage(action: AdminAction, s: Ctx): string {
   if (action === 'fin_charge_cancel') return `Pronto: pendência de ${s.member_name} (${s.description}) cancelada.`;
   if (action === 'fin_charge_adjust') return `Pronto: ajuste de ${centsBR(s.amount_cents)} aplicado na pendência de ${s.member_name} (${s.description}).`;
   if (action === 'fin_payment_reverse') return `Pronto: pagamento de ${centsBR(s.amount_cents)} de ${s.member_name} estornado; a pendência voltou a ficar em aberto.`;
+  if (action === 'fin_receipt_approve') return `Pronto: comprovante de ${s.member_name} aprovado, ${centsBR(s.amount_cents)} baixados.`;
+  if (action === 'fin_charges_generate') {
+    const r = (s.result ?? {}) as Ctx;
+    return `Pronto: ${Number(r.created ?? 0)} cobrança(s) nova(s) gerada(s); ${Number(r.existing ?? 0)} já existiam${Number(r.missing_price ?? 0) ? `; ${Number(r.missing_price)} mês(es) sem preço ficaram de fora` : ''}.`;
+  }
   if (action === 'fin_receipt_reject') return `Pronto: comprovante de ${s.member_name} recusado.`;
   if (action === 'fin_entry_create') return `Pronto: ${s.entry_kind === 'expense' ? 'despesa' : 'receita'} lançada: ${s.description}, ${centsBR(s.amount_cents)}.`;
   const r = (s.result ?? {}) as Ctx;
@@ -1827,6 +1837,13 @@ async function adminFinanceiro(i: DecideInput, memory: Memory): Promise<Decision
       if (m.ask) return ask(m.ask);
       p = { action: 'fin_payment_reverse', profile_id: m.id, reason: slots.reason ?? null };
     }
+  } else if (slots.fin_action === 'gerar_cobrancas') {
+    p = { action: 'fin_charges_generate' };
+  } else if (slots.fin_action === 'aprovar_comprovante') {
+    const m = await member();
+    if (m.ask) return ask(m.ask);
+    p = { action: 'fin_receipt_approve', profile_id: m.id, receipt_date: slots.receipt_date ?? null, paid_on: slots.paid_on ?? null,
+      method: slots.method ?? null, account_name: slots.account_name ?? null };
   } else if (slots.fin_action === 'rejeitar_comprovante') {
     const m = await member();
     if (m.ask) return ask(m.ask);
@@ -1839,13 +1856,13 @@ async function adminFinanceiro(i: DecideInput, memory: Memory): Promise<Decision
       entry_status: slots.entry_status ?? null, due_date: slots.due_date ?? null, paid_on: slots.paid_on ?? null,
       category_name: slots.category_name ?? null, account_name: slots.account_name ?? null };
   } else {
-    return ask('O que você quer fazer: lançar pendência, cobrar agora, pausar/retomar a cobrança, dar baixa, cancelar ou ajustar uma pendência, estornar um pagamento, recusar um comprovante ou lançar uma despesa/receita?');
+    return ask('O que você quer fazer: lançar pendência, cobrar agora, pausar/retomar a cobrança, dar baixa, cancelar ou ajustar uma pendência, estornar um pagamento, aprovar ou recusar um comprovante, gerar as cobranças do mês ou lançar uma despesa/receita?');
   }
 
   const res = (await deps.db('conv_svc_ai_admin_finance_propose', { p_session: session, p })).data as
     { ok: boolean; code?: string; message?: string; action?: AdminAction; summary?: Ctx } | null;
   if (!res?.ok || !res.summary || !res.action) return ask(res?.message ?? 'Não consegui montar esse lançamento. Pode repetir os dados?');
-  return { bubbles: [adminProposalMessage(res.action, res.summary)], awaiting: true, close: false, action: 'proposed_admin', memory };
+  return { bubbles: [adminProposalMessage(res.action, res.summary)], awaiting: true, close: false, action: 'proposed_admin', memory, verbatim: true };
 }
 
 async function resolve(db: Db, names: string[], scope: 'member' | 'student' | 'professor') {

@@ -373,6 +373,71 @@ describe('assessor administrativo do João (turno completo)', () => {
   }, 60000);
 });
 
+describe('onda 6: aprovar comprovante e gerar cobranças (N2)', () => {
+  const dizer = async (w: W, p: ReturnType<typeof provider>, texto: string, o: Record<string, unknown>) => {
+    const m = await direct(w, texto);
+    return turn(w, m.message_id, script(answer(o)).chat, p.uaz);
+  };
+  const confirmar = (w: W, p: ReturnType<typeof provider>, texto = 'sim') => dizer(w, p, texto, { customer_confirmed: true });
+  const pend = (w: W, cents: number, desc: string, due: string) => rpc(w.db, U.admin, `public.fin_create_member_pendency('${key()}', ${j({ profile_id: U.socioB, description: desc, amount_cents: cents, competence_month: '2026-10-01', due_date: due })})`);
+  const comprovante = (w: W, cents: number | null, n = 1) => q(w.db, `insert into public.fin_receipt_submissions(profile_id, status, storage_path, file_name, content_type, size_bytes, content_sha256, declared_amount_cents, ocr_status, request_id)
+    values ('${U.socioB}', 'submitted', 'x/${n}/c.jpg', 'c.jpg', 'image/jpeg', 100, '${'c'.repeat(63)}${n}', ${cents ?? 'null'}, 'not_run', gen_random_uuid())`);
+  const aprovar = { ready: true, slots: { fin_action: 'aprovar_comprovante', member_name: 'Beto' } };
+
+  it('aprova o comprovante distribuindo pela cobrança mais antiga primeiro; a mais nova fica parcial', async () => {
+    const w = await setup(); const p = provider();
+    await pend(w, 10000, 'Consumo antigo', '2026-09-10'); await pend(w, 10000, 'Consumo novo', '2026-10-05');
+    await comprovante(w, 15000);
+    const r = await dizer(w, p, 'aprova o comprovante do Beto', aprovar);
+    expect(r.action).toBe('proposed_admin');
+    expect(p.sent.at(-1)!.text).toMatch(/^Vou aprovar o comprovante de Beto Sócio, enviado em \d\d\/\d\d\/\d{4}: R\$ 150,00,[\s\S]*Consumo antigo \(venc\. 10\/09\/2026\): R\$ 100,00\n- Consumo novo \(venc\. 05\/10\/2026\): R\$ 50,00\nConfirma/);
+    expect((await q<any>(w.db, `select status from public.fin_receipt_submissions`))[0].status).toBe('submitted');
+    expect((await confirmar(w, p)).action).toBe('admin_confirmed');
+    expect((await q<any>(w.db, `select status from public.fin_receipt_submissions`))[0].status).toBe('approved');
+    const st = await q<any>(w.db, `select description, status from public.fin_member_charges where charge_type = 'member_pendency' order by due_date`);
+    expect(st.map((x: any) => x.status)).toEqual(['paid', 'partial']);
+    expect(p.sent.at(-1)!.text).toMatch(/Pronto: comprovante de Beto Sócio aprovado, R\$ 150,00 baixados/);
+  }, 90000);
+
+  it('valor ilegível, maior que o em aberto ou sem cobrança: não propõe e manda para o painel', async () => {
+    const w = await setup(); const p = provider();
+    await comprovante(w, null);
+    await dizer(w, p, 'aprova o do Beto', aprovar);
+    expect(p.sent.at(-1)!.text).toMatch(/Não consegui ler o valor/);
+    await q(w.db, `update public.fin_receipt_submissions set status = 'superseded'`);
+    await comprovante(w, 5000, 2);
+    await dizer(w, p, 'aprova o do Beto', aprovar);
+    expect(p.sent.at(-1)!.text).toMatch(/não tem cobrança em aberto/);
+    await pend(w, 3000, 'Consumo', '2026-10-05');
+    await dizer(w, p, 'aprova o do Beto', aprovar);
+    expect(p.sent.at(-1)!.text).toMatch(/passa do que esse sócio tem em aberto \(R\$ 30,00\)/);
+    expect(await q(w.db, `select 1 from public.conv_booking_proposals`)).toHaveLength(0);
+  }, 90000);
+
+  it('R$ 400 ou mais pede o segundo passo antes de baixar', async () => {
+    const w = await setup(); const p = provider();
+    await pend(w, 50000, 'Mensalidade atrasada', '2026-09-10'); await comprovante(w, 50000);
+    await dizer(w, p, 'aprova o do Beto', aprovar);
+    expect((await confirmar(w, p)).action).toBe('failed:CONFIRM_AMOUNT');
+    expect((await q<any>(w.db, `select status from public.fin_receipt_submissions`))[0].status).toBe('submitted');
+    expect((await confirmar(w, p, 'confirmo R$ 500,00')).action).toBe('admin_confirmed');
+    expect((await q<any>(w.db, `select status from public.fin_receipt_submissions`))[0].status).toBe('approved');
+  }, 90000);
+
+  it('gerar cobranças: resume, só roda depois do "sim" e não duplica ao repetir', async () => {
+    const w = await setup(); const p = provider();
+    await dizer(w, p, 'gera as cobranças do mês', { ready: true, slots: { fin_action: 'gerar_cobrancas' } });
+    expect(p.sent.at(-1)!.text).toMatch(/Não há plano de sócio ativo/);
+    await rpc(w.db, U.admin, `public.fin_create_member_plan('${key()}', ${j({ profile_id: U.socioB, start_on: '2026-10-01', amount_cents: 20000 })})`);
+    await dizer(w, p, 'gera as cobranças do mês', { ready: true, slots: { fin_action: 'gerar_cobrancas' } });
+    expect(p.sent.at(-1)!.text).toMatch(/^Vou gerar as cobranças que faltam dos 1 planos de sócios ativos/);
+    expect(await q(w.db, `select 1 from public.fin_member_charges where plan_id is not null`)).toHaveLength(0);
+    expect((await confirmar(w, p)).action).toBe('admin_confirmed');
+    expect((await q(w.db, `select 1 from public.fin_member_charges where plan_id is not null`)).length).toBeGreaterThan(0);
+    expect(p.sent.at(-1)!.text).toMatch(/Pronto: \d+ cobrança\(s\) nova\(s\) gerada\(s\)/);
+  }, 90000);
+});
+
 describe('assessor: peças puras', () => {
   const admin = { is_group: false, requester: { profile: { id: 'A', name: 'Admin', is_admin: true } } };
   const pend = (id: string, member: string, status = 'open') => ({ id, member_id: member, member_name: member, description: `d${id}`, status, due_date: '2026-10-01', total_due_cents: 100 });
