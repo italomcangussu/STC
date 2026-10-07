@@ -1,14 +1,17 @@
 {
   "versao": 2,
-  "geradoEm": "2026-10-06T12:10:11.852Z",
-  "commit": "9744c514",
+  "geradoEm": "2026-10-07T10:44:53.264Z",
+  "commit": "75006bf1",
   "pastas": [
     "__tests__",
     "__tests__/admin",
+    "__tests__/conversations",
     "__tests__/finance",
+    "__tests__/signatures",
     "components",
     "components/TenisProPlayer",
     "components/admin",
+    "components/conversations",
     "components/creator",
     "components/finance",
     "components/ui",
@@ -16,11 +19,14 @@
     "design",
     "design/tabela-confrontos",
     "docs",
+    "docs/assinaturas",
+    "docs/conversas",
     "docs/financeiro",
     "docs/superpowers",
     "hooks",
     "lib",
     "lib/championship",
+    "lib/conversations",
     "lib/finance",
     "lib/students",
     "migrations",
@@ -32,27 +38,47 @@
     "tasks"
   ],
   "agentmap": {
-    "arquivos": 266,
-    "sha": "6a3ed09",
+    "arquivos": 358,
+    "sha": "43fb4fd",
     "hubs": [
-      "types.ts",
       "lib/supabase.ts",
+      "types.ts",
       "lib/finance/dates.ts",
+      "__tests__/finance/sql/harness.ts",
       "lib/logger.ts",
-      "utils.ts",
-      "components/TenisProPlayer/constants.ts",
+      "__tests__/conversations/sql/harness.ts",
+      "components/finance/ui.tsx",
       "lib/finance/money.ts",
-      "lib/notifications.ts",
-      "lib/championship/formatConfig.ts",
-      "components/finance/ui.tsx"
+      "utils.ts",
+      "components/TenisProPlayer/constants.ts"
     ]
   },
   "skillsPorPerfil": {
     "nuvem": [
       {
+        "name": "analyze",
+        "origem": "plugin",
+        "hash": "36ea29c018fe"
+      },
+      {
+        "name": "architecture",
+        "origem": "plugin",
+        "hash": "dc1adc5cbe10"
+      },
+      {
         "name": "brand-guidelines",
         "origem": "global",
         "hash": "f7f3c8d35f22"
+      },
+      {
+        "name": "brand-review",
+        "origem": "plugin",
+        "hash": "b01afddf9232"
+      },
+      {
+        "name": "build-dashboard",
+        "origem": "plugin",
+        "hash": "c7e9c6c06923"
       },
       {
         "name": "built-in-browser",
@@ -60,9 +86,39 @@
         "hash": "82cf0526b176"
       },
       {
+        "name": "campaign-plan",
+        "origem": "plugin",
+        "hash": "96836aca2eee"
+      },
+      {
+        "name": "capacity-plan",
+        "origem": "plugin",
+        "hash": "f0f2868c2d2b"
+      },
+      {
+        "name": "change-request",
+        "origem": "plugin",
+        "hash": "b4a4ce77c10c"
+      },
+      {
         "name": "chrome-browser",
         "origem": "global",
         "hash": "eb21888039a8"
+      },
+      {
+        "name": "code-review",
+        "origem": "plugin",
+        "hash": "e47663fb711e"
+      },
+      {
+        "name": "competitive-brief",
+        "origem": "plugin",
+        "hash": "05c291dbf042"
+      },
+      {
+        "name": "compliance-tracking",
+        "origem": "plugin",
+        "hash": "65e4a7c7a1c5"
       },
       {
         "name": "computer-use",
@@ -70,9 +126,54 @@
         "hash": "c5d405caab0e"
       },
       {
+        "name": "content-creation",
+        "origem": "plugin",
+        "hash": "393b186bbc34"
+      },
+      {
+        "name": "cowork-plugin-customizer",
+        "origem": "plugin",
+        "hash": "449d404934e6"
+      },
+      {
+        "name": "create-cowork-plugin",
+        "origem": "plugin",
+        "hash": "04047579eb6a"
+      },
+      {
+        "name": "create-viz",
+        "origem": "plugin",
+        "hash": "daa1ef1a1d48"
+      },
+      {
+        "name": "data-context-extractor",
+        "origem": "plugin",
+        "hash": "d5dc5ce73339"
+      },
+      {
+        "name": "data-visualization",
+        "origem": "plugin",
+        "hash": "f76b047a8653"
+      },
+      {
+        "name": "debug",
+        "origem": "plugin",
+        "hash": "5a663df718f1"
+      },
+      {
         "name": "deep-research",
         "origem": "global",
         "hash": "8aec9bc788bf"
+      },
+      {
+        "name": "deploy-checklist",
+        "origem": "plugin",
+        "hash": "68a2bfc0ff16"
+      },
+      {
+        "name": "digest",
+        "origem": "plugin",
+        "hash": "c5f5ca72586a"
       },
       {
         "name": "docs",
@@ -80,9 +181,29 @@
         "hash": "4ca444740219"
       },
       {
+        "name": "documentation",
+        "origem": "plugin",
+        "hash": "5f5c4c45fa84"
+      },
+      {
         "name": "docx",
         "origem": "global",
         "hash": "2c57cdc0688e"
+      },
+      {
+        "name": "draft-content",
+        "origem": "plugin",
+        "hash": "465042f053f5"
+      },
+      {
+        "name": "email-sequence",
+        "origem": "plugin",
+        "hash": "c18ebf4b3da4"
+      },
+      {
+        "name": "explore-data",
+        "origem": "plugin",
+        "hash": "92b2229cca99"
       },
       {
         "name": "fabuloso",
@@ -90,14 +211,49 @@
         "hash": "94848fca4244"
       },
       {
+        "name": "google-ads",
+        "origem": "plugin",
+        "hash": "14efbf25c93d"
+      },
+      {
+        "name": "google-ads-policy",
+        "origem": "plugin",
+        "hash": "c4e954125bf9"
+      },
+      {
+        "name": "google-keywords",
+        "origem": "plugin",
+        "hash": "c16c110c5915"
+      },
+      {
+        "name": "google-my-business",
+        "origem": "plugin",
+        "hash": "5eed3f01d222"
+      },
+      {
         "name": "google-workspace",
         "origem": "global",
-        "hash": "822589fa268c"
+        "hash": "e982aeeac07e"
       },
       {
         "name": "import-memory",
         "origem": "global",
         "hash": "b158007fcb5a"
+      },
+      {
+        "name": "incident-response",
+        "origem": "plugin",
+        "hash": "0229680093f3"
+      },
+      {
+        "name": "knowledge-synthesis",
+        "origem": "plugin",
+        "hash": "e1ae9426f99c"
+      },
+      {
+        "name": "memory-management",
+        "origem": "plugin",
+        "hash": "845b535ad844"
       },
       {
         "name": "morning",
@@ -110,9 +266,49 @@
         "hash": "7489d5b400fe"
       },
       {
+        "name": "performance-report",
+        "origem": "plugin",
+        "hash": "91ec7fecc265"
+      },
+      {
         "name": "pptx",
         "origem": "global",
         "hash": "ec54f4194f80"
+      },
+      {
+        "name": "process-doc",
+        "origem": "plugin",
+        "hash": "a0744d8d6505"
+      },
+      {
+        "name": "process-optimization",
+        "origem": "plugin",
+        "hash": "e75ed90d073f"
+      },
+      {
+        "name": "risk-assessment",
+        "origem": "plugin",
+        "hash": "af09a37328ba"
+      },
+      {
+        "name": "runbook",
+        "origem": "plugin",
+        "hash": "d0d12c906259"
+      },
+      {
+        "name": "search",
+        "origem": "plugin",
+        "hash": "37e4f38e2a39"
+      },
+      {
+        "name": "search-strategy",
+        "origem": "plugin",
+        "hash": "b90a9bf8fd04"
+      },
+      {
+        "name": "seo-audit",
+        "origem": "plugin",
+        "hash": "77766595638c"
       },
       {
         "name": "skill-creator",
@@ -120,14 +316,84 @@
         "hash": "6693efb6e390"
       },
       {
+        "name": "source-management",
+        "origem": "plugin",
+        "hash": "45291dc755a1"
+      },
+      {
+        "name": "sql-queries",
+        "origem": "plugin",
+        "hash": "ce231be3a6f9"
+      },
+      {
+        "name": "standup",
+        "origem": "plugin",
+        "hash": "5d15df316712"
+      },
+      {
+        "name": "start",
+        "origem": "plugin",
+        "hash": "7bbd3680f1d1"
+      },
+      {
         "name": "startup-hook-skill",
         "origem": "global",
         "hash": "13f62e839e1b"
       },
       {
+        "name": "statistical-analysis",
+        "origem": "plugin",
+        "hash": "80fa567e0311"
+      },
+      {
+        "name": "status-report",
+        "origem": "plugin",
+        "hash": "1087b7ec4402"
+      },
+      {
+        "name": "system-design",
+        "origem": "plugin",
+        "hash": "27c137e87d78"
+      },
+      {
+        "name": "task-management",
+        "origem": "plugin",
+        "hash": "921b2435ae40"
+      },
+      {
+        "name": "tech-debt",
+        "origem": "plugin",
+        "hash": "79ab3e7bc697"
+      },
+      {
+        "name": "testing-strategy",
+        "origem": "plugin",
+        "hash": "ebfdb1c894cd"
+      },
+      {
         "name": "theme-factory",
         "origem": "global",
         "hash": "8e70c603a335"
+      },
+      {
+        "name": "update",
+        "origem": "plugin",
+        "hash": "6d7c99e5af2d"
+      },
+      {
+        "name": "validate-data",
+        "origem": "plugin",
+        "hash": "90f83338ae75"
+      },
+      {
+        "name": "vendor-review",
+        "origem": "plugin",
+        "hash": "115f2a58b5c7"
+      },
+      {
+        "name": "write-query",
+        "origem": "plugin",
+        "hash": "1454847bc1b1"
       },
       {
         "name": "xlsx",
