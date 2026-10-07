@@ -16,6 +16,7 @@ import { useAdminEmbedded } from '../admin/AdminEmbedContext';
 
 const OverviewTab = lazy(() => import('./tabs/OverviewTab'));
 const MembersTab = lazy(() => import('./tabs/MembersTab'));
+const PendenciesTab = lazy(() => import('./tabs/PendenciesTab'));
 const ReceiptsTab = lazy(() => import('./tabs/ReceiptsTab'));
 const StudentsTab = lazy(() => import('./tabs/StudentsTab'));
 const BillsTab = lazy(() => import('./tabs/BillsTab'));
@@ -29,7 +30,7 @@ const SettingsTab = lazy(() => import('./tabs/SettingsTab'));
 // eslint-disable-next-line react-refresh/only-export-components
 export const FINANCE_GROUPS = [
   { id: 'visao', label: 'Visão', tabs: [['overview', 'Painel'], ['dre', 'DRE'], ['cashflow', 'Fluxo de caixa']] },
-  { id: 'receber', label: 'Receber', tabs: [['members', 'Mensalidades'], ['receipts', 'Comprovantes'], ['students', 'Alunos e Day Card']] },
+  { id: 'receber', label: 'Receber', tabs: [['members', 'Mensalidades'], ['pendencies', 'Pendências'], ['receipts', 'Comprovantes'], ['students', 'Alunos e Day Card']] },
   { id: 'pagar', label: 'Pagar', tabs: [['bills', 'Contas a pagar'], ['recurrences', 'Recorrências']] },
   { id: 'cadastros', label: 'Cadastros', tabs: [['accounts', 'Contas'], ['categories', 'Categorias'], ['settings', 'Configurações']] },
 ] as const;
@@ -71,6 +72,7 @@ export const FinanceHub: React.FC = () => {
   const body = (() => {
     switch (tab) {
       case 'members': return <MembersTab />;
+      case 'pendencies': return <PendenciesTab />;
       case 'receipts': return <ReceiptsTab onChanged={pending.reload} />;
       case 'students': return <StudentsTab />;
       case 'bills': return <BillsTab />;
@@ -92,7 +94,7 @@ export const FinanceHub: React.FC = () => {
             <div className="rounded-2xl bg-linear-to-br from-emerald-500 to-emerald-600 p-3 text-white shadow-lg shadow-emerald-200"><Landmark size={24} /></div>
             <div>
               <h1 className="text-xl font-black tracking-tight text-stone-800 md:text-2xl">Financeiro do clube</h1>
-              <p className="text-xs font-medium text-stone-500">Mensalidades, pagamentos, contas, DRE e caixa</p>
+              <p className="text-xs font-medium text-stone-500">Mensalidades, pendências, pagamentos, contas, DRE e caixa</p>
             </div>
           </div>
         )}
