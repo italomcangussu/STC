@@ -247,7 +247,7 @@ export function proposalText(ctx: Ctx): string {
 }
 
 
-const fold = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+const fold = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
 const brDateFull = (iso: unknown) => {
   const s = String(iso ?? '').slice(0, 10);

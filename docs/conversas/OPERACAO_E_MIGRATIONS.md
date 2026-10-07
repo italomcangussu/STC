@@ -161,3 +161,5 @@ Aditiva (só funções novas; nenhum dado é reescrito). Ordem para pôr no ar:
 3. Abrir **Conversas → IA**: a memória só começa a ter sugestões depois que o João ouvir algo no grupo; nada vira memória sem aprovação.
 
 Reverter: `drop function` das funções acima (a migration traz o roteiro no rodapé). O João volta ao comportamento anterior sem outra mudança.
+
+> Estado em 2026-10-07: migration aplicada no projeto do STC e `whatsapp-webhook` publicado (v27). Se for republicar, envie **todos** os arquivos da função: o conector não faz merge com a versão anterior.
