@@ -4,7 +4,7 @@
  * (inclusive a escolha "não cobrar encargos"), nenhuma multa ou juro é calculada.
  */
 import React, { useEffect, useMemo, useState } from 'react';
-import { CalendarDays, History, Percent, Settings2 } from 'lucide-react';
+import { BellRing, CalendarDays, History, Percent, Settings2 } from 'lucide-react';
 import { notify } from '../../../lib/notifications';
 import { useConfirm } from '../../../hooks/useConfirm';
 import { notifyFinanceError } from '../../../lib/finance/errors';
@@ -250,7 +250,7 @@ const HolidaysSection: React.FC<{ holidays: FinHoliday[]; onChanged: () => void 
 // ------------------------------------------------------------------
 // Auditoria
 // ------------------------------------------------------------------
-const AUDIT_TABLES = [['', 'Tudo'], ['fin_settings', 'Configurações'], ['fin_member_charges', 'Mensalidades'], ['fin_charge_adjustments', 'Descontos e dispensas'], ['fin_charge_payments', 'Pagamentos'], ['fin_receipt_submissions', 'Comprovantes'], ['fin_entries', 'Lançamentos']] as const;
+const AUDIT_TABLES = [['', 'Tudo'], ['fin_settings', 'Configurações'], ['fin_member_charges', 'Mensalidades e pendências'], ['fin_charge_adjustments', 'Descontos e dispensas'], ['fin_charge_payments', 'Pagamentos'], ['fin_receipt_submissions', 'Comprovantes'], ['fin_entries', 'Lançamentos']] as const;
 
 const AuditSection: React.FC = () => {
   const [table, setTable] = useState('');
