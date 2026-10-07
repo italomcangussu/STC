@@ -27,7 +27,6 @@ class FakeObserver {
 
 const page = (n: number) => document.querySelector(`[data-page="${n}"]`)!;
 const endMarker = () => document.querySelector('[data-end]')!;
-const flush = () => act(async () => { await Promise.resolve(); await Promise.resolve(); });
 
 // Os observadores nascem num efeito, logo depois de a página aparecer: espera por eles antes de agir.
 const observersReady = () => vi.waitFor(() => expect(FakeObserver.live()).toHaveLength(3));
@@ -51,7 +50,7 @@ const reachEnd = async () => {
 };
 
 function fakePdf(pageCount = 3) {
-  const render = vi.fn(async () => undefined);
+  const render = vi.fn(async (_n: number, _c: HTMLCanvasElement, _w: number, _r: number, _s?: AbortSignal): Promise<void> => undefined);
   const destroy = vi.fn(async () => undefined);
   const handle = { pageCount, sizes: Array.from({ length: pageCount }, () => ({ width: 600, height: 800 })), render, destroy };
   openPdf.mockResolvedValue(handle);
@@ -94,7 +93,7 @@ describe('leitor de PDF', () => {
   it('libera a memória da página que se afastou e cancela o desenho em andamento', async () => {
     const pdf = fakePdf(2);
     let signal: AbortSignal | undefined;
-    pdf.render.mockImplementation(async (_n: number, _c: HTMLCanvasElement, _w: number, _r: number, s?: AbortSignal) => { signal = s; return new Promise<void>(() => undefined); });
+    pdf.render.mockImplementation(async (_n, _c, _w, _r, s) => { signal = s; return new Promise<void>(() => undefined); });
     render(<PdfReader data={bytes} expectedPages={2} track />);
     await screen.findByLabelText('Página 1 de 2');
     const canvas = document.querySelector('canvas')!;

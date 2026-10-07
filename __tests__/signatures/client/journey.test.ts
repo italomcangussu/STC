@@ -27,7 +27,7 @@ describe('trilha da leitura enviada ao servidor', () => {
   });
 
   it('cada passo é enviado uma vez só quando já foi registrado', async () => {
-    const send = vi.fn(async () => undefined);
+    const send = vi.fn(async (_kind: string) => undefined);
     const j = createJourney(send);
     await j.log('viewed');
     await j.log('viewed');

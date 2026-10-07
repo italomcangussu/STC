@@ -5,7 +5,7 @@
 > `signature-operations` (código + WhatsApp) e `signature-dispatch` (avisos e lembretes) **escritas e testadas, ainda NÃO
 > publicadas** (`__tests__/signatures/edge/`, 108 testes, incluindo um que liga a edge function ao SQL real).
 > **Telas do sócio prontas** (aba "Documentos e Assinaturas", leitor de PDF, aceite, CPF, folha do código, link `#documentos/<id>`,
-> selo de pendentes no menu): ver §8 (`__tests__/signatures/client/`, 14 arquivos). Falta o outro lado: o admin ainda não tem tela
+> selo de pendentes no menu): ver §8 (`__tests__/signatures/client/`, 12 arquivos). Falta o outro lado: o admin ainda não tem tela
 > para subir/publicar (fase 4); sem isso, o documento só nasce por SQL/RPC.
 > Fases seguintes: 4 Painel Admin · 5 comprovante em PDF e lembretes agendados.
 
