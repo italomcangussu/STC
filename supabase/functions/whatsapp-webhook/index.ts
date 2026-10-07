@@ -3,6 +3,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2.89.0';
 import { handleWhatsappWebhook, type ChannelDelivery } from './handler.ts';
 import { uazCaller } from '../_shared/uazChat.ts';
 import { recordInbound, type RecordDeps } from './record.ts';
+import { buildAdminPush } from './pushNotify.ts';
 import { chatClient } from '../_shared/aiAgent/llm.ts';
 import { runTurn } from '../_shared/aiAgent/turn.ts';
 
@@ -25,35 +26,22 @@ const waitUntil = (task) => { if (typeof EdgeRuntime !== 'undefined') EdgeRuntim
 // Push notifications para administradores (mensagens diretas de entrada, exceto grupos)
 async function notifyAdminsPush(messageId: string) {
   try {
-    const { data: msg } = await service
+    const { data: msg, error } = await service
       .from('conv_messages')
-      .select('id, body, kind, sender_name, conversation_id, conv_conversations!inner(kind, contact_id, conv_contacts(name, phone))')
+      .select('id, body, kind, direction, conversation_id, conv_conversations!inner(kind, conv_contacts(name, phone))')
       .eq('id', messageId)
       .maybeSingle();
+    if (error) { console.error('push-notify-query', error.message); return; }
 
-    if (!msg || msg.conv_conversations?.kind !== 'direct') return;
+    const push = buildAdminPush(msg);
+    if (!push) return;
 
-    const contactName = msg.conv_conversations.conv_contacts?.name || msg.sender_name || 'Nova mensagem no WhatsApp';
-    const textBody = msg.body
-      ? (msg.body.length > 90 ? msg.body.slice(0, 87) + '...' : msg.body)
-      : (msg.kind === 'image' ? '📷 Foto recebida' : msg.kind === 'audio' ? '🎤 Mensagem de áudio' : '📎 Arquivo recebido');
-
-    const pushEndpoint = `${url}/functions/v1/send-push`;
-    await fetch(pushEndpoint, {
+    const res = await fetch(`${url}/functions/v1/send-push`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${secret}`,
-      },
-      body: JSON.stringify({
-        admin_broadcast: true,
-        title: contactName,
-        body: textBody,
-        url: '/conversas',
-        tag: `conv-${msg.conversation_id}`,
-        data: { conversationId: msg.conversation_id, messageId: msg.id },
-      }),
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${secret}` },
+      body: JSON.stringify(push),
     });
+    if (!res.ok) console.error('push-notify-send', res.status, (await res.text()).slice(0, 200));
   } catch (err) {
     console.error('push-notify-error', err);
   }
