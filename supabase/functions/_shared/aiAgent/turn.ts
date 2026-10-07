@@ -67,7 +67,29 @@ export type Answer = {
   summary?: string | null;
   /** Aprendizados sociais candidatos; o servidor só registra como pendentes para revisão. */
   memory_candidates?: { subject_name: string; kind: string; content: string; confidence?: number }[];
+  /** Emoji que o servidor coloca na mensagem da pessoa (como um amigo que curte). Só os da lista `REACTIONS`. */
+  reaction?: string | null;
 };
+
+/** Reações que o João pode dar. O modelo escolhe; o servidor só aceita estas (e nunca reage em nome de outro assunto). */
+export const REACTIONS = ['👍', '😂', '🎾', '🔥', '👏', '❤️', '🙌', '💪', '😅', '🤝'] as const;
+const stripVs = (e: string) => e.replace(/\uFE0F/g, '');
+export function parseReaction(v: unknown): string | null {
+  const e = typeof v === 'string' ? stripVs(v.trim()) : '';
+  return e ? REACTIONS.find((r) => stripVs(r) === e) ?? null : null;
+}
+
+/**
+ * Conversa solta de grupo (nada em andamento) aguenta mais soltura de humor; reserva e proposta ficam
+ * firmes para o modelo não "criar" dado. Temperatura mais alta só onde o erro não custa nada.
+ */
+const SLOT_KEYS: (keyof Slots)[] = ['date', 'start', 'court_label', 'participant_names', 'reservation_ref', 'add_names', 'remove_names', 'guest_name', 'professor_name', 'student_names'];
+export function turnTemperature(isGroup: boolean, ctx: Ctx, memory: { slots?: Slots }): number {
+  if (!isGroup || ctx.open_proposal) return 0.2;
+  const slots = memory.slots ?? {};
+  const emAndamento = SLOT_KEYS.some((k) => { const v = slots[k]; return Array.isArray(v) ? v.length > 0 : Boolean(v); });
+  return emAndamento ? 0.2 : 0.45;
+}
 
 /* ------------------------------- Parse (soft-fail) ------------------------------- */
 
@@ -138,6 +160,7 @@ export function parseAnswer(output: string): Answer {
     transfer, handoff_kind: obj.handoff_kind === 'soft' || obj.handoff_kind === 'hard' ? obj.handoff_kind : transfer ? 'hard' : null,
     handoff_note: str(obj.handoff_note)?.slice(0, 500) ?? null, close: obj.close === true && !transfer,
     summary: clipSummary(obj.summary),
+    reaction: parseReaction(obj.reaction),
     memory_candidates: Array.isArray(obj.memory_candidates)
       ? obj.memory_candidates.slice(0, 2).map((x) => {
           const m = x && typeof x === 'object' && !Array.isArray(x) ? x as Record<string, unknown> : {};
@@ -618,6 +641,18 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
     ctx.group_members = membros;
   }
 
+  // Pacote do João (um RPC): memórias APROVADAS pela diretoria, resultados recentes e as últimas falas dele.
+  // Falhou ou a função ainda não existe no banco → o João segue sem esse contexto, nunca para.
+  ctx.joao_memories = []; ctx.joao_results = []; ctx.joao_own_lines = [];
+  try {
+    const pack = (await db('conv_svc_ai_joao_pack', { p_session: session })).data as Ctx | null;
+    if (pack && typeof pack === 'object') {
+      ctx.joao_memories = Array.isArray(pack.memories) ? pack.memories : [];
+      ctx.joao_results = Array.isArray(pack.results) ? pack.results : [];
+      ctx.joao_own_lines = Array.isArray(pack.own_lines) ? pack.own_lines : [];
+    }
+  } catch { /* contexto extra é opcional */ }
+
   // "@61809058967781" vira nome ANTES de o modelo ler tanto a solicitação quanto o papo recente do grupo.
   const textosComMencoes = [
     ...((ctx.transcript ?? []) as Ctx[]).map((t) => String(t.body ?? '')),
@@ -665,6 +700,22 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
     return enviadas;
   };
 
+  // Reação com emoji na mensagem da pessoa: o WhatsApp é a fonte da verdade (recusou → nada muda no banco).
+  // Melhor esforço: falhar em reagir nunca derruba o turno.
+  const reagir = async (emoji: string): Promise<boolean> => {
+    if (!deps.uaz || !ultima?.id) return false;
+    try {
+      const alvo = first<{ provider_message_id: string | null; destination: string | null }>(await db('conv_svc_message_target', { p_message: ultima.id as string }));
+      if (!alvo?.provider_message_id || !alvo.destination) return false;
+      if (!(await latest())) return false;
+      const pedido = buildChatRequest({ action: 'react', number: alvo.destination, messageId: alvo.provider_message_id, emoji });
+      const res = pedido ? await deps.uaz(pedido) : null;
+      if (!res?.ok) return false;
+      await db('conv_svc_staff_react', { p_message: ultima.id as string, p_emoji: emoji });
+      return true;
+    } catch { return false; }
+  };
+
   const save = (memory: Memory | null, decision: string, payload: Record<string, unknown>, awaiting: boolean, close: boolean) =>
     db('conv_svc_ai_save_turn', { p_session: session, p_memory: memory, p_decision: decision, p_payload: payload, p_awaiting: awaiting, p_close: close });
 
@@ -693,7 +744,7 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
     const r = await deps.chat([
       { role: 'system', content: systemPrompt(settings, ctx) },
       { role: 'user', content: userPrompt(ctx, memory, buffered) },
-    ], { model: settings.model, temperature: 0.2, maxTokens: 850, json: true });
+    ], { model: settings.model, temperature: turnTemperature(isGroup, ctx, memory), maxTokens: 900, json: true });
     answer = parseAnswer(r.output);
   } catch {
     return transferir('hard', 'Falha ao chamar o modelo de IA.', memory);
@@ -740,6 +791,20 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
   }
   if (answer.transfer && answer.messages.length === 0) {
     return transferir(answer.handoff_kind ?? 'hard', answer.handoff_note || 'A IA pediu ajuda da equipe.', memory);
+  }
+
+  // Reação: um amigo curte a mensagem antes de (ou em vez de) falar. Sozinha só vale para conversa solta
+  // (agradecimento, notícia boa, piada): nada operacional, sem proposta aberta e sem pergunta pendente.
+  if (answer.reaction && !answer.transfer) {
+    const reagiu = await reagir(answer.reaction);
+    const soReacao = answer.messages.length === 0 && !answer.awaiting && !answer.ready && !answer.customer_confirmed && !answer.declined
+      && !ctx.open_proposal && (answer.intent === 'informar' || answer.intent === 'outro');
+    if (soReacao) {
+      const resumo = answer.summary ?? memory.summary;
+      await save({ ...memory, intent: answer.intent, ...(resumo ? { summary: resumo } : {}) }, 'reaction',
+        { intent: answer.intent, reaction: answer.reaction, delivered: reagiu }, false, answer.close);
+      return { status: 'replied', bubbles: 0, handoff: null, action: reagiu ? 'reacted' : null };
+    }
   }
 
   // Trocar de ação no meio ("na verdade quero cancelar") recomeça os dados; o resto soma ao que já se sabia.
