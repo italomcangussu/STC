@@ -103,7 +103,7 @@ export const PendencyRulesSection: React.FC<{ s: FinSettings; onSaved: () => voi
           Antes de cada envio, o sistema recalcula o saldo e consolida todas as pendências abertas do sócio. Quando o saldo chega a zero, as cobranças futuras param automaticamente.
         </Notice>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 items-end gap-3">
           <Field label="Carência da pendência (dias)">
             <input inputMode="numeric" className={inputCls} value={grace} onChange={(e) => setGrace(e.target.value.replace(/[^0-9]/g, '').slice(0, 3))} />
           </Field>
