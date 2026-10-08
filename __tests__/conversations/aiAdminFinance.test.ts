@@ -756,6 +756,32 @@ describe('consultas nominais do assessor (inadimplentes, pagamentos, ficha, venc
   }, 90000);
 });
 
+describe('limite assumido e novidades (administrador)', () => {
+  it('"o que você faz?": o servidor lista as novidades e o que sabe, sem chamar fallback', async () => {
+    const w = await setup(); const p = provider();
+    const m = await direct(w, 'o que você consegue fazer de novo?');
+    const r = await turn(w, m.message_id, script(answer({ intent: 'admin_consulta', ready: true, slots: { read_domain: 'capacidades' } })).chat, p.uaz);
+    expect(r.action).toBe('admin_read:capacidades');
+    const t = p.sent.at(-1)!.text;
+    expect(t).toMatch(/^Novidades de \d\d\/\d\d:/);
+    expect(t).toMatch(/comunicado no WhatsApp pessoal de todos os sócios/);
+    expect(t).toMatch(/PDF/);
+    expect(t).toMatch(/o Ítalo ensina rápido/);
+  }, 90000);
+
+  it('pedido sem capacidade: o João assume o limite com a frase combinada, manda informar o Ítalo e registra a limitação', async () => {
+    const w = await setup(); const p = provider();
+    const frase = 'Ainda não consigo realizar esse pedido, mas consigo aprender a fazer. Informe ao Ítalo essa minha limitação que ele corrige rapidamente.';
+    const s = script(answer({ transfer: true, handoff_kind: 'hard', handoff_note: 'sem capacidade', messages: ['Vou passar para a equipe.'] }), answer({ messages: [frase] }));
+    const m = await direct(w, 'troca a logo do site pra mim');
+    await turn(w, m.message_id, s.chat, p.uaz);
+    expect(s.calls[1].system).toContain(frase);
+    expect(p.sent.at(-1)!.text).toBe(frase);
+    const [dec] = await q<any>(w.db, `select tool_result as payload from public.conv_ai_decisions order by created_at desc limit 1`);
+    expect(dec.payload).toMatchObject({ limitation: true, asked: 'troca a logo do site pra mim' });
+  }, 90000);
+});
+
 describe('relação nominal dos sócios', () => {
   it('"liste os sócios": o servidor escreve a relação (diretoria e sócios), sem chamar fallback', async () => {
     const w = await setup(); const p = provider();

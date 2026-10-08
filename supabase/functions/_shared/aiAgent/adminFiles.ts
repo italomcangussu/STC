@@ -24,7 +24,7 @@ const pct = (cur: number, prev: number) => (prev === 0 ? '—' : `${(((cur - pre
 export const DOMAIN_TITLE: Partial<Record<AdminReadDomain, string>> = {
   caixa: 'Caixa', receber_pagar: 'A receber e a pagar', dre: 'DRE — Demonstração do Resultado', receita_alunos: 'Receita de alunos',
   comprovantes: 'Comprovantes aguardando análise', acessos: 'Pedidos de acesso', assinaturas: 'Assinaturas', ocupacao: 'Ocupação das quadras',
-  comparativo: 'Comparativo de períodos', followups: 'Retornos', preferencias: 'Preferências', socios: 'Relação de sócios', inadimplentes: 'Inadimplentes', pagamentos: 'Pagamentos recebidos', socio_ficha: 'Ficha do sócio', vencimentos: 'Vencimentos', alunos: 'Alunos', movimentos: 'Últimos lançamentos',
+  comparativo: 'Comparativo de períodos', followups: 'Retornos', preferencias: 'Preferências', socios: 'Relação de sócios', inadimplentes: 'Inadimplentes', pagamentos: 'Pagamentos recebidos', socio_ficha: 'Ficha do sócio', vencimentos: 'Vencimentos', alunos: 'Alunos', movimentos: 'Últimos lançamentos', capacidades: 'O que o João faz',
 };
 
 export function reportDoc(domain: AdminReadDomain, data: unknown, generatedAt: string): PdfDoc {

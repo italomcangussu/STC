@@ -35,6 +35,7 @@ export const CAPABILITIES: readonly Capability[] = [
   { id: 'fin.due.list', domain: 'financeiro', risk: 'N0', label: 'Vencimentos a pagar e a receber, por item', panel: 'Financeiro', onDemand: 'vencimentos' },
   { id: 'pessoas.students', domain: 'pessoas', risk: 'N0', label: 'Alunos ativos e dependentes', panel: 'Alunos', onDemand: 'alunos' },
   { id: 'fin.recent', domain: 'financeiro', risk: 'N0', label: 'Últimos lançamentos pagos', panel: 'Financeiro', onDemand: 'movimentos' },
+  { id: 'club.capabilities', domain: 'clube', risk: 'N0', label: 'O que o João sabe fazer e as novidades', panel: 'João', onDemand: 'capacidades' },
   { id: 'adm.prefs.read', domain: 'clube', risk: 'N0', label: 'Minhas preferências do assessor', panel: 'João', onDemand: 'preferencias' },
   { id: 'fin.student_revenue', domain: 'financeiro', risk: 'N0', label: 'Receita de alunos', panel: 'Financeiro', onDemand: 'receita_alunos' },
   { id: 'fin.receipts', domain: 'financeiro', risk: 'N0', label: 'Fila de comprovantes', panel: 'Financeiro', onDemand: 'comprovantes' },
@@ -98,4 +99,30 @@ export function n3Reply(text: string): string | null {
   if (!hit) return null;
   const onde = hit.panel === 'o painel' ? 'pelo painel administrativo' : `pelo painel administrativo, na seção ${hit.panel}`;
   return `Isso (${hit.what}) eu não faço por aqui, por segurança. Dá pra fazer ${onde}. O resto eu resolvo aqui com você.`;
+}
+
+
+/** Frase do João ao administrador quando o pedido ainda não tem capacidade cadastrada (o Ítalo é quem ensina). */
+export const LIMITATION_PHRASE = 'Ainda não consigo realizar esse pedido, mas consigo aprender a fazer. Informe ao Ítalo essa minha limitação que ele corrige rapidamente.';
+
+/** Novidades, em linguagem de diretoria (as mais recentes primeiro). Acrescente aqui a cada capacidade nova. */
+export const NOVIDADES: readonly { date: string; items: readonly string[] }[] = [
+  { date: '08/10', items: [
+    'Disparar um comunicado no WhatsApp pessoal de todos os sócios, agora ou num horário (ex.: 8h00), com o resumo e o seu "sim" antes.',
+    'Mandar PDF (DRE, caixa, comparativo e outros relatórios), o comprovante de um sócio, anexo de despesa e documentos de assinatura.',
+    'Listas por nome: sócios, inadimplentes, quem pagou, vencimentos, alunos e últimos lançamentos; e a ficha de um sócio.',
+    'Chamar um sócio no privado e mandar uma mensagem (mesmo sem conversa anterior).',
+    'Cadastrar dependente de sócio e incluir ou tirar alguém da diretoria do resumo das 8h.',
+    'Comparar com o período anterior (por que subiu ou caiu), aprovar comprovante e gerar cobranças.',
+    'Ensinar a instalar o app no celular (Android pelo Chrome, iPhone pelo Safari).',
+  ] },
+];
+
+const DOMAIN_NAME: Record<Domain, string> = { financeiro: 'financeiro', pessoas: 'sócios e alunos', quadra: 'quadras e reservas', competicoes: 'competições', clube: 'clube', conversas: 'conversas' };
+
+/** Resposta de "o que você faz / o que há de novo": escrita pelo servidor a partir do registro (nunca de memória do modelo). */
+export function renderCapabilities(): string {
+  const novas = NOVIDADES.map((n) => `Novidades de ${n.date}:\n${n.items.map((i) => `- ${i}`).join('\n')}`).join('\n\n');
+  const dominios = [...new Set(CAPABILITIES.filter((c) => c.risk !== 'N3').map((c) => DOMAIN_NAME[c.domain]))].join(', ');
+  return `${novas}\n\nE sigo cuidando do dia a dia: ${dominios}. Tudo que muda dinheiro ou cadastro eu mostro um resumo e só faço depois do seu "sim". Se pedir algo que eu ainda não sei, me diga: o Ítalo ensina rápido.`;
 }

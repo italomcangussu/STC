@@ -15,7 +15,7 @@
 
 import { extrairObjeto, repararJson, stripCodeFence } from './jsonRepair.ts';
 import type { Chat } from './llm.ts';
-import { ADMIN_READS, n3Reply } from './capabilities.ts';
+import { ADMIN_READS, LIMITATION_PHRASE, n3Reply, renderCapabilities } from './capabilities.ts';
 import { sendWelcome } from './welcome.ts';
 import type { Provision, ProvisionResult } from '../athleteProvision.ts';
 import { isAdminReadDomain, READ_MORE_DOMAINS, renderAdminRead, type AdminReadDomain } from './adminReads.ts';
@@ -707,6 +707,7 @@ const TRANSFER_DIRECT = 'Vou passar a sua conversa para alguém da equipe, tá? 
 const MEMBER_KEEPS = ['Deixa eu entender direito: o que exatamente você quer que eu faça?', 'Não peguei bem o pedido. Me diz de novo com outras palavras que eu resolvo por aqui.', 'Quero te ajudar nisso, só preciso entender melhor. O que você tem em mente?'];
 const MEMBER_KEEP = MEMBER_KEEPS[0];
 const memberKeep = (seed: string) => MEMBER_KEEPS[[...seed].reduce((a, c) => a + c.charCodeAt(0), 0) % MEMBER_KEEPS.length];
+const ADMIN_LIMIT_RULE = `Se o pedido for algo que você não tem como executar (não está nas suas capacidades), diga exatamente esta frase, sem inventar que fez: "${LIMITATION_PHRASE}"`;
 const NO_TRANSFER_RULE = 'ATENÇÃO: você NÃO pode transferir nem encaminhar esta conversa para ninguém; é você quem atende. Responda você mesmo, de forma natural e específica ao que a pessoa escreveu: diga o que consegue fazer sobre isso (ou, com franqueza e sem enrolar, o que não consegue) e peça só o dado que falta. Nada de frases genéricas como "pode contar comigo" ou "me conta o que você precisa". Use transfer: false.';
 const MEMBER_FAIL = 'Não consegui concluir isso agora. Pode tentar de novo em instantes, ou me explicar de outro jeito?';
 const MEMBER_HANDOFF_TALK = /(vou|vamos|irei)\s+(te\s+)?(passar|encaminhar|transferir|pedir)|passar\s+(a|sua)\s+conversa|algu[eé]m\s+da\s+equipe\s+(te|vai)|atendente|transferi/i;
@@ -1321,7 +1322,7 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
         // Quem atende é o João: em vez de uma frase pronta, pede uma resposta de verdade ao modelo, sem a opção de transferir.
         try {
           const r2 = await deps.chat([
-            { role: 'system', content: `${systemPrompt(settings, ctx)}\n\n${NO_TRANSFER_RULE}` },
+            { role: 'system', content: `${systemPrompt(settings, ctx)}\n\n${NO_TRANSFER_RULE}${isAdminAssistant(ctx) ? ` ${ADMIN_LIMIT_RULE}` : ''}` },
             { role: 'user', content: userPrompt(ctx, memory, buffered) },
           ], { model: settings.model, temperature: 0.6, maxTokens: 600, json: true });
           falas = parseAnswer(r2.output).messages.filter((m) => !MEMBER_HANDOFF_TALK.test(m));
@@ -1386,7 +1387,7 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
     await db('conv_svc_ai_handoff', { p_session: session, p_kind: answer.handoff_kind ?? 'hard', p_note: answer.handoff_note || 'Transferida pela IA' });
   }
   await save(d.memory, answer.transfer ? `handoff_${answer.handoff_kind}` : d.close ? 'close' : d.action ?? 'reply',
-    { action: d.action, intent: answer.intent, bubbles: enviadas, ...(fallback ? { fallback, asked: buffered.slice(0, 200) } : {}) }, d.awaiting, d.close || (answer.transfer && answer.handoff_kind === 'hard'));
+    { action: d.action, intent: answer.intent, bubbles: enviadas, ...(fallback || d.bubbles.some((b) => b.includes('Ainda não consigo realizar esse pedido')) ? { fallback: fallback ?? 'limitacao', limitation: true, asked: buffered.slice(0, 200) } : {}) }, d.awaiting, d.close || (answer.transfer && answer.handoff_kind === 'hard'));
   return { status: 'replied', bubbles: enviadas, handoff: answer.transfer ? answer.handoff_kind : null, action: d.action };
 }
 
@@ -2229,6 +2230,7 @@ async function adminArquivo(i: DecideInput, memory: Memory): Promise<Decision> {
 
 /** Consulta do assessor: cada domínio vai para a função certa do banco (mesmo contrato `{ ok, message, data }`). */
 function readAdmin(deps: TurnDeps, session: string, domain: AdminReadDomain, args: Record<string, unknown>) {
+  if (domain === 'capacidades') return Promise.resolve({ data: { ok: true, data: { text: renderCapabilities() } }, error: null } as RpcResult);
   if (domain === 'socios') return deps.db('conv_svc_ai_admin_members', { p_session: session });
   if (READ_MORE_DOMAINS.includes(domain)) return deps.db('conv_svc_ai_admin_read_more', { p_session: session, p_domain: domain, p_args: args });
   return deps.db('conv_svc_ai_admin_read', { p_session: session, p_domain: domain, p_args: args });
