@@ -6,6 +6,8 @@ import { recordInbound, type RecordDeps } from './record.ts';
 import { buildAdminPush } from './pushNotify.ts';
 import { chatClient } from '../_shared/aiAgent/llm.ts';
 import { runTurn } from '../_shared/aiAgent/turn.ts';
+import { renderPdf } from '../_shared/aiAgent/adminFiles.ts';
+import { jsPDF } from 'npm:jspdf@4.2.0';
 import { makeProvision } from '../_shared/athleteProvision.ts';
 import { groqTranscriber } from '../_shared/audioTranscription.ts';
 
@@ -29,6 +31,30 @@ const transcriber = groqKey ? groqTranscriber({
   apiKey: groqKey,
   models: (Deno.env.get('STC_TRANSCRIBE_MODELS') ?? '').split(',').map((x) => x.trim()).filter(Boolean),
 }) : null;
+// Arquivos do João para o administrador: PDF gerado aqui e documentos do sistema copiados para a mídia da conversa.
+const filesKit = {
+  pdf: async (doc) => renderPdf(jsPDF, doc),
+  stage: async (source, name, mime) => {
+    try {
+      let bytes;
+      if ('bytes' in source) bytes = source.bytes;
+      else {
+        const f = await service.storage.from(source.bucket).download(source.path);
+        if (f.error || !f.data) return null;
+        bytes = new Uint8Array(await f.data.arrayBuffer());
+      }
+      if (bytes.byteLength === 0 || bytes.byteLength > MAX_MEDIA_BYTES) return null;
+      const safe = name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9._-]+/g, '-').slice(-100) || 'arquivo';
+      const path = `out/${crypto.randomUUID()}/${safe}`;
+      const up = await service.storage.from(MEDIA_BUCKET).upload(path, bytes, { contentType: mime, upsert: false });
+      return up.error ? null : path;
+    } catch { return null; }
+  },
+  signedUrl: async (path) => {
+    const r = await service.storage.from(MEDIA_BUCKET).createSignedUrl(path, 600);
+    return r.error ? null : r.data.signedUrl;
+  },
+};
 const waitUntil = (task) => { if (typeof EdgeRuntime !== 'undefined') EdgeRuntime.waitUntil(task); };
 
 // Push notifications para administradores (mensagens diretas de entrada, exceto grupos)
@@ -80,6 +106,7 @@ const runAiTurn = (messageId: string, mediaOnly = false) => runTurn(messageId, {
   sleep: (ms) => new Promise((r) => setTimeout(r, ms)),
   provision: makeProvision(service),
   mediaOnly,
+  files: filesKit,
 }).catch((e) => console.error('ai-turn', e instanceof Error ? e.message : 'erro'));
 
 const recordDeps: RecordDeps = {

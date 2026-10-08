@@ -727,6 +727,52 @@ describe('comunicado no WhatsApp de todos os sócios (N1)', () => {
   }, 120000);
 });
 
+describe('arquivos para o administrador (PDF e documentos)', () => {
+  const arq = (slots: Record<string, unknown>) => ({ intent: 'admin_consulta', ready: true, slots });
+  const kitDe = (guardados: { source: unknown; name: string }[]) => ({
+    pdf: async () => new TextEncoder().encode('%PDF-teste'),
+    stage: async (source: unknown, name: string) => { guardados.push({ source, name }); return `out/00000000-0000-4000-8000-00000000000${guardados.length}/${name}`; },
+    signedUrl: async (path: string) => `https://storage.teste/${path}?token=x`,
+  });
+  const comKit = (w: W, id: string, chat: Chat, uaz: UazCaller, files: ReturnType<typeof kitDe> | undefined) =>
+    runTurn(id, { db: pgDb(w.db), chat, uaz, sleep: async () => undefined, files });
+
+  it('"me manda o DRE em PDF": gera pelos dados da consulta, guarda e envia como documento ao próprio administrador', async () => {
+    const w = await setup(); const guardados: { source: unknown; name: string }[] = [];
+    const media: Record<string, unknown>[] = [];
+    const uaz: UazCaller = async ({ path, body }) => { if (path === '/send/media') media.push(body); return { ok: true, body: { messageid: `M${++n}` } }; };
+    const m = await direct(w, 'me manda o DRE do mês em pdf');
+    const r = await comKit(w, m.message_id, script(answer(arq({ file_kind: 'relatorio_pdf', read_domain: 'dre' }))).chat, uaz, kitDe(guardados));
+    expect(r.action).toBe('admin_file:dre');
+    expect(guardados).toHaveLength(1);
+    expect(guardados[0].name).toMatch(/^DRE-Demonstracao-do-Resultado-\d{4}-\d\d-\d\d\.pdf$/);
+    expect(media).toHaveLength(1);
+    expect(media[0]).toMatchObject({ type: 'document', mimetype: 'application/pdf', docName: guardados[0].name });
+    expect(String(media[0].file)).toMatch(/^https:\/\/storage\.teste\/out\//);
+    const [d] = await q<any>(w.db, `select kind, status, media_name from public.conv_messages where kind = 'document'`);
+    expect(d).toMatchObject({ kind: 'document', status: 'sent', media_name: guardados[0].name });
+  }, 90000);
+
+  it('sem relatório informado: pergunta qual; sem o kit de arquivos: avisa e não finge', async () => {
+    const w = await setup(); const p = provider();
+    const m1 = await direct(w, 'quero um pdf');
+    await comKit(w, m1.message_id, script(answer(arq({ file_kind: 'relatorio_pdf' }))).chat, p.uaz, kitDe([]));
+    expect(p.sent.at(-1)!.text).toMatch(/De qual relatório você quer o PDF/);
+    const m2 = await direct(w, 'o DRE em pdf');
+    await comKit(w, m2.message_id, script(answer(arq({ file_kind: 'relatorio_pdf', read_domain: 'dre' }))).chat, p.uaz, undefined);
+    expect(p.sent.at(-1)!.text).toMatch(/Não consegui gerar ou anexar arquivo agora/);
+    expect(await q(w.db, `select 1 from public.conv_messages where kind = 'document'`)).toHaveLength(0);
+  }, 90000);
+
+  it('não administrador não recebe arquivo: o pedido nem chega à consulta', async () => {
+    const w = await setup(); const p = provider(); const guardados: { source: unknown; name: string }[] = [];
+    const m = await direct(w, 'manda o DRE em pdf', '5599977770000');
+    await comKit(w, m.message_id, script(answer(arq({ file_kind: 'relatorio_pdf', read_domain: 'dre' }))).chat, p.uaz, kitDe(guardados));
+    expect(guardados).toHaveLength(0);
+    expect(await q(w.db, `select 1 from public.conv_messages where kind = 'document'`)).toHaveLength(0);
+  }, 90000);
+});
+
 describe('comprovante enviado logo depois do texto: o João não fica mudo', () => {
   const imagem = (w: W, phone: string) => svc<any>(w.db, `public.conv_svc_ingest_message(${j({ provider_id: `I${++n}${Math.random()}`, chat_kind: 'direct', phone, name: 'X', kind: 'image', body: '📷 Foto' })})`);
   const turnoMidia = (w: W, id: string, chat: Chat, uaz: UazCaller) => runTurn(id, { db: pgDb(w.db), chat, uaz, sleep: async () => undefined, mediaOnly: true });

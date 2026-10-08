@@ -19,6 +19,7 @@ import { ADMIN_READS, n3Reply } from './capabilities.ts';
 import { sendWelcome } from './welcome.ts';
 import type { Provision, ProvisionResult } from '../athleteProvision.ts';
 import { isAdminReadDomain, renderAdminRead, type AdminReadDomain } from './adminReads.ts';
+import { isFileKind, reportDoc, safeName, type FileKind, type FileKit } from './adminFiles.ts';
 import { receiptReceivedMessage, studentCardProposalMessage, studentCardSuccessMessage } from './studentCard.ts';
 import { hearAudios, unheardOnly, UNCLEAR_AUDIO_REPLY } from './audio.ts';
 import { adminPendencyRefs, isAdminAssistant, systemPrompt, userPrompt, type AiSettings, type Ctx } from './prompts.ts';
@@ -36,6 +37,8 @@ export type TurnDeps = {
   provision?: Provision;
   /** Turno disparado pela mídia (comprovante já lido): só vale para administrador no privado; o resto não responde por aqui. */
   mediaOnly?: boolean;
+  /** Gera PDF e entrega arquivos ao administrador no privado. Sem isso o João diz que não consegue gerar o arquivo agora. */
+  files?: FileKit;
 };
 
 export type Slots = {
@@ -97,6 +100,8 @@ export type Slots = {
   pref?: 'resumo' | 'estilo' | 'alertas' | 'saldo_minimo' | 'dias_atraso' | 'conta_padrao' | null;
   pref_value?: string | null;
   read_domain?: AdminReadDomain | null;
+  /** Pedido de arquivo ao administrador: relatório em PDF, comprovante de sócio, anexo de despesa ou documento de assinatura. */
+  file_kind?: FileKind | null;
   read_from?: string | null;
   read_to?: string | null;
 };
@@ -230,6 +235,7 @@ export function parseSlots(raw: unknown): Slots {
   if ('relationship' in o) out.relationship = ['esposa', 'esposo', 'filho', 'filha', 'outro'].includes(o.relationship as string) ? o.relationship as Slots['relationship'] : null;
   if ('pref' in o) out.pref = ['resumo', 'estilo', 'alertas', 'saldo_minimo', 'dias_atraso', 'conta_padrao'].includes(o.pref as string) ? o.pref as Slots['pref'] : null;
   if ('pref_value' in o) out.pref_value = str(o.pref_value);
+  if ('file_kind' in o) out.file_kind = isFileKind(o.file_kind) ? o.file_kind : null;
   if ('read_domain' in o) out.read_domain = isAdminReadDomain(o.read_domain) ? o.read_domain : null;
   if ('read_from' in o) out.read_from = isoDate(o.read_from);
   if ('read_to' in o) out.read_to = isoDate(o.read_to);
@@ -1004,7 +1010,10 @@ export type TurnResult = { status: string; reason?: string; bubbles?: number; ha
 type Memory = { intent?: Intent; slots?: Slots; proposal_names?: string[]; pending_guest?: string | null; summary?: string; [k: string]: unknown };
 
 type Decision = { bubbles: string[]; awaiting: boolean; close: boolean; action: string | null; memory: Memory; handoff?: { kind: 'soft' | 'hard'; note: string };
-  /** Relatório do servidor: vai numa mensagem só, com as quebras de linha (sem picotar em microbolhas). */ verbatim?: boolean };
+  /** Relatório do servidor: vai numa mensagem só, com as quebras de linha (sem picotar em microbolhas). */ verbatim?: boolean;
+  /** Arquivos para o administrador (já copiados para a mídia da conversa): saem como documento depois da fala. */ files?: OutFile[] };
+
+type OutFile = { path: string; name: string; mime: string; caption: string };
 
 export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnResult> {
   const { db } = deps;
@@ -1136,6 +1145,27 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
       enviadas += 1;
     }
     return enviadas;
+  };
+
+  // Arquivos como documento (comprovante, PDF): enfileira na conversa, assina o link da mídia e manda pela UazAPI.
+  const entregarArquivos = async (arquivos: OutFile[]) => {
+    let enviados = 0;
+    for (const f of arquivos) {
+      if (!(await latest())) break;
+      const q = first<{ message_id: string; destination: string }>(await db('conv_svc_queue_message', {
+        p_conversation: conversation,
+        p: { kind: 'document', body: f.caption, media_path: f.path, mime: f.mime, file_name: f.name },
+        p_author: null, p_key: crypto.randomUUID(), p_origin: 'ai', p_session: session,
+      }));
+      if (!q) break;
+      const url = deps.files ? await deps.files.signedUrl(f.path) : null;
+      const pedido = url ? buildChatRequest({ action: 'send', number: q.destination, kind: 'document', text: f.caption, fileUrl: url, mime: f.mime, fileName: f.name }) : null;
+      const res = deps.uaz && pedido ? await deps.uaz(pedido) : { ok: false as const, error: 'WHATSAPP_NOT_CONFIGURED' };
+      await db('conv_svc_finish_message', { p_message: q.message_id, p_sent: res.ok, p_provider_id: res.ok ? providerIdFrom((res as { body: Record<string, unknown> }).body) : null, p_error: uazError(res) });
+      if (!res.ok) break;
+      enviados += 1;
+    }
+    return enviados;
   };
 
   // Reação com emoji na mensagem da pessoa: o WhatsApp é a fonte da verdade (recusou → nada muda no banco).
@@ -1334,7 +1364,8 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
     await save(d.memory, `handoff_${d.handoff.kind}`, { action: d.action, reason: d.handoff.note.slice(0, 200) }, false, d.handoff.kind === 'hard');
     return { status: 'handoff', handoff: d.handoff.kind, action: d.action };
   }
-  const enviadas = await entregar(d.verbatim ? [{ text: d.bubbles.join('\n\n'), delayMs: 900 }] : cadence(d.bubbles));
+  let enviadas = await entregar(d.verbatim ? [{ text: d.bubbles.join('\n\n'), delayMs: 900 }] : cadence(d.bubbles));
+  if (d.files?.length) enviadas += await entregarArquivos(d.files);
   if (answer.transfer && !isGroup) {
     await db('conv_svc_ai_handoff', { p_session: session, p_kind: answer.handoff_kind ?? 'hard', p_note: answer.handoff_note || 'Transferida pela IA' });
   }
@@ -1929,6 +1960,7 @@ async function adminConsulta(i: DecideInput, memory: Memory): Promise<Decision> 
   const { deps, ctx, slots, session } = i;
   const ask = (text: string, awaiting = true): Decision => ({ bubbles: [text], awaiting, close: false, action: 'ask', memory });
   if (!isAdminAssistant(ctx)) return ask('Essa consulta é só com a diretoria, pela conversa privada. Posso te ajudar com outra coisa?', false);
+  if (slots.file_kind) return adminArquivo(i, memory);
   if (!slots.read_domain) return ask('O que você quer ver: caixa, a receber/a pagar, resultado (DRE), receita de alunos, comprovantes, pedidos de acesso, assinaturas ou reservas do dia?');
   const args: Record<string, unknown> = { from: slots.read_from ?? null, to: slots.read_to ?? null, date: slots.date ?? null };
   const res = (await deps.db('conv_svc_ai_admin_read', { p_session: session, p_domain: slots.read_domain, p_args: args })).data as
@@ -2118,3 +2150,48 @@ async function failure(code: string, message: string | undefined, i: DecideInput
 }
 
 const isGroupText = (ctx: Ctx) => ctx.is_group === true;
+
+
+/** Arquivo para o administrador no privado (somente leitura, vai para ele mesmo): PDF de relatório ou documento que o sistema guarda. */
+async function adminArquivo(i: DecideInput, memory: Memory): Promise<Decision> {
+  const { deps, slots, session } = i;
+  const ask = (text: string, awaiting = true): Decision => ({ bubbles: [text], awaiting, close: false, action: 'ask', memory });
+  const kit = deps.files;
+  if (!kit) return ask('Não consegui gerar ou anexar arquivo agora. Posso te mandar o resumo em texto?', false);
+  const falhou = ask('Não consegui anexar o arquivo agora. Tenta de novo daqui a pouco?', false);
+  const kind = slots.file_kind as FileKind;
+  if (kind === 'relatorio_pdf') {
+    if (!slots.read_domain) return ask('De qual relatório você quer o PDF: caixa, a receber/a pagar, resultado (DRE), receita de alunos, comparativo, comprovantes, assinaturas ou reservas do dia? E de qual período?');
+    const args: Record<string, unknown> = { from: slots.read_from ?? null, to: slots.read_to ?? null, date: slots.date ?? null };
+    const res = (await deps.db('conv_svc_ai_admin_read', { p_session: session, p_domain: slots.read_domain, p_args: args })).data as { ok: boolean; message?: string; data?: unknown } | null;
+    if (!res?.ok) return ask(res?.message ?? 'Não consegui consultar isso agora. Tenta de novo daqui a pouco?', false);
+    const quando = new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Fortaleza', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date()).replace(',', '');
+    const doc = reportDoc(slots.read_domain, res.data, quando);
+    const bytes = await kit.pdf(doc).catch(() => null);
+    if (!bytes) return falhou;
+    const nome = `${safeName(doc.title.replace(/^STC — /, ''))}-${new Date().toLocaleDateString('en-CA', { timeZone: 'America/Fortaleza' })}.pdf`;
+    const path = await kit.stage({ bytes }, nome, 'application/pdf');
+    if (!path) return falhou;
+    return { bubbles: ['Aqui está o PDF, gerado agora com os mesmos números da consulta.'], awaiting: false, close: false, action: `admin_file:${slots.read_domain}`, memory,
+      files: [{ path, name: nome, mime: 'application/pdf', caption: doc.title.replace(/^STC — /, '') + (doc.subtitle ? ` · ${doc.subtitle.replace('Período: ', '')}` : '') }] };
+  }
+  const p: Record<string, unknown> = { kind, from: slots.read_from ?? null, to: slots.read_to ?? null };
+  if (kind === 'comprovante') {
+    if (slots.member_name) {
+      const r = await resolve(deps.db, [slots.member_name], 'member');
+      if (r.ask) return ask(r.ask);
+      p.profile_id = r.ids[0];
+    }
+  } else if (kind === 'despesa_anexo') p.text = slots.description ?? slots.note ?? null;
+  else p.text = slots.doc_title ?? null;
+  const res = (await deps.db('conv_svc_ai_admin_file', { p_session: session, p })).data as
+    { ok: boolean; message?: string; files?: { bucket: string; path: string; name: string; mime: string; label: string }[] } | null;
+  if (!res?.ok || !res.files?.length) return ask(res?.message ?? 'Não achei nenhum arquivo com esses dados.', false);
+  const out: OutFile[] = [];
+  for (const f of res.files) {
+    const path = await kit.stage({ bucket: f.bucket, path: f.path }, f.name, f.mime);
+    if (path) out.push({ path, name: f.name, mime: f.mime, caption: f.label });
+  }
+  if (!out.length) return falhou;
+  return { bubbles: [out.length > 1 ? `Achei ${out.length} arquivos, já mando.` : 'Achei, já mando o arquivo.'], awaiting: false, close: false, action: `admin_file:${kind}`, memory, files: out };
+}

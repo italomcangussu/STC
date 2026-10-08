@@ -7,18 +7,18 @@ type Row = Record<string, unknown>;
 
 export const isAdminReadDomain = (v: unknown): v is AdminReadDomain => ADMIN_READ_DOMAINS.includes(v as AdminReadDomain);
 
-const brl = (v: unknown) => `R$ ${(Number(v ?? 0) / 100).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`;
+export const brl = (v: unknown) => `R$ ${(Number(v ?? 0) / 100).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`;
 const dia = (v: unknown) => String(v ?? '').slice(0, 10).split('-').reverse().join('/');
 const dh = (v: unknown) => { const s = String(v ?? ''); return s ? `${dia(s)}` : ''; };
-const n = (v: unknown) => Number(v ?? 0);
-const arr = (v: unknown): Row[] => (Array.isArray(v) ? v as Row[] : []);
-const periodo = (d: Row) => `${dia(d.from)} a ${dia(d.to)}`;
+export const n = (v: unknown) => Number(v ?? 0);
+export const arr = (v: unknown): Row[] => (Array.isArray(v) ? v as Row[] : []);
+export const periodo = (d: Row) => `${dia(d.from)} a ${dia(d.to)}`;
 
 const EXPENSE_LINES = ['variable_cost', 'operational', 'administrative', 'commercial', 'financial'];
-const LINE_LABEL: Record<string, string> = { revenue: 'Receitas', deduction: 'Deduções', variable_cost: 'Custos variáveis', operational: 'Operacional',
+export const LINE_LABEL: Record<string, string> = { revenue: 'Receitas', deduction: 'Deduções', variable_cost: 'Custos variáveis', operational: 'Operacional',
   administrative: 'Administrativo', commercial: 'Comercial', financial: 'Financeiro' };
 
-const sumLines = (rows: Row[]) => {
+export const sumLines = (rows: Row[]) => {
   const by = (l: string) => n(rows.find((r) => r.line === l)?.amount_cents);
   const despesas = EXPENSE_LINES.reduce((t, l) => t + by(l), 0);
   return { receitas: by('revenue'), deducoes: by('deduction'), despesas, resultado: by('revenue') - by('deduction') - despesas };
