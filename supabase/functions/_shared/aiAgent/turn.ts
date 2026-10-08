@@ -1040,6 +1040,12 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
   const ctx = ((await db('conv_svc_ai_context', { p_session: session })).data ?? ctx0) as Ctx;
   if (deps.mediaOnly && (isGroup || !isAdminAssistant(ctx))) return { status: 'skip', reason: 'media_only' };
 
+  // Cargo da pessoa que fala com o João (memória aprovada): ele passa a tratá-la por ele.
+  try {
+    const t = await db('conv_svc_ai_requester_title', { p_session: session });
+    if (typeof t.data === 'string' && t.data && ctx.requester && typeof ctx.requester === 'object') (ctx.requester as Ctx).title = t.data;
+  } catch { /* sem cargo: segue normalmente */ }
+
   // Contexto extra continua barato: SQL compacto + uma única chamada ao modelo por turno.
   try {
     const roster = await db('conv_svc_ai_club_roster', {});
@@ -1334,8 +1340,12 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
     }
   }
 
+  // Cargo informado ou corrigido por um administrador no privado já entra aprovado; o servidor confirma ("Anotei"), o modelo não.
+  const anotados: string[] = [];
   for (const candidate of answer.memory_candidates ?? []) {
-    await Promise.resolve(deps.db('conv_svc_ai_memory_candidate', { p: { ...candidate, source_message_id: messageId } })).catch(() => undefined);
+    const aprova = candidate.kind === 'role_title' && !isGroup && isAdminAssistant(ctx);
+    const r = await Promise.resolve(deps.db('conv_svc_ai_memory_candidate', { p: { ...candidate, source_message_id: messageId, approve: aprova } })).catch(() => null);
+    if (aprova && r?.data) anotados.push(`${candidate.subject_name} é ${candidate.content.replace(/^(o|a)\s+/i, '')}`);
   }
   if (answer.transfer && answer.messages.length === 0) {
     return transferir(answer.handoff_kind ?? 'hard', answer.handoff_note || 'A IA pediu ajuda da equipe.', memory);
@@ -1363,6 +1373,7 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
   const nextMemory: Memory = { ...memory, intent: answer.intent, slots, ...(summary ? { summary } : {}) };
 
   const d = await decide({ deps, ctx, answer, slots, memory: nextMemory, session, ultimaId: ultima?.id as string | undefined, today });
+  if (anotados.length && !d.handoff) d.bubbles = [...d.bubbles, `📝 Anotei: ${anotados.join('; ')}.`];
   // Os fechamentos (confirmou, desistiu) zeram os dados do pedido, mas o resumo da conversa fica.
   if (summary && !d.memory.summary) d.memory = { ...d.memory, summary };
   if (d.handoff && socioNoPrivado) {

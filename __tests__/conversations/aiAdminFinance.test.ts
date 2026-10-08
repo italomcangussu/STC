@@ -782,6 +782,34 @@ describe('limite assumido e novidades (administrador)', () => {
   }, 90000);
 });
 
+describe('memória de cargos (role_title)', () => {
+  it('administrador informa o cargo: entra aprovado, o servidor confirma ("Anotei") e o João passa a tratar a pessoa pelo cargo', async () => {
+    const w = await setup(); const p = provider();
+    const m = await direct(w, 'o Beto é o vice-presidente do clube');
+    const s1 = script(answer({ messages: ['Beleza, anotado.'], memory_candidates: [{ subject_name: 'Beto Sócio', kind: 'role_title', content: 'Vice-presidente do clube', confidence: 1 }] }));
+    await turn(w, m.message_id, s1.chat, p.uaz);
+    const [c] = await q<any>(w.db, `select status, kind, content from public.conv_ai_memory_candidates where kind = 'role_title' and subject_name = 'Beto Sócio'`);
+    expect(c).toMatchObject({ status: 'approved', content: 'Vice-presidente do clube' });
+    expect(p.sent.map((x) => x.text).join('\n')).toMatch(/📝 Anotei: Beto Sócio é Vice-presidente do clube\./);
+    // o cargo chega ao prompt de quando o Beto falar
+    const m2 = await direct(w, 'bom dia', '5599900000003');
+    const s2 = script(answer({ messages: ['Bom dia, Vice!'] }));
+    await q(w.db, `update public.profiles set phone = '5599900000003' where id = '${U.socioB}'`);
+    await turn(w, m2.message_id, s2.chat, p.uaz);
+    expect(s2.calls.at(-1)!.user + s2.calls.at(-1)!.system).toContain('Cargo no clube: Vice-presidente do clube');
+  }, 120000);
+
+  it('cargo novo substitui o anterior da mesma pessoa; sócio comum só sugere (fica pendente)', async () => {
+    const w = await setup();
+    await svc(w.db, `public.conv_svc_ai_memory_candidate(${j({ subject_name: 'Beto Sócio', kind: 'role_title', content: 'Tesoureiro', approve: true })})`);
+    await svc(w.db, `public.conv_svc_ai_memory_candidate(${j({ subject_name: 'Beto Sócio', kind: 'role_title', content: 'Vice-presidente', approve: true })})`);
+    expect(await q<any>(w.db, `select content, status from public.conv_ai_memory_candidates where kind = 'role_title' and subject_name = 'Beto Sócio' order by created_at`)).toEqual([
+      { content: 'Tesoureiro', status: 'superseded' }, { content: 'Vice-presidente', status: 'approved' }]);
+    await svc(w.db, `public.conv_svc_ai_memory_candidate(${j({ subject_name: 'Fulano', kind: 'role_title', content: 'Presidente' })})`);
+    expect((await q<any>(w.db, `select status from public.conv_ai_memory_candidates where subject_name = 'Fulano'`))[0].status).toBe('pending');
+  }, 90000);
+});
+
 describe('relação nominal dos sócios', () => {
   it('"liste os sócios": o servidor escreve a relação (diretoria e sócios), sem chamar fallback', async () => {
     const w = await setup(); const p = provider();
