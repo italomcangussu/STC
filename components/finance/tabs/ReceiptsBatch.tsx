@@ -19,6 +19,7 @@ import type { ReceiptAnalysis } from '../../../lib/finance/receipts';
 import type { ReceiptQueueRow } from '../../../lib/finance/types';
 import { analyzeFromStatements, batchReadiness, duplicateCandidates, mapLimit, runSequential, type BatchReadiness } from '../../../lib/finance/batch';
 import { brDate, monthLabel, type IsoDate } from '../../../lib/finance/dates';
+import { defaultReceiptsAccountId } from '../../../lib/finance/accounts';
 import { formatBRL } from '../../../lib/finance/money';
 import { useAsync, useToday } from '../hooks';
 import { useFinance } from '../FinanceContext';
@@ -82,7 +83,7 @@ export const BatchApproveSheet: React.FC<{ open: boolean; queue: ReceiptQueueRow
   const chosen = ready.filter((i) => selected.has(i.row.id));
   const total = chosen.reduce((s, i) => s + (i.analysis.amountCents ?? 0), 0);
   const allSelected = ready.length > 0 && chosen.length === ready.length;
-  const accountId = account || accounts.find((a) => a.is_default_receipts)?.id || accounts.find((a) => a.active)?.id || '';
+  const accountId = account || defaultReceiptsAccountId(accounts);
   const accountName = accounts.find((a) => a.id === accountId)?.name ?? '';
 
   const toggle = (id: string) => setSelected((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });

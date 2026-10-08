@@ -17,6 +17,7 @@ import { receiptStatusInfo, type ReceiptFlag } from '../../../lib/finance/receip
 import { analyzeFromStatements } from '../../../lib/finance/batch';
 import { brDate, monthLabel, type IsoDate } from '../../../lib/finance/dates';
 import { formatBRL } from '../../../lib/finance/money';
+import { defaultReceiptsAccountId } from '../../../lib/finance/accounts';
 import { useAsync, useRequestKey, useToday } from '../hooks';
 import { useFinance } from '../FinanceContext';
 import { Badge, Card, Empty, ErrorBlock, Field, MoneyInput, Notice, Row, SectionTabs, Sheet, Spinner, btnDanger, btnGhost, btnPrimary, inputCls } from '../ui';
@@ -113,7 +114,7 @@ const ReviewSheet: React.FC<ReviewProps> = ({ id, queue, onClose, onDone }) => {
     const d = detail.data;
     setPaidOn((d.declared_paid_on ?? ocr?.paid_on ?? today) as IsoDate);
     setMethod('pix'); setNote(''); setReason(''); setRejecting(false); setPreview(null); setWaive({}); setAlloc({});
-    setAccount(accounts.find((a) => a.is_default_receipts)?.id ?? accounts.find((a) => a.active)?.id ?? '');
+    setAccount(defaultReceiptsAccountId(accounts));
     renew();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [detail.data?.id]);

@@ -87,6 +87,17 @@ describe('Cobrança — registrar pagamento', () => {
     expect(api.listCharges).toHaveBeenCalledTimes(2);
   });
 
+  it('conta padrão desativada não vem escolhida: o dinheiro entra na primeira conta ativa', async () => {
+    const velha = { ...account, id: 'a-velha', name: 'Conta antiga', active: false };
+    const nova = { ...account, id: 'a-nova', name: 'Conta nova', is_default_receipts: false };
+    mount([velha, nova]);
+    const dlg = await openCharge();
+    fireEvent.click(dlg.getByRole('button', { name: 'Registrar pagamento' }));
+    fireEvent.click(dlg.getByRole('button', { name: 'Confirmar pagamento' }));
+
+    await waitFor(() => expect(api.registerPayment).toHaveBeenCalledWith('c1', 15000, '2026-10-06', 'pix', 'a-nova', null, KEY));
+  });
+
   it('sem observação envia null e o valor digitado vence o sugerido', async () => {
     mount();
     const dlg = await openCharge();

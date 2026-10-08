@@ -17,6 +17,7 @@ import { ENTRY_KIND_LABEL } from '../../../../lib/finance/export';
 import { safeReceiptFileName, validateReceiptFile } from '../../../../lib/finance/receiptFile';
 import { brDate, type IsoDate } from '../../../../lib/finance/dates';
 import { formatBRL } from '../../../../lib/finance/money';
+import { defaultReceiptsAccountId } from '../../../../lib/finance/accounts';
 import { useAsync, useRequestKey, useToday } from '../../hooks';
 import { categoryLabel, useFinance } from '../../FinanceContext';
 import { Badge, Field, MoneyInput, Notice, Sheet, btnDanger, btnGhost, btnPrimary, inputCls } from '../../ui';
@@ -141,7 +142,7 @@ export const EntrySheet: React.FC<{ entry: FinEntry | null; onClose: () => void;
   const start = (m: Mode) => {
     renew(); setMode(m); setReason(''); setNote(''); setSettle(false); setDate(today);
     setAmount(e.remaining_cents > 0 ? e.remaining_cents : null);
-    setAccount(e.account_id ?? accounts.find((a) => a.is_default_receipts)?.id ?? accounts.find((a) => a.active)?.id ?? '');
+    setAccount(e.account_id ?? defaultReceiptsAccountId(accounts));
     setDesc(e.description); setDue(e.due_date ?? ''); setCategory(e.category_id ?? '');
   };
 

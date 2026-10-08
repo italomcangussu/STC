@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { adjustCharge, cancelCharge, registerPayment, reversePayment } from '../../../../lib/finance/financeApi';
-import type { ChargePaymentRow, ChargeStatementRow, FinAccount } from '../../../../lib/finance/types';
+import type { ChargePaymentRow, ChargeStatementRow } from '../../../../lib/finance/types';
 import { brDate, type IsoDate } from '../../../../lib/finance/dates';
 import { formatBRL } from '../../../../lib/finance/money';
+import { defaultReceiptsAccountId } from '../../../../lib/finance/accounts';
 import { useConfirm } from '../../../../hooks/useConfirm';
 import { useRequestKey, useToday } from '../../hooks';
 import { useFinance } from '../../FinanceContext';
@@ -19,9 +20,6 @@ export interface FormProps { charge: ChargeStatementRow; lastPayment: ChargePaym
 const MIN_REASON = 5;
 const hasReason = (text: string) => text.trim().length >= MIN_REASON;
 
-// A conta pré-selecionada ao registrar: a padrão de recebimentos, senão a primeira ativa.
-const preferredAccount = (accounts: FinAccount[]) => accounts.find((a) => a.is_default_receipts)?.id ?? accounts.find((a) => a.active)?.id ?? '';
-
 export const PayForm: React.FC<FormProps> = ({ charge, busy, submit, onBack }) => {
   const today = useToday();
   const { accounts } = useFinance();
@@ -29,7 +27,7 @@ export const PayForm: React.FC<FormProps> = ({ charge, busy, submit, onBack }) =
   const [amount, setAmount] = useState<number | null>(charge.total_due_cents);
   const [date, setDate] = useState<IsoDate>(today);
   const [method, setMethod] = useState('pix');
-  const [account, setAccount] = useState(preferredAccount(accounts));
+  const [account, setAccount] = useState(defaultReceiptsAccountId(accounts));
   const [note, setNote] = useState('');
 
   const pay = async () => {
