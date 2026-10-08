@@ -1,7 +1,9 @@
 // Consultas do assessor (Onda 1): o servidor busca (RPC `conv_svc_ai_admin_read`, como o administrador) e escreve o texto.
 // O modelo só escolhe o domínio e o período; nenhum número passa pela cabeça dele.
 
-export const ADMIN_READ_DOMAINS = ['caixa', 'receber_pagar', 'dre', 'receita_alunos', 'comprovantes', 'acessos', 'assinaturas', 'ocupacao', 'comparativo', 'followups', 'preferencias', 'socios', 'inadimplentes', 'pagamentos', 'socio_ficha', 'vencimentos', 'alunos', 'movimentos', 'capacidades', 'memoria'] as const;
+export const ADMIN_READ_DOMAINS = ['caixa', 'receber_pagar', 'dre', 'receita_alunos', 'comprovantes', 'acessos', 'assinaturas', 'ocupacao', 'comparativo', 'followups', 'preferencias', 'socios', 'inadimplentes', 'pagamentos', 'socio_ficha', 'vencimentos', 'alunos', 'movimentos', 'capacidades', 'memoria', 'formularios', 'formulario', 'formulario_resultado'] as const;
+/** Domínios de formulários do clube: buscados por `conv_svc_ai_admin_forms_read`. */
+export const FORMS_DOMAINS: readonly string[] = ['formularios', 'formulario', 'formulario_resultado'];
 /** Domínios que o servidor busca por `conv_svc_ai_admin_read_more` (o resto vai por `conv_svc_ai_admin_read`; `socios` por `conv_svc_ai_admin_members`). */
 export const READ_MORE_DOMAINS: readonly string[] = ['inadimplentes', 'pagamentos', 'socio_ficha', 'vencimentos', 'alunos', 'movimentos'];
 export type AdminReadDomain = typeof ADMIN_READ_DOMAINS[number];
@@ -173,10 +175,47 @@ function renderMemoria(d: Row): string {
   return `O que eu sei${quem}:\n${itens.map((i) => `- ${i.subject_name} (${KIND[String(i.kind)] ?? 'nota'}): ${i.content}`).join('\n')}`;
 }
 
+
+const FORM_STATE: Record<string, string> = { aberto: 'aberto', encerrado: 'encerrado', vencido: 'com o prazo vencido', agendado: 'ainda não iniciado' };
+const nomes = (rows: Row[], max = 60) => `${rows.slice(0, max).map((r) => `${r.name}${r.reachable === false ? ' (sem WhatsApp válido)' : ''}`).join(', ')}${rows.length > max ? ` e mais ${rows.length - max}` : ''}`;
+
+function renderFormularios(d: Row): string {
+  const itens = arr(d.items);
+  if (!itens.length) return 'Ainda não há formulário cadastrado.';
+  const linhas = itens.map((i) => `- «${i.title}»: ${FORM_STATE[String(i.state)] ?? i.state}, ${n(i.participants)} ${n(i.participants) === 1 ? 'resposta' : 'respostas'}, ${n(i.questions)} pergunta${n(i.questions) === 1 ? '' : 's'}${i.expires_at ? `, prazo ${dia(i.expires_at)}` : ''}${i.secret ? ', votação secreta' : ''}\n  ${i.link}`).join('\n');
+  return `Formulários do clube (${n(d.audience)} sócios ativos no total):\n${linhas}`;
+}
+
+function renderFormulario(d: Row): string {
+  const respondeu = arr(d.responded); const falta = arr(d.pending); const total = n(d.audience);
+  const aviso = d.requires_auth === false ? '\n⚠ Este formulário aceita resposta sem login: só dá para saber quem respondeu logado.' : '';
+  const modo = d.secret ? 'votação secreta (sei QUEM participou, nunca o que cada um votou)' : 'respostas identificadas';
+  return `«${d.title}» está ${FORM_STATE[String(d.state)] ?? d.state}${d.expires_at ? ` (prazo ${dia(d.expires_at)})` : ''}, ${modo}.\n`
+    + `${respondeu.length} de ${total} sócios responderam; faltam ${falta.length}.${aviso}\n`
+    + `Responderam: ${respondeu.length ? nomes(respondeu) : 'ninguém ainda'}\n`
+    + `Faltam: ${falta.length ? nomes(falta) : 'ninguém, todos responderam 🎉'}\n`
+    + `Link: ${d.link}`;
+}
+
+function renderFormularioResultado(d: Row): string {
+  const perguntas = arr(d.questions);
+  const blocos = perguntas.map((q, i) => {
+    const ops = arr(q.options);
+    const votos = ops.map((o) => `  - ${o.label}: ${n(o.votes)}`).join('\n');
+    const textos = arr(q.texts);
+    const livres = textos.length
+      ? `\n  Respostas escritas (${n(q.texts_total)}${n(q.texts_total) > textos.length ? `, as ${textos.length} mais recentes` : ''}):\n${textos.map((t) => `  - ${t.author ? `${t.author}: ` : ''}${String(t.text).replace(/\s+/g, ' ')}`).join('\n')}`
+      : '';
+    return `${i + 1}. ${q.title}${votos ? `\n${votos}` : ''}${livres}`;
+  }).join('\n\n');
+  return `Resultado de «${d.title}» (${n(d.participants)} ${n(d.participants) === 1 ? 'participante' : 'participantes'}${d.secret ? ', votação secreta: sem nomes' : ''}):\n\n${blocos || 'O formulário não tem perguntas.'}`;
+}
+
 const RENDER: Record<AdminReadDomain, (d: Row) => string> = {
   caixa: renderCaixa, receber_pagar: renderReceberPagar, dre: renderDre, receita_alunos: renderReceitaAlunos,
   comprovantes: renderComprovantes, acessos: renderAcessos, assinaturas: renderAssinaturas, ocupacao: renderOcupacao, comparativo: renderComparativo, followups: renderFollowups, preferencias: renderPreferencias, socios: renderSocios, inadimplentes: renderInadimplentes, pagamentos: renderPagamentos,
   socio_ficha: renderSocioFicha, vencimentos: renderVencimentos, alunos: renderAlunos, movimentos: renderMovimentos, capacidades: renderCapacidades, memoria: renderMemoria,
+  formularios: renderFormularios, formulario: renderFormulario, formulario_resultado: renderFormularioResultado,
 };
 
 export const renderAdminRead = (domain: AdminReadDomain, data: unknown): string =>

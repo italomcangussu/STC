@@ -37,6 +37,24 @@ alter table public.courts enable row level security;
 grant select on public.courts to authenticated;
 create policy courts_read on public.courts for select using (true);
 
+-- Formulários do clube (mesmas colunas da migration 20260930120000): o assessor lê quem respondeu e cria/encerra/lembra.
+create table public.club_forms(id uuid primary key default gen_random_uuid(), title text not null, description text, slug text unique not null,
+  is_active boolean not null default true, is_secret_vote boolean not null default false, requires_auth boolean not null default true,
+  allow_multiple_submissions boolean not null default false, show_live_results boolean not null default true,
+  starts_at timestamptz, expires_at timestamptz, created_by uuid references public.profiles(id) on delete set null,
+  created_at timestamptz not null default now(), updated_at timestamptz not null default now());
+create table public.club_form_questions(id uuid primary key default gen_random_uuid(), form_id uuid not null references public.club_forms(id) on delete cascade,
+  title text not null, description text, question_type text not null check (question_type in ('single_choice', 'multiple_choice', 'open_text')),
+  is_required boolean not null default true, display_order integer not null default 0, created_at timestamptz not null default now());
+create table public.club_form_options(id uuid primary key default gen_random_uuid(), question_id uuid not null references public.club_form_questions(id) on delete cascade,
+  label text not null, display_order integer not null default 0, created_at timestamptz not null default now());
+create table public.club_form_voter_receipts(id uuid primary key default gen_random_uuid(), form_id uuid not null references public.club_forms(id) on delete cascade,
+  user_id uuid not null references public.profiles(id) on delete cascade, created_at timestamptz not null default now(), unique (form_id, user_id));
+create table public.club_form_responses(id uuid primary key default gen_random_uuid(), form_id uuid not null references public.club_forms(id) on delete cascade,
+  question_id uuid not null references public.club_form_questions(id) on delete cascade, option_id uuid references public.club_form_options(id) on delete cascade,
+  text_response text, user_id uuid references public.profiles(id) on delete set null, submission_batch_id uuid not null default gen_random_uuid(),
+  created_at timestamptz not null default now());
+
 create table public.championships(id uuid primary key default gen_random_uuid(), name text not null, status text default 'draft');
 create table public.championship_registrations(id uuid primary key default gen_random_uuid(),
   championship_id uuid references public.championships(id), participant_type text default 'socio',

@@ -18,7 +18,7 @@ import type { Chat } from './llm.ts';
 import { ADMIN_READS, LIMITATION_PHRASE, n3Reply, renderCapabilities } from './capabilities.ts';
 import { sendWelcome } from './welcome.ts';
 import type { Provision, ProvisionResult } from '../athleteProvision.ts';
-import { isAdminReadDomain, READ_MORE_DOMAINS, renderAdminRead, type AdminReadDomain } from './adminReads.ts';
+import { FORMS_DOMAINS, isAdminReadDomain, READ_MORE_DOMAINS, renderAdminRead, type AdminReadDomain } from './adminReads.ts';
 import { isFileKind, reportDoc, safeName, type FileKind, type FileKit } from './adminFiles.ts';
 import { receiptReceivedMessage, studentCardProposalMessage, studentCardSuccessMessage } from './studentCard.ts';
 import { hearAudios, unheardOnly, UNCLEAR_AUDIO_REPLY } from './audio.ts';
@@ -100,11 +100,22 @@ export type Slots = {
   pref?: 'resumo' | 'estilo' | 'alertas' | 'saldo_minimo' | 'dias_atraso' | 'conta_padrao' | null;
   pref_value?: string | null;
   read_domain?: AdminReadDomain | null;
+  /** Formulários do clube: qual (nome ou parte do nome), título e perguntas do novo, votação secreta, resposta múltipla. */
+  form_ref?: string | null;
+  form_title?: string | null;
+  form_questions?: FormQuestionSlot[] | null;
+  form_secret?: boolean | null;
+  form_multiple?: boolean | null;
   /** Pedido de arquivo ao administrador: relatório em PDF, comprovante de sócio, anexo de despesa ou documento de assinatura. */
   file_kind?: FileKind | null;
   read_from?: string | null;
   read_to?: string | null;
 };
+
+/** Pergunta de formulário como o servidor a entende: o modelo só transcreve o que o administrador ditou. */
+export type FormQuestionSlot = { title: string; type: 'single_choice' | 'multiple_choice' | 'open_text'; required: boolean; options: string[] };
+const QUESTION_TYPES: Record<string, FormQuestionSlot['type']> = { unica: 'single_choice', multipla: 'multiple_choice', texto: 'open_text',
+  single_choice: 'single_choice', multiple_choice: 'multiple_choice', open_text: 'open_text' };
 
 export type FinAction = 'lancar' | 'cobrar' | 'pausar' | 'retomar' | 'baixa' | 'renovar_card'
   | 'cancelar_pendencia' | 'ajustar' | 'estornar' | 'rejeitar_comprovante' | 'despesa' | 'receita' | 'aprovar_comprovante' | 'gerar_cobrancas';
@@ -113,7 +124,8 @@ type PayMethod = 'pix' | 'transfer' | 'cash' | 'card' | 'other';
 const FIN_ACTIONS: FinAction[] = ['lancar', 'cobrar', 'pausar', 'retomar', 'baixa', 'renovar_card',
   'cancelar_pendencia', 'ajustar', 'estornar', 'rejeitar_comprovante', 'despesa', 'receita', 'aprovar_comprovante', 'gerar_cobrancas'];
 export const ADM_ACTIONS = ['aviso', 'aviso_desativar', 'aluno_status', 'socio_status', 'assinatura_reenviar', 'reserva_cancelar', 'acesso_aprovar', 'acesso_recusar', 'socio_criar',
-  'followup_criar', 'followup_concluir', 'quadra_bloquear', 'preferencia', 'dependente_criar', 'mensagem_enviar', 'comunicado_enviar', 'resumo_destinatario', 'memoria_esquecer'] as const;
+  'followup_criar', 'followup_concluir', 'quadra_bloquear', 'preferencia', 'dependente_criar', 'mensagem_enviar', 'comunicado_enviar', 'resumo_destinatario', 'memoria_esquecer',
+  'formulario_criar', 'formulario_status', 'formulario_cobrar'] as const;
 export type AdmAction = typeof ADM_ACTIONS[number];
 const ADJUST_KINDS = ['discount', 'increase', 'fee_waiver'] as const;
 const PENDENCY_KINDS: PendencyKind[] = ['day_card', 'consumo', 'evento', 'multa', 'dano_reposicao', 'outros'];
@@ -239,7 +251,25 @@ export function parseSlots(raw: unknown): Slots {
   if ('read_domain' in o) out.read_domain = isAdminReadDomain(o.read_domain) ? o.read_domain : null;
   if ('read_from' in o) out.read_from = isoDate(o.read_from);
   if ('read_to' in o) out.read_to = isoDate(o.read_to);
+  if ('form_ref' in o) out.form_ref = str(o.form_ref)?.slice(0, 120) ?? null;
+  if ('form_title' in o) out.form_title = str(o.form_title)?.slice(0, 120) ?? null;
+  if ('form_questions' in o) out.form_questions = parseFormQuestions(o.form_questions);
+  if ('form_secret' in o) out.form_secret = typeof o.form_secret === 'boolean' ? o.form_secret : null;
+  if ('form_multiple' in o) out.form_multiple = typeof o.form_multiple === 'boolean' ? o.form_multiple : null;
   return out;
+}
+
+/** Perguntas ditadas pelo administrador; o que não tem texto ou tipo reconhecido é descartado (o banco valida o resto). */
+export function parseFormQuestions(v: unknown): FormQuestionSlot[] | null {
+  if (!Array.isArray(v)) return null;
+  const out = v.flatMap((x): FormQuestionSlot[] => {
+    const q = (x && typeof x === 'object' ? x : {}) as Record<string, unknown>;
+    const title = str(q.title)?.slice(0, 200);
+    const type = QUESTION_TYPES[String(q.type ?? 'texto')];
+    if (!title || !type) return [];
+    return [{ title, type, required: q.required !== false, options: Array.isArray(q.options) ? q.options.map((o) => String(o ?? '').trim()).filter(Boolean).slice(0, 12) : [] }];
+  });
+  return out.slice(0, 20);
 }
 
 const SUMMARY_MAX = 600;
@@ -1756,7 +1786,8 @@ type AdminAction = 'fin_pendency_create' | 'fin_pendency_collection' | 'fin_pend
   | 'fin_charge_cancel' | 'fin_charge_adjust' | 'fin_payment_reverse' | 'fin_receipt_reject' | 'fin_entry_create' | 'fin_receipt_approve' | 'fin_charges_generate'
   | 'adm_announcement_create' | 'adm_announcement_deactivate' | 'adm_student_status' | 'adm_member_status' | 'adm_signature_resend' | 'adm_reservation_cancel'
   | 'fin_member_create' | 'fin_access_approve' | 'adm_access_reject'
-  | 'adm_followup_create' | 'adm_followup_done' | 'adm_court_block' | 'adm_pref_set' | 'adm_dependent_create' | 'adm_message_send' | 'adm_broadcast_send' | 'adm_briefing_recipient' | 'adm_memory_forget';
+  | 'adm_followup_create' | 'adm_followup_done' | 'adm_court_block' | 'adm_pref_set' | 'adm_dependent_create' | 'adm_message_send' | 'adm_broadcast_send' | 'adm_briefing_recipient' | 'adm_memory_forget'
+  | 'adm_form_create' | 'adm_form_toggle' | 'adm_form_nudge';
 
 const centsBR = (v: unknown) => `R$ ${(Number(v ?? 0) / 100).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`;
 const dateBR = (v: unknown) => String(v ?? '').slice(0, 10).split('-').reverse().join('/');
@@ -1783,6 +1814,26 @@ function prefText(s: Ctx, done: boolean): string {
   }
 }
 
+const QUESTION_TEXT: Record<string, string> = { single_choice: 'escolha única', multiple_choice: 'múltipla escolha', open_text: 'resposta escrita' };
+
+function formCreateProposal(s: Ctx): string {
+  const qs = (Array.isArray(s.questions) ? s.questions : []) as { title: string; type: string; required: boolean; options: string[] }[];
+  const linhas = qs.map((q, i) => `${i + 1}. ${q.title} (${QUESTION_TEXT[q.type] ?? q.type}${q.required ? '' : ', opcional'})${q.options.length ? `: ${q.options.join(' / ')}` : ''}`).join('\n');
+  const modo = [s.secret ? 'votação secreta (ninguém vê quem votou em quê)' : 'respostas identificadas pelo nome do sócio',
+    s.multiple ? 'cada sócio pode responder mais de uma vez' : 'uma resposta por sócio',
+    s.expires_at ? `aberto até ${dateBR(s.expires_at)}` : 'sem prazo'].join(', ');
+  return `Vou criar o formulário «${s.title}»${s.description ? ` ("${s.description}")` : ''}: ${modo}.\n${linhas}\nFica aberto agora, no link ${s.link}. Confirma? Responda "sim".`;
+}
+
+function formNudgeProposal(s: Ctx): string {
+  const at = new Date(String(s.send_at));
+  const quando = at.getTime() - Date.now() < 90_000 ? 'agora' : `em ${hhmm(s.send_at).replace(', ', ' às ')}`;
+  const nomes = (Array.isArray(s.names) ? s.names : []) as string[];
+  const lista = nomes.length > 40 ? `${nomes.slice(0, 40).join(', ')} e mais ${nomes.length - 40}` : nomes.join(', ');
+  const fora = [Number(s.already) > 0 ? `${s.already} já receberam lembrete nas últimas 24 horas` : '', Number(s.skipped) > 0 ? `${s.skipped} ficam de fora por falta de telefone válido ou por terem pedido para não receber` : ''].filter(Boolean).join('; ');
+  return `Vou lembrar por WhatsApp ${s.count} ${Number(s.count) === 1 ? 'sócio' : 'sócios'} que ainda não responderam o «${s.form_title}», ${quando}: ${lista}${fora ? ` (${fora})` : ''}.\nTexto:\n«${s.body}»\nConfirma? Responda "sim".`;
+}
+
 export function adminProposalMessage(action: AdminAction, s: Ctx): string {
   if (action === 'student_card_renew') return studentCardProposalMessage(s);
   if (action === 'fin_member_create' || action === 'fin_access_approve') {
@@ -1806,6 +1857,9 @@ export function adminProposalMessage(action: AdminAction, s: Ctx): string {
     const fora = Number(s.skipped) > 0 ? ` (${s.skipped} ficam de fora por falta de telefone válido ou por terem pedido para não receber)` : '';
     return `Vou mandar este comunicado no WhatsApp pessoal de ${s.count} sócios, ${quando}${fora}:\n«${s.body}»\nConfirma? Responda "sim".`;
   }
+  if (action === 'adm_form_create') return formCreateProposal(s);
+  if (action === 'adm_form_toggle') return `Vou ${s.active ? 'reabrir' : 'encerrar'} o formulário «${s.title}»${s.active ? (s.expires_at ? ` com prazo até ${dateBR(s.expires_at)}` : '') : ' (ninguém mais consegue responder)'}. Confirma? Responda "sim".`;
+  if (action === 'adm_form_nudge') return formNudgeProposal(s);
   if (action === 'adm_dependent_create') return `Vou cadastrar ${s.dependent_name} como ${s.relationship} de ${s.member_name} (dependente, sem cobrança${s.phone ? `, telefone ${s.phone}` : ''}). Confirma? Responda "sim".`;
   if (action === 'adm_followup_create') {
     const quando = hhmm(s.due_at);
@@ -1859,6 +1913,9 @@ export function adminSuccessMessage(action: AdminAction, s: Ctx): string {
   if (action === 'adm_pref_set') return prefText(s, true);
   if (action === 'adm_memory_forget') return `Pronto: esqueci ${s.forgotten} ${Number(s.forgotten) === 1 ? 'memória' : 'memórias'} sobre ${s.subject}.`;
   if (action === 'adm_briefing_recipient') return `Pronto: ${s.name} ${s.enabled ? 'passa a receber' : 'não recebe mais'} o resumo das 8h. Lista atual: ${s.list_after}.`;
+  if (action === 'adm_form_create') return `Pronto: formulário «${s.title}» criado e já aberto para os sócios. Link para compartilhar: ${s.link}`;
+  if (action === 'adm_form_toggle') return `Pronto: formulário «${s.title}» ${s.active ? 'reaberto' : 'encerrado'}.`;
+  if (action === 'adm_form_nudge') return `Pronto: lembrete do «${s.form_title}» na fila para ${s.queued} ${Number(s.queued) === 1 ? 'sócio' : 'sócios'}. Sai no horário combinado (a fila anda a cada 5 minutos, então pode chegar até 5 minutos depois). Quando alguém responder, eu atendo.`;
   if (action === 'adm_broadcast_send') return `Pronto: o comunicado está agendado para ${s.queued} sócios. Sai no horário combinado (a fila anda a cada 5 minutos, então pode chegar até 5 minutos depois). Quando alguém responder, eu atendo.`;
   if (action === 'adm_message_send') return `Pronto: a mensagem para ${s.member_name} está na fila e sai em instantes. Se ele responder, eu atendo.`;
   if (action === 'adm_dependent_create') return `Pronto: ${s.dependent_name} cadastrado(a) como ${s.relationship} de ${s.member_name}.`;
@@ -1950,6 +2007,18 @@ async function adminAcao(i: DecideInput, memory: Memory): Promise<Decision> {
     const hoje = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Fortaleza' });
     const sendAt = slots.start ? `${slots.date ?? hoje}T${slots.start.slice(0, 5)}:00-03:00` : null;
     p = { action: 'adm_broadcast_send', body: slots.send_body, send_at: sendAt };
+  } else if (a === 'formulario_criar') {
+    if (!slots.form_title) return ask('Qual o título do novo formulário?');
+    if (!slots.form_questions?.length) return ask('Quais são as perguntas? Para as de escolha, me diga as alternativas (uma por pergunta); para as de resposta escrita, só o texto da pergunta.');
+    p = { action: 'adm_form_create', title: slots.form_title, description: slots.description ?? null, questions: slots.form_questions,
+      secret: slots.form_secret === true, multiple: slots.form_multiple === true, expires_on: slots.due_date ?? null };
+  } else if (a === 'formulario_status') {
+    if (typeof slots.active !== 'boolean') return ask('É para encerrar ou reabrir o formulário?');
+    p = { action: 'adm_form_toggle', form_ref: slots.form_ref ?? null, active: slots.active, expires_on: slots.due_date ?? null };
+  } else if (a === 'formulario_cobrar') {
+    const hoje = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Fortaleza' });
+    const sendAt = slots.start ? `${slots.date ?? hoje}T${slots.start.slice(0, 5)}:00-03:00` : null;
+    p = { action: 'adm_form_nudge', form_ref: slots.form_ref ?? null, body: slots.send_body ?? null, send_at: sendAt };
   } else if (a === 'dependente_criar') {
     if (!slots.member_name) return ask('Claro, posso cadastrar o dependente. De qual sócio ele(a) é dependente?');
     if (!slots.dependent_name) return ask(`Posso cadastrar sim. Me passa o nome completo do dependente e o telefone, se tiver (o telefone é opcional; CPF não é necessário no cadastro).`);
@@ -1990,6 +2059,7 @@ async function adminAcao(i: DecideInput, memory: Memory): Promise<Decision> {
   const rpc = a === 'memoria_esquecer' ? 'conv_svc_ai_admin_memory_forget_propose'
     : a === 'resumo_destinatario' ? 'conv_svc_ai_admin_briefing_propose'
     : a === 'comunicado_enviar' ? 'conv_svc_ai_admin_broadcast_propose'
+    : a === 'formulario_criar' || a === 'formulario_status' || a === 'formulario_cobrar' ? 'conv_svc_ai_admin_forms_propose'
     : a === 'mensagem_enviar' ? 'conv_svc_ai_admin_message_propose'
     : a === 'dependente_criar' ? 'conv_svc_ai_admin_dependent_propose'
     : a === 'acesso_aprovar' || a === 'acesso_recusar' || a === 'socio_criar' ? 'conv_svc_ai_admin_access_propose'
@@ -2009,6 +2079,7 @@ async function adminConsulta(i: DecideInput, memory: Memory): Promise<Decision> 
   if (!slots.read_domain) return ask('O que você quer ver: caixa, a receber/a pagar, resultado (DRE), receita de alunos, comprovantes, pedidos de acesso, assinaturas ou reservas do dia?');
   const args: Record<string, unknown> = { from: slots.read_from ?? null, to: slots.read_to ?? null, date: slots.date ?? null };
   if (slots.read_domain === 'memoria') args.subject = slots.member_name ?? null;
+  if (FORMS_DOMAINS.includes(slots.read_domain)) args.form_ref = slots.form_ref ?? null;
   if (slots.read_domain === 'socio_ficha') {
     if (!slots.member_name) return ask('De qual sócio você quer a ficha?');
     const r = await resolve(deps.db, [slots.member_name], 'member');
@@ -2254,6 +2325,7 @@ function readAdmin(deps: TurnDeps, session: string, domain: AdminReadDomain, arg
   if (domain === 'memoria') return deps.db('conv_svc_ai_admin_memories', { p_session: session, p_subject: typeof args.subject === 'string' ? args.subject : null });
   if (domain === 'capacidades') return Promise.resolve({ data: { ok: true, data: { text: renderCapabilities() } }, error: null } as RpcResult);
   if (domain === 'socios') return deps.db('conv_svc_ai_admin_members', { p_session: session });
+  if (FORMS_DOMAINS.includes(domain)) return deps.db('conv_svc_ai_admin_forms_read', { p_session: session, p_domain: domain, p_args: args });
   if (READ_MORE_DOMAINS.includes(domain)) return deps.db('conv_svc_ai_admin_read_more', { p_session: session, p_domain: domain, p_args: args });
   return deps.db('conv_svc_ai_admin_read', { p_session: session, p_domain: domain, p_args: args });
 }

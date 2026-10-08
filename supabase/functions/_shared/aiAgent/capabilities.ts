@@ -30,6 +30,9 @@ export const CAPABILITIES: readonly Capability[] = [
   { id: 'conv.followups', domain: 'conversas', risk: 'N0', label: 'Retornos pendentes', panel: 'Conversas', onDemand: 'followups' },
   { id: 'pessoas.members', domain: 'pessoas', risk: 'N0', label: 'Relação nominal dos sócios ativos', panel: 'Sócios', onDemand: 'socios' },
   { id: 'fin.overdue.list', domain: 'financeiro', risk: 'N0', label: 'Inadimplentes por nome e valor', panel: 'Financeiro', onDemand: 'inadimplentes' },
+  { id: 'club.forms.list', domain: 'clube', risk: 'N0', label: 'Formulários do clube e quantas respostas cada um tem', panel: 'Formulários', onDemand: 'formularios' },
+  { id: 'club.form.status', domain: 'clube', risk: 'N0', label: 'Quem respondeu e quem falta responder num formulário', panel: 'Formulários', onDemand: 'formulario' },
+  { id: 'club.form.results', domain: 'clube', risk: 'N0', label: 'Resultado de um formulário, pergunta por pergunta', panel: 'Formulários', onDemand: 'formulario_resultado' },
   { id: 'fin.payments.list', domain: 'financeiro', risk: 'N0', label: 'Quem pagou no período', panel: 'Financeiro', onDemand: 'pagamentos' },
   { id: 'pessoas.member.card', domain: 'pessoas', risk: 'N0', label: 'Ficha de um sócio (situação, em aberto, dependentes)', panel: 'Sócios', onDemand: 'socio_ficha' },
   { id: 'fin.due.list', domain: 'financeiro', risk: 'N0', label: 'Vencimentos a pagar e a receber, por item', panel: 'Financeiro', onDemand: 'vencimentos' },
@@ -71,6 +74,9 @@ export const CAPABILITIES: readonly Capability[] = [
   { id: 'adm.dependent.create', domain: 'pessoas', risk: 'N1', label: 'Cadastrar dependente de sócio', panel: 'Alunos', write: { admAction: 'dependente_criar' } },
   { id: 'adm.message.send', domain: 'pessoas', risk: 'N1', label: 'Chamar sócio no privado e mandar mensagem', panel: 'Conversas', write: { admAction: 'mensagem_enviar' } },
   { id: 'adm.broadcast.send', domain: 'pessoas', risk: 'N1', label: 'Disparar comunicado no WhatsApp de todos os sócios (agora ou agendado)', panel: 'Conversas', write: { admAction: 'comunicado_enviar' } },
+  { id: 'adm.form.create', domain: 'clube', risk: 'N1', label: 'Criar formulário ou votação', panel: 'Formulários', write: { admAction: 'formulario_criar' } },
+  { id: 'adm.form.toggle', domain: 'clube', risk: 'N1', label: 'Encerrar ou reabrir um formulário', panel: 'Formulários', write: { admAction: 'formulario_status' } },
+  { id: 'adm.form.nudge', domain: 'pessoas', risk: 'N1', label: 'Lembrar por WhatsApp quem ainda não respondeu o formulário (com o link)', panel: 'Formulários', write: { admAction: 'formulario_cobrar' } },
   { id: 'adm.briefing.recipient', domain: 'clube', risk: 'N1', label: 'Incluir ou tirar alguém da diretoria do resumo das 8h', panel: 'João', write: { admAction: 'resumo_destinatario' } },
   { id: 'adm.signature.resend', domain: 'clube', risk: 'N1', label: 'Reenviar avisos de assinatura com falha', panel: 'Documentos', write: { admAction: 'assinatura_reenviar' } },
   { id: 'adm.reservation.cancel', domain: 'quadra', risk: 'N1', label: 'Cancelar reserva', panel: 'Reservas', write: { admAction: 'reserva_cancelar' } },
@@ -88,7 +94,7 @@ const N3_RULES: { re: RegExp; what: string; panel: string }[] = [
   { re: /\b(zer(a|ar|e)|reset(a|ar|e)?|limp(a|ar|e))\b.{0,20}\branking\b|\branking\b.{0,20}\b(zer(a|ar|e)|reset(a|ar|e)?)\b/, what: 'zerar o ranking', panel: 'Lançamentos' },
   { re: /\b(troc(a|ar|e)|mud(a|ar|e)|alter(a|ar|e))\b.{0,25}\b(papel|cargo|fun[cç][aã]o|permiss[aã]o)\b/, what: 'trocar o papel de um sócio', panel: 'Sócios' },
   { re: /\b(encerr(a|ar|e)|cancel(a|ar|e)|termin(a|ar|e))\b.{0,20}\bplano\b/, what: 'encerrar um plano', panel: 'Financeiro' },
-  { re: /\b(apag(a|ar|ue)|exclu(i|ir|a)|delet(a|ar|e)|remov(a|er|e))\b.{0,30}\b(socio|aluno|professor|lancamento|cobranca|pendencia|pagamento|conta|categoria|documento|aviso|torneio|campeonato|reserva|mensagem|conversa)\b/, what: 'apagar registros', panel: 'o painel' },
+  { re: /\b(apag(a|ar|ue)|exclu(i|ir|a)|delet(a|ar|e)|remov(a|er|e))\b.{0,30}\b(socio|aluno|professor|lancamento|cobranca|pendencia|pagamento|conta|categoria|documento|aviso|torneio|campeonato|reserva|mensagem|conversa|formulario|votacao|pesquisa)\b/, what: 'apagar registros', panel: 'o painel' },
   { re: /\b(edit(a|ar|e)|mud(a|ar|e)|alter(a|ar|e))\b.{0,25}\b(configura[cç][aã]o|configuracoes|regras do clube|chave pix|pix do clube)\b/, what: 'mudar configurações do clube', panel: 'Regras' },
 ];
 
@@ -110,6 +116,7 @@ export const LIMITATION_PHRASE = 'Ainda não consigo realizar esse pedido, mas c
 /** Novidades, em linguagem de diretoria (as mais recentes primeiro). Acrescente aqui a cada capacidade nova. */
 export const NOVIDADES: readonly { date: string; items: readonly string[] }[] = [
   { date: '08/10', items: [
+    'Formulários do clube: ver quem já respondeu e quem falta (por nome) e o resultado de cada pergunta; criar formulário ou votação; lembrar por WhatsApp só quem ainda não respondeu, com o link; encerrar e reabrir.',
     'Memória: guardo o que você me contar sobre alguém (cargo, apelido, preferência), te mostro o que sei sobre uma pessoa e esqueço quando você mandar.',
     'Disparar um comunicado no WhatsApp pessoal de todos os sócios, agora ou num horário (ex.: 8h00), com o resumo e o seu "sim" antes.',
     'Mandar PDF (DRE, caixa, comparativo e outros relatórios), o comprovante de um sócio, anexo de despesa e documentos de assinatura.',
