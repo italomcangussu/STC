@@ -2473,7 +2473,8 @@ export const AddReservationModal: React.FC<{
                     .insert({
                         name: newStudentName.trim(),
                         phone: newStudentPhone.trim() || null,
-                        professor_id: isDependent ? null : currentProfessorId,
+                        // Todo aluno, dependente inclusive, nasce com o professor: a RLS só deixa o professor cadastrar com o id dele.
+                        professor_id: currentProfessorId,
                         student_type: isDependent ? 'dependent' : 'regular',
                         responsible_socio_id: isDependent ? newDependentResponsibleId : null,
                         relationship_type: isDependent ? newDependentRelationship : null,
