@@ -1,7 +1,9 @@
 // Consultas do assessor (Onda 1): o servidor busca (RPC `conv_svc_ai_admin_read`, como o administrador) e escreve o texto.
 // O modelo só escolhe o domínio e o período; nenhum número passa pela cabeça dele.
 
-export const ADMIN_READ_DOMAINS = ['caixa', 'receber_pagar', 'dre', 'receita_alunos', 'comprovantes', 'acessos', 'assinaturas', 'ocupacao', 'comparativo', 'followups', 'preferencias', 'socios'] as const;
+export const ADMIN_READ_DOMAINS = ['caixa', 'receber_pagar', 'dre', 'receita_alunos', 'comprovantes', 'acessos', 'assinaturas', 'ocupacao', 'comparativo', 'followups', 'preferencias', 'socios', 'inadimplentes', 'pagamentos', 'socio_ficha', 'vencimentos', 'alunos', 'movimentos'] as const;
+/** Domínios que o servidor busca por `conv_svc_ai_admin_read_more` (o resto vai por `conv_svc_ai_admin_read`; `socios` por `conv_svc_ai_admin_members`). */
+export const READ_MORE_DOMAINS: readonly string[] = ['inadimplentes', 'pagamentos', 'socio_ficha', 'vencimentos', 'alunos', 'movimentos'];
 export type AdminReadDomain = typeof ADMIN_READ_DOMAINS[number];
 type Row = Record<string, unknown>;
 
@@ -119,9 +121,52 @@ function renderSocios(d: Row): string {
   return `O STC tem ${todos.length} sócios ativos no cadastro (${dir.length} da diretoria e ${socios.length} sócios).\n\nDiretoria:\n${lista(dir)}\n\nSócios:\n${lista(socios)}`;
 }
 
+function renderInadimplentes(d: Row): string {
+  const itens = arr(d.items);
+  if (!itens.length) return 'Ninguém está com cobrança vencida agora. 🎉';
+  const lista = itens.map((i) => `- ${i.name}: ${brl(i.total_cents)} (${n(i.charges)} cobrança${n(i.charges) > 1 ? 's' : ''}, ${n(i.days_late)} dia${n(i.days_late) === 1 ? '' : 's'} de atraso)`).join('\n');
+  return `${n(d.members)} sócio${n(d.members) > 1 ? 's' : ''} com cobrança vencida, ${brl(d.total_cents)} no total (com multa e juros):\n${lista}${n(d.members) > itens.length ? `\n…e mais ${n(d.members) - itens.length}.` : ''}`;
+}
+
+function renderPagamentos(d: Row): string {
+  const itens = arr(d.items);
+  if (!itens.length) return `Nenhum pagamento de mensalidade entre ${periodo(d)}.`;
+  const lista = itens.map((i) => `- ${i.name}: ${brl(i.paid_cents)}, em ${dia(i.last)}`).join('\n');
+  return `${n(d.members)} sócio${n(d.members) > 1 ? 's' : ''} pagou entre ${periodo(d)}, ${brl(d.total_cents)} no total:\n${lista}${n(d.members) > itens.length ? `\n…e mais ${n(d.members) - itens.length}.` : ''}`;
+}
+
+function renderSocioFicha(d: Row): string {
+  const deps = Array.isArray(d.dependents) ? d.dependents as string[] : [];
+  const sit = !d.active ? 'inativo' : n(d.overdue_cents) > 0 ? `com ${brl(d.overdue_cents)} vencido` : 'em dia';
+  return `${d.name} (${d.role === 'admin' ? 'diretoria' : 'sócio'}), ${sit}. No clube desde ${dia(d.since)}.\n`
+    + `- Em aberto: ${brl(d.open_cents)}${d.next_due ? `; próximo vencimento ${dia(d.next_due)}` : ''}\n`
+    + `- Último pagamento: ${d.last_payment ? dia(d.last_payment) : 'nenhum registrado'}\n`
+    + `- Dependentes: ${deps.length ? deps.join(', ') : 'nenhum'}${d.phone ? `\n- Telefone: ${d.phone}` : ''}`;
+}
+
+function renderVencimentos(d: Row): string {
+  const itens = arr(d.items);
+  if (!itens.length) return `Nada a vencer até ${dia(d.until)}.`;
+  const lista = itens.map((i) => `- ${dia(i.due_date)}${i.late ? ' (atrasado)' : ''}: ${i.kind === 'revenue' ? 'a receber' : 'a pagar'} ${brl(i.amount_cents)} — ${i.description}${i.supplier ? ` (${i.supplier})` : ''}`).join('\n');
+  return `Até ${dia(d.until)}: a pagar ${brl(d.payable_cents)}${n(d.receivable_cents) ? `, a receber ${brl(d.receivable_cents)}` : ''}.\n${lista}`;
+}
+
+function renderAlunos(d: Row): string {
+  const itens = arr(d.items);
+  const lista = itens.map((i) => `- ${i.name}${i.plan ? ` (${i.plan})` : ''}${i.expires ? `, plano até ${dia(i.expires)}` : ''}`).join('\n');
+  return `Alunos ativos: ${n(d.regular)} avulsos/regulares e ${n(d.dependent)} dependentes de sócios.${lista ? `\n${lista}` : ''}`;
+}
+
+function renderMovimentos(d: Row): string {
+  const itens = arr(d.items);
+  if (!itens.length) return 'Ainda não há lançamentos pagos.';
+  return `Últimos lançamentos pagos:\n${itens.map((i) => `- ${dia(i.on)}: ${i.kind === 'revenue' ? 'entrou' : 'saiu'} ${brl(i.amount_cents)} — ${i.description}`).join('\n')}`;
+}
+
 const RENDER: Record<AdminReadDomain, (d: Row) => string> = {
   caixa: renderCaixa, receber_pagar: renderReceberPagar, dre: renderDre, receita_alunos: renderReceitaAlunos,
-  comprovantes: renderComprovantes, acessos: renderAcessos, assinaturas: renderAssinaturas, ocupacao: renderOcupacao, comparativo: renderComparativo, followups: renderFollowups, preferencias: renderPreferencias, socios: renderSocios,
+  comprovantes: renderComprovantes, acessos: renderAcessos, assinaturas: renderAssinaturas, ocupacao: renderOcupacao, comparativo: renderComparativo, followups: renderFollowups, preferencias: renderPreferencias, socios: renderSocios, inadimplentes: renderInadimplentes, pagamentos: renderPagamentos,
+  socio_ficha: renderSocioFicha, vencimentos: renderVencimentos, alunos: renderAlunos, movimentos: renderMovimentos,
 };
 
 export const renderAdminRead = (domain: AdminReadDomain, data: unknown): string =>

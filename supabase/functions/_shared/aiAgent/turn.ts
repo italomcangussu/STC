@@ -18,7 +18,7 @@ import type { Chat } from './llm.ts';
 import { ADMIN_READS, n3Reply } from './capabilities.ts';
 import { sendWelcome } from './welcome.ts';
 import type { Provision, ProvisionResult } from '../athleteProvision.ts';
-import { isAdminReadDomain, renderAdminRead, type AdminReadDomain } from './adminReads.ts';
+import { isAdminReadDomain, READ_MORE_DOMAINS, renderAdminRead, type AdminReadDomain } from './adminReads.ts';
 import { isFileKind, reportDoc, safeName, type FileKind, type FileKit } from './adminFiles.ts';
 import { receiptReceivedMessage, studentCardProposalMessage, studentCardSuccessMessage } from './studentCard.ts';
 import { hearAudios, unheardOnly, UNCLEAR_AUDIO_REPLY } from './audio.ts';
@@ -1987,7 +1987,13 @@ async function adminConsulta(i: DecideInput, memory: Memory): Promise<Decision> 
   if (slots.file_kind) return adminArquivo(i, memory);
   if (!slots.read_domain) return ask('O que você quer ver: caixa, a receber/a pagar, resultado (DRE), receita de alunos, comprovantes, pedidos de acesso, assinaturas ou reservas do dia?');
   const args: Record<string, unknown> = { from: slots.read_from ?? null, to: slots.read_to ?? null, date: slots.date ?? null };
-  const res = (await (slots.read_domain === 'socios' ? deps.db('conv_svc_ai_admin_members', { p_session: session }) : deps.db('conv_svc_ai_admin_read', { p_session: session, p_domain: slots.read_domain, p_args: args }))).data as
+  if (slots.read_domain === 'socio_ficha') {
+    if (!slots.member_name) return ask('De qual sócio você quer a ficha?');
+    const r = await resolve(deps.db, [slots.member_name], 'member');
+    if (r.ask) return ask(r.ask);
+    args.profile_id = r.ids[0];
+  }
+  const res = (await readAdmin(deps, session, slots.read_domain, args)).data as
     { ok: boolean; message?: string; data?: unknown } | null;
   if (!res?.ok) return ask(res?.message ?? 'Não consegui consultar isso agora. Tenta de novo daqui a pouco?', false);
   return { bubbles: [renderAdminRead(slots.read_domain, res.data)], awaiting: false, close: false, action: `admin_read:${slots.read_domain}`, memory, verbatim: true };
@@ -2187,7 +2193,7 @@ async function adminArquivo(i: DecideInput, memory: Memory): Promise<Decision> {
   if (kind === 'relatorio_pdf') {
     if (!slots.read_domain) return ask('De qual relatório você quer o PDF: caixa, a receber/a pagar, resultado (DRE), receita de alunos, comparativo, comprovantes, assinaturas ou reservas do dia? E de qual período?');
     const args: Record<string, unknown> = { from: slots.read_from ?? null, to: slots.read_to ?? null, date: slots.date ?? null };
-    const res = (await (slots.read_domain === 'socios' ? deps.db('conv_svc_ai_admin_members', { p_session: session }) : deps.db('conv_svc_ai_admin_read', { p_session: session, p_domain: slots.read_domain, p_args: args }))).data as { ok: boolean; message?: string; data?: unknown } | null;
+    const res = (await readAdmin(deps, session, slots.read_domain, args)).data as { ok: boolean; message?: string; data?: unknown } | null;
     if (!res?.ok) return ask(res?.message ?? 'Não consegui consultar isso agora. Tenta de novo daqui a pouco?', false);
     const quando = new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Fortaleza', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date()).replace(',', '');
     const doc = reportDoc(slots.read_domain, res.data, quando);
@@ -2218,4 +2224,12 @@ async function adminArquivo(i: DecideInput, memory: Memory): Promise<Decision> {
   }
   if (!out.length) return falhou;
   return { bubbles: [out.length > 1 ? `Achei ${out.length} arquivos, já mando.` : 'Achei, já mando o arquivo.'], awaiting: false, close: false, action: `admin_file:${kind}`, memory, files: out };
+}
+
+
+/** Consulta do assessor: cada domínio vai para a função certa do banco (mesmo contrato `{ ok, message, data }`). */
+function readAdmin(deps: TurnDeps, session: string, domain: AdminReadDomain, args: Record<string, unknown>) {
+  if (domain === 'socios') return deps.db('conv_svc_ai_admin_members', { p_session: session });
+  if (READ_MORE_DOMAINS.includes(domain)) return deps.db('conv_svc_ai_admin_read_more', { p_session: session, p_domain: domain, p_args: args });
+  return deps.db('conv_svc_ai_admin_read', { p_session: session, p_domain: domain, p_args: args });
 }

@@ -727,6 +727,35 @@ describe('comunicado no WhatsApp de todos os sócios (N1)', () => {
   }, 120000);
 });
 
+describe('consultas nominais do assessor (inadimplentes, pagamentos, ficha, vencimentos, alunos, movimentos)', () => {
+  it('cada domínio responde com dados do banco, escrito pelo servidor, sem cair em fallback', async () => {
+    const w = await setup(); const p = provider();
+    await rpc(w.db, U.admin, `public.fin_create_member_pendency('${key()}', ${j({ profile_id: U.socioB, description: 'Consumo do Beto', amount_cents: 15000, competence_month: '2026-10-01', due_date: '2026-10-01' })})`);
+    const ask = async (domain: string, slots: Record<string, unknown> = {}) => {
+      const m = await direct(w, `me mostra ${domain}`);
+      const r = await turn(w, m.message_id, script(answer({ intent: 'admin_consulta', ready: true, slots: { read_domain: domain, ...slots } })).chat, p.uaz);
+      expect(r.action, domain).toBe(`admin_read:${domain}`);
+      return p.sent.at(-1)!.text;
+    };
+    expect(await ask('inadimplentes')).toMatch(/^1 sócio com cobrança vencida, R\$ 1\d\d,\d\d no total[\s\S]*- Beto Sócio: R\$ 1\d\d,\d\d \(1 cobrança, \d+ dias? de atraso\)/);
+    expect(await ask('pagamentos')).toMatch(/Nenhum pagamento de mensalidade entre/);
+    expect(await ask('socio_ficha', { member_name: 'Beto' })).toMatch(/^Beto Sócio \(sócio\), com R\$ 1\d\d,\d\d vencido\.[\s\S]*- Dependentes: nenhum/);
+    expect(await ask('vencimentos')).toMatch(/^(Nada a vencer até|Até )/);
+    expect(await ask('alunos')).toMatch(/^Alunos ativos: \d+ avulsos\/regulares e \d+ dependentes/);
+    expect(await ask('movimentos')).toMatch(/^(Ainda não há lançamentos pagos|Últimos lançamentos pagos:)/);
+  }, 120000);
+
+  it('ficha sem sócio informado pergunta de quem; sem administrador não consulta', async () => {
+    const w = await setup(); const p = provider();
+    const m = await direct(w, 'me dá a ficha');
+    await turn(w, m.message_id, script(answer({ intent: 'admin_consulta', ready: true, slots: { read_domain: 'socio_ficha' } })).chat, p.uaz);
+    expect(p.sent.at(-1)!.text).toMatch(/De qual sócio você quer a ficha\?/);
+    const m2 = await direct(w, 'quem está devendo?', '5599977770000');
+    await turn(w, m2.message_id, script(answer({ intent: 'admin_consulta', ready: true, slots: { read_domain: 'inadimplentes' } })).chat, p.uaz);
+    expect(p.sent.at(-1)!.text).not.toMatch(/cobrança vencida/);
+  }, 90000);
+});
+
 describe('relação nominal dos sócios', () => {
   it('"liste os sócios": o servidor escreve a relação (diretoria e sócios), sem chamar fallback', async () => {
     const w = await setup(); const p = provider();
