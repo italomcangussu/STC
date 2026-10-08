@@ -99,6 +99,8 @@ export type Slots = {
   send_body?: string | null;
   pref?: 'resumo' | 'estilo' | 'alertas' | 'saldo_minimo' | 'dias_atraso' | 'conta_padrao' | null;
   pref_value?: string | null;
+  /** Aniversário que o administrador contou ("14/01"): dia/mês, sem ano. */
+  birthday?: string | null;
   read_domain?: AdminReadDomain | null;
   /** Formulários do clube: qual (nome ou parte do nome), título e perguntas do novo, votação secreta, resposta múltipla. */
   form_ref?: string | null;
@@ -125,7 +127,7 @@ const FIN_ACTIONS: FinAction[] = ['lancar', 'cobrar', 'pausar', 'retomar', 'baix
   'cancelar_pendencia', 'ajustar', 'estornar', 'rejeitar_comprovante', 'despesa', 'receita', 'aprovar_comprovante', 'gerar_cobrancas'];
 export const ADM_ACTIONS = ['aviso', 'aviso_desativar', 'aluno_status', 'socio_status', 'assinatura_reenviar', 'reserva_cancelar', 'acesso_aprovar', 'acesso_recusar', 'socio_criar',
   'followup_criar', 'followup_concluir', 'quadra_bloquear', 'preferencia', 'dependente_criar', 'mensagem_enviar', 'comunicado_enviar', 'resumo_destinatario', 'memoria_esquecer',
-  'formulario_criar', 'formulario_status', 'formulario_cobrar'] as const;
+  'formulario_criar', 'formulario_status', 'formulario_cobrar', 'aniversario'] as const;
 export type AdmAction = typeof ADM_ACTIONS[number];
 const ADJUST_KINDS = ['discount', 'increase', 'fee_waiver'] as const;
 const PENDENCY_KINDS: PendencyKind[] = ['day_card', 'consumo', 'evento', 'multa', 'dano_reposicao', 'outros'];
@@ -247,6 +249,7 @@ export function parseSlots(raw: unknown): Slots {
   if ('relationship' in o) out.relationship = ['esposa', 'esposo', 'filho', 'filha', 'outro'].includes(o.relationship as string) ? o.relationship as Slots['relationship'] : null;
   if ('pref' in o) out.pref = ['resumo', 'estilo', 'alertas', 'saldo_minimo', 'dias_atraso', 'conta_padrao'].includes(o.pref as string) ? o.pref as Slots['pref'] : null;
   if ('pref_value' in o) out.pref_value = str(o.pref_value);
+  if ('birthday' in o) out.birthday = parseBirthday(o.birthday);
   if ('file_kind' in o) out.file_kind = isFileKind(o.file_kind) ? o.file_kind : null;
   if ('read_domain' in o) out.read_domain = isAdminReadDomain(o.read_domain) ? o.read_domain : null;
   if ('read_from' in o) out.read_from = isoDate(o.read_from);
@@ -1966,12 +1969,41 @@ export function adminSuccessMessage(action: AdminAction, s: Ctx): string {
   return `Pronto: baixa de ${centsBR(s.amount_cents)} registrada para ${s.member_name}. ${fim}`.trim();
 }
 
+/** "14/01", "8/10" ou "08-10" → { day, month }; qualquer outra coisa → null (o banco ainda valida 31/04 e afins). */
+export function birthdayParts(v: string | null | undefined): { day: number; month: number } | null {
+  const m = /^(\d{1,2})[/-](\d{1,2})$/.exec(String(v ?? '').trim());
+  if (!m) return null;
+  const day = Number(m[1]), month = Number(m[2]);
+  return day >= 1 && day <= 31 && month >= 1 && month <= 12 ? { day, month } : null;
+}
+function parseBirthday(v: unknown): string | null {
+  const b = birthdayParts(typeof v === 'string' ? v : null);
+  return b ? `${String(b.day).padStart(2, '0')}/${String(b.month).padStart(2, '0')}` : null;
+}
+
+/** Aniversário contado pelo administrador: grava na hora (dado de baixo risco, auditado no banco), sem pedir "sim". */
+async function adminAniversario(i: DecideInput, memory: Memory): Promise<Decision> {
+  const { deps, slots, session } = i;
+  const reply = (text: string, awaiting = false): Decision => ({ bubbles: [text], awaiting, close: false, action: 'admin_birthday', memory });
+  if (!slots.member_name) return reply('De quem é o aniversário?', true);
+  const b = birthdayParts(slots.birthday);
+  if (!b) return reply(`Qual o dia e o mês do aniversário de ${slots.member_name}? Ex.: 14/01.`, true);
+  const r = await resolve(deps.db, [slots.member_name], 'member');
+  if (r.ask) return reply(r.ask, true);
+  const res = (await deps.db('conv_svc_ai_admin_birthday_set', { p_session: session, p: { profile_id: r.ids[0], day: b.day, month: b.month } })).data as
+    { ok: boolean; message?: string; member_name?: string } | null;
+  if (!res?.ok) return reply(res?.message ?? 'Não consegui gravar o aniversário agora. Tenta de novo daqui a pouco?');
+  const dm = `${String(b.day).padStart(2, '0')}/${String(b.month).padStart(2, '0')}`;
+  return reply(`Anotei: aniversário de ${res.member_name} em ${dm}. No dia, às 8h, eu mando os parabéns no grupo e no privado. 🎂`);
+}
+
 /** Ações administrativas reversíveis (N1): o servidor valida e propõe; só grava depois do "sim" do administrador. */
 async function adminAcao(i: DecideInput, memory: Memory): Promise<Decision> {
   const { deps, ctx, slots, session } = i;
   const ask = (text: string, awaiting = true): Decision => ({ bubbles: [text], awaiting, close: false, action: 'ask', memory });
   if (!isAdminAssistant(ctx)) return ask('Essa parte é só com a diretoria, pela conversa privada. Posso te ajudar com outra coisa?', false);
   const a = slots.adm_action;
+  if (a === 'aniversario') return adminAniversario(i, memory);
   let p: Record<string, unknown>;
   if (a === 'aviso') {
     if (!slots.ann_title) return ask('Qual o título do aviso?');

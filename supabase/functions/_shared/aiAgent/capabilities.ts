@@ -70,6 +70,7 @@ export const CAPABILITIES: readonly Capability[] = [
   { id: 'adm.followup.done', domain: 'conversas', risk: 'N1', label: 'Concluir ou cancelar retorno', panel: 'Conversas', write: { admAction: 'followup_concluir' } },
   { id: 'adm.court.block', domain: 'clube', risk: 'N1', label: 'Bloquear horário de quadra', panel: 'Agenda', write: { admAction: 'quadra_bloquear' } },
   { id: 'adm.prefs.set', domain: 'clube', risk: 'N1', label: 'Ajustar preferências, alertas e resumo da manhã', panel: 'João', write: { admAction: 'preferencia' } },
+  { id: 'adm.member.birthday', domain: 'pessoas', risk: 'N1', label: 'Anotar o aniversário de um sócio (parabéns automático no grupo e no privado)', panel: 'João', write: { admAction: 'aniversario' } },
   { id: 'adm.member.status', domain: 'pessoas', risk: 'N1', label: 'Inativar/reativar sócio', panel: 'Sócios', write: { admAction: 'socio_status' } },
   { id: 'adm.dependent.create', domain: 'pessoas', risk: 'N1', label: 'Cadastrar dependente de sócio', panel: 'Alunos', write: { admAction: 'dependente_criar' } },
   { id: 'adm.message.send', domain: 'pessoas', risk: 'N1', label: 'Chamar sócio no privado e mandar mensagem', panel: 'Conversas', write: { admAction: 'mensagem_enviar' } },
