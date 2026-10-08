@@ -124,3 +124,14 @@ describe('formulários pelo João', () => {
     expect(p.sent.at(-1)!.text).toMatch(/precisa de 2 a 12 alternativas/);
   }, 90000);
 });
+
+describe('texto próprio do administrador no lembrete', () => {
+  it('link com www não ganha um segundo link no fim; {nome} é mantido', async () => {
+    const { w } = await setup(); const p = provider();
+    await dizer(w, p, 'manda este texto', acao('formulario_cobrar', { form_ref: 'sugestões',
+      send_body: 'Oi {nome}! Participe: https://www.stcplay.com.br/votacao/sugestoes-melhorias Valeu!' }));
+    const t = p.sent.at(-1)!.text;
+    expect(t).toContain('«Oi {nome}! Participe: https://stcplay.com.br/votacao/sugestoes-melhorias Valeu!»');
+    expect(t.match(/votacao\/sugestoes-melhorias/g)).toHaveLength(1);
+  }, 90000);
+});

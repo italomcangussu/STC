@@ -2018,7 +2018,7 @@ async function adminAcao(i: DecideInput, memory: Memory): Promise<Decision> {
   } else if (a === 'formulario_cobrar') {
     const hoje = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Fortaleza' });
     const sendAt = slots.start ? `${slots.date ?? hoje}T${slots.start.slice(0, 5)}:00-03:00` : null;
-    p = { action: 'adm_form_nudge', form_ref: slots.form_ref ?? null, body: slots.send_body ?? null, send_at: sendAt };
+    p = { action: 'adm_form_nudge', form_ref: slots.form_ref ?? null, body: slots.send_body?.replace(/https?:\/\/www\.stcplay\.com\.br/gi, 'https://stcplay.com.br') ?? null, send_at: sendAt };
   } else if (a === 'dependente_criar') {
     if (!slots.member_name) return ask('Claro, posso cadastrar o dependente. De qual sócio ele(a) é dependente?');
     if (!slots.dependent_name) return ask(`Posso cadastrar sim. Me passa o nome completo do dependente e o telefone, se tiver (o telefone é opcional; CPF não é necessário no cadastro).`);
