@@ -3,6 +3,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area
 } from 'recharts';
 import { supabase } from '../lib/supabase';
+import { fetchAllRows } from '../lib/fetchAllRows';
 import { Loader2, TrendingUp, Clock, Calendar, Users, Trophy } from 'lucide-react';
 import { Reservation, Court } from '../types';
 import { isMember } from '../utils';
@@ -54,10 +55,13 @@ export const Dashboard: React.FC<DashboardProps> = () => {
       }
 
       // 3. Fetch Reservations (All, then filter locally for smooth UX or filter query for perf)
-      const { data: resData } = await supabase
-        .from('reservations')
-        .select('*')
-        .neq('status', 'cancelled'); // Don't count cancelled stats
+      const { data: resData } = await fetchAllRows((from, to) =>
+        supabase
+          .from('reservations')
+          .select('*')
+          .neq('status', 'cancelled') // Don't count cancelled stats
+          .order('id', { ascending: true })
+          .range(from, to));
 
       if (resData) {
         const mapped: Reservation[] = resData.map(r => ({

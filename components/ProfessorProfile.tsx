@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { User, NonSocioStudent, Reservation, Court, RelationshipType, StudentProfile } from '../types';
 import { Calendar, Users, Plus, Edit, CheckCircle, XCircle, Clock, MapPin, DollarSign, Loader2, AlertCircle, UserPlus, ArrowUpCircle, X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { fetchAllRows } from '../lib/fetchAllRows';
 import { notify } from '../lib/notifications';
 import { useConfirm } from '../hooks/useConfirm';
 import { validateStudentForm } from '../lib/students/validateStudentForm';
@@ -232,13 +233,16 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                 })));
 
                 // Fetch reservations for this professor
-                const { data: resData } = await supabase
-                    .from('reservations')
-                    .select('*')
-                    .eq('professor_id', profData.id)
-                    .eq('type', 'Aula')
-                    .eq('status', 'active')
-                    .order('date', { ascending: true });
+                const { data: resData } = await fetchAllRows((from, to) =>
+                    supabase
+                        .from('reservations')
+                        .select('*')
+                        .eq('professor_id', profData.id)
+                        .eq('type', 'Aula')
+                        .eq('status', 'active')
+                        .order('date', { ascending: true })
+                        .order('id', { ascending: true })
+                        .range(from, to));
 
                 setReservations((resData || []).map(r => ({
                     id: r.id,

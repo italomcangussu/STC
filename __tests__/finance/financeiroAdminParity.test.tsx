@@ -33,6 +33,7 @@ function builder(data: Array<Record<string, unknown>>) {
   let rows = data;
   const b: any = {
     select: () => b, order: () => b, eq: (c: string, v: unknown) => { rows = rows.filter((r) => r[c] === v); return b; },
+    range: (from: number, to: number) => { rows = rows.slice(from, to + 1); return b; },
     neq: (c: string, v: unknown) => { rows = rows.filter((r) => r[c] !== v); return b; },
     then: (res: (v: unknown) => unknown) => Promise.resolve({ data: rows, error: null }).then(res),
   };

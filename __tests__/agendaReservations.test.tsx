@@ -81,6 +81,7 @@ function makeQuery(table: TableName) {
   const query: any = {
     select: vi.fn(() => query),
     order: vi.fn(() => query),
+    range: vi.fn(() => query),
     not: vi.fn(() => query),
     in: vi.fn(() => query),
     contains: vi.fn(() => query),

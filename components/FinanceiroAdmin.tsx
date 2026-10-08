@@ -3,6 +3,7 @@ import {
     DollarSign, Loader2, TrendingUp, Calendar, Users, Trash2, Sparkles, CreditCard, UserCheck, Receipt
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { fetchAllRows } from '../lib/fetchAllRows';
 import { notify } from '../lib/notifications';
 import { useConfirm } from '../hooks/useConfirm';
 import { Reservation, NonSocioStudent } from '../types';
@@ -54,11 +55,14 @@ export const FinanceiroAdmin: React.FC<FinanceiroAdminProps> = ({ dayCardPriceCe
         setLoading(true);
 
         // 1. Fetch Reservations (amistosos com convidado => Day Card)
-        const { data: resData } = await supabase
-            .from('reservations')
-            .select('*')
-            .neq('status', 'cancelled')
-            .order('date', { ascending: false });
+        const { data: resData } = await fetchAllRows((from, to) =>
+            supabase
+                .from('reservations')
+                .select('*')
+                .neq('status', 'cancelled')
+                .order('date', { ascending: false })
+                .order('id', { ascending: true })
+                .range(from, to));
 
         if (resData) {
             setReservations(resData.map(r => ({

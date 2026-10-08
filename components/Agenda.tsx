@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom';
 import { User, Reservation, ReservationType, NonSocioStudent, Professor, Match, StudentProfile, RelationshipType } from '../types';
 import { ChevronLeft, ChevronRight, Plus, X, Calendar, MapPin, Users, Check, AlertCircle, Search, Loader2, Trash2, Trophy, UserCog, ArrowRight, Info, UserPlus, LogOut, Wallet, Pencil, UserMinus, Share2, ArrowLeft } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { fetchAllRows } from '../lib/fetchAllRows';
 import { notify } from '../lib/notifications';
 import { matchesSearch } from '../lib/searchText';
 import { useConfirm } from '../hooks/useConfirm';
@@ -1241,11 +1242,14 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
             }
 
             // Fetch reservations from Supabase
-            const { data: reservationsData, error: reservationsError } = await supabase
-                .from('reservations')
-                .select('*')
-                .order('date', { ascending: true })
-                .order('start_time', { ascending: true });
+            const { data: reservationsData, error: reservationsError } = await fetchAllRows((from, to) =>
+                supabase
+                    .from('reservations')
+                    .select('*')
+                    .order('date', { ascending: true })
+                    .order('start_time', { ascending: true })
+                    .order('id', { ascending: true })
+                    .range(from, to));
 
             let mappedReservations: Reservation[] = [];
             if (reservationsError) {
