@@ -173,6 +173,10 @@ Deno.serve(async req=>{
     const row=Array.isArray(q.data)?q.data[0]:q.data;
     if(q.error||!row)return js(500,{error:"QUEUE_FAILED"});
     if(row.already_sent)return js(200,{ok:true,already_sent:true,...info});
+    // Dois disparos simultâneos enxergam a mesma linha "queued"; só quem reivindica envia.
+    const claim=await db.from("conv_messages").update({last_error:"CLAIMED"}).eq("id",row.message_id).in("status",["queued","failed"]).or("last_error.is.null,last_error.neq.CLAIMED").select("id");
+    if(claim.error)return js(500,{error:"CLAIM_FAILED"});
+    if(!claim.data?.length)return js(200,{ok:true,already_in_flight:true,...info});
     const s=await send(String(row.destination||g.jid),text);
     await db.rpc("conv_svc_finish_message",{p_message:row.message_id,p_sent:s.ok,p_provider_id:s.provider,p_error:s.error});
     return js(s.ok?200:503,{ok:s.ok,error:s.error,...info});
