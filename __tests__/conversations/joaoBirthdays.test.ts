@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { birthdayParts, parseSlots } from '../../supabase/functions/_shared/aiAgent/turn';
+import { adminProposalMessage, birthdayParts, parseCuratorAsk, parseSlots } from '../../supabase/functions/_shared/aiAgent/turn';
 import { fallbackTexts, groupText, pickTexts, type Birthday } from '../../supabase/functions/joao-birthdays/messages';
 
 const lucas: Birthday = { profile_id: 'p1', name: 'Lucas Rodrigues', phone: '5588992241070', direct_conversation_id: 'c1', memories: [] };
@@ -40,5 +40,17 @@ describe('aniversário contado pelo administrador', () => {
   it('o slot chega normalizado como DD/MM', () => {
     expect(parseSlots({ adm_action: 'aniversario', member_name: 'Lucas', birthday: '8/10' })).toMatchObject({ adm_action: 'aniversario', birthday: '08/10' });
     expect(parseSlots({ birthday: 'amanhã' }).birthday).toBeNull();
+  });
+});
+
+describe('resenha no grupo', () => {
+  it('pergunta ao presidente só com sócio e pergunta de verdade', () => {
+    expect(parseCuratorAsk({ subject_name: 'Carlos', question: 'Me conta uma do Carlos?' })).toEqual({ subject_name: 'Carlos', question: 'Me conta uma do Carlos?' });
+    expect(parseCuratorAsk({ subject_name: 'Carlos', question: 'oi' })).toBeNull();
+    expect(parseCuratorAsk(null)).toBeNull();
+  });
+  it('a proposta mostra o texto sem o número da menção e diz quem será marcado', () => {
+    expect(adminProposalMessage('adm_group_post', { body: '@5588999990000 cadê você?', target_name: 'Tiago Gomes' }))
+      .toBe('Mando isto no grupo marcando Tiago Gomes:\n«cadê você?»\nManda? Responda "sim".');
   });
 });

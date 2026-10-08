@@ -127,7 +127,7 @@ const FIN_ACTIONS: FinAction[] = ['lancar', 'cobrar', 'pausar', 'retomar', 'baix
   'cancelar_pendencia', 'ajustar', 'estornar', 'rejeitar_comprovante', 'despesa', 'receita', 'aprovar_comprovante', 'gerar_cobrancas'];
 export const ADM_ACTIONS = ['aviso', 'aviso_desativar', 'aluno_status', 'socio_status', 'assinatura_reenviar', 'reserva_cancelar', 'acesso_aprovar', 'acesso_recusar', 'socio_criar',
   'followup_criar', 'followup_concluir', 'quadra_bloquear', 'preferencia', 'dependente_criar', 'mensagem_enviar', 'comunicado_enviar', 'resumo_destinatario', 'memoria_esquecer',
-  'formulario_criar', 'formulario_status', 'formulario_cobrar', 'aniversario'] as const;
+  'formulario_criar', 'formulario_status', 'formulario_cobrar', 'aniversario', 'resenha_grupo'] as const;
 export type AdmAction = typeof ADM_ACTIONS[number];
 const ADJUST_KINDS = ['discount', 'increase', 'fee_waiver'] as const;
 const PENDENCY_KINDS: PendencyKind[] = ['day_card', 'consumo', 'evento', 'multa', 'dano_reposicao', 'outros'];
@@ -153,6 +153,8 @@ export type Answer = {
   memory_candidates?: { subject_name: string; kind: string; content: string; confidence?: number }[];
   /** Emoji que o servidor coloca na mensagem da pessoa (como um amigo que curte). Só os da lista `REACTIONS`. */
   reaction?: string | null;
+  /** No grupo, citaram alguém de quem o João não sabe nada: ele pergunta ao presidente no privado (o servidor freia). */
+  ask_curator?: { subject_name: string; question: string } | null;
 };
 
 /** Reações que o João pode dar. O modelo escolhe; o servidor só aceita estas (e nunca reage em nome de outro assunto). */
@@ -285,6 +287,14 @@ export function clipSummary(v: unknown): string | null {
 }
 
 /** Falha vira transferência com mensagens vazias: nunca silêncio, nunca invenção. */
+export function parseCuratorAsk(v: unknown): Answer['ask_curator'] {
+  if (!v || typeof v !== 'object' || Array.isArray(v)) return null;
+  const o = v as Record<string, unknown>;
+  const subject = typeof o.subject_name === 'string' ? o.subject_name.trim().slice(0, 120) : '';
+  const question = typeof o.question === 'string' ? o.question.trim().slice(0, 500) : '';
+  return subject.length >= 2 && question.length >= 10 ? { subject_name: subject, question } : null;
+}
+
 export function parseAnswer(output: string): Answer {
   const obj = lerJson(output);
   if (!obj) {
@@ -303,6 +313,7 @@ export function parseAnswer(output: string): Answer {
     handoff_note: str(obj.handoff_note)?.slice(0, 500) ?? null, close: obj.close === true && !transfer,
     summary: clipSummary(obj.summary),
     reaction: parseReaction(obj.reaction),
+    ask_curator: parseCuratorAsk(obj.ask_curator),
     memory_candidates: Array.isArray(obj.memory_candidates)
       ? obj.memory_candidates.slice(0, 2).map((x) => {
           const m = x && typeof x === 'object' && !Array.isArray(x) ? x as Record<string, unknown> : {};
@@ -1384,6 +1395,9 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
     const r = await Promise.resolve(deps.db('conv_svc_ai_memory_candidate', { p: { ...candidate, source_message_id: messageId, approve: aprova } })).catch(() => null);
     if (aprova && r?.data) anotados.push(candidate.kind === 'role_title' ? `${candidate.subject_name} é ${candidate.content.replace(/^(o|a)\s+/i, '')}` : `${candidate.subject_name}: ${candidate.content}`);
   }
+  if (isGroup && answer.ask_curator) {
+    await Promise.resolve(deps.db('conv_svc_ai_curator_ask', { p_session: session, p: answer.ask_curator })).catch(() => null);
+  }
   if (answer.transfer && answer.messages.length === 0) {
     return transferir(answer.handoff_kind ?? 'hard', answer.handoff_note || 'A IA pediu ajuda da equipe.', memory);
   }
@@ -1796,7 +1810,7 @@ type AdminAction = 'fin_pendency_create' | 'fin_pendency_collection' | 'fin_pend
   | 'adm_announcement_create' | 'adm_announcement_deactivate' | 'adm_student_status' | 'adm_member_status' | 'adm_signature_resend' | 'adm_reservation_cancel'
   | 'fin_member_create' | 'fin_access_approve' | 'adm_access_reject'
   | 'adm_followup_create' | 'adm_followup_done' | 'adm_court_block' | 'adm_pref_set' | 'adm_dependent_create' | 'adm_message_send' | 'adm_broadcast_send' | 'adm_briefing_recipient' | 'adm_memory_forget'
-  | 'adm_form_create' | 'adm_form_toggle' | 'adm_form_nudge';
+  | 'adm_form_create' | 'adm_form_toggle' | 'adm_form_nudge' | 'adm_group_post';
 
 const centsBR = (v: unknown) => `R$ ${(Number(v ?? 0) / 100).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`;
 const dateBR = (v: unknown) => String(v ?? '').slice(0, 10).split('-').reverse().join('/');
@@ -1854,6 +1868,7 @@ export function adminProposalMessage(action: AdminAction, s: Ctx): string {
     return `${quem} (telefone ${tel}, ${email})${s.reactivate ? ', reativando o cadastro antigo' : ''}, com mensalidade de ${centsBR(s.amount_cents)}. A mensalidade de ${mes} fica paga com o comprovante que você mandou (${centsBR(s.amount_cents)}, pago em ${dateBR(s.paid_on)}, conta ${s.account_name}); ele entra sem pendência e os juros do mês de entrada são dispensados.${leitura} Confirma? Responda "sim".`;
   }
   if (action === 'adm_pref_set') return `${prefText(s, false)} Confirma? Responda "sim".`;
+  if (action === 'adm_group_post') return `Mando isto no grupo${s.target_name ? ` marcando ${s.target_name}` : ''}:\n«${String(s.body).replace(/^@\d+\s+/, '')}»\nManda? Responda "sim".`;
   if (action === 'adm_message_send') return `Vou chamar ${s.member_name} no WhatsApp (${s.phone}) e mandar esta mensagem:\n«${s.body}»\nConfirma? Responda "sim".`;
   if (action === 'adm_memory_forget') {
     const itens = (Array.isArray(s.items) ? s.items : []) as { subject_name: string; content: string }[];
@@ -1926,6 +1941,7 @@ export function adminSuccessMessage(action: AdminAction, s: Ctx): string {
   if (action === 'adm_form_toggle') return `Pronto: formulário «${s.title}» ${s.active ? 'reaberto' : 'encerrado'}.`;
   if (action === 'adm_form_nudge') return `Pronto: lembrete do «${s.form_title}» na fila para ${s.queued} ${Number(s.queued) === 1 ? 'sócio' : 'sócios'}. Sai no horário combinado (a fila anda a cada 5 minutos, então pode chegar até 5 minutos depois). Quando alguém responder, eu atendo.`;
   if (action === 'adm_broadcast_send') return `Pronto: o comunicado está agendado para ${s.queued} sócios. Sai no horário combinado (a fila anda a cada 5 minutos, então pode chegar até 5 minutos depois). Quando alguém responder, eu atendo.`;
+  if (action === 'adm_group_post') return 'Pronto: a resenha sai no grupo em instantes (até 5 minutos). Quando a turma responder, eu entro na brincadeira. 😂';
   if (action === 'adm_message_send') return `Pronto: a mensagem para ${s.member_name} está na fila e sai em instantes. Se ele responder, eu atendo.`;
   if (action === 'adm_dependent_create') return `Pronto: ${s.dependent_name} cadastrado(a) como ${s.relationship} de ${s.member_name}.`;
   if (action === 'adm_followup_create') return s.self ? `Pronto: te lembro em ${hhmm(s.due_at)}.` : `Pronto: retorno com ${s.member_name} criado para ${hhmm(s.due_at)}.`;
@@ -2032,6 +2048,15 @@ async function adminAcao(i: DecideInput, memory: Memory): Promise<Decision> {
     const r = await resolve(deps.db, [slots.member_name], 'member');
     if (r.ask) return ask(r.ask);
     p = { action: 'adm_message_send', profile_id: r.ids[0], body: slots.send_body };
+  } else if (a === 'resenha_grupo') {
+    if (!slots.send_body) return ask('Bora! Sobre quem é a resenha e qual a pegada? Se quiser, eu escolho a vítima. 😂');
+    let alvo: string | null = null;
+    if (slots.member_name) {
+      const r = await resolve(deps.db, [slots.member_name], 'member');
+      if (r.ask) return ask(r.ask);
+      alvo = r.ids[0];
+    }
+    p = { body: slots.send_body, profile_id: alvo };
   } else if (a === 'memoria_esquecer') {
     if (!slots.member_name) return ask('Sobre quem é a memória que devo esquecer? Se quiser só uma delas, me diga um trecho do que ela diz.');
     p = { action: 'adm_memory_forget', subject: slots.member_name, text: slots.note ?? null };
@@ -2094,7 +2119,8 @@ async function adminAcao(i: DecideInput, memory: Memory): Promise<Decision> {
   } else {
     return ask('O que você quer fazer: publicar ou tirar um aviso, pausar/reativar aluno, inativar/reativar sócio, reenviar avisos de assinatura, cancelar uma reserva, aprovar ou recusar pedido de acesso ou cadastrar um sócio novo?');
   }
-  const rpc = a === 'memoria_esquecer' ? 'conv_svc_ai_admin_memory_forget_propose'
+  const rpc = a === 'resenha_grupo' ? 'conv_svc_ai_admin_group_post_propose'
+    : a === 'memoria_esquecer' ? 'conv_svc_ai_admin_memory_forget_propose'
     : a === 'resumo_destinatario' ? 'conv_svc_ai_admin_briefing_propose'
     : a === 'comunicado_enviar' ? 'conv_svc_ai_admin_broadcast_propose'
     : a === 'formulario_criar' || a === 'formulario_status' || a === 'formulario_cobrar' ? 'conv_svc_ai_admin_forms_propose'

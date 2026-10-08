@@ -42,6 +42,13 @@ export function destination(value: string): string | null {
   return digits.length >= 10 ? digits : null;
 }
 
+/** No grupo, "@5588999990000" no texto só vira menção (nome destacado e notificação) se o número também for em `mentions`. */
+export function groupMentions(number: string, text: string): string | null {
+  if (!number.endsWith('@g.us')) return null;
+  const nums = [...new Set([...text.matchAll(/(?:^|\s)@(\d{10,15})\b/g)].map((m) => m[1]))];
+  return nums.length ? nums.join(',') : null;
+}
+
 export function buildChatRequest(input: ChatRequest): UazRequest | null {
   switch (input.action) {
     case 'send': {
@@ -50,7 +57,8 @@ export function buildChatRequest(input: ChatRequest): UazRequest | null {
       if (input.kind === 'text') {
         const text = (input.text ?? '').trim() ? input.text! : '';
         if (!text) return null;
-        return { path: '/send/text', body: { number, text, ...(input.replyId ? { replyid: input.replyId } : {}) } };
+        const mentions = groupMentions(number, text);
+        return { path: '/send/text', body: { number, text, ...(mentions ? { mentions } : {}), ...(input.replyId ? { replyid: input.replyId } : {}) } };
       }
       if (!input.fileUrl) return null;
       const body: Record<string, unknown> = { number, type: input.kind, file: input.fileUrl };

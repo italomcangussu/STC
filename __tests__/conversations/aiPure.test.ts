@@ -288,6 +288,14 @@ describe('João mais gente: reação, temperatura e contexto de amigo', () => {
     expect(memoryText(ctx, 'ele sempre chega atrasado')).toBe('(nenhuma memória aprovada relevante para este turno)');
   });
 
+  it('memória aprovada: com a diretoria no privado, o João enxerga a turma toda (de onde saem as resenhas)', () => {
+    const ctx = { is_group: false, requester: { profile: { name: 'Hermeson Veras', is_admin: true } }, group_members: [], club_roster: [], transcript: [], group_context: [],
+      joao_memories: [{ subject_name: 'Tiago Gomes', kind: 'confirmed_fact', content: 'Dono da Gomes Prime Ótica.' }, { subject_name: 'Mailson Freitas', kind: 'inside_joke', content: 'Rei das Bets.' }] };
+    const txt = memoryText(ctx, 'puxa uma resenha no grupo');
+    expect(txt).toContain('Tiago Gomes');
+    expect(txt).toContain('Mailson Freitas');
+  });
+
   it('resultados recentes: placar de quem ganhou, W.O., e sem dado quando a conversa não é de sócio nem de grupo', () => {
     const results = [
       { played_on: '2026-10-06', winner: 'Marcelo Sampieri', loser: 'Thieslley Soares', score: '6x3 6x4', championship: 'Open da Galera', phase: 'Semifinal', walkover: false },

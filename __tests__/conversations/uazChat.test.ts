@@ -68,3 +68,12 @@ describe('instância do clube', () => {
     expect(body.events).toEqual(expect.arrayContaining(['messages', 'messages_update']));
   });
 });
+
+describe('menção no grupo', () => {
+  it('número com @ no texto do grupo vira mentions; no privado não', () => {
+    expect(buildChatRequest({ action: 'send', number: '120363046963315575@g.us', kind: 'text', text: '@5588999990000 cadê você? e o @5588988887777 também' })?.body)
+      .toMatchObject({ mentions: '5588999990000,5588988887777' });
+    expect(buildChatRequest({ action: 'send', number: '5588999990000', kind: 'text', text: '@5588999990000 oi' })?.body).not.toHaveProperty('mentions');
+    expect(buildChatRequest({ action: 'send', number: '120363046963315575@g.us', kind: 'text', text: 'email a@b.com, nada de menção' })?.body).not.toHaveProperty('mentions');
+  });
+});
