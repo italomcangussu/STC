@@ -59,7 +59,8 @@ const PendenciesTab: React.FC = () => {
       <Sheet open={sheets.rulesOpen} onClose={sheets.closeRules} wide closeOnBackdrop={false} title="Régua de cobrança das pendências" subtitle="Vale para todas as pendências de sócio. Mensalidades têm encargos próprios, em Configurações.">
         {settings ? <PendencyRulesSection bare s={settings} onSaved={() => { reloadSettings(); sheets.closeRules(); }} /> : <Spinner />}
       </Sheet>
-      <PendencySheet row={selected} onClose={() => setSelected(null)} onChanged={() => { pendencies.reload(); setSelected(null); }} />
+      {/* Uma folha nova por pendência: o formulário que ficou aberto na anterior não passa para a próxima. */}
+      <PendencySheet key={selected?.charge_id ?? 'none'} row={selected} onClose={() => setSelected(null)} onChanged={() => { pendencies.reload(); setSelected(null); }} />
     </div>
   );
 };

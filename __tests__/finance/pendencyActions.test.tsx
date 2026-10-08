@@ -191,6 +191,21 @@ describe('Pendência — extrato e ações', () => {
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(api.listCharges).toHaveBeenCalledTimes(1);
   });
+
+  it('abrir outra pendência não herda o formulário da anterior', async () => {
+    api.listCharges.mockResolvedValue([stmt(), stmt({ charge_id: 'c2', profile_id: 'u2', profile_name: 'Beto Sócio', total_due_cents: 1200, original_amount_cents: 1200 })]);
+    api.listPendencyMeta.mockResolvedValue([meta(), meta({ id: 'c2', profile_id: 'u2', description: 'Consumo do bar', pendency_kind: 'consumo', guest_name: null, guest_date: null })]);
+    mount();
+    let dlg = await openPendency();
+    fireEvent.click(dlg.getByRole('button', { name: 'Registrar pagamento' }));
+    fireEvent.click(dlg.getByRole('button', { name: 'Fechar' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+
+    dlg = await openPendency('Consumo do bar');
+    expect(dlg.queryByRole('button', { name: 'Confirmar' })).toBeNull();
+    fireEvent.click(dlg.getByRole('button', { name: 'Registrar pagamento' }));
+    expect(dlg.getByLabelText(/^Valor/)).toHaveValue('12,00');
+  });
 });
 
 describe('Nova pendência — salvar', () => {
