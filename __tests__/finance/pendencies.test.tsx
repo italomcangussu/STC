@@ -94,10 +94,24 @@ describe('Régua de pendências (configurações)', () => {
 });
 
 describe('Pendências (contas a receber)', () => {
+  it('avisa que a lista e os totais estão incompletos quando há mais pendências que o limite carregado', async () => {
+    api.listCharges.mockResolvedValue([stmt({ total_count: 7000 }), stmt({ charge_id: 'c2', profile_id: 'u2', profile_name: 'Beto Sócio', total_count: 7000 })]);
+    mount(<PendenciesTab />);
+    expect(await screen.findByText(/7\.000 pendências/)).toBeInTheDocument();
+    expect(screen.getByText(/só as 2 mais recentes/)).toBeInTheDocument();
+  });
+
+  it('não mostra aviso de lista incompleta quando todas as pendências foram carregadas', async () => {
+    api.listCharges.mockResolvedValue([stmt({ total_count: 2 }), stmt({ charge_id: 'c2', profile_id: 'u2', profile_name: 'Beto Sócio', total_count: 2 })]);
+    mount(<PendenciesTab />);
+    await screen.findByText('Day Card do convidado Carlos');
+    expect(screen.queryByText(/mais recentes/)).not.toBeInTheDocument();
+  });
+
   it('lista com saldo em aberto, vencido e busca por convidado', async () => {
     mount(<PendenciesTab />);
     await screen.findByText('Day Card do convidado Carlos');
-    expect(api.listCharges).toHaveBeenCalledWith({ chargeType: 'member_pendency', status: '' }, 1000);
+    expect(api.listCharges).toHaveBeenCalledWith({ chargeType: 'member_pendency', status: '' }, 5000);
     expect(screen.getByText('Consumo do bar')).toBeInTheDocument();
     expect(screen.getByText('Pausada')).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText(/Buscar pendência/i), { target: { value: 'carlos' } });

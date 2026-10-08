@@ -33,6 +33,9 @@ const KINDS: Array<[MemberPendencyKind, string]> = [
 const METHODS = [['pix', 'Pix'], ['transfer', 'Transferência'], ['cash', 'Dinheiro'], ['card', 'Cartão'], ['other', 'Outro']] as const;
 const STATUS = [['', 'Todas'], ['overdue', 'Vencidas'], ['open', 'Em aberto'], ['partial', 'Parciais'], ['in_review', 'Em análise'], ['paid', 'Pagas'], ['canceled', 'Canceladas']] as const;
 
+/** Pendências carregadas de uma vez (a lista e os totais de saldo saem delas); acima disso a tela avisa. */
+const LIST_LIMIT = 5000;
+
 type ViewRow = ChargeStatementRow & { meta: MemberPendencyMeta };
 
 /** [0, 3, 7] → "No vencimento, +3 e +7 dias". */
@@ -258,7 +261,7 @@ const PendenciesTab: React.FC = () => {
   const [search,setSearch]=useState('');
   const [status,setStatus]=useState('');
   const [selected,setSelected]=useState<ViewRow|null>(null);
-  const statements=useAsync(()=>listCharges({chargeType:'member_pendency',status},1000),[status]);
+  const statements=useAsync(()=>listCharges({chargeType:'member_pendency',status},LIST_LIMIT),[status]);
   const meta=useAsync(()=>listPendencyMeta(),[]);
   const reload=()=>{statements.reload();meta.reload();};
 
@@ -267,6 +270,9 @@ const PendenciesTab: React.FC = () => {
     return (statements.data??[]).map((s)=>({ ...s,meta:byId.get(s.charge_id)! })).filter((r)=>r.meta)
       .filter((r)=>!search.trim()||matchesSearch(search,`${r.profile_name} ${r.meta.description} ${r.meta.guest_name??''}`));
   },[statements.data,meta.data,search]);
+  const loadedCount=statements.data?.length??0;
+  const totalCount=statements.data?.[0]?.total_count??0;
+  const partial=totalCount>loadedCount;
   const total=rows.filter((r)=>!['paid','canceled'].includes(r.stored_status)).reduce((sum,r)=>sum+r.total_due_cents,0);
   const overdue=rows.filter((r)=>r.display_status==='overdue').reduce((sum,r)=>sum+r.total_due_cents,0);
 
@@ -283,6 +289,7 @@ const PendenciesTab: React.FC = () => {
       <div className="mt-4 space-y-3">
         <AdminSearch value={search} onChange={setSearch} placeholder="Buscar sócio, descrição ou convidado…" label="Buscar pendência"/>
         <SectionTabs label="Situação" value={status} onChange={setStatus} items={STATUS.map(([id,label])=>({id,label}))}/>
+        {partial&&!statements.loading&&<Notice tone="warn">Há {totalCount.toLocaleString('pt-BR')} pendências neste filtro; só as {loadedCount.toLocaleString('pt-BR')} mais recentes entram na lista e nos totais acima. Escolha uma situação para ver as demais.</Notice>}
         {statements.loading||meta.loading?<Spinner/>:statements.error||meta.error?<Notice tone="warn">Não foi possível carregar as pendências.</Notice>:rows.length===0?<Empty title="Nenhuma pendência neste filtro" hint="Use “Nova pendência” para lançar uma cobrança manual para um sócio."/>:
           <div className="space-y-2">{rows.map((r)=><Row key={r.charge_id} onClick={()=>setSelected(r)}>
             <div className="flex flex-wrap items-start justify-between gap-2">
