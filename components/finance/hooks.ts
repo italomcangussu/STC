@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { newRequestId } from '../../lib/finance/financeApi';
 import { todayInFortaleza, type IsoDate } from '../../lib/finance/dates';
+import { notifyFinanceError } from '../../lib/finance/errors';
 
 export interface AsyncState<T> {
   data: T | null;
@@ -42,6 +43,21 @@ export function useAsync<T>(load: () => Promise<T>, deps: unknown[]): AsyncState
 export function useRequestKey() {
   const [key, setKey] = useState(newRequestId);
   return { key, renew: () => setKey(newRequestId()) };
+}
+
+/**
+ * Roda uma operação do financeiro com a trava de "ocupado": enquanto espera, o botão fica desabilitado;
+ * se falhar, avisa com mensagem humana e libera o botão para tentar de novo. `onSuccess` recebe o resultado.
+ */
+export function useAction(failure: { message: string; event: string }) {
+  const [busy, setBusy] = useState(false);
+  const run = async <T>(action: () => Promise<T>, onSuccess: (result: T) => void): Promise<void> => {
+    setBusy(true);
+    try { onSuccess(await action()); }
+    catch (e) { notifyFinanceError(e, failure.message, failure.event); }
+    finally { setBusy(false); }
+  };
+  return { busy, run };
 }
 
 /** "Hoje" do clube (Fortaleza), estável durante a vida do componente. */
