@@ -20,6 +20,7 @@ import {
   PieChart,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { fetchAllRows } from '../lib/fetchAllRows';
 import { LoadingOverlay } from './ui/LoadingStates';
 import { logger } from '../lib/logger';
 import { notify } from '../lib/notifications';
@@ -73,12 +74,15 @@ export const AdminReports: React.FC = () => {
       setLoading(true);
 
       // Fetch reservations
-      const { data: reservations, error: resError } = await supabase
-        .from('reservations')
-        .select('*')
-        .gte('date', dateRange.start)
-        .lte('date', dateRange.end)
-        .eq('status', 'active');
+      const { data: reservations, error: resError } = await fetchAllRows((from, to) =>
+        supabase
+          .from('reservations')
+          .select('*')
+          .gte('date', dateRange.start)
+          .lte('date', dateRange.end)
+          .eq('status', 'active')
+          .order('id', { ascending: true })
+          .range(from, to));
 
       if (resError) throw resError;
 
