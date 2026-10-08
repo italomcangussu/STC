@@ -71,7 +71,7 @@
 - update [edge]: supabase/functions/admin-athlete-access/index.ts:120, supabase/functions/admin-athlete-access/index.ts:150, supabase/functions/admin-athlete-access/index.ts:185
 
 ### admin_audit_logs
-- select: components/AdminPanel.tsx:1191, lib/finance/financeApi.ts:405
+- select: components/AdminPanel.tsx:1191, lib/finance/financeApi.ts:423
 
 ### announcements
 - select: App.tsx:114, components/AdminPanel.tsx:766
@@ -80,7 +80,7 @@
 - delete: components/AdminPanel.tsx:848
 
 ### challenges
-- select: components/AdminPanel.tsx:433, components/AdminReports.tsx:107, components/Agenda.tsx:1452, components/ChallengeNotificationPopup.tsx:28, components/Challenges.tsx:509, hooks/useChallenges.ts:188, lib/rankingService.ts:538, lib/rankingService.ts:546
+- select: components/AdminPanel.tsx:433, components/AdminReports.tsx:111, components/Agenda.tsx:1452, components/ChallengeNotificationPopup.tsx:28, components/Challenges.tsx:509, hooks/useChallenges.ts:188, lib/rankingService.ts:538, lib/rankingService.ts:546
 - insert: components/AdminMatchCreator.tsx:169, components/AdminPanel.tsx:597, components/Athletes.tsx:164, components/Challenges.tsx:612, hooks/useChallenges.ts:280
 - update: components/AdminPanel.tsx:484, components/AdminPanel.tsx:533, components/Agenda.tsx:1824, components/ChallengeNotificationPopup.tsx:94, components/Challenges.tsx:666, components/Challenges.tsx:803, hooks/useChallenges.ts:331, hooks/useChallenges.ts:354, hooks/useChallenges.ts:380
 
@@ -146,7 +146,7 @@
 - delete: lib/formsService.ts:273
 
 ### consumptions
-- select: components/AdminReports.tsx:95, components/Klanches.tsx:114, components/Klanches.tsx:304
+- select: components/AdminReports.tsx:99, components/Klanches.tsx:114, components/Klanches.tsx:304
 - insert: components/Klanches.tsx:293
 - update: components/Klanches.tsx:332
 
@@ -167,61 +167,61 @@
 - update [edge]: supabase/functions/joao-daily-greeting/index.ts:177
 
 ### courts
-- select: components/AdminPanel.tsx:1604, components/AdminPanel.tsx:271, components/AdminPanel.tsx:435, components/AdminReports.tsx:123, components/Agenda.tsx:1390, components/Athletes.tsx:99, components/ChallengeNotificationPopup.tsx:64, components/Challenges.tsx:72, components/ChampionshipInProgress.tsx:120, components/Championships.tsx:187, components/Dashboard.tsx:41, components/Klanches.tsx:169 +2
+- select: components/AdminPanel.tsx:1604, components/AdminPanel.tsx:271, components/AdminPanel.tsx:435, components/AdminReports.tsx:127, components/Agenda.tsx:1390, components/Athletes.tsx:99, components/ChallengeNotificationPopup.tsx:64, components/Challenges.tsx:72, components/ChampionshipInProgress.tsx:120, components/Championships.tsx:187, components/Dashboard.tsx:41, components/Klanches.tsx:169 +2
 
 ### fin_accounts
-- select: lib/finance/financeApi.ts:59
+- select: lib/finance/financeApi.ts:77
 
 ### fin_attachments
-- select: lib/finance/financeApi.ts:135
+- select: lib/finance/financeApi.ts:153
 
 ### fin_categories
-- select: lib/finance/financeApi.ts:68
+- select: lib/finance/financeApi.ts:86
 
 ### fin_charge_adjustments
-- select: lib/finance/financeApi.ts:252
+- select: lib/finance/financeApi.ts:270
 
 ### fin_charge_payments
-- select: lib/finance/financeApi.ts:251
-
-### fin_entries_v
-- select: lib/finance/financeApi.ts:90
-
-### fin_entry_payments
-- select: lib/finance/financeApi.ts:106
-
-### fin_holidays
-- select: lib/finance/financeApi.ts:50
-
-### fin_member_charges
-- select: lib/finance/financeApi.ts:198
-
-### fin_member_credits
 - select: lib/finance/financeApi.ts:269
 
+### fin_entries_v
+- select: lib/finance/financeApi.ts:108
+
+### fin_entry_payments
+- select: lib/finance/financeApi.ts:124
+
+### fin_holidays
+- select: lib/finance/financeApi.ts:68
+
+### fin_member_charges
+- select: lib/finance/financeApi.ts:216
+
+### fin_member_credits
+- select: lib/finance/financeApi.ts:287
+
 ### fin_member_plan_prices
-- select: lib/finance/financeApi.ts:166
+- select: lib/finance/financeApi.ts:184
 
 ### fin_member_plans
-- select: lib/finance/financeApi.ts:161, lib/finance/financeApi.ts:282
+- select: lib/finance/financeApi.ts:179, lib/finance/financeApi.ts:300
 
 ### fin_receipt_charges
-- select: lib/finance/financeApi.ts:330, lib/finance/financeApi.ts:344
+- select: lib/finance/financeApi.ts:348, lib/finance/financeApi.ts:362
 
 ### fin_receipt_submissions
-- select: lib/finance/financeApi.ts:330, lib/finance/financeApi.ts:344
+- select: lib/finance/financeApi.ts:348, lib/finance/financeApi.ts:362
 
 ### fin_recurrences
-- select: lib/finance/financeApi.ts:122
+- select: lib/finance/financeApi.ts:140
 
 ### fin_settings
-- select: lib/finance/financeApi.ts:42
+- select: lib/finance/financeApi.ts:60
 
 ### head_to_head_points
 - select: lib/rankingService.ts:173
 
 ### matches
-- select: components/AdminReports.tsx:115, components/Agenda.tsx:1282, components/Athletes.tsx:67, components/Challenges.tsx:418, components/Challenges.tsx:536, components/ChampionshipAdmin.tsx:588, components/ChampionshipCreator.tsx:207, components/ChampionshipInProgress.tsx:156, components/Championships.tsx:263, components/Championships.tsx:331, components/PublicChampionshipPage.tsx:99, components/SuperSet.tsx:166 +5
+- select: components/AdminReports.tsx:119, components/Agenda.tsx:1282, components/Athletes.tsx:67, components/Challenges.tsx:418, components/Challenges.tsx:536, components/ChampionshipAdmin.tsx:588, components/ChampionshipCreator.tsx:207, components/ChampionshipInProgress.tsx:156, components/Championships.tsx:263, components/Championships.tsx:331, components/PublicChampionshipPage.tsx:99, components/SuperSet.tsx:166 +5
 - insert: components/AdminMatchCreator.tsx:149, components/AdminPanel.tsx:515, components/Agenda.tsx:1806, components/ChampionshipInProgress.tsx:259, components/MatchGenerationModal.tsx:119, components/SuperSet.tsx:110, lib/championship/bracket.ts:223, lib/championship/groupPersistence.ts:190
 - update: components/ChampionshipInProgress.tsx:303, components/ChampionshipInProgress.tsx:364, components/Championships.tsx:561, components/Championships.tsx:621, components/Championships.tsx:701, components/Championships.tsx:747, components/Championships.tsx:835, lib/championship/bracket.ts:248, lib/resenhaOpenService.ts:390, lib/resenhaOpenService.ts:407
 - upsert: components/LiveScoreboard.tsx:157
@@ -252,7 +252,7 @@
 - delete: components/AdminProfessors.tsx:197
 
 ### profiles
-- select: components/AdminLogin.tsx:32, components/AdminPanel.tsx:1004, components/AdminPanel.tsx:1166, components/AdminPanel.tsx:1550, components/AdminPanel.tsx:1574, components/AdminPanel.tsx:1603, components/AdminPanel.tsx:272, components/AdminPanel.tsx:434, components/AdminProtect.tsx:23, components/AdminReports.tsx:86, components/AdminStudents.tsx:85, components/Agenda.tsx:1220 +35
+- select: components/AdminLogin.tsx:32, components/AdminPanel.tsx:1004, components/AdminPanel.tsx:1166, components/AdminPanel.tsx:1550, components/AdminPanel.tsx:1574, components/AdminPanel.tsx:1603, components/AdminPanel.tsx:272, components/AdminPanel.tsx:434, components/AdminProtect.tsx:23, components/AdminReports.tsx:90, components/AdminStudents.tsx:85, components/Agenda.tsx:1220 +35
 - select [edge]: supabase/functions/_shared/athleteProvision.ts:54, supabase/functions/_shared/serveAdmin.ts:29, supabase/functions/admin-athlete-access/index.ts:48, supabase/functions/send-push/index.ts:59
 - insert: contexts/AuthContext.tsx:429
 - update: components/AdminUserEditor.tsx:125, components/EditProfileModal.tsx:79, components/OnboardingModal.tsx:63, contexts/AuthContext.tsx:330
@@ -270,7 +270,7 @@
 - select: components/AdminPanel.tsx:1559
 
 ### reservations
-- select: components/AdminPanel.tsx:270, components/AdminPanel.tsx:79, components/AdminReports.tsx:76, components/Agenda.tsx:1246, components/Agenda.tsx:1642, components/Athletes.tsx:79, components/Challenges.tsx:96, components/Dashboard.tsx:59, components/FinanceiroAdmin.tsx:59, components/Klanches.tsx:148, components/ProfessorProfile.tsx:237, components/SuperSet.tsx:58 +1
+- select: components/AdminPanel.tsx:270, components/AdminPanel.tsx:79, components/AdminReports.tsx:78, components/Agenda.tsx:1246, components/Agenda.tsx:1642, components/Athletes.tsx:79, components/Challenges.tsx:96, components/Dashboard.tsx:59, components/FinanceiroAdmin.tsx:59, components/Klanches.tsx:148, components/ProfessorProfile.tsx:237, components/SuperSet.tsx:58 +1
 - insert: components/AdminMatchCreator.tsx:131, components/AdminPanel.tsx:574, components/Agenda.tsx:1723, components/Challenges.tsx:594, hooks/useReservations.ts:180
 - update: components/AdminPanel.tsx:328, components/Agenda.tsx:1501, components/Agenda.tsx:1539, components/Agenda.tsx:1559, components/Agenda.tsx:1588, components/Agenda.tsx:1715, components/Agenda.tsx:1833, components/ChallengeNotificationPopup.tsx:104, components/FinanceiroAdmin.tsx:170, components/ProfessorProfile.tsx:661, hooks/useReservations.ts:253, hooks/useReservations.ts:279
 

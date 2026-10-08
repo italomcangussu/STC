@@ -2568,7 +2568,7 @@
    "nome": "admin_audit_logs",
    "front": [
     "components/AdminPanel.tsx:1191",
-    "lib/finance/financeApi.ts:405"
+    "lib/finance/financeApi.ts:423"
    ],
    "edge": [],
    "telas": []
@@ -2596,7 +2596,7 @@
     "components/AdminPanel.tsx:484",
     "components/AdminPanel.tsx:533",
     "components/AdminPanel.tsx:597",
-    "components/AdminReports.tsx:107",
+    "components/AdminReports.tsx:111",
     "components/Agenda.tsx:1452",
     "components/Agenda.tsx:1824",
     "components/Athletes.tsx:164",
@@ -2847,7 +2847,7 @@
    "tipo": "tabela",
    "nome": "consumptions",
    "front": [
-    "components/AdminReports.tsx:95",
+    "components/AdminReports.tsx:99",
     "components/Klanches.tsx:114",
     "components/Klanches.tsx:293",
     "components/Klanches.tsx:304",
@@ -2917,7 +2917,7 @@
     "components/AdminPanel.tsx:1604",
     "components/AdminPanel.tsx:271",
     "components/AdminPanel.tsx:435",
-    "components/AdminReports.tsx:123",
+    "components/AdminReports.tsx:127",
     "components/Agenda.tsx:1390",
     "components/Athletes.tsx:99",
     "components/ChallengeNotificationPopup.tsx:64",
@@ -2936,7 +2936,7 @@
    "tipo": "tabela",
    "nome": "fin_accounts",
    "front": [
-    "lib/finance/financeApi.ts:59"
+    "lib/finance/financeApi.ts:77"
    ],
    "edge": [],
    "telas": []
@@ -2945,7 +2945,7 @@
    "tipo": "tabela",
    "nome": "fin_attachments",
    "front": [
-    "lib/finance/financeApi.ts:135"
+    "lib/finance/financeApi.ts:153"
    ],
    "edge": [],
    "telas": []
@@ -2954,7 +2954,7 @@
    "tipo": "tabela",
    "nome": "fin_categories",
    "front": [
-    "lib/finance/financeApi.ts:68"
+    "lib/finance/financeApi.ts:86"
    ],
    "edge": [],
    "telas": []
@@ -2963,7 +2963,7 @@
    "tipo": "tabela",
    "nome": "fin_charge_adjustments",
    "front": [
-    "lib/finance/financeApi.ts:252"
+    "lib/finance/financeApi.ts:270"
    ],
    "edge": [],
    "telas": []
@@ -2972,7 +2972,7 @@
    "tipo": "tabela",
    "nome": "fin_charge_payments",
    "front": [
-    "lib/finance/financeApi.ts:251"
+    "lib/finance/financeApi.ts:269"
    ],
    "edge": [],
    "telas": []
@@ -2981,7 +2981,7 @@
    "tipo": "tabela",
    "nome": "fin_entries_v",
    "front": [
-    "lib/finance/financeApi.ts:90"
+    "lib/finance/financeApi.ts:108"
    ],
    "edge": [],
    "telas": []
@@ -2990,7 +2990,7 @@
    "tipo": "tabela",
    "nome": "fin_entry_payments",
    "front": [
-    "lib/finance/financeApi.ts:106"
+    "lib/finance/financeApi.ts:124"
    ],
    "edge": [],
    "telas": []
@@ -2999,7 +2999,7 @@
    "tipo": "tabela",
    "nome": "fin_holidays",
    "front": [
-    "lib/finance/financeApi.ts:50"
+    "lib/finance/financeApi.ts:68"
    ],
    "edge": [],
    "telas": []
@@ -3008,7 +3008,7 @@
    "tipo": "tabela",
    "nome": "fin_member_charges",
    "front": [
-    "lib/finance/financeApi.ts:198"
+    "lib/finance/financeApi.ts:216"
    ],
    "edge": [],
    "telas": []
@@ -3017,7 +3017,7 @@
    "tipo": "tabela",
    "nome": "fin_member_credits",
    "front": [
-    "lib/finance/financeApi.ts:269"
+    "lib/finance/financeApi.ts:287"
    ],
    "edge": [],
    "telas": []
@@ -3026,7 +3026,7 @@
    "tipo": "tabela",
    "nome": "fin_member_plan_prices",
    "front": [
-    "lib/finance/financeApi.ts:166"
+    "lib/finance/financeApi.ts:184"
    ],
    "edge": [],
    "telas": []
@@ -3035,8 +3035,8 @@
    "tipo": "tabela",
    "nome": "fin_member_plans",
    "front": [
-    "lib/finance/financeApi.ts:161",
-    "lib/finance/financeApi.ts:282"
+    "lib/finance/financeApi.ts:179",
+    "lib/finance/financeApi.ts:300"
    ],
    "edge": [],
    "telas": []
@@ -3045,8 +3045,8 @@
    "tipo": "tabela",
    "nome": "fin_receipt_charges",
    "front": [
-    "lib/finance/financeApi.ts:330",
-    "lib/finance/financeApi.ts:344"
+    "lib/finance/financeApi.ts:348",
+    "lib/finance/financeApi.ts:362"
    ],
    "edge": [],
    "telas": []
@@ -3055,8 +3055,8 @@
    "tipo": "tabela",
    "nome": "fin_receipt_submissions",
    "front": [
-    "lib/finance/financeApi.ts:330",
-    "lib/finance/financeApi.ts:344"
+    "lib/finance/financeApi.ts:348",
+    "lib/finance/financeApi.ts:362"
    ],
    "edge": [],
    "telas": []
@@ -3065,7 +3065,7 @@
    "tipo": "tabela",
    "nome": "fin_recurrences",
    "front": [
-    "lib/finance/financeApi.ts:122"
+    "lib/finance/financeApi.ts:140"
    ],
    "edge": [],
    "telas": []
@@ -3074,7 +3074,7 @@
    "tipo": "tabela",
    "nome": "fin_settings",
    "front": [
-    "lib/finance/financeApi.ts:42"
+    "lib/finance/financeApi.ts:60"
    ],
    "edge": [],
    "telas": []
@@ -3094,7 +3094,7 @@
    "front": [
     "components/AdminMatchCreator.tsx:149",
     "components/AdminPanel.tsx:515",
-    "components/AdminReports.tsx:115",
+    "components/AdminReports.tsx:119",
     "components/Agenda.tsx:1282",
     "components/Agenda.tsx:1806",
     "components/Athletes.tsx:67",
@@ -3222,7 +3222,7 @@
     "components/AdminPanel.tsx:272",
     "components/AdminPanel.tsx:434",
     "components/AdminProtect.tsx:23",
-    "components/AdminReports.tsx:86",
+    "components/AdminReports.tsx:90",
     "components/AdminStudents.tsx:85",
     "components/AdminUserEditor.tsx:125",
     "components/Agenda.tsx:1220",
@@ -3259,7 +3259,7 @@
     "lib/championship/knockoutFromGroups.ts:164",
     "lib/championship/registration.ts:36",
     "lib/conversations/api.ts:556",
-    "lib/finance/financeApi.ts:281",
+    "lib/finance/financeApi.ts:299",
     "lib/formsService.ts:318",
     "lib/rankingService.ts:112",
     "lib/resenhaOpenService.ts:245",
@@ -3311,7 +3311,7 @@
     "components/AdminPanel.tsx:328",
     "components/AdminPanel.tsx:574",
     "components/AdminPanel.tsx:79",
-    "components/AdminReports.tsx:76",
+    "components/AdminReports.tsx:78",
     "components/Agenda.tsx:1246",
     "components/Agenda.tsx:1501",
     "components/Agenda.tsx:1539",
@@ -3769,7 +3769,7 @@
   "Acesso a dados direto no componente: `LancamentosTab` (components/AdminPanel.tsx:1550) chama point_history, profiles, ranking_reset_events, courts, admin_reset_ranking_full; o padrão do projeto é passar por hook/serviço",
   "Acesso a dados direto no componente: `AdminProfessors` (components/AdminProfessors.tsx:118) chama professors, non_socio_students; o padrão do projeto é passar por hook/serviço",
   "Acesso a dados direto no componente: `AdminProtect` (components/AdminProtect.tsx:23) chama profiles; o padrão do projeto é passar por hook/serviço",
-  "Acesso a dados direto no componente: `AdminReports` (components/AdminReports.tsx:76) chama reservations, profiles, consumptions, challenges, matches, courts; o padrão do projeto é passar por hook/serviço",
+  "Acesso a dados direto no componente: `AdminReports` (components/AdminReports.tsx:78) chama reservations, profiles, consumptions, challenges, matches, courts; o padrão do projeto é passar por hook/serviço",
   "Acesso a dados direto no componente: `AdminRules` (components/AdminRules.tsx:112) chama point_rules; o padrão do projeto é passar por hook/serviço",
   "Acesso a dados direto no componente: `AdminStudents` (components/AdminStudents.tsx:79) chama non_socio_students, student_profiles, professors, profiles, set_student_level, student_level_history, student_payments; o padrão do projeto é passar por hook/serviço",
   "Acesso a dados direto no componente: `AdminUserEditor` (components/AdminUserEditor.tsx:125) chama profiles, point_history; o padrão do projeto é passar por hook/serviço",

@@ -92,7 +92,7 @@ _nenhum_
 - Acesso a dados direto no componente: `LancamentosTab` (components/AdminPanel.tsx:1550) chama point_history, profiles, ranking_reset_events, courts, admin_reset_ranking_full; o padrão do projeto é passar por hook/serviço
 - Acesso a dados direto no componente: `AdminProfessors` (components/AdminProfessors.tsx:118) chama professors, non_socio_students; o padrão do projeto é passar por hook/serviço
 - Acesso a dados direto no componente: `AdminProtect` (components/AdminProtect.tsx:23) chama profiles; o padrão do projeto é passar por hook/serviço
-- Acesso a dados direto no componente: `AdminReports` (components/AdminReports.tsx:76) chama reservations, profiles, consumptions, challenges, matches, courts; o padrão do projeto é passar por hook/serviço
+- Acesso a dados direto no componente: `AdminReports` (components/AdminReports.tsx:78) chama reservations, profiles, consumptions, challenges, matches, courts; o padrão do projeto é passar por hook/serviço
 - Acesso a dados direto no componente: `AdminRules` (components/AdminRules.tsx:112) chama point_rules; o padrão do projeto é passar por hook/serviço
 - Acesso a dados direto no componente: `AdminStudents` (components/AdminStudents.tsx:79) chama non_socio_students, student_profiles, professors, profiles, set_student_level, student_level_history, student_payments; o padrão do projeto é passar por hook/serviço
 - Acesso a dados direto no componente: `AdminUserEditor` (components/AdminUserEditor.tsx:125) chama profiles, point_history; o padrão do projeto é passar por hook/serviço
