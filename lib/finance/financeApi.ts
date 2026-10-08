@@ -293,6 +293,14 @@ export async function listCredits(profileId?: string): Promise<MemberCreditRow[]
 export const resolveCredit = (creditId: string, action: 'apply' | 'refund' | 'void', data: Record<string, unknown>, requestId = newRequestId()) =>
   call('fin_resolve_credit', { p_request_id: requestId, p_credit: creditId, p_action: action, p_data: data });
 
+/** Nome de cada id (para telas que só têm o id do sócio, inclusive de quem já saiu do clube). */
+export async function profileNames(ids: string[]): Promise<Record<string, string>> {
+  if (ids.length === 0) return {};
+  const { data, error } = await supabase.from('profiles').select('id, name').in('id', ids);
+  if (error) throw error;
+  return Object.fromEntries((data ?? []).map((p) => [p.id as string, p.name as string]));
+}
+
 /** Sócios que ainda podem receber um plano (ativos e sem plano vivo). */
 export async function listMembersWithoutPlan(): Promise<Array<{ id: string; name: string }>> {
   const [members, plans] = await Promise.all([

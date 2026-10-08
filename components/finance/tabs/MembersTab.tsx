@@ -5,7 +5,7 @@ import { useConfirm } from '../../../hooks/useConfirm';
 import { notifyFinanceError } from '../../../lib/finance/errors';
 import {
   adjustCharge, cancelCharge, chargeHistory, createPlan, endPlan, generateCharges, listCharges, listCredits, listHolidays, listMembersWithoutPlan, listPlanPrices,
-  listPlans, registerPayment, resolveCredit, reversePayment, setPlanPrice, updatePlan, type PlanWithMember,
+  listPlans, profileNames, registerPayment, resolveCredit, reversePayment, setPlanPrice, updatePlan, type PlanWithMember,
 } from '../../../lib/finance/financeApi';
 import type { ChargeStatementRow, MemberCreditRow } from '../../../lib/finance/types';
 import { brDate, addMonths, firstOfMonth, monthLabel, type IsoDate } from '../../../lib/finance/dates';
@@ -298,10 +298,6 @@ const PlanCard: React.FC<{ plan: PlanWithMember; onChanged: () => void }> = ({ p
 const CreditsPanel: React.FC = () => {
   const { accounts } = useFinance();
   const credits = useAsync(() => listCredits(), []);
-  const names = useAsync(async () => {
-    const rows = await listCharges({ chargeType: 'membership' }, 500);
-    return rows;
-  }, []);
   const [sel, setSel] = useState<MemberCreditRow | null>(null);
   const [action, setAction] = useState<'apply' | 'refund' | 'void'>('apply');
   const [charge, setCharge] = useState('');
@@ -310,15 +306,19 @@ const CreditsPanel: React.FC = () => {
   const { key, renew } = useRequestKey();
   const [busy, setBusy] = useState(false);
   const open = (credits.data ?? []).filter((c) => c.status === 'open');
-  const targets = (names.data ?? []).filter((c) => sel && c.profile_id === sel.profile_id && c.total_due_cents > 0 && c.display_status !== 'canceled');
-  const who = (profileId: string) => (names.data ?? []).find((c) => c.profile_id === profileId)?.profile_name ?? 'Sócio';
+  const owners = [...new Set(open.map((c) => c.profile_id))];
+  const names = useAsync(() => profileNames(owners), [owners.join(',')]);
+  // Só as cobranças do sócio escolhido: não depende de a cobrança estar entre as mais recentes do clube.
+  const charges = useAsync(() => (sel ? listCharges({ profileId: sel.profile_id, chargeType: 'membership' }, 1000) : Promise.resolve([])), [sel?.profile_id]);
+  const targets = (charges.data ?? []).filter((c) => sel && c.profile_id === sel.profile_id && c.total_due_cents > 0 && c.display_status !== 'canceled');
+  const who = (profileId: string) => names.data?.[profileId] ?? 'Sócio';
 
   const submit = async () => {
     if (!sel) return;
     setBusy(true);
     try {
       await resolveCredit(sel.id, action, action === 'apply' ? { charge_id: charge } : action === 'refund' ? { account_id: account, reason } : { reason }, key);
-      notify.success('Crédito resolvido.'); renew(); setSel(null); credits.reload(); names.reload();
+      notify.success('Crédito resolvido.'); renew(); setSel(null); credits.reload(); charges.reload();
     } catch (e) { notifyFinanceError(e, 'Não foi possível resolver o crédito.', 'finance_credit_failed'); }
     finally { setBusy(false); }
   };
@@ -336,7 +336,7 @@ const CreditsPanel: React.FC = () => {
       <Sheet open={!!sel} onClose={() => setSel(null)} title="Resolver crédito" subtitle={sel ? `${who(sel.profile_id)} — ${formatBRL(sel.remaining_cents)}` : ''}
         footer={<><button className={btnGhost} onClick={() => setSel(null)}>Cancelar</button><button className={btnPrimary} disabled={busy || (action === 'apply' && !charge) || (action === 'refund' && (!account || reason.trim().length < 3)) || (action === 'void' && reason.trim().length < 5)} onClick={submit}>Confirmar</button></>}>
         <Field label="O que fazer"><select className={inputCls} value={action} onChange={(e) => setAction(e.target.value as 'apply')}><option value="apply">Aplicar numa cobrança do sócio</option><option value="refund">Devolver o dinheiro (saída de caixa)</option><option value="void">Baixar com justificativa</option></select></Field>
-        {action === 'apply' && <Field label="Cobrança"><select className={inputCls} value={charge} onChange={(e) => setCharge(e.target.value)}><option value="">Escolha…</option>{targets.map((t) => <option key={t.charge_id} value={t.charge_id}>{monthLabel(t.competence_month)} — {formatBRL(t.total_due_cents)}</option>)}</select></Field>}
+        {action === 'apply' && <Field label="Cobrança"><select className={inputCls} value={charge} onChange={(e) => setCharge(e.target.value)}><option value="">{charges.loading ? 'Carregando…' : 'Escolha…'}</option>{targets.map((t) => <option key={t.charge_id} value={t.charge_id}>{monthLabel(t.competence_month)} — {formatBRL(t.total_due_cents)}</option>)}</select></Field>}
         {action === 'refund' && <><Field label="Conta de onde saiu"><select className={inputCls} value={account} onChange={(e) => setAccount(e.target.value)}>{accounts.filter((a) => a.active).map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</select></Field><Field label="Observação"><input className={inputCls} value={reason} onChange={(e) => setReason(e.target.value)} /></Field></>}
         {action === 'void' && <Field label="Justificativa (obrigatória)"><textarea className={inputCls} rows={2} value={reason} onChange={(e) => setReason(e.target.value)} /></Field>}
       </Sheet>
