@@ -13,20 +13,21 @@ _nenhum_
 |---|---|---|---|---|---|
 | AdminEmbedContext | components/admin/AdminEmbedContext.tsx | AdminEmbedProvider | components/AdminPanel.tsx | useAdminEmbedded | 8 |
 | AuthContext | contexts/AuthContext.tsx | AuthProvider | App.tsx | useAuth | 7 |
-| ConfirmContext | hooks/useConfirm.ts | ConfirmProvider | App.tsx | useConfirm | 27 |
-| Ctx | components/finance/FinanceContext.tsx | FinanceProvider | components/finance/FinanceHub.tsx | useFinance | 14 |
+| ConfirmContext | hooks/useConfirm.ts | ConfirmProvider | App.tsx | useConfirm | 28 |
+| Ctx | components/finance/FinanceContext.tsx | FinanceProvider | components/finance/FinanceHub.tsx | useFinance | 18 |
 
 ## Stores (0)
 _nenhum_
 
-## Hooks próprios (26)
+## Hooks próprios (31)
 | Hook | Arquivo | Dados | Usado por |
 |---|---|---|---|
-| useConfirm | hooks/useConfirm.ts | — | 26 |
-| useAsync | components/finance/hooks.ts | — | 18 |
-| useFinance | components/finance/FinanceContext.tsx | — | 13 |
-| useToday | components/finance/hooks.ts | — | 13 |
-| useRequestKey | components/finance/hooks.ts | — | 10 |
+| useConfirm | hooks/useConfirm.ts | — | 27 |
+| useAsync | components/finance/hooks.ts | — | 25 |
+| useToday | components/finance/hooks.ts | — | 18 |
+| useFinance | components/finance/FinanceContext.tsx | — | 17 |
+| useRequestKey | components/finance/hooks.ts | — | 17 |
+| useAction | components/finance/hooks.ts | — | 7 |
 | useAdminEmbedded | components/admin/AdminEmbedContext.tsx | — | 7 |
 | useAuth | contexts/AuthContext.tsx | — | 6 |
 | useLiveRefresh | hooks/useLiveRefresh.ts | — | 4 |
@@ -34,8 +35,10 @@ _nenhum_
 | useAgendaRealtime | hooks/useAgendaRealtime.ts | — | 1 |
 | useAI | components/TenisProPlayer/engine/useAI.ts | — | 1 |
 | useBallPhysics | components/TenisProPlayer/engine/useBallPhysics.ts | — | 1 |
+| useChargesList | components/finance/tabs/members/useChargesList.ts | — | 1 |
 | useChatOverlay | components/conversations/useChatOverlay.ts | — | 1 |
 | useOrientation | components/TenisProPlayer/engine/useOrientation.ts | — | 1 |
+| usePendencies | components/finance/tabs/pendencies/usePendencies.ts | fin_member_charges(s) | 1 |
 | usePendingSignatures | lib/signatures/usePendingSignatures.ts | — | 1 |
 | usePlayerInput | components/TenisProPlayer/engine/usePlayerInput.ts | — | 1 |
 | useScoring | components/TenisProPlayer/engine/useScoring.ts | — | 1 |
@@ -44,39 +47,41 @@ _nenhum_
 | useChallenges | hooks/useChallenges.ts | challenges(s,i,u) head_to_head_points(s) matches(s) profiles(s) · rpc get_ranking_cycle_start | 0 |
 | useLatest | components/signatures/PdfReader.tsx | — | 0 |
 | useMediaQuery | components/conversations/useChatOverlay.ts | — | 0 |
+| useNewPlanPreview | components/finance/tabs/members/NewPlanSheet.tsx | — | 0 |
 | useRealtimeSubscription | hooks/useRealtimeSubscription.ts | — | 0 |
 | useRealtimeSubscriptions | hooks/useRealtimeSubscription.ts | — | 0 |
 | useReservations | hooks/useReservations.ts | courts(s) profiles(s) reservations(s,i,u) | 0 |
+| useRulesSheet | components/finance/tabs/PendenciesTab.tsx | — | 0 |
 | useStandardModal | components/StandardModal.tsx | — | 0 |
 
 ## Componentes compartilhados (25 mais usados)
 | Componente | Arquivo | Usado por |
 |---|---|---|
-| Spinner | components/finance/ui.tsx | 19 |
-| Notice | components/finance/ui.tsx | 18 |
-| Card | components/finance/ui.tsx | 17 |
-| Badge | components/finance/ui.tsx | 16 |
-| Empty | components/finance/ui.tsx | 16 |
-| Sheet (ui) | components/ui/Sheet.tsx | 15 |
+| Spinner | components/finance/ui.tsx | 26 |
+| Notice | components/finance/ui.tsx | 22 |
+| Badge | components/finance/ui.tsx | 19 |
+| Card | components/finance/ui.tsx | 19 |
+| Field | components/finance/ui.tsx | 19 |
+| Sheet (ui) | components/ui/Sheet.tsx | 19 |
+| Empty | components/finance/ui.tsx | 18 |
 | StandardModal | components/StandardModal.tsx | 15 |
-| Field | components/finance/ui.tsx | 14 |
-| ErrorBlock | components/finance/ui.tsx | 13 |
-| Row | components/finance/ui.tsx | 12 |
-| SectionTabs | components/finance/ui.tsx | 10 |
-| MoneyInput | components/finance/ui.tsx | 9 |
+| ErrorBlock | components/finance/ui.tsx | 14 |
+| Row | components/finance/ui.tsx | 13 |
+| MoneyInput | components/finance/ui.tsx | 12 |
+| SectionTabs | components/finance/ui.tsx | 11 |
 | Notice | components/signatures/ui.tsx | 7 |
 | Button | components/conversations/ui.tsx | 6 |
 | InlineAlert | components/conversations/ui.tsx | 6 |
 | Spinner | components/signatures/ui.tsx | 6 |
+| ChargeStatusBadge | components/finance/ui.tsx | 5 |
 | ExportButtons | components/finance/ui.tsx | 5 |
+| AccountSelect | components/finance/fields.tsx | 4 |
 | AdminPageHeader | components/admin/ui.tsx | 4 |
 | AdminSearch | components/admin/ui.tsx | 4 |
 | Badge | components/signatures/ui.tsx | 4 |
 | Money | components/finance/ui.tsx | 4 |
 | PeriodBar | components/finance/ui.tsx | 4 |
-| Avatar | components/conversations/ConversationCard.tsx | 3 |
-| BracketView | components/BracketView.tsx | 3 |
-| ChargeStatusBadge | components/finance/ui.tsx | 3 |
+| ActionPanel | components/finance/ActionPanel.tsx | 3 |
 
 ## Alertas (47)
 - Acesso a dados direto no componente: `PublicChampionshipEntry` (App.tsx:66) chama championships; o padrão do projeto é passar por hook/serviço

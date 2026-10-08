@@ -31,7 +31,7 @@
     "App.tsx"
    ],
    "gancho": "useConfirm",
-   "consumidores": 27
+   "consumidores": 28
   },
   {
    "nome": "Ctx",
@@ -41,7 +41,7 @@
     "components/finance/FinanceHub.tsx"
    ],
    "gancho": "useFinance",
-   "consumidores": 14
+   "consumidores": 18
   }
  ],
  "stores": [],
@@ -49,11 +49,17 @@
   {
    "nome": "useConfirm",
    "arquivo": "hooks/useConfirm.ts",
-   "usos": 26,
+   "usos": 27,
    "dados": "—"
   },
   {
    "nome": "useAsync",
+   "arquivo": "components/finance/hooks.ts",
+   "usos": 25,
+   "dados": "—"
+  },
+  {
+   "nome": "useToday",
    "arquivo": "components/finance/hooks.ts",
    "usos": 18,
    "dados": "—"
@@ -61,19 +67,19 @@
   {
    "nome": "useFinance",
    "arquivo": "components/finance/FinanceContext.tsx",
-   "usos": 13,
-   "dados": "—"
-  },
-  {
-   "nome": "useToday",
-   "arquivo": "components/finance/hooks.ts",
-   "usos": 13,
+   "usos": 17,
    "dados": "—"
   },
   {
    "nome": "useRequestKey",
    "arquivo": "components/finance/hooks.ts",
-   "usos": 10,
+   "usos": 17,
+   "dados": "—"
+  },
+  {
+   "nome": "useAction",
+   "arquivo": "components/finance/hooks.ts",
+   "usos": 7,
    "dados": "—"
   },
   {
@@ -119,6 +125,12 @@
    "dados": "—"
   },
   {
+   "nome": "useChargesList",
+   "arquivo": "components/finance/tabs/members/useChargesList.ts",
+   "usos": 1,
+   "dados": "—"
+  },
+  {
    "nome": "useChatOverlay",
    "arquivo": "components/conversations/useChatOverlay.ts",
    "usos": 1,
@@ -129,6 +141,12 @@
    "arquivo": "components/TenisProPlayer/engine/useOrientation.ts",
    "usos": 1,
    "dados": "—"
+  },
+  {
+   "nome": "usePendencies",
+   "arquivo": "components/finance/tabs/pendencies/usePendencies.ts",
+   "usos": 1,
+   "dados": "fin_member_charges(s)"
   },
   {
    "nome": "usePendingSignatures",
@@ -179,6 +197,12 @@
    "dados": "—"
   },
   {
+   "nome": "useNewPlanPreview",
+   "arquivo": "components/finance/tabs/members/NewPlanSheet.tsx",
+   "usos": 0,
+   "dados": "—"
+  },
+  {
    "nome": "useRealtimeSubscription",
    "arquivo": "hooks/useRealtimeSubscription.ts",
    "usos": 0,
@@ -197,6 +221,12 @@
    "dados": "courts(s) profiles(s) reservations(s,i,u)"
   },
   {
+   "nome": "useRulesSheet",
+   "arquivo": "components/finance/tabs/PendenciesTab.tsx",
+   "usos": 0,
+   "dados": "—"
+  },
+  {
    "nome": "useStandardModal",
    "arquivo": "components/StandardModal.tsx",
    "usos": 0,
@@ -207,38 +237,44 @@
   {
    "nome": "Spinner",
    "arquivo": "components/finance/ui.tsx",
-   "usos": 19,
+   "usos": 26,
    "ui": false
   },
   {
    "nome": "Notice",
    "arquivo": "components/finance/ui.tsx",
-   "usos": 18,
-   "ui": false
-  },
-  {
-   "nome": "Card",
-   "arquivo": "components/finance/ui.tsx",
-   "usos": 17,
+   "usos": 22,
    "ui": false
   },
   {
    "nome": "Badge",
    "arquivo": "components/finance/ui.tsx",
-   "usos": 16,
+   "usos": 19,
    "ui": false
   },
   {
-   "nome": "Empty",
+   "nome": "Card",
    "arquivo": "components/finance/ui.tsx",
-   "usos": 16,
+   "usos": 19,
+   "ui": false
+  },
+  {
+   "nome": "Field",
+   "arquivo": "components/finance/ui.tsx",
+   "usos": 19,
    "ui": false
   },
   {
    "nome": "Sheet",
    "arquivo": "components/ui/Sheet.tsx",
-   "usos": 15,
+   "usos": 19,
    "ui": true
+  },
+  {
+   "nome": "Empty",
+   "arquivo": "components/finance/ui.tsx",
+   "usos": 18,
+   "ui": false
   },
   {
    "nome": "StandardModal",
@@ -247,19 +283,19 @@
    "ui": false
   },
   {
-   "nome": "Field",
+   "nome": "ErrorBlock",
    "arquivo": "components/finance/ui.tsx",
    "usos": 14,
    "ui": false
   },
   {
-   "nome": "ErrorBlock",
+   "nome": "Row",
    "arquivo": "components/finance/ui.tsx",
    "usos": 13,
    "ui": false
   },
   {
-   "nome": "Row",
+   "nome": "MoneyInput",
    "arquivo": "components/finance/ui.tsx",
    "usos": 12,
    "ui": false
@@ -267,13 +303,7 @@
   {
    "nome": "SectionTabs",
    "arquivo": "components/finance/ui.tsx",
-   "usos": 10,
-   "ui": false
-  },
-  {
-   "nome": "MoneyInput",
-   "arquivo": "components/finance/ui.tsx",
-   "usos": 9,
+   "usos": 11,
    "ui": false
   },
   {
@@ -301,9 +331,21 @@
    "ui": false
   },
   {
+   "nome": "ChargeStatusBadge",
+   "arquivo": "components/finance/ui.tsx",
+   "usos": 5,
+   "ui": false
+  },
+  {
    "nome": "ExportButtons",
    "arquivo": "components/finance/ui.tsx",
    "usos": 5,
+   "ui": false
+  },
+  {
+   "nome": "AccountSelect",
+   "arquivo": "components/finance/fields.tsx",
+   "usos": 4,
    "ui": false
   },
   {
@@ -337,6 +379,12 @@
    "ui": false
   },
   {
+   "nome": "ActionPanel",
+   "arquivo": "components/finance/ActionPanel.tsx",
+   "usos": 3,
+   "ui": false
+  },
+  {
    "nome": "Avatar",
    "arquivo": "components/conversations/ConversationCard.tsx",
    "usos": 3,
@@ -349,12 +397,6 @@
    "ui": false
   },
   {
-   "nome": "ChargeStatusBadge",
-   "arquivo": "components/finance/ui.tsx",
-   "usos": 3,
-   "ui": false
-  },
-  {
    "nome": "GroupStandingsCard",
    "arquivo": "components/GroupStandingsCard.tsx",
    "usos": 3,
@@ -363,6 +405,18 @@
   {
    "nome": "LoadingSpinner",
    "arquivo": "components/conversations/ui.tsx",
+   "usos": 3,
+   "ui": false
+  },
+  {
+   "nome": "MethodSelect",
+   "arquivo": "components/finance/fields.tsx",
+   "usos": 3,
+   "ui": false
+  },
+  {
+   "nome": "PanelActions",
+   "arquivo": "components/finance/ActionPanel.tsx",
    "usos": 3,
    "ui": false
   },
@@ -673,6 +727,18 @@
    "ui": false
   },
   {
+   "nome": "CancelForm",
+   "arquivo": "components/finance/tabs/members/ChargeForms.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "CancelPanel",
+   "arquivo": "components/finance/tabs/pendencies/PendencyPanels.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
    "nome": "CashFlowTab",
    "arquivo": "components/finance/tabs/CashFlowTab.tsx",
    "usos": 1,
@@ -721,8 +787,32 @@
    "ui": false
   },
   {
+   "nome": "ChargeHistory",
+   "arquivo": "components/finance/tabs/members/ChargeHistory.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "ChargeSheet",
+   "arquivo": "components/finance/tabs/members/ChargeSheet.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "ChargesView",
+   "arquivo": "components/finance/tabs/members/ChargesView.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
    "nome": "CodeSheet",
    "arquivo": "components/signatures/CodeSheet.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "CollectionFields",
+   "arquivo": "components/finance/tabs/pendencies/NewPendencyFields.tsx",
    "usos": 1,
    "ui": false
   },
@@ -793,8 +883,26 @@
    "ui": false
   },
   {
+   "nome": "CreditsPanel",
+   "arquivo": "components/finance/tabs/members/CreditsPanel.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
    "nome": "Dashboard",
    "arquivo": "components/Dashboard.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "DayCardFields",
+   "arquivo": "components/finance/tabs/pendencies/NewPendencyFields.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "DiscountForm",
+   "arquivo": "components/finance/tabs/members/ChargeForms.tsx",
    "usos": 1,
    "ui": false
   },
@@ -825,6 +933,12 @@
   {
    "nome": "EditProfileModal",
    "arquivo": "components/EditProfileModal.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "EndForm",
+   "arquivo": "components/finance/tabs/members/PlanForms.tsx",
    "usos": 1,
    "ui": false
   },
@@ -901,6 +1015,12 @@
    "ui": true
   },
   {
+   "nome": "MainFields",
+   "arquivo": "components/finance/tabs/pendencies/NewPendencyFields.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
    "nome": "MatchExportPreview",
    "arquivo": "components/MatchExportPreview.tsx",
    "usos": 1,
@@ -943,6 +1063,18 @@
    "ui": false
   },
   {
+   "nome": "NewPendencySheet",
+   "arquivo": "components/finance/tabs/pendencies/NewPendencySheet.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "NewPlanSheet",
+   "arquivo": "components/finance/tabs/members/NewPlanSheet.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
    "nome": "OnboardingModal",
    "arquivo": "components/OnboardingModal.tsx",
    "usos": 1,
@@ -951,6 +1083,24 @@
   {
    "nome": "OverviewTab",
    "arquivo": "components/finance/tabs/OverviewTab.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "PartialNotice",
+   "arquivo": "components/finance/tabs/pendencies/PendencyList.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "PayForm",
+   "arquivo": "components/finance/tabs/members/ChargeForms.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "PayPanel",
+   "arquivo": "components/finance/tabs/pendencies/PendencyPanels.tsx",
    "usos": 1,
    "ui": false
   },
@@ -967,14 +1117,44 @@
    "ui": false
   },
   {
+   "nome": "PendencyRows",
+   "arquivo": "components/finance/tabs/pendencies/PendencyList.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
    "nome": "PendencyRulesSection",
    "arquivo": "components/finance/tabs/PendencyRulesSection.tsx",
    "usos": 1,
    "ui": false
   },
   {
+   "nome": "PendencySheet",
+   "arquivo": "components/finance/tabs/pendencies/PendencySheet.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
    "nome": "PhasePointsEditor",
    "arquivo": "components/admin/PhasePointsEditor.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "PixNotice",
+   "arquivo": "components/finance/tabs/pendencies/NewPendencyFields.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "PlanCard",
+   "arquivo": "components/finance/tabs/members/PlanCard.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "PlansView",
+   "arquivo": "components/finance/tabs/members/PlansView.tsx",
    "usos": 1,
    "ui": false
   },
@@ -989,6 +1169,18 @@
    "arquivo": "components/TenisProPlayer/ui/PointOverlay.tsx",
    "usos": 1,
    "ui": true
+  },
+  {
+   "nome": "PriceForm",
+   "arquivo": "components/finance/tabs/members/PlanForms.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "PriceHistory",
+   "arquivo": "components/finance/tabs/members/PlanForms.tsx",
+   "usos": 1,
+   "ui": false
   },
   {
    "nome": "PublicChampionshipPage",
@@ -1045,8 +1237,26 @@
    "ui": false
   },
   {
+   "nome": "ResolveCreditSheet",
+   "arquivo": "components/finance/tabs/members/ResolveCreditSheet.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
    "nome": "ResultModal",
    "arquivo": "components/Championships.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "ReverseForm",
+   "arquivo": "components/finance/tabs/members/ChargeForms.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "RulesSummary",
+   "arquivo": "components/finance/tabs/pendencies/RulesSummary.tsx",
    "usos": 1,
    "ui": false
   },
@@ -1099,6 +1309,12 @@
    "ui": true
   },
   {
+   "nome": "Totals",
+   "arquivo": "components/finance/tabs/pendencies/PendencyList.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
    "nome": "TouchControls",
    "arquivo": "components/TenisProPlayer/ui/TouchControls.tsx",
    "usos": 1,
@@ -1107,6 +1323,12 @@
   {
    "nome": "UpdateNotification",
    "arquivo": "components/UpdateNotification.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "WaiverForm",
+   "arquivo": "components/finance/tabs/members/ChargeForms.tsx",
    "usos": 1,
    "ui": false
   },
@@ -1135,8 +1357,26 @@
    "ui": false
   },
   {
+   "nome": "Actions",
+   "arquivo": "components/finance/tabs/pendencies/PendencySheet.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
    "nome": "AddReservationModal",
    "arquivo": "components/Agenda.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "AdjustForm",
+   "arquivo": "components/finance/tabs/members/ChargeForms.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "AdjustmentLine",
+   "arquivo": "components/finance/tabs/members/ChargeHistory.tsx",
    "usos": 0,
    "ui": false
   },
@@ -1225,6 +1465,18 @@
    "ui": false
   },
   {
+   "nome": "AmountLine",
+   "arquivo": "components/finance/tabs/members/ChargeSheet.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "Amounts",
+   "arquivo": "components/finance/tabs/pendencies/PendencySheet.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
    "nome": "AnnouncementPopup",
    "arquivo": "App.tsx",
    "usos": 0,
@@ -1239,6 +1491,12 @@
   {
    "nome": "AppContent",
    "arquivo": "App.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "ApplyFields",
+   "arquivo": "components/finance/tabs/members/ResolveCreditSheet.tsx",
    "usos": 0,
    "ui": false
   },
@@ -1297,6 +1555,12 @@
    "ui": false
   },
   {
+   "nome": "Badges",
+   "arquivo": "components/finance/tabs/pendencies/PendencySheet.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
    "nome": "BalanceExport",
    "arquivo": "components/finance/tabs/CashFlowTab.tsx",
    "usos": 0,
@@ -1329,6 +1593,12 @@
   {
    "nome": "BracketSelect",
    "arquivo": "components/creator/CreatorFormat.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "BUTTONS",
+   "arquivo": "components/finance/tabs/pendencies/PendencySheet.tsx",
    "usos": 0,
    "ui": false
   },
@@ -1411,14 +1681,38 @@
    "ui": false
   },
   {
+   "nome": "ChargeActions",
+   "arquivo": "components/finance/tabs/members/ChargeSheet.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
    "nome": "ChargeCard",
    "arquivo": "components/finance/MemberFinance.tsx",
    "usos": 0,
    "ui": false
   },
   {
-   "nome": "ChargeSheet",
-   "arquivo": "components/finance/tabs/MembersTab.tsx",
+   "nome": "ChargeRow",
+   "arquivo": "components/finance/tabs/members/ChargesView.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "ChargeRows",
+   "arquivo": "components/finance/tabs/members/ChargesView.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "ChargeSummary",
+   "arquivo": "components/finance/tabs/members/ChargeSheet.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "CheckOption",
+   "arquivo": "components/finance/tabs/pendencies/NewPendencyFields.tsx",
    "usos": 0,
    "ui": false
   },
@@ -1465,8 +1759,14 @@
    "ui": false
   },
   {
-   "nome": "CreditsPanel",
-   "arquivo": "components/finance/tabs/MembersTab.tsx",
+   "nome": "CreditList",
+   "arquivo": "components/finance/tabs/members/CreditsPanel.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "CurrentPrice",
+   "arquivo": "components/finance/tabs/members/PlanCard.tsx",
    "usos": 0,
    "ui": false
   },
@@ -1531,14 +1831,32 @@
    "ui": false
   },
   {
+   "nome": "EmptyCharges",
+   "arquivo": "components/finance/tabs/members/ChargesView.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
    "nome": "ExportButton",
    "arquivo": "components/ResenhaOpenTournamentBoard.tsx",
    "usos": 0,
    "ui": false
   },
   {
+   "nome": "FeeItems",
+   "arquivo": "components/finance/tabs/pendencies/RulesSummary.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
    "nome": "FeesSection",
    "arquivo": "components/finance/tabs/SettingsTab.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "FiltersCard",
+   "arquivo": "components/finance/tabs/members/ChargesView.tsx",
    "usos": 0,
    "ui": false
   },
@@ -1585,6 +1903,12 @@
    "ui": false
   },
   {
+   "nome": "GenerateButton",
+   "arquivo": "components/finance/tabs/members/ChargesView.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
    "nome": "Group",
    "arquivo": "components/signatures/admin/AdminDocuments.tsx",
    "usos": 0,
@@ -1599,6 +1923,12 @@
   {
    "nome": "Guardrails",
    "arquivo": "components/conversations/AiTab.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "GuestNotice",
+   "arquivo": "components/finance/tabs/pendencies/PendencySheet.tsx",
    "usos": 0,
    "ui": false
   },
@@ -1657,6 +1987,18 @@
    "ui": false
   },
   {
+   "nome": "Item",
+   "arquivo": "components/finance/tabs/pendencies/RulesSummary.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "KindSelect",
+   "arquivo": "components/finance/tabs/members/ChargeForms.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
    "nome": "Klanches",
    "arquivo": "App.tsx",
    "usos": 0,
@@ -1677,6 +2019,12 @@
   {
    "nome": "LancamentosTab",
    "arquivo": "components/AdminPanel.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "Line",
+   "arquivo": "components/finance/tabs/pendencies/PendencySheet.tsx",
    "usos": 0,
    "ui": false
   },
@@ -1789,18 +2137,6 @@
    "ui": false
   },
   {
-   "nome": "NewPendencySheet",
-   "arquivo": "components/finance/tabs/PendenciesTab.tsx",
-   "usos": 0,
-   "ui": false
-  },
-  {
-   "nome": "NewPlanSheet",
-   "arquivo": "components/finance/tabs/MembersTab.tsx",
-   "usos": 0,
-   "ui": false
-  },
-  {
    "nome": "NotificationSettings",
    "arquivo": "components/NotificationSettings.tsx",
    "usos": 0,
@@ -1831,14 +2167,26 @@
    "ui": false
   },
   {
+   "nome": "PaidFields",
+   "arquivo": "components/finance/tabs/pendencies/NewPendencyFields.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "PaymentLine",
+   "arquivo": "components/finance/tabs/members/ChargeHistory.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
    "nome": "PendenciesTab",
    "arquivo": "components/finance/FinanceHub.tsx",
    "usos": 0,
    "ui": false
   },
   {
-   "nome": "PendencySheet",
-   "arquivo": "components/finance/tabs/PendenciesTab.tsx",
+   "nome": "PendencyRowItem",
+   "arquivo": "components/finance/tabs/pendencies/PendencyList.tsx",
    "usos": 0,
    "ui": false
   },
@@ -1849,14 +2197,44 @@
    "ui": false
   },
   {
+   "nome": "PixItem",
+   "arquivo": "components/finance/tabs/pendencies/RulesSummary.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
    "nome": "Placeholder",
    "arquivo": "components/conversations/MessageBubble.tsx",
    "usos": 0,
    "ui": false
   },
   {
-   "nome": "PlanCard",
-   "arquivo": "components/finance/tabs/MembersTab.tsx",
+   "nome": "PlanActions",
+   "arquivo": "components/finance/tabs/members/PlanCard.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "PlanGrid",
+   "arquivo": "components/finance/tabs/members/PlansView.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "PlanHeader",
+   "arquivo": "components/finance/tabs/members/PlanCard.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "PlanModePanel",
+   "arquivo": "components/finance/tabs/members/PlanCard.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "PlanPreview",
+   "arquivo": "components/finance/tabs/members/NewPlanSheet.tsx",
    "usos": 0,
    "ui": false
   },
@@ -1945,6 +2323,12 @@
    "ui": false
   },
   {
+   "nome": "RefundFields",
+   "arquivo": "components/finance/tabs/members/ResolveCreditSheet.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
    "nome": "ReservasTab",
    "arquivo": "components/AdminPanel.tsx",
    "usos": 0,
@@ -1987,12 +2371,6 @@
    "ui": false
   },
   {
-   "nome": "RulesSummary",
-   "arquivo": "components/finance/tabs/PendenciesTab.tsx",
-   "usos": 0,
-   "ui": false
-  },
-  {
    "nome": "RunsSheet",
    "arquivo": "components/conversations/AutomationsTab.tsx",
    "usos": 0,
@@ -2013,6 +2391,12 @@
   {
    "nome": "ScoreSummary",
    "arquivo": "components/ChampionshipMatchActionModal.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "SearchLimitNotice",
+   "arquivo": "components/finance/tabs/members/ChargesView.tsx",
    "usos": 0,
    "ui": false
   },
@@ -2095,6 +2479,12 @@
    "ui": false
   },
   {
+   "nome": "StatusRow",
+   "arquivo": "components/finance/tabs/members/ChargeSheet.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
    "nome": "StudentCard",
    "arquivo": "components/ProfessorProfile.tsx",
    "usos": 0,
@@ -2103,6 +2493,12 @@
   {
    "nome": "StudentsTab",
    "arquivo": "components/finance/FinanceHub.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "SummaryBar",
+   "arquivo": "components/finance/tabs/members/ChargesView.tsx",
    "usos": 0,
    "ui": false
   },
@@ -2133,6 +2529,12 @@
   {
    "nome": "Transcricao",
    "arquivo": "components/conversations/MessageBubble.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "VoidFields",
+   "arquivo": "components/finance/tabs/members/ResolveCreditSheet.tsx",
    "usos": 0,
    "ui": false
   },
