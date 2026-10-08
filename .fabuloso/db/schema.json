@@ -8,7 +8,7 @@
     "public",
     "sig_private"
   ],
-  "ultima_migracao": "20261007190000",
+  "ultima_migracao": "20261007400000",
   "extensoes": [
     "pg_cron 1.6.4",
     "pg_net 0.19.5",
@@ -6014,11 +6014,364 @@
     },
     {
       "schema": "public",
+      "nome": "conv_admin_alert_log",
+      "tipo": "r",
+      "rls": true,
+      "rls_forcado": false,
+      "linhas_est": "0",
+      "opcoes": null,
+      "comentario": null,
+      "acesso": {
+        "anon": "",
+        "authenticated": ""
+      },
+      "definicao": null,
+      "colunas": [
+        {
+          "nome": "profile_id",
+          "tipo": "uuid",
+          "nulo": false,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "rule",
+          "tipo": "text",
+          "nulo": false,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "day",
+          "tipo": "date",
+          "nulo": false,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "created_at",
+          "tipo": "timestamp with time zone",
+          "nulo": false,
+          "padrao": "now()",
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        }
+      ],
+      "restricoes": [
+        {
+          "nome": "conv_admin_alert_log_profile_id_fkey",
+          "tipo": "f",
+          "def": "FOREIGN KEY (profile_id) REFERENCES profiles(id) ON DELETE CASCADE",
+          "colunas": [
+            "profile_id"
+          ],
+          "ref": "public.profiles",
+          "ref_colunas": [
+            "id"
+          ],
+          "ao_apagar": "c"
+        },
+        {
+          "nome": "conv_admin_alert_log_pkey",
+          "tipo": "p",
+          "def": "PRIMARY KEY (profile_id, rule, day)",
+          "colunas": [
+            "profile_id",
+            "rule",
+            "day"
+          ],
+          "ref": null,
+          "ref_colunas": null,
+          "ao_apagar": null
+        }
+      ],
+      "indices": [
+        {
+          "nome": "conv_admin_alert_log_pkey",
+          "def": "CREATE UNIQUE INDEX conv_admin_alert_log_pkey ON public.conv_admin_alert_log USING btree (profile_id, rule, day)",
+          "unico": true,
+          "pk": true,
+          "colunas": [
+            "profile_id",
+            "rule",
+            "day"
+          ]
+        }
+      ],
+      "politicas": [],
+      "gatilhos": []
+    },
+    {
+      "schema": "public",
+      "nome": "conv_admin_briefing_recipients",
+      "tipo": "r",
+      "rls": true,
+      "rls_forcado": false,
+      "linhas_est": "0",
+      "opcoes": null,
+      "comentario": null,
+      "acesso": {
+        "anon": "",
+        "authenticated": ""
+      },
+      "definicao": null,
+      "colunas": [
+        {
+          "nome": "profile_id",
+          "tipo": "uuid",
+          "nulo": false,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "enabled",
+          "tipo": "boolean",
+          "nulo": false,
+          "padrao": "true",
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "created_at",
+          "tipo": "timestamp with time zone",
+          "nulo": false,
+          "padrao": "now()",
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        }
+      ],
+      "restricoes": [
+        {
+          "nome": "conv_admin_briefing_recipients_profile_id_fkey",
+          "tipo": "f",
+          "def": "FOREIGN KEY (profile_id) REFERENCES profiles(id) ON DELETE CASCADE",
+          "colunas": [
+            "profile_id"
+          ],
+          "ref": "public.profiles",
+          "ref_colunas": [
+            "id"
+          ],
+          "ao_apagar": "c"
+        },
+        {
+          "nome": "conv_admin_briefing_recipients_pkey",
+          "tipo": "p",
+          "def": "PRIMARY KEY (profile_id)",
+          "colunas": [
+            "profile_id"
+          ],
+          "ref": null,
+          "ref_colunas": null,
+          "ao_apagar": null
+        }
+      ],
+      "indices": [
+        {
+          "nome": "conv_admin_briefing_recipients_pkey",
+          "def": "CREATE UNIQUE INDEX conv_admin_briefing_recipients_pkey ON public.conv_admin_briefing_recipients USING btree (profile_id)",
+          "unico": true,
+          "pk": true,
+          "colunas": [
+            "profile_id"
+          ]
+        }
+      ],
+      "politicas": [],
+      "gatilhos": []
+    },
+    {
+      "schema": "public",
+      "nome": "conv_admin_prefs",
+      "tipo": "r",
+      "rls": true,
+      "rls_forcado": false,
+      "linhas_est": "0",
+      "opcoes": null,
+      "comentario": null,
+      "acesso": {
+        "anon": "",
+        "authenticated": ""
+      },
+      "definicao": null,
+      "colunas": [
+        {
+          "nome": "profile_id",
+          "tipo": "uuid",
+          "nulo": false,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "briefing_enabled",
+          "tipo": "boolean",
+          "nulo": false,
+          "padrao": "true",
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "briefing_style",
+          "tipo": "text",
+          "nulo": false,
+          "padrao": "'completo'::text",
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "alerts_enabled",
+          "tipo": "boolean",
+          "nulo": false,
+          "padrao": "true",
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "min_balance_cents",
+          "tipo": "bigint",
+          "nulo": true,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "overdue_days",
+          "tipo": "integer",
+          "nulo": false,
+          "padrao": "7",
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "default_account_id",
+          "tipo": "uuid",
+          "nulo": true,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "updated_at",
+          "tipo": "timestamp with time zone",
+          "nulo": false,
+          "padrao": "now()",
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        }
+      ],
+      "restricoes": [
+        {
+          "nome": "conv_admin_prefs_briefing_style_check",
+          "tipo": "c",
+          "def": "CHECK ((briefing_style = ANY (ARRAY['completo'::text, 'curto'::text])))",
+          "colunas": [
+            "briefing_style"
+          ],
+          "ref": null,
+          "ref_colunas": null,
+          "ao_apagar": null
+        },
+        {
+          "nome": "conv_admin_prefs_min_balance_cents_check",
+          "tipo": "c",
+          "def": "CHECK (((min_balance_cents IS NULL) OR (min_balance_cents >= 0)))",
+          "colunas": [
+            "min_balance_cents"
+          ],
+          "ref": null,
+          "ref_colunas": null,
+          "ao_apagar": null
+        },
+        {
+          "nome": "conv_admin_prefs_overdue_days_check",
+          "tipo": "c",
+          "def": "CHECK (((overdue_days >= 1) AND (overdue_days <= 90)))",
+          "colunas": [
+            "overdue_days"
+          ],
+          "ref": null,
+          "ref_colunas": null,
+          "ao_apagar": null
+        },
+        {
+          "nome": "conv_admin_prefs_default_account_id_fkey",
+          "tipo": "f",
+          "def": "FOREIGN KEY (default_account_id) REFERENCES fin_accounts(id) ON DELETE SET NULL",
+          "colunas": [
+            "default_account_id"
+          ],
+          "ref": "public.fin_accounts",
+          "ref_colunas": [
+            "id"
+          ],
+          "ao_apagar": "n"
+        },
+        {
+          "nome": "conv_admin_prefs_profile_id_fkey",
+          "tipo": "f",
+          "def": "FOREIGN KEY (profile_id) REFERENCES profiles(id) ON DELETE CASCADE",
+          "colunas": [
+            "profile_id"
+          ],
+          "ref": "public.profiles",
+          "ref_colunas": [
+            "id"
+          ],
+          "ao_apagar": "c"
+        },
+        {
+          "nome": "conv_admin_prefs_pkey",
+          "tipo": "p",
+          "def": "PRIMARY KEY (profile_id)",
+          "colunas": [
+            "profile_id"
+          ],
+          "ref": null,
+          "ref_colunas": null,
+          "ao_apagar": null
+        }
+      ],
+      "indices": [
+        {
+          "nome": "conv_admin_prefs_pkey",
+          "def": "CREATE UNIQUE INDEX conv_admin_prefs_pkey ON public.conv_admin_prefs USING btree (profile_id)",
+          "unico": true,
+          "pk": true,
+          "colunas": [
+            "profile_id"
+          ]
+        }
+      ],
+      "politicas": [],
+      "gatilhos": []
+    },
+    {
+      "schema": "public",
       "nome": "conv_ai_decisions",
       "tipo": "r",
       "rls": true,
       "rls_forcado": false,
-      "linhas_est": "<100",
+      "linhas_est": "<1k",
       "opcoes": null,
       "comentario": null,
       "acesso": {
@@ -7522,7 +7875,7 @@
       "tipo": "r",
       "rls": true,
       "rls_forcado": false,
-      "linhas_est": "0",
+      "linhas_est": "<100",
       "opcoes": null,
       "comentario": null,
       "acesso": {
@@ -8649,7 +9002,7 @@
         {
           "nome": "conv_booking_proposals_action_check",
           "tipo": "c",
-          "def": "CHECK ((action = ANY (ARRAY['create'::text, 'cancel'::text, 'reschedule'::text, 'join'::text, 'participants'::text, 'fin_pendency_create'::text, 'fin_pendency_collection'::text, 'fin_pendency_send'::text, 'fin_payment'::text])))",
+          "def": "CHECK ((action = ANY (ARRAY['adm_student_status'::text, 'adm_followup_done'::text, 'adm_court_block'::text, 'adm_dependent_create'::text, 'adm_message_send'::text, 'join'::text, 'fin_charge_adjust'::text, 'fin_payment_reverse'::text, 'fin_pendency_send'::text, 'create'::text, 'fin_access_approve'::text, 'fin_charge_cancel'::text, 'adm_pref_set'::text, 'fin_member_create'::text, 'fin_payment'::text, 'cancel'::text, 'adm_followup_create'::text, 'adm_signature_resend'::text, 'adm_reservation_cancel'::text, 'adm_access_reject'::text, 'student_card_renew'::text, 'fin_receipt_approve'::text, 'fin_entry_create'::text, 'adm_announcement_deactivate'::text, 'adm_member_status'::text, 'fin_pendency_collection'::text, 'fin_receipt_reject'::text, 'adm_announcement_create'::text, 'reschedule'::text, 'fin_charges_generate'::text, 'fin_pendency_create'::text, 'participants'::text])))",
           "colunas": [
             "action"
           ],
@@ -28125,6 +28478,84 @@
   ],
   "funcoes": [
     {
+      "nome": "conv_private.admin_alert_data",
+      "args": "p_profile uuid",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.admin_alert_targets",
+      "args": "",
+      "retorno": "TABLE(profile_id uuid, name text, conversation_id uuid)",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.admin_briefing_data",
+      "args": "p_profile uuid",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.admin_briefing_data_base",
+      "args": "p_profile uuid",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.admin_briefing_targets",
+      "args": "",
+      "retorno": "TABLE(profile_id uuid, name text, conversation_id uuid)",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.admin_prefs_json",
+      "args": "p_profile uuid",
+      "retorno": "jsonb",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
       "nome": "conv_private.ai_active_settings",
       "args": "",
       "retorno": "conv_ai_settings",
@@ -28138,7 +28569,7 @@
       "comentario": null
     },
     {
-      "nome": "conv_private.ai_admin_finance_propose",
+      "nome": "conv_private.ai_admin_access_propose",
       "args": "p_session uuid, p jsonb",
       "retorno": "jsonb",
       "linguagem": "plpgsql",
@@ -28146,6 +28577,149 @@
       "security_definer": true,
       "search_path": "search_path=\"\"",
       "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.ai_admin_adm_propose",
+      "args": "p_session uuid, p jsonb",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.ai_admin_dependent_propose",
+      "args": "p_session uuid, p jsonb",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.ai_admin_finance_propose",
+      "args": "p_session uuid, p jsonb",
+      "retorno": "jsonb",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.ai_admin_finance_propose_ext",
+      "args": "p_session uuid, p jsonb",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.ai_admin_finance_propose_pendency",
+      "args": "p_session uuid, p jsonb",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.ai_admin_finance_propose_w2",
+      "args": "p_session uuid, p jsonb",
+      "retorno": "jsonb",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.ai_admin_finance_propose_w6",
+      "args": "p_session uuid, p jsonb",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.ai_admin_message_propose",
+      "args": "p_session uuid, p jsonb",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.ai_admin_prefs",
+      "args": "p_session uuid",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.ai_admin_read",
+      "args": "p_session uuid, p_domain text, p_args jsonb",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.ai_admin_receipt",
+      "args": "p_session uuid, p_message uuid",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
       "exec_anon": false,
       "exec_authenticated": false,
       "comentario": null
@@ -28159,6 +28733,19 @@
       "security_definer": true,
       "search_path": "search_path=\"\"",
       "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.ai_admin_wave8_propose",
+      "args": "p_session uuid, p jsonb",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
       "exec_anon": false,
       "exec_authenticated": false,
       "comentario": null
@@ -28242,7 +28829,124 @@
       "comentario": null
     },
     {
+      "nome": "conv_private.ai_confirm_before_student_card",
+      "args": "p_proposal uuid, p_message uuid",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
       "nome": "conv_private.ai_confirm_booking",
+      "args": "p_proposal uuid, p_message uuid",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.ai_confirm_pendency_step",
+      "args": "p_proposal uuid, p_message uuid",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.ai_confirm_pre_dependent_step",
+      "args": "p_proposal uuid, p_message uuid",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.ai_confirm_pre_message_step",
+      "args": "p_proposal uuid, p_message uuid",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.ai_confirm_single_step",
+      "args": "p_proposal uuid, p_message uuid",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.ai_confirm_wave2_step",
+      "args": "p_proposal uuid, p_message uuid",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.ai_confirm_wave3_step",
+      "args": "p_proposal uuid, p_message uuid",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.ai_confirm_wave6_step",
+      "args": "p_proposal uuid, p_message uuid",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.ai_confirm_wave7_step",
       "args": "p_proposal uuid, p_message uuid",
       "retorno": "jsonb",
       "linguagem": "plpgsql",
@@ -28359,6 +29063,19 @@
       "comentario": null
     },
     {
+      "nome": "conv_private.ai_member_onboard",
+      "args": "p_proposal uuid, p_profile uuid, p_message uuid",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
       "nome": "conv_private.ai_my_reservations",
       "args": "p_profile uuid",
       "retorno": "jsonb",
@@ -28458,6 +29175,19 @@
       "security_definer": true,
       "search_path": "search_path=\"\"",
       "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.ai_student_card_propose",
+      "args": "p_session uuid, p jsonb",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
       "exec_anon": false,
       "exec_authenticated": false,
       "comentario": null
@@ -28824,6 +29554,19 @@
       "volatilidade": "v",
       "exec_anon": true,
       "exec_authenticated": true,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.br_local_phone",
+      "args": "p text",
+      "retorno": "text",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": false,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "i",
+      "exec_anon": false,
+      "exec_authenticated": false,
       "comentario": null
     },
     {
@@ -29362,6 +30105,19 @@
     {
       "nome": "conv_private.pendency_paid_subject",
       "args": "p_submission uuid",
+      "retorno": "jsonb",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.pendency_send_existing",
+      "args": "p_profile uuid",
       "retorno": "jsonb",
       "linguagem": "sql",
       "tipo": "f",
@@ -30231,19 +30987,6 @@
       "comentario": null
     },
     {
-      "nome": "fin_private.zz_probe3",
-      "args": "p jsonb",
-      "retorno": "boolean",
-      "linguagem": "sql",
-      "tipo": "f",
-      "security_definer": false,
-      "search_path": "search_path=\"\"",
-      "volatilidade": "i",
-      "exec_anon": true,
-      "exec_authenticated": true,
-      "comentario": null
-    },
-    {
       "nome": "public.access_requests_set_updated_at",
       "args": "",
       "retorno": "trigger",
@@ -30855,7 +31598,202 @@
       "comentario": null
     },
     {
+      "nome": "public.conv_svc_admin_alert_claim",
+      "args": "p_profile uuid, p_rule text, p_day date",
+      "retorno": "boolean",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "public.conv_svc_admin_alert_data",
+      "args": "p_profile uuid",
+      "retorno": "jsonb",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "public.conv_svc_admin_alert_release",
+      "args": "p_profile uuid, p_rule text, p_day date",
+      "retorno": "void",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "public.conv_svc_admin_alert_targets",
+      "args": "",
+      "retorno": "TABLE(profile_id uuid, name text, conversation_id uuid)",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "public.conv_svc_admin_briefing_data",
+      "args": "p_profile uuid",
+      "retorno": "jsonb",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "public.conv_svc_admin_briefing_targets",
+      "args": "",
+      "retorno": "TABLE(profile_id uuid, name text, conversation_id uuid)",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "public.conv_svc_ai_admin_access_propose",
+      "args": "p_session uuid, p jsonb",
+      "retorno": "jsonb",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "public.conv_svc_ai_admin_adm_propose",
+      "args": "p_session uuid, p jsonb",
+      "retorno": "jsonb",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "public.conv_svc_ai_admin_dependent_propose",
+      "args": "p_session uuid, p jsonb",
+      "retorno": "jsonb",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
       "nome": "public.conv_svc_ai_admin_finance_propose",
+      "args": "p_session uuid, p jsonb",
+      "retorno": "jsonb",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "public.conv_svc_ai_admin_member_onboard",
+      "args": "p_proposal uuid, p_profile uuid, p_message uuid",
+      "retorno": "jsonb",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "public.conv_svc_ai_admin_message_propose",
+      "args": "p_session uuid, p jsonb",
+      "retorno": "jsonb",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "public.conv_svc_ai_admin_prefs",
+      "args": "p_session uuid",
+      "retorno": "jsonb",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "public.conv_svc_ai_admin_read",
+      "args": "p_session uuid, p_domain text, p_args jsonb",
+      "retorno": "jsonb",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "public.conv_svc_ai_admin_receipt",
+      "args": "p_session uuid, p_message uuid",
+      "retorno": "jsonb",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "public.conv_svc_ai_admin_wave8_propose",
       "args": "p_session uuid, p jsonb",
       "retorno": "jsonb",
       "linguagem": "sql",
@@ -30889,6 +31827,19 @@
       "security_definer": true,
       "search_path": "search_path=\"\"",
       "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "public.conv_svc_ai_club_balances",
+      "args": "",
+      "retorno": "jsonb",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
       "exec_anon": false,
       "exec_authenticated": false,
       "comentario": null
@@ -31091,6 +32042,19 @@
     {
       "nome": "public.conv_svc_ai_slot_games",
       "args": "p_court uuid, p_date date, p_start_min integer, p_end_min integer, p_requester uuid",
+      "retorno": "jsonb",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "public.conv_svc_ai_student_card_propose",
+      "args": "p_session uuid, p jsonb",
       "retorno": "jsonb",
       "linguagem": "sql",
       "tipo": "f",
@@ -31482,6 +32446,19 @@
       "nome": "public.conv_svc_update_message_status",
       "args": "p_provider_id text, p_status text",
       "retorno": "void",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "public.conv_svc_welcome_groups",
+      "args": "",
+      "retorno": "TABLE(conversation_id uuid, group_name text)",
       "linguagem": "sql",
       "tipo": "f",
       "security_definer": true,

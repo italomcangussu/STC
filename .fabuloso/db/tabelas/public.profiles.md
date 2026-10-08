@@ -52,6 +52,9 @@
 - public.club_form_voter_receipts.user_id
 - public.club_forms.created_by
 - public.consumptions.user_id
+- public.conv_admin_alert_log.profile_id
+- public.conv_admin_briefing_recipients.profile_id
+- public.conv_admin_prefs.profile_id
 - public.conv_ai_member_context.profile_id
 - public.conv_ai_settings.created_by
 - public.conv_automation_recipients.profile_id

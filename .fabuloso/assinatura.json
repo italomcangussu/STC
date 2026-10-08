@@ -1,7 +1,7 @@
 {
   "versao": 2,
-  "geradoEm": "2026-10-07T13:47:24.631Z",
-  "commit": "1d8042e9",
+  "geradoEm": "2026-10-08T10:13:12.169Z",
+  "commit": "27fa4e3f",
   "pastas": [
     "__tests__",
     "__tests__/admin",
@@ -24,6 +24,7 @@
     "docs/assinaturas",
     "docs/conversas",
     "docs/financeiro",
+    "docs/joao-assessor",
     "docs/superpowers",
     "hooks",
     "lib",
@@ -40,7 +41,22 @@
     "supabase/migrations",
     "tasks"
   ],
-  "agentmap": null,
+  "agentmap": {
+    "arquivos": 517,
+    "sha": "27fa4e3",
+    "hubs": [
+      "lib/supabase.ts",
+      "dist/assets/react-vendor-CcCdIb5n.js",
+      "types.ts",
+      "dist/assets/icons-vendor-DABEqPAo.js",
+      "__tests__/finance/sql/harness.ts",
+      "lib/finance/dates.ts",
+      "__tests__/conversations/sql/harness.ts",
+      "supabase/functions/_shared/uazChat.ts",
+      "lib/logger.ts",
+      "components/finance/ui.tsx"
+    ]
+  },
   "skillsPorPerfil": {
     "nuvem": [
       {

@@ -31,7 +31,7 @@
 - FK (reservation_id) → public.reservations(id) on delete set null
 - FK (session_id) → public.conv_ai_sessions(id)
 - UNIQUE (request_key)
-- CHECK conv_booking_proposals_action_check: `CHECK ((action = ANY (ARRAY['create'::text, 'cancel'::text, 'reschedule'::text, 'join'::text, 'participants'::text, 'fin_pendency_create'::text, 'fin_pendency_collection'::text, 'fin_pendency_send'::…`
+- CHECK conv_booking_proposals_action_check: `CHECK ((action = ANY (ARRAY['adm_student_status'::text, 'adm_followup_done'::text, 'adm_court_block'::text, 'adm_dependent_create'::text, 'adm_message_send'::text, 'join'::text, 'fin_charge_adjust'::…`
 - CHECK conv_booking_proposals_status_check: `CHECK ((status = ANY (ARRAY['open'::text, 'confirmed'::text, 'failed'::text, 'expired'::text, 'canceled'::text])))`
 - CHECK conv_proposal_confirmed_consistent: `CHECK (((status <> 'confirmed'::text) OR (confirmed_at IS NOT NULL)))`
 

@@ -62,6 +62,10 @@
 - [info] public.club_forms — FK (created_by) → public.profiles sem índice
 - [info] public.consumptions — FK (product_id) → public.products sem índice
 - [info] public.consumptions — FK (user_id) → public.profiles sem índice
+- [info] public.conv_admin_alert_log — RLS ligado sem políticas — ninguém acessa pela API (ok se for só service_role)
+- [info] public.conv_admin_briefing_recipients — RLS ligado sem políticas — ninguém acessa pela API (ok se for só service_role)
+- [info] public.conv_admin_prefs — RLS ligado sem políticas — ninguém acessa pela API (ok se for só service_role)
+- [info] public.conv_admin_prefs — FK (default_account_id) → public.fin_accounts sem índice
 - [info] public.conv_ai_decisions — FK (session_id) → public.conv_ai_sessions sem índice
 - [info] public.conv_ai_decisions — FK (settings_version) → public.conv_ai_settings sem índice
 - [info] public.conv_ai_memory_candidates — RLS ligado sem políticas — ninguém acessa pela API (ok se for só service_role)
