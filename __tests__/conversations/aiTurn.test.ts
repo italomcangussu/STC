@@ -744,7 +744,7 @@ describe('trava: sócio no privado nunca vai para atendimento humano', () => {
     const a = await turn(w, (await direct(w, 'quero falar com um atendente')).message_id, calls.chat, p.uaz);
     expect([a.status, a.handoff]).toEqual(['replied', null]);
     expect(calls.calls).toHaveLength(0);
-    expect(p.sent.at(-1)!.text).toMatch(/Pode contar comigo por aqui/);
+    expect(p.sent.at(-1)!.text).toMatch(/entender|pedido|ajudar/);
     const b = await turn(w, (await direct(w, 'oi')).message_id, script('isto não é json').chat, p.uaz);
     expect([b.status, b.handoff]).toEqual(['replied', null]);
     expect(p.sent.at(-1)!.text).not.toMatch(/equipe/);
@@ -757,11 +757,24 @@ describe('trava: sócio no privado nunca vai para atendimento humano', () => {
     const { w } = await setup();
     const p = provider();
     const r = await turn(w, (await direct(w, 'preciso de ajuda com uma coisa estranha')).message_id,
-      script(answer({ transfer: true, handoff_kind: 'hard', handoff_note: 'não sei', messages: ['Vou passar a sua conversa para alguém da equipe, tá?'] })).chat, p.uaz);
+      script(answer({ transfer: true, handoff_kind: 'hard', handoff_note: 'não sei', messages: ['Vou passar a sua conversa para alguém da equipe, tá?'] }),
+        answer({ messages: ['Isso de coisa estranha eu não sei o que é ainda. Me diz o que aconteceu que eu vejo.'] })).chat, p.uaz);
     expect([r.status, r.handoff]).toEqual(['replied', null]);
     expect(p.sent.map((x) => x.text).join(' ')).not.toMatch(/passar a sua conversa|equipe/);
-    expect(p.sent.at(-1)!.text).toMatch(/Pode contar comigo/);
+    expect(p.sent.at(-1)!.text).toBe('Isso de coisa estranha eu não sei o que é ainda. Me diz o que aconteceu que eu vejo.');
     expect(await estado(w)).toMatchObject({ ai_status: 'ai', handoff_kind: null });
+    const [dec] = await q<any>(w.db, `select tool_result as payload from public.conv_ai_decisions order by created_at desc limit 1`);
+    expect(dec.payload).toMatchObject({ fallback: 'reformulada' });
+  }, 120000);
+
+  it('se a segunda tentativa também falhar, usa uma frase pronta (nunca a de transferência) e marca o fallback', async () => {
+    const { w } = await setup();
+    const p = provider();
+    await turn(w, (await direct(w, 'coisa estranha de novo')).message_id,
+      script(answer({ transfer: true, handoff_kind: 'hard', handoff_note: 'x', messages: ['Vou passar para a equipe.'] })).chat, p.uaz);
+    expect(p.sent.at(-1)!.text).toMatch(/entender|pedido|ajudar/);
+    const [dec] = await q<any>(w.db, `select tool_result as payload from public.conv_ai_decisions order by created_at desc limit 1`);
+    expect(dec.payload).toMatchObject({ fallback: 'pronta' });
   }, 120000);
 
   it('mídia sem texto e áudio ilegível pedem texto em vez de transferir', async () => {

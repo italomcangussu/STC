@@ -1,7 +1,7 @@
 // Consultas do assessor (Onda 1): o servidor busca (RPC `conv_svc_ai_admin_read`, como o administrador) e escreve o texto.
 // O modelo só escolhe o domínio e o período; nenhum número passa pela cabeça dele.
 
-export const ADMIN_READ_DOMAINS = ['caixa', 'receber_pagar', 'dre', 'receita_alunos', 'comprovantes', 'acessos', 'assinaturas', 'ocupacao', 'comparativo', 'followups', 'preferencias'] as const;
+export const ADMIN_READ_DOMAINS = ['caixa', 'receber_pagar', 'dre', 'receita_alunos', 'comprovantes', 'acessos', 'assinaturas', 'ocupacao', 'comparativo', 'followups', 'preferencias', 'socios'] as const;
 export type AdminReadDomain = typeof ADMIN_READ_DOMAINS[number];
 type Row = Record<string, unknown>;
 
@@ -111,9 +111,17 @@ function renderPreferencias(d: Row): string {
     + `${d.min_balance_cents != null ? `caixa abaixo de ${brl(d.min_balance_cents)}` : 'sem aviso de caixa baixo'}\n- Conta padrão: ${d.default_account ?? 'nenhuma'}`;
 }
 
+function renderSocios(d: Row): string {
+  const todos = arr(d.members);
+  const dir = todos.filter((m) => m.role === 'admin'); const socios = todos.filter((m) => m.role !== 'admin');
+  const lista = (rows: Row[]) => rows.map((m, i) => `${i + 1}. ${m.name}`).join('\n');
+  if (!todos.length) return 'Não achei sócios ativos no cadastro.';
+  return `O STC tem ${todos.length} sócios ativos no cadastro (${dir.length} da diretoria e ${socios.length} sócios).\n\nDiretoria:\n${lista(dir)}\n\nSócios:\n${lista(socios)}`;
+}
+
 const RENDER: Record<AdminReadDomain, (d: Row) => string> = {
   caixa: renderCaixa, receber_pagar: renderReceberPagar, dre: renderDre, receita_alunos: renderReceitaAlunos,
-  comprovantes: renderComprovantes, acessos: renderAcessos, assinaturas: renderAssinaturas, ocupacao: renderOcupacao, comparativo: renderComparativo, followups: renderFollowups, preferencias: renderPreferencias,
+  comprovantes: renderComprovantes, acessos: renderAcessos, assinaturas: renderAssinaturas, ocupacao: renderOcupacao, comparativo: renderComparativo, followups: renderFollowups, preferencias: renderPreferencias, socios: renderSocios,
 };
 
 export const renderAdminRead = (domain: AdminReadDomain, data: unknown): string =>

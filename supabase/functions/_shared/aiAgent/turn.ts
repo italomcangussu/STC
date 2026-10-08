@@ -113,7 +113,7 @@ type PayMethod = 'pix' | 'transfer' | 'cash' | 'card' | 'other';
 const FIN_ACTIONS: FinAction[] = ['lancar', 'cobrar', 'pausar', 'retomar', 'baixa', 'renovar_card',
   'cancelar_pendencia', 'ajustar', 'estornar', 'rejeitar_comprovante', 'despesa', 'receita', 'aprovar_comprovante', 'gerar_cobrancas'];
 export const ADM_ACTIONS = ['aviso', 'aviso_desativar', 'aluno_status', 'socio_status', 'assinatura_reenviar', 'reserva_cancelar', 'acesso_aprovar', 'acesso_recusar', 'socio_criar',
-  'followup_criar', 'followup_concluir', 'quadra_bloquear', 'preferencia', 'dependente_criar', 'mensagem_enviar', 'comunicado_enviar'] as const;
+  'followup_criar', 'followup_concluir', 'quadra_bloquear', 'preferencia', 'dependente_criar', 'mensagem_enviar', 'comunicado_enviar', 'resumo_destinatario'] as const;
 export type AdmAction = typeof ADM_ACTIONS[number];
 const ADJUST_KINDS = ['discount', 'increase', 'fee_waiver'] as const;
 const PENDENCY_KINDS: PendencyKind[] = ['day_card', 'consumo', 'evento', 'multa', 'dano_reposicao', 'outros'];
@@ -704,7 +704,10 @@ export function claimsSuccess(text: string): boolean {
 
 const TRANSFER_DIRECT = 'Vou passar a sua conversa para alguém da equipe, tá? Eles te respondem por aqui mesmo.';
 /** Sócio no privado nunca é transferido para a equipe: o João continua a conversa. */
-const MEMBER_KEEP = 'Pode contar comigo por aqui. Me conta o que você precisa que eu resolvo.';
+const MEMBER_KEEPS = ['Deixa eu entender direito: o que exatamente você quer que eu faça?', 'Não peguei bem o pedido. Me diz de novo com outras palavras que eu resolvo por aqui.', 'Quero te ajudar nisso, só preciso entender melhor. O que você tem em mente?'];
+const MEMBER_KEEP = MEMBER_KEEPS[0];
+const memberKeep = (seed: string) => MEMBER_KEEPS[[...seed].reduce((a, c) => a + c.charCodeAt(0), 0) % MEMBER_KEEPS.length];
+const NO_TRANSFER_RULE = 'ATENÇÃO: você NÃO pode transferir nem encaminhar esta conversa para ninguém; é você quem atende. Responda você mesmo, de forma natural e específica ao que a pessoa escreveu: diga o que consegue fazer sobre isso (ou, com franqueza e sem enrolar, o que não consegue) e peça só o dado que falta. Nada de frases genéricas como "pode contar comigo" ou "me conta o que você precisa". Use transfer: false.';
 const MEMBER_FAIL = 'Não consegui concluir isso agora. Pode tentar de novo em instantes, ou me explicar de outro jeito?';
 const MEMBER_HANDOFF_TALK = /(vou|vamos|irei)\s+(te\s+)?(passar|encaminhar|transferir|pedir)|passar\s+(a|sua)\s+conversa|algu[eé]m\s+da\s+equipe\s+(te|vai)|atendente|transferi/i;
 const TRANSFER_GROUP = 'Vou pedir para alguém da equipe te ajudar com isso por aqui, tá?';
@@ -1192,7 +1195,7 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
 
   const transferir = async (kind: 'soft' | 'hard', note: string, memory: Memory | null, falar = true, opts: { texto?: string; fechar?: boolean } = {}) => {
     if (socioNoPrivado) {
-      const enviadas = falar ? await entregar(cadence([opts.texto ?? MEMBER_KEEP])) : 0;
+      const enviadas = falar ? await entregar(cadence([opts.texto ?? memberKeep(messageId)])) : 0;
       await save(memory, 'member_no_handoff', { reason: note.slice(0, 200), kind }, !opts.fechar, opts.fechar === true);
       return { status: 'replied', bubbles: enviadas, handoff: null } as TurnResult;
     }
@@ -1309,11 +1312,24 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
     }
   }
 
+  let fallback: 'reformulada' | 'pronta' | null = null;
   if (socioNoPrivado) {
     const seguras = answer.messages.filter((m) => !MEMBER_HANDOFF_TALK.test(m));
     if (answer.transfer || seguras.length !== answer.messages.length) {
+      let falas = seguras;
+      if (!falas.length) {
+        // Quem atende é o João: em vez de uma frase pronta, pede uma resposta de verdade ao modelo, sem a opção de transferir.
+        try {
+          const r2 = await deps.chat([
+            { role: 'system', content: `${systemPrompt(settings, ctx)}\n\n${NO_TRANSFER_RULE}` },
+            { role: 'user', content: userPrompt(ctx, memory, buffered) },
+          ], { model: settings.model, temperature: 0.6, maxTokens: 600, json: true });
+          falas = parseAnswer(r2.output).messages.filter((m) => !MEMBER_HANDOFF_TALK.test(m));
+        } catch { falas = []; }
+        fallback = falas.length ? 'reformulada' : 'pronta';
+      }
       answer = { ...answer, ...(answer.transfer ? { intent: 'outro' as Intent, ready: false, customer_confirmed: false, awaiting: true, transfer: false, handoff_kind: null, handoff_note: null, close: false } : {}),
-        messages: seguras.length ? seguras : [MEMBER_KEEP] };
+        messages: falas.length ? falas : [memberKeep(messageId)] };
     }
   }
 
@@ -1370,7 +1386,7 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
     await db('conv_svc_ai_handoff', { p_session: session, p_kind: answer.handoff_kind ?? 'hard', p_note: answer.handoff_note || 'Transferida pela IA' });
   }
   await save(d.memory, answer.transfer ? `handoff_${answer.handoff_kind}` : d.close ? 'close' : d.action ?? 'reply',
-    { action: d.action, intent: answer.intent, bubbles: enviadas }, d.awaiting, d.close || (answer.transfer && answer.handoff_kind === 'hard'));
+    { action: d.action, intent: answer.intent, bubbles: enviadas, ...(fallback ? { fallback, asked: buffered.slice(0, 200) } : {}) }, d.awaiting, d.close || (answer.transfer && answer.handoff_kind === 'hard'));
   return { status: 'replied', bubbles: enviadas, handoff: answer.transfer ? answer.handoff_kind : null, action: d.action };
 }
 
@@ -1728,7 +1744,7 @@ type AdminAction = 'fin_pendency_create' | 'fin_pendency_collection' | 'fin_pend
   | 'fin_charge_cancel' | 'fin_charge_adjust' | 'fin_payment_reverse' | 'fin_receipt_reject' | 'fin_entry_create' | 'fin_receipt_approve' | 'fin_charges_generate'
   | 'adm_announcement_create' | 'adm_announcement_deactivate' | 'adm_student_status' | 'adm_member_status' | 'adm_signature_resend' | 'adm_reservation_cancel'
   | 'fin_member_create' | 'fin_access_approve' | 'adm_access_reject'
-  | 'adm_followup_create' | 'adm_followup_done' | 'adm_court_block' | 'adm_pref_set' | 'adm_dependent_create' | 'adm_message_send' | 'adm_broadcast_send';
+  | 'adm_followup_create' | 'adm_followup_done' | 'adm_court_block' | 'adm_pref_set' | 'adm_dependent_create' | 'adm_message_send' | 'adm_broadcast_send' | 'adm_briefing_recipient';
 
 const centsBR = (v: unknown) => `R$ ${(Number(v ?? 0) / 100).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`;
 const dateBR = (v: unknown) => String(v ?? '').slice(0, 10).split('-').reverse().join('/');
@@ -1767,6 +1783,7 @@ export function adminProposalMessage(action: AdminAction, s: Ctx): string {
   }
   if (action === 'adm_pref_set') return `${prefText(s, false)} Confirma? Responda "sim".`;
   if (action === 'adm_message_send') return `Vou chamar ${s.member_name} no WhatsApp (${s.phone}) e mandar esta mensagem:\n«${s.body}»\nConfirma? Responda "sim".`;
+  if (action === 'adm_briefing_recipient') return `Vou ${s.enabled ? 'incluir' : 'tirar'} ${s.name} ${s.enabled ? 'no' : 'do'} resumo diário das 8h. A lista fica: ${s.list_after}. Confirma? Responda "sim".`;
   if (action === 'adm_broadcast_send') {
     const at = new Date(String(s.send_at));
     const quando = at.getTime() - Date.now() < 90_000 ? 'agora' : `em ${hhmm(s.send_at).replace(', ', ' às ')}`;
@@ -1824,6 +1841,7 @@ export function adminSuccessMessage(action: AdminAction, s: Ctx): string {
   if (action === 'student_card_renew') return studentCardSuccessMessage(s);
   if (action === 'fin_member_create' || action === 'fin_access_approve') return `Pronto: ${s.name} agora é sócio e a mensalidade de ${String(s.month ?? '').slice(5, 7)}/${String(s.month ?? '').slice(0, 4)} ficou paga (${centsBR(s.amount_cents)}), sem pendência.`;
   if (action === 'adm_pref_set') return prefText(s, true);
+  if (action === 'adm_briefing_recipient') return `Pronto: ${s.name} ${s.enabled ? 'passa a receber' : 'não recebe mais'} o resumo das 8h. Lista atual: ${s.list_after}.`;
   if (action === 'adm_broadcast_send') return `Pronto: o comunicado está agendado para ${s.queued} sócios. Sai no horário combinado (a fila anda a cada 5 minutos, então pode chegar até 5 minutos depois). Quando alguém responder, eu atendo.`;
   if (action === 'adm_message_send') return `Pronto: a mensagem para ${s.member_name} está na fila e sai em instantes. Se ele responder, eu atendo.`;
   if (action === 'adm_dependent_create') return `Pronto: ${s.dependent_name} cadastrado(a) como ${s.relationship} de ${s.member_name}.`;
@@ -1902,6 +1920,11 @@ async function adminAcao(i: DecideInput, memory: Memory): Promise<Decision> {
     const r = await resolve(deps.db, [slots.member_name], 'member');
     if (r.ask) return ask(r.ask);
     p = { action: 'adm_message_send', profile_id: r.ids[0], body: slots.send_body };
+  } else if (a === 'resumo_destinatario') {
+    if (!slots.member_name) return ask('Quem da diretoria entra (ou sai) do resumo das 8h? Me diz o nome.');
+    const r = await resolve(deps.db, [slots.member_name], 'member');
+    if (r.ask) return ask(r.ask);
+    p = { action: 'adm_briefing_recipient', profile_id: r.ids[0], enabled: slots.active !== false };
   } else if (a === 'comunicado_enviar') {
     if (!slots.send_body) return ask('Consigo sim: disparo o comunicado direto no WhatsApp pessoal de cada sócio, na hora que você quiser (agora ou num horário, como às 8h00). Me passa o texto exato e o horário do disparo?');
     const hoje = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Fortaleza' });
@@ -1944,7 +1967,8 @@ async function adminAcao(i: DecideInput, memory: Memory): Promise<Decision> {
   } else {
     return ask('O que você quer fazer: publicar ou tirar um aviso, pausar/reativar aluno, inativar/reativar sócio, reenviar avisos de assinatura, cancelar uma reserva, aprovar ou recusar pedido de acesso ou cadastrar um sócio novo?');
   }
-  const rpc = a === 'comunicado_enviar' ? 'conv_svc_ai_admin_broadcast_propose'
+  const rpc = a === 'resumo_destinatario' ? 'conv_svc_ai_admin_briefing_propose'
+    : a === 'comunicado_enviar' ? 'conv_svc_ai_admin_broadcast_propose'
     : a === 'mensagem_enviar' ? 'conv_svc_ai_admin_message_propose'
     : a === 'dependente_criar' ? 'conv_svc_ai_admin_dependent_propose'
     : a === 'acesso_aprovar' || a === 'acesso_recusar' || a === 'socio_criar' ? 'conv_svc_ai_admin_access_propose'
@@ -1963,7 +1987,7 @@ async function adminConsulta(i: DecideInput, memory: Memory): Promise<Decision> 
   if (slots.file_kind) return adminArquivo(i, memory);
   if (!slots.read_domain) return ask('O que você quer ver: caixa, a receber/a pagar, resultado (DRE), receita de alunos, comprovantes, pedidos de acesso, assinaturas ou reservas do dia?');
   const args: Record<string, unknown> = { from: slots.read_from ?? null, to: slots.read_to ?? null, date: slots.date ?? null };
-  const res = (await deps.db('conv_svc_ai_admin_read', { p_session: session, p_domain: slots.read_domain, p_args: args })).data as
+  const res = (await (slots.read_domain === 'socios' ? deps.db('conv_svc_ai_admin_members', { p_session: session }) : deps.db('conv_svc_ai_admin_read', { p_session: session, p_domain: slots.read_domain, p_args: args }))).data as
     { ok: boolean; message?: string; data?: unknown } | null;
   if (!res?.ok) return ask(res?.message ?? 'Não consegui consultar isso agora. Tenta de novo daqui a pouco?', false);
   return { bubbles: [renderAdminRead(slots.read_domain, res.data)], awaiting: false, close: false, action: `admin_read:${slots.read_domain}`, memory, verbatim: true };
@@ -2163,7 +2187,7 @@ async function adminArquivo(i: DecideInput, memory: Memory): Promise<Decision> {
   if (kind === 'relatorio_pdf') {
     if (!slots.read_domain) return ask('De qual relatório você quer o PDF: caixa, a receber/a pagar, resultado (DRE), receita de alunos, comparativo, comprovantes, assinaturas ou reservas do dia? E de qual período?');
     const args: Record<string, unknown> = { from: slots.read_from ?? null, to: slots.read_to ?? null, date: slots.date ?? null };
-    const res = (await deps.db('conv_svc_ai_admin_read', { p_session: session, p_domain: slots.read_domain, p_args: args })).data as { ok: boolean; message?: string; data?: unknown } | null;
+    const res = (await (slots.read_domain === 'socios' ? deps.db('conv_svc_ai_admin_members', { p_session: session }) : deps.db('conv_svc_ai_admin_read', { p_session: session, p_domain: slots.read_domain, p_args: args }))).data as { ok: boolean; message?: string; data?: unknown } | null;
     if (!res?.ok) return ask(res?.message ?? 'Não consegui consultar isso agora. Tenta de novo daqui a pouco?', false);
     const quando = new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Fortaleza', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date()).replace(',', '');
     const doc = reportDoc(slots.read_domain, res.data, quando);

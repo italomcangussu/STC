@@ -710,9 +710,9 @@ describe('comunicado no WhatsApp de todos os sócios (N1)', () => {
     await q(w.db, `update public.profiles set phone = '88993412944' where id = '${U.socioB}'`);
     await dizer(w, p, 'preciso disparar um comunicado para os sócios', com());
     expect(p.sent.at(-1)!.text).toMatch(/Consigo sim.*texto exato e o horário/);
-    const r = await dizer(w, p, 'texto acima, às 8h', com({ send_body: texto, start: '08:00' }));
+    const r = await dizer(w, p, 'texto acima, às 8h', com({ send_body: texto, start: '23:30' }));
     expect(r.action).toBe('proposed_admin');
-    expect(p.sent.at(-1)!.text).toMatch(/Vou mandar este comunicado no WhatsApp pessoal de \d+ sócios, em .* às 08:00/);
+    expect(p.sent.at(-1)!.text).toMatch(/Vou mandar este comunicado no WhatsApp pessoal de \d+ sócios, em .* às 23:30/);
     expect(await q(w.db, `select 1 from public.conv_followups where send_body is not null`)).toHaveLength(0);
     expect((await dizer(w, p, 'sim', { customer_confirmed: true })).action).toBe('admin_confirmed');
     expect(p.sent.at(-1)!.text).toMatch(/comunicado está agendado para \d+ sócios/);
@@ -725,6 +725,48 @@ describe('comunicado no WhatsApp de todos os sócios (N1)', () => {
     await dizer(w, p, 'sim', { customer_confirmed: true });
     expect(await q(w.db, `select 1 from public.conv_followups where send_body is not null`)).toHaveLength(f.length);
   }, 120000);
+});
+
+describe('relação nominal dos sócios', () => {
+  it('"liste os sócios": o servidor escreve a relação (diretoria e sócios), sem chamar fallback', async () => {
+    const w = await setup(); const p = provider();
+    const m = await direct(w, 'liste os sócios atuais do clube');
+    const r = await turn(w, m.message_id, script(answer({ intent: 'admin_consulta', ready: true, slots: { read_domain: 'socios' } })).chat, p.uaz);
+    expect(r.action).toBe('admin_read:socios');
+    expect(p.sent.at(-1)!.text).toMatch(/^O STC tem \d+ sócios ativos no cadastro \(\d+ da diretoria e \d+ sócios\)\.\n\nDiretoria:\n1\. /);
+    expect(p.sent.at(-1)!.text).toMatch(/\n\nSócios:\n1\. /);
+  }, 90000);
+});
+
+describe('lista do resumo das 8h pelo chat (N1)', () => {
+  const dizer = async (w: W, p: ReturnType<typeof provider>, texto: string, o: Record<string, unknown>) => {
+    const m = await direct(w, texto);
+    return turn(w, m.message_id, script(answer(o)).chat, p.uaz);
+  };
+  const lista = (slots: Record<string, unknown>) => ({ ready: true, intent: 'admin_acao', slots: { adm_action: 'resumo_destinatario', ...slots } });
+
+  it('tira e volta um administrador da lista: resumo mostra como a lista fica e só aplica depois do "sim"', async () => {
+    const w = await setup(); const p = provider();
+    await q(w.db, `insert into public.conv_admin_briefing_recipients(profile_id, enabled) values ('${U.admin}', true) on conflict (profile_id) do update set enabled = true`);
+    const [adm] = await q<any>(w.db, `select name from public.profiles where id = '${U.admin}'`);
+    const r = await dizer(w, p, 'tira o admin do resumo', lista({ member_name: adm.name, active: false }));
+    expect(r.action).toBe('proposed_admin');
+    expect(p.sent.at(-1)!.text).toMatch(/Vou tirar .* do resumo diário das 8h\. A lista fica: ninguém\. Confirma\?/);
+    expect((await q<any>(w.db, `select enabled from public.conv_admin_briefing_recipients where profile_id = '${U.admin}'`))[0].enabled).toBe(true);
+    expect((await dizer(w, p, 'sim', { customer_confirmed: true })).action).toBe('admin_confirmed');
+    expect(p.sent.at(-1)!.text).toMatch(/não recebe mais o resumo das 8h/);
+    expect((await q<any>(w.db, `select enabled from public.conv_admin_briefing_recipients where profile_id = '${U.admin}'`))[0].enabled).toBe(false);
+    await dizer(w, p, 'inclui de volta', lista({ member_name: adm.name, active: true }));
+    expect(p.sent.at(-1)!.text).toMatch(/Vou incluir .* no resumo diário das 8h\. A lista fica: /);
+    await dizer(w, p, 'sim', { customer_confirmed: true });
+    expect((await q<any>(w.db, `select enabled from public.conv_admin_briefing_recipients where profile_id = '${U.admin}'`))[0].enabled).toBe(true);
+  }, 120000);
+
+  it('quem não é administrador não entra na lista (o resumo traz dado financeiro)', async () => {
+    const w = await setup(); const p = provider();
+    await dizer(w, p, 'inclui o Beto no resumo', lista({ member_name: 'Beto', active: true }));
+    expect(p.sent.at(-1)!.text).toMatch(/não é da diretoria no sistema/);
+  }, 90000);
 });
 
 describe('arquivos para o administrador (PDF e documentos)', () => {
