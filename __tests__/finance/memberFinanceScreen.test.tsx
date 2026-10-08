@@ -403,7 +403,8 @@ describe('Meu financeiro — envio do comprovante', () => {
     fireEvent.change(arquivo(), { target: { files: [pngFile()] } });
 
     expect(await sheet.findByText('Preenchemos o que conseguimos ler')).toBeInTheDocument();
-    expect(sheet.getByLabelText('Valor pago')).toHaveValue('154,50');
+    // O campo de dinheiro reescreve o texto num efeito: espera o valor aparecer em vez de supor que já chegou.
+    await waitFor(() => expect(sheet.getByLabelText('Valor pago')).toHaveValue('154,50'));
     expect(sheet.getByLabelText('Data do pagamento')).toHaveValue('');
     expect(sheet.getByLabelText(/Identificador do Pix/)).toHaveValue('E123456');
   });
