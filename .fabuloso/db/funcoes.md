@@ -1,5 +1,5 @@
 # Funções
-> 473 funções nos schemas conv_private, fin_private, public, sig_private. Corpo completo sob demanda: `select pg_get_functiondef('<schema.nome>(<args>)'::regprocedure)`.
+> 475 funções nos schemas conv_private, fin_private, public, sig_private. Corpo completo sob demanda: `select pg_get_functiondef('<schema.nome>(<args>)'::regprocedure)`.
 
 | Função | Argumentos | Retorno | Ling. | Segurança | anon | Nota |
 |---|---|---|---|---|---|---|
@@ -332,6 +332,7 @@
 | public.conv_svc_update_message_status | `p_provider_id text, p_status text` | `void` | sql | DEFINER | não |  |
 | public.conv_svc_welcome_groups | — | `TABLE(conversation_id uuid, group_name text)` | sql | DEFINER | não |  |
 | public.conv_update_followup | `p_id uuid, p_status text, p_due_at timestamp with time zone` | `void` | plpgsql | DEFINER | não |  |
+| public.default_professor_id | — | `uuid` | sql | DEFINER | não |  |
 | public.ensure_knockout_rounds | `p_championship_id uuid` | `TABLE(semifinal_round_id uuid, final_round_id uuid)` | plpgsql | DEFINER | sim |  |
 | public.escape_for_regexp | `str text` | `text` | sql | invoker | sim |  |
 | public.fin_account_balances | `p_at date` | `TABLE(id uuid, name text, kind text, active boolean, is_def…` | plpgsql | DEFINER | não |  |
@@ -420,6 +421,7 @@
 | public.revert_championship_edition_points | `p_championship_id uuid` | `void` | plpgsql | DEFINER ⚠ sem search_path | sim |  |
 | public.rollback_bootstrap_3_circuito | — | `void` | plpgsql | DEFINER ⚠ sem search_path | sim |  |
 | public.set_credito_crm_timestamp | — | `trigger` | plpgsql | invoker | sim |  |
+| public.set_default_professor | — | `trigger` | plpgsql | DEFINER | não |  |
 | public.set_student_level | `p_student_profile_id uuid, p_new_level text, p_observation text` | `void` | plpgsql | invoker | não |  |
 | public.sig_add_recipients | `p_id uuid, p_profiles uuid[]` | `jsonb` | plpgsql | DEFINER | não |  |
 | public.sig_admin_recipients | `p_id uuid` | `TABLE(profile_id uuid, name text, phone text, source text, …` | plpgsql | DEFINER | não |  |

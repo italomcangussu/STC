@@ -8,7 +8,7 @@
     "public",
     "sig_private"
   ],
-  "ultima_migracao": "20261008102600",
+  "ultima_migracao": "20261008124729",
   "extensoes": [
     "pg_cron 1.6.4",
     "pg_net 0.19.5",
@@ -21261,6 +21261,13 @@
       ],
       "gatilhos": [
         {
+          "nome": "trg_non_socio_students_default_professor",
+          "def": "CREATE TRIGGER trg_non_socio_students_default_professor BEFORE INSERT OR UPDATE OF professor_id ON public.non_socio_students FOR EACH ROW EXECUTE FUNCTION set_default_professor()",
+          "funcao": "public.set_default_professor",
+          "ativo": true,
+          "externo": false
+        },
+        {
           "nome": "update_non_socio_students_updated_at",
           "def": "CREATE TRIGGER update_non_socio_students_updated_at BEFORE UPDATE ON public.non_socio_students FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()",
           "funcao": "public.update_updated_at_column",
@@ -26740,7 +26747,7 @@
       "tipo": "r",
       "rls": true,
       "rls_forcado": false,
-      "linhas_est": "0",
+      "linhas_est": "<100",
       "opcoes": null,
       "comentario": "Student metadata linked to an existing member profile or non-member student; does not duplicate the person.",
       "acesso": {
@@ -27020,6 +27027,13 @@
           "nome": "student_profiles_sync_legacy_status",
           "def": "CREATE TRIGGER student_profiles_sync_legacy_status AFTER UPDATE OF student_status ON public.student_profiles FOR EACH ROW WHEN ((old.student_status IS DISTINCT FROM new.student_status)) EXECUTE FUNCTION sync_student_profile_status_to_legacy_student()",
           "funcao": "public.sync_student_profile_status_to_legacy_student",
+          "ativo": true,
+          "externo": false
+        },
+        {
+          "nome": "trg_student_profiles_default_professor",
+          "def": "CREATE TRIGGER trg_student_profiles_default_professor BEFORE INSERT OR UPDATE OF professor_id ON public.student_profiles FOR EACH ROW EXECUTE FUNCTION set_default_professor()",
+          "funcao": "public.set_default_professor",
           "ativo": true,
           "externo": false
         }
@@ -32755,6 +32769,19 @@
       "comentario": null
     },
     {
+      "nome": "public.default_professor_id",
+      "args": "",
+      "retorno": "uuid",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": true,
+      "comentario": null
+    },
+    {
       "nome": "public.ensure_knockout_rounds",
       "args": "p_championship_id uuid",
       "retorno": "TABLE(semifinal_round_id uuid, final_round_id uuid)",
@@ -33896,6 +33923,19 @@
       "volatilidade": "v",
       "exec_anon": true,
       "exec_authenticated": true,
+      "comentario": null
+    },
+    {
+      "nome": "public.set_default_professor",
+      "args": "",
+      "retorno": "trigger",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
       "comentario": null
     },
     {

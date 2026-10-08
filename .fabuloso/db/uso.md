@@ -297,7 +297,7 @@
 
 ### student_profiles
 - select: components/AdminStudents.tsx:83, components/Agenda.tsx:1414, components/ProfessorProfile.tsx:202
-- insert: components/AdminStudents.tsx:176, components/AdminStudents.tsx:232, components/Agenda.tsx:2449, components/Agenda.tsx:2486, components/ProfessorProfile.tsx:426
+- insert: components/AdminStudents.tsx:176, components/AdminStudents.tsx:232, components/Agenda.tsx:2449, components/Agenda.tsx:2487, components/ProfessorProfile.tsx:426
 - update: components/AdminStudents.tsx:164, components/AdminStudents.tsx:208, components/AdminStudents.tsx:224, components/AdminStudents.tsx:244, components/AdminStudents.tsx:250, components/ProfessorProfile.tsx:499, components/ProfessorProfile.tsx:517, components/ProfessorProfile.tsx:530, components/ProfessorProfile.tsx:554
 - upsert: components/Agenda.tsx:1623
 

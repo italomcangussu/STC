@@ -1,6 +1,6 @@
 -- base.sql — DDL do schema remoto. Gerado por `fabuloso.mjs db`; não edite.
 -- É a base do banco de teste em PGlite (`fabuloso.mjs pg`): schema real do remoto + migrations locais pendentes.
---@@ meta {"versao":1,"postgres":"17.6","schemas":["conv_private","fin_private","public","sig_private"],"extensoes":[{"nome":"pg_cron","schema":"pg_catalog"},{"nome":"pg_net","schema":"extensions"},{"nome":"pg_stat_statements","schema":"extensions"},{"nome":"pgcrypto","schema":"extensions"},{"nome":"supabase_vault","schema":"vault"},{"nome":"uuid-ossp","schema":"extensions"},{"nome":"vector","schema":"public"}],"papeis":["anon","authenticated","authenticator","cli_login_postgres","dashboard_user","pgbouncer","postgres","service_role","supabase_auth_admin","supabase_etl_admin","supabase_functions_admin","supabase_privileged_role","supabase_read_only_user","supabase_realtime_admin","supabase_replication_admin","supabase_storage_admin"],"migracoes":["20251228080214","20251228081253","20251228083254","20251228083507","20251228083944","20251228085506","20251228085656","20251228085817","20251228113842","20251228114731","20251228115147","20251228214931","20251228220119","20251228220952","20251230094628","20251230103441","20251230111220","20260101134906","20260101134940","20260101141731","20260101155936","20260103141626","20260103153236","20260103153329","20260103153404","20260103153757","20260115192527","20260119084237","20260119084321","20260119085322","20260119090000","20260119090225","20260119141114","20260123101818","20260123101853","20260123104620","20260123125031","20260124215137","20260125081739","20260125102639","20260125174723","20260127175350","20260127175608","20260128133915","20260129075257","20260129075631","20260129083027","20260129145632","20260131091223","20260203185748","20260205232352","20260205232412","20260212105246","20260212113107","20260212121128","20260213083000","20260215123000","20260216090000","20260216123000","20260323073000","20260421153000","20260421184125","20260422100000","20260422100100","20260422100200","20260422100300","20260422100400","20260422113000","20260422124000","20260422130000","20260422143000","20260422150000","20260427134500","20260427135800","20260427140500","20260502000001","20260502000002","20260519072400","20260519073500","20260519074500","20260519075000","20260519080000","20260519081000","20260519082000","20260805085500","20260805091000","20260807120000","20260807140000","20260807160000","20260807180000","20260807200000","20260808120000","20260824120000","20260824121000","20260824140000","20260912090000","20260912100000","20260930120000","20260930123000","20261005161200","20261006100000","20261006100100","20261006100200","20261006100300","20261006100400","20261006100500","20261007064837","20261007070656","20261007100000","20261007100100","20261007100200","20261007100300","20261007100400","20261007100500","20261007100600","20261007100700","20261007100800","20261007100900","20261007101000","20261007101100","20261007101200","20261007101210","20261007101300","20261007101400","20261007110000","20261007120000","20261007120100","20261007120200","20261007130000","20261007135553","20261007140000","20261007140144","20261007140427","20261007140831","20261007141000","20261007150000","20261007150010","20261007150100","20261007160000","20261007170000","20261007180000","20261007190000","20261007200000","20261007210000","20261007220000","20261007230000","20261007240000","20261007250000","20261007250100","20261007260000","20261007260100","20261007270000","20261007280000","20261007290000","20261007290100","20261007300000","20261007310000","20261007320000","20261007330000","20261007340000","20261007350000","20261007360000","20261007370000","20261007380000","20261007390000","20261007400000","20261008101944","20261008102600"]}
+--@@ meta {"versao":1,"postgres":"17.6","schemas":["conv_private","fin_private","public","sig_private"],"extensoes":[{"nome":"pg_cron","schema":"pg_catalog"},{"nome":"pg_net","schema":"extensions"},{"nome":"pg_stat_statements","schema":"extensions"},{"nome":"pgcrypto","schema":"extensions"},{"nome":"supabase_vault","schema":"vault"},{"nome":"uuid-ossp","schema":"extensions"},{"nome":"vector","schema":"public"}],"papeis":["anon","authenticated","authenticator","cli_login_postgres","dashboard_user","pgbouncer","postgres","service_role","supabase_auth_admin","supabase_etl_admin","supabase_functions_admin","supabase_privileged_role","supabase_read_only_user","supabase_realtime_admin","supabase_replication_admin","supabase_storage_admin"],"migracoes":["20251228080214","20251228081253","20251228083254","20251228083507","20251228083944","20251228085506","20251228085656","20251228085817","20251228113842","20251228114731","20251228115147","20251228214931","20251228220119","20251228220952","20251230094628","20251230103441","20251230111220","20260101134906","20260101134940","20260101141731","20260101155936","20260103141626","20260103153236","20260103153329","20260103153404","20260103153757","20260115192527","20260119084237","20260119084321","20260119085322","20260119090000","20260119090225","20260119141114","20260123101818","20260123101853","20260123104620","20260123125031","20260124215137","20260125081739","20260125102639","20260125174723","20260127175350","20260127175608","20260128133915","20260129075257","20260129075631","20260129083027","20260129145632","20260131091223","20260203185748","20260205232352","20260205232412","20260212105246","20260212113107","20260212121128","20260213083000","20260215123000","20260216090000","20260216123000","20260323073000","20260421153000","20260421184125","20260422100000","20260422100100","20260422100200","20260422100300","20260422100400","20260422113000","20260422124000","20260422130000","20260422143000","20260422150000","20260427134500","20260427135800","20260427140500","20260502000001","20260502000002","20260519072400","20260519073500","20260519074500","20260519075000","20260519080000","20260519081000","20260519082000","20260805085500","20260805091000","20260807120000","20260807140000","20260807160000","20260807180000","20260807200000","20260808120000","20260824120000","20260824121000","20260824140000","20260912090000","20260912100000","20260930120000","20260930123000","20261005161200","20261006100000","20261006100100","20261006100200","20261006100300","20261006100400","20261006100500","20261007064837","20261007070656","20261007100000","20261007100100","20261007100200","20261007100300","20261007100400","20261007100500","20261007100600","20261007100700","20261007100800","20261007100900","20261007101000","20261007101100","20261007101200","20261007101210","20261007101300","20261007101400","20261007110000","20261007120000","20261007120100","20261007120200","20261007130000","20261007135553","20261007140000","20261007140144","20261007140427","20261007140831","20261007141000","20261007150000","20261007150010","20261007150100","20261007160000","20261007170000","20261007180000","20261007190000","20261007200000","20261007210000","20261007220000","20261007230000","20261007240000","20261007250000","20261007250100","20261007260000","20261007260100","20261007270000","20261007280000","20261007290000","20261007290100","20261007300000","20261007310000","20261007320000","20261007330000","20261007340000","20261007350000","20261007360000","20261007370000","20261007380000","20261007390000","20261007400000","20261008101944","20261008102600","20261008124729"]}
 --@@ 10 schema conv_private
 create schema if not exists conv_private;
 --@@ 10 schema fin_private
@@ -10835,6 +10835,18 @@ begin
   where id = p_id and status = 'pending';
   if not found then raise exception 'FOLLOWUP_NOT_PENDING'; end if;
 end $function$;
+--@@ 45 funcao public.default_professor_id()
+CREATE OR REPLACE FUNCTION public.default_professor_id()
+ RETURNS uuid
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+  select (array_agg(p.id))[1]
+  from public.professors p
+  where coalesce(p.is_active, true)
+  having count(*) = 1;
+$function$;
 --@@ 45 funcao public.ensure_knockout_rounds(p_championship_id uuid)
 CREATE OR REPLACE FUNCTION public.ensure_knockout_rounds(p_championship_id uuid)
  RETURNS TABLE(semifinal_round_id uuid, final_round_id uuid)
@@ -13918,6 +13930,20 @@ BEGIN
   -- Otherwise, keep existing value
   RETURN NEW;
 END;
+$function$;
+--@@ 45 funcao public.set_default_professor()
+CREATE OR REPLACE FUNCTION public.set_default_professor()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+begin
+  if new.professor_id is null then
+    new.professor_id := public.default_professor_id();
+  end if;
+  return new;
+end;
 $function$;
 --@@ 45 funcao public.set_student_level(p_student_profile_id uuid, p_new_level
 CREATE OR REPLACE FUNCTION public.set_student_level(p_student_profile_id uuid, p_new_level text, p_observation text DEFAULT NULL::text)
@@ -18589,6 +18615,8 @@ CREATE TRIGGER trg_sync_group_knockout_on_match_change AFTER INSERT OR UPDATE OF
 CREATE TRIGGER trg_validate_match_result_integrity BEFORE INSERT OR UPDATE OF status, result_type, winner_id, walkover_winner_id, walkover_winner_registration_id, round_id, phase ON public.matches FOR EACH ROW EXECUTE FUNCTION validate_match_result_integrity();
 --@@ 75 gatilho public.matches.update_matches_updated_at
 CREATE TRIGGER update_matches_updated_at BEFORE UPDATE ON public.matches FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+--@@ 75 gatilho public.non_socio_students.trg_non_socio_students_default_profes
+CREATE TRIGGER trg_non_socio_students_default_professor BEFORE INSERT OR UPDATE OF professor_id ON public.non_socio_students FOR EACH ROW EXECUTE FUNCTION set_default_professor();
 --@@ 75 gatilho public.non_socio_students.update_non_socio_students_updated_at
 CREATE TRIGGER update_non_socio_students_updated_at BEFORE UPDATE ON public.non_socio_students FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 --@@ 75 gatilho public.point_history.trg_admin_audit_point_history
@@ -18637,6 +18665,8 @@ CREATE TRIGGER update_student_payments_updated_at BEFORE UPDATE ON public.studen
 CREATE TRIGGER student_profiles_record_level_change AFTER INSERT OR UPDATE OF technical_level ON public.student_profiles FOR EACH ROW EXECUTE FUNCTION record_student_level_change();
 --@@ 75 gatilho public.student_profiles.student_profiles_sync_legacy_status
 CREATE TRIGGER student_profiles_sync_legacy_status AFTER UPDATE OF student_status ON public.student_profiles FOR EACH ROW WHEN ((old.student_status IS DISTINCT FROM new.student_status)) EXECUTE FUNCTION sync_student_profile_status_to_legacy_student();
+--@@ 75 gatilho public.student_profiles.trg_student_profiles_default_professor
+CREATE TRIGGER trg_student_profiles_default_professor BEFORE INSERT OR UPDATE OF professor_id ON public.student_profiles FOR EACH ROW EXECUTE FUNCTION set_default_professor();
 --@@ 75 gatilho public.students.update_students_updated_at
 CREATE TRIGGER update_students_updated_at BEFORE UPDATE ON public.students FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 --@@ 75 gatilho public.support_messages.update_support_messages_updated_at
@@ -19863,6 +19893,8 @@ revoke all on routine conv_svc_update_message_status(text,text) from public, ano
 revoke all on routine conv_svc_welcome_groups() from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao conv_update_followup(uuid,text,timestamp with time zone)
 revoke all on routine conv_update_followup(uuid,text,timestamp with time zone) from public, anon, authenticated, service_role;
+--@@ 89 revoke-funcao default_professor_id()
+revoke all on routine default_professor_id() from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao ensure_knockout_rounds(uuid)
 revoke all on routine ensure_knockout_rounds(uuid) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao escape_for_regexp(text)
@@ -20311,6 +20343,8 @@ revoke all on routine revert_championship_edition_points(uuid) from public, anon
 revoke all on routine rollback_bootstrap_3_circuito() from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao set_credito_crm_timestamp()
 revoke all on routine set_credito_crm_timestamp() from public, anon, authenticated, service_role;
+--@@ 89 revoke-funcao set_default_professor()
+revoke all on routine set_default_professor() from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao set_student_level(uuid,text,text)
 revoke all on routine set_student_level(uuid,text,text) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao sig_add_recipients(uuid,uuid[])
@@ -20777,6 +20811,10 @@ grant execute on routine conv_svc_welcome_groups() to service_role;
 grant execute on routine conv_update_followup(uuid,text,timestamp with time zone) to authenticated;
 --@@ 90 grant-funcao conv_update_followup(uuid,text,timestamp with time zone)→serv
 grant execute on routine conv_update_followup(uuid,text,timestamp with time zone) to service_role;
+--@@ 90 grant-funcao default_professor_id()→authenticated
+grant execute on routine default_professor_id() to authenticated;
+--@@ 90 grant-funcao default_professor_id()→service_role
+grant execute on routine default_professor_id() to service_role;
 --@@ 90 grant-funcao ensure_knockout_rounds(uuid)→anon
 grant execute on routine ensure_knockout_rounds(uuid) to anon;
 --@@ 90 grant-funcao ensure_knockout_rounds(uuid)→authenticated
@@ -21905,6 +21943,8 @@ grant execute on routine set_credito_crm_timestamp() to authenticated;
 grant execute on routine set_credito_crm_timestamp() to public;
 --@@ 90 grant-funcao set_credito_crm_timestamp()→service_role
 grant execute on routine set_credito_crm_timestamp() to service_role;
+--@@ 90 grant-funcao set_default_professor()→service_role
+grant execute on routine set_default_professor() to service_role;
 --@@ 90 grant-funcao set_student_level(uuid,text,text)→authenticated
 grant execute on routine set_student_level(uuid,text,text) to authenticated;
 --@@ 90 grant-funcao set_student_level(uuid,text,text)→service_role

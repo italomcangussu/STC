@@ -1,5 +1,5 @@
 # public.student_profiles
-> tabela · RLS on · ~0 linhas — Student metadata linked to an existing member profile or non-member student; does not duplicate the person.
+> tabela · RLS on · ~<100 linhas — Student metadata linked to an existing member profile or non-member student; does not duplicate the person.
 
 ## Colunas
 | Coluna | Tipo | Nulo | Padrão | Nota |
@@ -41,6 +41,7 @@ public.student_level_history.student_profile_id
 ## Gatilhos
 - student_profiles_record_level_change — AFTER INSERT OR UPDATE OF technical_level → public.record_student_level_change()
 - student_profiles_sync_legacy_status — AFTER UPDATE OF student_status → public.sync_student_profile_status_to_legacy_student()
+- trg_student_profiles_default_professor — BEFORE INSERT OR UPDATE OF professor_id → public.set_default_professor()
 
 ## Grants
 - anon: siud · authenticated: siud (s=select i=insert u=update d=delete)

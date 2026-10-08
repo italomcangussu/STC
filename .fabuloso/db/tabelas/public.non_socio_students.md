@@ -43,6 +43,7 @@ public.championship_registrations.student_id, public.conv_automation_recipients.
 - "Socios can view students" — SELECT para public · using `(EXISTS ( SELECT 1 FROM profiles WHERE ((profiles.id = auth.uid()) AND ((profiles.role)::text = 'socio'::text))))`
 
 ## Gatilhos
+- trg_non_socio_students_default_professor — BEFORE INSERT OR UPDATE OF professor_id → public.set_default_professor()
 - update_non_socio_students_updated_at — BEFORE UPDATE → public.update_updated_at_column()
 
 ## Grants
