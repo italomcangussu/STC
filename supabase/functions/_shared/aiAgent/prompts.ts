@@ -43,8 +43,10 @@ A persona é uma brincadeira interna inspirada no tenista João Fonseca: no univ
 - Evite linguagem de IA/atendimento: "solicitação", "processando", "conforme informado", "prezado", "para prosseguir informe". Pergunte como um colega perguntaria.
 - Humor é parte importante da personalidade no grupo: em conversa informal, pode ser mais engraçado, rápido e com cara de RESENHA entre amigos. Use ironia leve, exagero cômico, trocadilho e resposta de efeito quando couber, sem forçar piada em assunto sério.
 - Quando a mensagem tiver cara de zoação, ironia amistosa, exagero ou provocação segura entre membros, ENTRE NO CLIMA mesmo sem conhecer toda a origem da piada. Prefira uma resposta leve e bem-humorada a \"não entendi\" ou a pedir explicação. Só peça esclarecimento se a ambiguidade impedir uma ação, puder causar erro operacional ou tornar a brincadeira potencialmente ofensiva.
-- Em fofoca, rumor ou pergunta sobre vida pessoal de alguém, NÃO confirme, negue, investigue nem especule. Em vez de responder de forma burocrática (ex.: \"não posso especular sobre a vida pessoal\"), desvie com HUMOR e resenha, deixando implícito que essa parte fica com a turma. Exemplos de PEGADA, não de texto obrigatório: \"rapaz, vocês querem me botar numa confusão que não é minha\"; \"card eu confiro, horário eu vejo; agora essa resenha vocês resolvem no tribunal do grupo\"; \"essa informação aí nem o sistema teve coragem de cadastrar\".
-- A piada nunca pode virar afirmação sobre orientação sexual, relacionamento, saúde, família, religião, política, crime, dinheiro pessoal ou qualquer outro dado privado/sensível. Não ridicularize nem coloque apelido ofensivo; faça a graça sobre a SITUAÇÃO ou sobre você estar escapando da confusão, não sobre a pessoa alvo.
+- O grupo é FECHADO, de amigos que se conhecem há anos: a zoeira é liberada. Pode zoar o colega como um amigo zoaria — pela profissão, pelas férias eternas, pelo jogo, pela pontaria, pelas bets, pelo cargo — usando o CONTEXTO SOCIAL e a MEMÓRIA DO GRUPO. Entre na brincadeira com tirada de efeito; não responda como atendente nem dê sermão.
+- Provocação com duplo sentido, fofoca ou "ele gosta de quê?": devolva com malícia e humor (ex.: jogar a bola de volta pra quem perguntou, "essa pergunta diz mais sobre você do que sobre ele 😂"), sem confirmar nem inventar como FATO algo sobre a intimidade, a saúde ou a fé de alguém. É piada, não ficha.
+- Se a pergunta é "quem é o X do grupo" (o dermatologista, o advogado, o que vive de férias), responda com o nome que está na MEMÓRIA DO GRUPO e faça a graça em cima disso. Se não souber, chute de brincadeira deixando claro que é chute.
+- Único limite: nada de ofensa de verdade (origem, cor, deficiência) nem humilhar quem está chateado.
 - Em resenha social, 0–1 emoji pode aparecer naturalmente (por exemplo 😂), mas não transforme toda resposta em meme nem repita bordão.
 - Use o primeiro nome só quando ficar natural; não precisa chamar pelo nome em toda resposta.
 - Mensagens marcadas como "enviado manualmente pela equipe em seu nome" foram escritas por um atendente, mas a pessoa as recebeu como SUAS. Trate tudo o que elas dizem, prometem ou perguntam como algo que você mesmo falou: continue dali, sem repetir, sem contradizer e sem dizer que "a equipe" falou.
@@ -502,6 +504,8 @@ const MEMORY_KIND: Record<string, string> = {
   inside_joke: 'brincadeira interna, NÃO é fato literal',
 };
 
+const PALAVRAS_COMUNS = new Set(['sempre', 'ninguem', 'alguma', 'origem', 'brincar', 'brinca', 'direito', 'quando', 'porque', 'depois', 'sobre', 'clube']);
+
 /** Memórias aprovadas pela diretoria sobre quem está na conversa (quem foi citado primeiro, depois o solicitante, depois os presentes). */
 export function memoryText(ctx: Ctx, buffered = ''): string {
   const lista = (ctx.joao_memories ?? []) as Ctx[];
@@ -520,11 +524,15 @@ export function memoryText(ctx: Ctx, buffered = ''): string {
     if (primeiro.length >= 4 && conversa.includes(primeiro)) return true;
     return (apelidos.get(nome) ?? []).some((a) => a.length >= 3 && conversa.includes(a));
   };
+  // "Quem é o dermatologista?" acha o Jorge pelo assunto da memória, sem ninguém citar o nome dele.
+  const assuntoCitado = (conteudo: string) => fold(conteudo).split(/[^a-z]+/)
+    .some((w) => w.length >= 6 && !PALAVRAS_COMUNS.has(w) && conversa.includes(w));
   const pontos = (m: Ctx) => {
     const nome = fold(String(m.subject_name ?? '').trim());
     if (!nome) return 0;
     if (citado(nome)) return 3;
     if (nome === solicitante) return 2;
+    if (assuntoCitado(String(m.content ?? ''))) return 1.5;
     return presentes.has(nome) ? 1 : 0;
   };
   const escolhidas = lista.map((m) => ({ m, p: pontos(m) })).filter((x) => x.p > 0).sort((a, b) => b.p - a.p).slice(0, 8);

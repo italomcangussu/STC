@@ -727,9 +727,13 @@ export function availabilityFallbackSlots(text: string, nowLocal: string, curren
 }
 
 /** O texto do modelo afirma que algo foi feito? Quem afirma isso é o sistema, não o modelo. */
-const SUCCESS_CLAIM = /\b(reservei|reservad[oa]s?|marquei|marcad[oa]s?|agendei|agendad[oa]s?|confirmei|confirmad[oa]s?|cancelei|cancelad[oa]s?|remarquei|remarcad[oa]s?|retirei|removi|tirei|adicionei|coloquei|inclu[ií]|alterei|atualizei|editei|j[aá] est[aá] (garantid[oa]|feit[oa]|ok))\b/i;
+const SUCCESS_BY_ME = /\b(reservei|marquei|agendei|confirmei|cancelei|remarquei|retirei|removi|tirei|adicionei|coloquei|inclu[ií]|alterei|atualizei|editei|j[aá] est[aá] (garantid[oa]|feit[oa]|ok))\b/i;
+const SUCCESS_STATE = /\b(reservad[oa]s?|marcad[oa]s?|agendad[oa]s?|confirmad[oa]s?|cancelad[oa]s?|remarcad[oa]s?)\b/i;
+// "A Rápida tem aula marcada às 18h" relata a agenda; não é o João dizendo que fez algo.
+const AGENDA_REPORT = /\b(tem|t[eê]m|h[aá]|tinha|teve)\s+(\S+\s+){0,3}(reservad|marcad|agendad|confirmad|cancelad)/i;
 export function claimsSuccess(text: string): boolean {
-  return SUCCESS_CLAIM.test(text);
+  if (SUCCESS_BY_ME.test(text)) return true;
+  return SUCCESS_STATE.test(text) && !AGENDA_REPORT.test(text);
 }
 
 const TRANSFER_DIRECT = 'Vou passar a sua conversa para alguém da equipe, tá? Eles te respondem por aqui mesmo.';
@@ -1443,9 +1447,11 @@ async function decide(i: DecideInput): Promise<Decision> {
   const hasProposal = Boolean(ctx.open_proposal);
   const plain = (extra: Partial<Decision> = {}): Decision => {
     // Nenhuma frase do modelo pode afirmar que algo foi reservado/confirmado/cancelado.
-    const seguro = answer.messages.some(claimsSuccess)
+    // Só a bolha que anuncia sucesso sai; o resto da resposta (piada, contexto) continua.
+    const semAnuncio = answer.messages.filter((m) => !claimsSuccess(m));
+    const seguro = semAnuncio.length < answer.messages.length && !semAnuncio.length
       ? ['Ainda não registrei nada. Me diga o que falta e eu monto o resumo para você confirmar.']
-      : answer.messages;
+      : semAnuncio;
     // Sem texto e sem transferência, o modelo falhou em dizer algo: nunca fica silêncio.
     const bubbles = seguro.length || answer.transfer || answer.close ? seguro : ['Não entendi bem. Pode me explicar de outro jeito?'];
     return { bubbles, awaiting: answer.awaiting || (!seguro.length && !answer.transfer && !answer.close), close: answer.close, action: null, memory, ...extra };

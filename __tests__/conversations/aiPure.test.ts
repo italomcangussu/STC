@@ -57,7 +57,7 @@ describe('o modelo nunca anuncia sucesso', () => {
   it.each(['Pronto, reservei!', 'Sua reserva está confirmada', 'Marquei para você', 'Cancelei a reserva', 'Quadra reservada.', 'Já está garantido', 'remarquei pro sábado'])('detecta: %s', (t) => {
     expect(claimsSuccess(t)).toBe(true);
   });
-  it.each(['Posso confirmar essa reserva?', 'Qual horário você prefere?', 'Não consegui reservar ainda', 'Vou verificar a disponibilidade'])('não detecta: %s', (t) => {
+  it.each(['Posso confirmar essa reserva?', 'Qual horário você prefere?', 'Não consegui reservar ainda', 'Vou verificar a disponibilidade', 'Hoje a Rápida tem aula marcada às 18h', 'O Bruno tem reserva confirmada às 18h'])('não detecta: %s', (t) => {
     // "Não consegui reservar" usa o verbo no infinitivo: não é afirmação de feito
     expect(claimsSuccess(t)).toBe(false);
   });
@@ -276,6 +276,16 @@ describe('João mais gente: reação, temperatura e contexto de amigo', () => {
     expect(memoryText({ ...base, joao_memories: [] })).toBe('(nenhuma memória aprovada ainda)');
     expect(memoryText({ ...base, group_members: [], requester: {}, joao_memories: [{ subject_name: 'Beto Sócio', kind: 'confirmed_fact', content: 'x' }] }, 'oi'))
       .toBe('(nenhuma memória aprovada relevante para este turno)');
+  });
+
+  it('memória aprovada: o assunto da conversa acha a pessoa mesmo sem citar o nome', () => {
+    const ctx = { ...base, group_members: [], requester: {}, joao_memories: [
+      { subject_name: 'Jorge Medeiros', kind: 'confirmed_fact', content: 'É médico dermatologista.' },
+      { subject_name: 'Diego Parente', kind: 'confirmed_fact', content: 'É advogado.' },
+      { subject_name: 'Henrique Coelho', kind: 'inside_joke', content: 'Está sempre de férias.' }] };
+    expect(memoryText(ctx, 'quem é o dermatologista mais charmoso de Sobral?')).toBe('- Jorge Medeiros (fato confirmado): É médico dermatologista.');
+    expect(memoryText(ctx, 'cadê os advogados?')).toContain('Diego Parente');
+    expect(memoryText(ctx, 'ele sempre chega atrasado')).toBe('(nenhuma memória aprovada relevante para este turno)');
   });
 
   it('resultados recentes: placar de quem ganhou, W.O., e sem dado quando a conversa não é de sócio nem de grupo', () => {
