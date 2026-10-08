@@ -51,10 +51,8 @@
 - CHECK fin_member_charges_source_check: `CHECK ((source = ANY (ARRAY['generated'::text, 'manual'::text])))`
 - CHECK fin_member_charges_status_check: `CHECK ((status = ANY (ARRAY['open'::text, 'partial'::text, 'paid'::text, 'canceled'::text])))`
 
-## Referenciada por
-- public.fin_charge_adjustments.charge_id
-- public.fin_charge_payments.charge_id
-- public.fin_receipt_charges.charge_id
+## Referenciada por (3)
+public.fin_charge_adjustments.charge_id, public.fin_charge_payments.charge_id, public.fin_receipt_charges.charge_id
 
 ## Índices
 - fin_member_charges_due_idx: `btree (due_date) WHERE (status = ANY (ARRAY['open'::text, 'partial'::text]))`

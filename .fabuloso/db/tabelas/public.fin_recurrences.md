@@ -39,8 +39,8 @@
 - CHECK fin_recurrences_start_month_check: `CHECK ((EXTRACT(day FROM start_month) = (1)::numeric))`
 - CHECK fin_recurrences_supplier_check: `CHECK (((supplier IS NULL) OR (length(supplier) <= 120)))`
 
-## Referenciada por
-- public.fin_entries.recurrence_id
+## Referenciada por (1)
+public.fin_entries.recurrence_id
 
 ## Índices
 - fin_recurrences_account_idx: `btree (account_id)`

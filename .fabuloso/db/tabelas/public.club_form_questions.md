@@ -18,9 +18,8 @@
 - FK (form_id) → public.club_forms(id) on delete cascade
 - CHECK club_form_questions_question_type_check: `CHECK ((question_type = ANY (ARRAY['single_choice'::text, 'multiple_choice'::text, 'open_text'::text])))`
 
-## Referenciada por
-- public.club_form_options.question_id
-- public.club_form_responses.question_id
+## Referenciada por (2)
+public.club_form_options.question_id, public.club_form_responses.question_id
 
 ## Índices
 - idx_club_form_questions_form_order: `btree (form_id, display_order)`

@@ -54,10 +54,8 @@
 - CHECK fin_entries_status_check: `CHECK ((status = ANY (ARRAY['pending'::text, 'partial'::text, 'paid'::text, 'canceled'::text])))`
 - CHECK fin_entries_supplier_check: `CHECK (((supplier IS NULL) OR (length(supplier) <= 120)))`
 
-## Referenciada por
-- public.fin_attachments.entry_id
-- public.fin_entry_payments.entry_id
-- public.fin_member_credits.refund_entry_id
+## Referenciada por (3)
+public.fin_attachments.entry_id, public.fin_entry_payments.entry_id, public.fin_member_credits.refund_entry_id
 
 ## Índices
 - fin_entries_account_idx: `btree (account_id)`

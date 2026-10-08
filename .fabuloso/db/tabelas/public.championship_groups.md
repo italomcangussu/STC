@@ -18,9 +18,8 @@
 - FK (seed_registration_id) → public.championship_registrations(id) on delete set null
 - UNIQUE (championship_id, category, group_name)
 
-## Referenciada por
-- public.championship_group_members.group_id
-- public.matches.championship_group_id
+## Referenciada por (2)
+public.championship_group_members.group_id, public.matches.championship_group_id
 
 ## Índices
 - championship_groups_championship_id_category_group_name_key: `btree (championship_id, category, group_name)` único

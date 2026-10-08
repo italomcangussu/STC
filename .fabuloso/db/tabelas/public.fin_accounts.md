@@ -26,13 +26,8 @@
 - CHECK fin_accounts_name_check: `CHECK (((length(TRIM(BOTH FROM name)) >= 2) AND (length(TRIM(BOTH FROM name)) <= 60)))`
 - CHECK fin_accounts_opening_balance_cents_check: `CHECK ((abs(opening_balance_cents) <= '100000000000'::bigint))`
 
-## Referenciada por
-- public.conv_admin_prefs.default_account_id
-- public.fin_charge_payments.account_id
-- public.fin_entries.account_id
-- public.fin_entries.counter_account_id
-- public.fin_entry_payments.account_id
-- public.fin_recurrences.account_id
+## Referenciada por (6)
+public.conv_admin_prefs.default_account_id, public.fin_charge_payments.account_id, public.fin_entries.account_id, public.fin_entries.counter_account_id, public.fin_entry_payments.account_id, public.fin_recurrences.account_id
 
 ## Índices
 - fin_accounts_name_key: `btree (lower(name))` único

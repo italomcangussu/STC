@@ -41,8 +41,8 @@
 - CHECK conv_automation_recipients_skip_reason_check: `CHECK (((skip_reason IS NULL) OR (length(skip_reason) <= 120)))`
 - CHECK conv_automation_recipients_status_check: `CHECK ((status = ANY (ARRAY['review'::text, 'pending'::text, 'processing'::text, 'sent'::text, 'failed'::text, 'skipped'::text, 'canceled'::text])))`
 
-## Referenciada por
-- public.conv_messages.automation_recipient_id
+## Referenciada por (1)
+public.conv_messages.automation_recipient_id
 
 ## Índices
 - conv_automation_recipients_contact_idx: `btree (contact_id) WHERE (contact_id IS NOT NULL)`

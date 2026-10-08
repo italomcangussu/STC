@@ -26,12 +26,8 @@
 - CHECK non_socio_students_relationship_type_check: `CHECK (((relationship_type)::text = ANY ((ARRAY['filho'::character varying, 'filha'::character varying, 'esposo'::character varying, 'esposa'::character varying, 'outro'::character varying])::text[])…`
 - CHECK non_socio_students_student_type_check: `CHECK (((student_type)::text = ANY ((ARRAY['regular'::character varying, 'dependent'::character varying])::text[])))`
 
-## Referenciada por
-- public.championship_registrations.student_id
-- public.conv_automation_recipients.student_id
-- public.conv_contacts.non_socio_student_id
-- public.student_payments.student_id
-- public.student_profiles.non_socio_student_id
+## Referenciada por (5)
+public.championship_registrations.student_id, public.conv_automation_recipients.student_id, public.conv_contacts.non_socio_student_id, public.student_payments.student_id, public.student_profiles.non_socio_student_id
 
 ## Índices
 - idx_non_socio_students_is_active: `btree (is_active)`

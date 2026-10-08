@@ -29,8 +29,8 @@
 - CHECK fin_member_credits_remaining_cents_check: `CHECK ((remaining_cents >= 0))`
 - CHECK fin_member_credits_status_check: `CHECK ((status = ANY (ARRAY['open'::text, 'applied'::text, 'refunded'::text, 'void'::text])))`
 
-## Referenciada por
-- public.fin_charge_payments.credit_id
+## Referenciada por (1)
+public.fin_charge_payments.credit_id
 
 ## Índices
 - fin_member_credits_open_idx: `btree (profile_id) WHERE (status = 'open'::text)`

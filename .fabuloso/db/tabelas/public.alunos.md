@@ -30,10 +30,8 @@
 - CHECK alunos_peso_kg_check: `CHECK (((peso_kg >= (35)::double precision) AND (peso_kg <= (250)::double precision)))`
 - CHECK alunos_sexo_check: `CHECK ((sexo = ANY (ARRAY['Masculino'::text, 'Feminino'::text, 'Outro'::text])))`
 
-## Referenciada por
-- public.avaliacoes_semanais.id_aluno
-- public.historico_treino.id_aluno
-- public.planos_treino.id_aluno
+## Referenciada por (3)
+public.avaliacoes_semanais.id_aluno, public.historico_treino.id_aluno, public.planos_treino.id_aluno
 
 ## Índices
 - alunos_email_key: `btree (email)` único

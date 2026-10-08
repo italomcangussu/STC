@@ -23,8 +23,8 @@
 - FK (student_id) → public.non_socio_students(id) on delete cascade
 - CHECK student_payments_status_check: `CHECK (((status)::text = ANY ((ARRAY['active'::character varying, 'cancelled'::character varying])::text[])))`
 
-## Referenciada por
-- public.student_payments.related_payment_id
+## Referenciada por (1)
+public.student_payments.related_payment_id
 
 ## Índices
 - idx_student_payments_status: `btree (status)`

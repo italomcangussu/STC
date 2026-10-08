@@ -6817,7 +6817,7 @@
         {
           "nome": "conv_ai_memory_candidates_kind_check",
           "tipo": "c",
-          "def": "CHECK ((kind = ANY (ARRAY['confirmed_fact'::text, 'recurring_preference'::text, 'social_relation'::text, 'inside_joke'::text])))",
+          "def": "CHECK ((kind = ANY (ARRAY['confirmed_fact'::text, 'recurring_preference'::text, 'social_relation'::text, 'inside_joke'::text, 'role_title'::text])))",
           "colunas": [
             "kind"
           ],
@@ -9002,7 +9002,7 @@
         {
           "nome": "conv_booking_proposals_action_check",
           "tipo": "c",
-          "def": "CHECK ((action = ANY (ARRAY['adm_student_status'::text, 'adm_followup_done'::text, 'adm_court_block'::text, 'adm_dependent_create'::text, 'adm_message_send'::text, 'join'::text, 'fin_charge_adjust'::text, 'fin_payment_reverse'::text, 'fin_pendency_send'::text, 'create'::text, 'fin_access_approve'::text, 'fin_charge_cancel'::text, 'adm_pref_set'::text, 'fin_member_create'::text, 'fin_payment'::text, 'cancel'::text, 'adm_followup_create'::text, 'adm_signature_resend'::text, 'adm_reservation_cancel'::text, 'adm_access_reject'::text, 'student_card_renew'::text, 'fin_receipt_approve'::text, 'fin_entry_create'::text, 'adm_announcement_deactivate'::text, 'adm_member_status'::text, 'fin_pendency_collection'::text, 'fin_receipt_reject'::text, 'adm_announcement_create'::text, 'reschedule'::text, 'fin_charges_generate'::text, 'fin_pendency_create'::text, 'participants'::text, 'adm_broadcast_send'::text])))",
+          "def": "CHECK ((action = ANY (ARRAY['adm_student_status'::text, 'adm_followup_done'::text, 'adm_briefing_recipient'::text, 'adm_court_block'::text, 'adm_dependent_create'::text, 'adm_message_send'::text, 'join'::text, 'fin_charge_adjust'::text, 'fin_payment_reverse'::text, 'fin_pendency_send'::text, 'create'::text, 'fin_access_approve'::text, 'fin_charge_cancel'::text, 'adm_pref_set'::text, 'adm_memory_forget'::text, 'fin_member_create'::text, 'fin_payment'::text, 'cancel'::text, 'adm_followup_create'::text, 'adm_signature_resend'::text, 'adm_reservation_cancel'::text, 'adm_access_reject'::text, 'student_card_renew'::text, 'fin_receipt_approve'::text, 'fin_entry_create'::text, 'adm_announcement_deactivate'::text, 'adm_member_status'::text, 'fin_pendency_collection'::text, 'fin_receipt_reject'::text, 'adm_announcement_create'::text, 'reschedule'::text, 'fin_charges_generate'::text, 'fin_pendency_create'::text, 'participants'::text, 'adm_broadcast_send'::text])))",
           "colunas": [
             "action"
           ],
@@ -10285,7 +10285,7 @@
       "tipo": "r",
       "rls": true,
       "rls_forcado": false,
-      "linhas_est": "0",
+      "linhas_est": "<100",
       "opcoes": null,
       "comentario": null,
       "acesso": {
@@ -28595,6 +28595,19 @@
       "comentario": null
     },
     {
+      "nome": "conv_private.ai_admin_briefing_propose",
+      "args": "p_session uuid, p jsonb",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
       "nome": "conv_private.ai_admin_broadcast_propose",
       "args": "p_session uuid, p jsonb",
       "retorno": "jsonb",
@@ -28609,6 +28622,19 @@
     },
     {
       "nome": "conv_private.ai_admin_dependent_propose",
+      "args": "p_session uuid, p jsonb",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.ai_admin_file_lookup",
       "args": "p_session uuid, p jsonb",
       "retorno": "jsonb",
       "linguagem": "plpgsql",
@@ -28686,6 +28712,45 @@
       "comentario": null
     },
     {
+      "nome": "conv_private.ai_admin_members",
+      "args": "p_session uuid",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.ai_admin_memories",
+      "args": "p_session uuid, p_subject text",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.ai_admin_memory_forget_propose",
+      "args": "p_session uuid, p jsonb",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
       "nome": "conv_private.ai_admin_message_propose",
       "args": "p_session uuid, p jsonb",
       "retorno": "jsonb",
@@ -28713,6 +28778,19 @@
     },
     {
       "nome": "conv_private.ai_admin_read",
+      "args": "p_session uuid, p_domain text, p_args jsonb",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.ai_admin_read_more",
       "args": "p_session uuid, p_domain text, p_args jsonb",
       "retorno": "jsonb",
       "linguagem": "plpgsql",
@@ -28881,6 +28959,19 @@
       "comentario": null
     },
     {
+      "nome": "conv_private.ai_confirm_pre_briefing_step",
+      "args": "p_proposal uuid, p_message uuid",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
       "nome": "conv_private.ai_confirm_pre_broadcast_step",
       "args": "p_proposal uuid, p_message uuid",
       "retorno": "jsonb",
@@ -28895,6 +28986,19 @@
     },
     {
       "nome": "conv_private.ai_confirm_pre_dependent_step",
+      "args": "p_proposal uuid, p_message uuid",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.ai_confirm_pre_memory_step",
       "args": "p_proposal uuid, p_message uuid",
       "retorno": "jsonb",
       "linguagem": "plpgsql",
@@ -29144,6 +29248,19 @@
       "nome": "conv_private.ai_recent_results",
       "args": "p_days integer",
       "retorno": "jsonb",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.ai_requester_title",
+      "args": "p_session uuid",
+      "retorno": "text",
       "linguagem": "sql",
       "tipo": "f",
       "security_definer": true,
@@ -29591,6 +29708,19 @@
       "security_definer": false,
       "search_path": "search_path=\"\"",
       "volatilidade": "i",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.briefing_list_names",
+      "args": "p_extra uuid, p_enabled boolean",
+      "retorno": "text",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
       "exec_anon": false,
       "exec_authenticated": false,
       "comentario": null
@@ -31741,6 +31871,19 @@
       "comentario": null
     },
     {
+      "nome": "public.conv_svc_ai_admin_briefing_propose",
+      "args": "p_session uuid, p jsonb",
+      "retorno": "jsonb",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
       "nome": "public.conv_svc_ai_admin_broadcast_propose",
       "args": "p_session uuid, p jsonb",
       "retorno": "jsonb",
@@ -31755,6 +31898,19 @@
     },
     {
       "nome": "public.conv_svc_ai_admin_dependent_propose",
+      "args": "p_session uuid, p jsonb",
+      "retorno": "jsonb",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "public.conv_svc_ai_admin_file",
       "args": "p_session uuid, p jsonb",
       "retorno": "jsonb",
       "linguagem": "sql",
@@ -31793,6 +31949,45 @@
       "comentario": null
     },
     {
+      "nome": "public.conv_svc_ai_admin_members",
+      "args": "p_session uuid",
+      "retorno": "jsonb",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "public.conv_svc_ai_admin_memories",
+      "args": "p_session uuid, p_subject text",
+      "retorno": "jsonb",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "public.conv_svc_ai_admin_memory_forget_propose",
+      "args": "p_session uuid, p jsonb",
+      "retorno": "jsonb",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
       "nome": "public.conv_svc_ai_admin_message_propose",
       "args": "p_session uuid, p jsonb",
       "retorno": "jsonb",
@@ -31820,6 +32015,19 @@
     },
     {
       "nome": "public.conv_svc_ai_admin_read",
+      "args": "p_session uuid, p_domain text, p_args jsonb",
+      "retorno": "jsonb",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "public.conv_svc_ai_admin_read_more",
       "args": "p_session uuid, p_domain text, p_args jsonb",
       "retorno": "jsonb",
       "linguagem": "sql",
@@ -32048,6 +32256,19 @@
       "security_definer": true,
       "search_path": "search_path=\"\"",
       "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "public.conv_svc_ai_requester_title",
+      "args": "p_session uuid",
+      "retorno": "text",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
       "exec_anon": false,
       "exec_authenticated": false,
       "comentario": null

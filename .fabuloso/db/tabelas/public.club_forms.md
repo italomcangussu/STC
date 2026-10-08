@@ -24,10 +24,8 @@
 - FK (created_by) → public.profiles(id) on delete set null
 - UNIQUE (slug)
 
-## Referenciada por
-- public.club_form_questions.form_id
-- public.club_form_responses.form_id
-- public.club_form_voter_receipts.form_id
+## Referenciada por (3)
+public.club_form_questions.form_id, public.club_form_responses.form_id, public.club_form_voter_receipts.form_id
 
 ## Índices
 - club_forms_slug_key: `btree (slug)` único

@@ -31,13 +31,8 @@
 - CHECK championship_registrations_shirt_size_check: `CHECK ((shirt_size = ANY (ARRAY['P'::text, 'M'::text, 'G'::text, 'GG'::text, 'XGG'::text])))`
 - CHECK valid_participant: `CHECK ((((participant_type = 'socio'::text) AND (user_id IS NOT NULL)) OR ((participant_type = 'guest'::text) AND (guest_name IS NOT NULL)) OR ((participant_type = 'aluno'::text) AND (student_id IS N…`
 
-## Referenciada por
-- public.championship_group_members.registration_id
-- public.championship_groups.seed_registration_id
-- public.matches.registration_a_id
-- public.matches.registration_b_id
-- public.matches.walkover_winner_registration_id
-- public.matches.winner_registration_id
+## Referenciada por (6)
+public.championship_group_members.registration_id, public.championship_groups.seed_registration_id, public.matches.registration_a_id, public.matches.registration_b_id, public.matches.walkover_winner_registration_id, public.matches.winner_registration_id
 
 ## Índices
 - idx_championship_registrations_championship: `btree (championship_id)`

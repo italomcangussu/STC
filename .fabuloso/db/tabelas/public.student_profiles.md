@@ -23,8 +23,8 @@
 - CHECK student_profiles_student_status_check: `CHECK ((student_status = ANY (ARRAY['active'::text, 'paused'::text, 'ended'::text])))`
 - CHECK student_profiles_technical_level_check: `CHECK ((technical_level = ANY (ARRAY['Iniciante'::text, 'Iniciante Avançado'::text, 'Intermediário'::text, 'Intermediário Avançado'::text, 'Avançado'::text])))`
 
-## Referenciada por
-- public.student_level_history.student_profile_id
+## Referenciada por (1)
+public.student_level_history.student_profile_id
 
 ## Índices
 - idx_student_profiles_non_socio_id: `btree (non_socio_student_id)` único

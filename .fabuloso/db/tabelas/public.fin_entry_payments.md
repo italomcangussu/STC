@@ -29,8 +29,8 @@
 - CHECK fin_entry_payments_kind_check: `CHECK ((kind = ANY (ARRAY['payment'::text, 'reversal'::text])))`
 - CHECK fin_entry_payments_note_check: `CHECK (((note IS NULL) OR (length(note) <= 500)))`
 
-## Referenciada por
-- public.fin_entry_payments.reverses_payment_id
+## Referenciada por (1)
+public.fin_entry_payments.reverses_payment_id
 
 ## Índices
 - fin_entry_payments_account_idx: `btree (account_id)`

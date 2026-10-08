@@ -14,8 +14,8 @@
 - PK (id)
 - FK (question_id) → public.club_form_questions(id) on delete cascade
 
-## Referenciada por
-- public.club_form_responses.option_id
+## Referenciada por (1)
+public.club_form_responses.option_id
 
 ## Índices
 - idx_club_form_options_question_order: `btree (question_id, display_order)`

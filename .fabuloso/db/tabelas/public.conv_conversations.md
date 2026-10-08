@@ -39,14 +39,8 @@
 - CHECK conv_conversations_status_check: `CHECK ((status = ANY (ARRAY['open'::text, 'closed'::text])))`
 - CHECK conv_conversations_tags_check: `CHECK ((cardinality(tags) <= 12))`
 
-## Referenciada por
-- public.conv_ai_decisions.conversation_id
-- public.conv_ai_sessions.conversation_id
-- public.conv_booking_proposals.conversation_id
-- public.conv_conversations.merged_into
-- public.conv_followups.conversation_id
-- public.conv_messages.conversation_id
-- public.conv_notes.conversation_id
+## Referenciada por (7)
+public.conv_ai_decisions.conversation_id, public.conv_ai_sessions.conversation_id, public.conv_booking_proposals.conversation_id, public.conv_conversations.merged_into, public.conv_followups.conversation_id, public.conv_messages.conversation_id, public.conv_notes.conversation_id
 
 ## Índices
 - conv_conversations_contact_idx: `btree (contact_id)`

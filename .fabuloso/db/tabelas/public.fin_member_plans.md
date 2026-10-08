@@ -33,9 +33,8 @@
 - CHECK fin_member_plans_period_months_check: `CHECK ((period_months = ANY (ARRAY[1, 3, 6, 12])))`
 - CHECK fin_member_plans_status_check: `CHECK ((status = ANY (ARRAY['active'::text, 'paused'::text, 'ended'::text])))`
 
-## Referenciada por
-- public.fin_member_charges.plan_id
-- public.fin_member_plan_prices.plan_id
+## Referenciada por (2)
+public.fin_member_charges.plan_id, public.fin_member_plan_prices.plan_id
 
 ## Índices
 - fin_member_plans_one_live: `btree (profile_id) WHERE (status <> 'ended'::text)` único

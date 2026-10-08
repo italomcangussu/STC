@@ -26,8 +26,8 @@
 - FK (match_id) → public.matches(id)
 - FK (reservation_id) → public.reservations(id)
 
-## Referenciada por
-- public.reservations.challenge_id
+## Referenciada por (1)
+public.reservations.challenge_id
 
 ## Índices
 - idx_challenges_notification: `btree (challenged_id, notification_seen) WHERE (notification_seen = false)`

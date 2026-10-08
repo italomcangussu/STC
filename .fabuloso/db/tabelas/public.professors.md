@@ -16,11 +16,8 @@
 - PK (id)
 - FK (user_id) → public.profiles(id)
 
-## Referenciada por
-- public.non_socio_students.professor_id
-- public.reservations.professor_id
-- public.student_profiles.professor_id
-- public.students.professor_id
+## Referenciada por (4)
+public.non_socio_students.professor_id, public.reservations.professor_id, public.student_profiles.professor_id, public.students.professor_id
 
 ## Políticas RLS
 - "Admins can manage professors" — ALL para public · using `(EXISTS ( SELECT 1 FROM profiles WHERE ((profiles.id = auth.uid()) AND ((profiles.role)::text = 'admin'::text))))`

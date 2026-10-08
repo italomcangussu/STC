@@ -14,9 +14,8 @@
 - PK (id)
 - UNIQUE (modelo_canonico)
 
-## Referenciada por
-- public.tabela_familia_iphone_map.modelo_canonico
-- public.tabela_sinonimo_modelo.modelo_canonico
+## Referenciada por (2)
+public.tabela_familia_iphone_map.modelo_canonico, public.tabela_sinonimo_modelo.modelo_canonico
 
 ## Índices
 - idx_modelos_familia: `btree (familia)`

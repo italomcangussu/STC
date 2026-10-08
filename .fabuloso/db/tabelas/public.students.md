@@ -17,8 +17,8 @@
 - PK (id)
 - FK (professor_id) → public.professors(id)
 
-## Referenciada por
-- public.reservations.student_id
+## Referenciada por (1)
+public.reservations.student_id
 
 ## Políticas RLS
 - (RLS desligado)

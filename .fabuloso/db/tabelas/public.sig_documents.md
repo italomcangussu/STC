@@ -46,13 +46,8 @@
 - CHECK sig_documents_title_check: `CHECK (((char_length(btrim(title)) >= 3) AND (char_length(btrim(title)) <= 160)))`
 - CHECK sig_documents_version_check: `CHECK ((version >= 1))`
 
-## Referenciada por
-- public.sig_documents.replaces_id
-- public.sig_events.document_id
-- public.sig_notifications.document_id
-- public.sig_recipients.document_id
-- public.sig_signatures.document_id
-- sig_private.challenges.document_id
+## Referenciada por (6)
+public.sig_documents.replaces_id, public.sig_events.document_id, public.sig_notifications.document_id, public.sig_recipients.document_id, public.sig_signatures.document_id, sig_private.challenges.document_id
 
 ## Índices
 - sig_documents_replaces_idx: `btree (replaces_id) WHERE (replaces_id IS NOT NULL)`

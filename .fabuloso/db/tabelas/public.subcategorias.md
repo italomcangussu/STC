@@ -12,8 +12,8 @@
 - PK (id)
 - UNIQUE (categoria_id, nome)
 
-## Referenciada por
-- public.servicos.subcategoria_id
+## Referenciada por (1)
+public.servicos.subcategoria_id
 
 ## Índices
 - subcategorias_categoria_id_nome_key: `btree (categoria_id, nome)` único

@@ -20,8 +20,8 @@
 - PK (id)
 - FK (championship_id) → public.championships(id) on delete cascade
 
-## Referenciada por
-- public.matches.round_id
+## Referenciada por (1)
+public.matches.round_id
 
 ## Índices
 - uidx_championship_rounds_champ_class_number: `btree (championship_id, class, round_number)` único

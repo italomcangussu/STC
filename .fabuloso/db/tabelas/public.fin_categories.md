@@ -30,11 +30,8 @@
 - CHECK fin_categories_kind_check: `CHECK ((kind = ANY (ARRAY['expense'::text, 'revenue'::text])))`
 - CHECK fin_categories_name_check: `CHECK (((length(TRIM(BOTH FROM name)) >= 2) AND (length(TRIM(BOTH FROM name)) <= 60)))`
 
-## Referenciada por
-- public.fin_categories.parent_id
-- public.fin_entries.category_id
-- public.fin_member_charges.category_id
-- public.fin_recurrences.category_id
+## Referenciada por (4)
+public.fin_categories.parent_id, public.fin_entries.category_id, public.fin_member_charges.category_id, public.fin_recurrences.category_id
 
 ## Índices
 - fin_categories_name_key: `btree (COALESCE(parent_id, '00000000-0000-0000-0000-000000000000'::uuid), lower(name))` único

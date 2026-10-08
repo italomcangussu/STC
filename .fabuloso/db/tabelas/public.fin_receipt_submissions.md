@@ -55,11 +55,8 @@
 - CHECK fin_receipt_submissions_source_check: `CHECK ((source = ANY (ARRAY['app'::text, 'whatsapp'::text])))`
 - CHECK fin_receipt_submissions_status_check: `CHECK ((status = ANY (ARRAY['submitted'::text, 'in_review'::text, 'approved'::text, 'rejected'::text, 'superseded'::text])))`
 
-## Referenciada por
-- public.fin_charge_payments.submission_id
-- public.fin_receipt_charges.submission_id
-- public.fin_receipt_submissions.duplicate_of
-- public.fin_receipt_submissions.superseded_by
+## Referenciada por (4)
+public.fin_charge_payments.submission_id, public.fin_receipt_charges.submission_id, public.fin_receipt_submissions.duplicate_of, public.fin_receipt_submissions.superseded_by
 
 ## Índices
 - fin_receipt_submissions_hash_idx: `btree (content_sha256)`

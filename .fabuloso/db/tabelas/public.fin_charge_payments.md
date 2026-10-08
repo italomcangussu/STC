@@ -45,9 +45,8 @@
 - CHECK fin_charge_payments_note_check: `CHECK (((note IS NULL) OR (length(note) <= 500)))`
 - CHECK fin_charge_payments_principal_cents_check: `CHECK ((principal_cents >= 0))`
 
-## Referenciada por
-- public.fin_charge_payments.reverses_payment_id
-- public.fin_member_credits.source_payment_id
+## Referenciada por (2)
+public.fin_charge_payments.reverses_payment_id, public.fin_member_credits.source_payment_id
 
 ## Índices
 - fin_charge_payments_charge_idx: `btree (charge_id)`

@@ -37,8 +37,8 @@
 - PK (id)
 - FK (store_id) → public.stores(id)
 
-## Referenciada por
-- public.consumptions.product_id
+## Referenciada por (1)
+public.consumptions.product_id
 
 ## Índices
 - idx_products_brand: `btree (brand)`

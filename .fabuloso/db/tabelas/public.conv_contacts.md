@@ -31,14 +31,8 @@
 - CHECK conv_contacts_name_check: `CHECK (((name IS NULL) OR (length(name) <= 200)))`
 - CHECK conv_contacts_phone_check: `CHECK (((phone IS NULL) OR (phone ~ '^[1-9][0-9]{9,14}$'::text)))`
 
-## Referenciada por
-- public.conv_ai_sessions.requester_contact_id
-- public.conv_automation_recipients.contact_id
-- public.conv_booking_proposals.confirmed_by_contact_id
-- public.conv_booking_proposals.requester_contact_id
-- public.conv_contacts.merged_into
-- public.conv_conversations.contact_id
-- public.conv_messages.sender_contact_id
+## Referenciada por (7)
+public.conv_ai_sessions.requester_contact_id, public.conv_automation_recipients.contact_id, public.conv_booking_proposals.confirmed_by_contact_id, public.conv_booking_proposals.requester_contact_id, public.conv_contacts.merged_into, public.conv_conversations.contact_id, public.conv_messages.sender_contact_id
 
 ## Índices
 - conv_contacts_lid_uidx: `btree (lid) WHERE (lid IS NOT NULL)` único

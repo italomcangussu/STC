@@ -35,10 +35,8 @@
 - CHECK conv_automations_status_check: `CHECK ((status = ANY (ARRAY['draft'::text, 'active'::text, 'paused'::text, 'ended'::text])))`
 - CHECK conv_automations_trigger_type_check: `CHECK ((trigger_type = ANY (ARRAY['scheduled'::text, 'conditional'::text, 'event'::text, 'manual'::text])))`
 
-## Referenciada por
-- public.conv_automation_recipients.automation_id
-- public.conv_automation_runs.automation_id
-- public.conv_automation_versions.automation_id
+## Referenciada por (3)
+public.conv_automation_recipients.automation_id, public.conv_automation_runs.automation_id, public.conv_automation_versions.automation_id
 
 ## Políticas RLS
 - "conv_automations_admin_read" — SELECT para authenticated · using `is_admin()`

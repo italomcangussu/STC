@@ -43,8 +43,8 @@
 - CHECK sig_signatures_chain_hash_check: `CHECK ((chain_hash ~ '^[0-9a-f]{64}$'::text))`
 - CHECK sig_signatures_evidence_hash_check: `CHECK ((evidence_hash ~ '^[0-9a-f]{64}$'::text))`
 
-## Referenciada por
-- public.sig_recipients.signature_id
+## Referenciada por (1)
+public.sig_recipients.signature_id
 
 ## Índices
 - sig_signatures_document_id_profile_id_key: `btree (document_id, profile_id)` único

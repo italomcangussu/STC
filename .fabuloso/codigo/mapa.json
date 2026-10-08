@@ -1,0 +1,3809 @@
+{
+ "versao": 1,
+ "roteador": null,
+ "rotas": [],
+ "contexts": [
+  {
+   "nome": "AdminEmbedContext",
+   "arquivo": "components/admin/AdminEmbedContext.tsx",
+   "provedor": "AdminEmbedProvider",
+   "montadoEm": [
+    "components/AdminPanel.tsx"
+   ],
+   "gancho": "useAdminEmbedded",
+   "consumidores": 8
+  },
+  {
+   "nome": "AuthContext",
+   "arquivo": "contexts/AuthContext.tsx",
+   "provedor": "AuthProvider",
+   "montadoEm": [
+    "App.tsx"
+   ],
+   "gancho": "useAuth",
+   "consumidores": 7
+  },
+  {
+   "nome": "ConfirmContext",
+   "arquivo": "hooks/useConfirm.ts",
+   "provedor": "ConfirmProvider",
+   "montadoEm": [
+    "App.tsx"
+   ],
+   "gancho": "useConfirm",
+   "consumidores": 27
+  },
+  {
+   "nome": "Ctx",
+   "arquivo": "components/finance/FinanceContext.tsx",
+   "provedor": "FinanceProvider",
+   "montadoEm": [
+    "components/finance/FinanceHub.tsx"
+   ],
+   "gancho": "useFinance",
+   "consumidores": 14
+  }
+ ],
+ "stores": [],
+ "hooks": [
+  {
+   "nome": "useConfirm",
+   "arquivo": "hooks/useConfirm.ts",
+   "usos": 26,
+   "dados": "—"
+  },
+  {
+   "nome": "useAsync",
+   "arquivo": "components/finance/hooks.ts",
+   "usos": 18,
+   "dados": "—"
+  },
+  {
+   "nome": "useFinance",
+   "arquivo": "components/finance/FinanceContext.tsx",
+   "usos": 13,
+   "dados": "—"
+  },
+  {
+   "nome": "useToday",
+   "arquivo": "components/finance/hooks.ts",
+   "usos": 13,
+   "dados": "—"
+  },
+  {
+   "nome": "useRequestKey",
+   "arquivo": "components/finance/hooks.ts",
+   "usos": 10,
+   "dados": "—"
+  },
+  {
+   "nome": "useAdminEmbedded",
+   "arquivo": "components/admin/AdminEmbedContext.tsx",
+   "usos": 7,
+   "dados": "—"
+  },
+  {
+   "nome": "useAuth",
+   "arquivo": "contexts/AuthContext.tsx",
+   "usos": 6,
+   "dados": "—"
+  },
+  {
+   "nome": "useLiveRefresh",
+   "arquivo": "hooks/useLiveRefresh.ts",
+   "usos": 4,
+   "dados": "—"
+  },
+  {
+   "nome": "useAdminPending",
+   "arquivo": "components/admin/useAdminPending.ts",
+   "usos": 1,
+   "dados": "—"
+  },
+  {
+   "nome": "useAgendaRealtime",
+   "arquivo": "hooks/useAgendaRealtime.ts",
+   "usos": 1,
+   "dados": "—"
+  },
+  {
+   "nome": "useAI",
+   "arquivo": "components/TenisProPlayer/engine/useAI.ts",
+   "usos": 1,
+   "dados": "—"
+  },
+  {
+   "nome": "useBallPhysics",
+   "arquivo": "components/TenisProPlayer/engine/useBallPhysics.ts",
+   "usos": 1,
+   "dados": "—"
+  },
+  {
+   "nome": "useChatOverlay",
+   "arquivo": "components/conversations/useChatOverlay.ts",
+   "usos": 1,
+   "dados": "—"
+  },
+  {
+   "nome": "useOrientation",
+   "arquivo": "components/TenisProPlayer/engine/useOrientation.ts",
+   "usos": 1,
+   "dados": "—"
+  },
+  {
+   "nome": "usePendingSignatures",
+   "arquivo": "lib/signatures/usePendingSignatures.ts",
+   "usos": 1,
+   "dados": "—"
+  },
+  {
+   "nome": "usePlayerInput",
+   "arquivo": "components/TenisProPlayer/engine/usePlayerInput.ts",
+   "usos": 1,
+   "dados": "—"
+  },
+  {
+   "nome": "useScoring",
+   "arquivo": "components/TenisProPlayer/engine/useScoring.ts",
+   "usos": 1,
+   "dados": "—"
+  },
+  {
+   "nome": "useSounds",
+   "arquivo": "components/TenisProPlayer/engine/useSounds.ts",
+   "usos": 1,
+   "dados": "—"
+  },
+  {
+   "nome": "useVersionCheck",
+   "arquivo": "hooks/useVersionCheck.ts",
+   "usos": 1,
+   "dados": "—"
+  },
+  {
+   "nome": "useChallenges",
+   "arquivo": "hooks/useChallenges.ts",
+   "usos": 0,
+   "dados": "challenges(s,i,u) head_to_head_points(s) matches(s) profiles(s) · rpc get_ranking_cycle_start"
+  },
+  {
+   "nome": "useLatest",
+   "arquivo": "components/signatures/PdfReader.tsx",
+   "usos": 0,
+   "dados": "—"
+  },
+  {
+   "nome": "useMediaQuery",
+   "arquivo": "components/conversations/useChatOverlay.ts",
+   "usos": 0,
+   "dados": "—"
+  },
+  {
+   "nome": "useRealtimeSubscription",
+   "arquivo": "hooks/useRealtimeSubscription.ts",
+   "usos": 0,
+   "dados": "—"
+  },
+  {
+   "nome": "useRealtimeSubscriptions",
+   "arquivo": "hooks/useRealtimeSubscription.ts",
+   "usos": 0,
+   "dados": "—"
+  },
+  {
+   "nome": "useReservations",
+   "arquivo": "hooks/useReservations.ts",
+   "usos": 0,
+   "dados": "courts(s) profiles(s) reservations(s,i,u)"
+  },
+  {
+   "nome": "useStandardModal",
+   "arquivo": "components/StandardModal.tsx",
+   "usos": 0,
+   "dados": "—"
+  }
+ ],
+ "componentes": [
+  {
+   "nome": "Spinner",
+   "arquivo": "components/finance/ui.tsx",
+   "usos": 19,
+   "ui": false
+  },
+  {
+   "nome": "Notice",
+   "arquivo": "components/finance/ui.tsx",
+   "usos": 18,
+   "ui": false
+  },
+  {
+   "nome": "Card",
+   "arquivo": "components/finance/ui.tsx",
+   "usos": 17,
+   "ui": false
+  },
+  {
+   "nome": "Badge",
+   "arquivo": "components/finance/ui.tsx",
+   "usos": 16,
+   "ui": false
+  },
+  {
+   "nome": "Empty",
+   "arquivo": "components/finance/ui.tsx",
+   "usos": 16,
+   "ui": false
+  },
+  {
+   "nome": "Sheet",
+   "arquivo": "components/ui/Sheet.tsx",
+   "usos": 15,
+   "ui": true
+  },
+  {
+   "nome": "StandardModal",
+   "arquivo": "components/StandardModal.tsx",
+   "usos": 15,
+   "ui": false
+  },
+  {
+   "nome": "Field",
+   "arquivo": "components/finance/ui.tsx",
+   "usos": 14,
+   "ui": false
+  },
+  {
+   "nome": "ErrorBlock",
+   "arquivo": "components/finance/ui.tsx",
+   "usos": 13,
+   "ui": false
+  },
+  {
+   "nome": "Row",
+   "arquivo": "components/finance/ui.tsx",
+   "usos": 12,
+   "ui": false
+  },
+  {
+   "nome": "SectionTabs",
+   "arquivo": "components/finance/ui.tsx",
+   "usos": 10,
+   "ui": false
+  },
+  {
+   "nome": "MoneyInput",
+   "arquivo": "components/finance/ui.tsx",
+   "usos": 9,
+   "ui": false
+  },
+  {
+   "nome": "Notice",
+   "arquivo": "components/signatures/ui.tsx",
+   "usos": 7,
+   "ui": false
+  },
+  {
+   "nome": "Button",
+   "arquivo": "components/conversations/ui.tsx",
+   "usos": 6,
+   "ui": false
+  },
+  {
+   "nome": "InlineAlert",
+   "arquivo": "components/conversations/ui.tsx",
+   "usos": 6,
+   "ui": false
+  },
+  {
+   "nome": "Spinner",
+   "arquivo": "components/signatures/ui.tsx",
+   "usos": 6,
+   "ui": false
+  },
+  {
+   "nome": "ExportButtons",
+   "arquivo": "components/finance/ui.tsx",
+   "usos": 5,
+   "ui": false
+  },
+  {
+   "nome": "AdminPageHeader",
+   "arquivo": "components/admin/ui.tsx",
+   "usos": 4,
+   "ui": false
+  },
+  {
+   "nome": "AdminSearch",
+   "arquivo": "components/admin/ui.tsx",
+   "usos": 4,
+   "ui": false
+  },
+  {
+   "nome": "Badge",
+   "arquivo": "components/signatures/ui.tsx",
+   "usos": 4,
+   "ui": false
+  },
+  {
+   "nome": "Money",
+   "arquivo": "components/finance/ui.tsx",
+   "usos": 4,
+   "ui": false
+  },
+  {
+   "nome": "PeriodBar",
+   "arquivo": "components/finance/ui.tsx",
+   "usos": 4,
+   "ui": false
+  },
+  {
+   "nome": "Avatar",
+   "arquivo": "components/conversations/ConversationCard.tsx",
+   "usos": 3,
+   "ui": false
+  },
+  {
+   "nome": "BracketView",
+   "arquivo": "components/BracketView.tsx",
+   "usos": 3,
+   "ui": false
+  },
+  {
+   "nome": "ChargeStatusBadge",
+   "arquivo": "components/finance/ui.tsx",
+   "usos": 3,
+   "ui": false
+  },
+  {
+   "nome": "GroupStandingsCard",
+   "arquivo": "components/GroupStandingsCard.tsx",
+   "usos": 3,
+   "ui": false
+  },
+  {
+   "nome": "LoadingSpinner",
+   "arquivo": "components/conversations/ui.tsx",
+   "usos": 3,
+   "ui": false
+  },
+  {
+   "nome": "ResenhaOpenBracketView",
+   "arquivo": "components/ResenhaOpenBracketView.tsx",
+   "usos": 3,
+   "ui": false
+  },
+  {
+   "nome": "ResenhaOpenTournamentBoard",
+   "arquivo": "components/ResenhaOpenTournamentBoard.tsx",
+   "usos": 3,
+   "ui": false
+  },
+  {
+   "nome": "StandingsDetailModal",
+   "arquivo": "components/StandingsDetailModal.tsx",
+   "usos": 3,
+   "ui": false
+  },
+  {
+   "nome": "AdminEmpty",
+   "arquivo": "components/admin/ui.tsx",
+   "usos": 2,
+   "ui": false
+  },
+  {
+   "nome": "AdminField",
+   "arquivo": "components/admin/ui.tsx",
+   "usos": 2,
+   "ui": false
+  },
+  {
+   "nome": "AiTab",
+   "arquivo": "components/conversations/AiTab.tsx",
+   "usos": 2,
+   "ui": false
+  },
+  {
+   "nome": "AutomationsTab",
+   "arquivo": "components/conversations/AutomationsTab.tsx",
+   "usos": 2,
+   "ui": false
+  },
+  {
+   "nome": "BasisTag",
+   "arquivo": "components/finance/ui.tsx",
+   "usos": 2,
+   "ui": false
+  },
+  {
+   "nome": "ChampionshipOddsSimulator",
+   "arquivo": "components/ChampionshipOddsSimulator.tsx",
+   "usos": 2,
+   "ui": false
+  },
+  {
+   "nome": "ChampionshipStatistics",
+   "arquivo": "components/ChampionshipStatistics.tsx",
+   "usos": 2,
+   "ui": false
+  },
+  {
+   "nome": "ChannelTab",
+   "arquivo": "components/conversations/ChannelTab.tsx",
+   "usos": 2,
+   "ui": false
+  },
+  {
+   "nome": "ChipGroup",
+   "arquivo": "components/admin/ui.tsx",
+   "usos": 2,
+   "ui": false
+  },
+  {
+   "nome": "EntriesTab",
+   "arquivo": "components/finance/tabs/entries/EntriesTab.tsx",
+   "usos": 2,
+   "ui": false
+  },
+  {
+   "nome": "FinanceHub",
+   "arquivo": "components/finance/FinanceHub.tsx",
+   "usos": 2,
+   "ui": false
+  },
+  {
+   "nome": "InboxTab",
+   "arquivo": "components/conversations/InboxTab.tsx",
+   "usos": 2,
+   "ui": false
+  },
+  {
+   "nome": "LiveScoreboard",
+   "arquivo": "components/LiveScoreboard.tsx",
+   "usos": 2,
+   "ui": false
+  },
+  {
+   "nome": "MatchScheduleModal",
+   "arquivo": "components/MatchScheduleModal.tsx",
+   "usos": 2,
+   "ui": false
+  },
+  {
+   "nome": "ReceiptButton",
+   "arquivo": "components/signatures/ReceiptButton.tsx",
+   "usos": 2,
+   "ui": false
+  },
+  {
+   "nome": "StatCard",
+   "arquivo": "components/finance/ui.tsx",
+   "usos": 2,
+   "ui": false
+  },
+  {
+   "nome": "StatTile",
+   "arquivo": "components/admin/ui.tsx",
+   "usos": 2,
+   "ui": false
+  },
+  {
+   "nome": "SuperSet",
+   "arquivo": "components/SuperSet.tsx",
+   "usos": 2,
+   "ui": false
+  },
+  {
+   "nome": "Toggle",
+   "arquivo": "components/creator/Toggle.tsx",
+   "usos": 2,
+   "ui": false
+  },
+  {
+   "nome": "TournamentBracketView",
+   "arquivo": "components/TournamentBracketView.tsx",
+   "usos": 2,
+   "ui": false
+  },
+  {
+   "nome": "AccountsTab",
+   "arquivo": "components/finance/tabs/AccountsTab.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "AdminDocuments",
+   "arquivo": "components/signatures/admin/AdminDocuments.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "AdminEmbedProvider",
+   "arquivo": "components/admin/AdminEmbedContext.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "AdminForms",
+   "arquivo": "components/AdminForms.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "AdminLogin",
+   "arquivo": "components/AdminLogin.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "AdminMatchCreator",
+   "arquivo": "components/AdminMatchCreator.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "AdminNav",
+   "arquivo": "components/admin/AdminNav.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "AdminPending",
+   "arquivo": "components/admin/AdminPending.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "AdminProfessors",
+   "arquivo": "components/AdminProfessors.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "AdminProtect",
+   "arquivo": "components/AdminProtect.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "AdminPushPermissionBanner",
+   "arquivo": "components/conversations/AdminPushPermissionBanner.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "AdminRules",
+   "arquivo": "components/AdminRules.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "AdminSearchBox",
+   "arquivo": "components/admin/AdminNav.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "AdminSectionHeading",
+   "arquivo": "components/admin/AdminNav.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "AdminStudents",
+   "arquivo": "components/AdminStudents.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "AdminUserEditor",
+   "arquivo": "components/AdminUserEditor.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "Agenda",
+   "arquivo": "components/Agenda.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "App",
+   "arquivo": "App.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "AppSettings",
+   "arquivo": "components/AppSettings.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "Athletes",
+   "arquivo": "components/Athletes.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "AudioPlayer",
+   "arquivo": "components/conversations/AudioPlayer.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "AudioRecorder",
+   "arquivo": "components/conversations/AudioRecorder.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "Auth",
+   "arquivo": "components/Auth.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "AuthProvider",
+   "arquivo": "contexts/AuthContext.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "Ball",
+   "arquivo": "components/TenisProPlayer/components/Ball.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "BatchApproveSheet",
+   "arquivo": "components/finance/tabs/ReceiptsBatch.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "BillsTab",
+   "arquivo": "components/finance/tabs/BillsTab.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "BracketEditor",
+   "arquivo": "components/creator/BracketEditor.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "CashFlowTab",
+   "arquivo": "components/finance/tabs/CashFlowTab.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "CategoriesTab",
+   "arquivo": "components/finance/tabs/CategoriesTab.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "ChallengeNotificationPopup",
+   "arquivo": "components/ChallengeNotificationPopup.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "ChallengesView",
+   "arquivo": "components/Challenges.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "ChampionshipAdmin",
+   "arquivo": "components/ChampionshipAdmin.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "ChampionshipInProgress",
+   "arquivo": "components/ChampionshipInProgress.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "ChampionshipMatchActionModal",
+   "arquivo": "components/ChampionshipMatchActionModal.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "Championships",
+   "arquivo": "components/Championships.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "CodeSheet",
+   "arquivo": "components/signatures/CodeSheet.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "Composer",
+   "arquivo": "components/conversations/Composer.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "ConfirmDialog",
+   "arquivo": "components/ui/ConfirmDialog.tsx",
+   "usos": 1,
+   "ui": true
+  },
+  {
+   "nome": "ConfirmProvider",
+   "arquivo": "components/ui/ConfirmProvider.tsx",
+   "usos": 1,
+   "ui": true
+  },
+  {
+   "nome": "ContactPanel",
+   "arquivo": "components/conversations/ContactPanel.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "ConversationCard",
+   "arquivo": "components/conversations/ConversationCard.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "ConversationsHub",
+   "arquivo": "components/conversations/ConversationsHub.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "ConversationsStandalonePage",
+   "arquivo": "components/conversations/ConversationsStandalonePage.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "Court",
+   "arquivo": "components/TenisProPlayer/components/Court.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "CreatorFormat",
+   "arquivo": "components/creator/CreatorFormat.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "CreatorRegistration",
+   "arquivo": "components/creator/CreatorRegistration.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "CreatorSetup",
+   "arquivo": "components/creator/CreatorSetup.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "Dashboard",
+   "arquivo": "components/Dashboard.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "DocumentDetail",
+   "arquivo": "components/signatures/admin/DocumentDetail.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "DocumentForm",
+   "arquivo": "components/signatures/admin/DocumentForm.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "DocumentSigning",
+   "arquivo": "components/signatures/DocumentSigning.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "DreTab",
+   "arquivo": "components/finance/tabs/DreTab.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "EditProfileModal",
+   "arquivo": "components/EditProfileModal.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "EntrySheet",
+   "arquivo": "components/finance/tabs/entries/EntrySheets.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "FinanceProvider",
+   "arquivo": "components/finance/FinanceContext.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "ForwardDialog",
+   "arquivo": "components/conversations/ConversationDialogs.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "GroupDrawEditor",
+   "arquivo": "components/creator/GroupDrawEditor.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "GroupDrawPage",
+   "arquivo": "components/GroupDrawPage.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "HUD",
+   "arquivo": "components/TenisProPlayer/ui/HUD.tsx",
+   "usos": 1,
+   "ui": true
+  },
+  {
+   "nome": "ImageViewer",
+   "arquivo": "components/conversations/ConversationDialogs.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "InfoTooltip",
+   "arquivo": "components/ui/Tooltip.tsx",
+   "usos": 1,
+   "ui": true
+  },
+  {
+   "nome": "KnockoutFromGroups",
+   "arquivo": "components/creator/KnockoutFromGroups.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "Layout",
+   "arquivo": "components/Layout.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "LoadingButton",
+   "arquivo": "components/ui/LoadingStates.tsx",
+   "usos": 1,
+   "ui": true
+  },
+  {
+   "nome": "LoadingOverlay",
+   "arquivo": "components/ui/LoadingStates.tsx",
+   "usos": 1,
+   "ui": true
+  },
+  {
+   "nome": "MatchExportPreview",
+   "arquivo": "components/MatchExportPreview.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "MatchGenerationModal",
+   "arquivo": "components/MatchGenerationModal.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "MemberFinance",
+   "arquivo": "components/finance/MemberFinance.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "MembersTab",
+   "arquivo": "components/finance/tabs/MembersTab.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "MessageBubble",
+   "arquivo": "components/conversations/MessageBubble.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "NewConversationDialog",
+   "arquivo": "components/conversations/ConversationDialogs.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "NewEntrySheet",
+   "arquivo": "components/finance/tabs/entries/EntrySheets.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "OnboardingModal",
+   "arquivo": "components/OnboardingModal.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "OverviewTab",
+   "arquivo": "components/finance/tabs/OverviewTab.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "PdfReader",
+   "arquivo": "components/signatures/PdfReader.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "PendenciesTab",
+   "arquivo": "components/finance/tabs/PendenciesTab.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "PendencyRulesSection",
+   "arquivo": "components/finance/tabs/PendencyRulesSection.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "PhasePointsEditor",
+   "arquivo": "components/admin/PhasePointsEditor.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "PlayerModel",
+   "arquivo": "components/TenisProPlayer/components/PlayerModel.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "PointOverlay",
+   "arquivo": "components/TenisProPlayer/ui/PointOverlay.tsx",
+   "usos": 1,
+   "ui": true
+  },
+  {
+   "nome": "PublicChampionshipPage",
+   "arquivo": "components/PublicChampionshipPage.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "PublicFormPage",
+   "arquivo": "components/PublicFormPage.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "PushPermissionPrompt",
+   "arquivo": "components/PushPermissionPrompt.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "QuickRepliesDialog",
+   "arquivo": "components/conversations/ConversationDialogs.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "QuickReplyMenu",
+   "arquivo": "components/conversations/ConversationDialogs.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "Ranking",
+   "arquivo": "components/Ranking.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "ReceiptsTab",
+   "arquivo": "components/finance/tabs/ReceiptsTab.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "ReceivablesTab",
+   "arquivo": "components/finance/tabs/ReceivablesTab.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "RecurrencesTab",
+   "arquivo": "components/finance/tabs/RecurrencesTab.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "ResultModal",
+   "arquivo": "components/Championships.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "ScoreModal",
+   "arquivo": "components/ScoreModal.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "SettingsTab",
+   "arquivo": "components/finance/tabs/SettingsTab.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "Stadium",
+   "arquivo": "components/TenisProPlayer/components/Stadium.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "StatusPill",
+   "arquivo": "components/admin/ui.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "Step",
+   "arquivo": "components/signatures/ui.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "StudentsTab",
+   "arquivo": "components/finance/tabs/StudentsTab.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "TenisProPlayer",
+   "arquivo": "components/TenisProPlayer/index.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "TennisCourtAnimation",
+   "arquivo": "components/ui/TennisCourtAnimation.tsx",
+   "usos": 1,
+   "ui": true
+  },
+  {
+   "nome": "TouchControls",
+   "arquivo": "components/TenisProPlayer/ui/TouchControls.tsx",
+   "usos": 1,
+   "ui": true
+  },
+  {
+   "nome": "UpdateNotification",
+   "arquivo": "components/UpdateNotification.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "AccountSheet",
+   "arquivo": "components/finance/tabs/AccountsTab.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "AccountsTab",
+   "arquivo": "components/finance/FinanceHub.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "AcessosTab",
+   "arquivo": "components/AdminPanel.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "ActionButton",
+   "arquivo": "components/AppSettings.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "AddReservationModal",
+   "arquivo": "components/Agenda.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "AdminDocuments",
+   "arquivo": "components/AdminPanel.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "AdminForms",
+   "arquivo": "App.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "AdminMatchResultModal",
+   "arquivo": "components/Championships.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "AdminPanel",
+   "arquivo": "App.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "AdminPanel",
+   "arquivo": "components/AdminPanel.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "AdminProfessors",
+   "arquivo": "App.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "AdminReports",
+   "arquivo": "components/AdminReports.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "AdminResultActionsModal",
+   "arquivo": "components/ChampionshipInProgress.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "AdminStudents",
+   "arquivo": "App.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "AgendaFilters",
+   "arquivo": "components/AgendaFilters.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "AiChannelCard",
+   "arquivo": "components/conversations/ChannelTab.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "AiControl",
+   "arquivo": "components/conversations/InboxTab.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "AiTab",
+   "arquivo": "components/conversations/ConversationsHub.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "AiTab",
+   "arquivo": "components/conversations/ConversationsStandalonePage.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "AnnouncementPopup",
+   "arquivo": "App.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "AnunciosTab",
+   "arquivo": "components/AdminPanel.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "AppContent",
+   "arquivo": "App.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "AppSettings",
+   "arquivo": "App.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "AthleteProfile",
+   "arquivo": "components/Athletes.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "AthleteRow",
+   "arquivo": "components/ChampionshipStatistics.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "AthleteSelect",
+   "arquivo": "components/ChampionshipOddsSimulator.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "AuditSection",
+   "arquivo": "components/finance/tabs/SettingsTab.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "AutomationsTab",
+   "arquivo": "components/conversations/ConversationsHub.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "AutomationsTab",
+   "arquivo": "components/conversations/ConversationsStandalonePage.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "AvatarPreview",
+   "arquivo": "components/AdminUserEditor.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "Badge",
+   "arquivo": "components/admin/AdminNav.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "BalanceExport",
+   "arquivo": "components/finance/tabs/CashFlowTab.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "BillsTab",
+   "arquivo": "components/finance/FinanceHub.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "BracketClassSwitch",
+   "arquivo": "components/ResenhaOpenTournamentBoard.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "BracketMatchCard",
+   "arquivo": "components/Championships.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "BracketMatchCard",
+   "arquivo": "components/ResenhaOpenTournamentBoard.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "BracketSelect",
+   "arquivo": "components/creator/CreatorFormat.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "CalendarIcon",
+   "arquivo": "components/Agenda.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "Card",
+   "arquivo": "components/signatures/admin/AdminDocuments.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "CashFlowTab",
+   "arquivo": "components/finance/FinanceHub.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "CATEGORIES",
+   "arquivo": "components/AdminRules.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "CategoriesTab",
+   "arquivo": "components/finance/FinanceHub.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "CategorySheet",
+   "arquivo": "components/finance/tabs/CategoriesTab.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "ChallengeResultsModal",
+   "arquivo": "components/Challenges.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "ChallengeRulesExplainer",
+   "arquivo": "components/ChallengeRulesExplainer.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "ChampionshipAdmin",
+   "arquivo": "App.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "ChampionshipCreator",
+   "arquivo": "App.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "ChampionshipCreator",
+   "arquivo": "components/ChampionshipCreator.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "ChannelTab",
+   "arquivo": "components/conversations/ConversationsHub.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "ChannelTab",
+   "arquivo": "components/conversations/ConversationsStandalonePage.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "ChargeCard",
+   "arquivo": "components/finance/MemberFinance.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "ChargeSheet",
+   "arquivo": "components/finance/tabs/MembersTab.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "ConfettiEffect",
+   "arquivo": "components/TenisProPlayer/ui/PointOverlay.tsx",
+   "usos": 0,
+   "ui": true
+  },
+  {
+   "nome": "ConnectorLayer",
+   "arquivo": "components/ResenhaOpenTournamentBoard.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "ConversationsHub",
+   "arquivo": "components/AdminPanel.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "ConversationsStandalonePage",
+   "arquivo": "App.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "Count",
+   "arquivo": "components/conversations/AutomationsTab.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "CourtLine",
+   "arquivo": "components/TenisProPlayer/components/Court.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "CreateChallengeModal",
+   "arquivo": "components/Challenges.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "CreditsPanel",
+   "arquivo": "components/finance/tabs/MembersTab.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "Dashboard",
+   "arquivo": "App.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "DayCardPanel",
+   "arquivo": "components/finance/tabs/StudentsTab.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "DesafiosTab",
+   "arquivo": "components/AdminPanel.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "DetailSheet",
+   "arquivo": "components/finance/tabs/DreTab.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "DocumentCard",
+   "arquivo": "components/signatures/DocumentsPage.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "DocumentsPage",
+   "arquivo": "App.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "DocumentsPage",
+   "arquivo": "components/signatures/DocumentsPage.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "DreTab",
+   "arquivo": "components/finance/FinanceHub.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "DueSection",
+   "arquivo": "components/finance/tabs/SettingsTab.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "EditorSheet",
+   "arquivo": "components/conversations/AutomationsTab.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "ExportButton",
+   "arquivo": "components/ResenhaOpenTournamentBoard.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "FeesSection",
+   "arquivo": "components/finance/tabs/SettingsTab.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "FinanceHub",
+   "arquivo": "App.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "FinanceHub",
+   "arquivo": "components/AdminPanel.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "FinanceiroAdmin",
+   "arquivo": "components/finance/tabs/StudentsTab.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "FinanceiroAdmin",
+   "arquivo": "components/FinanceiroAdmin.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "Game3D",
+   "arquivo": "components/TenisProPlayer/Game3D.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "Game3D",
+   "arquivo": "components/TenisProPlayer/index.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "GameScene",
+   "arquivo": "components/TenisProPlayer/Game3D.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "Group",
+   "arquivo": "components/signatures/admin/AdminDocuments.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "GroupsCard",
+   "arquivo": "components/conversations/ChannelTab.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "Guardrails",
+   "arquivo": "components/conversations/AiTab.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "HolidaysSection",
+   "arquivo": "components/finance/tabs/SettingsTab.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "HowItWorks",
+   "arquivo": "components/signatures/DocumentsPage.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "IdentityCard",
+   "arquivo": "components/conversations/ChannelTab.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "InboxTab",
+   "arquivo": "components/conversations/ConversationsHub.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "InboxTab",
+   "arquivo": "components/conversations/ConversationsStandalonePage.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "InlineSpinner",
+   "arquivo": "components/ui/LoadingStates.tsx",
+   "usos": 0,
+   "ui": true
+  },
+  {
+   "nome": "InstallPrompt",
+   "arquivo": "components/InstallPrompt.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "InstanceCard",
+   "arquivo": "components/conversations/ChannelTab.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "Item",
+   "arquivo": "components/conversations/MessageBubble.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "Klanches",
+   "arquivo": "App.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "Klanches",
+   "arquivo": "components/Klanches.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "Lab",
+   "arquivo": "bracket-lab.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "LancamentosTab",
+   "arquivo": "components/AdminPanel.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "LinkChargesPanel",
+   "arquivo": "components/finance/tabs/ReceiptsTab.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "LoadingContainer",
+   "arquivo": "components/ui/LoadingStates.tsx",
+   "usos": 0,
+   "ui": true
+  },
+  {
+   "nome": "LoadingSpinner",
+   "arquivo": "components/ui/LoadingStates.tsx",
+   "usos": 0,
+   "ui": true
+  },
+  {
+   "nome": "ManageGuestModal",
+   "arquivo": "components/Agenda.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "ManageParticipantsModal",
+   "arquivo": "components/Agenda.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "MatchCard",
+   "arquivo": "components/ChampionshipCreator.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "MatchCard",
+   "arquivo": "components/Championships.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "MatchStateTag",
+   "arquivo": "components/ResenhaOpenTournamentBoard.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "MemberFinance",
+   "arquivo": "App.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "MembersTab",
+   "arquivo": "components/finance/FinanceHub.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "MemoryCard",
+   "arquivo": "components/conversations/AiTab.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "MemoryItem",
+   "arquivo": "components/conversations/AiTab.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "MentionCard",
+   "arquivo": "components/conversations/ChannelTab.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "Metric",
+   "arquivo": "components/ChampionshipStatistics.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "MetricCard",
+   "arquivo": "components/AdminReports.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "Midia",
+   "arquivo": "components/conversations/MessageBubble.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "NavBadge",
+   "arquivo": "components/Layout.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "NewChallengeModal",
+   "arquivo": "components/AdminPanel.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "NewPendencySheet",
+   "arquivo": "components/finance/tabs/PendenciesTab.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "NewPlanSheet",
+   "arquivo": "components/finance/tabs/MembersTab.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "NotificationSettings",
+   "arquivo": "components/NotificationSettings.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "NumberField",
+   "arquivo": "components/creator/CreatorFormat.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "OddCard",
+   "arquivo": "components/ChampionshipOddsSimulator.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "OptionsSection",
+   "arquivo": "components/finance/tabs/SettingsTab.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "OverviewTab",
+   "arquivo": "components/finance/FinanceHub.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "PendenciesTab",
+   "arquivo": "components/finance/FinanceHub.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "PendencySheet",
+   "arquivo": "components/finance/tabs/PendenciesTab.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "PhaseHeaders",
+   "arquivo": "components/ResenhaOpenTournamentBoard.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "Placeholder",
+   "arquivo": "components/conversations/MessageBubble.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "PlanCard",
+   "arquivo": "components/finance/tabs/MembersTab.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "PlayerCard",
+   "arquivo": "components/Ranking.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "PlayerChallengeStatus",
+   "arquivo": "components/ChallengeRulesExplainer.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "PlayerLine",
+   "arquivo": "components/ChampionshipCreator.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "PlayerLine",
+   "arquivo": "components/ChampionshipMatchActionModal.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "PlayerRow",
+   "arquivo": "components/ResenhaOpenTournamentBoard.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "PreviewSheet",
+   "arquivo": "components/conversations/AutomationsTab.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "ProfessorModal",
+   "arquivo": "components/AdminProfessors.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "ProfessorProfile",
+   "arquivo": "App.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "ProfessorProfile",
+   "arquivo": "components/ProfessorProfile.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "PublicChampionshipEntry",
+   "arquivo": "App.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "ReceiptsTab",
+   "arquivo": "components/finance/FinanceHub.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "ReceivablesTab",
+   "arquivo": "components/finance/FinanceHub.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "RecurrenceSheet",
+   "arquivo": "components/finance/tabs/RecurrencesTab.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "RecurrencesTab",
+   "arquivo": "components/finance/FinanceHub.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "ReservasTab",
+   "arquivo": "components/AdminPanel.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "ReservationCard",
+   "arquivo": "components/Agenda.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "ReservationDetails",
+   "arquivo": "components/Agenda.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "ReviewSheet",
+   "arquivo": "components/finance/tabs/ReceiptsTab.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "RotatePrompt",
+   "arquivo": "components/TenisProPlayer/index.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "RuleRow",
+   "arquivo": "components/AdminRules.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "RulesSheet",
+   "arquivo": "components/conversations/AutomationsTab.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "RulesSummary",
+   "arquivo": "components/finance/tabs/PendenciesTab.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "RunsSheet",
+   "arquivo": "components/conversations/AutomationsTab.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "ScoreCell",
+   "arquivo": "components/ResenhaOpenTournamentBoard.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "ScorePanel",
+   "arquivo": "components/ResenhaOpenTournamentBoard.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "ScoreSummary",
+   "arquivo": "components/ChampionshipMatchActionModal.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "Secao",
+   "arquivo": "components/conversations/ContactPanel.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "Section",
+   "arquivo": "components/AdminUserEditor.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "Section",
+   "arquivo": "components/AppSettings.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "SendReceiptSheet",
+   "arquivo": "components/finance/MemberFinance.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "SettingsCard",
+   "arquivo": "components/conversations/AiTab.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "SettingsTab",
+   "arquivo": "components/finance/FinanceHub.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "Shimmer",
+   "arquivo": "components/ui/LoadingStates.tsx",
+   "usos": 0,
+   "ui": true
+  },
+  {
+   "nome": "SkeletonAvatar",
+   "arquivo": "components/ui/LoadingStates.tsx",
+   "usos": 0,
+   "ui": true
+  },
+  {
+   "nome": "SkeletonCard",
+   "arquivo": "components/ui/LoadingStates.tsx",
+   "usos": 0,
+   "ui": true
+  },
+  {
+   "nome": "SkeletonList",
+   "arquivo": "components/ui/LoadingStates.tsx",
+   "usos": 0,
+   "ui": true
+  },
+  {
+   "nome": "SkeletonText",
+   "arquivo": "components/ui/LoadingStates.tsx",
+   "usos": 0,
+   "ui": true
+  },
+  {
+   "nome": "SociosTab",
+   "arquivo": "components/AdminPanel.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "StatusIcon",
+   "arquivo": "components/conversations/MessageBubble.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "StudentCard",
+   "arquivo": "components/ProfessorProfile.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "StudentsTab",
+   "arquivo": "components/finance/FinanceHub.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "TabButton",
+   "arquivo": "components/ChampionshipAdmin.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "TenisProPlayer",
+   "arquivo": "App.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "Toggle",
+   "arquivo": "components/AppSettings.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "Tooltip",
+   "arquivo": "components/ui/Tooltip.tsx",
+   "usos": 0,
+   "ui": true
+  },
+  {
+   "nome": "Transcricao",
+   "arquivo": "components/conversations/MessageBubble.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "WebhookCard",
+   "arquivo": "components/conversations/ChannelTab.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "ZoomControls",
+   "arquivo": "components/ResenhaOpenTournamentBoard.tsx",
+   "usos": 0,
+   "ui": false
+  }
+ ],
+ "usos": [
+  {
+   "tipo": "bucket",
+   "nome": "conv-media",
+   "front": [],
+   "edge": [
+    "supabase/functions/conversation-operations/index.ts:10"
+   ],
+   "telas": []
+  },
+  {
+   "tipo": "bucket",
+   "nome": "klancheimages",
+   "front": [
+    "components/Klanches.tsx:65",
+    "components/Klanches.tsx:71"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "edge",
+   "nome": "admin-athlete-access",
+   "front": [
+    "components/AdminPanel.tsx:1227"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "edge",
+   "nome": "finance-receipt-whatsapp",
+   "front": [],
+   "edge": [
+    "supabase/functions/whatsapp-webhook/index.ts:63"
+   ],
+   "telas": []
+  },
+  {
+   "tipo": "edge",
+   "nome": "send-push",
+   "front": [
+    "lib/notificationService.ts:17"
+   ],
+   "edge": [
+    "supabase/functions/whatsapp-webhook/index.ts:90"
+   ],
+   "telas": []
+  },
+  {
+   "tipo": "edge",
+   "nome": "signature-operations",
+   "front": [
+    "lib/signatures/api.ts:25"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "realtime",
+   "nome": "championship_registrations",
+   "front": [
+    "components/Championships.tsx:220"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "realtime",
+   "nome": "championship_rounds",
+   "front": [
+    "components/Championships.tsx:380"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "realtime",
+   "nome": "club_form_responses",
+   "front": [
+    "lib/formsService.ts:344"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "realtime",
+   "nome": "club_form_voter_receipts",
+   "front": [
+    "lib/formsService.ts:344"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "realtime",
+   "nome": "conv_conversations",
+   "front": [
+    "lib/conversations/api.ts:345"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "realtime",
+   "nome": "conv_messages",
+   "front": [
+    "lib/conversations/api.ts:345"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "realtime",
+   "nome": "matches",
+   "front": [
+    "components/Championships.tsx:380",
+    "components/ResenhaOpenBracketView.tsx:39",
+    "components/SuperSet.tsx:182",
+    "components/TournamentBracketView.tsx:65"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "realtime",
+   "nome": "reservations",
+   "front": [
+    "components/Dashboard.tsx:86"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "rpc",
+   "nome": "admin_record_user_access",
+   "front": [
+    "contexts/AuthContext.tsx:129"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "rpc",
+   "nome": "admin_reset_ranking_full",
+   "front": [
+    "components/AdminPanel.tsx:1634"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "rpc",
+   "nome": "apply_championship_edition_points",
+   "front": [
+    "components/ChampionshipAdmin.tsx:537"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "rpc",
+   "nome": "conv_svc_apply_delete",
+   "front": [],
+   "edge": [
+    "supabase/functions/whatsapp-webhook/record.ts:124"
+   ],
+   "telas": []
+  },
+  {
+   "tipo": "rpc",
+   "nome": "conv_svc_apply_edit_with_mention",
+   "front": [],
+   "edge": [
+    "supabase/functions/whatsapp-webhook/record.ts:113"
+   ],
+   "telas": []
+  },
+  {
+   "tipo": "rpc",
+   "nome": "conv_svc_apply_reaction",
+   "front": [],
+   "edge": [
+    "supabase/functions/whatsapp-webhook/record.ts:98"
+   ],
+   "telas": []
+  },
+  {
+   "tipo": "rpc",
+   "nome": "conv_svc_channel_delivery",
+   "front": [],
+   "edge": [
+    "supabase/functions/whatsapp-webhook/index.ts:167"
+   ],
+   "telas": []
+  },
+  {
+   "tipo": "rpc",
+   "nome": "conv_svc_finish_message",
+   "front": [],
+   "edge": [
+    "supabase/functions/joao-daily-greeting/index.ts:181"
+   ],
+   "telas": []
+  },
+  {
+   "tipo": "rpc",
+   "nome": "conv_svc_ingest_message",
+   "front": [],
+   "edge": [
+    "supabase/functions/whatsapp-webhook/record.ts:48"
+   ],
+   "telas": []
+  },
+  {
+   "tipo": "rpc",
+   "nome": "conv_svc_log_webhook",
+   "front": [],
+   "edge": [
+    "supabase/functions/whatsapp-webhook/record.ts:177",
+    "supabase/functions/whatsapp-webhook/record.ts:42"
+   ],
+   "telas": []
+  },
+  {
+   "tipo": "rpc",
+   "nome": "conv_svc_queue_message",
+   "front": [],
+   "edge": [
+    "supabase/functions/joao-daily-greeting/index.ts:172"
+   ],
+   "telas": []
+  },
+  {
+   "tipo": "rpc",
+   "nome": "conv_svc_resolve_undecryptable",
+   "front": [],
+   "edge": [
+    "supabase/functions/whatsapp-webhook/record.ts:90"
+   ],
+   "telas": []
+  },
+  {
+   "tipo": "rpc",
+   "nome": "conv_svc_set_message_media",
+   "front": [],
+   "edge": [
+    "supabase/functions/whatsapp-webhook/record.ts:152"
+   ],
+   "telas": []
+  },
+  {
+   "tipo": "rpc",
+   "nome": "conv_svc_set_message_transcription",
+   "front": [],
+   "edge": [
+    "supabase/functions/whatsapp-webhook/record.ts:174"
+   ],
+   "telas": []
+  },
+  {
+   "tipo": "rpc",
+   "nome": "conv_svc_update_message_status",
+   "front": [],
+   "edge": [
+    "supabase/functions/whatsapp-webhook/record.ts:128"
+   ],
+   "telas": []
+  },
+  {
+   "tipo": "rpc",
+   "nome": "fin_submit_whatsapp_pendency_receipt",
+   "front": [],
+   "edge": [
+    "supabase/functions/finance-receipt-whatsapp/index.ts:86"
+   ],
+   "telas": []
+  },
+  {
+   "tipo": "rpc",
+   "nome": "finish_championship",
+   "front": [
+    "components/ChampionshipAdmin.tsx:493"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "rpc",
+   "nome": "get_admin_push_subscriptions",
+   "front": [],
+   "edge": [
+    "supabase/functions/send-push/index.ts:55"
+   ],
+   "telas": []
+  },
+  {
+   "tipo": "rpc",
+   "nome": "get_form_live_results",
+   "front": [
+    "lib/formsService.ts:302"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "rpc",
+   "nome": "get_ranking_cycle_start",
+   "front": [
+    "lib/rankingService.ts:75"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "rpc",
+   "nome": "get_user_h2h_points",
+   "front": [
+    "components/Athletes.tsx:123"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "rpc",
+   "nome": "joao_daily_secret_ok",
+   "front": [],
+   "edge": [
+    "supabase/functions/joao-daily-greeting/index.ts:26"
+   ],
+   "telas": []
+  },
+  {
+   "tipo": "rpc",
+   "nome": "resolve_resenha_open_final_phases",
+   "front": [
+    "lib/resenhaOpenService.ts:424"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "rpc",
+   "nome": "revert_championship_edition_points",
+   "front": [
+    "components/ChampionshipAdmin.tsx:569"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "rpc",
+   "nome": "set_student_level",
+   "front": [
+    "components/AdminStudents.tsx:169",
+    "components/AdminStudents.tsx:238",
+    "components/ProfessorProfile.tsx:392",
+    "components/ProfessorProfile.tsx:536"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "rpc",
+   "nome": "sig_svc_issue_challenge",
+   "front": [],
+   "edge": [
+    "supabase/functions/_shared/signatureRequest.ts:116"
+   ],
+   "telas": []
+  },
+  {
+   "tipo": "rpc",
+   "nome": "sig_svc_mark_code_sent",
+   "front": [],
+   "edge": [
+    "supabase/functions/_shared/signatureRequest.ts:131"
+   ],
+   "telas": []
+  },
+  {
+   "tipo": "rpc",
+   "nome": "sig_svc_verify_code",
+   "front": [],
+   "edge": [
+    "supabase/functions/_shared/signatureRequest.ts:145"
+   ],
+   "telas": []
+  },
+  {
+   "tipo": "rpc",
+   "nome": "submit_club_form",
+   "front": [
+    "lib/formsService.ts:285"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "access_requests",
+   "front": [
+    "components/AdminPanel.tsx:1137",
+    "contexts/AuthContext.tsx:163",
+    "contexts/AuthContext.tsx:175"
+   ],
+   "edge": [
+    "supabase/functions/admin-athlete-access/index.ts:120",
+    "supabase/functions/admin-athlete-access/index.ts:150",
+    "supabase/functions/admin-athlete-access/index.ts:185",
+    "supabase/functions/admin-athlete-access/index.ts:94"
+   ],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "admin_audit_logs",
+   "front": [
+    "components/AdminPanel.tsx:1191",
+    "lib/finance/financeApi.ts:405"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "announcements",
+   "front": [
+    "App.tsx:114",
+    "components/AdminPanel.tsx:766",
+    "components/AdminPanel.tsx:819",
+    "components/AdminPanel.tsx:820",
+    "components/AdminPanel.tsx:833",
+    "components/AdminPanel.tsx:848"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "challenges",
+   "front": [
+    "components/AdminMatchCreator.tsx:169",
+    "components/AdminPanel.tsx:433",
+    "components/AdminPanel.tsx:484",
+    "components/AdminPanel.tsx:533",
+    "components/AdminPanel.tsx:597",
+    "components/AdminReports.tsx:107",
+    "components/Agenda.tsx:1452",
+    "components/Agenda.tsx:1824",
+    "components/Athletes.tsx:164",
+    "components/ChallengeNotificationPopup.tsx:28",
+    "components/ChallengeNotificationPopup.tsx:94",
+    "components/Challenges.tsx:509",
+    "components/Challenges.tsx:612",
+    "components/Challenges.tsx:666",
+    "components/Challenges.tsx:803",
+    "hooks/useChallenges.ts:188",
+    "hooks/useChallenges.ts:280",
+    "hooks/useChallenges.ts:331",
+    "hooks/useChallenges.ts:354",
+    "hooks/useChallenges.ts:380",
+    "lib/rankingService.ts:538",
+    "lib/rankingService.ts:546"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "championship_admin_audit_logs",
+   "front": [
+    "components/ChampionshipAdmin.tsx:301",
+    "components/ChampionshipAdmin.tsx:351",
+    "components/ChampionshipInProgress.tsx:333",
+    "components/Championships.tsx:609",
+    "components/Championships.tsx:775",
+    "components/Championships.tsx:862"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "championship_group_members",
+   "front": [
+    "components/ChampionshipInProgress.tsx:137",
+    "components/Championships.tsx:421",
+    "components/GroupDrawPage.tsx:115",
+    "components/GroupDrawPage.tsx:440",
+    "components/GroupDrawPage.tsx:454",
+    "components/PublicChampionshipPage.tsx:84",
+    "lib/championship/groupPersistence.ts:100",
+    "lib/championship/groupPersistence.ts:124",
+    "lib/championship/knockoutFromGroups.ts:153"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "championship_groups",
+   "front": [
+    "components/ChampionshipAdmin.tsx:297",
+    "components/ChampionshipInProgress.tsx:137",
+    "components/Championships.tsx:421",
+    "components/GroupDrawPage.tsx:115",
+    "components/GroupDrawPage.tsx:398",
+    "components/GroupDrawPage.tsx:405",
+    "components/GroupDrawPage.tsx:419",
+    "components/PublicChampionshipPage.tsx:84",
+    "lib/championship/groupPersistence.ts:67",
+    "lib/championship/groupPersistence.ts:78",
+    "lib/championship/knockoutFromGroups.ts:153"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "championship_phase_points",
+   "front": [
+    "components/admin/PhasePointsEditor.tsx:37",
+    "components/admin/PhasePointsEditor.tsx:60"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "championship_registrations",
+   "front": [
+    "components/Agenda.tsx:1305",
+    "components/ChampionshipAdmin.tsx:286",
+    "components/ChampionshipAdmin.tsx:394",
+    "components/ChampionshipAdmin.tsx:423",
+    "components/ChampionshipInProgress.tsx:147",
+    "components/Championships.tsx:211",
+    "components/Championships.tsx:308",
+    "components/GroupDrawPage.tsx:105",
+    "components/PublicChampionshipPage.tsx:91",
+    "components/creator/CreatorRegistration.tsx:143",
+    "components/creator/CreatorRegistration.tsx:169",
+    "components/creator/CreatorRegistration.tsx:216",
+    "lib/championship/knockoutFromGroups.ts:164",
+    "lib/championship/registration.ts:36",
+    "lib/championship/registration.ts:72",
+    "lib/championship/seeding.ts:54",
+    "lib/championship/seeding.ts:63",
+    "lib/resenhaOpenService.ts:195",
+    "lib/resenhaOpenService.ts:212",
+    "lib/resenhaOpenService.ts:232",
+    "lib/resenhaOpenService.ts:245",
+    "lib/resenhaOpenService.ts:308",
+    "lib/resenhaOpenService.ts:445"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "championship_rounds",
+   "front": [
+    "components/Agenda.tsx:1282",
+    "components/ChampionshipAdmin.tsx:291",
+    "components/ChampionshipAdmin.tsx:614",
+    "components/ChampionshipAdmin.tsx:654",
+    "components/ChampionshipCreator.tsx:177",
+    "components/ChampionshipInProgress.tsx:128",
+    "components/ChampionshipInProgress.tsx:203",
+    "components/ChampionshipInProgress.tsx:764",
+    "components/Championships.tsx:248",
+    "components/Championships.tsx:326",
+    "components/PublicChampionshipPage.tsx:77",
+    "lib/championship/creation.ts:107",
+    "lib/championship/rounds.ts:123",
+    "lib/championship/rounds.ts:138",
+    "lib/championship/rounds.ts:161",
+    "lib/championship/rounds.ts:181",
+    "lib/championship/rounds.ts:203",
+    "lib/championship/rounds.ts:228",
+    "lib/resenhaOpenService.ts:140",
+    "lib/resenhaOpenService.ts:175",
+    "lib/resenhaOpenService.ts:303"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "championship_series",
+   "front": [
+    "components/Athletes.tsx:106",
+    "components/creator/CreatorSetup.tsx:21",
+    "lib/championship/creation.ts:46",
+    "lib/championship/creation.ts:55",
+    "lib/resenhaOpenService.ts:84"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "championships",
+   "front": [
+    "App.tsx:66",
+    "components/Agenda.tsx:1282",
+    "components/ChampionshipAdmin.tsx:204",
+    "components/ChampionshipAdmin.tsx:452",
+    "components/ChampionshipCreator.tsx:142",
+    "components/ChampionshipCreator.tsx:551",
+    "components/ChampionshipCreator.tsx:94",
+    "components/Championships.tsx:140",
+    "components/GroupDrawPage.tsx:84",
+    "components/Layout.tsx:76",
+    "components/PublicChampionshipPage.tsx:57",
+    "components/ResenhaOpenBracketView.tsx:26",
+    "lib/championship/creation.ts:121",
+    "lib/championship/creation.ts:145",
+    "lib/championship/creation.ts:81",
+    "lib/championship/participantSources.ts:52",
+    "lib/championship/participantSources.ts:86",
+    "lib/championship/rounds.ts:189",
+    "lib/conversations/api.ts:542",
+    "lib/resenhaOpenService.ts:112",
+    "lib/resenhaOpenService.ts:429",
+    "lib/resenhaOpenService.ts:457",
+    "lib/resenhaOpenService.ts:98"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "club_form_options",
+   "front": [
+    "lib/formsService.ts:203",
+    "lib/formsService.ts:221",
+    "lib/formsService.ts:226",
+    "lib/formsService.ts:235",
+    "lib/formsService.ts:57",
+    "lib/formsService.ts:9"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "club_form_questions",
+   "front": [
+    "lib/formsService.ts:164",
+    "lib/formsService.ts:186",
+    "lib/formsService.ts:191",
+    "lib/formsService.ts:246",
+    "lib/formsService.ts:57",
+    "lib/formsService.ts:9"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "club_form_responses",
+   "front": [
+    "lib/formsService.ts:318"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "club_form_voter_receipts",
+   "front": [
+    "lib/formsService.ts:102",
+    "lib/formsService.ts:32",
+    "lib/formsService.ts:82"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "club_forms",
+   "front": [
+    "lib/formsService.ts:142",
+    "lib/formsService.ts:149",
+    "lib/formsService.ts:261",
+    "lib/formsService.ts:273",
+    "lib/formsService.ts:57",
+    "lib/formsService.ts:9"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "consumptions",
+   "front": [
+    "components/AdminReports.tsx:95",
+    "components/Klanches.tsx:114",
+    "components/Klanches.tsx:293",
+    "components/Klanches.tsx:304",
+    "components/Klanches.tsx:332"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "conv_ai_settings",
+   "front": [],
+   "edge": [
+    "supabase/functions/joao-daily-greeting/index.ts:109"
+   ],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "conv_contacts",
+   "front": [],
+   "edge": [
+    "supabase/functions/finance-receipt-whatsapp/index.ts:52",
+    "supabase/functions/whatsapp-webhook/index.ts:139",
+    "supabase/functions/whatsapp-webhook/index.ts:80"
+   ],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "conv_conversations",
+   "front": [],
+   "edge": [
+    "supabase/functions/finance-receipt-whatsapp/index.ts:49",
+    "supabase/functions/joao-daily-greeting/index.ts:99",
+    "supabase/functions/whatsapp-webhook/index.ts:141",
+    "supabase/functions/whatsapp-webhook/index.ts:80"
+   ],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "conv_groups",
+   "front": [],
+   "edge": [
+    "supabase/functions/joao-daily-greeting/index.ts:97"
+   ],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "conv_messages",
+   "front": [],
+   "edge": [
+    "supabase/functions/finance-receipt-whatsapp/index.ts:38",
+    "supabase/functions/joao-daily-greeting/index.ts:105",
+    "supabase/functions/joao-daily-greeting/index.ts:177",
+    "supabase/functions/whatsapp-webhook/index.ts:152",
+    "supabase/functions/whatsapp-webhook/index.ts:80"
+   ],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "courts",
+   "front": [
+    "components/AdminPanel.tsx:1604",
+    "components/AdminPanel.tsx:271",
+    "components/AdminPanel.tsx:435",
+    "components/AdminReports.tsx:123",
+    "components/Agenda.tsx:1390",
+    "components/Athletes.tsx:99",
+    "components/ChallengeNotificationPopup.tsx:64",
+    "components/Challenges.tsx:72",
+    "components/ChampionshipInProgress.tsx:120",
+    "components/Championships.tsx:187",
+    "components/Dashboard.tsx:41",
+    "components/Klanches.tsx:169",
+    "components/ProfessorProfile.tsx:265",
+    "hooks/useReservations.ts:63"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "fin_accounts",
+   "front": [
+    "lib/finance/financeApi.ts:59"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "fin_attachments",
+   "front": [
+    "lib/finance/financeApi.ts:135"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "fin_categories",
+   "front": [
+    "lib/finance/financeApi.ts:68"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "fin_charge_adjustments",
+   "front": [
+    "lib/finance/financeApi.ts:252"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "fin_charge_payments",
+   "front": [
+    "lib/finance/financeApi.ts:251"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "fin_entries_v",
+   "front": [
+    "lib/finance/financeApi.ts:90"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "fin_entry_payments",
+   "front": [
+    "lib/finance/financeApi.ts:106"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "fin_holidays",
+   "front": [
+    "lib/finance/financeApi.ts:50"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "fin_member_charges",
+   "front": [
+    "lib/finance/financeApi.ts:198"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "fin_member_credits",
+   "front": [
+    "lib/finance/financeApi.ts:269"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "fin_member_plan_prices",
+   "front": [
+    "lib/finance/financeApi.ts:166"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "fin_member_plans",
+   "front": [
+    "lib/finance/financeApi.ts:161",
+    "lib/finance/financeApi.ts:282"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "fin_receipt_charges",
+   "front": [
+    "lib/finance/financeApi.ts:330",
+    "lib/finance/financeApi.ts:344"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "fin_receipt_submissions",
+   "front": [
+    "lib/finance/financeApi.ts:330",
+    "lib/finance/financeApi.ts:344"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "fin_recurrences",
+   "front": [
+    "lib/finance/financeApi.ts:122"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "fin_settings",
+   "front": [
+    "lib/finance/financeApi.ts:42"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "head_to_head_points",
+   "front": [
+    "lib/rankingService.ts:173"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "matches",
+   "front": [
+    "components/AdminMatchCreator.tsx:149",
+    "components/AdminPanel.tsx:515",
+    "components/AdminReports.tsx:115",
+    "components/Agenda.tsx:1282",
+    "components/Agenda.tsx:1806",
+    "components/Athletes.tsx:67",
+    "components/Challenges.tsx:418",
+    "components/Challenges.tsx:536",
+    "components/ChampionshipAdmin.tsx:588",
+    "components/ChampionshipCreator.tsx:207",
+    "components/ChampionshipInProgress.tsx:156",
+    "components/ChampionshipInProgress.tsx:259",
+    "components/ChampionshipInProgress.tsx:303",
+    "components/ChampionshipInProgress.tsx:364",
+    "components/Championships.tsx:263",
+    "components/Championships.tsx:331",
+    "components/Championships.tsx:561",
+    "components/Championships.tsx:621",
+    "components/Championships.tsx:701",
+    "components/Championships.tsx:747",
+    "components/Championships.tsx:835",
+    "components/LiveScoreboard.tsx:157",
+    "components/MatchGenerationModal.tsx:108",
+    "components/MatchGenerationModal.tsx:119",
+    "components/PublicChampionshipPage.tsx:99",
+    "components/SuperSet.tsx:110",
+    "components/SuperSet.tsx:166",
+    "lib/championship/bracket.ts:167",
+    "lib/championship/bracket.ts:223",
+    "lib/championship/bracket.ts:248",
+    "lib/championship/groupPersistence.ts:190",
+    "lib/championship/knockoutFromGroups.ts:172",
+    "lib/championship/matches.ts:19",
+    "lib/rankingService.ts:136",
+    "lib/resenhaOpenService.ts:303",
+    "lib/resenhaOpenService.ts:390",
+    "lib/resenhaOpenService.ts:407",
+    "lib/resenhaOpenService.ts:466"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "non_socio_students",
+   "front": [
+    "components/AdminProfessors.tsx:126",
+    "components/AdminStudents.tsx:161",
+    "components/AdminStudents.tsx:173",
+    "components/AdminStudents.tsx:209",
+    "components/AdminStudents.tsx:225",
+    "components/AdminStudents.tsx:296",
+    "components/AdminStudents.tsx:365",
+    "components/AdminStudents.tsx:79",
+    "components/Agenda.tsx:1430",
+    "components/Agenda.tsx:1657",
+    "components/Agenda.tsx:2471",
+    "components/FinanceiroAdmin.tsx:87",
+    "components/ProfessorProfile.tsx:197",
+    "components/ProfessorProfile.tsx:379",
+    "components/ProfessorProfile.tsx:412",
+    "components/ProfessorProfile.tsx:615",
+    "lib/championship/registration.ts:36",
+    "lib/championship/registration.ts:9",
+    "lib/conversations/api.ts:557"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "point_history",
+   "front": [
+    "components/AdminPanel.tsx:1550",
+    "components/AdminUserEditor.tsx:142",
+    "components/Athletes.tsx:106"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "point_rules",
+   "front": [
+    "components/AdminRules.tsx:112",
+    "components/AdminRules.tsx:150"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "products",
+   "front": [
+    "components/Klanches.tsx:364",
+    "components/Klanches.tsx:365",
+    "components/Klanches.tsx:403",
+    "components/Klanches.tsx:99"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "professors",
+   "front": [
+    "components/AdminProfessors.tsx:118",
+    "components/AdminProfessors.tsx:175",
+    "components/AdminProfessors.tsx:176",
+    "components/AdminProfessors.tsx:197",
+    "components/AdminStudents.tsx:84",
+    "components/Agenda.tsx:1402",
+    "components/ProfessorProfile.tsx:182"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "profiles",
+   "front": [
+    "components/AdminLogin.tsx:32",
+    "components/AdminPanel.tsx:1004",
+    "components/AdminPanel.tsx:1166",
+    "components/AdminPanel.tsx:1550",
+    "components/AdminPanel.tsx:1574",
+    "components/AdminPanel.tsx:1603",
+    "components/AdminPanel.tsx:272",
+    "components/AdminPanel.tsx:434",
+    "components/AdminProtect.tsx:23",
+    "components/AdminReports.tsx:86",
+    "components/AdminStudents.tsx:85",
+    "components/AdminUserEditor.tsx:125",
+    "components/Agenda.tsx:1220",
+    "components/Agenda.tsx:1305",
+    "components/Agenda.tsx:1402",
+    "components/Athletes.tsx:646",
+    "components/Challenges.tsx:418",
+    "components/ChampionshipAdmin.tsx:241",
+    "components/ChampionshipAdmin.tsx:286",
+    "components/ChampionshipAdmin.tsx:301",
+    "components/ChampionshipCreator.tsx:103",
+    "components/ChampionshipInProgress.tsx:147",
+    "components/Championships.tsx:181",
+    "components/Championships.tsx:211",
+    "components/Championships.tsx:308",
+    "components/Dashboard.tsx:45",
+    "components/EditProfileModal.tsx:79",
+    "components/GroupDrawPage.tsx:105",
+    "components/Klanches.tsx:129",
+    "components/OnboardingModal.tsx:63",
+    "components/ProfessorProfile.tsx:182",
+    "components/ProfessorProfile.tsx:272",
+    "components/ProfessorProfile.tsx:288",
+    "components/PublicChampionshipPage.tsx:91",
+    "components/SuperSet.tsx:39",
+    "components/creator/CreatorRegistration.tsx:121",
+    "contexts/AuthContext.tsx:301",
+    "contexts/AuthContext.tsx:330",
+    "contexts/AuthContext.tsx:385",
+    "contexts/AuthContext.tsx:429",
+    "contexts/AuthContext.tsx:68",
+    "contexts/AuthContext.tsx:88",
+    "hooks/useReservations.ts:84",
+    "lib/championship/knockoutFromGroups.ts:164",
+    "lib/championship/registration.ts:36",
+    "lib/conversations/api.ts:556",
+    "lib/finance/financeApi.ts:281",
+    "lib/formsService.ts:318",
+    "lib/rankingService.ts:112",
+    "lib/resenhaOpenService.ts:245",
+    "lib/resenhaOpenService.ts:308",
+    "lib/signatures/admin.ts:99",
+    "seed_admin.ts:39",
+    "seed_admin.ts:56"
+   ],
+   "edge": [
+    "supabase/functions/_shared/athleteProvision.ts:54",
+    "supabase/functions/_shared/athleteProvision.ts:60",
+    "supabase/functions/_shared/athleteProvision.ts:64",
+    "supabase/functions/_shared/serveAdmin.ts:29",
+    "supabase/functions/admin-athlete-access/index.ts:48",
+    "supabase/functions/send-push/index.ts:59"
+   ],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "push_subscriptions",
+   "front": [
+    "lib/pushNotifications.ts:181",
+    "lib/pushNotifications.ts:73",
+    "lib/pushNotifications.ts:85"
+   ],
+   "edge": [
+    "supabase/functions/send-push/index.ts:109",
+    "supabase/functions/send-push/index.ts:62",
+    "supabase/functions/send-push/index.ts:67"
+   ],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "ranking_reset_events",
+   "front": [
+    "components/AdminPanel.tsx:1559"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "reservations",
+   "front": [
+    "components/AdminMatchCreator.tsx:131",
+    "components/AdminPanel.tsx:270",
+    "components/AdminPanel.tsx:328",
+    "components/AdminPanel.tsx:574",
+    "components/AdminPanel.tsx:79",
+    "components/AdminReports.tsx:76",
+    "components/Agenda.tsx:1246",
+    "components/Agenda.tsx:1501",
+    "components/Agenda.tsx:1539",
+    "components/Agenda.tsx:1559",
+    "components/Agenda.tsx:1588",
+    "components/Agenda.tsx:1642",
+    "components/Agenda.tsx:1715",
+    "components/Agenda.tsx:1723",
+    "components/Agenda.tsx:1833",
+    "components/Athletes.tsx:79",
+    "components/ChallengeNotificationPopup.tsx:104",
+    "components/Challenges.tsx:594",
+    "components/Challenges.tsx:96",
+    "components/Dashboard.tsx:59",
+    "components/FinanceiroAdmin.tsx:170",
+    "components/FinanceiroAdmin.tsx:59",
+    "components/Klanches.tsx:148",
+    "components/ProfessorProfile.tsx:237",
+    "components/ProfessorProfile.tsx:661",
+    "components/SuperSet.tsx:58",
+    "hooks/useReservations.ts:113",
+    "hooks/useReservations.ts:180",
+    "hooks/useReservations.ts:253",
+    "hooks/useReservations.ts:279"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "sig_documents",
+   "front": [
+    "components/signatures/admin/DocumentDetail.tsx:137",
+    "lib/signatures/admin.ts:87"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "sig_documents_overview",
+   "front": [
+    "lib/signatures/admin.ts:76"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "sig_member_identities",
+   "front": [
+    "lib/signatures/documents.ts:51"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "sig_signatures",
+   "front": [
+    "lib/signatures/receipt.ts:215"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "student_level_history",
+   "front": [
+    "components/AdminStudents.tsx:256",
+    "components/ProfessorProfile.tsx:543"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "student_payments",
+   "front": [
+    "components/AdminStudents.tsx:277",
+    "components/AdminStudents.tsx:336",
+    "components/AdminStudents.tsx:344",
+    "components/AdminStudents.tsx:354",
+    "components/FinanceiroAdmin.tsx:108",
+    "components/FinanceiroAdmin.tsx:139",
+    "components/ProfessorProfile.tsx:586",
+    "components/ProfessorProfile.tsx:594",
+    "components/ProfessorProfile.tsx:604"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "tabela",
+   "nome": "student_profiles",
+   "front": [
+    "components/AdminStudents.tsx:164",
+    "components/AdminStudents.tsx:176",
+    "components/AdminStudents.tsx:208",
+    "components/AdminStudents.tsx:224",
+    "components/AdminStudents.tsx:232",
+    "components/AdminStudents.tsx:244",
+    "components/AdminStudents.tsx:250",
+    "components/AdminStudents.tsx:83",
+    "components/Agenda.tsx:1414",
+    "components/Agenda.tsx:1623",
+    "components/Agenda.tsx:2449",
+    "components/Agenda.tsx:2486",
+    "components/ProfessorProfile.tsx:202",
+    "components/ProfessorProfile.tsx:426",
+    "components/ProfessorProfile.tsx:499",
+    "components/ProfessorProfile.tsx:517",
+    "components/ProfessorProfile.tsx:530",
+    "components/ProfessorProfile.tsx:554"
+   ],
+   "edge": [],
+   "telas": []
+  }
+ ],
+ "edge": [
+  {
+   "nome": "admin-athlete-access",
+   "verifyJwt": true,
+   "tabelas": [
+    "access_requests(s,u)",
+    "profiles(s,u,U)"
+   ],
+   "rpc": [],
+   "buckets": [],
+   "segredos": [
+    "SUPABASE_ANON_KEY",
+    "SUPABASE_SERVICE_ROLE_KEY",
+    "SUPABASE_URL"
+   ],
+   "hosts": [],
+   "shared": [
+    "athleteProvision.ts"
+   ],
+   "invocadaPor": [
+    "components/AdminPanel.tsx:1227"
+   ],
+   "deploy": "sem registro"
+  },
+  {
+   "nome": "conversation-operations",
+   "verifyJwt": true,
+   "tabelas": [
+    "profiles(s)"
+   ],
+   "rpc": [],
+   "buckets": [
+    "conv-media"
+   ],
+   "segredos": [
+    "STC_AI_API_KEY",
+    "STC_PUBLIC_ORIGIN",
+    "STC_UAZAPI_INSTANCE_TOKEN",
+    "SUPABASE_ANON_KEY",
+    "SUPABASE_PUBLISHABLE_KEY",
+    "SUPABASE_SECRET_KEY",
+    "SUPABASE_SERVICE_ROLE_KEY",
+    "SUPABASE_URL",
+    "UAZAPI_SERVER_URL"
+   ],
+   "hosts": [],
+   "shared": [
+    "adminRequest.ts",
+    "serveAdmin.ts",
+    "uazChat.ts",
+    "whatsappInstance.ts"
+   ],
+   "invocadaPor": [],
+   "deploy": "sem registro"
+  },
+  {
+   "nome": "conversations-dispatch",
+   "verifyJwt": true,
+   "tabelas": [],
+   "rpc": [],
+   "buckets": [],
+   "segredos": [
+    "STC_DISPATCH_SECRET",
+    "STC_UAZAPI_INSTANCE_TOKEN",
+    "SUPABASE_SECRET_KEY",
+    "SUPABASE_SERVICE_ROLE_KEY",
+    "SUPABASE_URL",
+    "UAZAPI_SERVER_URL"
+   ],
+   "hosts": [],
+   "shared": [
+    "dispatch.ts",
+    "uazChat.ts"
+   ],
+   "invocadaPor": [],
+   "deploy": "sem registro"
+  },
+  {
+   "nome": "finance-receipt-whatsapp",
+   "verifyJwt": true,
+   "tabelas": [
+    "conv_contacts(s)",
+    "conv_conversations(s)",
+    "conv_messages(s)"
+   ],
+   "rpc": [
+    "fin_submit_whatsapp_pendency_receipt"
+   ],
+   "buckets": [],
+   "segredos": [
+    "STC_OCR_LANG_PATH",
+    "SUPABASE_SECRET_KEY",
+    "SUPABASE_SERVICE_ROLE_KEY",
+    "SUPABASE_URL"
+   ],
+   "hosts": [],
+   "shared": [
+    "financeReceiptOcr.ts"
+   ],
+   "invocadaPor": [],
+   "deploy": "sem registro"
+  },
+  {
+   "nome": "joao-admin-alerts",
+   "verifyJwt": true,
+   "tabelas": [],
+   "rpc": [],
+   "buckets": [],
+   "segredos": [
+    "STC_DISPATCH_SECRET",
+    "STC_UAZAPI_INSTANCE_TOKEN",
+    "SUPABASE_SECRET_KEY",
+    "SUPABASE_SERVICE_ROLE_KEY",
+    "SUPABASE_URL",
+    "UAZAPI_SERVER_URL"
+   ],
+   "hosts": [],
+   "shared": [
+    "adminAlerts.ts",
+    "adminBriefing.ts",
+    "dispatch.ts",
+    "uazChat.ts"
+   ],
+   "invocadaPor": [],
+   "deploy": "sem registro"
+  },
+  {
+   "nome": "joao-admin-briefing",
+   "verifyJwt": true,
+   "tabelas": [],
+   "rpc": [],
+   "buckets": [],
+   "segredos": [
+    "STC_DISPATCH_SECRET",
+    "STC_UAZAPI_INSTANCE_TOKEN",
+    "SUPABASE_SECRET_KEY",
+    "SUPABASE_SERVICE_ROLE_KEY",
+    "SUPABASE_URL",
+    "UAZAPI_SERVER_URL"
+   ],
+   "hosts": [],
+   "shared": [
+    "adminBriefing.ts",
+    "dispatch.ts",
+    "uazChat.ts"
+   ],
+   "invocadaPor": [],
+   "deploy": "sem registro"
+  },
+  {
+   "nome": "joao-daily-greeting",
+   "verifyJwt": true,
+   "tabelas": [
+    "conv_ai_settings(s)",
+    "conv_conversations(s)",
+    "conv_groups(s)",
+    "conv_messages(s,u)"
+   ],
+   "rpc": [
+    "conv_svc_finish_message",
+    "conv_svc_queue_message",
+    "joao_daily_secret_ok"
+   ],
+   "buckets": [],
+   "segredos": [
+    "STC_AI_API_KEY",
+    "STC_AI_BASE_URL",
+    "STC_UAZAPI_INSTANCE_TOKEN",
+    "SUPABASE_SECRET_KEY",
+    "SUPABASE_SERVICE_ROLE_KEY",
+    "SUPABASE_URL",
+    "UAZAPI_SERVER_URL"
+   ],
+   "hosts": [],
+   "shared": [],
+   "invocadaPor": [],
+   "deploy": "sem registro"
+  },
+  {
+   "nome": "send-push",
+   "verifyJwt": true,
+   "tabelas": [
+    "profiles(s)",
+    "push_subscriptions(s,d)"
+   ],
+   "rpc": [
+    "get_admin_push_subscriptions"
+   ],
+   "buckets": [],
+   "segredos": [
+    "SUPABASE_SECRET_KEY",
+    "SUPABASE_SERVICE_ROLE_KEY",
+    "SUPABASE_URL",
+    "VAPID_PRIVATE_KEY",
+    "VAPID_PUBLIC_KEY",
+    "VITE_VAPID_PUBLIC_KEY"
+   ],
+   "hosts": [],
+   "shared": [],
+   "invocadaPor": [
+    "lib/notificationService.ts:17"
+   ],
+   "deploy": "sem registro"
+  },
+  {
+   "nome": "signature-dispatch",
+   "verifyJwt": true,
+   "tabelas": [],
+   "rpc": [],
+   "buckets": [],
+   "segredos": [
+    "STC_APP_URL",
+    "STC_DISPATCH_SECRET",
+    "STC_UAZAPI_INSTANCE_TOKEN",
+    "SUPABASE_SECRET_KEY",
+    "SUPABASE_SERVICE_ROLE_KEY",
+    "SUPABASE_URL",
+    "UAZAPI_SERVER_URL"
+   ],
+   "hosts": [],
+   "shared": [
+    "dispatch.ts",
+    "signatureDispatch.ts",
+    "signatureMessages.ts",
+    "uazChat.ts"
+   ],
+   "invocadaPor": [],
+   "deploy": "sem registro"
+  },
+  {
+   "nome": "signature-operations",
+   "verifyJwt": true,
+   "tabelas": [
+    "profiles(s)"
+   ],
+   "rpc": [
+    "sig_svc_issue_challenge",
+    "sig_svc_mark_code_sent",
+    "sig_svc_verify_code"
+   ],
+   "buckets": [],
+   "segredos": [
+    "STC_APP_URL",
+    "STC_GEOIP_URL",
+    "STC_PUBLIC_ORIGIN",
+    "STC_UAZAPI_INSTANCE_TOKEN",
+    "SUPABASE_ANON_KEY",
+    "SUPABASE_PUBLISHABLE_KEY",
+    "SUPABASE_SECRET_KEY",
+    "SUPABASE_SERVICE_ROLE_KEY",
+    "SUPABASE_URL",
+    "UAZAPI_SERVER_URL"
+   ],
+   "hosts": [],
+   "shared": [
+    "adminRequest.ts",
+    "dispatch.ts",
+    "serveAdmin.ts",
+    "signatureDispatch.ts",
+    "signatureGeo.ts",
+    "signatureMessages.ts",
+    "signatureRequest.ts",
+    "uazChat.ts"
+   ],
+   "invocadaPor": [
+    "lib/signatures/api.ts:25"
+   ],
+   "deploy": "sem registro"
+  },
+  {
+   "nome": "whatsapp-webhook",
+   "verifyJwt": true,
+   "tabelas": [
+    "conv_contacts(s)",
+    "conv_conversations(s)",
+    "conv_messages(s)",
+    "profiles(s,u,U)"
+   ],
+   "rpc": [
+    "conv_svc_apply_delete",
+    "conv_svc_apply_edit_with_mention",
+    "conv_svc_apply_reaction",
+    "conv_svc_channel_delivery",
+    "conv_svc_ingest_message",
+    "conv_svc_log_webhook",
+    "conv_svc_resolve_undecryptable",
+    "conv_svc_set_message_media",
+    "conv_svc_set_message_transcription",
+    "conv_svc_update_message_status"
+   ],
+   "buckets": [],
+   "segredos": [
+    "GROQ_API_KEY",
+    "STC_AI_API_KEY",
+    "STC_AI_BASE_URL",
+    "STC_TRANSCRIBE_MODELS",
+    "STC_UAZAPI_INSTANCE_TOKEN",
+    "SUPABASE_SECRET_KEY",
+    "SUPABASE_SERVICE_ROLE_KEY",
+    "SUPABASE_URL",
+    "UAZAPI_SERVER_URL"
+   ],
+   "hosts": [],
+   "shared": [
+    "aiAgent/adminFiles.ts",
+    "aiAgent/adminReads.ts",
+    "aiAgent/audio.ts",
+    "aiAgent/capabilities.ts",
+    "aiAgent/jsonRepair.ts",
+    "aiAgent/llm.ts",
+    "aiAgent/prompts.ts",
+    "aiAgent/studentCard.ts",
+    "aiAgent/turn.ts",
+    "aiAgent/welcome.ts",
+    "athleteProvision.ts",
+    "audioTranscription.ts",
+    "groupMention.ts",
+    "uazChat.ts",
+    "uazWebhook.ts"
+   ],
+   "invocadaPor": [],
+   "deploy": "sem registro"
+  }
+ ],
+ "alertas": [
+  "Acesso a dados direto no componente: `PublicChampionshipEntry` (App.tsx:66) chama championships; o padrão do projeto é passar por hook/serviço",
+  "Acesso a dados direto no componente: `AnnouncementPopup` (App.tsx:114) chama announcements; o padrão do projeto é passar por hook/serviço",
+  "Acesso a dados direto no componente: `AdminLogin` (components/AdminLogin.tsx:32) chama profiles; o padrão do projeto é passar por hook/serviço",
+  "Acesso a dados direto no componente: `AdminMatchCreator` (components/AdminMatchCreator.tsx:131) chama reservations, matches, challenges; o padrão do projeto é passar por hook/serviço",
+  "Acesso a dados direto no componente: `NewChallengeModal` (components/AdminPanel.tsx:79) chama reservations; o padrão do projeto é passar por hook/serviço",
+  "Acesso a dados direto no componente: `ReservasTab` (components/AdminPanel.tsx:270) chama reservations, courts, profiles; o padrão do projeto é passar por hook/serviço",
+  "Acesso a dados direto no componente: `DesafiosTab` (components/AdminPanel.tsx:433) chama challenges, profiles, courts, matches, reservations; o padrão do projeto é passar por hook/serviço",
+  "Acesso a dados direto no componente: `AnunciosTab` (components/AdminPanel.tsx:766) chama announcements; o padrão do projeto é passar por hook/serviço",
+  "Acesso a dados direto no componente: `SociosTab` (components/AdminPanel.tsx:1004) chama profiles; o padrão do projeto é passar por hook/serviço",
+  "Acesso a dados direto no componente: `AcessosTab` (components/AdminPanel.tsx:1137) chama access_requests, profiles, admin_audit_logs; o padrão do projeto é passar por hook/serviço",
+  "Acesso a dados direto no componente: `LancamentosTab` (components/AdminPanel.tsx:1550) chama point_history, profiles, ranking_reset_events, courts, admin_reset_ranking_full; o padrão do projeto é passar por hook/serviço",
+  "Acesso a dados direto no componente: `AdminProfessors` (components/AdminProfessors.tsx:118) chama professors, non_socio_students; o padrão do projeto é passar por hook/serviço",
+  "Acesso a dados direto no componente: `AdminProtect` (components/AdminProtect.tsx:23) chama profiles; o padrão do projeto é passar por hook/serviço",
+  "Acesso a dados direto no componente: `AdminReports` (components/AdminReports.tsx:76) chama reservations, profiles, consumptions, challenges, matches, courts; o padrão do projeto é passar por hook/serviço",
+  "Acesso a dados direto no componente: `AdminRules` (components/AdminRules.tsx:112) chama point_rules; o padrão do projeto é passar por hook/serviço",
+  "Acesso a dados direto no componente: `AdminStudents` (components/AdminStudents.tsx:79) chama non_socio_students, student_profiles, professors, profiles, set_student_level, student_level_history, student_payments; o padrão do projeto é passar por hook/serviço",
+  "Acesso a dados direto no componente: `AdminUserEditor` (components/AdminUserEditor.tsx:125) chama profiles, point_history; o padrão do projeto é passar por hook/serviço",
+  "Acesso a dados direto no componente: `Agenda` (components/Agenda.tsx:1220) chama profiles, reservations, matches, championships, championship_rounds, championship_registrations, courts, professors, student_profiles, non_socio_students, challenges; o padrão do projeto é passar por hook/serviço",
+  "Acesso a dados direto no componente: `AddReservationModal` (components/Agenda.tsx:2449) chama student_profiles, non_socio_students; o padrão do projeto é passar por hook/serviço",
+  "Acesso a dados direto no componente: `AthleteProfile` (components/Athletes.tsx:67) chama matches, reservations, courts, point_history, championship_series, get_user_h2h_points, challenges; o padrão do projeto é passar por hook/serviço",
+  "Acesso a dados direto no componente: `Athletes` (components/Athletes.tsx:646) chama profiles; o padrão do projeto é passar por hook/serviço",
+  "Acesso a dados direto no componente: `ChallengeNotificationPopup` (components/ChallengeNotificationPopup.tsx:28) chama challenges, courts, reservations; o padrão do projeto é passar por hook/serviço",
+  "Acesso a dados direto no componente: `CreateChallengeModal` (components/Challenges.tsx:72) chama courts, reservations; o padrão do projeto é passar por hook/serviço",
+  "Acesso a dados direto no componente: `ChallengeResultsModal` (components/Challenges.tsx:418) chama matches, profiles; o padrão do projeto é passar por hook/serviço",
+  "Acesso a dados direto no componente: `ChallengesView` (components/Challenges.tsx:509) chama challenges, matches, reservations; o padrão do projeto é passar por hook/serviço",
+  "Acesso a dados direto no componente: `ChampionshipAdmin` (components/ChampionshipAdmin.tsx:204) chama championships, profiles, championship_registrations, championship_rounds, championship_groups, championship_admin_audit_logs, finish_championship, apply_championship_edition_points, revert_championship_edition_points, matches; o padrão do projeto é passar por hook/serviço",
+  "Acesso a dados direto no componente: `ChampionshipCreator` (components/ChampionshipCreator.tsx:94) chama championships, profiles, championship_rounds, matches; o padrão do projeto é passar por hook/serviço",
+  "Acesso a dados direto no componente: `ChampionshipInProgress` (components/ChampionshipInProgress.tsx:120) chama courts, championship_rounds, championship_groups, championship_group_members, championship_registrations, profiles, matches, championship_admin_audit_logs; o padrão do projeto é passar por hook/serviço",
+  "Acesso a dados direto no componente: `Championships` (components/Championships.tsx:140) chama championships, profiles, courts, championship_registrations, championship_rounds, matches, championship_groups, championship_group_members, championship_admin_audit_logs; o padrão do projeto é passar por hook/serviço",
+  "Acesso a dados direto no componente: `Dashboard` (components/Dashboard.tsx:41) chama courts, profiles, reservations; o padrão do projeto é passar por hook/serviço",
+  "Acesso a dados direto no componente: `EditProfileModal` (components/EditProfileModal.tsx:79) chama profiles; o padrão do projeto é passar por hook/serviço",
+  "Acesso a dados direto no componente: `FinanceiroAdmin` (components/FinanceiroAdmin.tsx:59) chama reservations, non_socio_students, student_payments; o padrão do projeto é passar por hook/serviço",
+  "Acesso a dados direto no componente: `GroupDrawPage` (components/GroupDrawPage.tsx:84) chama championships, championship_registrations, profiles, championship_groups, championship_group_members; o padrão do projeto é passar por hook/serviço",
+  "Acesso a dados direto no componente: `Klanches` (components/Klanches.tsx:99) chama products, consumptions, profiles, reservations, courts; o padrão do projeto é passar por hook/serviço",
+  "Acesso a dados direto no componente: `Layout` (components/Layout.tsx:76) chama championships; o padrão do projeto é passar por hook/serviço",
+  "Acesso a dados direto no componente: `LiveScoreboard` (components/LiveScoreboard.tsx:157) chama matches; o padrão do projeto é passar por hook/serviço",
+  "Acesso a dados direto no componente: `MatchGenerationModal` (components/MatchGenerationModal.tsx:108) chama matches; o padrão do projeto é passar por hook/serviço",
+  "Acesso a dados direto no componente: `OnboardingModal` (components/OnboardingModal.tsx:63) chama profiles; o padrão do projeto é passar por hook/serviço",
+  "Acesso a dados direto no componente: `ProfessorProfile` (components/ProfessorProfile.tsx:182) chama professors, profiles, non_socio_students, student_profiles, reservations, courts, set_student_level, student_level_history, student_payments; o padrão do projeto é passar por hook/serviço",
+  "Acesso a dados direto no componente: `PublicChampionshipPage` (components/PublicChampionshipPage.tsx:57) chama championships, championship_rounds, championship_groups, championship_group_members, championship_registrations, profiles, matches; o padrão do projeto é passar por hook/serviço",
+  "Acesso a dados direto no componente: `ResenhaOpenBracketView` (components/ResenhaOpenBracketView.tsx:26) chama championships; o padrão do projeto é passar por hook/serviço",
+  "Acesso a dados direto no componente: `SuperSet` (components/SuperSet.tsx:39) chama profiles, reservations, matches; o padrão do projeto é passar por hook/serviço",
+  "Acesso a dados direto no componente: `PhasePointsEditor` (components/admin/PhasePointsEditor.tsx:37) chama championship_phase_points; o padrão do projeto é passar por hook/serviço",
+  "Acesso a dados direto no componente: `CreatorRegistration` (components/creator/CreatorRegistration.tsx:121) chama profiles, championship_registrations; o padrão do projeto é passar por hook/serviço",
+  "Acesso a dados direto no componente: `CreatorSetup` (components/creator/CreatorSetup.tsx:21) chama championship_series; o padrão do projeto é passar por hook/serviço",
+  "Acesso a dados direto no componente: `DocumentDetail` (components/signatures/admin/DocumentDetail.tsx:137) chama sig_documents; o padrão do projeto é passar por hook/serviço",
+  "Acesso a dados direto no componente: `AuthProvider` (contexts/AuthContext.tsx:68) chama profiles, admin_record_user_access, access_requests; o padrão do projeto é passar por hook/serviço",
+  "Tabelas do mapa sem uso no código (front + edge): `Cliente_CRM`, `Memory Long`, `Memory Long_jp`, `Memory Test`, `alunos`, `aniversario_consulta`, `avaliacoes_semanais`, `championship_participants`, `championship_winners`, `class_change_events`, `conv_admin_alert_log`, `conv_admin_briefing_recipients`, `conv_admin_prefs`, `conv_ai_decisions`, `conv_ai_member_context`, `conv_ai_memory_candidates`, `conv_ai_sessions`, `conv_automation_recipients`, `conv_automation_runs`, `conv_automation_settings`, `conv_automation_versions`, `conv_automations`, `conv_booking_proposals`, `conv_channel`, `conv_followups`, `conv_notes`, `conv_quick_replies`, `conv_requests`, `conv_webhook_log`, `des`, `documentos_contexto`, `familia_compat_produto`, `fin_entries`, `fin_private.charge_payments_effective`, `fin_requests`, `historico_conversas`, `historico_treino`, `iatende_conversas`, `members`, `n8n_chat_histories`, `n8n_chat_histories_duplicate`, `n8n_chat_histories_evento`, `n8n_vectors`, `n8n_vectors2`, `n8n_vectors_treinador`, `patients_ebm`, `planos_treino`, `reservas`, `reservas2`, `reservation_participants`, `servicos`, `sig_events`, `sig_notifications`, `sig_private.challenges`, `sig_recipients`, `stock_automator_config`, `stores`, `students`, `subcategorias`, `support_messages`, `tabela_familia_iphone_map`, `tabela_modelos`, `tabela_sinonimo_modelo`, `tbl_embedding`, `tbl_embedding_valid`, `vw_familia_modelos_expandidos`",
+  "Edge functions sem chamada no front (webhook, cron ou outra função?): `conversation-operations`, `conversations-dispatch`, `finance-receipt-whatsapp`, `joao-admin-alerts`, `joao-admin-briefing`, `joao-daily-greeting`, `signature-dispatch`, `whatsapp-webhook`"
+ ]
+}

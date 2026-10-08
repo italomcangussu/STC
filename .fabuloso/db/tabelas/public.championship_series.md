@@ -15,9 +15,8 @@
 - FK (created_by) → public.profiles(id)
 - UNIQUE (slug)
 
-## Referenciada por
-- public.championships.series_id
-- public.point_history.series_id
+## Referenciada por (2)
+public.championships.series_id, public.point_history.series_id
 
 ## Índices
 - championship_series_slug_key: `btree (slug)` único

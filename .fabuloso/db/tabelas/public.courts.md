@@ -14,10 +14,8 @@
 ## Chaves e restrições
 - PK (id)
 
-## Referenciada por
-- public.challenges.court_id
-- public.matches.court_id
-- public.reservations.court_id
+## Referenciada por (3)
+public.challenges.court_id, public.matches.court_id, public.reservations.court_id
 
 ## Políticas RLS
 - (RLS desligado)

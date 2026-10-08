@@ -32,8 +32,8 @@
 - CHECK conv_ai_settings_proposal_ttl_minutes_check: `CHECK (((proposal_ttl_minutes >= 2) AND (proposal_ttl_minutes <= 120)))`
 - CHECK conv_ai_settings_version_check: `CHECK ((version > 0))`
 
-## Referenciada por
-- public.conv_ai_decisions.settings_version
+## Referenciada por (1)
+public.conv_ai_decisions.settings_version
 
 ## Políticas RLS
 - "conv_ai_settings_admin_read" — SELECT para authenticated · using `is_admin()`

@@ -24,8 +24,8 @@
 - CHECK conv_automation_runs_kind_check: `CHECK ((kind = ANY (ARRAY['scheduled'::text, 'conditional'::text, 'event'::text, 'manual'::text])))`
 - CHECK conv_automation_runs_status_check: `CHECK ((status = ANY (ARRAY['review'::text, 'running'::text, 'done'::text, 'canceled'::text])))`
 
-## Referenciada por
-- public.conv_automation_recipients.run_id
+## Referenciada por (1)
+public.conv_automation_recipients.run_id
 
 ## Índices
 - conv_automation_runs_automation_id_planned_for_key: `btree (automation_id, planned_for)` único

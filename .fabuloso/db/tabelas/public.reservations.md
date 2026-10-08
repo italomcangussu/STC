@@ -37,10 +37,8 @@
 - FK (professor_id) → public.professors(id)
 - FK (student_id) → public.students(id)
 
-## Referenciada por
-- public.challenges.reservation_id
-- public.conv_booking_proposals.reservation_id
-- public.reservation_participants.reservation_id
+## Referenciada por (3)
+public.challenges.reservation_id, public.conv_booking_proposals.reservation_id, public.reservation_participants.reservation_id
 
 ## Índices
 - idx_reservations_challenge: `btree (challenge_id)`

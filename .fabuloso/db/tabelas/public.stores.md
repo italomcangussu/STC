@@ -18,9 +18,8 @@
 ## Chaves e restrições
 - PK (id)
 
-## Referenciada por
-- public.products.store_id
-- public.stock_automator_config.store_id
+## Referenciada por (2)
+public.products.store_id, public.stock_automator_config.store_id
 
 ## Políticas RLS
 - (RLS desligado)

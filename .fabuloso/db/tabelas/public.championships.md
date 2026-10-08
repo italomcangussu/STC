@@ -39,14 +39,8 @@
 - UNIQUE (slug)
 - CHECK championships_format_check: `CHECK ((format = ANY (ARRAY['mata-mata'::text, 'pontos-corridos'::text, 'grupo-mata-mata'::text])))`
 
-## Referenciada por
-- public.championship_admin_audit_logs.championship_id
-- public.championship_groups.championship_id
-- public.championship_participants.championship_id
-- public.championship_registrations.championship_id
-- public.championship_rounds.championship_id
-- public.championship_winners.championship_id
-- public.matches.championship_id
+## Referenciada por (7)
+public.championship_admin_audit_logs.championship_id, public.championship_groups.championship_id, public.championship_participants.championship_id, public.championship_registrations.championship_id, public.championship_rounds.championship_id, public.championship_winners.championship_id, public.matches.championship_id
 
 ## Índices
 - championships_slug_key: `btree (slug)` único

@@ -25,8 +25,8 @@
 - CHECK conv_groups_name_check: `CHECK (((name IS NULL) OR (length(name) <= 200)))`
 - CHECK conv_groups_status_check: `CHECK ((status = ANY (ARRAY['detected'::text, 'allowed'::text, 'blocked'::text])))`
 
-## Referenciada por
-- public.conv_conversations.group_id
+## Referenciada por (1)
+public.conv_conversations.group_id
 
 ## Índices
 - conv_groups_group_jid_key: `btree (group_jid)` único

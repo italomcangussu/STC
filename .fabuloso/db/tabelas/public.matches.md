@@ -55,13 +55,8 @@
 - FK (winner_registration_id) → public.championship_registrations(id)
 - CHECK matches_result_type_check: `CHECK ((result_type = ANY (ARRAY['played'::text, 'walkover'::text, 'technical_draw'::text])))`
 
-## Referenciada por
-- public.challenges.match_id
-- public.head_to_head_points.invalidated_by_match_id
-- public.head_to_head_points.match_id
-- public.matches.player_a_source_match_id
-- public.matches.player_b_source_match_id
-- public.reservations.match_id
+## Referenciada por (6)
+public.challenges.match_id, public.head_to_head_points.invalidated_by_match_id, public.head_to_head_points.match_id, public.matches.player_a_source_match_id, public.matches.player_b_source_match_id, public.reservations.match_id
 
 ## Índices
 - idx_matches_champ_result_type: `btree (championship_id, result_type)`
