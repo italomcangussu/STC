@@ -7,6 +7,7 @@
  * Nada aqui registra valores, arquivos ou texto de comprovante em log.
  */
 import { supabase } from '../supabase';
+import { fetchAllRows } from '../fetchAllRows';
 import type {
   AccountBalance, AuditRow, CashFlowBucket, ChargeAdjustmentRow, ChargePaymentRow, ChargeStatementRow, DreDetailRow, DreLineRow, FinAccount,
   DayCardRow, FinCategory, FinEntry, FinHoliday, FinRecurrence, FinSettings, MemberCreditRow, MemberPlanRow, MonthlyTrendRow, MovementRow,
@@ -31,6 +32,23 @@ async function call<T>(fn: string, args: Record<string, unknown> = {}): Promise<
 
 async function rows<T>(fn: string, args: Record<string, unknown> = {}): Promise<T[]> {
   return (await call<T[] | null>(fn, args)) ?? [];
+}
+
+/**
+ * Lista de uma função paginada por `p_limit`/`p_offset`, com até `limit` linhas a partir de `offset`.
+ * A API corta cada resposta em 1000 linhas sem avisar (e o SQL também limita `p_limit`), então um pedido
+ * maior vira várias páginas de 1000. Pedido de até 1000 continua sendo uma única chamada.
+ */
+async function pagedRows<T>(fn: string, args: Record<string, unknown>, { limit, offset }: { limit: number; offset: number }): Promise<T[]> {
+  const { data, error } = await fetchAllRows<T>(async (from, to) => {
+    try {
+      return { data: await rows<T>(fn, { ...args, p_limit: to - from + 1, p_offset: offset + from }), error: null };
+    } catch (failure) {
+      return { data: null, error: failure as { message: string } };
+    }
+  }, { maxRows: limit });
+  if (error) throw error;
+  return data ?? [];
 }
 
 // ------------------------------------------------------------------
@@ -185,7 +203,7 @@ const filterJson = (f: ChargeFilters) => ({
   due_from: f.dueFrom ?? '', due_to: f.dueTo ?? '', profile_id: f.profileId ?? '', plan_id: f.planId ?? '', charge_type: f.chargeType ?? '',
 });
 export const listCharges = (f: ChargeFilters = {}, limit = 200, offset = 0, asOf?: IsoDate) =>
-  rows<ChargeStatementRow>('fin_charge_statements', { p_filters: filterJson(f), p_as_of: asOf ?? null, p_limit: limit, p_offset: offset });
+  pagedRows<ChargeStatementRow>('fin_charge_statements', { p_filters: filterJson(f), p_as_of: asOf ?? null }, { limit, offset });
 export const chargeStatementsByIds = (ids: string[], asOf?: IsoDate) => rows<ChargeStatementRow>('fin_charge_statements_by_ids', { p_ids: ids, p_as_of: asOf ?? null });
 export const myCharges = (asOf?: IsoDate) => rows<ChargeStatementRow>('fin_my_charges', { p_as_of: asOf ?? null });
 
@@ -394,7 +412,7 @@ export const dreLines = (from: IsoDate, to: IsoDate) => rows<DreLineRow>('fin_dr
 export const dreMemo = async (from: IsoDate, to: IsoDate) => (await rows<{ contributions_cents: number; withdrawals_cents: number }>('fin_dre_memo', { p_from: from, p_to: to }))[0];
 export const dreDetail = (from: IsoDate, to: IsoDate, categoryId: string | null) => rows<DreDetailRow>('fin_dre_detail', { p_from: from, p_to: to, p_category: categoryId });
 export const movements = (from: IsoDate, to: IsoDate, filters: Record<string, unknown> = {}, limit = 1000, offset = 0) =>
-  rows<MovementRow>('fin_movements', { p_from: from, p_to: to, p_filters: filters, p_limit: limit, p_offset: offset });
+  pagedRows<MovementRow>('fin_movements', { p_from: from, p_to: to, p_filters: filters }, { limit, offset });
 export const cashFlow = (from: IsoDate, to: IsoDate, granularity: 'day' | 'week' | 'month', accountId: string | null) =>
   rows<CashFlowBucket>('fin_cash_flow', { p_from: from, p_to: to, p_granularity: granularity, p_account: accountId });
 export const receivablesSummary = async () => (await rows<ReceivablesSummary>('fin_receivables_summary'))[0];
