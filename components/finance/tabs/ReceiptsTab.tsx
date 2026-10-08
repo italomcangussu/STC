@@ -132,7 +132,7 @@ const ReviewSheet: React.FC<ReviewProps> = ({ id, queue, onClose, onDone }) => {
     const others = queue.filter((q) => q.id !== d.id).map((q) => ({
       amountCents: q.declared_amount_cents, paidOn: q.declared_paid_on, identifier: ((q.ocr ?? null) as { identifier?: string | null } | null)?.identifier ?? null,
     }));
-    return analyzeFromStatements({ detail: d, atPaid: stm.data.atPaid, now: stm.data.now, others, payeeNames: settings?.payee_names ?? [], today });
+    return analyzeFromStatements({ detail: d, atPaid: stm.data.atPaid, now: stm.data.now, others, payeeNames: settings?.payee_names ?? [], pixKey: settings?.pix_key, today });
   }, [detail.data, stm.data, queue, settings?.payee_names, today]);
 
   // Sugestão inicial da divisão (o administrador pode editar). A sobra vai para a última cobrança e vira crédito.

@@ -7,6 +7,7 @@
  */
 import { allocateAcrossCharges, type Statement } from './lateFees';
 import { diffDays, type IsoDate } from './dates';
+import { payeeCnpjMatches, payeeNameMatches } from './payee';
 import { formatBRL, type Cents } from './money';
 import type { ChargeStatementRow, ReceiptStatus } from './types';
 
@@ -40,7 +41,7 @@ export interface OtherReceipt { amountCents: Cents | null; paidOn: IsoDate | nul
 
 export interface ReceiptAnalysisInput {
   declared: { amountCents: Cents | null; paidOn: IsoDate | null };
-  extracted: { amountCents: Cents | null; paidOn: IsoDate | null; identifier?: string | null; payee?: string | null } | null;
+  extracted: { amountCents: Cents | null; paidOn: IsoDate | null; identifier?: string | null; payee?: string | null; payeeDocument?: string | null } | null;
   ocrStatus: 'not_run' | 'ok' | 'unreadable' | 'failed';
   charges: ReceiptChargeContext[];
   today: IsoDate;
@@ -49,6 +50,8 @@ export interface ReceiptAnalysisInput {
   others?: OtherReceipt[];
   /** Nomes esperados do favorecido (configuração do clube); vazio = não conferir. */
   payeeNames?: string[];
+  /** Chave Pix (CNPJ) do clube: o CNPJ do favorecido igual a ela dispensa a conferência do nome. */
+  pixKey?: string | null;
 }
 
 export type ReceiptVerdict = 'ok' | 'review' | 'blocked';
@@ -126,9 +129,9 @@ export function analyzeReceipt(input: ReceiptAnalysisInput): ReceiptAnalysis {
     if (same) { add('duplicate_fields', 'warn', 'Outro comprovante tem o mesmo identificador, ou o mesmo valor na mesma data.'); break; }
   }
 
-  const expected = (input.payeeNames ?? []).map(norm).filter(Boolean);
-  const payee = input.extracted?.payee ? norm(input.extracted.payee) : null;
-  if (expected.length > 0 && payee && !expected.some((n) => payee.includes(n) || n.includes(payee))) {
+  const expected = (input.payeeNames ?? []).filter((n) => n.trim());
+  const cnpjOk = payeeCnpjMatches(input.extracted?.payeeDocument, input.pixKey);
+  if (!cnpjOk && expected.length > 0 && input.extracted?.payee && !payeeNameMatches(input.extracted.payee, expected)) {
     add('payee_mismatch', 'warn', 'O favorecido lido não parece ser o clube. Confira o comprovante.');
   }
 

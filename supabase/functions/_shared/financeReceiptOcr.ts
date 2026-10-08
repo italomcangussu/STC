@@ -24,6 +24,8 @@ const NOISE=/tarifa|taxa|juros|multa|desconto|saldo|limite|iof|encargo|abatiment
 const MONEY_BEFORE=/tarifa|taxa|juros|multa|desconto|saldo|limite/;
 const PAYEE_LABEL=/^(?:favorecido|recebedor|destinat[aá]rio|benefici[aá]rio|quem recebeu|nome do recebedor|destino|para)\s*[:-]?\s*(.*)$/i;
 const NOT_NAME=/\d{3}\.?\d{3}\.?\d{3}-?\d{2}|\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}|r\$|ag[eê]ncia|conta|chave|cpf|cnpj|banco|institui/i;
+const PAYER_LABEL=/^(?:origem|pagador|remetente|quem pagou|nome do pagador|dados de quem pagou)\b/i;
+const CNPJ_RE=/(?<![\w*])[\d*•xX#]{2}\.?[\d*•xX#]{3}\.?[\d*•xX#]{3}(\/)?[\d*•xX#]{4}-?[\d*•xX#]{2}(?![\w*])/;
 const E2E_RE=/\bE\d{8}\d{8}\d{4}[A-Za-z0-9]{11}\b/;
 const ID_LABEL_RE=/(?:autentica[cç][aã]o|id da transa[cç][aã]o|id transa[cç][aã]o|c[oó]digo de transa[cç][aã]o|c[oó]digo da transa[cç][aã]o|protocolo|n[uú]mero da transa[cç][aã]o|nsu)\s*[:-]?\s*([A-Za-z0-9.-]{6,64})/i;
 
@@ -97,8 +99,22 @@ export function parseReceiptText(text:string):Record<string,unknown>{
     if(candidate.length>=3&&candidate.length<=80&&!NOT_NAME.test(candidate)&&/[A-Za-zÀ-ÿ]{3}/.test(candidate))payee=candidate;
   }
 
+  // CNPJ só do bloco do favorecido (nunca CPF nem dados do pagador); mascarado vira `*`.
+  let payeeDocument:string|null=null;
+  for(let i=0;i<lines.length&&!payeeDocument;i++){
+    if(!PAYEE_LABEL.test(clean(lines[i])))continue;
+    for(let j=i;j<Math.min(i+9,lines.length);j++){
+      const line=clean(lines[j]);
+      if(j>i&&PAYER_LABEL.test(line))break;
+      const m=CNPJ_RE.exec(line);
+      if(!m||(!m[1]&&!/cnpj|chave/i.test(`${lines[j-1]??''} ${line}`)))continue;
+      const doc=m[0].replace(/[^\d*•xX#]/g,'').replace(/[^\d]/g,'*');
+      if(doc.replace(/\*/g,'').length>=4){payeeDocument=doc;break;}
+    }
+  }
+
   return {
-    amount_cents:amount, paid_on:paidOn, identifier, payee,
+    amount_cents:amount, paid_on:paidOn, identifier, payee, payee_document:payeeDocument,
     confidence:{amount:amountConf,date:dateConf,identifier:idConf,payee:payee?'high':'none'},
   };
 }

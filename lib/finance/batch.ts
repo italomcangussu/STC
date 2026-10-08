@@ -50,7 +50,7 @@ export interface QueuedReceiptDetail {
   possible_duplicate: boolean;
 }
 
-type OcrFields = { amount_cents?: number | null; paid_on?: string | null; identifier?: string | null; payee?: string | null } | null;
+type OcrFields = { amount_cents?: number | null; paid_on?: string | null; identifier?: string | null; payee?: string | null; payee_document?: string | null } | null;
 
 /**
  * Outros comprovantes da fila usados na checagem de duplicidade. No lote, valor + data
@@ -68,7 +68,7 @@ export function duplicateCandidates(queue: ReceiptQueueRow[], self: { id: string
 
 /** Mesma conferência da folha individual, montada a partir dos extratos já lidos do banco. */
 export function analyzeFromStatements(i: {
-  detail: QueuedReceiptDetail; atPaid: ChargeStatementRow[]; now: ChargeStatementRow[]; others: OtherReceipt[]; payeeNames: string[]; today: IsoDate;
+  detail: QueuedReceiptDetail; atPaid: ChargeStatementRow[]; now: ChargeStatementRow[]; others: OtherReceipt[]; payeeNames: string[]; pixKey?: string | null; today: IsoDate;
 }): ReceiptAnalysis {
   const ocr = (i.detail.ocr ?? null) as OcrFields;
   const charges = i.atPaid.map((r) => {
@@ -77,8 +77,8 @@ export function analyzeFromStatements(i: {
   });
   return analyzeReceipt({
     declared: { amountCents: i.detail.declared_amount_cents, paidOn: i.detail.declared_paid_on as IsoDate | null },
-    extracted: ocr ? { amountCents: ocr.amount_cents ?? null, paidOn: (ocr.paid_on ?? null) as IsoDate | null, identifier: ocr.identifier ?? null, payee: ocr.payee ?? null } : null,
-    ocrStatus: i.detail.ocr_status, charges, today: i.today, possibleDuplicate: i.detail.possible_duplicate, others: i.others, payeeNames: i.payeeNames,
+    extracted: ocr ? { amountCents: ocr.amount_cents ?? null, paidOn: (ocr.paid_on ?? null) as IsoDate | null, identifier: ocr.identifier ?? null, payee: ocr.payee ?? null, payeeDocument: ocr.payee_document ?? null } : null,
+    ocrStatus: i.detail.ocr_status, charges, today: i.today, possibleDuplicate: i.detail.possible_duplicate, others: i.others, payeeNames: i.payeeNames, pixKey: i.pixKey,
   });
 }
 

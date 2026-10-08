@@ -61,7 +61,7 @@ describe('OCR de comprovante no servidor', () => {
 
   it('o resultado não carrega o texto bruto', () => {
     const r = parseReceiptText(PIX);
-    expect(Object.keys(r).sort()).toEqual(['amount_cents', 'confidence', 'identifier', 'paid_on', 'payee']);
+    expect(Object.keys(r).sort()).toEqual(['amount_cents', 'confidence', 'identifier', 'paid_on', 'payee', 'payee_document']);
     expect(JSON.stringify(r)).not.toContain('Comprovante de transferência');
   });
 

@@ -64,6 +64,7 @@ export const CAPABILITIES: readonly Capability[] = [
   { id: 'adm.member.status', domain: 'pessoas', risk: 'N1', label: 'Inativar/reativar sócio', panel: 'Sócios', write: { admAction: 'socio_status' } },
   { id: 'adm.dependent.create', domain: 'pessoas', risk: 'N1', label: 'Cadastrar dependente de sócio', panel: 'Alunos', write: { admAction: 'dependente_criar' } },
   { id: 'adm.message.send', domain: 'pessoas', risk: 'N1', label: 'Chamar sócio no privado e mandar mensagem', panel: 'Conversas', write: { admAction: 'mensagem_enviar' } },
+  { id: 'adm.broadcast.send', domain: 'pessoas', risk: 'N1', label: 'Disparar comunicado no WhatsApp de todos os sócios (agora ou agendado)', panel: 'Conversas', write: { admAction: 'comunicado_enviar' } },
   { id: 'adm.signature.resend', domain: 'clube', risk: 'N1', label: 'Reenviar avisos de assinatura com falha', panel: 'Documentos', write: { admAction: 'assinatura_reenviar' } },
   { id: 'adm.reservation.cancel', domain: 'quadra', risk: 'N1', label: 'Cancelar reserva', panel: 'Reservas', write: { admAction: 'reserva_cancelar' } },
   { id: 'fin.payment.register', domain: 'financeiro', risk: 'N2', label: 'Dar baixa em pagamento', panel: 'Financeiro', write: { finAction: 'baixa' } },

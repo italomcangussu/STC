@@ -21,6 +21,8 @@ export interface ExtractedReceipt {
   dateCandidates: IsoDate[];
   identifier: string | null;
   payee: string | null;
+  /** CNPJ do favorecido (14 posições, `*` onde o banco mascarou). Nunca CPF nem dados do pagador. */
+  payeeDocument: string | null;
   confidence: { amount: FieldConfidence; date: FieldConfidence; identifier: FieldConfidence; payee: FieldConfidence };
 }
 
@@ -99,6 +101,25 @@ function findIdentifier(text: string): { value: string | null; confidence: Field
 const PAYEE_LABEL = /^(?:favorecido|recebedor|destinat[aá]rio|benefici[aá]rio|quem recebeu|nome do recebedor|destino|para)\s*[:-]?\s*(.*)$/i;
 const NOT_A_NAME = /\d{3}\.?\d{3}\.?\d{3}-?\d{2}|\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}|r\$|ag[eê]ncia|conta|chave|cpf|cnpj|banco|institui/i;
 
+const PAYER_LABEL = /^(?:origem|pagador|remetente|quem pagou|nome do pagador|dados de quem pagou)\b/i;
+const CNPJ_RE = /(?<![\w*])[\d*•xX#]{2}\.?[\d*•xX#]{3}\.?[\d*•xX#]{3}(\/)?[\d*•xX#]{4}-?[\d*•xX#]{2}(?![\w*])/;
+
+/** CNPJ do bloco do favorecido (do rótulo até o bloco do pagador); CPF e dados do pagador são ignorados. */
+function findPayeeDocument(lines: string[]): string | null {
+  for (let i = 0; i < lines.length; i++) {
+    if (!PAYEE_LABEL.test(clean(lines[i]))) continue;
+    for (let j = i; j < Math.min(i + 9, lines.length); j++) {
+      const line = clean(lines[j]);
+      if (j > i && PAYER_LABEL.test(line)) break;
+      const m = CNPJ_RE.exec(line);
+      if (!m || (!m[1] && !/cnpj|chave/i.test(`${lines[j - 1] ?? ''} ${line}`))) continue;
+      const doc = m[0].replace(/[^\d*•xX#]/g, '').replace(/[^\d]/g, '*');
+      if (doc.replace(/\*/g, '').length >= 4) return doc;
+    }
+  }
+  return null;
+}
+
 function findPayee(lines: string[]): { value: string | null; confidence: FieldConfidence } {
   for (let i = 0; i < lines.length; i++) {
     const m = PAYEE_LABEL.exec(clean(lines[i]));
@@ -145,6 +166,7 @@ export function parseReceiptText(text: string): ExtractedReceipt {
     dateCandidates: [...new Set(dates.filter((d) => d.priority > 0).map((d) => d.value))],
     identifier: id.value,
     payee: payee.value,
+    payeeDocument: findPayeeDocument(lines),
     confidence: { amount: amountConfidence, date: dateConfidence, identifier: id.confidence, payee: payee.confidence },
   };
 }
@@ -162,6 +184,7 @@ export function toStoredOcr(e: ExtractedReceipt, engine: string): Record<string,
     paid_on: e.paidOn,
     identifier: e.identifier,
     payee: e.payee,
+    payee_document: e.payeeDocument,
     confidence: e.confidence,
   };
 }

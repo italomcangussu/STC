@@ -1,4 +1,5 @@
 import { diffDays, type IsoDate } from './dates';
+import { payeeCnpjMatches, payeeNameMatches } from './payee';
 
 export const DEFAULT_PENDENCY_REMINDER_DAYS = [0, 3, 7, 14, 21] as const;
 
@@ -39,6 +40,9 @@ export interface AutoApprovePendencyReceiptInput {
   payee: string | null;
   payeeConfidence: Confidence;
   expectedPayees: string[];
+  /** CNPJ lido no bloco do favorecido e chave Pix (CNPJ) do clube: igual à chave basta, sem conferir o nome. */
+  payeeDocument?: string | null;
+  pixKey?: string | null;
 }
 
 const norm = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim();
@@ -51,11 +55,10 @@ export function canAutoApprovePendencyReceipt(i: AutoApprovePendencyReceiptInput
   if (i.amountCents !== i.ocrAmountCents) return { ok: false, reason: 'AMOUNT_MISMATCH' };
   if (i.paidOn !== i.ocrPaidOn) return { ok: false, reason: 'DATE_MISMATCH' };
 
-  const expected = i.expectedPayees.map(norm).filter(Boolean);
-  if (expected.length > 0) {
+  if (!payeeCnpjMatches(i.payeeDocument, i.pixKey)) {
+    if (i.expectedPayees.every((x) => norm(x).length < 3)) return { ok: false, reason: 'PAYEE_NOT_CONFIGURED' };
     if (!i.payee || i.payeeConfidence !== 'high') return { ok: false, reason: 'PAYEE_NOT_CONFIRMED' };
-    const got = norm(i.payee);
-    if (!expected.some((x) => got.includes(x) || x.includes(got))) return { ok: false, reason: 'PAYEE_MISMATCH' };
+    if (!payeeNameMatches(i.payee, i.expectedPayees)) return { ok: false, reason: 'PAYEE_MISMATCH' };
   }
 
   return { ok: true, reason: null };

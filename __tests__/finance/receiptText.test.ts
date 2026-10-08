@@ -98,3 +98,38 @@ describe('leitura assistida do texto do comprovante (só sugere)', () => {
     expect(toStoredOcr(r, 'tesseract')).toMatchObject({ engine: 'tesseract', amount_cents: 5000 });
   });
 });
+
+describe('CNPJ do favorecido (só do bloco do destino)', () => {
+  const bloco = (doc: string) => `Comprovante de transferência
+Valor
+R$ 150,00
+Destino
+Nome
+Sobral Tênis Clube
+CPF/CNPJ
+${doc}
+Origem
+Nome
+Maria da Silva
+CPF/CNPJ
+123.456.789-00`;
+
+  it('lê o CNPJ completo do destino e ignora o CPF do pagador', () => {
+    expect(parseReceiptText(bloco('12.345.678/0001-95')).payeeDocument).toBe('12345678000195');
+    expect(toStoredOcr(parseReceiptText(bloco('12.345.678/0001-95')), 'x').payee_document).toBe('12345678000195');
+  });
+
+  it('mantém as posições mascaradas como *', () => {
+    expect(parseReceiptText(bloco('**.345.678/0001-**')).payeeDocument).toBe('**3456780001**');
+  });
+
+  it('mascarado quase todo guarda só o que apareceu (o banco exige 8+ dígitos para aceitar)', () => {
+    expect(parseReceiptText(bloco('**.***.***/0001-**')).payeeDocument).toBe('********0001**');
+  });
+
+  it('CNPJ do pagador (depois de "Origem") não conta', () => {
+    const t = `Destino\nNome\nSobral Tênis Clube\nOrigem\nNome\nEmpresa X\nCNPJ\n98.765.432/0001-10`;
+    expect(parseReceiptText(t).payeeDocument).toBeNull();
+  });
+});
+

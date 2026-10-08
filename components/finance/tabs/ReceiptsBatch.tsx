@@ -57,6 +57,7 @@ export const BatchApproveSheet: React.FC<{ open: boolean; queue: ReceiptQueueRow
 
   const queueKey = queue.map((q) => q.id).join(',');
   const payeeNames = settings?.payee_names;
+  const pixKey = settings?.pix_key;
   const data = useAsync<Loaded>(async () => {
     if (!open) return { items: [], failed: [] };
     setProgress({ done: 0, total: queue.length });
@@ -66,13 +67,13 @@ export const BatchApproveSheet: React.FC<{ open: boolean; queue: ReceiptQueueRow
         const ocr = (d.ocr ?? null) as { paid_on?: string | null } | null;
         const paidOn = (d.declared_paid_on ?? ocr?.paid_on ?? today) as IsoDate;
         const [atPaid, now] = d.charge_ids.length === 0 ? [[], []] : await Promise.all([chargeStatementsByIds(d.charge_ids, paidOn), chargeStatementsByIds(d.charge_ids)]);
-        const analysis = analyzeFromStatements({ detail: d, atPaid, now, others: duplicateCandidates(queue, row), payeeNames: payeeNames ?? [], today });
+        const analysis = analyzeFromStatements({ detail: d, atPaid, now, others: duplicateCandidates(queue, row), payeeNames: payeeNames ?? [], pixKey, today });
         return { row, storagePath: d.storage_path, contentType: d.content_type, analysis, readiness: batchReadiness(analysis), months: atPaid.map((c) => monthLabel(c.competence_month)) };
       } catch { return row; }
     }, (done, total) => setProgress({ done, total }));
     setProgress(null);
     return { items: res.filter((r): r is Item => 'analysis' in r), failed: res.filter((r): r is ReceiptQueueRow => !('analysis' in r)) };
-  }, [open, queueKey, payeeNames]);
+  }, [open, queueKey, payeeNames, pixKey]);
 
   const items = useMemo(() => data.data?.items ?? [], [data.data]);
   const ready = useMemo(() => items.filter((i) => i.readiness.status === 'ready'), [items]);

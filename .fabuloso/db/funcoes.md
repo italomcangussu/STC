@@ -1,5 +1,5 @@
 # Funções
-> 452 funções nos schemas conv_private, fin_private, public, sig_private. Corpo completo sob demanda: `select pg_get_functiondef('<schema.nome>(<args>)'::regprocedure)`.
+> 453 funções nos schemas conv_private, fin_private, public, sig_private. Corpo completo sob demanda: `select pg_get_functiondef('<schema.nome>(<args>)'::regprocedure)`.
 
 | Função | Argumentos | Retorno | Ling. | Segurança | anon | Nota |
 |---|---|---|---|---|---|---|
@@ -169,6 +169,7 @@
 | fin_private.check_account | `p_account uuid` | `void` | plpgsql | DEFINER | sim |  |
 | fin_private.check_category | `p_category uuid, p_kind text` | `void` | plpgsql | DEFINER | sim |  |
 | fin_private.check_period | `p_from date, p_to date` | `void` | plpgsql | invoker | sim |  |
+| fin_private.cnpj_matches | `p_read text, p_key text` | `boolean` | sql | invoker | não |  |
 | fin_private.day_card_rows | `p_from date, p_to date` | `TABLE(reservation_id uuid, occurred_on date, guest_name tex…` | plpgsql | DEFINER | sim |  |
 | fin_private.dre_lines | `p_from date, p_to date` | `TABLE(line text, category_id uuid, name text, parent_name t…` | sql | DEFINER | sim |  |
 | fin_private.dre_rows | `p_from date, p_to date` | `TABLE(category_id uuid, amount_cents bigint, source_type te…` | plpgsql | DEFINER | sim |  |

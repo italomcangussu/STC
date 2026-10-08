@@ -8,7 +8,7 @@
     "public",
     "sig_private"
   ],
-  "ultima_migracao": "20261007400000",
+  "ultima_migracao": "20261008101944",
   "extensoes": [
     "pg_cron 1.6.4",
     "pg_net 0.19.5",
@@ -30633,6 +30633,19 @@
       "volatilidade": "i",
       "exec_anon": true,
       "exec_authenticated": true,
+      "comentario": null
+    },
+    {
+      "nome": "fin_private.cnpj_matches",
+      "args": "p_read text, p_key text",
+      "retorno": "boolean",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": false,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "i",
+      "exec_anon": false,
+      "exec_authenticated": false,
       "comentario": null
     },
     {

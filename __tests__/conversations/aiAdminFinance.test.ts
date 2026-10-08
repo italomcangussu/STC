@@ -715,6 +715,36 @@ describe('chamar sócio no privado e mandar mensagem (N1)', () => {
   }, 90000);
 });
 
+describe('comunicado no WhatsApp de todos os sócios (N1)', () => {
+  const dizer = async (w: W, p: ReturnType<typeof provider>, texto: string, o: Record<string, unknown>) => {
+    const m = await direct(w, texto);
+    return turn(w, m.message_id, script(answer(o)).chat, p.uaz);
+  };
+  const com = (slots: Record<string, unknown> = {}) => ({ ready: true, intent: 'admin_acao', slots: { adm_action: 'comunicado_enviar', ...slots } });
+  const texto = 'COMUNICADO – STC\n\nConcluímos a transição entre as diretorias. Iniciaremos o Plano de Revitalização do STC.';
+
+  it('sem texto: explica que consegue e pede texto e horário; com texto: mostra e só enfileira (uma vez por sócio) depois do "sim"', async () => {
+    const w = await setup(); const p = provider();
+    await q(w.db, `update public.profiles set phone = '88993412944' where id = '${U.socioB}'`);
+    await dizer(w, p, 'preciso disparar um comunicado para os sócios', com());
+    expect(p.sent.at(-1)!.text).toMatch(/Consigo sim.*texto exato e o horário/);
+    const r = await dizer(w, p, 'texto acima, às 8h', com({ send_body: texto, start: '08:00' }));
+    expect(r.action).toBe('proposed_admin');
+    expect(p.sent.at(-1)!.text).toMatch(/Vou mandar este comunicado no WhatsApp pessoal de \d+ sócios, em .* às 08:00/);
+    expect(await q(w.db, `select 1 from public.conv_followups where send_body is not null`)).toHaveLength(0);
+    expect((await dizer(w, p, 'sim', { customer_confirmed: true })).action).toBe('admin_confirmed');
+    expect(p.sent.at(-1)!.text).toMatch(/comunicado está agendado para \d+ sócios/);
+    const f = await q<any>(w.db, `select f.send_body, f.due_at, ct.phone from public.conv_followups f join public.conv_conversations c on c.id = f.conversation_id join public.conv_contacts ct on ct.id = c.contact_id where f.send_body is not null`);
+    expect(f.length).toBeGreaterThan(0);
+    expect(new Set(f.map((x: any) => x.phone)).size).toBe(f.length);
+    expect(f.every((x: any) => x.send_body === texto)).toBe(true);
+    expect(f.some((x: any) => x.phone === '5588993412944')).toBe(true);
+    // repetir o "sim" não duplica
+    await dizer(w, p, 'sim', { customer_confirmed: true });
+    expect(await q(w.db, `select 1 from public.conv_followups where send_body is not null`)).toHaveLength(f.length);
+  }, 120000);
+});
+
 describe('comprovante enviado logo depois do texto: o João não fica mudo', () => {
   const imagem = (w: W, phone: string) => svc<any>(w.db, `public.conv_svc_ingest_message(${j({ provider_id: `I${++n}${Math.random()}`, chat_kind: 'direct', phone, name: 'X', kind: 'image', body: '📷 Foto' })})`);
   const turnoMidia = (w: W, id: string, chat: Chat, uaz: UazCaller) => runTurn(id, { db: pgDb(w.db), chat, uaz, sleep: async () => undefined, mediaOnly: true });
