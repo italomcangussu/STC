@@ -26,7 +26,8 @@ const MembersTab: React.FC = () => {
       {view === 'charges' && <ChargesView list={list} onOpen={setSelected} onGenerated={plans.reload} />}
       {view === 'plans' && <PlansView plans={plans} onChanged={reloadAll} />}
       {view === 'credits' && <CreditsPanel />}
-      <ChargeSheet charge={selected} onClose={() => setSelected(null)} onChanged={() => { list.charges.reload(); setSelected(null); }} />
+      {/* Uma folha nova por cobrança: o formulário que ficou aberto na anterior não passa para a próxima. */}
+      <ChargeSheet key={selected?.charge_id ?? 'none'} charge={selected} onClose={() => setSelected(null)} onChanged={() => { list.charges.reload(); setSelected(null); }} />
     </div>
   );
 };

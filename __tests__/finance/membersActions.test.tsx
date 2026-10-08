@@ -214,6 +214,21 @@ describe('Cobrança — cancelar e estornar', () => {
 
     expect(dlg.queryByRole('button', { name: /Registrar pagamento|Desconto|Dispensar|Estornar|Cancelar cobrança/ })).toBeNull();
   });
+
+  it('abrir outra cobrança não herda o formulário nem o valor da anterior', async () => {
+    api.listCharges.mockResolvedValue([charge(), charge({ charge_id: 'c2', profile_name: 'Bia Sócia', total_due_cents: 9000, original_amount_cents: 9000 })]);
+    mount();
+    let dlg = await openCharge('Ana Sócia');
+    fireEvent.click(dlg.getByRole('button', { name: 'Registrar pagamento' }));
+    expect(dlg.getByLabelText('Valor recebido')).toHaveValue('150,00');
+    fireEvent.click(dlg.getByRole('button', { name: 'Fechar' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+
+    dlg = await openCharge('Bia Sócia');
+    expect(dlg.queryByRole('button', { name: 'Confirmar pagamento' })).toBeNull();
+    fireEvent.click(dlg.getByRole('button', { name: 'Registrar pagamento' }));
+    expect(dlg.getByLabelText('Valor recebido')).toHaveValue('90,00');
+  });
 });
 
 describe('Cobrança — extrato e histórico', () => {
