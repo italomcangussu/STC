@@ -75,6 +75,8 @@ let pendingInsert: Promise<any> | null = null;
 let insertResolvers: Array<(value: any) => void> = [];
 let postgresCallbacks: Array<() => void> = [];
 let failProfilesFetch = false;
+let failReservationsFetch = false;
+let gteCalls: Array<{ table: string; column: string; value: string }> = [];
 let insertedRows: any[] = [];
 
 function makeQuery(table: TableName) {
@@ -82,6 +84,10 @@ function makeQuery(table: TableName) {
     select: vi.fn(() => query),
     order: vi.fn(() => query),
     range: vi.fn(() => query),
+    gte: vi.fn((column: string, value: string) => {
+      gteCalls.push({ table, column, value });
+      return query;
+    }),
     not: vi.fn(() => query),
     in: vi.fn(() => query),
     contains: vi.fn(() => query),
@@ -105,6 +111,9 @@ function makeQuery(table: TableName) {
       if (table === 'profiles' && failProfilesFetch) {
         return Promise.resolve({ data: null, error: new Error('Network offline') }).then(resolve);
       }
+      if (table === 'reservations' && failReservationsFetch) {
+        return Promise.resolve({ data: null, error: new Error('Falha ao ler reservas') }).then(resolve);
+      }
       return Promise.resolve({ data: tableData[table], error: null }).then(resolve);
     },
   };
@@ -118,6 +127,8 @@ beforeEach(() => {
   insertResolvers = [];
   postgresCallbacks = [];
   failProfilesFetch = false;
+  failReservationsFetch = false;
+  gteCalls = [];
   insertedRows = [];
   tableData.reservations = [];
 
@@ -180,5 +191,47 @@ describe('Agenda reservation persistence', () => {
     });
 
     consoleErrorSpy.mockRestore();
+  });
+  it('avisa quando não consegue ler as reservas, em vez de dizer que o dia está vazio', async () => {
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    failReservationsFetch = true;
+    render(<ConfirmProvider><Agenda currentUser={currentUser} /></ConfirmProvider>);
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(/não consegui carregar a agenda/i);
+    expect(screen.queryByText(/nenhuma reserva para este dia/i)).not.toBeInTheDocument();
+
+    failReservationsFetch = false;
+    fireEvent.click(screen.getByRole('button', { name: /tentar de novo/i }));
+    await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument());
+    expect(await screen.findByText(/nenhuma reserva para este dia/i)).toBeInTheDocument();
+
+    consoleErrorSpy.mockRestore();
+  });
+
+  it('abre lendo só os últimos 60 dias em diante e recua o histórico quando a pessoa navega para antes', async () => {
+    render(<ConfirmProvider><Agenda currentUser={currentUser} /></ConfirmProvider>);
+    await screen.findByRole('button', { name: /nova reserva/i });
+
+    const firstLoad = gteCalls.filter(c => c.table === 'reservations');
+    expect(firstLoad).toHaveLength(1);
+    expect(firstLoad[0].column).toBe('date');
+    expect(gteCalls.some(c => c.table === 'matches' && c.column === 'scheduled_date' && c.value === firstLoad[0].value)).toBe(true);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Semana' }));
+    for (let i = 0; i < 10; i += 1) {
+      const previous = await waitFor(() => {
+        const button = screen.getAllByRole('button').find(b => b.querySelector('svg.lucide-chevron-left'));
+        if (!button) throw new Error('botão anterior ainda não apareceu');
+        return button;
+      });
+      fireEvent.click(previous);
+    }
+
+    await waitFor(() => {
+      expect(gteCalls.filter(c => c.table === 'reservations').length).toBeGreaterThan(1);
+    });
+    const last = gteCalls.filter(c => c.table === 'reservations').at(-1)!;
+    expect(last.value < firstLoad[0].value).toBe(true);
+    expect(last.value.endsWith('-01')).toBe(true);
   });
 });

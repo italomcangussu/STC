@@ -4,7 +4,9 @@ import { createPortal } from 'react-dom';
 import { User, Reservation, ReservationType, NonSocioStudent, Professor, Match, StudentProfile, RelationshipType } from '../types';
 import { ChevronLeft, ChevronRight, Plus, X, Calendar, MapPin, Users, Check, AlertCircle, Search, Loader2, Trash2, Trophy, UserCog, ArrowRight, Info, UserPlus, LogOut, Wallet, Pencil, UserMinus, Share2, ArrowLeft } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { fetchAllRows } from '../lib/fetchAllRows';
+import { loadAgendaReservations } from '../lib/agenda/loadAgendaReservations';
+import { defaultHistoryStart, extendedHistoryStart, firstDayShown } from '../lib/agenda/reservationWindow';
+import { AgendaLoadError } from './agenda/AgendaLoadError';
 import { notify } from '../lib/notifications';
 import { matchesSearch } from '../lib/searchText';
 import { useConfirm } from '../hooks/useConfirm';
@@ -1200,7 +1202,12 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
 
     const [challenges, setChallenges] = useState<Challenge[]>([]);
     const [loading, setLoading] = useState(true);
+    const [loadFailed, setLoadFailed] = useState(false);
     const [showCancelled, setShowCancelled] = useState(false);
+
+    // Reservas antigas só são lidas quando a pessoa navega até elas; `fetchSeq` descarta respostas atrasadas.
+    const historyFromRef = React.useRef(defaultHistoryStart(getNowInFortaleza()));
+    const fetchSeq = React.useRef(0);
 
     // --- CHAMPIONSHIP DATA ---
     // We will merge matches into reservations, but we can also store them if needed separately
@@ -1215,6 +1222,8 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
     // Stable fetchData function
     const fetchData = React.useCallback(async (showLoading = true) => {
         if (showLoading) setLoading(true);
+        const seq = ++fetchSeq.current;
+        const historyFrom = historyFromRef.current;
         try {
             // Fetch profiles
             const { data: profilesData, error: profilesError } = await supabase
@@ -1241,150 +1250,11 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                 setProfiles(mappedProfiles);
             }
 
-            // Fetch reservations from Supabase
-            const { data: reservationsData, error: reservationsError } = await fetchAllRows((from, to) =>
-                supabase
-                    .from('reservations')
-                    .select('*')
-                    .order('date', { ascending: true })
-                    .order('start_time', { ascending: true })
-                    .order('id', { ascending: true })
-                    .range(from, to));
+            const uniqueReservations = await loadAgendaReservations(historyFrom, profilesForFallback);
 
-            let mappedReservations: Reservation[] = [];
-            if (reservationsError) {
-                console.log('Reservations table may not exist yet, using empty array');
-            } else if (reservationsData) {
-                mappedReservations = reservationsData.map(r => ({
-                    id: r.id,
-                    type: r.type,
-                    date: r.date,
-                    startTime: r.start_time,
-                    endTime: r.end_time,
-                    courtId: r.court_id,
-                    creatorId: r.creator_id,
-                    participantIds: r.participant_ids || [],
-                    guestName: r.guest_name,
-                    guestResponsibleId: r.guest_responsible_id,
-                    professorId: r.professor_id,
-                    studentType: r.student_type,
-                    nonSocioStudentId: r.non_socio_student_id,
-                    nonSocioStudentIds: r.non_socio_student_ids || [],
-                    observation: r.observation,
-                    status: r.status || 'active'
-                }));
-            }
-
-            // Store all in a temporary array
-            let allCombined = [...mappedReservations];
-
-            // Fetch Championship Matches with a stable query to avoid brittle deep joins.
-            const { data: matchesData, error: matchesError } = await supabase
-                .from('matches')
-                .select(`
-                    *,
-                    championships(name),
-                    championship_rounds(name)
-                `)
-                .not('scheduled_date', 'is', null)
-                .not('scheduled_time', 'is', null)
-                .order('scheduled_date', { ascending: true })
-                .order('scheduled_time', { ascending: true });
-
-            if (matchesError) {
-                console.warn('Error fetching matches for agenda:', matchesError.message);
-            }
-
-            const registrationLookup = new Map<string, { name: string | null; avatar: string | null }>();
-            if (matchesData && matchesData.length > 0) {
-                const registrationIds = Array.from(new Set(
-                    matchesData.flatMap((m: any) => [m.registration_a_id, m.registration_b_id].filter(Boolean))
-                )) as string[];
-
-                if (registrationIds.length > 0) {
-                    const { data: registrationsData, error: registrationsError } = await supabase
-                        .from('championship_registrations')
-                        .select('id, participant_type, guest_name, user_id, user:profiles!user_id(name, avatar_url)')
-                        .in('id', registrationIds);
-
-                    if (registrationsError) {
-                        console.warn('Error fetching championship registrations for agenda:', registrationsError.message);
-                    } else if (registrationsData) {
-                        registrationsData.forEach((reg: any) => {
-                            const isGuest = reg.participant_type === 'guest';
-                            registrationLookup.set(reg.id, {
-                                name: isGuest ? (reg.guest_name || null) : (reg.user?.name || null),
-                                avatar: isGuest ? null : (reg.user?.avatar_url || null)
-                            });
-                        });
-                    }
-                }
-
-                const mappedMatches: Reservation[] = matchesData.map((m: any) => {
-                    const [hours, minutes] = (m.scheduled_time || '00:00').split(':').map(Number);
-                    const endDate = getNowInFortaleza();
-                    endDate.setHours(hours, minutes + 90, 0);
-                    const endTime = endDate.toTimeString().slice(0, 5);
-
-                    const profileA = profilesForFallback.find(p => p.id === m.player_a_id);
-                    const profileB = profilesForFallback.find(p => p.id === m.player_b_id);
-                    const regA = m.registration_a_id ? registrationLookup.get(m.registration_a_id) : undefined;
-                    const regB = m.registration_b_id ? registrationLookup.get(m.registration_b_id) : undefined;
-
-                    return {
-                        id: `match_${m.id}`,
-                        matchId: m.id,
-                        type: 'Campeonato',
-                        date: m.scheduled_date!,
-                        startTime: (m.scheduled_time || '').slice(0, 5),
-                        endTime: endTime,
-                        courtId: m.court_id!,
-                        creatorId: 'system',
-                        participantIds: [m.player_a_id, m.player_b_id].filter(Boolean) as string[],
-                        participantNames: [
-                            regA?.name || profileA?.name || null,
-                            regB?.name || profileB?.name || null
-                        ],
-                        participantAvatars: [
-                            regA?.avatar || profileA?.avatar || null,
-                            regB?.avatar || profileB?.avatar || null
-                        ],
-                        scoreA: m.score_a || [0],
-                        scoreB: m.score_b || [0],
-                        matchStatus: m.status || 'pending',
-                        matchWinnerId: m.winner_id || null,
-                        matchIsWalkover: !!m.is_walkover,
-                        matchRegistrationAId: m.registration_a_id || null,
-                        matchRegistrationBId: m.registration_b_id || null,
-                        matchWalkoverWinnerRegistrationId: m.walkover_winner_registration_id || null,
-                        guestName: null,
-                        guestResponsibleId: null,
-                        professorId: null,
-                        studentType: null,
-                        nonSocioStudentId: null,
-                        nonSocioStudentIds: [],
-                        observation: `${(m.championships as any)?.name || 'Campeonato'} | ${(m.championship_rounds as any)?.name || 'Rodada'}`,
-                        status: 'active'
-                    };
-                });
-                allCombined = [...allCombined, ...mappedMatches];
-            }
-
-            // Deduplicate by slot (date, time, court)
-            const uniqueReservations = Array.from(
-                allCombined.reduce((map, item) => {
-                    const key = `${item.date}_${item.startTime}_${item.courtId}`;
-                    const existing = map.get(key);
-
-                    // Keep 'match_' items over standard ones if same slot
-                    if (!existing || item.id.startsWith('match_')) {
-                        map.set(key, item);
-                    }
-                    return map;
-                }, new Map<string, Reservation>()).values()
-            );
-
+            if (seq !== fetchSeq.current) return; // outra leitura mais nova já está a caminho
             setReservations(uniqueReservations);
+            setLoadFailed(false);
 
             // Fetch courts
             const { data: courtsData } = await supabase
@@ -1462,6 +1332,10 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
             })));
         } catch (err) {
             console.error('Error fetching data:', err);
+            if (seq === fetchSeq.current) {
+                setLoadFailed(true);
+                notify.failure(err, 'Não foi possível carregar a agenda.', { event: 'agenda_load_failed' });
+            }
         } finally {
             if (showLoading) setLoading(false);
         }
@@ -1471,6 +1345,14 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
     useEffect(() => {
         fetchData(true);
     }, [fetchData]);
+
+    // Navegou para antes do que foi carregado: recua o histórico e lê de novo.
+    useEffect(() => {
+        const extended = extendedHistoryStart(historyFromRef.current, firstDayShown(currentDate, view));
+        if (!extended) return;
+        historyFromRef.current = extended;
+        fetchData(true);
+    }, [currentDate, view, fetchData]);
 
     // Supabase Real-time Subscription
     const refetchSilently = React.useCallback(() => { fetchData(false); }, [fetchData]);
@@ -1894,7 +1776,7 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
             </h3>
             <div className="space-y-3">
                 {filteredReservations.length === 0 ? (
-                    <div className="text-center py-10 text-stone-600 section-header animate-fade-in">Nenhuma reserva para este dia.</div>
+                    !loadFailed && <div className="text-center py-10 text-stone-600 section-header animate-fade-in">Nenhuma reserva para este dia.</div>
                 ) : (
                     filteredReservations.map((res, index) => (
                         <div key={res.id} className={`animate-slide-in opacity-0`} style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'forwards' }}>
@@ -2046,6 +1928,8 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                                 </button>
                             )}
                         </div>
+
+                        {loadFailed && <AgendaLoadError onRetry={() => fetchData(true)} />}
 
                         {/* View Switcher */}
                         <div className="bg-stone-100 p-1 rounded-lg flex text-sm font-medium">
