@@ -1,7 +1,7 @@
 // Consultas do assessor (Onda 1): o servidor busca (RPC `conv_svc_ai_admin_read`, como o administrador) e escreve o texto.
 // O modelo só escolhe o domínio e o período; nenhum número passa pela cabeça dele.
 
-export const ADMIN_READ_DOMAINS = ['caixa', 'receber_pagar', 'dre', 'receita_alunos', 'comprovantes', 'acessos', 'assinaturas', 'ocupacao', 'comparativo', 'followups', 'preferencias', 'socios', 'inadimplentes', 'pagamentos', 'socio_ficha', 'vencimentos', 'alunos', 'movimentos', 'capacidades'] as const;
+export const ADMIN_READ_DOMAINS = ['caixa', 'receber_pagar', 'dre', 'receita_alunos', 'comprovantes', 'acessos', 'assinaturas', 'ocupacao', 'comparativo', 'followups', 'preferencias', 'socios', 'inadimplentes', 'pagamentos', 'socio_ficha', 'vencimentos', 'alunos', 'movimentos', 'capacidades', 'memoria'] as const;
 /** Domínios que o servidor busca por `conv_svc_ai_admin_read_more` (o resto vai por `conv_svc_ai_admin_read`; `socios` por `conv_svc_ai_admin_members`). */
 export const READ_MORE_DOMAINS: readonly string[] = ['inadimplentes', 'pagamentos', 'socio_ficha', 'vencimentos', 'alunos', 'movimentos'];
 export type AdminReadDomain = typeof ADMIN_READ_DOMAINS[number];
@@ -165,10 +165,18 @@ function renderMovimentos(d: Row): string {
 
 const renderCapacidades = (d: Row): string => String(d.text ?? '');
 
+function renderMemoria(d: Row): string {
+  const itens = arr(d.items);
+  const quem = d.subject ? ` sobre ${d.subject}` : '';
+  if (!itens.length) return `Não tenho nenhuma memória aprovada${quem}.`;
+  const KIND: Record<string, string> = { role_title: 'cargo', confirmed_fact: 'fato', recurring_preference: 'preferência', social_relation: 'relação', inside_joke: 'brincadeira interna' };
+  return `O que eu sei${quem}:\n${itens.map((i) => `- ${i.subject_name} (${KIND[String(i.kind)] ?? 'nota'}): ${i.content}`).join('\n')}`;
+}
+
 const RENDER: Record<AdminReadDomain, (d: Row) => string> = {
   caixa: renderCaixa, receber_pagar: renderReceberPagar, dre: renderDre, receita_alunos: renderReceitaAlunos,
   comprovantes: renderComprovantes, acessos: renderAcessos, assinaturas: renderAssinaturas, ocupacao: renderOcupacao, comparativo: renderComparativo, followups: renderFollowups, preferencias: renderPreferencias, socios: renderSocios, inadimplentes: renderInadimplentes, pagamentos: renderPagamentos,
-  socio_ficha: renderSocioFicha, vencimentos: renderVencimentos, alunos: renderAlunos, movimentos: renderMovimentos, capacidades: renderCapacidades,
+  socio_ficha: renderSocioFicha, vencimentos: renderVencimentos, alunos: renderAlunos, movimentos: renderMovimentos, capacidades: renderCapacidades, memoria: renderMemoria,
 };
 
 export const renderAdminRead = (domain: AdminReadDomain, data: unknown): string =>

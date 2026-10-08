@@ -35,6 +35,8 @@ export const CAPABILITIES: readonly Capability[] = [
   { id: 'fin.due.list', domain: 'financeiro', risk: 'N0', label: 'Vencimentos a pagar e a receber, por item', panel: 'Financeiro', onDemand: 'vencimentos' },
   { id: 'pessoas.students', domain: 'pessoas', risk: 'N0', label: 'Alunos ativos e dependentes', panel: 'Alunos', onDemand: 'alunos' },
   { id: 'fin.recent', domain: 'financeiro', risk: 'N0', label: 'Últimos lançamentos pagos', panel: 'Financeiro', onDemand: 'movimentos' },
+  { id: 'club.memory.read', domain: 'clube', risk: 'N0', label: 'O que o João sabe sobre uma pessoa (memória aprovada)', panel: 'João', onDemand: 'memoria' },
+  { id: 'adm.memory.forget', domain: 'clube', risk: 'N1', label: 'Esquecer a memória sobre alguém', panel: 'João', write: { admAction: 'memoria_esquecer' } },
   { id: 'club.capabilities', domain: 'clube', risk: 'N0', label: 'O que o João sabe fazer e as novidades', panel: 'João', onDemand: 'capacidades' },
   { id: 'adm.prefs.read', domain: 'clube', risk: 'N0', label: 'Minhas preferências do assessor', panel: 'João', onDemand: 'preferencias' },
   { id: 'fin.student_revenue', domain: 'financeiro', risk: 'N0', label: 'Receita de alunos', panel: 'Financeiro', onDemand: 'receita_alunos' },
@@ -108,6 +110,7 @@ export const LIMITATION_PHRASE = 'Ainda não consigo realizar esse pedido, mas c
 /** Novidades, em linguagem de diretoria (as mais recentes primeiro). Acrescente aqui a cada capacidade nova. */
 export const NOVIDADES: readonly { date: string; items: readonly string[] }[] = [
   { date: '08/10', items: [
+    'Memória: guardo o que você me contar sobre alguém (cargo, apelido, preferência), te mostro o que sei sobre uma pessoa e esqueço quando você mandar.',
     'Disparar um comunicado no WhatsApp pessoal de todos os sócios, agora ou num horário (ex.: 8h00), com o resumo e o seu "sim" antes.',
     'Mandar PDF (DRE, caixa, comparativo e outros relatórios), o comprovante de um sócio, anexo de despesa e documentos de assinatura.',
     'Listas por nome: sócios, inadimplentes, quem pagou, vencimentos, alunos e últimos lançamentos; e a ficha de um sócio.',

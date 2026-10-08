@@ -113,7 +113,7 @@ type PayMethod = 'pix' | 'transfer' | 'cash' | 'card' | 'other';
 const FIN_ACTIONS: FinAction[] = ['lancar', 'cobrar', 'pausar', 'retomar', 'baixa', 'renovar_card',
   'cancelar_pendencia', 'ajustar', 'estornar', 'rejeitar_comprovante', 'despesa', 'receita', 'aprovar_comprovante', 'gerar_cobrancas'];
 export const ADM_ACTIONS = ['aviso', 'aviso_desativar', 'aluno_status', 'socio_status', 'assinatura_reenviar', 'reserva_cancelar', 'acesso_aprovar', 'acesso_recusar', 'socio_criar',
-  'followup_criar', 'followup_concluir', 'quadra_bloquear', 'preferencia', 'dependente_criar', 'mensagem_enviar', 'comunicado_enviar', 'resumo_destinatario'] as const;
+  'followup_criar', 'followup_concluir', 'quadra_bloquear', 'preferencia', 'dependente_criar', 'mensagem_enviar', 'comunicado_enviar', 'resumo_destinatario', 'memoria_esquecer'] as const;
 export type AdmAction = typeof ADM_ACTIONS[number];
 const ADJUST_KINDS = ['discount', 'increase', 'fee_waiver'] as const;
 const PENDENCY_KINDS: PendencyKind[] = ['day_card', 'consumo', 'evento', 'multa', 'dano_reposicao', 'outros'];
@@ -1343,9 +1343,9 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
   // Cargo informado ou corrigido por um administrador no privado já entra aprovado; o servidor confirma ("Anotei"), o modelo não.
   const anotados: string[] = [];
   for (const candidate of answer.memory_candidates ?? []) {
-    const aprova = candidate.kind === 'role_title' && !isGroup && isAdminAssistant(ctx);
+    const aprova = candidate.kind !== 'inside_joke' && !isGroup && isAdminAssistant(ctx);
     const r = await Promise.resolve(deps.db('conv_svc_ai_memory_candidate', { p: { ...candidate, source_message_id: messageId, approve: aprova } })).catch(() => null);
-    if (aprova && r?.data) anotados.push(`${candidate.subject_name} é ${candidate.content.replace(/^(o|a)\s+/i, '')}`);
+    if (aprova && r?.data) anotados.push(candidate.kind === 'role_title' ? `${candidate.subject_name} é ${candidate.content.replace(/^(o|a)\s+/i, '')}` : `${candidate.subject_name}: ${candidate.content}`);
   }
   if (answer.transfer && answer.messages.length === 0) {
     return transferir(answer.handoff_kind ?? 'hard', answer.handoff_note || 'A IA pediu ajuda da equipe.', memory);
@@ -1756,7 +1756,7 @@ type AdminAction = 'fin_pendency_create' | 'fin_pendency_collection' | 'fin_pend
   | 'fin_charge_cancel' | 'fin_charge_adjust' | 'fin_payment_reverse' | 'fin_receipt_reject' | 'fin_entry_create' | 'fin_receipt_approve' | 'fin_charges_generate'
   | 'adm_announcement_create' | 'adm_announcement_deactivate' | 'adm_student_status' | 'adm_member_status' | 'adm_signature_resend' | 'adm_reservation_cancel'
   | 'fin_member_create' | 'fin_access_approve' | 'adm_access_reject'
-  | 'adm_followup_create' | 'adm_followup_done' | 'adm_court_block' | 'adm_pref_set' | 'adm_dependent_create' | 'adm_message_send' | 'adm_broadcast_send' | 'adm_briefing_recipient';
+  | 'adm_followup_create' | 'adm_followup_done' | 'adm_court_block' | 'adm_pref_set' | 'adm_dependent_create' | 'adm_message_send' | 'adm_broadcast_send' | 'adm_briefing_recipient' | 'adm_memory_forget';
 
 const centsBR = (v: unknown) => `R$ ${(Number(v ?? 0) / 100).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`;
 const dateBR = (v: unknown) => String(v ?? '').slice(0, 10).split('-').reverse().join('/');
@@ -1795,6 +1795,10 @@ export function adminProposalMessage(action: AdminAction, s: Ctx): string {
   }
   if (action === 'adm_pref_set') return `${prefText(s, false)} Confirma? Responda "sim".`;
   if (action === 'adm_message_send') return `Vou chamar ${s.member_name} no WhatsApp (${s.phone}) e mandar esta mensagem:\n«${s.body}»\nConfirma? Responda "sim".`;
+  if (action === 'adm_memory_forget') {
+    const itens = (Array.isArray(s.items) ? s.items : []) as { subject_name: string; content: string }[];
+    return `Vou esquecer ${itens.length === 1 ? 'esta memória' : `estas ${itens.length} memórias`} (elas saem das minhas conversas, o histórico fica guardado):\n${itens.map((i) => `- ${i.subject_name}: ${i.content}`).join('\n')}\nConfirma? Responda "sim".`;
+  }
   if (action === 'adm_briefing_recipient') return `Vou ${s.enabled ? 'incluir' : 'tirar'} ${s.name} ${s.enabled ? 'no' : 'do'} resumo diário das 8h. A lista fica: ${s.list_after}. Confirma? Responda "sim".`;
   if (action === 'adm_broadcast_send') {
     const at = new Date(String(s.send_at));
@@ -1853,6 +1857,7 @@ export function adminSuccessMessage(action: AdminAction, s: Ctx): string {
   if (action === 'student_card_renew') return studentCardSuccessMessage(s);
   if (action === 'fin_member_create' || action === 'fin_access_approve') return `Pronto: ${s.name} agora é sócio e a mensalidade de ${String(s.month ?? '').slice(5, 7)}/${String(s.month ?? '').slice(0, 4)} ficou paga (${centsBR(s.amount_cents)}), sem pendência.`;
   if (action === 'adm_pref_set') return prefText(s, true);
+  if (action === 'adm_memory_forget') return `Pronto: esqueci ${s.forgotten} ${Number(s.forgotten) === 1 ? 'memória' : 'memórias'} sobre ${s.subject}.`;
   if (action === 'adm_briefing_recipient') return `Pronto: ${s.name} ${s.enabled ? 'passa a receber' : 'não recebe mais'} o resumo das 8h. Lista atual: ${s.list_after}.`;
   if (action === 'adm_broadcast_send') return `Pronto: o comunicado está agendado para ${s.queued} sócios. Sai no horário combinado (a fila anda a cada 5 minutos, então pode chegar até 5 minutos depois). Quando alguém responder, eu atendo.`;
   if (action === 'adm_message_send') return `Pronto: a mensagem para ${s.member_name} está na fila e sai em instantes. Se ele responder, eu atendo.`;
@@ -1932,6 +1937,9 @@ async function adminAcao(i: DecideInput, memory: Memory): Promise<Decision> {
     const r = await resolve(deps.db, [slots.member_name], 'member');
     if (r.ask) return ask(r.ask);
     p = { action: 'adm_message_send', profile_id: r.ids[0], body: slots.send_body };
+  } else if (a === 'memoria_esquecer') {
+    if (!slots.member_name) return ask('Sobre quem é a memória que devo esquecer? Se quiser só uma delas, me diga um trecho do que ela diz.');
+    p = { action: 'adm_memory_forget', subject: slots.member_name, text: slots.note ?? null };
   } else if (a === 'resumo_destinatario') {
     if (!slots.member_name) return ask('Quem da diretoria entra (ou sai) do resumo das 8h? Me diz o nome.');
     const r = await resolve(deps.db, [slots.member_name], 'member');
@@ -1979,7 +1987,8 @@ async function adminAcao(i: DecideInput, memory: Memory): Promise<Decision> {
   } else {
     return ask('O que você quer fazer: publicar ou tirar um aviso, pausar/reativar aluno, inativar/reativar sócio, reenviar avisos de assinatura, cancelar uma reserva, aprovar ou recusar pedido de acesso ou cadastrar um sócio novo?');
   }
-  const rpc = a === 'resumo_destinatario' ? 'conv_svc_ai_admin_briefing_propose'
+  const rpc = a === 'memoria_esquecer' ? 'conv_svc_ai_admin_memory_forget_propose'
+    : a === 'resumo_destinatario' ? 'conv_svc_ai_admin_briefing_propose'
     : a === 'comunicado_enviar' ? 'conv_svc_ai_admin_broadcast_propose'
     : a === 'mensagem_enviar' ? 'conv_svc_ai_admin_message_propose'
     : a === 'dependente_criar' ? 'conv_svc_ai_admin_dependent_propose'
@@ -1999,6 +2008,7 @@ async function adminConsulta(i: DecideInput, memory: Memory): Promise<Decision> 
   if (slots.file_kind) return adminArquivo(i, memory);
   if (!slots.read_domain) return ask('O que você quer ver: caixa, a receber/a pagar, resultado (DRE), receita de alunos, comprovantes, pedidos de acesso, assinaturas ou reservas do dia?');
   const args: Record<string, unknown> = { from: slots.read_from ?? null, to: slots.read_to ?? null, date: slots.date ?? null };
+  if (slots.read_domain === 'memoria') args.subject = slots.member_name ?? null;
   if (slots.read_domain === 'socio_ficha') {
     if (!slots.member_name) return ask('De qual sócio você quer a ficha?');
     const r = await resolve(deps.db, [slots.member_name], 'member');
@@ -2241,6 +2251,7 @@ async function adminArquivo(i: DecideInput, memory: Memory): Promise<Decision> {
 
 /** Consulta do assessor: cada domínio vai para a função certa do banco (mesmo contrato `{ ok, message, data }`). */
 function readAdmin(deps: TurnDeps, session: string, domain: AdminReadDomain, args: Record<string, unknown>) {
+  if (domain === 'memoria') return deps.db('conv_svc_ai_admin_memories', { p_session: session, p_subject: typeof args.subject === 'string' ? args.subject : null });
   if (domain === 'capacidades') return Promise.resolve({ data: { ok: true, data: { text: renderCapabilities() } }, error: null } as RpcResult);
   if (domain === 'socios') return deps.db('conv_svc_ai_admin_members', { p_session: session });
   if (READ_MORE_DOMAINS.includes(domain)) return deps.db('conv_svc_ai_admin_read_more', { p_session: session, p_domain: domain, p_args: args });

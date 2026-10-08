@@ -810,6 +810,46 @@ describe('memória de cargos (role_title)', () => {
   }, 90000);
 });
 
+describe('memória ampliada pelo administrador (fatos, consulta e esquecer)', () => {
+  const dizer = async (w: W, p: ReturnType<typeof provider>, texto: string, o: Record<string, unknown>) => {
+    const m = await direct(w, texto);
+    return turn(w, m.message_id, script(answer(o)).chat, p.uaz);
+  };
+
+  it('fato contado pelo administrador entra aprovado e o servidor confirma; brincadeira interna continua pendente', async () => {
+    const w = await setup(); const p = provider();
+    await dizer(w, p, 'o Beto prefere jogar cedo, lembra disso', { messages: ['Fechou.'], memory_candidates: [
+      { subject_name: 'Beto Sócio', kind: 'recurring_preference', content: 'Prefere jogar cedo, por volta das 6h.', confidence: 1 },
+      { subject_name: 'Beto Sócio', kind: 'inside_joke', content: 'Brincadeira de que sempre atrasa.', confidence: 0.7 }] });
+    const rows = await q<any>(w.db, `select kind, status from public.conv_ai_memory_candidates where subject_name = 'Beto Sócio' order by kind`);
+    expect(rows).toEqual([{ kind: 'inside_joke', status: 'pending' }, { kind: 'recurring_preference', status: 'approved' }]);
+    expect(p.sent.map((x) => x.text).join('\n')).toMatch(/📝 Anotei: Beto Sócio: Prefere jogar cedo, por volta das 6h\./);
+  }, 90000);
+
+  it('"o que você sabe do Beto?" lista as memórias aprovadas; esquecer mostra o que sai, só aplica no "sim" e tira do prompt', async () => {
+    const w = await setup(); const p = provider();
+    await svc(w.db, `public.conv_svc_ai_memory_candidate(${j({ subject_name: 'Beto Sócio', kind: 'confirmed_fact', content: 'Joga de canhoto.', approve: true })})`);
+    await svc(w.db, `public.conv_svc_ai_memory_candidate(${j({ subject_name: 'Beto Sócio', kind: 'recurring_preference', content: 'Prefere jogar cedo.', approve: true })})`);
+    const r = await dizer(w, p, 'o que você sabe do Beto?', { intent: 'admin_consulta', ready: true, slots: { read_domain: 'memoria', member_name: 'Beto' } });
+    expect(r.action).toBe('admin_read:memoria');
+    expect(p.sent.at(-1)!.text).toMatch(/O que eu sei sobre Beto:\n- Beto Sócio \(fato\): Joga de canhoto\.\n- Beto Sócio \(preferência\): Prefere jogar cedo\./);
+    const f = await dizer(w, p, 'esquece que ele joga de canhoto', { intent: 'admin_acao', ready: true, slots: { adm_action: 'memoria_esquecer', member_name: 'Beto', note: 'canhoto' } });
+    expect(f.action).toBe('proposed_admin');
+    expect(p.sent.at(-1)!.text).toMatch(/Vou esquecer esta memória[\s\S]*- Beto Sócio: Joga de canhoto\.\nConfirma\?/);
+    expect((await q<any>(w.db, `select count(*)::int n from public.conv_ai_memory_candidates where status = 'approved' and subject_name = 'Beto Sócio'`))[0].n).toBe(2);
+    expect((await dizer(w, p, 'sim', { customer_confirmed: true })).action).toBe('admin_confirmed');
+    expect(p.sent.at(-1)!.text).toMatch(/Pronto: esqueci 1 memória sobre Beto/);
+    expect(await q<any>(w.db, `select content, status from public.conv_ai_memory_candidates where subject_name = 'Beto Sócio' order by content`)).toEqual([
+      { content: 'Joga de canhoto.', status: 'superseded' }, { content: 'Prefere jogar cedo.', status: 'approved' }]);
+  }, 120000);
+
+  it('nada para esquecer: avisa com franqueza, sem propor', async () => {
+    const w = await setup(); const p = provider();
+    await dizer(w, p, 'esquece o que sabe do Zé', { intent: 'admin_acao', ready: true, slots: { adm_action: 'memoria_esquecer', member_name: 'Zé' } });
+    expect(p.sent.at(-1)!.text).toMatch(/Não tenho nenhuma memória guardada sobre Zé/);
+  }, 90000);
+});
+
 describe('relação nominal dos sócios', () => {
   it('"liste os sócios": o servidor escreve a relação (diretoria e sócios), sem chamar fallback', async () => {
     const w = await setup(); const p = provider();
