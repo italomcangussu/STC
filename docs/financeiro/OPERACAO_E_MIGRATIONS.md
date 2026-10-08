@@ -116,8 +116,9 @@ Ordem sugerida, tudo em **Financeiro** (menu do administrador):
 2. **Cadastros › Configurações › Feriados:** (opcional) “Carregar nacionais” do ano para consulta e cadastre os municipais/estaduais; nada conta até ser ativado.
 3. **Configurações › Cobrança:** confira o vencimento (dia 5 do mês cobrado; sábado e domingo vão para a segunda; feriado não conta — decisão do clube de 2026-10-06) e **defina a política de encargos** (carência, multa, juros). Enquanto não confirmar, **nenhum encargo é calculado**.
 4. **Configurações › Day Card e comprovantes:** confira o valor do Day Card do convidado (vem do valor já usado no app, R$ 50) e os nomes do clube nos comprovantes.
-5. **Receber › Mensalidades › Sócios e valores:** crie o plano de cada sócio (valor próprio, início, periodicidade) e gere as cobranças.
-6. **Cadastros › Categorias:** revise o plano de contas do DRE.
+5. **Receber › Pendências › Configurar régua:** confira a chave PIX, os dias de envio e os encargos próprios das pendências de sócio (não ficam em Configurações).
+6. **Receber › Mensalidades › Sócios e valores:** crie o plano de cada sócio (valor próprio, início, periodicidade) e gere as cobranças.
+7. **Cadastros › Categorias:** revise o plano de contas do DRE.
 
 ### Geração automática de cobranças (opcional, não aplicada)
 
@@ -166,6 +167,7 @@ vê tudo. A cobertura automática dessas regras está em
 | Base do percentual diário | Fixa no código e documentada: juros **simples**, sobre o principal em aberto no início do dia; multa única no 1º dia de atraso; encargos nunca entram na base | — (mudar exige decisão e nova versão da regra) |
 | Dia/mês do vencimento e regra de dia não útil | Configurações › Cobrança | Padrão: dia 5 do mês cobrado, próximo dia útil; sábado **não** é dia útil (configurável); feriado não conta (ver abaixo) |
 | Feriados (nacionais, locais, Carnaval, Corpus Christi) | Configurações › Feriados | **Nenhum conta** por padrão (só fins de semana); todos nascem **inativos** e o admin ativa os que o vencimento deve pular |
+| Régua das pendências de sócio (ativa/pausada, dias de envio, PIX, carência, multa/juros) | Receber › Pendências › Configurar régua | Configuração salva; sem PIX a nova pendência avisa e leva à régua |
 | Valor do Day Card (convidado) | Configurações › Day Card | R$ 50, o valor que o app já usava |
 | Day Card entra no caixa ou só na competência? | Configurações › Day Card | Só competência (DRE): é derivado da reserva, sem pagamento registrado |
 | Quem pode dispensar encargos / dar desconto | Papel `admin` (existente) | Só administrador — **não há papel financeiro separado** |

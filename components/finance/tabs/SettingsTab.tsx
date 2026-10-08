@@ -2,9 +2,12 @@
  * Configurações do financeiro. Nenhum valor de multa, juros ou carência
  * vem preenchido: o clube decide. Até a política de encargos ser CONFIRMADA
  * (inclusive a escolha "não cobrar encargos"), nenhuma multa ou juro é calculada.
+ *
+ * A régua das pendências de sócio (dias, PIX, encargos próprios) NÃO fica aqui:
+ * mora em Receber › Pendências › "Configurar régua", junto do que ela cobra.
  */
 import React, { useEffect, useMemo, useState } from 'react';
-import { CalendarDays, History, Percent, Settings2 } from 'lucide-react';
+import { ArrowRight, BellRing, CalendarDays, History, Percent, Settings2 } from 'lucide-react';
 import { notify } from '../../../lib/notifications';
 import { useConfirm } from '../../../hooks/useConfirm';
 import { notifyFinanceError } from '../../../lib/finance/errors';
@@ -17,7 +20,6 @@ import { formatBRL, parseBRL } from '../../../lib/finance/money';
 import { useAsync, useRequestKey, useToday } from '../hooks';
 import { useFinance } from '../FinanceContext';
 import { Badge, Card, Empty, ErrorBlock, Field, MoneyInput, Notice, Row, SectionTabs, Spinner, btnGhost, btnPrimary, inputCls } from '../ui';
-import PendencyRulesSection from './PendencyRulesSection';
 
 /** "2" → 200 pontos-base; "0,033" → 3; vazio → null. `NaN` se inválido. */
 const percentToBps = (text: string): number | null => {
@@ -275,7 +277,7 @@ const AuditSection: React.FC = () => {
 
 // ------------------------------------------------------------------
 const SettingsTab: React.FC = () => {
-  const { settings, reload } = useFinance();
+  const { settings, reload, go } = useFinance();
   const [view, setView] = useState('rules');
   const holidays = useAsync(() => listHolidays(), []);
   if (!settings) return <Spinner />;
@@ -289,7 +291,12 @@ const SettingsTab: React.FC = () => {
         <>
           <DueSection s={settings} holidays={holidays.data ?? []} onSaved={reloadAll} />
           <FeesSection s={settings} onSaved={reloadAll} />
-          <PendencyRulesSection s={settings} onSaved={reloadAll} />
+          <Notice tone="info">
+            <span className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <span className="flex items-start gap-1.5"><BellRing size={14} className="mt-0.5 shrink-0" />A régua de pendências de sócios (dias de envio, PIX, multa e juros) fica em Receber › Pendências.</span>
+              <button className={`${btnGhost} w-full shrink-0 sm:w-auto`} onClick={() => go('pendencies')}>Abrir Pendências <ArrowRight size={16} /></button>
+            </span>
+          </Notice>
           <Notice tone="info"><span className="flex items-start gap-1.5"><Percent size={14} className="mt-0.5 shrink-0" />Descontos e dispensas de encargo são feitos cobrança a cobrança (aba Mensalidades), sempre com justificativa e registro de quem autorizou.</span></Notice>
         </>
       )}

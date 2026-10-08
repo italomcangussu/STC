@@ -1,12 +1,18 @@
+/**
+ * Receber › Pendências de sócio: cobranças manuais (Day Card não lançado,
+ * consumo, evento, reposição…) com régua de cobrança pelo WhatsApp. A régua
+ * (dias, PIX, carência, multa/juros) se configura AQUI, em "Configurar régua";
+ * o resumo da aba é lido das configurações salvas, não é texto fixo.
+ */
 import React, { useMemo, useState } from 'react';
-import { BellRing, PauseCircle, PlayCircle, Plus, ReceiptText, Send, WalletCards } from 'lucide-react';
+import { BellRing, PauseCircle, PlayCircle, Plus, Send, Settings2 } from 'lucide-react';
 import { notify } from '../../../lib/notifications';
 import { notifyFinanceError } from '../../../lib/finance/errors';
 import {
   cancelCharge, createMemberPendency, listActiveMembers, listCharges, listPendencyMeta,
   registerPayment, sendPendencyNow, setPendencyCollection,
 } from '../../../lib/finance/financeApi';
-import type { ChargeStatementRow, MemberPendencyKind, MemberPendencyMeta } from '../../../lib/finance/types';
+import type { ChargeStatementRow, FinSettings, MemberPendencyKind, MemberPendencyMeta } from '../../../lib/finance/types';
 import { brDate, firstOfMonth, monthLabel, type IsoDate } from '../../../lib/finance/dates';
 import { formatBRL } from '../../../lib/finance/money';
 import { matchesSearch } from '../../../lib/searchText';
@@ -14,6 +20,7 @@ import { useAsync, useRequestKey, useToday } from '../hooks';
 import { useFinance } from '../FinanceContext';
 import { AdminSearch } from '../../admin/ui';
 import { Badge, Card, ChargeStatusBadge, Empty, Field, MoneyInput, Notice, Row, SectionTabs, Sheet, Spinner, btnDanger, btnGhost, btnPrimary, inputCls } from '../ui';
+import PendencyRulesSection from './PendencyRulesSection';
 
 const KINDS: Array<[MemberPendencyKind, string]> = [
   ['day_card', 'Day Card'],
@@ -28,7 +35,45 @@ const STATUS = [['', 'Todas'], ['overdue', 'Vencidas'], ['open', 'Em aberto'], [
 
 type ViewRow = ChargeStatementRow & { meta: MemberPendencyMeta };
 
-const NewPendencySheet: React.FC<{ open: boolean; onClose: () => void; onDone: () => void }> = ({ open, onClose, onDone }) => {
+/** [0, 3, 7] → "No vencimento, +3 e +7 dias". */
+const reminderDaysText = (days: number[]) => {
+  const parts = days.map((d) => (d === 0 ? 'no vencimento' : `+${d}`));
+  if (!parts.length) return 'Nenhum envio';
+  const joined = parts.length === 1 ? parts[0] : `${parts.slice(0, -1).join(', ')} e ${parts[parts.length - 1]}`;
+  const text = days[days.length - 1] === 0 ? joined : `${joined} dias`;
+  return text.charAt(0).toUpperCase() + text.slice(1);
+};
+const pct = (bps: number) => `${(bps / 100).toLocaleString('pt-BR', { maximumFractionDigits: 2 })}%`;
+const feeText = (fixed: number, bps: number) => [fixed ? formatBRL(fixed) : null, bps ? pct(bps) : null].filter(Boolean).join(' + ');
+
+/** Resumo VIVO da régua (lido de `settings`), com o atalho para configurar. */
+const RulesSummary: React.FC<{ s: FinSettings | null; onConfigure: () => void }> = ({ s, onConfigure }) => {
+  const configure = <button className={`${btnGhost} w-full sm:w-auto`} onClick={onConfigure}><Settings2 size={16} /> Configurar</button>;
+  if (!s) return <Card title="Régua de cobrança" right={configure}><Spinner /></Card>;
+  const fine = feeText(s.pendency_fine_fixed_cents, s.pendency_fine_percent_bps);
+  const interest = feeText(s.pendency_interest_daily_fixed_cents, s.pendency_interest_daily_percent_bps);
+  const item = (label: string, value: React.ReactNode) => (
+    <div className="rounded-2xl bg-stone-50 p-3"><dt className="text-[10px] font-black uppercase tracking-wide text-stone-400">{label}</dt><dd className="mt-0.5 text-sm font-bold text-stone-700">{value}</dd></div>
+  );
+  return (
+    <Card
+      title={<span className="flex items-center gap-2"><BellRing size={18} className="text-stone-400" /> Régua de cobrança <Badge tone={s.pendency_automation_enabled ? 'good' : 'muted'}>{s.pendency_automation_enabled ? 'Ativa' : 'Pausada'}</Badge></span>}
+      subtitle="Antes de cada envio o saldo é recalculado e as pendências abertas do sócio vão numa mensagem só."
+      right={configure}>
+      <dl className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        {item('Envios', reminderDaysText(s.pendency_reminder_days))}
+        {item('Carência', s.pendency_grace_days ? `${s.pendency_grace_days} dia(s) após o vencimento` : 'Sem carência')}
+        {fine || interest
+          ? <>{fine && item('Multa', fine)}{interest && item('Juros por dia', interest)}</>
+          : item('Multa e juros', 'Não cobra')}
+        {item('Chave PIX', s.pix_key?.trim() ? <span className="break-all">{s.pix_key}</span> : <span className="text-amber-700">Não configurada</span>)}
+      </dl>
+      <p className="mt-3 text-xs text-stone-500">Comprovante com leitura segura dá baixa sozinho; na dúvida vai para revisão. Pagamento parcial mantém o saldo; excedente vira crédito do sócio.</p>
+    </Card>
+  );
+};
+
+const NewPendencySheet: React.FC<{ open: boolean; onClose: () => void; onDone: () => void; onConfigure: () => void }> = ({ open, onClose, onDone, onConfigure }) => {
   const today = useToday();
   const { accounts, categories, settings } = useFinance();
   const members = useAsync(() => (open ? listActiveMembers() : Promise.resolve([])), [open]);
@@ -138,7 +183,10 @@ const NewPendencySheet: React.FC<{ open: boolean; onClose: () => void; onDone: (
             <span><b className="block text-sm">Enviar cobrança agora</b><span className="text-xs text-stone-500">O WhatsApp consolida todas as pendências abertas do sócio em uma única mensagem.</span></span>
           </label>
         )}
-        <Notice tone="info">PIX do clube: <b>{settings?.pix_key ?? '52.393.541/0001-20'}</b>. O comprovante pode gerar baixa parcial, quitar várias pendências e transformar excedente em crédito.</Notice>
+        {settings?.pix_key?.trim()
+          ? <Notice tone="info">PIX do clube: <b className="break-all">{settings.pix_key}</b>. O comprovante pode gerar baixa parcial, quitar várias pendências e transformar excedente em crédito.</Notice>
+          : <Notice tone="warn" title="Configure a chave PIX na régua">Sem a chave, a cobrança chega ao sócio sem o PIX para pagar.
+              <span className="mt-2 block"><button type="button" className={`${btnGhost} w-full sm:w-auto`} onClick={onConfigure}><Settings2 size={16} /> Configurar régua</button></span></Notice>}
       </>}
     </Sheet>
   );
@@ -200,7 +248,13 @@ const PendencySheet: React.FC<{ row: ViewRow | null; onClose: () => void; onChan
 };
 
 const PendenciesTab: React.FC = () => {
+  const { settings, reload: reloadSettings } = useFinance();
   const [newOpen,setNewOpen]=useState(false);
+  const [rulesOpen,setRulesOpen]=useState(false);
+  // aberto pelo aviso de PIX da "Nova pendência": ao fechar a régua, volta para ela
+  const [resumeNew,setResumeNew]=useState(false);
+  const openRules=(fromNew=false)=>{ if(fromNew){setNewOpen(false);setResumeNew(true);} setRulesOpen(true); };
+  const closeRules=()=>{ setRulesOpen(false); if(resumeNew){setResumeNew(false);setNewOpen(true);} };
   const [search,setSearch]=useState('');
   const [status,setStatus]=useState('');
   const [selected,setSelected]=useState<ViewRow|null>(null);
@@ -218,7 +272,10 @@ const PendenciesTab: React.FC = () => {
 
   return <div className="space-y-4">
     <Card title="Pendências de sócios" subtitle="Cobranças manuais vinculadas ao sócio: Day Card não lançado, consumo, evento, reposição ou outro ajuste."
-      right={<button className={btnPrimary} onClick={()=>setNewOpen(true)}><Plus size={16}/> Nova pendência</button>}>
+      right={<div className="flex w-full flex-wrap gap-2 sm:w-auto">
+        <button className={`${btnGhost} flex-1 whitespace-nowrap sm:flex-none`} onClick={()=>openRules()}><Settings2 size={16}/> Configurar régua</button>
+        <button className={`${btnPrimary} flex-1 whitespace-nowrap sm:flex-none`} onClick={()=>setNewOpen(true)}><Plus size={16}/> Nova pendência</button>
+      </div>}>
       <div className="grid grid-cols-2 gap-3">
         <div className="rounded-2xl bg-stone-50 p-3"><p className="text-[10px] font-black uppercase text-stone-400">Saldo em aberto</p><p className="text-xl font-black">{formatBRL(total)}</p></div>
         <div className="rounded-2xl bg-red-50 p-3"><p className="text-[10px] font-black uppercase text-red-400">Vencido</p><p className="text-xl font-black text-red-700">{formatBRL(overdue)}</p></div>
@@ -235,14 +292,11 @@ const PendenciesTab: React.FC = () => {
           </Row>)}</div>}
       </div>
     </Card>
-    <Card title="Como funciona a régua" subtitle="Consolida as pendências do mesmo sócio e revalida o saldo antes de cada envio.">
-      <div className="grid gap-2 text-sm text-stone-600 sm:grid-cols-3">
-        <div className="rounded-2xl bg-stone-50 p-3"><BellRing size={18}/><b className="mt-2 block">Cobrança configurável</b><span>Vencimento, +3, +7, +14 e +21 dias por padrão.</span></div>
-        <div className="rounded-2xl bg-stone-50 p-3"><ReceiptText size={18}/><b className="mt-2 block">Comprovante inteligente</b><span>OCR forte pode baixar automaticamente; dúvida vai para revisão.</span></div>
-        <div className="rounded-2xl bg-stone-50 p-3"><WalletCards size={18}/><b className="mt-2 block">Parcial e excedente</b><span>Parcial mantém saldo; excedente vira crédito do sócio.</span></div>
-      </div>
-    </Card>
-    <NewPendencySheet open={newOpen} onClose={()=>setNewOpen(false)} onDone={reload}/>
+    <RulesSummary s={settings} onConfigure={()=>openRules()}/>
+    <NewPendencySheet open={newOpen} onClose={()=>setNewOpen(false)} onDone={reload} onConfigure={()=>openRules(true)}/>
+    <Sheet open={rulesOpen} onClose={closeRules} wide closeOnBackdrop={false} title="Régua de cobrança das pendências" subtitle="Vale para todas as pendências de sócio. Mensalidades têm encargos próprios, em Configurações.">
+      {settings ? <PendencyRulesSection bare s={settings} onSaved={()=>{reloadSettings();closeRules();}}/> : <Spinner/>}
+    </Sheet>
     <PendencySheet row={selected} onClose={()=>setSelected(null)} onChanged={()=>{reload();setSelected(null);}}/>
   </div>;
 };

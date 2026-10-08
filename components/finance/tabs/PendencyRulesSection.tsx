@@ -1,3 +1,8 @@
+/**
+ * Régua de cobrança das pendências de sócio: ativa/pausada, PIX, dias de envio,
+ * carência, multa e juros. Abre a partir de Receber › Pendências ("Configurar
+ * régua"), dentro de uma folha (`bare`); sem `bare`, ainda se embrulha num Card.
+ */
 import React, { useEffect, useMemo, useState } from 'react';
 import { BellRing } from 'lucide-react';
 import { notify } from '../../../lib/notifications';
@@ -17,7 +22,7 @@ const percentToBps = (text: string): number | null => {
 const bpsToText = (bps: number) =>
   (bps / 100).toLocaleString('pt-BR', { maximumFractionDigits: 2, useGrouping: false });
 
-export const PendencyRulesSection: React.FC<{ s: FinSettings; onSaved: () => void }> = ({ s, onSaved }) => {
+export const PendencyRulesSection: React.FC<{ s: FinSettings; onSaved: () => void; /** Sem o Card externo (para dentro de uma folha). */ bare?: boolean }> = ({ s, onSaved, bare }) => {
   const { key, renew } = useRequestKey();
   const [enabled, setEnabled] = useState(s.pendency_automation_enabled);
   const [pix, setPix] = useState(s.pix_key);
@@ -38,7 +43,7 @@ export const PendencyRulesSection: React.FC<{ s: FinSettings; onSaved: () => voi
     setFinePct(bpsToText(s.pendency_fine_percent_bps));
     setIntFixed(s.pendency_interest_daily_fixed_cents);
     setIntPct(bpsToText(s.pendency_interest_daily_percent_bps));
-  }, [s.version]);
+  }, [s.version]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const reminderDays = useMemo(() => {
     const raw = days.split(/[,; ]+/).map((v) => v.trim()).filter(Boolean);
@@ -75,12 +80,7 @@ export const PendencyRulesSection: React.FC<{ s: FinSettings; onSaved: () => voi
     }
   };
 
-  return (
-    <Card
-      title="Pendências de sócios"
-      subtitle="Régua de cobrança, PIX e encargos próprios das pendências manuais."
-      right={<div className="flex items-center gap-2"><Badge tone={enabled ? 'good' : 'muted'}>{enabled ? 'Ativa' : 'Pausada'}</Badge><BellRing size={18} className="text-stone-300" /></div>}
-    >
+  const form = (
       <div className="space-y-3">
         <label className="flex min-h-11 items-start gap-3 rounded-2xl border border-stone-200 p-3">
           <input type="checkbox" className="mt-0.5 h-5 w-5" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} />
@@ -115,8 +115,18 @@ export const PendencyRulesSection: React.FC<{ s: FinSettings; onSaved: () => voi
         </div>
 
         <p className="text-xs text-stone-500">O padrão é zero de multa e juros. Valores só são aplicados depois de configurados aqui.</p>
-        <button className={btnPrimary} disabled={busy || invalid} onClick={save}>Salvar pendências e automação</button>
+        <button className={`${btnPrimary} w-full sm:w-auto`} disabled={busy || invalid} onClick={save}>Salvar pendências e automação</button>
       </div>
+  );
+
+  if (bare) return form;
+  return (
+    <Card
+      title="Pendências de sócios"
+      subtitle="Régua de cobrança, PIX e encargos próprios das pendências manuais."
+      right={<div className="flex items-center gap-2"><Badge tone={enabled ? 'good' : 'muted'}>{enabled ? 'Ativa' : 'Pausada'}</Badge><BellRing size={18} className="text-stone-300" /></div>}
+    >
+      {form}
     </Card>
   );
 };

@@ -1,7 +1,9 @@
 /**
- * Financeiro do clube (administrador). Reúne dashboard, mensalidades, comprovantes,
- * alunos e Day Card, contas a pagar, recorrências, DRE, fluxo de caixa,
- * contas, categorias e configurações. Cada aba é carregada sob demanda.
+ * Financeiro do clube (administrador). Reúne dashboard, DRE e fluxo de caixa;
+ * Receber (mensalidades, pendências de sócio — com a régua de cobrança —, outras
+ * receitas e aportes, comprovantes, alunos e Day Card); Pagar (contas a pagar:
+ * despesas, retiradas e transferências; recorrências); e cadastros. Cada aba é
+ * carregada sob demanda.
  *
  * Quem pode: o administrador (`is_admin()`), garantido no BANCO — esconder o botão
  * não é a proteção; as funções recusam qualquer outro papel.
@@ -20,6 +22,7 @@ const MembersTab = lazy(() => import('./tabs/MembersTab'));
 const PendenciesTab = lazy(() => import('./tabs/PendenciesTab'));
 const ReceiptsTab = lazy(() => import('./tabs/ReceiptsTab'));
 const StudentsTab = lazy(() => import('./tabs/StudentsTab'));
+const ReceivablesTab = lazy(() => import('./tabs/ReceivablesTab'));
 const BillsTab = lazy(() => import('./tabs/BillsTab'));
 const RecurrencesTab = lazy(() => import('./tabs/RecurrencesTab'));
 const CashFlowTab = lazy(() => import('./tabs/CashFlowTab'));
@@ -31,7 +34,7 @@ const SettingsTab = lazy(() => import('./tabs/SettingsTab'));
 // eslint-disable-next-line react-refresh/only-export-components
 export const FINANCE_GROUPS = [
   { id: 'visao', label: 'Visão', tabs: [['overview', 'Painel'], ['dre', 'DRE'], ['cashflow', 'Fluxo de caixa']] },
-  { id: 'receber', label: 'Receber', tabs: [['members', 'Mensalidades'], ['pendencies', 'Pendências'], ['receipts', 'Comprovantes'], ['students', 'Alunos e Day Card']] },
+  { id: 'receber', label: 'Receber', tabs: [['members', 'Mensalidades'], ['pendencies', 'Pendências'], ['receivables', 'Outras receitas'], ['receipts', 'Comprovantes'], ['students', 'Alunos e Day Card']] },
   { id: 'pagar', label: 'Pagar', tabs: [['bills', 'Contas a pagar'], ['recurrences', 'Recorrências']] },
   { id: 'cadastros', label: 'Cadastros', tabs: [['accounts', 'Contas'], ['categories', 'Categorias'], ['settings', 'Configurações']] },
 ] as const;
@@ -77,6 +80,7 @@ export const FinanceHub: React.FC = () => {
       case 'pendencies': return <PendenciesTab />;
       case 'receipts': return <ReceiptsTab onChanged={pending.reload} />;
       case 'students': return <StudentsTab />;
+      case 'receivables': return <ReceivablesTab />;
       case 'bills': return <BillsTab />;
       case 'recurrences': return <RecurrencesTab />;
       case 'cashflow': return <CashFlowTab />;

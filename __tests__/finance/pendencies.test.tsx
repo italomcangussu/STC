@@ -7,6 +7,7 @@ const api = vi.hoisted(() => ({
   newRequestId: () => globalThis.crypto.randomUUID(),
   saveSettings: vi.fn(), listCharges: vi.fn(), listPendencyMeta: vi.fn(), listActiveMembers: vi.fn(), createMemberPendency: vi.fn(),
   sendPendencyNow: vi.fn(), setPendencyCollection: vi.fn(), registerPayment: vi.fn(), cancelCharge: vi.fn(),
+  listHolidays: vi.fn(), listAudit: vi.fn(),
 }));
 vi.mock('../../lib/finance/financeApi', () => api);
 
@@ -14,6 +15,7 @@ import { ConfirmProvider } from '../../components/ui/ConfirmProvider';
 import { FinanceProvider } from '../../components/finance/FinanceContext';
 import PendencyRulesSection from '../../components/finance/tabs/PendencyRulesSection';
 import PendenciesTab from '../../components/finance/tabs/PendenciesTab';
+import SettingsTab from '../../components/finance/tabs/SettingsTab';
 
 const account: FinAccount = { id: 'a1', name: 'Banco do clube', kind: 'bank', opening_balance_cents: 0, opening_date: '2026-01-01', is_default_receipts: true, active: true, position: 0, version: 1 };
 const categories = [
@@ -42,9 +44,9 @@ const meta = (over: Partial<MemberPendencyMeta> = {}): MemberPendencyMeta => ({
   original_amount_cents: 5000, status: 'open', version: 1, ...over,
 });
 
-const mount = (ui: React.ReactElement, s: FinSettings = settings()) => render(
+const mount = (ui: React.ReactElement, s: FinSettings = settings(), ctx: { reload?: () => void; go?: (id: string) => void } = {}) => render(
   <ConfirmProvider>
-    <FinanceProvider value={{ accounts: [account], categories, settings: s, reload: vi.fn(), go: vi.fn() }}>{ui}</FinanceProvider>
+    <FinanceProvider value={{ accounts: [account], categories, settings: s, reload: ctx.reload ?? vi.fn(), go: ctx.go ?? vi.fn() }}>{ui}</FinanceProvider>
   </ConfirmProvider>,
 );
 
@@ -57,6 +59,8 @@ beforeEach(() => {
   api.createMemberPendency.mockResolvedValue({ id: 'new', status: 'open' });
   api.sendPendencyNow.mockResolvedValue({});
   api.setPendencyCollection.mockResolvedValue({});
+  api.listHolidays.mockResolvedValue([]);
+  api.listAudit.mockResolvedValue([]);
 });
 
 describe('Régua de pendências (configurações)', () => {
@@ -152,5 +156,68 @@ describe('Pendências (contas a receber)', () => {
     const sheet = await screen.findByRole('dialog');
     fireEvent.click(within(sheet).getByRole('button', { name: /Cobrar agora/ }));
     await waitFor(() => expect(api.sendPendencyNow).toHaveBeenCalledWith('c1', expect.any(String)));
+  });
+});
+
+describe('Régua de pendências dentro da aba Pendências', () => {
+  it('o resumo é lido das configurações salvas (dias, carência, encargos, PIX)', async () => {
+    mount(<PendenciesTab />, settings({ pendency_automation_enabled: false, pendency_reminder_days: [0, 5], pendency_grace_days: 2, pendency_fine_percent_bps: 200 }));
+    await screen.findByText('Day Card do convidado Carlos');
+    expect(screen.getByText('No vencimento e +5 dias')).toBeInTheDocument();
+    expect(screen.getByText('2 dia(s) após o vencimento')).toBeInTheDocument();
+    expect(screen.getByText('2%')).toBeInTheDocument();
+    expect(screen.getAllByText('52.393.541/0001-20').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Pausada').length).toBeGreaterThan(0);
+    expect(screen.queryByText('Como funciona a régua')).not.toBeInTheDocument();
+  });
+
+  it('"Configurar régua" abre a folha com o formulário; fechar some com ela', async () => {
+    mount(<PendenciesTab />);
+    await screen.findByText('Day Card do convidado Carlos');
+    expect(screen.queryByLabelText(/^Dias da régua/)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /^Configurar régua$/ }));
+    const sheet = await screen.findByRole('dialog');
+    expect(within(sheet).getByLabelText(/^Dias da régua/)).toHaveValue('0, 3, 7, 14, 21');
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Fechar' }));
+    await waitFor(() => expect(screen.queryByLabelText(/^Dias da régua/)).not.toBeInTheDocument());
+  });
+
+  it('salvar a régua grava, recarrega as configurações e fecha a folha', async () => {
+    const reload = vi.fn();
+    mount(<PendenciesTab />, settings(), { reload });
+    await screen.findByText('Day Card do convidado Carlos');
+    fireEvent.click(screen.getByRole('button', { name: /^Configurar$/ }));
+    const sheet = await screen.findByRole('dialog');
+    fireEvent.change(within(sheet).getByLabelText(/^Dias da régua/), { target: { value: '0, 10' } });
+    fireEvent.click(within(sheet).getByRole('button', { name: /Salvar pendências e automação/ }));
+    await waitFor(() => expect(api.saveSettings).toHaveBeenCalledWith(3, expect.objectContaining({ pendency_reminder_days: [0, 10] }), expect.any(String)));
+    await waitFor(() => expect(reload).toHaveBeenCalled());
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+
+  it('sem chave PIX, a nova pendência avisa e leva à régua (sem PIX inventado)', async () => {
+    mount(<PendenciesTab />, settings({ pix_key: '' }));
+    await screen.findByText('Day Card do convidado Carlos');
+    fireEvent.click(screen.getByRole('button', { name: /Nova pendência/ }));
+    const sheet = await screen.findByRole('dialog');
+    await within(sheet).findByRole('option', { name: 'Beto Sócio' });
+    expect(within(sheet).getByText('Configure a chave PIX na régua')).toBeInTheDocument();
+    expect(screen.queryByText(/52\.393\.541/)).not.toBeInTheDocument();
+    fireEvent.click(within(sheet).getByRole('button', { name: /Configurar régua/ }));
+    const rules = await screen.findByRole('dialog', { name: /Régua de cobrança das pendências/ });
+    expect(within(rules).getByLabelText(/^Chave PIX do clube/)).toHaveValue('');
+  });
+});
+
+describe('Configurações não têm mais a régua de pendências', () => {
+  it('a seção Cobrança aponta para Receber › Pendências', async () => {
+    const go = vi.fn();
+    mount(<SettingsTab />, settings(), { go });
+    expect(await screen.findByText('Vencimento das mensalidades')).toBeInTheDocument();
+    expect(screen.queryByLabelText(/^Dias da régua/)).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Salvar pendências e automação/ })).not.toBeInTheDocument();
+    expect(screen.getByText(/fica em Receber › Pendências/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Abrir Pendências/ }));
+    expect(go).toHaveBeenCalledWith('pendencies');
   });
 });

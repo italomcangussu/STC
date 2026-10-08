@@ -157,11 +157,9 @@ describe('Contas a pagar — categorias automáticas ficam de fora', () => {
     const options = [...catSelect.options].map((o) => o.textContent);
     expect(options).toContain('Aluguel');
     expect(options).not.toContain('Mensalidades de sócios');
-    // trocar para receita: só categorias de receita manuais
-    fireEvent.change(within(dlg).getByLabelText(/^Tipo/), { target: { value: 'revenue' } });
-    const revOptions = [...(within(dlg).getByLabelText(/^Categoria/) as HTMLSelectElement).options].map((o) => o.textContent);
-    expect(revOptions).toContain('Patrocínio');
-    expect(revOptions).not.toContain('Mensalidades de sócios');
+    // receita não se lança em Pagar: fica em Receber › Outras receitas (ver entriesDirection.test)
+    const kinds = [...(within(dlg).getByLabelText(/^Tipo/) as HTMLSelectElement).options].map((o) => o.value);
+    expect(kinds).toEqual(['expense', 'withdrawal', 'transfer']);
   });
 
   it('registra uma despesa pendente com vencimento (idempotente: chave por tentativa)', async () => {
