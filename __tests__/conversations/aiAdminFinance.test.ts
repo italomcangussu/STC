@@ -97,32 +97,20 @@ describe('assessor administrativo do João (turno completo)', () => {
     expect((await pendencies(w))[0].status).toBe('partial');
   }, 90000);
 
-  it('R$ 400 ou mais: o "sim" não basta; só grava depois de repetir o valor (regra no banco)', async () => {
+  it('valor alto (R$ 450) também grava com um "sim" só, sem segundo passo', async () => {
     const w = await setup();
     const p = provider();
     const lancar = { fin_action: 'lancar', member_name: 'Beto', description: 'Evento fechado', amount: 450 };
     const m1 = await direct(w, 'lança 450 de evento pro Beto');
     await turn(w, m1.message_id, script(answer({ ready: true, slots: lancar })).chat, p.uaz);
     expect(p.sent.at(-1)!.text).toContain('R$ 450,00');
-
-    const confirmar = async (texto: string) => {
-      const m = await direct(w, texto);
-      return turn(w, m.message_id, script(answer({ customer_confirmed: true, slots: lancar })).chat, p.uaz);
-    };
-    expect((await confirmar('sim')).action).toBe('failed:CONFIRM_AMOUNT');
-    expect(p.sent.at(-1)!.text).toContain('confirmo R$ 450,00');
-    expect(await pendencies(w)).toHaveLength(0);
-
-    expect((await confirmar('sim')).action).toBe('failed:CONFIRM_AMOUNT');          // outro "sim" não vale
-    expect((await confirmar('confirmo 45')).action).toBe('failed:CONFIRM_AMOUNT');   // valor errado não vale
-    expect(await pendencies(w)).toHaveLength(0);
-
-    expect((await confirmar('confirmo R$ 450,00')).action).toBe('admin_confirmed');
+    const m2 = await direct(w, 'sim');
+    expect((await turn(w, m2.message_id, script(answer({ customer_confirmed: true, slots: lancar })).chat, p.uaz)).action).toBe('admin_confirmed');
     const [ch] = await pendencies(w);
     expect(ch).toMatchObject({ profile_id: U.socioB, original_amount_cents: 45000 });
   }, 90000);
 
-  it('abaixo de R$ 400 segue com um "sim" só', async () => {
+  it('abaixo de R$ 400 também segue com um "sim" só', async () => {
     const w = await setup();
     const p = provider();
     const lancar = { fin_action: 'lancar', member_name: 'Beto', description: 'Consumo', amount: 399.99 };
@@ -252,12 +240,10 @@ describe('assessor administrativo do João (turno completo)', () => {
       expect(p.sent.at(-1)!.text).toMatch(/Em qual categoria\?/);
     }, 90000);
 
-    it('valor alto continua exigindo o segundo passo também nas ações novas (despesa de R$ 500)', async () => {
+    it('valor alto não pede segundo passo nas ações novas (despesa de R$ 500)', async () => {
       const w = await setup(); const p = provider();
       await dizer(w, p, 'lança despesa de 500', { ready: true, slots: { fin_action: 'despesa', description: 'Manutenção da quadra', amount: 500, category_name: 'energia' } });
-      expect((await confirmar(w, p)).action).toBe('failed:CONFIRM_AMOUNT');
-      expect(await q(w.db, `select 1 from public.fin_entries`)).toHaveLength(0);
-      expect((await confirmar(w, p, 'confirmo R$ 500,00')).action).toBe('admin_confirmed');
+      expect((await confirmar(w, p)).action).toBe('admin_confirmed');
       expect(await q(w.db, `select 1 from public.fin_entries`)).toHaveLength(1);
     }, 90000);
   });
@@ -417,13 +403,11 @@ describe('onda 6: aprovar comprovante e gerar cobranças (N2)', () => {
     expect(await q(w.db, `select 1 from public.conv_booking_proposals`)).toHaveLength(0);
   }, 90000);
 
-  it('R$ 400 ou mais pede o segundo passo antes de baixar', async () => {
+  it('R$ 400 ou mais baixa com um "sim" só', async () => {
     const w = await setup(); const p = provider();
     await pend(w, 50000, 'Mensalidade atrasada', '2026-09-10'); await comprovante(w, 50000);
     await dizer(w, p, 'aprova o do Beto', aprovar);
-    expect((await confirmar(w, p)).action).toBe('failed:CONFIRM_AMOUNT');
-    expect((await q<any>(w.db, `select status from public.fin_receipt_submissions`))[0].status).toBe('submitted');
-    expect((await confirmar(w, p, 'confirmo R$ 500,00')).action).toBe('admin_confirmed');
+    expect((await confirmar(w, p)).action).toBe('admin_confirmed');
     expect((await q<any>(w.db, `select status from public.fin_receipt_submissions`))[0].status).toBe('approved');
   }, 90000);
 
@@ -509,13 +493,11 @@ describe('onda 7: pedidos de acesso e sócio novo com mensalidade paga', () => {
     expect(await q(w.db, `select 1 from public.conv_booking_proposals`)).toHaveLength(0);
   }, 90000);
 
-  it('mensalidade de R$ 500 pede o segundo passo antes de criar o acesso', async () => {
+  it('mensalidade de R$ 500 cria o acesso com um "sim" só', async () => {
     calls = []; const w = await setup(); const p = provider();
     await comprovante(w, 50000);
     await dizer(w, p, 'cadastra a Carla', criar({ amount: 500 }));
-    expect((await confirmar(w, p)).action).toBe('failed:CONFIRM_AMOUNT');
-    expect(calls).toHaveLength(0);
-    expect((await confirmar(w, p, 'confirmo R$ 500,00')).action).toBe('admin_confirmed');
+    expect((await confirmar(w, p)).action).toBe('admin_confirmed');
     expect(calls).toHaveLength(1);
   }, 90000);
 

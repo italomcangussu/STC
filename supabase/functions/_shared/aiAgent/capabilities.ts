@@ -1,8 +1,7 @@
 // Registro de capacidades do João como assessor dos administradores (Onda 0, docs/joao-assessor/MAPA.md).
 // Uma capacidade nova entra aqui (domínio, risco, leitura/escrita) e ganha RPC + teste; o fluxo do turno não muda.
 //
-// Riscos: N0 leitura · N1 reversível/operacional (resumo + "sim") · N2 financeiro (resumo + "sim"; a partir do
-// limite, segunda confirmação repetindo o valor, imposta no banco) · N3 nunca por chat (o João só indica a tela).
+// Riscos: N0 leitura · N1 reversível/operacional (resumo + "sim") · N2 financeiro (resumo + "sim") · N3 nunca por chat (o João só indica a tela).
 
 export type Risk = 'N0' | 'N1' | 'N2' | 'N3';
 export type Domain = 'financeiro' | 'pessoas' | 'quadra' | 'competicoes' | 'clube' | 'conversas';
@@ -21,9 +20,6 @@ export type Capability = {
   /** Ação de escrita (`fin_action` do modelo → proposta no banco). */
   write?: { finAction: string } | { admAction: string };
 };
-
-/** Valor (centavos) a partir do qual uma operação financeira exige a segunda confirmação. Igual ao do banco. */
-export const SECOND_CONFIRM_CENTS = 40000;
 
 export const CAPABILITIES: readonly Capability[] = [
   { id: 'fin.balances', domain: 'financeiro', risk: 'N0', label: 'Saldo das contas do clube', panel: 'Financeiro', read: { rpc: 'conv_svc_ai_club_balances', ctxKey: 'club_balances' } },
@@ -75,9 +71,6 @@ export const ADMIN_READS = CAPABILITIES.filter((c) => c.read);
 
 export const capabilityByFinAction = (finAction: string | null | undefined) =>
   CAPABILITIES.find((c) => c.write && 'finAction' in c.write && c.write.finAction === finAction);
-
-export const needsSecondConfirm = (amountCents: number | null | undefined) =>
-  Number.isFinite(amountCents) && Number(amountCents) >= SECOND_CONFIRM_CENTS;
 
 // N3: pedidos destrutivos ou de configuração. O servidor responde, o modelo nem é chamado.
 const N3_RULES: { re: RegExp; what: string; panel: string }[] = [

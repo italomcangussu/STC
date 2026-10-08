@@ -16,10 +16,10 @@
 Limite estrutural: despejar todo o contexto no prompt não escala (cada novo domínio incharia o prompt e o custo). A evolução precisa de **consulta por domínio**.
 
 ## 1b. Onda 0 entregue (2026-10-07)
-- `supabase/functions/_shared/aiAgent/capabilities.ts`: registro (domínio, risco N0–N3, leitura, escrita), limite de R$ 400 e regras N3. Migradas as 5 ações + saldo.
+- `supabase/functions/_shared/aiAgent/capabilities.ts`: registro (domínio, risco N0–N3, leitura, escrita) e regras N3. Migradas as 5 ações + saldo.
 - Leituras do administrador carregadas pelo registro (`ADMIN_READS`), só para admin no privado.
 - N3: o servidor recusa e indica a seção do painel, sem chamar o modelo.
-- R$ 400 ou mais: segunda confirmação repetindo o valor, **no banco** (`20261007210000_conversations_admin_second_confirm.sql`; `ai_confirm` envolve o ramo financeiro).
+- ~~R$ 400 ou mais: segunda confirmação~~ **Removida em 2026-10-08** (`20261008102600_conversations_admin_no_second_confirm.sql`): o "sim" do administrador basta em qualquer valor.
 - Auditoria com origem WhatsApp já existia (`conv_private.audit('ai_admin_finance', …, source: 'whatsapp')`).
 - Ainda não feito da onda: leitura **sob demanda por domínio** do bloco financeiro (hoje segue inteiro no prompt); entra junto com a Onda 1, quando houver mais de uma leitura grande.
 
@@ -29,7 +29,7 @@ Domínios: `caixa`, `receber_pagar`, `dre` (com período anterior), `receita_alu
 Próximo: Onda 2 (financeiro completo, N2).
 
 ## 1d. Onda 2 entregue (2026-10-07) — financeiro completo (N2)
-Novas ações em `admin_financeiro` (proposta com resumo → "sim" → segunda confirmação a partir de R$ 400 → grava pelas funções do painel, como o administrador, com auditoria): `cancelar_pendencia` (`fin_cancel_charge`; o banco recusa se já há pagamento), `ajustar` (`fin_adjust_charge`: desconto, acréscimo ou perdão de juros/multa), `estornar` (`fin_reverse_payment`: último pagamento da pendência ou do sócio), `rejeitar_comprovante` (`fin_reject_receipt`: por sócio e dia) e `despesa`/`receita` (`fin_create_entry`: categoria e conta pelo nome). Motivo é obrigatório em cancelar, ajustar, estornar e recusar. Migration `20261007240000` (encadeia com a de renovar Card: `ai_confirm` → … → `ai_confirm_single_step` → `ai_confirm_pendency_step`).
+Novas ações em `admin_financeiro` (proposta com resumo → "sim" → grava pelas funções do painel, como o administrador, com auditoria): `cancelar_pendencia` (`fin_cancel_charge`; o banco recusa se já há pagamento), `ajustar` (`fin_adjust_charge`: desconto, acréscimo ou perdão de juros/multa), `estornar` (`fin_reverse_payment`: último pagamento da pendência ou do sócio), `rejeitar_comprovante` (`fin_reject_receipt`: por sócio e dia) e `despesa`/`receita` (`fin_create_entry`: categoria e conta pelo nome). Motivo é obrigatório em cancelar, ajustar, estornar e recusar. Migration `20261007240000` (encadeia com a de renovar Card: `ai_confirm` → … → `ai_confirm_single_step` → `ai_confirm_pendency_step`).
 **Ficam só no painel (decisão técnica):** aprovar comprovante (exige alocar cobranças e conta) e gerar cobranças do mês (por plano). O João indica o painel.
 Próximo: Onda 3 (administrativo, N1).
 
@@ -117,16 +117,16 @@ Prioridade: **A** alta (valor diário), **B** média, **C** baixa. Risco: N0–N
 ## 5. Decisões do clube (2026-10-07)
 1. **Um único nível de administrador.** Todo `is_admin` tem o mesmo acesso; perde as funções do João assim que deixa de ser administrador (a checagem é feita a cada turno, sem lista própria). Sem permissões por domínio.
 2. **N3 (nunca por chat) confirmado:** apagar qualquer coisa, reset de ranking, trocar papel de sócio, editar configurações, encerrar plano. O João só entrega o link da tela do painel.
-3. **Limite de valor: R$ 400.** Operação N2 de R$ 400 ou mais exige confirmação em dois passos (resumo + "sim", depois confirmação do valor por extenso). A regra vale por operação e também para a soma de um lote.
+3. **Limite de valor: sem limite (decisão de 2026-10-08).** Antes, operação N2 de R$ 400 ou mais exigia segundo passo; foi retirado, vale resumo + "sim" em qualquer valor.
 4. **Resumo proativo pela manhã** para **Hermeson** e **Henrique** (horário a fixar na Onda 4; sugestão 08h00 de Fortaleza). Conteúdo inicial: caixa e saldo das contas, a receber vencido, comprovantes parados, documentos sem assinatura vencendo.
 5. **Só no privado.** O assessor não funciona em grupo, nem de administradores.
 
 
 ## Onda 6 (2026-10-07)
-Entregue: aprovar comprovante (valor lido, distribuído da cobrança mais antiga para a mais nova; ilegível ou sobra vão ao painel) e gerar cobranças do mês (idempotente). Ambos N2, com segundo passo a partir de R$ 400. Fora, sem função própria para reutilizar: aprovar/recusar acesso (borda cria o usuário), follow-up e bloquear horário; baixa em lote é coberta pela aprovação de comprovante.
+Entregue: aprovar comprovante (valor lido, distribuído da cobrança mais antiga para a mais nova; ilegível ou sobra vão ao painel) e gerar cobranças do mês (idempotente). Ambos N2 (resumo + "sim"). Fora, sem função própria para reutilizar: aprovar/recusar acesso (borda cria o usuário), follow-up e bloquear horário; baixa em lote é coberta pela aprovação de comprovante.
 
 ## Onda 7 (2026-10-07)
-Entregue: recusar pedido de acesso (N1); aprovar pedido de acesso e cadastrar sócio novo (N2). Regra do clube: sócio novo entra com a mensalidade do mês paga, comprovada por imagem enviada na conversa (sem comprovante o João não propõe; valor diferente do informado ou favorecido que não bate também travam). Depois do "sim" (e do segundo passo a partir de R$ 400): acesso criado no Auth (`_shared/athleteProvision.ts`, mesmo critério da função do painel), plano, cobrança do mês, comprovante movido para o sócio novo e aprovado, juros do mês de entrada dispensados. Boas-vindas com humor do João no(s) grupo(s) liberado(s) com IA ligada (`aiAgent/welcome.ts`). Telefone de professor/admin ou de sócio ativo é recusado. Duplicação conhecida: a lógica de criação de acesso existe aqui e em `admin-athlete-access`.
+Entregue: recusar pedido de acesso (N1); aprovar pedido de acesso e cadastrar sócio novo (N2). Regra do clube: sócio novo entra com a mensalidade do mês paga, comprovada por imagem enviada na conversa (sem comprovante o João não propõe; valor diferente do informado ou favorecido que não bate também travam). Depois do "sim": acesso criado no Auth (`_shared/athleteProvision.ts`, mesmo critério da função do painel), plano, cobrança do mês, comprovante movido para o sócio novo e aprovado, juros do mês de entrada dispensados. Boas-vindas com humor do João no(s) grupo(s) liberado(s) com IA ligada (`aiAgent/welcome.ts`). Telefone de professor/admin ou de sócio ativo é recusado. Duplicação conhecida: a lógica de criação de acesso existe aqui e em `admin-athlete-access`.
 
 ## Onda 8 (2026-10-07)
 Entregue: retornos/lembretes (criar e concluir/cancelar, mais leitura dos pendentes); bloqueio de quadra (reserva "Bloqueio: motivo" do administrador, que o motor de reservas já respeita; liberar = cancelar essa reserva); preferências do administrador (`conv_admin_prefs`: resumo da manhã liga/desliga e estilo curto/completo, alertas, saldo mínimo, dias de atraso, conta padrão aplicada em baixa/despesa/receita/aprovar comprovante) e alertas por regra (cobrança vencida há N dias, comprovante parado 24h, conta a pagar vencida, caixa abaixo do mínimo; no máximo 1 aviso por regra por dia; função `joao-admin-alerts`, cron job 9 de hora em hora das 09h às 18h de Fortaleza). Unificação: `admin-athlete-access` agora usa `_shared/athleteProvision.ts` (antes a lógica estava duplicada); mudança de comportamento: telefone de perfil que não é sócio (ex.: admin) deixa de ser rebaixado a sócio e vira erro.

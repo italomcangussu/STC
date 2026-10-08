@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
 import { ADMIN_READ_DOMAINS } from '../../supabase/functions/_shared/aiAgent/adminReads';
-import { ADMIN_READS, CAPABILITIES, SECOND_CONFIRM_CENTS, capabilityByFinAction, n3Reply, needsSecondConfirm } from '../../supabase/functions/_shared/aiAgent/capabilities';
+import { ADMIN_READS, CAPABILITIES, capabilityByFinAction, n3Reply } from '../../supabase/functions/_shared/aiAgent/capabilities';
 
 describe('registro de capacidades do assessor', () => {
   it('ids únicos; toda capacidade tem leitura ou escrita; N3 nunca tem escrita', () => {
@@ -23,14 +23,6 @@ describe('registro de capacidades do assessor', () => {
     expect(capabilityByFinAction('baixa')!.risk).toBe('N2');
     expect(capabilityByFinAction('lancar')!.risk).toBe('N2');
     expect(capabilityByFinAction('apagar')).toBeUndefined();
-  });
-
-  it('limite da segunda confirmação: 399,99 não, 400,00 sim, ausente não', () => {
-    expect(SECOND_CONFIRM_CENTS).toBe(40000);
-    expect(needsSecondConfirm(39999)).toBe(false);
-    expect(needsSecondConfirm(40000)).toBe(true);
-    expect(needsSecondConfirm(null)).toBe(false);
-    expect(needsSecondConfirm(undefined)).toBe(false);
   });
 
   it('N3 reconhece os pedidos proibidos e deixa passar os comuns', () => {

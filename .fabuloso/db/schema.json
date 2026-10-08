@@ -8,7 +8,7 @@
     "public",
     "sig_private"
   ],
-  "ultima_migracao": "20261008101944",
+  "ultima_migracao": "20261008102600",
   "extensoes": [
     "pg_cron 1.6.4",
     "pg_net 0.19.5",
@@ -9002,7 +9002,7 @@
         {
           "nome": "conv_booking_proposals_action_check",
           "tipo": "c",
-          "def": "CHECK ((action = ANY (ARRAY['adm_student_status'::text, 'adm_followup_done'::text, 'adm_court_block'::text, 'adm_dependent_create'::text, 'adm_message_send'::text, 'join'::text, 'fin_charge_adjust'::text, 'fin_payment_reverse'::text, 'fin_pendency_send'::text, 'create'::text, 'fin_access_approve'::text, 'fin_charge_cancel'::text, 'adm_pref_set'::text, 'fin_member_create'::text, 'fin_payment'::text, 'cancel'::text, 'adm_followup_create'::text, 'adm_signature_resend'::text, 'adm_reservation_cancel'::text, 'adm_access_reject'::text, 'student_card_renew'::text, 'fin_receipt_approve'::text, 'fin_entry_create'::text, 'adm_announcement_deactivate'::text, 'adm_member_status'::text, 'fin_pendency_collection'::text, 'fin_receipt_reject'::text, 'adm_announcement_create'::text, 'reschedule'::text, 'fin_charges_generate'::text, 'fin_pendency_create'::text, 'participants'::text])))",
+          "def": "CHECK ((action = ANY (ARRAY['adm_student_status'::text, 'adm_followup_done'::text, 'adm_court_block'::text, 'adm_dependent_create'::text, 'adm_message_send'::text, 'join'::text, 'fin_charge_adjust'::text, 'fin_payment_reverse'::text, 'fin_pendency_send'::text, 'create'::text, 'fin_access_approve'::text, 'fin_charge_cancel'::text, 'adm_pref_set'::text, 'fin_member_create'::text, 'fin_payment'::text, 'cancel'::text, 'adm_followup_create'::text, 'adm_signature_resend'::text, 'adm_reservation_cancel'::text, 'adm_access_reject'::text, 'student_card_renew'::text, 'fin_receipt_approve'::text, 'fin_entry_create'::text, 'adm_announcement_deactivate'::text, 'adm_member_status'::text, 'fin_pendency_collection'::text, 'fin_receipt_reject'::text, 'adm_announcement_create'::text, 'reschedule'::text, 'fin_charges_generate'::text, 'fin_pendency_create'::text, 'participants'::text, 'adm_broadcast_send'::text])))",
           "colunas": [
             "action"
           ],
@@ -28595,6 +28595,19 @@
       "comentario": null
     },
     {
+      "nome": "conv_private.ai_admin_broadcast_propose",
+      "args": "p_session uuid, p jsonb",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
       "nome": "conv_private.ai_admin_dependent_propose",
       "args": "p_session uuid, p jsonb",
       "retorno": "jsonb",
@@ -28832,7 +28845,7 @@
       "nome": "conv_private.ai_confirm_before_student_card",
       "args": "p_proposal uuid, p_message uuid",
       "retorno": "jsonb",
-      "linguagem": "plpgsql",
+      "linguagem": "sql",
       "tipo": "f",
       "security_definer": true,
       "search_path": "search_path=\"\"",
@@ -28856,6 +28869,19 @@
     },
     {
       "nome": "conv_private.ai_confirm_pendency_step",
+      "args": "p_proposal uuid, p_message uuid",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.ai_confirm_pre_broadcast_step",
       "args": "p_proposal uuid, p_message uuid",
       "retorno": "jsonb",
       "linguagem": "plpgsql",
@@ -31703,6 +31729,19 @@
     },
     {
       "nome": "public.conv_svc_ai_admin_adm_propose",
+      "args": "p_session uuid, p jsonb",
+      "retorno": "jsonb",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "public.conv_svc_ai_admin_broadcast_propose",
       "args": "p_session uuid, p jsonb",
       "retorno": "jsonb",
       "linguagem": "sql",
