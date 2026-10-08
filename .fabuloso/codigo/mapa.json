@@ -2568,7 +2568,7 @@
    "nome": "admin_audit_logs",
    "front": [
     "components/AdminPanel.tsx:1191",
-    "lib/finance/financeApi.ts:423"
+    "lib/finance/financeApi.ts:431"
    ],
    "edge": [],
    "telas": []
@@ -3036,7 +3036,7 @@
    "nome": "fin_member_plans",
    "front": [
     "lib/finance/financeApi.ts:179",
-    "lib/finance/financeApi.ts:300"
+    "lib/finance/financeApi.ts:308"
    ],
    "edge": [],
    "telas": []
@@ -3045,8 +3045,8 @@
    "tipo": "tabela",
    "nome": "fin_receipt_charges",
    "front": [
-    "lib/finance/financeApi.ts:348",
-    "lib/finance/financeApi.ts:362"
+    "lib/finance/financeApi.ts:356",
+    "lib/finance/financeApi.ts:370"
    ],
    "edge": [],
    "telas": []
@@ -3055,8 +3055,8 @@
    "tipo": "tabela",
    "nome": "fin_receipt_submissions",
    "front": [
-    "lib/finance/financeApi.ts:348",
-    "lib/finance/financeApi.ts:362"
+    "lib/finance/financeApi.ts:356",
+    "lib/finance/financeApi.ts:370"
    ],
    "edge": [],
    "telas": []
@@ -3260,6 +3260,7 @@
     "lib/championship/registration.ts:36",
     "lib/conversations/api.ts:556",
     "lib/finance/financeApi.ts:299",
+    "lib/finance/financeApi.ts:307",
     "lib/formsService.ts:318",
     "lib/rankingService.ts:112",
     "lib/resenhaOpenService.ts:245",

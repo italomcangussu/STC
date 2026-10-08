@@ -71,7 +71,7 @@
 - update [edge]: supabase/functions/admin-athlete-access/index.ts:120, supabase/functions/admin-athlete-access/index.ts:150, supabase/functions/admin-athlete-access/index.ts:185
 
 ### admin_audit_logs
-- select: components/AdminPanel.tsx:1191, lib/finance/financeApi.ts:423
+- select: components/AdminPanel.tsx:1191, lib/finance/financeApi.ts:431
 
 ### announcements
 - select: App.tsx:114, components/AdminPanel.tsx:766
@@ -203,13 +203,13 @@
 - select: lib/finance/financeApi.ts:184
 
 ### fin_member_plans
-- select: lib/finance/financeApi.ts:179, lib/finance/financeApi.ts:300
+- select: lib/finance/financeApi.ts:179, lib/finance/financeApi.ts:308
 
 ### fin_receipt_charges
-- select: lib/finance/financeApi.ts:348, lib/finance/financeApi.ts:362
+- select: lib/finance/financeApi.ts:356, lib/finance/financeApi.ts:370
 
 ### fin_receipt_submissions
-- select: lib/finance/financeApi.ts:348, lib/finance/financeApi.ts:362
+- select: lib/finance/financeApi.ts:356, lib/finance/financeApi.ts:370
 
 ### fin_recurrences
 - select: lib/finance/financeApi.ts:140
@@ -252,7 +252,7 @@
 - delete: components/AdminProfessors.tsx:197
 
 ### profiles
-- select: components/AdminLogin.tsx:32, components/AdminPanel.tsx:1004, components/AdminPanel.tsx:1166, components/AdminPanel.tsx:1550, components/AdminPanel.tsx:1574, components/AdminPanel.tsx:1603, components/AdminPanel.tsx:272, components/AdminPanel.tsx:434, components/AdminProtect.tsx:23, components/AdminReports.tsx:90, components/AdminStudents.tsx:85, components/Agenda.tsx:1220 +35
+- select: components/AdminLogin.tsx:32, components/AdminPanel.tsx:1004, components/AdminPanel.tsx:1166, components/AdminPanel.tsx:1550, components/AdminPanel.tsx:1574, components/AdminPanel.tsx:1603, components/AdminPanel.tsx:272, components/AdminPanel.tsx:434, components/AdminProtect.tsx:23, components/AdminReports.tsx:90, components/AdminStudents.tsx:85, components/Agenda.tsx:1220 +36
 - select [edge]: supabase/functions/_shared/athleteProvision.ts:54, supabase/functions/_shared/serveAdmin.ts:29, supabase/functions/admin-athlete-access/index.ts:48, supabase/functions/send-push/index.ts:59
 - insert: contexts/AuthContext.tsx:429
 - update: components/AdminUserEditor.tsx:125, components/EditProfileModal.tsx:79, components/OnboardingModal.tsx:63, contexts/AuthContext.tsx:330
