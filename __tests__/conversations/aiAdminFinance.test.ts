@@ -1046,7 +1046,7 @@ describe('regressão: contexto administrativo além do limite de turnos', () => 
     const r2 = await turn(w, m2.message_id, modelo.chat, p.uaz);
     expect(modelo.calls).toHaveLength(1);
     expect(r2.action).toBe('proposed_admin');
-    expect(p.sent.at(-1)!.text).toMatch(/R\\$ 30,00, categoria Outras receitas/);
+    expect(p.sent.at(-1)!.text).toMatch(/R\$ 30,00, categoria Outras receitas/);
     expect(await q(w.db, 'select id from public.fin_entries')).toHaveLength(0);
 
     // Resposta à proposta financeira: segunda autorização, validada pelo banco.
