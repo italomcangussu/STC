@@ -18,7 +18,7 @@ export type TopicSnapshot = {
 
 export type TopicMemory = {
   intent?: string;
-  slots?: Record<string, unknown>;
+  slots?: object;
   summary?: string;
   topics?: TopicSnapshot[];
   active_topic_id?: string | null;
@@ -71,7 +71,7 @@ export function topicForIntent(memory: TopicMemory, intent: string, mode: TopicM
 export type TopicTurn = {
   intent: string;
   mode?: TopicMode;
-  slots: Record<string, unknown>;
+  slots: object;
   summary?: string | null;
   action?: string | null;
   awaiting: boolean;
