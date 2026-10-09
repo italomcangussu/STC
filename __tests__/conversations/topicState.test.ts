@@ -1,11 +1,11 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
-import { openTopics, restoreConversationMemory, topicForIntent, trackConversationTopic } from '../../supabase/functions/_shared/aiAgent/topicState';
+import { openTopics, restoreConversationMemory, topicForIntent, trackConversationTopic, type TopicMemory } from '../../supabase/functions/_shared/aiAgent/topicState';
 import { q, world } from './sql/harness';
 
 describe('João: sessões são técnicas, assuntos são persistentes', () => {
   it('compacta apenas tarefas concluídas, conservando tarefas abertas de outros domínios', () => {
-    let memory = trackConversationTopic({}, {
+    let memory: TopicMemory = trackConversationTopic({} as TopicMemory, {
       intent: 'admin_financeiro', slots: { description: 'Doação de brinquedos', amount: 30 },
       summary: 'Lançar doação de R$ 30', awaiting: true, close: false, action: 'ask',
       lastQuestion: 'Qual a categoria?',
@@ -32,7 +32,7 @@ describe('João: sessões são técnicas, assuntos são persistentes', () => {
   });
 
   it('sessão nova recebe dados pendentes, mas não reabre assuntos já concluídos', () => {
-    const prior = trackConversationTopic({}, {
+    const prior = trackConversationTopic({} as TopicMemory, {
       intent: 'admin_financeiro', slots: { amount: 30, category_name: 'Outras receitas' },
       summary: 'Doação ação das crianças', awaiting: true, close: false, action: 'ask',
       lastQuestion: 'Confirma a categoria?',
