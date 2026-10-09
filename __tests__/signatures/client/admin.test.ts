@@ -73,6 +73,9 @@ describe('prepareFile: o que o banco exige do PDF, conferido antes de enviar', (
   });
 
   it('PDF que o leitor não abre (protegido/corrompido) é recusado, e 0 ou mais de 1000 páginas também', async () => {
+    openPdf.mockRejectedValueOnce(Object.assign(new Error('No password given'), { name: 'PasswordException' }));
+    await expect(prepareFile(pdfFile('%PDF-1.4 senha'))).rejects.toMatchObject({ reason: 'password' });
+    expect(openPdf).toHaveBeenLastCalledWith(expect.anything(), { skipSizes: true });
     openPdf.mockRejectedValueOnce(new Error('Invalid PDF structure'));
     await expect(prepareFile(pdfFile('%PDF-1.4 quebrado'))).rejects.toMatchObject({ reason: 'unreadable' });
     openPdf.mockResolvedValueOnce({ pageCount: 1001, destroy: vi.fn(async () => {}) });

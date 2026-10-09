@@ -106,7 +106,7 @@ export async function listSignableMembers(): Promise<MemberOption[]> {
 // ---- arquivo -------------------------------------------------------------------------------------------
 
 export class PdfRejectedError extends Error {
-  constructor(readonly reason: 'not_pdf' | 'too_big' | 'empty' | 'unreadable') {
+  constructor(readonly reason: 'not_pdf' | 'too_big' | 'empty' | 'unreadable' | 'password') {
     super(`PDF_${reason}`);
     this.name = 'PdfRejectedError';
   }
@@ -121,10 +121,13 @@ export async function prepareFile(file: File): Promise<PreparedFile> {
   if (new TextDecoder('latin1').decode(new Uint8Array(bytes.slice(0, 5))) !== '%PDF-') throw new PdfRejectedError('not_pdf');
   let pageCount: number;
   try {
-    const pdf = await openPdf(bytes);
+    const pdf = await openPdf(bytes, { skipSizes: true });
     pageCount = pdf.pageCount;
     await pdf.destroy();
-  } catch {
+  } catch (error) {
+    // Sem isto a causa real (senha, worker que não carregou, estrutura) some atrás da mensagem genérica.
+    console.error('[assinaturas] pdfjs não abriu o PDF:', error);
+    if ((error as { name?: string } | null)?.name === 'PasswordException') throw new PdfRejectedError('password');
     throw new PdfRejectedError('unreadable');
   }
   if (pageCount < 1 || pageCount > 1000) throw new PdfRejectedError('unreadable');
@@ -270,6 +273,7 @@ export function adminErrorMessage(error: unknown, fallback = 'Não foi possível
       not_pdf: 'O arquivo não é um PDF. Escolha um arquivo .pdf.',
       too_big: 'O PDF tem mais de 10 MB. Comprima o arquivo e tente de novo.',
       empty: 'O arquivo está vazio.',
+      password: 'Este PDF pede senha para abrir. Salve uma cópia sem senha e anexe de novo.',
       unreadable: 'Não foi possível ler este PDF (pode estar protegido ou corrompido). Gere o arquivo de novo.',
     }[error.reason];
   }

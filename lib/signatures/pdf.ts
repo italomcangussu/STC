@@ -16,7 +16,7 @@ export type PdfHandle = {
 };
 
 /** Abre o PDF a partir dos bytes (já conferidos pelo hash). Rejeita se o arquivo não for um PDF legível. */
-export async function openPdf(data: ArrayBuffer): Promise<PdfHandle> {
+export async function openPdf(data: ArrayBuffer, opts: { skipSizes?: boolean } = {}): Promise<PdfHandle> {
   const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');
   const worker = await import('pdfjs-dist/legacy/build/pdf.worker.min.mjs?url');
   pdfjs.GlobalWorkerOptions.workerSrc = worker.default;
@@ -26,7 +26,9 @@ export async function openPdf(data: ArrayBuffer): Promise<PdfHandle> {
   const doc = await task.promise;
 
   const sizes: PdfPageSize[] = [];
-  for (let i = 1; i <= doc.numPages; i++) {
+  // Conferir o arquivo no envio só precisa do número de páginas: abrir cada página aqui faria um PDF
+  // legível recusar por causa de uma página ou fonte estranha.
+  for (let i = 1; !opts.skipSizes && i <= doc.numPages; i++) {
     const view = (await doc.getPage(i)).getViewport({ scale: 1 });
     sizes.push({ width: view.width, height: view.height });
   }
