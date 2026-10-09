@@ -83,7 +83,7 @@ describe('renovar o Card Mensal de aluno pelo João (turno completo)', () => {
     const m1 = await direct(w, 'o nome dele é Erick, paga 200 pra quadra rápida');
     const r1 = await turn(w, m1.message_id, script(answer({ ready: true, slots: renovar })).chat, p.uaz);
     expect(r1.action).toBe('proposed_admin');
-    expect(p.sent.at(-1)!.text).toMatch(/^Vou renovar o Card Mensal de Erick Souza \(hoje vale até 20\/09\/2026\): R\$ 200,00 pagos em 07\/10\/2026 via PIX, nova validade 07\/11\/2026\. Comprovante lido: R\$ 200,00 em 07\/10\/2026, para Sobral Tenis Clube\. Confirma\? Responda "sim"\.$/);
+    expect(p.sent.at(-1)!.text).toMatch(/^Vou renovar o Card Mensal de Erick Souza \(hoje vale até 20\/09\/2026\): R\$ 200,00 pagos em 07\/10\/2026 via PIX, nova validade 07\/11\/2026\. Comprovante lido: R\$ 200,00 em 07\/10\/2026, para Sobral Tenis Clube\. Confirma\?$/);
     expect(await payments(w)).toHaveLength(0);
 
     const m2 = await direct(w, 'sim');

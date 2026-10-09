@@ -75,7 +75,7 @@ describe('assessor administrativo do João (turno completo)', () => {
     const r1 = await turn(w, m1.message_id, s1.chat, p.uaz);
     expect(r1.action).toBe('proposed_admin');
     expect(s1.calls[0].system).toContain('ASSESSOR ADMINISTRATIVO');
-    expect(p.sent.at(-1)!.text).toMatch(/^Vou lançar para Beto Sócio: Day Card do convidado Carlos \(convidado Carlos\), R\$ 50,00, vencimento .*Confirma\? Responda "sim"\.$/);
+    expect(p.sent.at(-1)!.text).toMatch(/^Vou lançar para Beto Sócio: Day Card do convidado Carlos \(convidado Carlos\), R\$ 50,00, vencimento .*Confirma\?$/);
     expect(await pendencies(w)).toHaveLength(0);
 
     const m2 = await direct(w, 'sim');
@@ -676,7 +676,7 @@ describe('chamar sócio no privado e mandar mensagem (N1)', () => {
     const texto = 'Beto, boas-vindas ao STC! Acesse o app por https://stcplay.com.br. Seu celular é iOS ou Android?';
     const r = await dizer(w, p, 'manda o link e pergunta se é ios ou android', msg({ send_body: texto }));
     expect(r.action).toBe('proposed_admin');
-    expect(p.sent.at(-1)!.text).toBe(`Vou chamar Beto Sócio no WhatsApp (5588993412944) e mandar esta mensagem:\n«${texto}»\nConfirma? Responda "sim".`);
+    expect(p.sent.at(-1)!.text).toBe(`Vou chamar Beto Sócio no WhatsApp (5588993412944) e mandar esta mensagem:\n«${texto}»\nConfirma?`);
     expect(await q(w.db, `select 1 from public.conv_followups where send_body is not null`)).toHaveLength(0);
     expect((await dizer(w, p, 'sim', { customer_confirmed: true })).action).toBe('admin_confirmed');
     expect(p.sent.at(-1)!.text).toMatch(/Pronto: a mensagem para Beto Sócio está na fila/);
@@ -1023,4 +1023,136 @@ describe('assessor: peças puras', () => {
     expect(t).toContain('via dinheiro');
     expect(t).toContain('R$ 5,00 viram crédito');
   });
+});
+
+describe('regressão: contexto administrativo além do limite de turnos', () => {
+  it('o 13º turno entende "isso" como categoria, monta a proposta e só lança depois de nova confirmação', async () => {
+    const w = await setup();
+    const p = provider();
+    const slots = {
+      fin_action: 'receita', description: 'Doação para comprar presentes, pipoca e picolés para crianças carentes',
+      amount: 30, category_name: 'Doações', entry_status: 'paid',
+    };
+    const m1 = await direct(w, 'Recebi 30 reais para a ação das crianças, lança como doação');
+    const r1 = await turn(w, m1.message_id, script(answer({ ready: true, slots })).chat, p.uaz);
+    expect(r1.action).toBe('ask');
+    expect(p.sent.at(-1)!.text).toContain('Em qual categoria?');
+    const sessions = await q<{ id: string }>(w.db, 'select id from public.conv_ai_sessions order by started_at desc limit 1');
+    await q(w.db, `update public.conv_ai_sessions set turns=12 where id='${sessions[0].id}'`);
+
+    // É o turno que antes era interceptado ANTES de chegar ao modelo.
+    const m2 = await direct(w, 'Isso');
+    const modelo = script(answer({ ready: true, topic_mode: 'continue', slots: { category_name: 'Outras receitas' } }));
+    const r2 = await turn(w, m2.message_id, modelo.chat, p.uaz);
+    expect(modelo.calls).toHaveLength(1);
+    expect(r2.action).toBe('proposed_admin');
+    expect(p.sent.at(-1)!.text).toMatch(/R\$ 30,00, categoria Outras receitas/);
+    expect(await q(w.db, 'select id from public.fin_entries')).toHaveLength(0);
+
+    // Resposta à proposta financeira: segunda autorização, validada pelo banco.
+    const m3 = await direct(w, 'sim');
+    const r3 = await turn(w, m3.message_id, script(answer({ customer_confirmed: true })).chat, p.uaz);
+    expect(r3.action).toBe('admin_confirmed');
+    const created = await q<{ kind: string; amount_cents: number }>(w.db, 'select kind, amount_cents from public.fin_entries');
+    expect(created).toHaveLength(1);
+    expect(created[0]).toMatchObject({ kind: 'revenue', amount_cents: 3000 });
+  }, 180000);
+
+  it('presidente interrompe a doação para falar de quadra, a sessão expira e "sobre aquele dinheiro, pode continuar" retoma sem repetir dados e sem lançar', async () => {
+    const w = await setup();
+    const p = provider();
+    const doacao = { fin_action: 'receita', description: 'Doação para presentes, pipoca e picolés das crianças', amount: 30, entry_status: 'paid' };
+    const m1 = await direct(w, 'lança 30 de doação das crianças');
+    expect((await turn(w, m1.message_id, script(answer({ ready: true, awaiting: true, slots: doacao })).chat, p.uaz)).action).toBe('ask');
+
+    // Assunto no meio: consulta de quadra (não mexe na doação).
+    const m2 = await direct(w, 'tem quadra amanhã de noite?');
+    await turn(w, m2.message_id, script(answer({ intent: 'consultar', messages: ['Vou ver aqui.'], slots: {} })).chat, p.uaz);
+
+    // A sessão técnica expira (dias depois).
+    await q(w.db, `update public.conv_ai_sessions set expires_at = now() - interval '1 minute'`);
+    await svc(w.db, 'public.conv_svc_ai_expire_sessions()');
+
+    const m3 = await direct(w, 'sobre aquele dinheiro, pode continuar');
+    const modelo = script(answer({ topic_mode: 'resume', topic_ref: 't1', awaiting: true, messages: ['Fechado. Qual categoria: Outras receitas?'], slots: {} }));
+    const r3 = await turn(w, m3.message_id, modelo.chat, p.uaz);
+    expect(r3.action).not.toBe('admin_confirmed');
+    // O modelo da sessão nova recebeu a doação inteira (valor, descrição) e a última pergunta.
+    expect(modelo.calls[0].user).toContain('- t1 (ATIVO) [admin_financeiro');
+    expect(modelo.calls[0].user).toMatch(/dados: .*"amount":30.*Doação para presentes/);
+    expect(modelo.calls[0].user).toContain('sua última pergunta: "Em qual categoria?');
+    expect(await q(w.db, 'select id from public.fin_entries')).toHaveLength(0);
+
+    // "Isso" vindo como informar: confirma a categoria, monta a proposta; só o "pode lançar" seguinte grava, uma vez.
+    const m4 = await direct(w, 'Isso');
+    const r4 = await turn(w, m4.message_id, script(answer({ intent: 'informar', ready: true, slots: { category_name: 'Outras receitas' } })).chat, p.uaz);
+    expect(r4.action).toBe('proposed_admin');
+    expect(p.sent.at(-1)!.text).toMatch(/R\$ 30,00, categoria Outras receitas/);
+    expect(await q(w.db, 'select id from public.fin_entries')).toHaveLength(0);
+
+    const m5 = await direct(w, 'Negativo');
+    await turn(w, m5.message_id, script(answer({ customer_confirmed: true })).chat, p.uaz);
+    expect(await q(w.db, 'select id from public.fin_entries')).toHaveLength(0);
+
+    const m6 = await direct(w, 'pode lançar');
+    expect((await turn(w, m6.message_id, script(answer({ customer_confirmed: true })).chat, p.uaz)).action).toBe('admin_confirmed');
+    expect(await q(w.db, 'select amount_cents from public.fin_entries')).toEqual([{ amount_cents: 3000 }]);
+    const topics = await q<{ status: string; outcome: string }>(w.db, 'select status, outcome from public.conv_ai_topics');
+    expect(topics).toEqual([{ status: 'completed', outcome: 'admin_confirmed' }]);
+  }, 180000);
+
+  it('"pode" sobre a segunda receita não confirma a proposta aberta da primeira', async () => {
+    const w = await setup();
+    const p = provider();
+    const m1 = await direct(w, 'lança receita de 30 de doação, outras receitas');
+    await turn(w, m1.message_id, script(answer({ ready: true, slots: { fin_action: 'receita', description: 'Doação crianças', amount: 30, category_name: 'Outras receitas', entry_status: 'paid' } })).chat, p.uaz);
+    const m2 = await direct(w, 'outra coisa: tem um patrocínio de 500 também');
+    await turn(w, m2.message_id, script(answer({ topic_mode: 'new', awaiting: true, messages: ['Qual categoria do patrocínio?'], slots: { fin_action: 'receita', description: 'Patrocínio', amount: 500 } })).chat, p.uaz);
+    const m3 = await direct(w, 'pode');
+    await turn(w, m3.message_id, script(answer({ topic_ref: 't2', customer_confirmed: true, slots: {} })).chat, p.uaz);
+    expect(await q(w.db, 'select id from public.fin_entries')).toHaveLength(0);
+    const abertos = await q<{ amount: number }>(w.db, `select (slots->>'amount')::int amount from public.conv_ai_topics where status in ('awaiting_data','awaiting_confirmation','suspended') order by created_at`);
+    expect(abertos).toEqual([{ amount: 30 }, { amount: 500 }]);
+  }, 180000);
+
+  it('pedido composto que nunca foi uma ação só: mostra o plano, executa cada passo com aceite natural e deixa o de painel como roteiro', async () => {
+    const w = await setup();
+      await w.db.exec(`create table if not exists public.announcements(id uuid primary key default gen_random_uuid(), title text not null, message text not null, image_url text,
+        is_active boolean default true, show_once boolean default false, created_at timestamptz default now(), expires_at timestamptz, updated_at timestamptz default now())`);
+    const p = provider();
+    const plan = {
+      goal: 'registrar a doação das crianças e agradecer aos sócios',
+      steps: [
+        { label: 'Lançar a receita de R$ 30 da doação', fin_action: 'receita', slots: { description: 'Doação ação das crianças', amount: 30, category_name: 'Outras receitas', entry_status: 'paid' } },
+        { label: 'Publicar um aviso de agradecimento no app', adm_action: 'aviso', slots: { ann_title: 'Obrigado!', ann_message: 'A ação das crianças recebeu R$ 30 em doações.' } },
+        { label: 'Trocar o banner do site', adm_action: 'banner_trocar', how: 'Configurações › Site › Banner' },
+      ],
+    };
+    const m1 = await direct(w, 'registra a doação das crianças, agradece os sócios no app e troca o banner do site');
+    const r1 = await turn(w, m1.message_id, script(answer({ intent: 'outro', plan })).chat, p.uaz);
+    expect(r1.action).toBe('proposed_admin');
+    const t1 = p.sent.at(-1)!.text;
+    expect(t1).toContain('Entendi: registrar a doação das crianças e agradecer aos sócios. Vou fazer assim:');
+    expect(t1).toContain('1. Lançar a receita de R$ 30 da doação (faço por aqui)');
+    expect(t1).toContain('3. Trocar o banner do site (no painel: Configurações › Site › Banner)');
+    expect(t1).toMatch(/Passo 1: .*\n\nVou lançar a receita: Doação ação das crianças, R\$ 30,00/s);
+    expect(t1).not.toMatch(/Responda "sim"/);
+    expect(await q(w.db, 'select 1 from public.fin_entries')).toHaveLength(0);
+
+    // "manda" executa o passo 1 e já emenda o 2, sem pedir de novo o que foi dito.
+    const m2 = await direct(w, 'manda');
+    const r2 = await turn(w, m2.message_id, script(answer({ intent: 'informar', customer_confirmed: true })).chat, p.uaz);
+    expect(r2.action).toBe('proposed_admin');
+    expect(p.sent.at(-1)!.text).toMatch(/Pronto: receita lançada.*Passo 2: Publicar um aviso/s);
+    expect(await q(w.db, 'select amount_cents from public.fin_entries')).toEqual([{ amount_cents: 3000 }]);
+    expect(await q(w.db, 'select 1 from public.announcements')).toHaveLength(0);
+
+    // Modelo classifica o aceite como financeiro: continua sendo o mesmo plano.
+    const m3 = await direct(w, 'isso');
+    const r3 = await turn(w, m3.message_id, script(answer({ intent: 'admin_financeiro', customer_confirmed: true })).chat, p.uaz);
+    expect(r3.action).toBe('admin_confirmed');
+    expect(await q(w.db, 'select title from public.announcements')).toEqual([{ title: 'Obrigado!' }]);
+    expect(p.sent.at(-1)!.text).toContain('Falta no painel: 3. Trocar o banner do site (Configurações › Site › Banner).');
+    expect(await q(w.db, 'select status from public.conv_ai_topics')).toEqual([{ status: 'completed' }]);
+  }, 180000);
 });

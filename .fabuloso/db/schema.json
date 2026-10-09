@@ -8,7 +8,7 @@
     "public",
     "sig_private"
   ],
-  "ultima_migracao": "20261008124729",
+  "ultima_migracao": "20261008150000",
   "extensoes": [
     "pg_cron 1.6.4",
     "pg_net 0.19.5",
@@ -9002,7 +9002,7 @@
         {
           "nome": "conv_booking_proposals_action_check",
           "tipo": "c",
-          "def": "CHECK ((action = ANY (ARRAY['adm_student_status'::text, 'adm_followup_done'::text, 'adm_briefing_recipient'::text, 'adm_court_block'::text, 'adm_dependent_create'::text, 'adm_message_send'::text, 'join'::text, 'fin_charge_adjust'::text, 'fin_payment_reverse'::text, 'fin_pendency_send'::text, 'create'::text, 'fin_access_approve'::text, 'fin_charge_cancel'::text, 'adm_pref_set'::text, 'adm_memory_forget'::text, 'fin_member_create'::text, 'fin_payment'::text, 'cancel'::text, 'adm_followup_create'::text, 'adm_signature_resend'::text, 'adm_reservation_cancel'::text, 'adm_access_reject'::text, 'student_card_renew'::text, 'fin_receipt_approve'::text, 'fin_entry_create'::text, 'adm_announcement_deactivate'::text, 'adm_member_status'::text, 'fin_pendency_collection'::text, 'fin_receipt_reject'::text, 'adm_announcement_create'::text, 'reschedule'::text, 'fin_charges_generate'::text, 'fin_pendency_create'::text, 'participants'::text, 'adm_broadcast_send'::text])))",
+          "def": "CHECK ((action = ANY (ARRAY['adm_student_status'::text, 'adm_followup_done'::text, 'adm_briefing_recipient'::text, 'adm_court_block'::text, 'adm_dependent_create'::text, 'adm_message_send'::text, 'join'::text, 'fin_charge_adjust'::text, 'fin_payment_reverse'::text, 'fin_pendency_send'::text, 'create'::text, 'fin_access_approve'::text, 'fin_charge_cancel'::text, 'adm_pref_set'::text, 'adm_memory_forget'::text, 'fin_member_create'::text, 'adm_form_toggle'::text, 'fin_payment'::text, 'cancel'::text, 'adm_group_post'::text, 'adm_form_nudge'::text, 'adm_followup_create'::text, 'adm_signature_resend'::text, 'adm_reservation_cancel'::text, 'adm_access_reject'::text, 'student_card_renew'::text, 'fin_receipt_approve'::text, 'fin_entry_create'::text, 'adm_form_create'::text, 'adm_announcement_deactivate'::text, 'adm_member_status'::text, 'fin_pendency_collection'::text, 'fin_receipt_reject'::text, 'adm_announcement_create'::text, 'reschedule'::text, 'fin_charges_generate'::text, 'fin_pendency_create'::text, 'participants'::text, 'adm_broadcast_send'::text])))",
           "colunas": [
             "action"
           ],
@@ -22804,9 +22804,39 @@
           "gerada": null,
           "identidade": null,
           "comentario": null
+        },
+        {
+          "nome": "birth_day",
+          "tipo": "smallint",
+          "nulo": true,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "birth_month",
+          "tipo": "smallint",
+          "nulo": true,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
         }
       ],
       "restricoes": [
+        {
+          "nome": "profiles_birthday_check",
+          "tipo": "c",
+          "def": "CHECK ((((birth_day IS NULL) AND (birth_month IS NULL)) OR ((birth_month IS NOT NULL) AND (birth_day IS NOT NULL) AND ((birth_month >= 1) AND (birth_month <= 12)) AND ((birth_day >= 1) AND (birth_day <=\nCASE\n    WHEN (birth_month = 2) THEN 29\n    WHEN (birth_month = ANY (ARRAY[4, 6, 9, 11])) THEN 30\n    ELSE 31\nEND)))))",
+          "colunas": [
+            "birth_day",
+            "birth_month"
+          ],
+          "ref": null,
+          "ref_colunas": null,
+          "ao_apagar": null
+        },
         {
           "nome": "profiles_id_fkey",
           "tipo": "f",
@@ -28609,6 +28639,19 @@
       "comentario": null
     },
     {
+      "nome": "conv_private.ai_admin_birthday_set",
+      "args": "p_session uuid, p jsonb",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
       "nome": "conv_private.ai_admin_briefing_propose",
       "args": "p_session uuid, p jsonb",
       "retorno": "jsonb",
@@ -28714,6 +28757,45 @@
     },
     {
       "nome": "conv_private.ai_admin_finance_propose_w6",
+      "args": "p_session uuid, p jsonb",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.ai_admin_forms_propose",
+      "args": "p_session uuid, p jsonb",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.ai_admin_forms_read",
+      "args": "p_session uuid, p_domain text, p_args jsonb",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.ai_admin_group_post_propose",
       "args": "p_session uuid, p jsonb",
       "retorno": "jsonb",
       "linguagem": "plpgsql",
@@ -29012,6 +29094,32 @@
       "comentario": null
     },
     {
+      "nome": "conv_private.ai_confirm_pre_forms_step",
+      "args": "p_proposal uuid, p_message uuid",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.ai_confirm_pre_group_post_step",
+      "args": "p_proposal uuid, p_message uuid",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
       "nome": "conv_private.ai_confirm_pre_memory_step",
       "args": "p_proposal uuid, p_message uuid",
       "retorno": "jsonb",
@@ -29116,6 +29224,19 @@
       "comentario": null
     },
     {
+      "nome": "conv_private.ai_curator_ask",
+      "args": "p_session uuid, p jsonb",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
       "nome": "conv_private.ai_expire_sessions",
       "args": "",
       "retorno": "integer",
@@ -29150,6 +29271,71 @@
       "security_definer": true,
       "search_path": "search_path=\"\"",
       "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.ai_form_audience",
+      "args": "p_form uuid",
+      "retorno": "TABLE(profile_id uuid, name text, phone text, responded boolean, responded_at timestamp with time zone, opted_out boolean)",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.ai_form_link",
+      "args": "p_slug text",
+      "retorno": "text",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": false,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "i",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.ai_form_pick",
+      "args": "p_ref text",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.ai_form_state",
+      "args": "f club_forms",
+      "retorno": "text",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": false,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.ai_forms_gate",
+      "args": "bp conv_booking_proposals, p_message uuid",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
       "exec_anon": false,
       "exec_authenticated": false,
       "comentario": null
@@ -29714,6 +29900,19 @@
       "comentario": null
     },
     {
+      "nome": "conv_private.birthdays_today",
+      "args": "p_today date",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
       "nome": "conv_private.br_local_phone",
       "args": "p text",
       "retorno": "text",
@@ -30127,6 +30326,19 @@
       "volatilidade": "s",
       "exec_anon": true,
       "exec_authenticated": true,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.members_group_conversation",
+      "args": "",
+      "retorno": "uuid",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": false,
       "comentario": null
     },
     {
@@ -31885,6 +32097,19 @@
       "comentario": null
     },
     {
+      "nome": "public.conv_svc_ai_admin_birthday_set",
+      "args": "p_session uuid, p jsonb",
+      "retorno": "jsonb",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
       "nome": "public.conv_svc_ai_admin_briefing_propose",
       "args": "p_session uuid, p jsonb",
       "retorno": "jsonb",
@@ -31938,6 +32163,45 @@
     },
     {
       "nome": "public.conv_svc_ai_admin_finance_propose",
+      "args": "p_session uuid, p jsonb",
+      "retorno": "jsonb",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "public.conv_svc_ai_admin_forms_propose",
+      "args": "p_session uuid, p jsonb",
+      "retorno": "jsonb",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "public.conv_svc_ai_admin_forms_read",
+      "args": "p_session uuid, p_domain text, p_args jsonb",
+      "retorno": "jsonb",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "public.conv_svc_ai_admin_group_post_propose",
       "args": "p_session uuid, p jsonb",
       "retorno": "jsonb",
       "linguagem": "sql",
@@ -32147,6 +32411,19 @@
     {
       "nome": "public.conv_svc_ai_context",
       "args": "p_session uuid",
+      "retorno": "jsonb",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "public.conv_svc_ai_curator_ask",
+      "args": "p_session uuid, p jsonb",
       "retorno": "jsonb",
       "linguagem": "sql",
       "tipo": "f",
@@ -32486,6 +32763,19 @@
       "nome": "public.conv_svc_available_slots",
       "args": "p_date date, p_court uuid, p_duration integer",
       "retorno": "text[]",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "public.conv_svc_birthdays_today",
+      "args": "p_today date",
+      "retorno": "jsonb",
       "linguagem": "sql",
       "tipo": "f",
       "security_definer": true,

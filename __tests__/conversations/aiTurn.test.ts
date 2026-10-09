@@ -140,7 +140,7 @@ describe('conversa de reserva (individual)', () => {
     const m2 = await direct(w, 'talvez');
     const r = await turn(w, m2.message_id, script(answer({ customer_confirmed: true, slots: { date, start: '16:00', court_label: 'saibro', participants_known: true } })).chat, p.uaz);
     expect(r.action).toBe('failed:NOT_EXPLICIT');
-    expect(p.sent[p.sent.length - 1].text).toMatch(/responda "sim"/);
+    expect(p.sent[p.sent.length - 1].text).toMatch(/Sigo assim, ou quer mudar algo\?/);
     expect((await reservations(w)).length).toBe(0);
   }, 90000);
 
@@ -271,7 +271,7 @@ describe('horário ocupado por um jogo: a IA mostra quem está e oferece entrar'
     const s1 = script(pedido(date));
     const r1 = await turn(w, m1.message_id, s1.chat, p.uaz);
     expect(r1.action).toBe('proposed_join');
-    expect(p.sent[0].text).toBe('Esse horário já está reservado: amanhã, 16:00–17:00 na Quadra 1, com Beto Sócio e Paulo Professor (restam 6 vagas). Quer entrar nesse jogo? Responda "sim" que eu te adiciono.');
+    expect(p.sent[0].text).toBe('Esse horário já está reservado: amanhã, 16:00–17:00 na Quadra 1, com Beto Sócio e Paulo Professor (restam 6 vagas). Quer entrar nesse jogo? Se quiser, já te adiciono.');
     expect(await participantes(w, id)).toEqual([U.socioB, U.prof]);               // a pergunta não adiciona ninguém
     expect((await q<any>(w.db, `select action, status from public.conv_booking_proposals`))[0]).toMatchObject({ action: 'join', status: 'open' });
 
@@ -294,7 +294,7 @@ describe('horário ocupado por um jogo: a IA mostra quem está e oferece entrar'
     const m1 = await direct(w, 'amanhã às 16h na quadra 1, eu e o Paulo');
     const r1 = await turn(w, m1.message_id, script(answer({ ready: true, slots: { date, start: '16:00', court_label: 'Quadra 1', participant_names: ['Paulo'] } })).chat, p.uaz);
     expect(r1.action).toBe('proposed_join');
-    expect(p.sent[0].text).toBe('Esse horário já está reservado: amanhã, 16:00–17:00 na Quadra 1, com Beto Sócio (restam 7 vagas). Quer entrar nesse jogo com Paulo Professor? Responda "sim" que eu adiciono vocês.');
+    expect(p.sent[0].text).toBe('Esse horário já está reservado: amanhã, 16:00–17:00 na Quadra 1, com Beto Sócio (restam 7 vagas). Quer entrar nesse jogo com Paulo Professor? Se quiser, já adiciono vocês.');
     expect(await participantes(w, id)).toEqual([U.socioB]);
     await tick();
     const m2 = await direct(w, 'sim');
@@ -335,7 +335,7 @@ describe('horário ocupado por um jogo: a IA mostra quem está e oferece entrar'
     const s2 = script(answer({ intent: 'entrar', ready: true, messages: ['Não consigo informar quem reservou esse horário.'] }));
     const r2 = await turn(w, m2.message_id, s2.chat, p.uaz);
     expect(r2.action).toBe('proposed_join');
-    expect(p.sent[1].text).toBe('Esse horário já está reservado: amanhã, 16:00–17:00 na Quadra 1, com Beto Sócio e Paulo Professor (restam 6 vagas). Quer entrar nesse jogo? Responda "sim" que eu te adiciono.');
+    expect(p.sent[1].text).toBe('Esse horário já está reservado: amanhã, 16:00–17:00 na Quadra 1, com Beto Sócio e Paulo Professor (restam 6 vagas). Quer entrar nesse jogo? Se quiser, já te adiciono.');
     expect(p.sent.some((x) => /Não consigo informar/.test(x.text))).toBe(false);   // o texto do modelo não sai
     expect(await participantes(w, id)).toEqual([U.socioB, U.prof]);
     // 3) "me adiciona" → "sim"

@@ -28,11 +28,14 @@
 | legacy_matches_played | integer | sim | `0` | Total de partidas disputadas em campeonatos anteriores |
 | legacy_matches_with_tiebreak | integer | sim | `0` | Partidas que foram para tiebreak em campeonatos anteriores |
 | updated_at | timestamp with time zone | sim | `now()` |  |
+| birth_day | smallint | sim |  |  |
+| birth_month | smallint | sim |  |  |
 
 ## Chaves e restrições
 - PK (id)
 - FK (id) → auth.users(id)
 - UNIQUE (phone)
+- CHECK profiles_birthday_check: `CHECK ((((birth_day IS NULL) AND (birth_month IS NULL)) OR ((birth_month IS NOT NULL) AND (birth_day IS NOT NULL) AND ((birth_month >= 1) AND (birth_month <= 12)) AND ((birth_day >= 1) AND (birth_day…`
 
 ## Referenciada por (95)
 public.access_requests.decided_by, public.admin_audit_logs.actor_user_id, public.admin_audit_logs.target_user_id, public.challenges.challenged_id, public.challenges.challenger_id, public.championship_admin_audit_logs.actor_user_id, public.championship_participants.user_id, public.championship_registrations.registered_by, public.championship_registrations.user_id, public.championship_series.created_by, public.championship_winners.winner_id, public.class_change_events.changed_by, public.class_change_events.user_id, public.club_form_responses.user_id, public.club_form_voter_receipts.user_id, public.club_forms.created_by, public.consumptions.user_id, public.conv_admin_alert_log.profile_id, public.conv_admin_briefing_recipients.profile_id, public.conv_admin_prefs.profile_id, public.conv_ai_member_context.profile_id, public.conv_ai_settings.created_by, public.conv_automation_recipients.profile_id, public.conv_automation_runs.created_by, public.conv_automation_settings.updated_by, …
