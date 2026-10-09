@@ -23,7 +23,7 @@ const text = (v: unknown, max: number) => (typeof v === 'string' && v.trim() ? v
 /** Valida o plano do modelo. Ação fora do catálogo nunca vira execução: vira passo manual. */
 export function parsePlan(raw: unknown, catalog: { fin: readonly string[]; adm: readonly string[] }): AdminPlan | null {
   const o = raw && typeof raw === 'object' && !Array.isArray(raw) ? raw as Record<string, unknown> : null;
-  const goal = text(o?.goal, 200);
+  const goal = text(o?.goal, 200)?.replace(/[.\s]+$/, '') ?? null;
   if (!o || !goal || !Array.isArray(o.steps)) return null;
   const steps = o.steps.slice(0, MAX_STEPS).map((s): PlanStep | null => {
     const r = s && typeof s === 'object' ? s as Record<string, unknown> : {};

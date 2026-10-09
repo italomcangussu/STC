@@ -1068,6 +1068,9 @@ export function nearest(slots: string[], wanted: string | null | undefined, n = 
 
 /* ------------------------------- Turno ------------------------------- */
 
+/** Teto da resposta do modelo: o assessor administrativo devolve planos e dados de formulário, maiores que um pedido de quadra. */
+const answerBudget = (ctx: Ctx) => (isAdminAssistant(ctx) ? 1800 : 900);
+
 const first = <T,>(r: RpcResult): T | null => (Array.isArray(r.data) ? (r.data[0] as T) ?? null : (r.data as T) ?? null);
 
 export type TurnResult = { status: string; reason?: string; bubbles?: number; handoff?: string | null; action?: string | null };
@@ -1344,7 +1347,7 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
     const r = await deps.chat([
       { role: 'system', content: systemPrompt(settings, ctx) },
       { role: 'user', content: userPrompt(ctx, memory, buffered) },
-    ], { model: settings.model, temperature: turnTemperature(isGroup, ctx, memory), maxTokens: 900, json: true });
+    ], { model: settings.model, temperature: turnTemperature(isGroup, ctx, memory), maxTokens: answerBudget(ctx), json: true });
     answer = parseAnswer(r.output);
   } catch {
     return transferir('hard', 'Falha ao chamar o modelo de IA.', memory);
@@ -1397,7 +1400,7 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
           const r2 = await deps.chat([
             { role: 'system', content: `${systemPrompt(settings, ctx)}\n\n${NO_TRANSFER_RULE}${isAdminAssistant(ctx) ? ` ${ADMIN_LIMIT_RULE}` : ''}` },
             { role: 'user', content: userPrompt(ctx, memory, buffered) },
-          ], { model: settings.model, temperature: 0.6, maxTokens: 600, json: true });
+          ], { model: settings.model, temperature: 0.6, maxTokens: answerBudget(ctx), json: true });
           falas = parseAnswer(r2.output).messages.filter((m) => !MEMBER_HANDOFF_TALK.test(m));
         } catch { falas = []; }
         fallback = falas.length ? 'reformulada' : 'pronta';
