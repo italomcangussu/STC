@@ -21,6 +21,7 @@ import type { Provision, ProvisionResult } from '../athleteProvision.ts';
 import { FORMS_DOMAINS, isAdminReadDomain, READ_MORE_DOMAINS, renderAdminRead, type AdminReadDomain } from './adminReads.ts';
 import { isFileKind, reportDoc, safeName, type FileKind, type FileKit } from './adminFiles.ts';
 import { receiptReceivedMessage, studentCardProposalMessage, studentCardSuccessMessage } from './studentCard.ts';
+import { openTopics, restoreConversationMemory, topicForIntent, trackConversationTopic, type TopicMode } from './topicState.ts';
 import { hearAudios, unheardOnly, UNCLEAR_AUDIO_REPLY } from './audio.ts';
 import { adminPendencyRefs, isAdminAssistant, systemPrompt, userPrompt, type AiSettings, type Ctx } from './prompts.ts';
 import { buildChatRequest, providerIdFrom, uazError, type UazCaller } from '../uazChat.ts';
@@ -147,6 +148,8 @@ export type Answer = {
   handoff_kind: 'soft' | 'hard' | null;
   handoff_note: string | null;
   close: boolean;
+  /** 'new' apenas quando realmente iniciar outro assunto; 'resume' recupera pendência anterior. */
+  topic_mode?: TopicMode;
   /** Resumo compactado da conversa (o agente reescreve a cada turno); ausente = manter o anterior. */
   summary?: string | null;
   /** Aprendizados sociais candidatos; o servidor só registra como pendentes para revisão. */
@@ -311,6 +314,7 @@ export function parseAnswer(output: string): Answer {
     declined: obj.declined === true, awaiting: obj.awaiting === true,
     transfer, handoff_kind: obj.handoff_kind === 'soft' || obj.handoff_kind === 'hard' ? obj.handoff_kind : transfer ? 'hard' : null,
     handoff_note: str(obj.handoff_note)?.slice(0, 500) ?? null, close: obj.close === true && !transfer,
+    topic_mode: obj.topic_mode === 'new' || obj.topic_mode === 'resume' ? obj.topic_mode : 'continue',
     summary: clipSummary(obj.summary),
     reaction: parseReaction(obj.reaction),
     ask_curator: parseCuratorAsk(obj.ask_curator),
@@ -1268,7 +1272,8 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
 
   // Regras que não dependem do modelo.
   if (!deps.chat || !settings.model) return transferir('hard', 'Agente de IA sem provedor ou modelo configurado.', null, socioNoPrivado);
-  if (Number(ctx.session?.turns ?? 0) >= settings.max_turns) return transferir('hard', `Atendimento passou de ${settings.max_turns} turnos com a IA sem concluir.`, null, true, { texto: 'Vamos recomeçar do zero? Me diz o que você precisa.', fechar: true });
+  // max_turns é um limiar para resumir contexto, NUNCA para interromper um assunto.
+  // O contexto enviado ao modelo já é limitado pelas últimas 8 trocas + memória estruturada.
   if (wantsHuman(buffered, settings.handoff_keywords ?? [])) return transferir('hard', 'A pessoa pediu atendimento humano.', null);
   const naoOuvido = unheardOnly(pendentes);
   if (naoOuvido === 'failed' && !isGroup) return transferir('hard', 'Chegou áudio e a transcrição automática falhou; ouça na conversa.', null, true, { texto: 'Não consegui ouvir seu áudio. Pode escrever, ou mandar de novo?' });
@@ -1304,7 +1309,7 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
     return { status: 'replied', bubbles: sent, handoff: null, action: 'admin_n3_refused' } as TurnResult;
   }
 
-  const memory = (ctx.session?.memory ?? {}) as Memory;
+  const memory = restoreConversationMemory((ctx.session?.memory ?? {}) as Memory, (ctx.prior_memory ?? null) as Memory);
 
   if (ctx.pro_tennis && looksLikeProTennisQuestion(buffered, (ctx.group_context ?? []) as Ctx[])) {
     const messages = proTennisDirectMessages(tennisQueryContext, ctx.pro_tennis);
@@ -1416,17 +1421,30 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
     }
   }
 
-  // Trocar de ação no meio ("na verdade quero cancelar") recomeça os dados; o resto soma ao que já se sabia.
-  const trocouDeAcao = memory.intent !== undefined && ACTIONABLE.includes(memory.intent) && ACTIONABLE.includes(answer.intent) && memory.intent !== answer.intent;
-  const slots = mergeSlots(memory.slots, answer.slots, trocouDeAcao);
+  // Assuntos independentes: não misturar os slots de uma receita com outra tarefa.
+  // Ao voltar a uma pendência, recuperar somente seus dados próprios.
+  const selectedTopic = topicForIntent(memory, answer.intent, answer.topic_mode);
+  const changeOfAction = memory.intent !== undefined && ACTIONABLE.includes(memory.intent) && ACTIONABLE.includes(answer.intent) && memory.intent !== answer.intent;
+  const startFresh = answer.topic_mode === 'new' || (changeOfAction && !selectedTopic);
+  const baseSlots = selectedTopic?.slots as Slots | undefined ?? (startFresh ? undefined : memory.slots);
+  const slots = mergeSlots(baseSlots, answer.slots, startFresh);
   // Resumo: o que o modelo reescreveu agora; senão o anterior; senão o do atendimento anterior da mesma pessoa.
   const summary = answer.summary ?? memory.summary ?? (typeof ctx.prior_summary === 'string' ? ctx.prior_summary : undefined);
   const nextMemory: Memory = { ...memory, intent: answer.intent, slots, ...(summary ? { summary } : {}) };
 
   const d = await decide({ deps, ctx, answer, slots, memory: nextMemory, session, ultimaId: ultima?.id as string | undefined, today });
   if (anotados.length && !d.handoff) d.bubbles = [...d.bubbles, `📝 Anotei: ${anotados.join('; ')}.`];
-  // Os fechamentos (confirmou, desistiu) zeram os dados do pedido, mas o resumo da conversa fica.
+  // Compacta SOMENTE o assunto resolvido; as demais tarefas abertas continuam.
+  // 'done' e 'declined' não encerram a sessão se houver outro assunto pendente.
+  d.memory = trackConversationTopic({ ...nextMemory, ...d.memory, topics: nextMemory.topics, active_topic_id: nextMemory.active_topic_id }, {
+    intent: answer.intent, mode: answer.topic_mode, slots, summary,
+    action: d.action, awaiting: d.awaiting, close: d.close,
+    lastQuestion: d.bubbles.at(-1) ?? null,
+  });
   if (summary && !d.memory.summary) d.memory = { ...d.memory, summary };
+  const hasOpenTopics = openTopics(d.memory).length > 0;
+  const closeSession = d.close && !hasOpenTopics;
+  const awaitingContinuation = d.awaiting || hasOpenTopics;
   if (d.handoff && socioNoPrivado) {
     const enviadas = await entregar(cadence([MEMBER_FAIL]));
     await save(d.memory, 'member_no_handoff', { action: d.action, reason: d.handoff.note.slice(0, 200) }, false, false);
@@ -1449,7 +1467,7 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
     await db('conv_svc_ai_handoff', { p_session: session, p_kind: answer.handoff_kind ?? 'hard', p_note: answer.handoff_note || 'Transferida pela IA' });
   }
   await save(d.memory, answer.transfer ? `handoff_${answer.handoff_kind}` : d.close ? 'close' : d.action ?? 'reply',
-    { action: d.action, intent: answer.intent, bubbles: enviadas, ...(fallback || d.bubbles.some((b) => b.includes('Ainda não consigo realizar esse pedido')) ? { fallback: fallback ?? 'limitacao', limitation: true, asked: buffered.slice(0, 200) } : {}) }, d.awaiting, d.close || (answer.transfer && answer.handoff_kind === 'hard'));
+    { action: d.action, intent: answer.intent, bubbles: enviadas, ...(fallback || d.bubbles.some((b) => b.includes('Ainda não consigo realizar esse pedido')) ? { fallback: fallback ?? 'limitacao', limitation: true, asked: buffered.slice(0, 200) } : {}) }, awaitingContinuation, closeSession || (answer.transfer && answer.handoff_kind === 'hard'));
   return { status: 'replied', bubbles: enviadas, handoff: answer.transfer ? answer.handoff_kind : null, action: d.action };
 }
 
