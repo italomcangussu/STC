@@ -1425,7 +1425,8 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
   // Ao voltar a uma pendência, recuperar somente seus dados próprios.
   const selectedTopic = topicForIntent(memory, answer.intent, answer.topic_mode);
   const changeOfAction = memory.intent !== undefined && ACTIONABLE.includes(memory.intent) && ACTIONABLE.includes(answer.intent) && memory.intent !== answer.intent;
-  const startFresh = answer.topic_mode === 'new' || (changeOfAction && !selectedTopic);
+  const isNewAction = ['reservar', 'cancelar', 'remarcar', 'entrar', 'participantes', 'admin_financeiro', 'admin_acao'].includes(answer.intent);
+  const startFresh = answer.topic_mode === 'new' || (isNewAction && memory.intent !== undefined && memory.intent !== answer.intent && !selectedTopic) || (changeOfAction && !selectedTopic);
   const baseSlots = selectedTopic?.slots as Slots | undefined ?? (startFresh ? undefined : memory.slots);
   const slots = mergeSlots(baseSlots, answer.slots, startFresh);
   // Resumo: o que o modelo reescreveu agora; senão o anterior; senão o do atendimento anterior da mesma pessoa.
