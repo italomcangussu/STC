@@ -1024,3 +1024,37 @@ describe('assessor: peças puras', () => {
     expect(t).toContain('R$ 5,00 viram crédito');
   });
 });
+
+describe('regressão: contexto administrativo além do limite de turnos', () => {
+  it('o 13º turno entende "isso" como categoria, monta a proposta e só lança depois de nova confirmação', async () => {
+    const w = await setup();
+    const p = provider();
+    const slots = {
+      fin_action: 'receita', description: 'Doação para comprar presentes, pipoca e picolés para crianças carentes',
+      amount: 30, category_name: 'Doações', entry_status: 'paid',
+    };
+    const m1 = await direct(w, 'Recebi 30 reais para a ação das crianças, lança como doação');
+    const r1 = await turn(w, m1.message_id, script(answer({ ready: true, slots })).chat, p.uaz);
+    expect(r1.action).toBe('ask');
+    expect(p.sent.at(-1)!.text).toContain('Em qual categoria?');
+    const sessions = await q<{ id: string }>(w.db, 'select id from public.conv_ai_sessions order by started_at desc limit 1');
+    await q(w.db, `update public.conv_ai_sessions set turns=12 where id='${sessions[0].id}'`);
+
+    // É o turno que antes era interceptado ANTES de chegar ao modelo.
+    const m2 = await direct(w, 'Isso');
+    const modelo = script(answer({ ready: true, topic_mode: 'continue', slots: { category_name: 'Outras receitas' } }));
+    const r2 = await turn(w, m2.message_id, modelo.chat, p.uaz);
+    expect(modelo.calls).toHaveLength(1);
+    expect(r2.action).toBe('proposed_admin');
+    expect(p.sent.at(-1)!.text).toMatch(/R\\$ 30,00, categoria Outras receitas/);
+    expect(await q(w.db, 'select id from public.fin_entries')).toHaveLength(0);
+
+    // Resposta à proposta financeira: segunda autorização, validada pelo banco.
+    const m3 = await direct(w, 'sim');
+    const r3 = await turn(w, m3.message_id, script(answer({ customer_confirmed: true })).chat, p.uaz);
+    expect(r3.action).toBe('admin_confirmed');
+    const created = await q<{ kind: string; amount_cents: number }>(w.db, 'select kind, amount_cents from public.fin_entries');
+    expect(created).toHaveLength(1);
+    expect(created[0]).toMatchObject({ kind: 'revenue', amount_cents: 3000 });
+  }, 180000);
+});
