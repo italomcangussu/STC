@@ -160,8 +160,10 @@ function normalize(t: TopicSnapshot, input: RestoreInput): TopicSnapshot {
   return t;
 }
 
+// Plano do assessor reúne passos financeiros e administrativos num assunto só.
 const sameTask = (t: TopicSnapshot, intent: string) => t.intent === intent
-  || (t.domain === 'agenda' && domainOf(intent) === 'agenda' && !(BOOKING_ACTIONS.has(t.intent) && BOOKING_ACTIONS.has(intent)));
+  || (t.domain === 'agenda' && domainOf(intent) === 'agenda' && !(BOOKING_ACTIONS.has(t.intent) && BOOKING_ACTIONS.has(intent)))
+  || (t.domain === 'admin' && domainOf(intent) === 'admin' && Boolean(t.slots.plan));
 
 /**
  * Qual assunto pendente este turno continua (null = assunto novo).

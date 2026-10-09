@@ -15,7 +15,7 @@ export function studentCardProposalMessage(s: Ctx): string {
     : ' Sem comprovante nesta conversa.';
   const antes = s.previous_valid_until ? ` (hoje vale até ${dateBR(s.previous_valid_until)})` : '';
   const alerta = avisos.length ? ` Atenção: ${avisos.join(' ')}` : '';
-  return `Vou renovar o Card Mensal de ${s.student_name}${antes}: ${centsBR(s.amount_cents)} pagos em ${dateBR(s.paid_on)} via PIX, nova validade ${dateBR(s.new_valid_until)}.${origem}${alerta} Confirma? Responda "sim".`;
+  return `Vou renovar o Card Mensal de ${s.student_name}${antes}: ${centsBR(s.amount_cents)} pagos em ${dateBR(s.paid_on)} via PIX, nova validade ${dateBR(s.new_valid_until)}.${origem}${alerta} Confirma?`;
 }
 
 export function studentCardSuccessMessage(s: Ctx): string {

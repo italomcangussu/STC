@@ -51,6 +51,6 @@ describe('resenha no grupo', () => {
   });
   it('a proposta mostra o texto sem o número da menção e diz quem será marcado', () => {
     expect(adminProposalMessage('adm_group_post', { body: '@5588999990000 cadê você?', target_name: 'Tiago Gomes' }))
-      .toBe('Mando isto no grupo marcando Tiago Gomes:\n«cadê você?»\nManda? Responda "sim".');
+      .toBe('Mando isto no grupo marcando Tiago Gomes:\n«cadê você?»\nManda?');
   });
 });

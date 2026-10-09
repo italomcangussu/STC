@@ -38,10 +38,10 @@ describe('julgamento da transcrição (o que o Whisper ouviu de verdade)', () =>
   });
 
   it('prompt do Whisper: nomes e vocabulário do clube, com a última fala do João no fim', () => {
-    const p = whisperPrompt({ names: ['Maria', 'STC Institucional', 'Maria', ''], previous: 'Confirma a quadra 2 às 18h? Responda "sim".' });
+    const p = whisperPrompt({ names: ['Maria', 'STC Institucional', 'Maria', ''], previous: 'Confirma a quadra 2 às 18h?' });
     expect(p).toContain('(Maria, STC Institucional)');
     expect(p).toContain('Day Card');
-    expect(p.endsWith('João: Confirma a quadra 2 às 18h? Responda "sim".')).toBe(true);
+    expect(p.endsWith('João: Confirma a quadra 2 às 18h?')).toBe(true);
     expect(whisperPrompt({ previous: 'x'.repeat(5000) }).length).toBeLessThanOrEqual(800);
   });
 });

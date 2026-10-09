@@ -21,6 +21,7 @@ import type { Provision, ProvisionResult } from '../athleteProvision.ts';
 import { FORMS_DOMAINS, isAdminReadDomain, READ_MORE_DOMAINS, renderAdminRead, type AdminReadDomain } from './adminReads.ts';
 import { isFileKind, reportDoc, safeName, type FileKind, type FileKit } from './adminFiles.ts';
 import { receiptReceivedMessage, studentCardProposalMessage, studentCardSuccessMessage } from './studentCard.ts';
+import { completeCurrentStep, nextActionStep, parsePlan, planClosing, planIntro, stepHeading, type AdminPlan } from './adminPlan.ts';
 import { activeTopic, domainOf, bringsNewData, openTopics, recordTopicTurn, restoreTopics, selectTopic, topicIdFromRef, type TopicMode, type TopicSnapshot } from './topicState.ts';
 import { hearAudios, unheardOnly, UNCLEAR_AUDIO_REPLY } from './audio.ts';
 import { adminPendencyRefs, isAdminAssistant, systemPrompt, userPrompt, type AiSettings, type Ctx } from './prompts.ts';
@@ -61,6 +62,8 @@ export type Slots = {
   add_names?: string[];
   remove_names?: string[];
   remove_guest?: boolean;
+  /** Plano em passos de um pedido composto do administrador (vive no assunto até o último passo). */
+  plan?: AdminPlan | null;
   /** Assessor administrativo (só administrador, no privado). */
   fin_action?: FinAction | null;
   member_name?: string | null;
@@ -152,6 +155,8 @@ export type Answer = {
   topic_mode?: TopicMode;
   /** Referência do assunto pendente (t1, t2…) a que a fala se refere, quando há mais de um. */
   topic_ref?: string | null;
+  /** Pedido do administrador sem ação única no catálogo: o plano em passos (já validado contra o catálogo). */
+  plan?: AdminPlan | null;
   /** Resumo compactado da conversa (o agente reescreve a cada turno); ausente = manter o anterior. */
   summary?: string | null;
   /** Aprendizados sociais candidatos; o servidor só registra como pendentes para revisão. */
@@ -318,6 +323,7 @@ export function parseAnswer(output: string): Answer {
     handoff_note: str(obj.handoff_note)?.slice(0, 500) ?? null, close: obj.close === true && !transfer,
     topic_mode: obj.topic_mode === 'new' || obj.topic_mode === 'resume' ? obj.topic_mode : 'continue',
     topic_ref: str(obj.topic_ref)?.slice(0, 4) ?? null,
+    plan: parsePlan(obj.plan, { fin: FIN_ACTIONS, adm: ADM_ACTIONS }),
     summary: clipSummary(obj.summary),
     reaction: parseReaction(obj.reaction),
     ask_curator: parseCuratorAsk(obj.ask_curator),
@@ -806,7 +812,7 @@ export function describeReservation(n: Summary, today: string, names: string[] =
 }
 
 export function proposalMessage(action: 'create' | 'cancel' | 'reschedule', n: Summary, today: string, names: string[], me?: string): string {
-  if (action === 'cancel') return `Vou cancelar a ${describeReservation(n, today)}. Posso cancelar? Responda "sim" para confirmar.`;
+  if (action === 'cancel') return `Vou cancelar a ${describeReservation(n, today)}. Posso cancelar?`;
   if (action === 'reschedule') return `Dá pra remarcar sim: ${describeReservation(n, today, names, me)}. A anterior eu cancelo. Posso fechar assim?`;
   return `Tá livre! Seria ${describeReservation(n, today, names, me)}. Posso confirmar?`;
 }
@@ -826,7 +832,7 @@ export function joinOfferMessage(g: Game, today: string, levando: string[] = [])
   if (g.participants >= 4) {
     return `Rapaz, esse play já tá com uma galera, viu: ${jogoDe(g, today)}${quem} (${vagas}). Se quiser entrar${junto}, cabe; ou eu vejo outra quadra/horário pra você.`;
   }
-  return `Esse horário já está reservado: ${jogoDe(g, today)}${quem} (${vagas}). Quer entrar nesse jogo${junto}? Responda "sim" que eu ${levando.length ? 'adiciono vocês' : 'te adiciono'}.`;
+  return `Esse horário já está reservado: ${jogoDe(g, today)}${quem} (${vagas}). Quer entrar nesse jogo${junto}? Se quiser, ${levando.length ? 'já adiciono vocês' : 'já te adiciono'}.`;
 }
 
 /** O jogo tem vaga, mas não para todo mundo que a pessoa quer levar. */
@@ -911,11 +917,11 @@ export const CODE_TEXT: Record<string, string | null> = {
   GUEST_ALREADY: 'Esse jogo já tem um convidado. Quer trocar por outro (retiro o atual e coloco o novo)?',
   NOT_YOUR_RESERVATION: 'Só quem criou a reserva (ou um administrador) pode cancelar ou remarcar.',
   RESERVATION_NOT_FOUND: 'Não encontrei essa reserva entre as suas futuras.',
-  NOT_EXPLICIT: 'Não entendi como confirmação. Para eu seguir, responda "sim" à proposta acima — ou me diga o que mudar.',
-  NOT_AUTHORIZED_TO_CONFIRM: 'Só quem pediu (ou um administrador) pode confirmar. Quem pediu pode responder "sim".',
+  NOT_EXPLICIT: 'Não entendi se é para seguir com o que descrevi acima. Sigo assim, ou quer mudar algo?',
+  NOT_AUTHORIZED_TO_CONFIRM: 'Só quem pediu (ou um administrador) pode confirmar. Quem pediu pode me dizer se sigo.',
   PROPOSAL_EXPIRED: 'A proposta venceu. Quer que eu monte outra com os mesmos dados?',
   PROPOSAL_CLOSED: 'Essa proposta já não está aberta. Quer que eu monte outra?',
-  CONFIRMATION_NOT_AFTER_PROPOSAL: 'Para confirmar, responda "sim" depois do resumo que enviei.',
+  CONFIRMATION_NOT_AFTER_PROPOSAL: 'Acabei de te mandar o resumo atualizado; me diz se sigo com ele.',
 };
 
 /* ------------------------------- Quem foi marcado: do número para o sócio ------------------------------- */
@@ -1071,6 +1077,7 @@ type Memory = { intent?: Intent; slots?: Slots; proposal_names?: string[]; pendi
   topics?: TopicSnapshot[]; active_topic_id?: string | null; [k: string]: unknown };
 
 type Decision = { bubbles: string[]; awaiting: boolean; close: boolean; action: string | null; memory: Memory; handoff?: { kind: 'soft' | 'hard'; note: string };
+  /** Dados do assunto depois do turno, quando o servidor os muda (passo do plano). */ slots?: Slots;
   /** Relatório do servidor: vai numa mensagem só, com as quebras de linha (sem picotar em microbolhas). */ verbatim?: boolean;
   /** Arquivos para o administrador (já copiados para a mídia da conversa): saem como documento depois da fala. */ files?: OutFile[] };
 
@@ -1435,6 +1442,7 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
     && (bringsNewData(answer.slots, ativo.slots) || answer.ready || answer.customer_confirmed || answer.declined)) {
     answer = { ...answer, intent: ativo.intent as Intent };
   }
+  if (answer.plan && isAdminAssistant(ctx) && answer.intent !== 'admin_financeiro') answer = { ...answer, intent: 'admin_acao' };
   const topico = selectTopic(memory, answer.intent, answer.topic_mode, topicIdFromRef(memory, answer.topic_ref));
   // Assuntos independentes não se misturam: retomar usa só os dados daquele assunto; tarefa nova começa limpa.
   const slots = mergeSlots(baseSlotsFor(memory, answer, topico), answer.slots, !topico && startsFresh(memory, answer));
@@ -1444,11 +1452,14 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
 
   // A proposta aberta pertence a um assunto: "pode"/"não" sobre OUTRO assunto não confirma nem cancela a dela.
   const ctxDoTurno = proposalBelongsElsewhere(ctx, topico) ? { ...ctx, open_proposal: null } : ctx;
-  const d = await decide({ deps, ctx: ctxDoTurno, answer, slots, memory: nextMemory, session, ultimaId: ultima?.id as string | undefined, today });
+  const entrada: DecideInput = { deps, ctx: ctxDoTurno, answer, slots, memory: nextMemory, session, ultimaId: ultima?.id as string | undefined, today };
+  let d = await decide(entrada);
+  // Plano composto: o passo aceito foi feito; o servidor já emenda o próximo (ou fecha com o que fica no painel).
+  if (d.action === 'admin_confirmed' && slots.plan) d = await continuePlan(entrada, d, slots.plan);
   if (anotados.length && !d.handoff) d.bubbles = [...d.bubbles, `📝 Anotei: ${anotados.join('; ')}.`];
   // Só o assunto deste turno muda de estado; os demais pendentes continuam como estavam (o ativo anterior fica suspenso).
   d.memory = recordTopicTurn({ ...nextMemory, ...d.memory, topics: nextMemory.topics, active_topic_id: nextMemory.active_topic_id }, {
-    topic: topico, intent: answer.intent, slots, summary, action: d.action, awaiting: d.awaiting, close: d.close,
+    topic: topico, intent: answer.intent, slots: d.slots ?? slots, summary, action: d.action, awaiting: d.awaiting, close: d.close,
     declined: d.action === 'declined' || (answer.declined && d.close), lastQuestion: d.bubbles.at(-1) ?? null,
   });
   if (summary && !d.memory.summary) d.memory = { ...d.memory, summary };
@@ -1478,6 +1489,37 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
   await save(d.memory, answer.transfer ? `handoff_${answer.handoff_kind}` : d.close ? 'close' : d.action ?? 'reply',
     { action: d.action, intent: answer.intent, bubbles: enviadas, ...(fallback || d.bubbles.some((b) => b.includes('Ainda não consigo realizar esse pedido')) ? { fallback: fallback ?? 'limitacao', limitation: true, asked: buffered.slice(0, 200) } : {}) }, d.awaiting, closeSession || (answer.transfer && answer.handoff_kind === 'hard'));
   return { status: 'replied', bubbles: enviadas, handoff: answer.transfer ? answer.handoff_kind : null, action: d.action };
+}
+
+/* ------------------------------- Plano composto do assessor ------------------------------- */
+
+async function adminPlano(i: DecideInput, memory: Memory, plan: AdminPlan): Promise<Decision> {
+  const intro = planIntro(plan);
+  const next = nextActionStep(plan);
+  if (next === null) {
+    return { bubbles: [intro, 'São passos do painel; se quiser, te acompanho em cada um.'], awaiting: false, close: false,
+      action: 'admin_plan_manual', memory, slots: { ...i.slots, plan }, verbatim: true };
+  }
+  return runPlanStep(i, memory, plan, next, [intro]);
+}
+
+/** Prepara um passo pelo caminho normal da ação (proposta no banco); o aceite natural do administrador executa. */
+async function runPlanStep(i: DecideInput, memory: Memory, plan: AdminPlan, index: number, prefix: string[]): Promise<Decision> {
+  const step = plan.steps[index];
+  const stepSlots = parseSlots(step.slots ?? {});
+  const run = step.intent === 'admin_financeiro' ? adminFinanceiro : adminAcao;
+  const sub = await run({ ...i, slots: stepSlots }, memory);
+  const withCursor: AdminPlan = { ...plan, cursor: index };
+  const heading = plan.steps.filter((s) => s.kind === 'acao').length > 1 ? [stepHeading(plan, index)] : [];
+  return { ...sub, bubbles: [...prefix, ...heading, ...sub.bubbles], verbatim: true, slots: { ...stepSlots, plan: withCursor } };
+}
+
+async function continuePlan(i: DecideInput, done: Decision, plan: AdminPlan): Promise<Decision> {
+  const updated = completeCurrentStep(plan);
+  const next = nextActionStep(updated);
+  if (next === null) return { ...done, bubbles: [...done.bubbles, planClosing(updated)], slots: { plan: updated }, verbatim: true };
+  const step = await runPlanStep({ ...i, ctx: { ...i.ctx, open_proposal: null } }, done.memory, updated, next, done.bubbles);
+  return step.action?.startsWith('proposed') ? step : { ...step, action: step.action ?? 'ask' };
 }
 
 /** Dados de partida do turno: os do assunto retomado; nada se é tarefa nova; senão a memória solta (consultas). */
@@ -1564,6 +1606,9 @@ async function decide(i: DecideInput): Promise<Decision> {
     }
     return failure(res?.code ?? 'UNKNOWN', res?.message, i, memory, ctx.open_proposal as Ctx);
   }
+
+  // 2-) Pedido composto do administrador: mostra o plano e já prepara o primeiro passo executável.
+  if (answer.plan && isAdminAssistant(ctx) && !answer.transfer) return adminPlano(i, memory, answer.plan);
 
   // 2a) Sair, retirar ou adicionar atletas de uma reserva existente (e convidado): o servidor entende, valida e propõe.
   if (answer.intent === 'participantes' && !answer.transfer) return participantes(i, memory);
@@ -1892,7 +1937,7 @@ function formCreateProposal(s: Ctx): string {
   const modo = [s.secret ? 'votação secreta (ninguém vê quem votou em quê)' : 'respostas identificadas pelo nome do sócio',
     s.multiple ? 'cada sócio pode responder mais de uma vez' : 'uma resposta por sócio',
     s.expires_at ? `aberto até ${dateBR(s.expires_at)}` : 'sem prazo'].join(', ');
-  return `Vou criar o formulário «${s.title}»${s.description ? ` ("${s.description}")` : ''}: ${modo}.\n${linhas}\nFica aberto agora, no link ${s.link}. Confirma? Responda "sim".`;
+  return `Vou criar o formulário «${s.title}»${s.description ? ` ("${s.description}")` : ''}: ${modo}.\n${linhas}\nFica aberto agora, no link ${s.link}. Confirma?`;
 }
 
 function formNudgeProposal(s: Ctx): string {
@@ -1901,7 +1946,7 @@ function formNudgeProposal(s: Ctx): string {
   const nomes = (Array.isArray(s.names) ? s.names : []) as string[];
   const lista = nomes.length > 40 ? `${nomes.slice(0, 40).join(', ')} e mais ${nomes.length - 40}` : nomes.join(', ');
   const fora = [Number(s.already) > 0 ? `${s.already} já receberam lembrete nas últimas 24 horas` : '', Number(s.skipped) > 0 ? `${s.skipped} ficam de fora por falta de telefone válido ou por terem pedido para não receber` : ''].filter(Boolean).join('; ');
-  return `Vou lembrar por WhatsApp ${s.count} ${Number(s.count) === 1 ? 'sócio' : 'sócios'} que ainda não responderam o «${s.form_title}», ${quando}: ${lista}${fora ? ` (${fora})` : ''}.\nTexto:\n«${s.body}»\nConfirma? Responda "sim".`;
+  return `Vou lembrar por WhatsApp ${s.count} ${Number(s.count) === 1 ? 'sócio' : 'sócios'} que ainda não responderam o «${s.form_title}», ${quando}: ${lista}${fora ? ` (${fora})` : ''}.\nTexto:\n«${s.body}»\nConfirma?`;
 }
 
 export function adminProposalMessage(action: AdminAction, s: Ctx): string {
@@ -1912,70 +1957,70 @@ export function adminProposalMessage(action: AdminAction, s: Ctx): string {
     const quem = action === 'fin_access_approve' ? `Vou aprovar o pedido de acesso de ${s.name}` : `Vou cadastrar o sócio ${s.name}`;
     const email = s.email ? `e-mail ${s.email}` : 'e-mail gerado pelo sistema';
     const leitura = s.amount_read ? '' : ' Não consegui ler o valor do comprovante; vale o que você informou.';
-    return `${quem} (telefone ${tel}, ${email})${s.reactivate ? ', reativando o cadastro antigo' : ''}, com mensalidade de ${centsBR(s.amount_cents)}. A mensalidade de ${mes} fica paga com o comprovante que você mandou (${centsBR(s.amount_cents)}, pago em ${dateBR(s.paid_on)}, conta ${s.account_name}); ele entra sem pendência e os juros do mês de entrada são dispensados.${leitura} Confirma? Responda "sim".`;
+    return `${quem} (telefone ${tel}, ${email})${s.reactivate ? ', reativando o cadastro antigo' : ''}, com mensalidade de ${centsBR(s.amount_cents)}. A mensalidade de ${mes} fica paga com o comprovante que você mandou (${centsBR(s.amount_cents)}, pago em ${dateBR(s.paid_on)}, conta ${s.account_name}); ele entra sem pendência e os juros do mês de entrada são dispensados.${leitura} Confirma?`;
   }
-  if (action === 'adm_pref_set') return `${prefText(s, false)} Confirma? Responda "sim".`;
-  if (action === 'adm_group_post') return `Mando isto no grupo${s.target_name ? ` marcando ${s.target_name}` : ''}:\n«${String(s.body).replace(/^@\d+\s+/, '')}»\nManda? Responda "sim".`;
-  if (action === 'adm_message_send') return `Vou chamar ${s.member_name} no WhatsApp (${s.phone}) e mandar esta mensagem:\n«${s.body}»\nConfirma? Responda "sim".`;
+  if (action === 'adm_pref_set') return `${prefText(s, false)} Confirma?`;
+  if (action === 'adm_group_post') return `Mando isto no grupo${s.target_name ? ` marcando ${s.target_name}` : ''}:\n«${String(s.body).replace(/^@\d+\s+/, '')}»\nManda?`;
+  if (action === 'adm_message_send') return `Vou chamar ${s.member_name} no WhatsApp (${s.phone}) e mandar esta mensagem:\n«${s.body}»\nConfirma?`;
   if (action === 'adm_memory_forget') {
     const itens = (Array.isArray(s.items) ? s.items : []) as { subject_name: string; content: string }[];
-    return `Vou esquecer ${itens.length === 1 ? 'esta memória' : `estas ${itens.length} memórias`} (elas saem das minhas conversas, o histórico fica guardado):\n${itens.map((i) => `- ${i.subject_name}: ${i.content}`).join('\n')}\nConfirma? Responda "sim".`;
+    return `Vou esquecer ${itens.length === 1 ? 'esta memória' : `estas ${itens.length} memórias`} (elas saem das minhas conversas, o histórico fica guardado):\n${itens.map((i) => `- ${i.subject_name}: ${i.content}`).join('\n')}\nConfirma?`;
   }
-  if (action === 'adm_briefing_recipient') return `Vou ${s.enabled ? 'incluir' : 'tirar'} ${s.name} ${s.enabled ? 'no' : 'do'} resumo diário das 8h. A lista fica: ${s.list_after}. Confirma? Responda "sim".`;
+  if (action === 'adm_briefing_recipient') return `Vou ${s.enabled ? 'incluir' : 'tirar'} ${s.name} ${s.enabled ? 'no' : 'do'} resumo diário das 8h. A lista fica: ${s.list_after}. Confirma?`;
   if (action === 'adm_broadcast_send') {
     const at = new Date(String(s.send_at));
     const quando = at.getTime() - Date.now() < 90_000 ? 'agora' : `em ${hhmm(s.send_at).replace(', ', ' às ')}`;
     const fora = Number(s.skipped) > 0 ? ` (${s.skipped} ficam de fora por falta de telefone válido ou por terem pedido para não receber)` : '';
-    return `Vou mandar este comunicado no WhatsApp pessoal de ${s.count} sócios, ${quando}${fora}:\n«${s.body}»\nConfirma? Responda "sim".`;
+    return `Vou mandar este comunicado no WhatsApp pessoal de ${s.count} sócios, ${quando}${fora}:\n«${s.body}»\nConfirma?`;
   }
   if (action === 'adm_form_create') return formCreateProposal(s);
-  if (action === 'adm_form_toggle') return `Vou ${s.active ? 'reabrir' : 'encerrar'} o formulário «${s.title}»${s.active ? (s.expires_at ? ` com prazo até ${dateBR(s.expires_at)}` : '') : ' (ninguém mais consegue responder)'}. Confirma? Responda "sim".`;
+  if (action === 'adm_form_toggle') return `Vou ${s.active ? 'reabrir' : 'encerrar'} o formulário «${s.title}»${s.active ? (s.expires_at ? ` com prazo até ${dateBR(s.expires_at)}` : '') : ' (ninguém mais consegue responder)'}. Confirma?`;
   if (action === 'adm_form_nudge') return formNudgeProposal(s);
-  if (action === 'adm_dependent_create') return `Vou cadastrar ${s.dependent_name} como ${s.relationship} de ${s.member_name} (dependente, sem cobrança${s.phone ? `, telefone ${s.phone}` : ''}). Confirma? Responda "sim".`;
+  if (action === 'adm_dependent_create') return `Vou cadastrar ${s.dependent_name} como ${s.relationship} de ${s.member_name} (dependente, sem cobrança${s.phone ? `, telefone ${s.phone}` : ''}). Confirma?`;
   if (action === 'adm_followup_create') {
     const quando = hhmm(s.due_at);
-    if (s.self) return `Vou te lembrar em ${quando}: «${s.note ?? s.send_body}». Confirma? Responda "sim".`;
-    return `Vou criar um retorno com ${s.member_name} para ${quando}${s.note ? `: ${s.note}` : ''}.${s.send_body ? ` Nesse horário mando para ele(a): «${s.send_body}».` : ''} Confirma? Responda "sim".`;
+    if (s.self) return `Vou te lembrar em ${quando}: «${s.note ?? s.send_body}». Confirma?`;
+    return `Vou criar um retorno com ${s.member_name} para ${quando}${s.note ? `: ${s.note}` : ''}.${s.send_body ? ` Nesse horário mando para ele(a): «${s.send_body}».` : ''} Confirma?`;
   }
-  if (action === 'adm_followup_done') return `Vou ${s.new_status === 'canceled' ? 'cancelar' : 'dar por concluído'} o retorno${s.member_name ? ` com ${s.member_name}` : ''} de ${hhmm(s.due_at)}${s.note ? ` («${s.note}»)` : ''}. Confirma? Responda "sim".`;
-  if (action === 'adm_court_block') return `Vou bloquear a ${s.court} em ${dateBR(s.date)}, das ${s.start} às ${s.end}${s.reason ? ` (${s.reason})` : ''}. Ninguém consegue reservar nesse horário. Confirma? Responda "sim".`;
-  if (action === 'adm_access_reject') return `Vou recusar o pedido de acesso de ${s.name}${s.reason ? `. Motivo: ${s.reason}` : ''}. Confirma? Responda "sim".`;
-  if (action === 'adm_announcement_create') return `Vou publicar este aviso para todos os sócios no app:\n«${s.title}»\n${s.message}\n${s.expires_on ? `Fica no ar até ${dateBR(s.expires_on)}.` : 'Sem data para sair.'} Confirma? Responda "sim".`;
-  if (action === 'adm_announcement_deactivate') return `Vou tirar do ar o aviso «${s.title}». Confirma? Responda "sim".`;
-  if (action === 'adm_student_status') return `Vou ${s.status === 'paused' ? 'pausar' : 'reativar'} o aluno ${s.student_name}. Confirma? Responda "sim".`;
-  if (action === 'adm_member_status') return `Vou ${s.active ? 'reativar' : 'inativar'} o sócio ${s.member_name}. ${s.active ? '' : 'Ele deixa de aparecer nas listas e nas cobranças automáticas. '}Confirma? Responda "sim".`;
-  if (action === 'adm_signature_resend') return `Vou reenviar os avisos com falha do documento «${s.title}» (${s.failed_count}). Confirma? Responda "sim".`;
-  if (action === 'adm_reservation_cancel') return `Vou cancelar a reserva ${s.court}, ${dateBR(s.date)} ${s.start}-${s.end} (${s.type}${s.by ? `, de ${s.by}` : ''})${s.reason ? `. Motivo: ${s.reason}` : ''}. Confirma? Responda "sim".`;
-  if (action === 'fin_charge_cancel') return `Vou cancelar a pendência de ${s.member_name}: ${s.description} (saldo ${centsBR(s.total_due_cents)}). Motivo: ${s.reason}. Confirma? Responda "sim".`;
+  if (action === 'adm_followup_done') return `Vou ${s.new_status === 'canceled' ? 'cancelar' : 'dar por concluído'} o retorno${s.member_name ? ` com ${s.member_name}` : ''} de ${hhmm(s.due_at)}${s.note ? ` («${s.note}»)` : ''}. Confirma?`;
+  if (action === 'adm_court_block') return `Vou bloquear a ${s.court} em ${dateBR(s.date)}, das ${s.start} às ${s.end}${s.reason ? ` (${s.reason})` : ''}. Ninguém consegue reservar nesse horário. Confirma?`;
+  if (action === 'adm_access_reject') return `Vou recusar o pedido de acesso de ${s.name}${s.reason ? `. Motivo: ${s.reason}` : ''}. Confirma?`;
+  if (action === 'adm_announcement_create') return `Vou publicar este aviso para todos os sócios no app:\n«${s.title}»\n${s.message}\n${s.expires_on ? `Fica no ar até ${dateBR(s.expires_on)}.` : 'Sem data para sair.'} Confirma?`;
+  if (action === 'adm_announcement_deactivate') return `Vou tirar do ar o aviso «${s.title}». Confirma?`;
+  if (action === 'adm_student_status') return `Vou ${s.status === 'paused' ? 'pausar' : 'reativar'} o aluno ${s.student_name}. Confirma?`;
+  if (action === 'adm_member_status') return `Vou ${s.active ? 'reativar' : 'inativar'} o sócio ${s.member_name}. ${s.active ? '' : 'Ele deixa de aparecer nas listas e nas cobranças automáticas. '}Confirma?`;
+  if (action === 'adm_signature_resend') return `Vou reenviar os avisos com falha do documento «${s.title}» (${s.failed_count}). Confirma?`;
+  if (action === 'adm_reservation_cancel') return `Vou cancelar a reserva ${s.court}, ${dateBR(s.date)} ${s.start}-${s.end} (${s.type}${s.by ? `, de ${s.by}` : ''})${s.reason ? `. Motivo: ${s.reason}` : ''}. Confirma?`;
+  if (action === 'fin_charge_cancel') return `Vou cancelar a pendência de ${s.member_name}: ${s.description} (saldo ${centsBR(s.total_due_cents)}). Motivo: ${s.reason}. Confirma?`;
   if (action === 'fin_charge_adjust') {
     const o = s.adjust_kind === 'discount' ? 'desconto de' : s.adjust_kind === 'increase' ? 'acréscimo de' : 'perdão de juros/multa de';
-    return `Vou aplicar ${o} ${centsBR(s.amount_cents)} na pendência de ${s.member_name}: ${s.description} (saldo hoje ${centsBR(s.total_due_cents)}). Motivo: ${s.reason}. Confirma? Responda "sim".`;
+    return `Vou aplicar ${o} ${centsBR(s.amount_cents)} na pendência de ${s.member_name}: ${s.description} (saldo hoje ${centsBR(s.total_due_cents)}). Motivo: ${s.reason}. Confirma?`;
   }
-  if (action === 'fin_payment_reverse') return `Vou estornar o pagamento de ${centsBR(s.amount_cents)} de ${s.member_name} (${s.description}), feito em ${dateBR(s.paid_on)}. Motivo: ${s.reason}. A pendência volta a ficar em aberto. Confirma? Responda "sim".`;
+  if (action === 'fin_payment_reverse') return `Vou estornar o pagamento de ${centsBR(s.amount_cents)} de ${s.member_name} (${s.description}), feito em ${dateBR(s.paid_on)}. Motivo: ${s.reason}. A pendência volta a ficar em aberto. Confirma?`;
   if (action === 'fin_receipt_approve') {
     const itens = (Array.isArray(s.allocations) ? s.allocations as Ctx[] : []).map((a) => `- ${a.description} (venc. ${dateBR(a.due_date)}): ${centsBR(a.amount_cents)}`).join('\n');
-    return `Vou aprovar o comprovante de ${s.member_name}, enviado em ${dateBR(s.sent_on)}: ${centsBR(s.amount_cents)}, pago em ${dateBR(s.paid_on)} via ${METHOD_TEXT[String(s.method)] ?? s.method}, conta ${s.account_name}. Baixa nas cobranças, da mais antiga para a mais nova:\n${itens}\nConfirma? Responda "sim".`;
+    return `Vou aprovar o comprovante de ${s.member_name}, enviado em ${dateBR(s.sent_on)}: ${centsBR(s.amount_cents)}, pago em ${dateBR(s.paid_on)} via ${METHOD_TEXT[String(s.method)] ?? s.method}, conta ${s.account_name}. Baixa nas cobranças, da mais antiga para a mais nova:\n${itens}\nConfirma?`;
   }
-  if (action === 'fin_charges_generate') return `Vou gerar as cobranças que faltam dos ${s.plans_count} planos de sócios ativos (não duplica as que já existem; mês sem preço fica de fora). Confirma? Responda "sim".`;
-  if (action === 'fin_receipt_reject') return `Vou recusar o comprovante de ${s.member_name}, enviado em ${dateBR(s.sent_on)}${s.amount_cents != null ? ` (${centsBR(s.amount_cents)})` : ''}. Motivo: ${s.reason}. Confirma? Responda "sim".`;
+  if (action === 'fin_charges_generate') return `Vou gerar as cobranças que faltam dos ${s.plans_count} planos de sócios ativos (não duplica as que já existem; mês sem preço fica de fora). Confirma?`;
+  if (action === 'fin_receipt_reject') return `Vou recusar o comprovante de ${s.member_name}, enviado em ${dateBR(s.sent_on)}${s.amount_cents != null ? ` (${centsBR(s.amount_cents)})` : ''}. Motivo: ${s.reason}. Confirma?`;
   if (action === 'fin_entry_create') {
     const tipo = s.entry_kind === 'expense' ? 'despesa' : 'receita';
     const quando = s.entry_status === 'pending' ? `a pagar até ${dateBR(s.due_date)}` : `paga em ${dateBR(s.paid_on)}`;
-    return `Vou lançar a ${tipo}: ${s.description}, ${centsBR(s.amount_cents)}, categoria ${s.category_name}, conta ${s.account_name}, ${quando}. Confirma? Responda "sim".`;
+    return `Vou lançar a ${tipo}: ${s.description}, ${centsBR(s.amount_cents)}, categoria ${s.category_name}, conta ${s.account_name}, ${quando}. Confirma?`;
   }
   if (action === 'fin_pendency_create') {
     const guest = s.guest_name ? ` (convidado ${s.guest_name}${s.guest_date ? ` em ${dateBR(s.guest_date)}` : ''})` : '';
     const envio = s.send_now ? 'Já mando a cobrança no WhatsApp do sócio.' : 'Sem mandar cobrança agora; a régua segue normal.';
-    return `Vou lançar para ${s.member_name}: ${s.description}${guest}, ${centsBR(s.amount_cents)}, vencimento ${dateBR(s.due_date)}. ${envio} Confirma? Responda "sim".`;
+    return `Vou lançar para ${s.member_name}: ${s.description}${guest}, ${centsBR(s.amount_cents)}, vencimento ${dateBR(s.due_date)}. ${envio} Confirma?`;
   }
   if (action === 'fin_pendency_send') {
-    return `Vou mandar agora a cobrança para ${s.member_name}: ${s.open_count} pendência(s) em aberto, total ${centsBR(s.member_total_due_cents)}. Confirma? Responda "sim".`;
+    return `Vou mandar agora a cobrança para ${s.member_name}: ${s.open_count} pendência(s) em aberto, total ${centsBR(s.member_total_due_cents)}. Confirma?`;
   }
   if (action === 'fin_pendency_collection') {
-    return `Vou ${s.enabled ? 'retomar' : 'pausar'} a cobrança de ${s.member_name}: ${s.description} (saldo ${centsBR(s.total_due_cents)}). Confirma? Responda "sim".`;
+    return `Vou ${s.enabled ? 'retomar' : 'pausar'} a cobrança de ${s.member_name}: ${s.description} (saldo ${centsBR(s.total_due_cents)}). Confirma?`;
   }
   const sobra = Number(s.excess_cents ?? 0) > 0 ? ` Passa do saldo: ${centsBR(s.excess_cents)} viram crédito do sócio.` : '';
-  return `Vou dar baixa de ${centsBR(s.amount_cents)} para ${s.member_name}: ${s.description} (saldo ${centsBR(s.total_due_cents)}), pago em ${dateBR(s.paid_on)} via ${METHOD_TEXT[String(s.method)] ?? s.method}, conta ${s.account_name}.${sobra} Confirma? Responda "sim".`;
+  return `Vou dar baixa de ${centsBR(s.amount_cents)} para ${s.member_name}: ${s.description} (saldo ${centsBR(s.total_due_cents)}), pago em ${dateBR(s.paid_on)} via ${METHOD_TEXT[String(s.method)] ?? s.method}, conta ${s.account_name}.${sobra} Confirma?`;
 }
 
 export function adminSuccessMessage(action: AdminAction, s: Ctx): string {

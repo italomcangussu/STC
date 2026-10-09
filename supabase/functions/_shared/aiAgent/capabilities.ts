@@ -119,7 +119,7 @@ export const NOVIDADES: readonly { date: string; items: readonly string[] }[] = 
   { date: '08/10', items: [
     'Formulários do clube: ver quem já respondeu e quem falta (por nome) e o resultado de cada pergunta; criar formulário ou votação; lembrar por WhatsApp só quem ainda não respondeu, com o link; encerrar e reabrir.',
     'Memória: guardo o que você me contar sobre alguém (cargo, apelido, preferência), te mostro o que sei sobre uma pessoa e esqueço quando você mandar.',
-    'Disparar um comunicado no WhatsApp pessoal de todos os sócios, agora ou num horário (ex.: 8h00), com o resumo e o seu "sim" antes.',
+    'Disparar um comunicado no WhatsApp pessoal de todos os sócios, agora ou num horário (ex.: 8h00), mostrando antes o que vai sair.',
     'Mandar PDF (DRE, caixa, comparativo e outros relatórios), o comprovante de um sócio, anexo de despesa e documentos de assinatura.',
     'Listas por nome: sócios, inadimplentes, quem pagou, vencimentos, alunos e últimos lançamentos; e a ficha de um sócio.',
     'Chamar um sócio no privado e mandar uma mensagem (mesmo sem conversa anterior).',
@@ -135,5 +135,5 @@ const DOMAIN_NAME: Record<Domain, string> = { financeiro: 'financeiro', pessoas:
 export function renderCapabilities(): string {
   const novas = NOVIDADES.map((n) => `Novidades de ${n.date}:\n${n.items.map((i) => `- ${i}`).join('\n')}`).join('\n\n');
   const dominios = [...new Set(CAPABILITIES.filter((c) => c.risk !== 'N3').map((c) => DOMAIN_NAME[c.domain]))].join(', ');
-  return `${novas}\n\nE sigo cuidando do dia a dia: ${dominios}. Tudo que muda dinheiro ou cadastro eu mostro um resumo e só faço depois do seu "sim". Se pedir algo que eu ainda não sei, me diga: o Ítalo ensina rápido.`;
+  return `${novas}\n\nE sigo cuidando do dia a dia: ${dominios}. Tudo que muda dinheiro ou cadastro eu te mostro como vou fazer e sigo quando você der o ok, do jeito que falar. Se pedir algo que eu ainda não sei, me diga: o Ítalo ensina rápido.`;
 }
