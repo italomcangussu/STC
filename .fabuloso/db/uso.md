@@ -22,11 +22,11 @@
 | club_form_voter_receipts | select | 1 | 0 | 0 |
 | club_forms | select, insert, update, delete | 1 | 0 | 0 |
 | consumptions | select, insert, update | 2 | 0 | 0 |
-| conv_ai_settings | select | 0 | 1 | 0 |
+| conv_ai_settings | select | 0 | 2 | 0 |
 | conv_contacts | select | 0 | 2 | 0 |
-| conv_conversations | select | 0 | 3 | 0 |
-| conv_groups | select | 0 | 1 | 0 |
-| conv_messages | select, update | 0 | 3 | 0 |
+| conv_conversations | select | 0 | 4 | 0 |
+| conv_groups | select | 0 | 2 | 0 |
+| conv_messages | select, update | 0 | 4 | 0 |
 | courts | select | 12 | 0 | 0 |
 | fin_accounts | select | 1 | 0 | 0 |
 | fin_attachments | select | 1 | 0 | 0 |
@@ -45,16 +45,16 @@
 | fin_recurrences | select | 1 | 0 | 0 |
 | fin_settings | select | 1 | 0 | 0 |
 | head_to_head_points | select | 1 | 0 | 0 |
-| matches | select, insert, update, upsert, delete | 20 | 0 | 0 |
+| matches | select, insert, update, upsert, delete | 21 | 0 | 0 |
 | non_socio_students | select, insert, update | 7 | 0 | 0 |
 | point_history | select, insert | 3 | 0 | 0 |
 | point_rules | select, update | 1 | 0 | 0 |
 | products | select, insert, update | 1 | 0 | 0 |
 | professors | select, insert, update, delete | 4 | 0 | 0 |
-| profiles | select, insert, update, upsert | 33 | 4 | 0 |
+| profiles | select, insert, update, upsert | 34 | 4 | 0 |
 | push_subscriptions | select, upsert, delete | 1 | 1 | 0 |
 | ranking_reset_events | select | 1 | 0 | 0 |
-| reservations | select, insert, update | 13 | 0 | 0 |
+| reservations | select, insert, update | 14 | 0 | 0 |
 | sig_documents | select | 2 | 0 | 0 |
 | sig_documents_overview | select | 1 | 0 | 0 |
 | sig_member_identities | select | 1 | 0 | 0 |
@@ -80,9 +80,9 @@
 - delete: components/AdminPanel.tsx:848
 
 ### challenges
-- select: components/AdminPanel.tsx:433, components/AdminReports.tsx:111, components/Agenda.tsx:1452, components/ChallengeNotificationPopup.tsx:28, components/Challenges.tsx:509, hooks/useChallenges.ts:188, lib/rankingService.ts:538, lib/rankingService.ts:546
+- select: components/AdminPanel.tsx:433, components/AdminReports.tsx:111, components/Agenda.tsx:1322, components/ChallengeNotificationPopup.tsx:28, components/Challenges.tsx:509, hooks/useChallenges.ts:188, lib/rankingService.ts:538, lib/rankingService.ts:546
 - insert: components/AdminMatchCreator.tsx:169, components/AdminPanel.tsx:597, components/Athletes.tsx:164, components/Challenges.tsx:612, hooks/useChallenges.ts:280
-- update: components/AdminPanel.tsx:484, components/AdminPanel.tsx:533, components/Agenda.tsx:1824, components/ChallengeNotificationPopup.tsx:94, components/Challenges.tsx:666, components/Challenges.tsx:803, hooks/useChallenges.ts:331, hooks/useChallenges.ts:354, hooks/useChallenges.ts:380
+- update: components/AdminPanel.tsx:484, components/AdminPanel.tsx:533, components/Agenda.tsx:1706, components/ChallengeNotificationPopup.tsx:94, components/Challenges.tsx:666, components/Challenges.tsx:803, hooks/useChallenges.ts:331, hooks/useChallenges.ts:354, hooks/useChallenges.ts:380
 
 ### championship_admin_audit_logs
 - select: components/ChampionshipAdmin.tsx:301
@@ -102,13 +102,13 @@
 - upsert: components/admin/PhasePointsEditor.tsx:60
 
 ### championship_registrations
-- select: components/Agenda.tsx:1305, components/ChampionshipAdmin.tsx:286, components/ChampionshipInProgress.tsx:147, components/Championships.tsx:211, components/Championships.tsx:308, components/GroupDrawPage.tsx:105, components/PublicChampionshipPage.tsx:91, lib/championship/knockoutFromGroups.ts:164, lib/championship/registration.ts:36, lib/resenhaOpenService.ts:245, lib/resenhaOpenService.ts:308, lib/resenhaOpenService.ts:445
+- select: components/ChampionshipAdmin.tsx:286, components/ChampionshipInProgress.tsx:147, components/Championships.tsx:211, components/Championships.tsx:308, components/GroupDrawPage.tsx:105, components/PublicChampionshipPage.tsx:91, lib/agenda/loadAgendaReservations.ts:79, lib/championship/knockoutFromGroups.ts:164, lib/championship/registration.ts:36, lib/resenhaOpenService.ts:245, lib/resenhaOpenService.ts:308, lib/resenhaOpenService.ts:445
 - insert: components/ChampionshipAdmin.tsx:394, components/creator/CreatorRegistration.tsx:143, components/creator/CreatorRegistration.tsx:169, lib/championship/registration.ts:72, lib/resenhaOpenService.ts:195, lib/resenhaOpenService.ts:212
 - update: lib/championship/seeding.ts:54, lib/championship/seeding.ts:63
 - delete: components/ChampionshipAdmin.tsx:423, components/creator/CreatorRegistration.tsx:216, lib/resenhaOpenService.ts:232
 
 ### championship_rounds
-- select: components/Agenda.tsx:1282, components/ChampionshipAdmin.tsx:291, components/ChampionshipCreator.tsx:177, components/ChampionshipInProgress.tsx:128, components/Championships.tsx:248, components/Championships.tsx:326, components/PublicChampionshipPage.tsx:77, lib/championship/creation.ts:107, lib/championship/rounds.ts:123, lib/championship/rounds.ts:138, lib/championship/rounds.ts:203, lib/championship/rounds.ts:228 +2
+- select: components/ChampionshipAdmin.tsx:291, components/ChampionshipCreator.tsx:177, components/ChampionshipInProgress.tsx:128, components/Championships.tsx:248, components/Championships.tsx:326, components/PublicChampionshipPage.tsx:77, lib/agenda/loadAgendaReservations.ts:47, lib/championship/creation.ts:107, lib/championship/rounds.ts:123, lib/championship/rounds.ts:138, lib/championship/rounds.ts:203, lib/championship/rounds.ts:228 +2
 - insert: components/ChampionshipInProgress.tsx:203, lib/championship/rounds.ts:161, lib/resenhaOpenService.ts:175
 - update: components/ChampionshipAdmin.tsx:614, components/ChampionshipAdmin.tsx:654, components/ChampionshipInProgress.tsx:764, lib/championship/rounds.ts:181
 
@@ -117,7 +117,7 @@
 - insert: lib/championship/creation.ts:55
 
 ### championships
-- select: App.tsx:66, components/Agenda.tsx:1282, components/ChampionshipAdmin.tsx:204, components/ChampionshipCreator.tsx:142, components/ChampionshipCreator.tsx:551, components/ChampionshipCreator.tsx:94, components/Championships.tsx:140, components/GroupDrawPage.tsx:84, components/Layout.tsx:76, components/PublicChampionshipPage.tsx:57, components/ResenhaOpenBracketView.tsx:26, lib/championship/creation.ts:81 +3
+- select: App.tsx:66, components/ChampionshipAdmin.tsx:204, components/ChampionshipCreator.tsx:142, components/ChampionshipCreator.tsx:551, components/ChampionshipCreator.tsx:94, components/Championships.tsx:140, components/GroupDrawPage.tsx:84, components/Layout.tsx:76, components/PublicChampionshipPage.tsx:57, components/ResenhaOpenBracketView.tsx:26, lib/agenda/loadAgendaReservations.ts:47, lib/championship/creation.ts:81 +3
 - insert: lib/championship/creation.ts:145, lib/resenhaOpenService.ts:112
 - update: components/ChampionshipAdmin.tsx:452, lib/championship/creation.ts:121, lib/championship/participantSources.ts:86, lib/championship/rounds.ts:189, lib/resenhaOpenService.ts:429, lib/resenhaOpenService.ts:457
 
@@ -151,23 +151,23 @@
 - update: components/Klanches.tsx:332
 
 ### conv_ai_settings
-- select [edge]: supabase/functions/joao-daily-greeting/index.ts:109
+- select [edge]: supabase/functions/joao-birthdays/index.ts:36, supabase/functions/joao-daily-greeting/index.ts:109
 
 ### conv_contacts
 - select [edge]: supabase/functions/finance-receipt-whatsapp/index.ts:52, supabase/functions/whatsapp-webhook/index.ts:139, supabase/functions/whatsapp-webhook/index.ts:80
 
 ### conv_conversations
-- select [edge]: supabase/functions/finance-receipt-whatsapp/index.ts:49, supabase/functions/joao-daily-greeting/index.ts:99, supabase/functions/whatsapp-webhook/index.ts:141, supabase/functions/whatsapp-webhook/index.ts:80
+- select [edge]: supabase/functions/finance-receipt-whatsapp/index.ts:49, supabase/functions/joao-birthdays/index.ts:32, supabase/functions/joao-daily-greeting/index.ts:99, supabase/functions/whatsapp-webhook/index.ts:141, supabase/functions/whatsapp-webhook/index.ts:80
 
 ### conv_groups
-- select [edge]: supabase/functions/joao-daily-greeting/index.ts:97
+- select [edge]: supabase/functions/joao-birthdays/index.ts:30, supabase/functions/joao-daily-greeting/index.ts:97
 
 ### conv_messages
 - select [edge]: supabase/functions/finance-receipt-whatsapp/index.ts:38, supabase/functions/joao-daily-greeting/index.ts:105, supabase/functions/whatsapp-webhook/index.ts:152, supabase/functions/whatsapp-webhook/index.ts:80
-- update [edge]: supabase/functions/joao-daily-greeting/index.ts:177
+- update [edge]: supabase/functions/joao-birthdays/index.ts:76, supabase/functions/joao-daily-greeting/index.ts:177
 
 ### courts
-- select: components/AdminPanel.tsx:1604, components/AdminPanel.tsx:271, components/AdminPanel.tsx:435, components/AdminReports.tsx:127, components/Agenda.tsx:1390, components/Athletes.tsx:99, components/ChallengeNotificationPopup.tsx:64, components/Challenges.tsx:72, components/ChampionshipInProgress.tsx:120, components/Championships.tsx:187, components/Dashboard.tsx:41, components/Klanches.tsx:169 +2
+- select: components/AdminPanel.tsx:1604, components/AdminPanel.tsx:271, components/AdminPanel.tsx:435, components/AdminReports.tsx:127, components/Agenda.tsx:1260, components/Athletes.tsx:99, components/ChallengeNotificationPopup.tsx:64, components/Challenges.tsx:72, components/ChampionshipInProgress.tsx:120, components/Championships.tsx:187, components/Dashboard.tsx:41, components/Klanches.tsx:169 +2
 
 ### fin_accounts
 - select: lib/finance/financeApi.ts:77
@@ -221,16 +221,16 @@
 - select: lib/rankingService.ts:173
 
 ### matches
-- select: components/AdminReports.tsx:119, components/Agenda.tsx:1282, components/Athletes.tsx:67, components/Challenges.tsx:418, components/Challenges.tsx:536, components/ChampionshipAdmin.tsx:588, components/ChampionshipCreator.tsx:207, components/ChampionshipInProgress.tsx:156, components/Championships.tsx:263, components/Championships.tsx:331, components/PublicChampionshipPage.tsx:99, components/SuperSet.tsx:166 +5
-- insert: components/AdminMatchCreator.tsx:149, components/AdminPanel.tsx:515, components/Agenda.tsx:1806, components/ChampionshipInProgress.tsx:259, components/MatchGenerationModal.tsx:119, components/SuperSet.tsx:110, lib/championship/bracket.ts:223, lib/championship/groupPersistence.ts:190
+- select: components/AdminReports.tsx:119, components/Athletes.tsx:67, components/Challenges.tsx:418, components/Challenges.tsx:536, components/ChampionshipAdmin.tsx:588, components/ChampionshipCreator.tsx:207, components/ChampionshipInProgress.tsx:156, components/Championships.tsx:263, components/Championships.tsx:331, components/PublicChampionshipPage.tsx:99, components/SuperSet.tsx:166, lib/agenda/loadAgendaReservations.ts:47 +5
+- insert: components/AdminMatchCreator.tsx:149, components/AdminPanel.tsx:515, components/Agenda.tsx:1688, components/ChampionshipInProgress.tsx:259, components/MatchGenerationModal.tsx:119, components/SuperSet.tsx:110, lib/championship/bracket.ts:223, lib/championship/groupPersistence.ts:190
 - update: components/ChampionshipInProgress.tsx:303, components/ChampionshipInProgress.tsx:364, components/Championships.tsx:561, components/Championships.tsx:621, components/Championships.tsx:701, components/Championships.tsx:747, components/Championships.tsx:835, lib/championship/bracket.ts:248, lib/resenhaOpenService.ts:390, lib/resenhaOpenService.ts:407
 - upsert: components/LiveScoreboard.tsx:157
 - delete: components/MatchGenerationModal.tsx:108, lib/resenhaOpenService.ts:466
 
 ### non_socio_students
-- select: components/AdminProfessors.tsx:126, components/AdminStudents.tsx:79, components/Agenda.tsx:1430, components/FinanceiroAdmin.tsx:87, components/ProfessorProfile.tsx:197, lib/championship/registration.ts:36, lib/championship/registration.ts:9, lib/conversations/api.ts:557
-- insert: components/AdminStudents.tsx:173, components/Agenda.tsx:2471, components/ProfessorProfile.tsx:412
-- update: components/AdminStudents.tsx:161, components/AdminStudents.tsx:209, components/AdminStudents.tsx:225, components/AdminStudents.tsx:296, components/AdminStudents.tsx:365, components/Agenda.tsx:1657, components/ProfessorProfile.tsx:379, components/ProfessorProfile.tsx:615
+- select: components/AdminProfessors.tsx:126, components/AdminStudents.tsx:79, components/Agenda.tsx:1300, components/FinanceiroAdmin.tsx:87, components/ProfessorProfile.tsx:197, lib/championship/registration.ts:36, lib/championship/registration.ts:9, lib/conversations/api.ts:557
+- insert: components/AdminStudents.tsx:173, components/Agenda.tsx:2355, components/ProfessorProfile.tsx:412
+- update: components/AdminStudents.tsx:161, components/AdminStudents.tsx:209, components/AdminStudents.tsx:225, components/AdminStudents.tsx:296, components/AdminStudents.tsx:365, components/Agenda.tsx:1539, components/ProfessorProfile.tsx:379, components/ProfessorProfile.tsx:615
 
 ### point_history
 - select: components/AdminPanel.tsx:1550, components/Athletes.tsx:106
@@ -246,13 +246,13 @@
 - update: components/Klanches.tsx:364, components/Klanches.tsx:403
 
 ### professors
-- select: components/AdminProfessors.tsx:118, components/AdminStudents.tsx:84, components/Agenda.tsx:1402, components/ProfessorProfile.tsx:182
+- select: components/AdminProfessors.tsx:118, components/AdminStudents.tsx:84, components/Agenda.tsx:1272, components/ProfessorProfile.tsx:182
 - insert: components/AdminProfessors.tsx:176
 - update: components/AdminProfessors.tsx:175
 - delete: components/AdminProfessors.tsx:197
 
 ### profiles
-- select: components/AdminLogin.tsx:32, components/AdminPanel.tsx:1004, components/AdminPanel.tsx:1166, components/AdminPanel.tsx:1550, components/AdminPanel.tsx:1574, components/AdminPanel.tsx:1603, components/AdminPanel.tsx:272, components/AdminPanel.tsx:434, components/AdminProtect.tsx:23, components/AdminReports.tsx:90, components/AdminStudents.tsx:85, components/Agenda.tsx:1220 +36
+- select: components/AdminLogin.tsx:32, components/AdminPanel.tsx:1004, components/AdminPanel.tsx:1166, components/AdminPanel.tsx:1550, components/AdminPanel.tsx:1574, components/AdminPanel.tsx:1603, components/AdminPanel.tsx:272, components/AdminPanel.tsx:434, components/AdminProtect.tsx:23, components/AdminReports.tsx:90, components/AdminStudents.tsx:85, components/Agenda.tsx:1229 +36
 - select [edge]: supabase/functions/_shared/athleteProvision.ts:54, supabase/functions/_shared/serveAdmin.ts:29, supabase/functions/admin-athlete-access/index.ts:48, supabase/functions/send-push/index.ts:59
 - insert: contexts/AuthContext.tsx:429
 - update: components/AdminUserEditor.tsx:125, components/EditProfileModal.tsx:79, components/OnboardingModal.tsx:63, contexts/AuthContext.tsx:330
@@ -270,9 +270,9 @@
 - select: components/AdminPanel.tsx:1559
 
 ### reservations
-- select: components/AdminPanel.tsx:270, components/AdminPanel.tsx:79, components/AdminReports.tsx:78, components/Agenda.tsx:1246, components/Agenda.tsx:1642, components/Athletes.tsx:79, components/Challenges.tsx:96, components/Dashboard.tsx:59, components/FinanceiroAdmin.tsx:59, components/Klanches.tsx:148, components/ProfessorProfile.tsx:237, components/SuperSet.tsx:58 +1
-- insert: components/AdminMatchCreator.tsx:131, components/AdminPanel.tsx:574, components/Agenda.tsx:1723, components/Challenges.tsx:594, hooks/useReservations.ts:180
-- update: components/AdminPanel.tsx:328, components/Agenda.tsx:1501, components/Agenda.tsx:1539, components/Agenda.tsx:1559, components/Agenda.tsx:1588, components/Agenda.tsx:1715, components/Agenda.tsx:1833, components/ChallengeNotificationPopup.tsx:104, components/FinanceiroAdmin.tsx:170, components/ProfessorProfile.tsx:661, hooks/useReservations.ts:253, hooks/useReservations.ts:279
+- select: components/AdminPanel.tsx:270, components/AdminPanel.tsx:79, components/AdminReports.tsx:78, components/Agenda.tsx:1524, components/Athletes.tsx:79, components/Challenges.tsx:96, components/Dashboard.tsx:59, components/FinanceiroAdmin.tsx:59, components/Klanches.tsx:148, components/ProfessorProfile.tsx:237, components/SuperSet.tsx:58, hooks/useReservations.ts:113 +1
+- insert: components/AdminMatchCreator.tsx:131, components/AdminPanel.tsx:574, components/Agenda.tsx:1605, components/Challenges.tsx:594, hooks/useReservations.ts:180
+- update: components/AdminPanel.tsx:328, components/Agenda.tsx:1383, components/Agenda.tsx:1421, components/Agenda.tsx:1441, components/Agenda.tsx:1470, components/Agenda.tsx:1597, components/Agenda.tsx:1715, components/ChallengeNotificationPopup.tsx:104, components/FinanceiroAdmin.tsx:170, components/ProfessorProfile.tsx:661, hooks/useReservations.ts:253, hooks/useReservations.ts:279
 
 ### sig_documents
 - select: components/signatures/admin/DocumentDetail.tsx:137, lib/signatures/admin.ts:87
@@ -296,23 +296,24 @@
 - delete: components/FinanceiroAdmin.tsx:139
 
 ### student_profiles
-- select: components/AdminStudents.tsx:83, components/Agenda.tsx:1414, components/ProfessorProfile.tsx:202
-- insert: components/AdminStudents.tsx:176, components/AdminStudents.tsx:232, components/Agenda.tsx:2449, components/Agenda.tsx:2487, components/ProfessorProfile.tsx:426
+- select: components/AdminStudents.tsx:83, components/Agenda.tsx:1284, components/ProfessorProfile.tsx:202
+- insert: components/AdminStudents.tsx:176, components/AdminStudents.tsx:232, components/Agenda.tsx:2333, components/Agenda.tsx:2371, components/ProfessorProfile.tsx:426
 - update: components/AdminStudents.tsx:164, components/AdminStudents.tsx:208, components/AdminStudents.tsx:224, components/AdminStudents.tsx:244, components/AdminStudents.tsx:250, components/ProfessorProfile.tsx:499, components/ProfessorProfile.tsx:517, components/ProfessorProfile.tsx:530, components/ProfessorProfile.tsx:554
-- upsert: components/Agenda.tsx:1623
+- upsert: components/Agenda.tsx:1505
 
-## RPC (29)
+## RPC (30)
 - `admin_record_user_access`: contexts/AuthContext.tsx:129
 - `admin_reset_ranking_full`: components/AdminPanel.tsx:1634
 - `apply_championship_edition_points`: components/ChampionshipAdmin.tsx:537
 - `conv_svc_apply_delete`: — · [edge] supabase/functions/whatsapp-webhook/record.ts:124
 - `conv_svc_apply_edit_with_mention`: — · [edge] supabase/functions/whatsapp-webhook/record.ts:113
 - `conv_svc_apply_reaction`: — · [edge] supabase/functions/whatsapp-webhook/record.ts:98
+- `conv_svc_birthdays_today`: — · [edge] supabase/functions/joao-birthdays/index.ts:89
 - `conv_svc_channel_delivery`: — · [edge] supabase/functions/whatsapp-webhook/index.ts:167
-- `conv_svc_finish_message`: — · [edge] supabase/functions/joao-daily-greeting/index.ts:181
+- `conv_svc_finish_message`: — · [edge] supabase/functions/joao-birthdays/index.ts:79, supabase/functions/joao-daily-greeting/index.ts:181
 - `conv_svc_ingest_message`: — · [edge] supabase/functions/whatsapp-webhook/record.ts:48
 - `conv_svc_log_webhook`: — · [edge] supabase/functions/whatsapp-webhook/record.ts:177, supabase/functions/whatsapp-webhook/record.ts:42
-- `conv_svc_queue_message`: — · [edge] supabase/functions/joao-daily-greeting/index.ts:172
+- `conv_svc_queue_message`: — · [edge] supabase/functions/joao-birthdays/index.ts:72, supabase/functions/joao-daily-greeting/index.ts:172
 - `conv_svc_resolve_undecryptable`: — · [edge] supabase/functions/whatsapp-webhook/record.ts:90
 - `conv_svc_set_message_media`: — · [edge] supabase/functions/whatsapp-webhook/record.ts:152
 - `conv_svc_set_message_transcription`: — · [edge] supabase/functions/whatsapp-webhook/record.ts:174
@@ -323,7 +324,7 @@
 - `get_form_live_results`: lib/formsService.ts:302
 - `get_ranking_cycle_start`: lib/rankingService.ts:75
 - `get_user_h2h_points`: components/Athletes.tsx:123
-- `joao_daily_secret_ok`: — · [edge] supabase/functions/joao-daily-greeting/index.ts:26
+- `joao_daily_secret_ok`: — · [edge] supabase/functions/joao-birthdays/index.ts:24, supabase/functions/joao-daily-greeting/index.ts:26
 - `resolve_resenha_open_final_phases`: lib/resenhaOpenService.ts:424
 - `revert_championship_edition_points`: components/ChampionshipAdmin.tsx:569
 - `set_student_level`: components/AdminStudents.tsx:169, components/AdminStudents.tsx:238, components/ProfessorProfile.tsx:392, components/ProfessorProfile.tsx:536
@@ -354,4 +355,4 @@
 
 ## Alertas (2)
 - Tabelas do mapa sem uso no código (front + edge): `Cliente_CRM`, `Memory Long`, `Memory Long_jp`, `Memory Test`, `alunos`, `aniversario_consulta`, `avaliacoes_semanais`, `championship_participants`, `championship_winners`, `class_change_events`, `conv_admin_alert_log`, `conv_admin_briefing_recipients`, `conv_admin_prefs`, `conv_ai_decisions`, `conv_ai_member_context`, `conv_ai_memory_candidates`, `conv_ai_sessions`, `conv_automation_recipients`, `conv_automation_runs`, `conv_automation_settings`, `conv_automation_versions`, `conv_automations`, `conv_booking_proposals`, `conv_channel`, `conv_followups`, `conv_notes`, `conv_quick_replies`, `conv_requests`, `conv_webhook_log`, `des`, `documentos_contexto`, `familia_compat_produto`, `fin_entries`, `fin_private.charge_payments_effective`, `fin_requests`, `historico_conversas`, `historico_treino`, `iatende_conversas`, `members`, `n8n_chat_histories`, `n8n_chat_histories_duplicate`, `n8n_chat_histories_evento`, `n8n_vectors`, `n8n_vectors2`, `n8n_vectors_treinador`, `patients_ebm`, `planos_treino`, `reservas`, `reservas2`, `reservation_participants`, `servicos`, `sig_events`, `sig_notifications`, `sig_private.challenges`, `sig_recipients`, `stock_automator_config`, `stores`, `students`, `subcategorias`, `support_messages`, `tabela_familia_iphone_map`, `tabela_modelos`, `tabela_sinonimo_modelo`, `tbl_embedding`, `tbl_embedding_valid`, `vw_familia_modelos_expandidos`
-- Edge functions sem chamada no front (webhook, cron ou outra função?): `conversation-operations`, `conversations-dispatch`, `finance-receipt-whatsapp`, `joao-admin-alerts`, `joao-admin-briefing`, `joao-daily-greeting`, `signature-dispatch`, `whatsapp-webhook`
+- Edge functions sem chamada no front (webhook, cron ou outra função?): `conversation-operations`, `conversations-dispatch`, `finance-receipt-whatsapp`, `joao-admin-alerts`, `joao-admin-briefing`, `joao-birthdays`, `joao-daily-greeting`, `signature-dispatch`, `whatsapp-webhook`

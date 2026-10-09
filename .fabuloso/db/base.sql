@@ -1,6 +1,6 @@
 -- base.sql — DDL do schema remoto. Gerado por `fabuloso.mjs db`; não edite.
 -- É a base do banco de teste em PGlite (`fabuloso.mjs pg`): schema real do remoto + migrations locais pendentes.
---@@ meta {"versao":1,"postgres":"17.6","schemas":["conv_private","fin_private","public","sig_private"],"extensoes":[{"nome":"pg_cron","schema":"pg_catalog"},{"nome":"pg_net","schema":"extensions"},{"nome":"pg_stat_statements","schema":"extensions"},{"nome":"pgcrypto","schema":"extensions"},{"nome":"supabase_vault","schema":"vault"},{"nome":"uuid-ossp","schema":"extensions"},{"nome":"vector","schema":"public"}],"papeis":["anon","authenticated","authenticator","cli_login_postgres","dashboard_user","pgbouncer","postgres","service_role","supabase_auth_admin","supabase_etl_admin","supabase_functions_admin","supabase_privileged_role","supabase_read_only_user","supabase_realtime_admin","supabase_replication_admin","supabase_storage_admin"],"migracoes":["20251228080214","20251228081253","20251228083254","20251228083507","20251228083944","20251228085506","20251228085656","20251228085817","20251228113842","20251228114731","20251228115147","20251228214931","20251228220119","20251228220952","20251230094628","20251230103441","20251230111220","20260101134906","20260101134940","20260101141731","20260101155936","20260103141626","20260103153236","20260103153329","20260103153404","20260103153757","20260115192527","20260119084237","20260119084321","20260119085322","20260119090000","20260119090225","20260119141114","20260123101818","20260123101853","20260123104620","20260123125031","20260124215137","20260125081739","20260125102639","20260125174723","20260127175350","20260127175608","20260128133915","20260129075257","20260129075631","20260129083027","20260129145632","20260131091223","20260203185748","20260205232352","20260205232412","20260212105246","20260212113107","20260212121128","20260213083000","20260215123000","20260216090000","20260216123000","20260323073000","20260421153000","20260421184125","20260422100000","20260422100100","20260422100200","20260422100300","20260422100400","20260422113000","20260422124000","20260422130000","20260422143000","20260422150000","20260427134500","20260427135800","20260427140500","20260502000001","20260502000002","20260519072400","20260519073500","20260519074500","20260519075000","20260519080000","20260519081000","20260519082000","20260805085500","20260805091000","20260807120000","20260807140000","20260807160000","20260807180000","20260807200000","20260808120000","20260824120000","20260824121000","20260824140000","20260912090000","20260912100000","20260930120000","20260930123000","20261005161200","20261006100000","20261006100100","20261006100200","20261006100300","20261006100400","20261006100500","20261007064837","20261007070656","20261007100000","20261007100100","20261007100200","20261007100300","20261007100400","20261007100500","20261007100600","20261007100700","20261007100800","20261007100900","20261007101000","20261007101100","20261007101200","20261007101210","20261007101300","20261007101400","20261007110000","20261007120000","20261007120100","20261007120200","20261007130000","20261007135553","20261007140000","20261007140144","20261007140427","20261007140831","20261007141000","20261007150000","20261007150010","20261007150100","20261007160000","20261007170000","20261007180000","20261007190000","20261007200000","20261007210000","20261007220000","20261007230000","20261007240000","20261007250000","20261007250100","20261007260000","20261007260100","20261007270000","20261007280000","20261007290000","20261007290100","20261007300000","20261007310000","20261007320000","20261007330000","20261007340000","20261007350000","20261007360000","20261007370000","20261007380000","20261007390000","20261007400000","20261008101944","20261008102600","20261008124729"]}
+--@@ meta {"versao":1,"postgres":"17.6","schemas":["conv_private","fin_private","public","sig_private"],"extensoes":[{"nome":"pg_cron","schema":"pg_catalog"},{"nome":"pg_net","schema":"extensions"},{"nome":"pg_stat_statements","schema":"extensions"},{"nome":"pgcrypto","schema":"extensions"},{"nome":"supabase_vault","schema":"vault"},{"nome":"uuid-ossp","schema":"extensions"},{"nome":"vector","schema":"public"}],"papeis":["anon","authenticated","authenticator","cli_login_postgres","dashboard_user","pgbouncer","postgres","service_role","supabase_auth_admin","supabase_etl_admin","supabase_functions_admin","supabase_privileged_role","supabase_read_only_user","supabase_realtime_admin","supabase_replication_admin","supabase_storage_admin"],"migracoes":["20251228080214","20251228081253","20251228083254","20251228083507","20251228083944","20251228085506","20251228085656","20251228085817","20251228113842","20251228114731","20251228115147","20251228214931","20251228220119","20251228220952","20251230094628","20251230103441","20251230111220","20260101134906","20260101134940","20260101141731","20260101155936","20260103141626","20260103153236","20260103153329","20260103153404","20260103153757","20260115192527","20260119084237","20260119084321","20260119085322","20260119090000","20260119090225","20260119141114","20260123101818","20260123101853","20260123104620","20260123125031","20260124215137","20260125081739","20260125102639","20260125174723","20260127175350","20260127175608","20260128133915","20260129075257","20260129075631","20260129083027","20260129145632","20260131091223","20260203185748","20260205232352","20260205232412","20260212105246","20260212113107","20260212121128","20260213083000","20260215123000","20260216090000","20260216123000","20260323073000","20260421153000","20260421184125","20260422100000","20260422100100","20260422100200","20260422100300","20260422100400","20260422113000","20260422124000","20260422130000","20260422143000","20260422150000","20260427134500","20260427135800","20260427140500","20260502000001","20260502000002","20260519072400","20260519073500","20260519074500","20260519075000","20260519080000","20260519081000","20260519082000","20260805085500","20260805091000","20260807120000","20260807140000","20260807160000","20260807180000","20260807200000","20260808120000","20260824120000","20260824121000","20260824140000","20260912090000","20260912100000","20260930120000","20260930123000","20261005161200","20261006100000","20261006100100","20261006100200","20261006100300","20261006100400","20261006100500","20261007064837","20261007070656","20261007100000","20261007100100","20261007100200","20261007100300","20261007100400","20261007100500","20261007100600","20261007100700","20261007100800","20261007100900","20261007101000","20261007101100","20261007101200","20261007101210","20261007101300","20261007101400","20261007110000","20261007120000","20261007120100","20261007120200","20261007130000","20261007135553","20261007140000","20261007140144","20261007140427","20261007140831","20261007141000","20261007150000","20261007150010","20261007150100","20261007160000","20261007170000","20261007180000","20261007190000","20261007200000","20261007210000","20261007220000","20261007230000","20261007240000","20261007250000","20261007250100","20261007260000","20261007260100","20261007270000","20261007280000","20261007290000","20261007290100","20261007300000","20261007310000","20261007320000","20261007330000","20261007340000","20261007350000","20261007360000","20261007370000","20261007380000","20261007390000","20261007400000","20261008101944","20261008102600","20261008124729","20261008130005","20261008130203","20261008130745","20261008132237","20261008132335","20261008132419","20261008135821","20261008135824","20261008143837","20261008150000"]}
 --@@ 10 schema conv_private
 create schema if not exists conv_private;
 --@@ 10 schema fin_private
@@ -1336,7 +1336,9 @@ create table public.profiles (
   legacy_tiebreaks_lost integer,
   legacy_matches_played integer,
   legacy_matches_with_tiebreak integer,
-  updated_at timestamp with time zone
+  updated_at timestamp with time zone,
+  birth_day smallint,
+  birth_month smallint
 );
 --@@ 40 tabela public.push_subscriptions
 create table public.push_subscriptions (
@@ -2053,6 +2055,36 @@ begin
 exception when invalid_text_representation or invalid_datetime_format or datetime_field_overflow or numeric_value_out_of_range then
   return conv_private.vfail('INVALID_DATA', 'Algum dado veio num formato que não entendi (data, hora ou valor).');
 end $function$;
+--@@ 45 funcao conv_private.ai_admin_birthday_set(p_session uuid, p jsonb)
+CREATE OR REPLACE FUNCTION conv_private.ai_admin_birthday_set(p_session uuid, p jsonb)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare
+  v_admin uuid := conv_private.ai_admin_requester(p_session);
+  v_profile uuid := nullif(p->>'profile_id', '')::uuid;
+  v_day int := nullif(p->>'day', '')::int;
+  v_month int := nullif(p->>'month', '')::int;
+  pr public.profiles%rowtype;
+begin
+  if v_admin is null then
+    return conv_private.vfail('ADMIN_ONLY_PRIVATE', 'Isso só um administrador faz, e só na conversa privada comigo.');
+  end if;
+  select * into pr from public.profiles where id = v_profile;
+  if pr.id is null then return conv_private.vfail('MEMBER_NOT_FOUND', 'Não achei esse sócio.'); end if;
+  if v_month is null or v_month < 1 or v_month > 12 or v_day is null or v_day < 1
+     or v_day > (case when v_month = 2 then 29 when v_month in (4, 6, 9, 11) then 30 else 31 end) then
+    return conv_private.vfail('INVALID_BIRTHDAY', 'Qual o dia e o mês do aniversário? Ex.: 14/01.');
+  end if;
+  update public.profiles set birth_day = v_day, birth_month = v_month where id = pr.id;
+  perform conv_private.audit('ai_admin_action', 'profiles', pr.id::text,
+    jsonb_build_object('birth_day', pr.birth_day, 'birth_month', pr.birth_month),
+    jsonb_build_object('birth_day', v_day, 'birth_month', v_month),
+    jsonb_build_object('actor', 'ai', 'source', 'whatsapp', 'action', 'adm_birthday_set'), v_admin);
+  return jsonb_build_object('ok', true, 'member_name', pr.name, 'day', v_day, 'month', v_month);
+end $function$;
 --@@ 45 funcao conv_private.ai_admin_briefing_propose(p_session uuid, p jsonb)
 CREATE OR REPLACE FUNCTION conv_private.ai_admin_briefing_propose(p_session uuid, p jsonb)
  RETURNS jsonb
@@ -2607,6 +2639,241 @@ begin
   return jsonb_build_object('ok', true, 'proposal_id', v_id, 'action', v_action, 'summary', v_payload);
 exception when invalid_text_representation or invalid_datetime_format or datetime_field_overflow or numeric_value_out_of_range then
   return conv_private.vfail('INVALID_DATA', 'Algum dado veio num formato que não entendi (data ou valor).');
+end $function$;
+--@@ 45 funcao conv_private.ai_admin_forms_propose(p_session uuid, p jsonb)
+CREATE OR REPLACE FUNCTION conv_private.ai_admin_forms_propose(p_session uuid, p jsonb)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare
+  sess public.conv_ai_sessions%rowtype; s public.conv_ai_settings%rowtype; f public.club_forms%rowtype;
+  v_admin uuid; v_action text := p->>'action'; v_payload jsonb; v_id uuid; v_pick jsonb;
+  v_today date := (now() at time zone 'America/Fortaleza')::date;
+  v_title text; v_desc text; v_slug text; v_base text; v_i int := 1; v_qs jsonb := '[]'::jsonb; v_q jsonb; v_qt text; v_type text; v_opts jsonb;
+  v_expires timestamptz; v_active boolean; v_rec jsonb; v_n int; v_pending int; v_already int; v_body text; v_at timestamptz; v_note text; v_link text;
+begin
+  select * into sess from public.conv_ai_sessions where id = p_session and status = 'open' for update;
+  if not found then return conv_private.vfail('SESSION_CLOSED', 'Atendimento encerrado.'); end if;
+  v_admin := conv_private.ai_admin_requester(p_session);
+  if v_admin is null then
+    return conv_private.vfail('ADMIN_ONLY_PRIVATE', 'Isso só um administrador faz, e só na conversa privada comigo.');
+  end if;
+
+  if v_action = 'adm_form_create' then
+    v_title := trim(coalesce(p->>'title', '')); v_desc := nullif(trim(coalesce(p->>'description', '')), '');
+    if length(v_title) not between 3 and 120 then return conv_private.vfail('INVALID_TITLE', 'Qual o título do formulário? (de 3 a 120 caracteres)'); end if;
+    if exists (select 1 from public.club_forms x where fin_private.fold_text(x.title) = fin_private.fold_text(v_title)) then
+      return conv_private.vfail('FORM_EXISTS', 'Já existe um formulário com o título «' || v_title || '». Quer outro título?');
+    end if;
+    for v_q in select value from jsonb_array_elements(coalesce(p->'questions', '[]'::jsonb)) loop
+      v_qt := trim(coalesce(v_q->>'title', '')); v_type := coalesce(v_q->>'type', 'open_text');
+      if length(v_qt) not between 3 and 200 then return conv_private.vfail('INVALID_QUESTION', 'Cada pergunta precisa de um texto (de 3 a 200 caracteres).'); end if;
+      if v_type not in ('single_choice', 'multiple_choice', 'open_text') then
+        return conv_private.vfail('INVALID_QUESTION', 'A pergunta «' || v_qt || '» precisa ser de escolha única, de múltipla escolha ou de texto livre.');
+      end if;
+      if v_type = 'open_text' then v_opts := '[]'::jsonb;
+      else
+        select coalesce(jsonb_agg(trim(o.val)), '[]'::jsonb) into v_opts
+        from jsonb_array_elements_text(coalesce(v_q->'options', '[]'::jsonb)) as o(val) where length(trim(o.val)) between 1 and 120;
+        if jsonb_array_length(v_opts) not between 2 and 12 then
+          return conv_private.vfail('INVALID_QUESTION', 'A pergunta «' || v_qt || '» precisa de 2 a 12 alternativas. Quais são?');
+        end if;
+      end if;
+      v_qs := v_qs || jsonb_build_array(jsonb_build_object('title', v_qt, 'type', v_type,
+        'required', coalesce((v_q->>'required')::boolean, true), 'options', v_opts));
+    end loop;
+    if jsonb_array_length(v_qs) not between 1 and 20 then
+      return conv_private.vfail('NO_QUESTIONS', 'Quais são as perguntas do formulário? (de 1 a 20; para as de escolha, me diga as alternativas)');
+    end if;
+    if nullif(p->>'expires_on', '') is not null then
+      if (p->>'expires_on')::date < v_today then return conv_private.vfail('INVALID_DATE', 'O prazo não pode ser no passado.'); end if;
+      v_expires := ((p->>'expires_on') || ' 23:59:59-03')::timestamptz;
+    end if;
+    v_base := left(trim(both '-' from regexp_replace(lower(fin_private.fold_text(v_title)), '[^a-z0-9]+', '-', 'g')), 60);
+    if v_base = '' then v_base := 'formulario'; end if;
+    v_slug := v_base;
+    while exists (select 1 from public.club_forms x where x.slug = v_slug) loop v_i := v_i + 1; v_slug := v_base || '-' || v_i; end loop;
+    v_payload := jsonb_strip_nulls(jsonb_build_object('title', v_title, 'description', v_desc, 'slug', v_slug, 'questions', v_qs,
+      'secret', coalesce((p->>'secret')::boolean, false), 'multiple', coalesce((p->>'multiple')::boolean, false),
+      'requires_auth', coalesce((p->>'requires_auth')::boolean, true), 'expires_at', v_expires, 'link', conv_private.ai_form_link(v_slug)));
+
+  elsif v_action = 'adm_form_toggle' then
+    v_active := (p->>'active')::boolean;
+    if v_active is null then return conv_private.vfail('INVALID_DATA', 'É para encerrar ou reabrir o formulário?'); end if;
+    v_pick := conv_private.ai_form_pick(p->>'form_ref');
+    if not (v_pick->>'ok')::boolean then return v_pick; end if;
+    select * into f from public.club_forms where id = (v_pick->>'form_id')::uuid;
+    if nullif(p->>'expires_on', '') is not null then
+      if (p->>'expires_on')::date < v_today then return conv_private.vfail('INVALID_DATE', 'O prazo não pode ser no passado.'); end if;
+      v_expires := ((p->>'expires_on') || ' 23:59:59-03')::timestamptz;
+    end if;
+    if not v_active then
+      if not f.is_active then return conv_private.vfail('ALREADY_SET', 'O formulário «' || f.title || '» já está encerrado.'); end if;
+    else
+      if conv_private.ai_form_state(f) = 'aberto' and v_expires is null then
+        return conv_private.vfail('ALREADY_SET', 'O formulário «' || f.title || '» já está aberto.');
+      end if;
+      if f.expires_at is not null and f.expires_at <= now() and v_expires is null then
+        return conv_private.vfail('DEADLINE_PASSED', 'O prazo do «' || f.title || '» acabou em ' || to_char(f.expires_at at time zone 'America/Fortaleza', 'DD/MM')
+          || '. Até quando você quer deixar aberto?');
+      end if;
+    end if;
+    v_payload := jsonb_strip_nulls(jsonb_build_object('form_id', f.id, 'title', f.title, 'slug', f.slug, 'active', v_active, 'expires_at', v_expires));
+
+  elsif v_action = 'adm_form_nudge' then
+    v_pick := conv_private.ai_form_pick(p->>'form_ref');
+    if not (v_pick->>'ok')::boolean then return v_pick; end if;
+    select * into f from public.club_forms where id = (v_pick->>'form_id')::uuid;
+    if conv_private.ai_form_state(f) <> 'aberto' then
+      return conv_private.vfail('FORM_NOT_OPEN', 'O formulário «' || f.title || '» está ' || conv_private.ai_form_state(f) || ': não dá para pedir resposta agora. Posso reabrir primeiro.');
+    end if;
+    v_link := conv_private.ai_form_link(f.slug);
+    v_note := 'Lembrete: formulário ' || f.slug;
+    v_body := trim(coalesce(p->>'body', ''));
+    if v_body = '' then
+      v_body := 'Olá, {nome}! Aqui é o João, do STC. A diretoria ainda não recebeu a sua resposta no formulário «' || f.title || '». Leva só alguns minutos: ' || v_link;
+    elsif position(v_link in v_body) = 0 then
+      v_body := v_body || E'\n' || v_link;
+    end if;
+    if length(v_body) > 3500 then return conv_private.vfail('INVALID_BODY', 'O texto ficou grande demais.'); end if;
+    v_at := coalesce(nullif(p->>'send_at', '')::timestamptz, now());
+    if v_at < now() then v_at := now(); end if;
+    if v_at > now() + interval '7 days' then return conv_private.vfail('INVALID_DATE', 'Só consigo agendar até 7 dias à frente.'); end if;
+    select count(*) into v_pending from conv_private.ai_form_audience(f.id) a where not a.responded and a.profile_id <> v_admin;
+    if v_pending = 0 then
+      return conv_private.vfail('NO_PENDING', 'Todos já responderam o «' || f.title || '». Não há ninguém para lembrar.');
+    end if;
+    select coalesce(jsonb_agg(jsonb_build_object('profile_id', t.profile_id, 'name', t.name, 'phone', t.phone) order by t.name), '[]'::jsonb), count(*)
+      into v_rec, v_n
+    from (select a.* from conv_private.ai_form_audience(f.id) a
+          where not a.responded and a.profile_id <> v_admin and a.phone is not null and length(a.phone) >= 12 and not a.opted_out
+            and not exists (select 1 from public.conv_followups fu
+                            join public.conv_conversations cv on cv.id = fu.conversation_id
+                            join public.conv_contacts ct on ct.id = cv.contact_id
+                            where ct.phone = a.phone and fu.note = v_note and fu.status in ('pending', 'sending', 'sent')
+                              and fu.created_at > now() - interval '24 hours')) t;
+    select count(*) into v_already from conv_private.ai_form_audience(f.id) a
+    where not a.responded and a.profile_id <> v_admin and a.phone is not null and length(a.phone) >= 12 and not a.opted_out
+      and exists (select 1 from public.conv_followups fu join public.conv_conversations cv on cv.id = fu.conversation_id
+                  join public.conv_contacts ct on ct.id = cv.contact_id
+                  where ct.phone = a.phone and fu.note = v_note and fu.status in ('pending', 'sending', 'sent') and fu.created_at > now() - interval '24 hours');
+    if v_n = 0 then
+      return conv_private.vfail('NO_RECIPIENTS', case when v_already > 0
+        then 'Quem falta já recebeu o lembrete nas últimas 24 horas (' || v_already || '). Não mando de novo para não incomodar.'
+        else 'Quem falta responder está sem telefone válido ou pediu para não receber mensagens.' end);
+    end if;
+    v_payload := jsonb_build_object('form_id', f.id, 'form_title', f.title, 'slug', f.slug, 'link', v_link, 'body', v_body, 'send_at', v_at,
+      'count', v_n, 'already', v_already, 'skipped', v_pending - v_n - v_already,
+      'names', (select jsonb_agg(r->>'name') from jsonb_array_elements(v_rec) r), 'recipients', v_rec);
+  else
+    return conv_private.vfail('INVALID_ACTION', 'Essa ação de formulário eu não conheço.');
+  end if;
+
+  select * into s from public.conv_ai_settings where active order by version desc limit 1;
+  update public.conv_booking_proposals set status = 'canceled' where session_id = p_session and status = 'open';
+  insert into public.conv_booking_proposals(conversation_id, session_id, requester_contact_id, requester_profile_id, action, payload, expires_at)
+  values (sess.conversation_id, p_session, sess.requester_contact_id, v_admin, v_action, v_payload,
+    now() + make_interval(mins => greatest(coalesce(s.proposal_ttl_minutes, 20), 30)))
+  returning id into v_id;
+  return jsonb_build_object('ok', true, 'proposal_id', v_id, 'action', v_action, 'summary', v_payload - 'recipients');
+exception when invalid_text_representation or invalid_datetime_format or datetime_field_overflow or invalid_parameter_value then
+  return conv_private.vfail('INVALID_DATA', 'Algum dado veio num formato que não entendi (data ou opção).');
+end $function$;
+--@@ 45 funcao conv_private.ai_admin_forms_read(p_session uuid, p_domain text,
+CREATE OR REPLACE FUNCTION conv_private.ai_admin_forms_read(p_session uuid, p_domain text, p_args jsonb)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare
+  v_admin uuid; v_out jsonb; v_pick jsonb; f public.club_forms%rowtype;
+begin
+  v_admin := conv_private.ai_admin_requester(p_session);
+  if v_admin is null then
+    return conv_private.vfail('ADMIN_ONLY_PRIVATE', 'Isso só um administrador consulta, e só na conversa privada comigo.');
+  end if;
+
+  if p_domain = 'formularios' then
+    select jsonb_build_object(
+      'audience', (select count(*) from public.profiles pr where coalesce(pr.is_active, true) and pr.role::text in ('socio', 'admin')),
+      'items', coalesce(jsonb_agg(jsonb_build_object('title', x.title, 'slug', x.slug, 'state', conv_private.ai_form_state(x), 'secret', x.is_secret_vote,
+        'expires_at', x.expires_at, 'link', conv_private.ai_form_link(x.slug),
+        'questions', (select count(*) from public.club_form_questions q where q.form_id = x.id),
+        'participants', (select count(*) from public.club_form_voter_receipts r where r.form_id = x.id)) order by x.created_at desc), '[]'::jsonb))
+    into v_out from (select * from public.club_forms order by created_at desc limit 15) x;
+  else
+    v_pick := conv_private.ai_form_pick(p_args->>'form_ref');
+    if not (v_pick->>'ok')::boolean then return v_pick; end if;
+    select * into f from public.club_forms where id = (v_pick->>'form_id')::uuid;
+    if p_domain = 'formulario' then
+      select jsonb_build_object('title', f.title, 'slug', f.slug, 'link', conv_private.ai_form_link(f.slug), 'state', conv_private.ai_form_state(f),
+        'requires_auth', f.requires_auth, 'secret', f.is_secret_vote, 'expires_at', f.expires_at,
+        'participants', (select count(*) from public.club_form_voter_receipts r where r.form_id = f.id),
+        'audience', count(*),
+        'responded', coalesce(jsonb_agg(jsonb_build_object('name', a.name, 'at', a.responded_at) order by a.responded_at) filter (where a.responded), '[]'::jsonb),
+        'pending', coalesce(jsonb_agg(jsonb_build_object('name', a.name,
+          'reachable', a.phone is not null and length(a.phone) >= 12 and not a.opted_out) order by a.name) filter (where not a.responded), '[]'::jsonb))
+      into v_out from conv_private.ai_form_audience(f.id) a;
+    elsif p_domain = 'formulario_resultado' then
+      select jsonb_build_object('title', f.title, 'slug', f.slug, 'secret', f.is_secret_vote,
+        'participants', (select count(*) from public.club_form_voter_receipts r where r.form_id = f.id),
+        'questions', coalesce((select jsonb_agg(jsonb_build_object('title', q.title, 'type', q.question_type,
+          'options', coalesce((select jsonb_agg(jsonb_build_object('label', o.label,
+              'votes', (select count(*) from public.club_form_responses res where res.option_id = o.id)) order by o.display_order)
+            from public.club_form_options o where o.question_id = q.id), '[]'::jsonb),
+          'texts_total', (select count(*) from public.club_form_responses res where res.question_id = q.id and trim(coalesce(res.text_response, '')) <> ''),
+          'texts', coalesce((select jsonb_agg(jsonb_build_object('text', t.text_response, 'author', case when f.is_secret_vote then null else pr.name end) order by t.created_at desc)
+            from (select * from public.club_form_responses res where res.question_id = q.id and trim(coalesce(res.text_response, '')) <> ''
+                  order by res.created_at desc limit 15) t
+            left join public.profiles pr on pr.id = t.user_id), '[]'::jsonb)) order by q.display_order)
+          from public.club_form_questions q where q.form_id = f.id), '[]'::jsonb))
+      into v_out;
+    else
+      return conv_private.vfail('INVALID_DOMAIN', 'Essa consulta eu ainda não sei fazer.');
+    end if;
+  end if;
+  perform conv_private.audit('ai_admin_read', 'conv_ai_sessions', p_session::text, null,
+    jsonb_build_object('domain', p_domain), jsonb_build_object('actor', 'ai', 'source', 'whatsapp', 'requester_profile_id', v_admin), v_admin);
+  return jsonb_build_object('ok', true, 'domain', p_domain, 'data', v_out);
+end $function$;
+--@@ 45 funcao conv_private.ai_admin_group_post_propose(p_session uuid, p json
+CREATE OR REPLACE FUNCTION conv_private.ai_admin_group_post_propose(p_session uuid, p jsonb)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare
+  sess public.conv_ai_sessions%rowtype; s public.conv_ai_settings%rowtype; v_admin uuid; v_id uuid; v_payload jsonb;
+  v_conv uuid := conv_private.members_group_conversation(); v_body text := trim(coalesce(p->>'body', ''));
+  v_target uuid := nullif(p->>'profile_id', '')::uuid; pr public.profiles%rowtype; v_phone text;
+begin
+  select * into sess from public.conv_ai_sessions where id = p_session and status = 'open' for update;
+  if not found then return conv_private.vfail('SESSION_CLOSED', 'Atendimento encerrado.'); end if;
+  v_admin := conv_private.ai_admin_requester(p_session);
+  if v_admin is null then
+    return conv_private.vfail('ADMIN_ONLY_PRIVATE', 'Isso só um administrador faz, e só na conversa privada comigo.');
+  end if;
+  if v_conv is null then return conv_private.vfail('NO_GROUP', 'Não achei o grupo de sócios liberado para mim.'); end if;
+  if length(v_body) not between 3 and 1000 then return conv_private.vfail('INVALID_BODY', 'Qual a resenha que eu mando no grupo?'); end if;
+  if v_target is not null then
+    select * into pr from public.profiles where id = v_target;
+    v_phone := conv_private.phone_e164(pr.phone);
+    if v_phone is not null and length(v_phone) >= 12 and position('@' || v_phone in v_body) = 0 then
+      v_body := '@' || v_phone || ' ' || v_body;
+    end if;
+  end if;
+  v_payload := jsonb_build_object('conversation_id', v_conv, 'body', v_body, 'target_name', pr.name);
+  select * into s from public.conv_ai_settings where active order by version desc limit 1;
+  update public.conv_booking_proposals set status = 'canceled' where session_id = p_session and status = 'open';
+  insert into public.conv_booking_proposals(conversation_id, session_id, requester_contact_id, requester_profile_id, action, payload, expires_at)
+  values (sess.conversation_id, p_session, sess.requester_contact_id, v_admin, 'adm_group_post', v_payload,
+    now() + make_interval(mins => coalesce(s.proposal_ttl_minutes, 20)))
+  returning id into v_id;
+  return jsonb_build_object('ok', true, 'proposal_id', v_id, 'action', 'adm_group_post', 'summary', v_payload);
 end $function$;
 --@@ 45 funcao conv_private.ai_admin_members(p_session uuid)
 CREATE OR REPLACE FUNCTION conv_private.ai_admin_members(p_session uuid)
@@ -3800,6 +4067,125 @@ begin
     bp.requester_profile_id);
   return jsonb_build_object('ok', true, 'action', bp.action, 'summary', bp.payload || jsonb_build_object('result', v_res));
 end $function$;
+--@@ 45 funcao conv_private.ai_confirm_pre_forms_step(p_proposal uuid, p_messa
+CREATE OR REPLACE FUNCTION conv_private.ai_confirm_pre_forms_step(p_proposal uuid, p_message uuid)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare
+  bp public.conv_booking_proposals%rowtype; m public.conv_messages%rowtype; v_admin uuid; v_n int;
+begin
+  select * into bp from public.conv_booking_proposals where id = p_proposal for update;
+  if not found or bp.action <> 'adm_memory_forget' then return conv_private.ai_confirm_pre_memory_step(p_proposal, p_message); end if;
+  if bp.status = 'confirmed' then return jsonb_build_object('ok', true, 'replayed', true, 'action', bp.action, 'summary', bp.payload); end if;
+  if bp.status <> 'open' then return conv_private.vfail('PROPOSAL_CLOSED', 'Essa proposta não está mais aberta.'); end if;
+  if bp.expires_at <= now() then
+    update public.conv_booking_proposals set status = 'expired' where id = bp.id;
+    return conv_private.vfail('PROPOSAL_EXPIRED', 'A proposta venceu. Posso montar outra.');
+  end if;
+  select * into m from public.conv_messages where id = p_message and direction = 'inbound' and conversation_id = bp.conversation_id;
+  if not found or m.created_at <= bp.created_at then
+    return conv_private.vfail('CONFIRMATION_NOT_AFTER_PROPOSAL', 'A confirmação precisa vir depois da proposta.');
+  end if;
+  if m.kind <> 'text' or not (conv_private.is_confirmation(m.body) or conv_private.is_semantic_acceptance(m.body, false)) then
+    return conv_private.vfail('NOT_EXPLICIT', 'Não entendi como confirmação clara.');
+  end if;
+  if m.sender_contact_id is distinct from bp.requester_contact_id then
+    return conv_private.vfail('NOT_AUTHORIZED_TO_CONFIRM', 'Só o administrador que pediu pode confirmar.');
+  end if;
+  v_admin := conv_private.ai_admin_requester(bp.session_id);
+  if v_admin is null or v_admin <> bp.requester_profile_id then
+    update public.conv_booking_proposals set status = 'failed', failure_code = 'ADMIN_ONLY_PRIVATE' where id = bp.id;
+    return conv_private.vfail('ADMIN_ONLY_PRIVATE', 'Isso só um administrador faz, e só na conversa privada comigo.');
+  end if;
+  update public.conv_ai_memory_candidates set status = 'superseded', reviewed_at = now()
+   where status = 'approved' and id in (select (x->>'id')::uuid from jsonb_array_elements(bp.payload->'items') x);
+  get diagnostics v_n = row_count;
+  update public.conv_booking_proposals set status = 'confirmed', confirmed_at = now(), confirmed_message_id = m.id,
+    confirmed_by_contact_id = m.sender_contact_id, payload = bp.payload || jsonb_build_object('forgotten', v_n) where id = bp.id;
+  perform conv_private.audit('ai_admin_action', 'conv_ai_memory_candidates', bp.id::text, null,
+    jsonb_build_object('action', bp.action, 'forgotten', v_n),
+    jsonb_build_object('actor', 'ai', 'source', 'whatsapp', 'conversation_id', bp.conversation_id, 'proposal_id', bp.id,
+      'requester_profile_id', bp.requester_profile_id), bp.requester_profile_id);
+  return jsonb_build_object('ok', true, 'action', bp.action, 'summary', bp.payload || jsonb_build_object('forgotten', v_n));
+end $function$;
+--@@ 45 funcao conv_private.ai_confirm_pre_group_post_step(p_proposal uuid, p_
+CREATE OR REPLACE FUNCTION conv_private.ai_confirm_pre_group_post_step(p_proposal uuid, p_message uuid)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare
+  bp public.conv_booking_proposals%rowtype; v_gate jsonb; v_admin uuid; v_res jsonb; v_err text; v_code text;
+  v_form uuid; v_qid uuid; v_n int := 0; r record; v_contact uuid; v_conv uuid; v_at timestamptz; v_note text;
+  f public.club_forms%rowtype;
+begin
+  select * into bp from public.conv_booking_proposals where id = p_proposal for update;
+  if not found or bp.action not in ('adm_form_create', 'adm_form_toggle', 'adm_form_nudge') then
+    return conv_private.ai_confirm_pre_forms_step(p_proposal, p_message);
+  end if;
+  v_gate := conv_private.ai_forms_gate(bp, p_message);
+  if v_gate is not null then return v_gate; end if;
+  v_admin := bp.requester_profile_id;
+  begin
+    if bp.action = 'adm_form_create' then
+      insert into public.club_forms(title, description, slug, is_active, is_secret_vote, requires_auth, allow_multiple_submissions, show_live_results, expires_at, created_by)
+      values (bp.payload->>'title', bp.payload->>'description', bp.payload->>'slug', true, coalesce((bp.payload->>'secret')::boolean, false),
+        coalesce((bp.payload->>'requires_auth')::boolean, true), coalesce((bp.payload->>'multiple')::boolean, false), false,
+        nullif(bp.payload->>'expires_at', '')::timestamptz, v_admin)
+      returning id into v_form;
+      for r in select e.value as q, e.ordinality as i from jsonb_array_elements(bp.payload->'questions') with ordinality as e(value, ordinality) loop
+        insert into public.club_form_questions(form_id, title, question_type, is_required, display_order)
+        values (v_form, r.q->>'title', r.q->>'type', coalesce((r.q->>'required')::boolean, true), (r.i - 1)::int) returning id into v_qid;
+        insert into public.club_form_options(question_id, label, display_order)
+        select v_qid, o.val, (o.ordinality - 1)::int from jsonb_array_elements_text(coalesce(r.q->'options', '[]'::jsonb)) with ordinality as o(val, ordinality);
+      end loop;
+      v_res := jsonb_build_object('form_id', v_form, 'link', bp.payload->>'link');
+
+    elsif bp.action = 'adm_form_toggle' then
+      update public.club_forms set is_active = (bp.payload->>'active')::boolean,
+        expires_at = coalesce(nullif(bp.payload->>'expires_at', '')::timestamptz, expires_at), updated_at = now()
+       where id = (bp.payload->>'form_id')::uuid;
+      get diagnostics v_n = row_count;
+      if v_n = 0 then raise exception 'FORM_NOT_FOUND'; end if;
+      v_res := jsonb_build_object('form_id', bp.payload->>'form_id');
+
+    else
+      select * into f from public.club_forms where id = (bp.payload->>'form_id')::uuid;
+      if not found or conv_private.ai_form_state(f) <> 'aberto' then raise exception 'FORM_NOT_OPEN'; end if;
+      v_note := 'Lembrete: formulário ' || f.slug;
+      v_at := greatest((bp.payload->>'send_at')::timestamptz, now());
+      for r in select e.value as rec from jsonb_array_elements(bp.payload->'recipients') as e loop
+        -- Quem respondeu entre o resumo e o "sim" não recebe; opt-out vale até o último instante.
+        if exists (select 1 from public.club_form_voter_receipts rc where rc.form_id = f.id and rc.user_id = (r.rec->>'profile_id')::uuid) then continue; end if;
+        if exists (select 1 from public.conv_contacts c where c.phone = r.rec->>'phone' and c.opt_out) then continue; end if;
+        v_contact := conv_private.upsert_contact(r.rec->>'phone', null, r.rec->>'name', true);
+        v_conv := conv_private.open_direct(v_contact);
+        insert into public.conv_followups(conversation_id, due_at, note, send_body, created_by)
+        values (v_conv, v_at, v_note, bp.payload->>'body', v_admin);
+        v_n := v_n + 1;
+      end loop;
+      v_res := jsonb_build_object('queued', v_n);
+    end if;
+  exception when others then
+    v_err := sqlerrm;
+  end;
+  if v_err is not null then
+    v_code := case when v_err ~ '^[A-Z][A-Z_]+$' then v_err else 'ADMIN_ACTION_FAILED' end;
+    update public.conv_booking_proposals set status = 'failed', failure_code = v_code where id = bp.id;
+    return conv_private.vfail(v_code, case v_code when 'FORM_NOT_OPEN' then 'O formulário não está mais aberto.' else 'Não consegui concluir: ' || v_code || '.' end);
+  end if;
+  update public.conv_booking_proposals set status = 'confirmed', confirmed_at = now(), confirmed_message_id = p_message,
+    confirmed_by_contact_id = bp.requester_contact_id, payload = (bp.payload - 'recipients') || v_res where id = bp.id;
+  perform conv_private.audit('ai_admin_action', 'conv_booking_proposals', bp.id::text, null,
+    jsonb_build_object('action', bp.action) || v_res - 'link',
+    jsonb_build_object('actor', 'ai', 'source', 'whatsapp', 'conversation_id', bp.conversation_id, 'proposal_id', bp.id,
+      'requester_profile_id', bp.requester_profile_id), bp.requester_profile_id);
+  return jsonb_build_object('ok', true, 'action', bp.action, 'summary', (bp.payload - 'recipients') || v_res);
+end $function$;
 --@@ 45 funcao conv_private.ai_confirm_pre_memory_step(p_proposal uuid, p_mess
 CREATE OR REPLACE FUNCTION conv_private.ai_confirm_pre_memory_step(p_proposal uuid, p_message uuid)
  RETURNS jsonb
@@ -3910,42 +4296,23 @@ CREATE OR REPLACE FUNCTION conv_private.ai_confirm_single_step(p_proposal uuid, 
  SECURITY DEFINER
  SET search_path TO ''
 AS $function$
-declare
-  bp public.conv_booking_proposals%rowtype; m public.conv_messages%rowtype; v_admin uuid; v_n int;
+declare bp public.conv_booking_proposals%rowtype; v_gate jsonb; v_fu uuid; v_res jsonb;
 begin
   select * into bp from public.conv_booking_proposals where id = p_proposal for update;
-  if not found or bp.action <> 'adm_memory_forget' then return conv_private.ai_confirm_pre_memory_step(p_proposal, p_message); end if;
-  if bp.status = 'confirmed' then return jsonb_build_object('ok', true, 'replayed', true, 'action', bp.action, 'summary', bp.payload); end if;
-  if bp.status <> 'open' then return conv_private.vfail('PROPOSAL_CLOSED', 'Essa proposta não está mais aberta.'); end if;
-  if bp.expires_at <= now() then
-    update public.conv_booking_proposals set status = 'expired' where id = bp.id;
-    return conv_private.vfail('PROPOSAL_EXPIRED', 'A proposta venceu. Posso montar outra.');
-  end if;
-  select * into m from public.conv_messages where id = p_message and direction = 'inbound' and conversation_id = bp.conversation_id;
-  if not found or m.created_at <= bp.created_at then
-    return conv_private.vfail('CONFIRMATION_NOT_AFTER_PROPOSAL', 'A confirmação precisa vir depois da proposta.');
-  end if;
-  if m.kind <> 'text' or not (conv_private.is_confirmation(m.body) or conv_private.is_semantic_acceptance(m.body, false)) then
-    return conv_private.vfail('NOT_EXPLICIT', 'Não entendi como confirmação clara.');
-  end if;
-  if m.sender_contact_id is distinct from bp.requester_contact_id then
-    return conv_private.vfail('NOT_AUTHORIZED_TO_CONFIRM', 'Só o administrador que pediu pode confirmar.');
-  end if;
-  v_admin := conv_private.ai_admin_requester(bp.session_id);
-  if v_admin is null or v_admin <> bp.requester_profile_id then
-    update public.conv_booking_proposals set status = 'failed', failure_code = 'ADMIN_ONLY_PRIVATE' where id = bp.id;
-    return conv_private.vfail('ADMIN_ONLY_PRIVATE', 'Isso só um administrador faz, e só na conversa privada comigo.');
-  end if;
-  update public.conv_ai_memory_candidates set status = 'superseded', reviewed_at = now()
-   where status = 'approved' and id in (select (x->>'id')::uuid from jsonb_array_elements(bp.payload->'items') x);
-  get diagnostics v_n = row_count;
-  update public.conv_booking_proposals set status = 'confirmed', confirmed_at = now(), confirmed_message_id = m.id,
-    confirmed_by_contact_id = m.sender_contact_id, payload = bp.payload || jsonb_build_object('forgotten', v_n) where id = bp.id;
-  perform conv_private.audit('ai_admin_action', 'conv_ai_memory_candidates', bp.id::text, null,
-    jsonb_build_object('action', bp.action, 'forgotten', v_n),
+  if not found or bp.action <> 'adm_group_post' then return conv_private.ai_confirm_pre_group_post_step(p_proposal, p_message); end if;
+  v_gate := conv_private.ai_forms_gate(bp, p_message);
+  if v_gate is not null then return v_gate; end if;
+  insert into public.conv_followups(conversation_id, due_at, note, send_body, created_by)
+  values ((bp.payload->>'conversation_id')::uuid, now(), 'Resenha pedida pela diretoria (WhatsApp)', bp.payload->>'body', bp.requester_profile_id)
+  returning id into v_fu;
+  v_res := jsonb_build_object('followup_id', v_fu);
+  update public.conv_booking_proposals set status = 'confirmed', confirmed_at = now(), confirmed_message_id = p_message,
+    confirmed_by_contact_id = bp.requester_contact_id, payload = bp.payload || v_res where id = bp.id;
+  perform conv_private.audit('ai_admin_action', 'conv_booking_proposals', bp.id::text, null,
+    jsonb_build_object('action', bp.action, 'target', bp.payload->>'target_name'),
     jsonb_build_object('actor', 'ai', 'source', 'whatsapp', 'conversation_id', bp.conversation_id, 'proposal_id', bp.id,
       'requester_profile_id', bp.requester_profile_id), bp.requester_profile_id);
-  return jsonb_build_object('ok', true, 'action', bp.action, 'summary', bp.payload || jsonb_build_object('forgotten', v_n));
+  return jsonb_build_object('ok', true, 'action', bp.action, 'summary', bp.payload || v_res);
 end $function$;
 --@@ 45 funcao conv_private.ai_confirm_wave2_step(p_proposal uuid, p_message u
 CREATE OR REPLACE FUNCTION conv_private.ai_confirm_wave2_step(p_proposal uuid, p_message uuid)
@@ -4337,6 +4704,42 @@ begin
     'transcript', v_transcript, 'older_messages', v_older, 'prior_summary', v_prior,
     'agenda', conv_private.ai_agenda(v_prof_id));
 end $function$;
+--@@ 45 funcao conv_private.ai_curator_ask(p_session uuid, p jsonb)
+CREATE OR REPLACE FUNCTION conv_private.ai_curator_ask(p_session uuid, p jsonb)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare
+  v_subject text := left(trim(coalesce(p->>'subject_name', '')), 120);
+  v_question text := left(trim(coalesce(p->>'question', '')), 500);
+  v_note text; pr public.profiles%rowtype; v_phone text; v_contact uuid; v_conv uuid; v_fu uuid;
+begin
+  if length(v_subject) < 2 or length(v_question) < 10 then return conv_private.vfail('INVALID', 'Pergunta vazia.'); end if;
+  if not exists (select 1 from public.conv_ai_sessions s join public.conv_conversations c on c.id = s.conversation_id
+                 where s.id = p_session and c.kind = 'group') then
+    return conv_private.vfail('GROUP_ONLY', 'Só pergunto quando a resenha é no grupo.');
+  end if;
+  select pf.* into pr from public.profiles pf
+  join public.conv_ai_memory_candidates m on lower(m.subject_name) = lower(pf.name)
+  where m.status = 'approved' and m.kind = 'role_title' and m.content ilike 'presidente%' and coalesce(pf.is_active, true)
+  order by m.created_at desc limit 1;
+  if pr.id is null then return conv_private.vfail('NO_CURATOR', 'Não sei quem é o presidente.'); end if;
+  v_note := 'Curiosidade do João: ' || v_subject;
+  if exists (select 1 from public.conv_followups f where lower(f.note) = lower(v_note) and f.created_at > now() - interval '7 days')
+     or (select count(*) from public.conv_followups f where f.note like 'Curiosidade do João: %' and f.created_at > now() - interval '1 day') >= 3 then
+    return conv_private.vfail('RATE_LIMITED', 'Já perguntei há pouco.');
+  end if;
+  v_phone := conv_private.phone_e164(pr.phone);
+  if v_phone is null or length(v_phone) < 12 then return conv_private.vfail('NO_PHONE', 'Presidente sem telefone.'); end if;
+  if exists (select 1 from public.conv_contacts c where c.phone = v_phone and c.opt_out) then return conv_private.vfail('OPT_OUT', 'Opt-out.'); end if;
+  v_contact := conv_private.upsert_contact(v_phone, null, pr.name, true);
+  v_conv := conv_private.open_direct(v_contact);
+  insert into public.conv_followups(conversation_id, due_at, note, send_body, created_by)
+  values (v_conv, now(), v_note, v_question, null) returning id into v_fu;
+  return jsonb_build_object('ok', true, 'followup_id', v_fu, 'curator', pr.name);
+end $function$;
 --@@ 45 funcao conv_private.ai_expire_sessions()
 CREATE OR REPLACE FUNCTION conv_private.ai_expire_sessions()
  RETURNS integer
@@ -4476,6 +4879,107 @@ AS $function$
     and (nullif(trim(coalesce(p_label, '')), '') is null
          or conv_private.fold(c.type::text) like '%' || conv_private.fold(replace(trim(p_label), 'á', 'a')) || '%'
          or conv_private.fold(c.name) like '%' || conv_private.fold(trim(p_label)) || '%') $function$;
+--@@ 45 funcao conv_private.ai_form_audience(p_form uuid)
+CREATE OR REPLACE FUNCTION conv_private.ai_form_audience(p_form uuid)
+ RETURNS TABLE(profile_id uuid, name text, phone text, responded boolean, responded_at timestamp with time zone, opted_out boolean)
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+  select x.id, x.name, x.ph, x.rat is not null, x.rat,
+    (x.ph is not null and exists (select 1 from public.conv_contacts c where c.phone = x.ph and c.opt_out))
+  from (select pr.id, pr.name, conv_private.phone_e164(pr.phone) ph, r.created_at rat
+        from public.profiles pr
+        left join public.club_form_voter_receipts r on r.form_id = p_form and r.user_id = pr.id
+        where coalesce(pr.is_active, true) and pr.role::text in ('socio', 'admin')) x
+$function$;
+--@@ 45 funcao conv_private.ai_form_link(p_slug text)
+CREATE OR REPLACE FUNCTION conv_private.ai_form_link(p_slug text)
+ RETURNS text
+ LANGUAGE sql
+ IMMUTABLE
+ SET search_path TO ''
+AS $function$ select 'https://stcplay.com.br/votacao/' || p_slug $function$;
+--@@ 45 funcao conv_private.ai_form_pick(p_ref text)
+CREATE OR REPLACE FUNCTION conv_private.ai_form_pick(p_ref text)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare
+  v_ref text := nullif(trim(coalesce(p_ref, '')), '');
+  v_ids uuid[]; v_exact uuid[]; v_open uuid[]; v_list text;
+begin
+  if v_ref is null then
+    select array_agg(id order by created_at desc) into v_ids from public.club_forms f where conv_private.ai_form_state(f) = 'aberto';
+  else
+    v_ref := fin_private.fold_text(v_ref);
+    select array_agg(id order by created_at desc) into v_ids from public.club_forms
+     where fin_private.fold_text(title) like '%' || v_ref || '%' or fin_private.fold_text(slug) like '%' || replace(v_ref, ' ', '-') || '%';
+    if cardinality(v_ids) > 1 then
+      select array_agg(id) into v_exact from public.club_forms where id = any(v_ids) and fin_private.fold_text(title) = v_ref;
+      if cardinality(v_exact) = 1 then v_ids := v_exact; end if;
+    end if;
+    if cardinality(v_ids) > 1 then
+      select array_agg(id) into v_open from public.club_forms f where f.id = any(v_ids) and conv_private.ai_form_state(f) = 'aberto';
+      if cardinality(v_open) = 1 then v_ids := v_open; end if;
+    end if;
+  end if;
+  if cardinality(v_ids) = 1 then return jsonb_build_object('ok', true, 'form_id', v_ids[1]); end if;
+  select string_agg('«' || t.title || '»', ', ' order by t.created_at desc) into v_list
+  from (select title, created_at from public.club_forms where v_ids is null or id = any(v_ids) order by created_at desc limit 6) t;
+  if v_list is null then return conv_private.vfail('FORM_NOT_FOUND', 'Ainda não há formulário cadastrado.'); end if;
+  if cardinality(v_ids) > 1 then
+    return conv_private.vfail('FORM_AMBIGUOUS', 'Achei mais de um formulário: ' || v_list || '. De qual você fala?');
+  end if;
+  return conv_private.vfail('FORM_NOT_FOUND', case when v_ref is null then 'Não há formulário aberto agora. ' else 'Não achei formulário com esse nome. ' end
+    || 'Os mais recentes: ' || v_list || '. Qual deles?');
+end $function$;
+--@@ 45 funcao conv_private.ai_form_state(f club_forms)
+CREATE OR REPLACE FUNCTION conv_private.ai_form_state(f club_forms)
+ RETURNS text
+ LANGUAGE sql
+ STABLE
+ SET search_path TO ''
+AS $function$
+  select case when not f.is_active then 'encerrado'
+              when f.starts_at is not null and f.starts_at > now() then 'agendado'
+              when f.expires_at is not null and f.expires_at <= now() then 'vencido'
+              else 'aberto' end
+$function$;
+--@@ 45 funcao conv_private.ai_forms_gate(bp conv_booking_proposals, p_message
+CREATE OR REPLACE FUNCTION conv_private.ai_forms_gate(bp conv_booking_proposals, p_message uuid)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare m public.conv_messages%rowtype; v_admin uuid;
+begin
+  if bp.status = 'confirmed' then return jsonb_build_object('ok', true, 'replayed', true, 'action', bp.action, 'summary', bp.payload - 'recipients'); end if;
+  if bp.status <> 'open' then return conv_private.vfail('PROPOSAL_CLOSED', 'Essa proposta não está mais aberta.'); end if;
+  if bp.expires_at <= now() then
+    update public.conv_booking_proposals set status = 'expired' where id = bp.id;
+    return conv_private.vfail('PROPOSAL_EXPIRED', 'A proposta venceu. Posso montar outra.');
+  end if;
+  select * into m from public.conv_messages where id = p_message and direction = 'inbound' and conversation_id = bp.conversation_id;
+  if not found or m.created_at <= bp.created_at then
+    return conv_private.vfail('CONFIRMATION_NOT_AFTER_PROPOSAL', 'A confirmação precisa vir depois da proposta.');
+  end if;
+  if m.kind <> 'text' or not (conv_private.is_confirmation(m.body) or conv_private.is_semantic_acceptance(m.body, false)) then
+    return conv_private.vfail('NOT_EXPLICIT', 'Não entendi como confirmação clara.');
+  end if;
+  if m.sender_contact_id is distinct from bp.requester_contact_id then
+    return conv_private.vfail('NOT_AUTHORIZED_TO_CONFIRM', 'Só o administrador que pediu pode confirmar.');
+  end if;
+  v_admin := conv_private.ai_admin_requester(bp.session_id);
+  if v_admin is null or v_admin <> bp.requester_profile_id then
+    update public.conv_booking_proposals set status = 'failed', failure_code = 'ADMIN_ONLY_PRIVATE' where id = bp.id;
+    return conv_private.vfail('ADMIN_ONLY_PRIVATE', 'Isso só um administrador faz, e só na conversa privada comigo.');
+  end if;
+  return null;
+end $function$;
 --@@ 45 funcao conv_private.ai_group_context(p_session uuid)
 CREATE OR REPLACE FUNCTION conv_private.ai_group_context(p_session uuid)
  RETURNS jsonb
@@ -6111,6 +6615,44 @@ begin
   end if;
   return null;
 end $function$;
+--@@ 45 funcao conv_private.birthdays_today(p_today date)
+CREATE OR REPLACE FUNCTION conv_private.birthdays_today(p_today date)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare
+  v_out jsonb := '[]'::jsonb; pr record; v_phone text; v_contact uuid; v_conv uuid; v_opt boolean;
+  v_leap boolean := (extract(year from p_today)::int % 4 = 0 and extract(year from p_today)::int % 100 <> 0)
+                    or extract(year from p_today)::int % 400 = 0;
+begin
+  for pr in
+    select p.id, p.name, p.phone from public.profiles p
+    where coalesce(p.is_active, true)
+      and p.birth_month = extract(month from p_today)::int
+      and (p.birth_day = extract(day from p_today)::int
+           or (not v_leap and p.birth_month = 2 and p.birth_day = 29 and extract(day from p_today)::int = 28))
+    order by p.name
+  loop
+    v_phone := conv_private.phone_e164(pr.phone);
+    v_conv := null; v_opt := false;
+    if v_phone is not null and length(v_phone) >= 12 then
+      select coalesce(bool_or(c.opt_out), false) into v_opt from public.conv_contacts c where c.phone = v_phone;
+      if not v_opt then
+        v_contact := conv_private.upsert_contact(v_phone, null, pr.name, true);
+        v_conv := conv_private.open_direct(v_contact);
+      end if;
+    end if;
+    v_out := v_out || jsonb_build_object(
+      'profile_id', pr.id, 'name', pr.name, 'phone', case when v_phone is not null and length(v_phone) >= 12 then v_phone end,
+      'direct_conversation_id', v_conv,
+      'memories', coalesce((select jsonb_agg(m.content order by m.created_at)
+                            from public.conv_ai_memory_candidates m
+                            where m.status = 'approved' and lower(m.subject_name) = lower(pr.name)), '[]'::jsonb));
+  end loop;
+  return v_out;
+end $function$;
 --@@ 45 funcao conv_private.br_local_phone(p text)
 CREATE OR REPLACE FUNCTION conv_private.br_local_phone(p text)
  RETURNS text
@@ -6756,6 +7298,16 @@ select case when coalesce(a.qty,0)=0 then null else
   ) end
 from agg a
 $function$;
+--@@ 45 funcao conv_private.members_group_conversation()
+CREATE OR REPLACE FUNCTION conv_private.members_group_conversation()
+ RETURNS uuid
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+  select c.id from public.conv_conversations c join public.conv_groups g on g.id = c.group_id
+  where c.kind = 'group' and c.status = 'open' and g.status = 'allowed' and g.ai_enabled
+  order by g.last_seen_at desc nulls last limit 1 $function$;
 --@@ 45 funcao conv_private.merge_contacts(p_keep uuid, p_drop uuid)
 CREATE OR REPLACE FUNCTION conv_private.merge_contacts(p_keep uuid, p_drop uuid)
  RETURNS uuid
@@ -10306,6 +10858,13 @@ CREATE OR REPLACE FUNCTION public.conv_svc_ai_admin_adm_propose(p_session uuid, 
  SECURITY DEFINER
  SET search_path TO ''
 AS $function$ select conv_private.ai_admin_adm_propose(p_session, p) $function$;
+--@@ 45 funcao public.conv_svc_ai_admin_birthday_set(p_session uuid, p jsonb)
+CREATE OR REPLACE FUNCTION public.conv_svc_ai_admin_birthday_set(p_session uuid, p jsonb)
+ RETURNS jsonb
+ LANGUAGE sql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$ select conv_private.ai_admin_birthday_set(p_session, p) $function$;
 --@@ 45 funcao public.conv_svc_ai_admin_briefing_propose(p_session uuid, p jso
 CREATE OR REPLACE FUNCTION public.conv_svc_ai_admin_briefing_propose(p_session uuid, p jsonb)
  RETURNS jsonb
@@ -10341,6 +10900,27 @@ CREATE OR REPLACE FUNCTION public.conv_svc_ai_admin_finance_propose(p_session uu
  SECURITY DEFINER
  SET search_path TO ''
 AS $function$ select conv_private.ai_admin_finance_propose(p_session, p) $function$;
+--@@ 45 funcao public.conv_svc_ai_admin_forms_propose(p_session uuid, p jsonb)
+CREATE OR REPLACE FUNCTION public.conv_svc_ai_admin_forms_propose(p_session uuid, p jsonb)
+ RETURNS jsonb
+ LANGUAGE sql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$ select conv_private.ai_admin_forms_propose(p_session, p) $function$;
+--@@ 45 funcao public.conv_svc_ai_admin_forms_read(p_session uuid, p_domain te
+CREATE OR REPLACE FUNCTION public.conv_svc_ai_admin_forms_read(p_session uuid, p_domain text, p_args jsonb DEFAULT '{}'::jsonb)
+ RETURNS jsonb
+ LANGUAGE sql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$ select conv_private.ai_admin_forms_read(p_session, p_domain, coalesce(p_args, '{}'::jsonb)) $function$;
+--@@ 45 funcao public.conv_svc_ai_admin_group_post_propose(p_session uuid, p j
+CREATE OR REPLACE FUNCTION public.conv_svc_ai_admin_group_post_propose(p_session uuid, p jsonb)
+ RETURNS jsonb
+ LANGUAGE sql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$ select conv_private.ai_admin_group_post_propose(p_session, p) $function$;
 --@@ 45 funcao public.conv_svc_ai_admin_member_onboard(p_proposal uuid, p_prof
 CREATE OR REPLACE FUNCTION public.conv_svc_ai_admin_member_onboard(p_proposal uuid, p_profile uuid, p_message uuid)
  RETURNS jsonb
@@ -10462,6 +11042,13 @@ CREATE OR REPLACE FUNCTION public.conv_svc_ai_context(p_session uuid)
  SECURITY DEFINER
  SET search_path TO ''
 AS $function$ select conv_private.ai_context(p_session) $function$;
+--@@ 45 funcao public.conv_svc_ai_curator_ask(p_session uuid, p jsonb)
+CREATE OR REPLACE FUNCTION public.conv_svc_ai_curator_ask(p_session uuid, p jsonb)
+ RETURNS jsonb
+ LANGUAGE sql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$ select conv_private.ai_curator_ask(p_session, p) $function$;
 --@@ 45 funcao public.conv_svc_ai_expire_sessions()
 CREATE OR REPLACE FUNCTION public.conv_svc_ai_expire_sessions()
  RETURNS integer
@@ -10678,6 +11265,13 @@ CREATE OR REPLACE FUNCTION public.conv_svc_available_slots(p_date date, p_court 
  SECURITY DEFINER
  SET search_path TO ''
 AS $function$ select conv_private.available_slots(p_date, p_court, p_duration) $function$;
+--@@ 45 funcao public.conv_svc_birthdays_today(p_today date)
+CREATE OR REPLACE FUNCTION public.conv_svc_birthdays_today(p_today date)
+ RETURNS jsonb
+ LANGUAGE sql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$ select conv_private.birthdays_today(p_today) $function$;
 --@@ 45 funcao public.conv_svc_channel_delivery()
 CREATE OR REPLACE FUNCTION public.conv_svc_channel_delivery()
  RETURNS TABLE(inbound_token_hash text, bot_phone text, bot_lids text[], ai_direct_enabled boolean, ai_group_enabled boolean, mention_verified_at timestamp with time zone, group_session_minutes smallint, institutional_name text)
@@ -17021,7 +17615,7 @@ alter table public.conv_automations add constraint conv_automations_status_check
 --@@ 55 restricao public.conv_automations.conv_automations_trigger_type_check
 alter table public.conv_automations add constraint conv_automations_trigger_type_check CHECK ((trigger_type = ANY (ARRAY['scheduled'::text, 'conditional'::text, 'event'::text, 'manual'::text])));
 --@@ 55 restricao public.conv_booking_proposals.conv_booking_proposals_action_che
-alter table public.conv_booking_proposals add constraint conv_booking_proposals_action_check CHECK ((action = ANY (ARRAY['adm_student_status'::text, 'adm_followup_done'::text, 'adm_briefing_recipient'::text, 'adm_court_block'::text, 'adm_dependent_create'::text, 'adm_message_send'::text, 'join'::text, 'fin_charge_adjust'::text, 'fin_payment_reverse'::text, 'fin_pendency_send'::text, 'create'::text, 'fin_access_approve'::text, 'fin_charge_cancel'::text, 'adm_pref_set'::text, 'adm_memory_forget'::text, 'fin_member_create'::text, 'fin_payment'::text, 'cancel'::text, 'adm_followup_create'::text, 'adm_signature_resend'::text, 'adm_reservation_cancel'::text, 'adm_access_reject'::text, 'student_card_renew'::text, 'fin_receipt_approve'::text, 'fin_entry_create'::text, 'adm_announcement_deactivate'::text, 'adm_member_status'::text, 'fin_pendency_collection'::text, 'fin_receipt_reject'::text, 'adm_announcement_create'::text, 'reschedule'::text, 'fin_charges_generate'::text, 'fin_pendency_create'::text, 'participants'::text, 'adm_broadcast_send'::text])));
+alter table public.conv_booking_proposals add constraint conv_booking_proposals_action_check CHECK ((action = ANY (ARRAY['adm_student_status'::text, 'adm_followup_done'::text, 'adm_briefing_recipient'::text, 'adm_court_block'::text, 'adm_dependent_create'::text, 'adm_message_send'::text, 'join'::text, 'fin_charge_adjust'::text, 'fin_payment_reverse'::text, 'fin_pendency_send'::text, 'create'::text, 'fin_access_approve'::text, 'fin_charge_cancel'::text, 'adm_pref_set'::text, 'adm_memory_forget'::text, 'fin_member_create'::text, 'adm_form_toggle'::text, 'fin_payment'::text, 'cancel'::text, 'adm_group_post'::text, 'adm_form_nudge'::text, 'adm_followup_create'::text, 'adm_signature_resend'::text, 'adm_reservation_cancel'::text, 'adm_access_reject'::text, 'student_card_renew'::text, 'fin_receipt_approve'::text, 'fin_entry_create'::text, 'adm_form_create'::text, 'adm_announcement_deactivate'::text, 'adm_member_status'::text, 'fin_pendency_collection'::text, 'fin_receipt_reject'::text, 'adm_announcement_create'::text, 'reschedule'::text, 'fin_charges_generate'::text, 'fin_pendency_create'::text, 'participants'::text, 'adm_broadcast_send'::text])));
 --@@ 55 restricao public.conv_booking_proposals.conv_booking_proposals_pkey
 alter table public.conv_booking_proposals add constraint conv_booking_proposals_pkey PRIMARY KEY (id);
 --@@ 55 restricao public.conv_booking_proposals.conv_booking_proposals_request_ke
@@ -17488,6 +18082,13 @@ alter table public.point_rules add constraint point_rules_rule_key_key UNIQUE (r
 alter table public.products add constraint products_pkey PRIMARY KEY (id);
 --@@ 55 restricao public.professors.professors_pkey
 alter table public.professors add constraint professors_pkey PRIMARY KEY (id);
+--@@ 55 restricao public.profiles.profiles_birthday_check
+alter table public.profiles add constraint profiles_birthday_check CHECK ((((birth_day IS NULL) AND (birth_month IS NULL)) OR ((birth_month IS NOT NULL) AND (birth_day IS NOT NULL) AND ((birth_month >= 1) AND (birth_month <= 12)) AND ((birth_day >= 1) AND (birth_day <=
+CASE
+    WHEN (birth_month = 2) THEN 29
+    WHEN (birth_month = ANY (ARRAY[4, 6, 9, 11])) THEN 30
+    ELSE 31
+END)))));
 --@@ 55 restricao public.profiles.profiles_phone_key
 alter table public.profiles add constraint profiles_phone_key UNIQUE (phone);
 --@@ 55 restricao public.profiles.profiles_pkey
@@ -19497,6 +20098,8 @@ revoke all on routine conv_private.ai_active_settings() from public, anon, authe
 revoke all on routine conv_private.ai_admin_access_propose(uuid,jsonb) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao conv_private.ai_admin_adm_propose(uuid,jsonb)
 revoke all on routine conv_private.ai_admin_adm_propose(uuid,jsonb) from public, anon, authenticated, service_role;
+--@@ 89 revoke-funcao conv_private.ai_admin_birthday_set(uuid,jsonb)
+revoke all on routine conv_private.ai_admin_birthday_set(uuid,jsonb) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao conv_private.ai_admin_briefing_propose(uuid,jsonb)
 revoke all on routine conv_private.ai_admin_briefing_propose(uuid,jsonb) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao conv_private.ai_admin_broadcast_propose(uuid,jsonb)
@@ -19515,6 +20118,12 @@ revoke all on routine conv_private.ai_admin_finance_propose_pendency(uuid,jsonb)
 revoke all on routine conv_private.ai_admin_finance_propose_w2(uuid,jsonb) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao conv_private.ai_admin_finance_propose_w6(uuid,jsonb)
 revoke all on routine conv_private.ai_admin_finance_propose_w6(uuid,jsonb) from public, anon, authenticated, service_role;
+--@@ 89 revoke-funcao conv_private.ai_admin_forms_propose(uuid,jsonb)
+revoke all on routine conv_private.ai_admin_forms_propose(uuid,jsonb) from public, anon, authenticated, service_role;
+--@@ 89 revoke-funcao conv_private.ai_admin_forms_read(uuid,text,jsonb)
+revoke all on routine conv_private.ai_admin_forms_read(uuid,text,jsonb) from public, anon, authenticated, service_role;
+--@@ 89 revoke-funcao conv_private.ai_admin_group_post_propose(uuid,jsonb)
+revoke all on routine conv_private.ai_admin_group_post_propose(uuid,jsonb) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao conv_private.ai_admin_members(uuid)
 revoke all on routine conv_private.ai_admin_members(uuid) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao conv_private.ai_admin_memories(uuid,text)
@@ -19559,6 +20168,10 @@ revoke all on routine conv_private.ai_confirm_pre_briefing_step(uuid,uuid) from 
 revoke all on routine conv_private.ai_confirm_pre_broadcast_step(uuid,uuid) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao conv_private.ai_confirm_pre_dependent_step(uuid,uuid)
 revoke all on routine conv_private.ai_confirm_pre_dependent_step(uuid,uuid) from public, anon, authenticated, service_role;
+--@@ 89 revoke-funcao conv_private.ai_confirm_pre_forms_step(uuid,uuid)
+revoke all on routine conv_private.ai_confirm_pre_forms_step(uuid,uuid) from public, anon, authenticated, service_role;
+--@@ 89 revoke-funcao conv_private.ai_confirm_pre_group_post_step(uuid,uuid)
+revoke all on routine conv_private.ai_confirm_pre_group_post_step(uuid,uuid) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao conv_private.ai_confirm_pre_memory_step(uuid,uuid)
 revoke all on routine conv_private.ai_confirm_pre_memory_step(uuid,uuid) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao conv_private.ai_confirm_pre_message_step(uuid,uuid)
@@ -19575,10 +20188,22 @@ revoke all on routine conv_private.ai_confirm_wave6_step(uuid,uuid) from public,
 revoke all on routine conv_private.ai_confirm_wave7_step(uuid,uuid) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao conv_private.ai_context(uuid)
 revoke all on routine conv_private.ai_context(uuid) from public, anon, authenticated, service_role;
+--@@ 89 revoke-funcao conv_private.ai_curator_ask(uuid,jsonb)
+revoke all on routine conv_private.ai_curator_ask(uuid,jsonb) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao conv_private.ai_expire_sessions()
 revoke all on routine conv_private.ai_expire_sessions() from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao conv_private.ai_find_courts(text)
 revoke all on routine conv_private.ai_find_courts(text) from public, anon, authenticated, service_role;
+--@@ 89 revoke-funcao conv_private.ai_form_audience(uuid)
+revoke all on routine conv_private.ai_form_audience(uuid) from public, anon, authenticated, service_role;
+--@@ 89 revoke-funcao conv_private.ai_form_link(text)
+revoke all on routine conv_private.ai_form_link(text) from public, anon, authenticated, service_role;
+--@@ 89 revoke-funcao conv_private.ai_form_pick(text)
+revoke all on routine conv_private.ai_form_pick(text) from public, anon, authenticated, service_role;
+--@@ 89 revoke-funcao conv_private.ai_form_state(club_forms)
+revoke all on routine conv_private.ai_form_state(club_forms) from public, anon, authenticated, service_role;
+--@@ 89 revoke-funcao conv_private.ai_forms_gate(conv_booking_proposals,uuid)
+revoke all on routine conv_private.ai_forms_gate(conv_booking_proposals,uuid) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao conv_private.ai_group_context(uuid)
 revoke all on routine conv_private.ai_group_context(uuid) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao conv_private.ai_handoff(uuid,text,text)
@@ -19621,6 +20246,8 @@ revoke all on routine conv_private.apply_edit_with_mention(text,text,boolean,tex
 revoke all on routine conv_private.apply_reaction(text,text,boolean) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao conv_private.available_slots(date,uuid,integer)
 revoke all on routine conv_private.available_slots(date,uuid,integer) from public, anon, authenticated, service_role;
+--@@ 89 revoke-funcao conv_private.birthdays_today(date)
+revoke all on routine conv_private.birthdays_today(date) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao conv_private.br_local_phone(text)
 revoke all on routine conv_private.br_local_phone(text) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao conv_private.briefing_list_names(uuid,boolean)
@@ -19665,6 +20292,8 @@ revoke all on routine conv_private.log_webhook(text,text,text) from public, anon
 revoke all on routine conv_private.mark_read_collect(uuid) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao conv_private.mark_unread(uuid)
 revoke all on routine conv_private.mark_unread(uuid) from public, anon, authenticated, service_role;
+--@@ 89 revoke-funcao conv_private.members_group_conversation()
+revoke all on routine conv_private.members_group_conversation() from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao conv_private.merge_contacts(uuid,uuid)
 revoke all on routine conv_private.merge_contacts(uuid,uuid) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao conv_private.message_target(uuid)
@@ -19757,6 +20386,8 @@ revoke all on routine conv_svc_admin_briefing_targets() from public, anon, authe
 revoke all on routine conv_svc_ai_admin_access_propose(uuid,jsonb) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao conv_svc_ai_admin_adm_propose(uuid,jsonb)
 revoke all on routine conv_svc_ai_admin_adm_propose(uuid,jsonb) from public, anon, authenticated, service_role;
+--@@ 89 revoke-funcao conv_svc_ai_admin_birthday_set(uuid,jsonb)
+revoke all on routine conv_svc_ai_admin_birthday_set(uuid,jsonb) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao conv_svc_ai_admin_briefing_propose(uuid,jsonb)
 revoke all on routine conv_svc_ai_admin_briefing_propose(uuid,jsonb) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao conv_svc_ai_admin_broadcast_propose(uuid,jsonb)
@@ -19767,6 +20398,12 @@ revoke all on routine conv_svc_ai_admin_dependent_propose(uuid,jsonb) from publi
 revoke all on routine conv_svc_ai_admin_file(uuid,jsonb) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao conv_svc_ai_admin_finance_propose(uuid,jsonb)
 revoke all on routine conv_svc_ai_admin_finance_propose(uuid,jsonb) from public, anon, authenticated, service_role;
+--@@ 89 revoke-funcao conv_svc_ai_admin_forms_propose(uuid,jsonb)
+revoke all on routine conv_svc_ai_admin_forms_propose(uuid,jsonb) from public, anon, authenticated, service_role;
+--@@ 89 revoke-funcao conv_svc_ai_admin_forms_read(uuid,text,jsonb)
+revoke all on routine conv_svc_ai_admin_forms_read(uuid,text,jsonb) from public, anon, authenticated, service_role;
+--@@ 89 revoke-funcao conv_svc_ai_admin_group_post_propose(uuid,jsonb)
+revoke all on routine conv_svc_ai_admin_group_post_propose(uuid,jsonb) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao conv_svc_ai_admin_member_onboard(uuid,uuid,uuid)
 revoke all on routine conv_svc_ai_admin_member_onboard(uuid,uuid,uuid) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao conv_svc_ai_admin_members(uuid)
@@ -19799,6 +20436,8 @@ revoke all on routine conv_svc_ai_club_roster() from public, anon, authenticated
 revoke all on routine conv_svc_ai_confirm(uuid,uuid) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao conv_svc_ai_context(uuid)
 revoke all on routine conv_svc_ai_context(uuid) from public, anon, authenticated, service_role;
+--@@ 89 revoke-funcao conv_svc_ai_curator_ask(uuid,jsonb)
+revoke all on routine conv_svc_ai_curator_ask(uuid,jsonb) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao conv_svc_ai_expire_sessions()
 revoke all on routine conv_svc_ai_expire_sessions() from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao conv_svc_ai_financial_context()
@@ -19851,6 +20490,8 @@ revoke all on routine conv_svc_automation_test_payload(uuid,uuid) from public, a
 revoke all on routine conv_svc_automation_tick() from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao conv_svc_available_slots(date,uuid,integer)
 revoke all on routine conv_svc_available_slots(date,uuid,integer) from public, anon, authenticated, service_role;
+--@@ 89 revoke-funcao conv_svc_birthdays_today(date)
+revoke all on routine conv_svc_birthdays_today(date) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao conv_svc_channel_delivery()
 revoke all on routine conv_svc_channel_delivery() from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao conv_svc_claim_due_followups(integer)
@@ -20673,6 +21314,8 @@ grant execute on routine conv_svc_admin_briefing_targets() to service_role;
 grant execute on routine conv_svc_ai_admin_access_propose(uuid,jsonb) to service_role;
 --@@ 90 grant-funcao conv_svc_ai_admin_adm_propose(uuid,jsonb)→service_role
 grant execute on routine conv_svc_ai_admin_adm_propose(uuid,jsonb) to service_role;
+--@@ 90 grant-funcao conv_svc_ai_admin_birthday_set(uuid,jsonb)→service_role
+grant execute on routine conv_svc_ai_admin_birthday_set(uuid,jsonb) to service_role;
 --@@ 90 grant-funcao conv_svc_ai_admin_briefing_propose(uuid,jsonb)→service_role
 grant execute on routine conv_svc_ai_admin_briefing_propose(uuid,jsonb) to service_role;
 --@@ 90 grant-funcao conv_svc_ai_admin_broadcast_propose(uuid,jsonb)→service_role
@@ -20683,6 +21326,12 @@ grant execute on routine conv_svc_ai_admin_dependent_propose(uuid,jsonb) to serv
 grant execute on routine conv_svc_ai_admin_file(uuid,jsonb) to service_role;
 --@@ 90 grant-funcao conv_svc_ai_admin_finance_propose(uuid,jsonb)→service_role
 grant execute on routine conv_svc_ai_admin_finance_propose(uuid,jsonb) to service_role;
+--@@ 90 grant-funcao conv_svc_ai_admin_forms_propose(uuid,jsonb)→service_role
+grant execute on routine conv_svc_ai_admin_forms_propose(uuid,jsonb) to service_role;
+--@@ 90 grant-funcao conv_svc_ai_admin_forms_read(uuid,text,jsonb)→service_role
+grant execute on routine conv_svc_ai_admin_forms_read(uuid,text,jsonb) to service_role;
+--@@ 90 grant-funcao conv_svc_ai_admin_group_post_propose(uuid,jsonb)→service_role
+grant execute on routine conv_svc_ai_admin_group_post_propose(uuid,jsonb) to service_role;
 --@@ 90 grant-funcao conv_svc_ai_admin_member_onboard(uuid,uuid,uuid)→service_role
 grant execute on routine conv_svc_ai_admin_member_onboard(uuid,uuid,uuid) to service_role;
 --@@ 90 grant-funcao conv_svc_ai_admin_members(uuid)→service_role
@@ -20715,6 +21364,8 @@ grant execute on routine conv_svc_ai_club_roster() to service_role;
 grant execute on routine conv_svc_ai_confirm(uuid,uuid) to service_role;
 --@@ 90 grant-funcao conv_svc_ai_context(uuid)→service_role
 grant execute on routine conv_svc_ai_context(uuid) to service_role;
+--@@ 90 grant-funcao conv_svc_ai_curator_ask(uuid,jsonb)→service_role
+grant execute on routine conv_svc_ai_curator_ask(uuid,jsonb) to service_role;
 --@@ 90 grant-funcao conv_svc_ai_expire_sessions()→service_role
 grant execute on routine conv_svc_ai_expire_sessions() to service_role;
 --@@ 90 grant-funcao conv_svc_ai_financial_context()→service_role
@@ -20767,6 +21418,8 @@ grant execute on routine conv_svc_automation_test_payload(uuid,uuid) to service_
 grant execute on routine conv_svc_automation_tick() to service_role;
 --@@ 90 grant-funcao conv_svc_available_slots(date,uuid,integer)→service_role
 grant execute on routine conv_svc_available_slots(date,uuid,integer) to service_role;
+--@@ 90 grant-funcao conv_svc_birthdays_today(date)→service_role
+grant execute on routine conv_svc_birthdays_today(date) to service_role;
 --@@ 90 grant-funcao conv_svc_channel_delivery()→service_role
 grant execute on routine conv_svc_channel_delivery() to service_role;
 --@@ 90 grant-funcao conv_svc_claim_due_followups(integer)→service_role

@@ -1,5 +1,5 @@
 # Funções
-> 475 funções nos schemas conv_private, fin_private, public, sig_private. Corpo completo sob demanda: `select pg_get_functiondef('<schema.nome>(<args>)'::regprocedure)`.
+> 495 funções nos schemas conv_private, fin_private, public, sig_private. Corpo completo sob demanda: `select pg_get_functiondef('<schema.nome>(<args>)'::regprocedure)`.
 
 | Função | Argumentos | Retorno | Ling. | Segurança | anon | Nota |
 |---|---|---|---|---|---|---|
@@ -12,6 +12,7 @@
 | conv_private.ai_active_settings | — | `conv_ai_settings` | sql | DEFINER | não |  |
 | conv_private.ai_admin_access_propose | `p_session uuid, p jsonb` | `jsonb` | plpgsql | DEFINER | não |  |
 | conv_private.ai_admin_adm_propose | `p_session uuid, p jsonb` | `jsonb` | plpgsql | DEFINER | não |  |
+| conv_private.ai_admin_birthday_set | `p_session uuid, p jsonb` | `jsonb` | plpgsql | DEFINER | não |  |
 | conv_private.ai_admin_briefing_propose | `p_session uuid, p jsonb` | `jsonb` | plpgsql | DEFINER | não |  |
 | conv_private.ai_admin_broadcast_propose | `p_session uuid, p jsonb` | `jsonb` | plpgsql | DEFINER | não |  |
 | conv_private.ai_admin_dependent_propose | `p_session uuid, p jsonb` | `jsonb` | plpgsql | DEFINER | não |  |
@@ -21,6 +22,9 @@
 | conv_private.ai_admin_finance_propose_pendency | `p_session uuid, p jsonb` | `jsonb` | plpgsql | DEFINER | não |  |
 | conv_private.ai_admin_finance_propose_w2 | `p_session uuid, p jsonb` | `jsonb` | sql | DEFINER | não |  |
 | conv_private.ai_admin_finance_propose_w6 | `p_session uuid, p jsonb` | `jsonb` | plpgsql | DEFINER | não |  |
+| conv_private.ai_admin_forms_propose | `p_session uuid, p jsonb` | `jsonb` | plpgsql | DEFINER | não |  |
+| conv_private.ai_admin_forms_read | `p_session uuid, p_domain text, p_args jsonb` | `jsonb` | plpgsql | DEFINER | não |  |
+| conv_private.ai_admin_group_post_propose | `p_session uuid, p jsonb` | `jsonb` | plpgsql | DEFINER | não |  |
 | conv_private.ai_admin_members | `p_session uuid` | `jsonb` | plpgsql | DEFINER | não |  |
 | conv_private.ai_admin_memories | `p_session uuid, p_subject text` | `jsonb` | plpgsql | DEFINER | não |  |
 | conv_private.ai_admin_memory_forget_propose | `p_session uuid, p jsonb` | `jsonb` | plpgsql | DEFINER | não |  |
@@ -43,6 +47,8 @@
 | conv_private.ai_confirm_pre_briefing_step | `p_proposal uuid, p_message uuid` | `jsonb` | plpgsql | DEFINER | não |  |
 | conv_private.ai_confirm_pre_broadcast_step | `p_proposal uuid, p_message uuid` | `jsonb` | plpgsql | DEFINER | não |  |
 | conv_private.ai_confirm_pre_dependent_step | `p_proposal uuid, p_message uuid` | `jsonb` | plpgsql | DEFINER | não |  |
+| conv_private.ai_confirm_pre_forms_step | `p_proposal uuid, p_message uuid` | `jsonb` | plpgsql | DEFINER | não |  |
+| conv_private.ai_confirm_pre_group_post_step | `p_proposal uuid, p_message uuid` | `jsonb` | plpgsql | DEFINER | não |  |
 | conv_private.ai_confirm_pre_memory_step | `p_proposal uuid, p_message uuid` | `jsonb` | plpgsql | DEFINER | não |  |
 | conv_private.ai_confirm_pre_message_step | `p_proposal uuid, p_message uuid` | `jsonb` | plpgsql | DEFINER | não |  |
 | conv_private.ai_confirm_single_step | `p_proposal uuid, p_message uuid` | `jsonb` | plpgsql | DEFINER | não |  |
@@ -51,9 +57,15 @@
 | conv_private.ai_confirm_wave6_step | `p_proposal uuid, p_message uuid` | `jsonb` | plpgsql | DEFINER | não |  |
 | conv_private.ai_confirm_wave7_step | `p_proposal uuid, p_message uuid` | `jsonb` | plpgsql | DEFINER | não |  |
 | conv_private.ai_context | `p_session uuid` | `jsonb` | plpgsql | DEFINER | não |  |
+| conv_private.ai_curator_ask | `p_session uuid, p jsonb` | `jsonb` | plpgsql | DEFINER | não |  |
 | conv_private.ai_expire_sessions | — | `integer` | plpgsql | DEFINER | não |  |
 | conv_private.ai_financial_context | — | `jsonb` | sql | DEFINER | sim |  |
 | conv_private.ai_find_courts | `p_label text` | `jsonb` | sql | DEFINER | não |  |
+| conv_private.ai_form_audience | `p_form uuid` | `TABLE(profile_id uuid, name text, phone text, responded boo…` | sql | DEFINER | não |  |
+| conv_private.ai_form_link | `p_slug text` | `text` | sql | invoker | não |  |
+| conv_private.ai_form_pick | `p_ref text` | `jsonb` | plpgsql | DEFINER | não |  |
+| conv_private.ai_form_state | `f club_forms` | `text` | sql | invoker | não |  |
+| conv_private.ai_forms_gate | `bp conv_booking_proposals, p_message uuid` | `jsonb` | plpgsql | DEFINER | não |  |
 | conv_private.ai_group_context | `p_session uuid` | `jsonb` | plpgsql | DEFINER | não |  |
 | conv_private.ai_handoff | `p_session uuid, p_kind text, p_note text` | `void` | plpgsql | DEFINER | não |  |
 | conv_private.ai_is_latest | `p_message uuid` | `boolean` | sql | DEFINER | não |  |
@@ -97,6 +109,7 @@
 | conv_private.automation_vars | `p_source text` | `text[]` | sql | invoker | sim |  |
 | conv_private.available_slots | `p_date date, p_court uuid, p_duration integer` | `text[]` | plpgsql | DEFINER | não |  |
 | conv_private.begin_op | `p_key uuid, p_action text` | `jsonb` | plpgsql | DEFINER | sim |  |
+| conv_private.birthdays_today | `p_today date` | `jsonb` | plpgsql | DEFINER | não |  |
 | conv_private.br_local_phone | `p text` | `text` | plpgsql | invoker | não |  |
 | conv_private.briefing_list_names | `p_extra uuid, p_enabled boolean` | `text` | sql | DEFINER | não |  |
 | conv_private.brl | `p_cents bigint` | `text` | sql | invoker | sim |  |
@@ -129,6 +142,7 @@
 | conv_private.mark_read_collect | `p_conversation uuid` | `TABLE(destination text, provider_ids text[], is_group boole…` | plpgsql | DEFINER | não |  |
 | conv_private.mark_unread | `p_conversation uuid` | `void` | plpgsql | DEFINER | não |  |
 | conv_private.member_pendency_subject | `p_profile uuid, p_as_of date, p_include_future boolean` | `jsonb` | sql | DEFINER | sim |  |
+| conv_private.members_group_conversation | — | `uuid` | sql | DEFINER | não |  |
 | conv_private.merge_contacts | `p_keep uuid, p_drop uuid` | `uuid` | plpgsql | DEFINER | não |  |
 | conv_private.message_target | `p_message uuid` | `TABLE(provider_message_id text, destination text, direction…` | sql | DEFINER | não |  |
 | conv_private.min_to_hhmm | `p integer` | `text` | sql | invoker | sim |  |
@@ -264,11 +278,15 @@
 | public.conv_svc_admin_briefing_targets | — | `TABLE(profile_id uuid, name text, conversation_id uuid)` | sql | DEFINER | não |  |
 | public.conv_svc_ai_admin_access_propose | `p_session uuid, p jsonb` | `jsonb` | sql | DEFINER | não |  |
 | public.conv_svc_ai_admin_adm_propose | `p_session uuid, p jsonb` | `jsonb` | sql | DEFINER | não |  |
+| public.conv_svc_ai_admin_birthday_set | `p_session uuid, p jsonb` | `jsonb` | sql | DEFINER | não |  |
 | public.conv_svc_ai_admin_briefing_propose | `p_session uuid, p jsonb` | `jsonb` | sql | DEFINER | não |  |
 | public.conv_svc_ai_admin_broadcast_propose | `p_session uuid, p jsonb` | `jsonb` | sql | DEFINER | não |  |
 | public.conv_svc_ai_admin_dependent_propose | `p_session uuid, p jsonb` | `jsonb` | sql | DEFINER | não |  |
 | public.conv_svc_ai_admin_file | `p_session uuid, p jsonb` | `jsonb` | sql | DEFINER | não |  |
 | public.conv_svc_ai_admin_finance_propose | `p_session uuid, p jsonb` | `jsonb` | sql | DEFINER | não |  |
+| public.conv_svc_ai_admin_forms_propose | `p_session uuid, p jsonb` | `jsonb` | sql | DEFINER | não |  |
+| public.conv_svc_ai_admin_forms_read | `p_session uuid, p_domain text, p_args jsonb` | `jsonb` | sql | DEFINER | não |  |
+| public.conv_svc_ai_admin_group_post_propose | `p_session uuid, p jsonb` | `jsonb` | sql | DEFINER | não |  |
 | public.conv_svc_ai_admin_member_onboard | `p_proposal uuid, p_profile uuid, p_message uuid` | `jsonb` | sql | DEFINER | não |  |
 | public.conv_svc_ai_admin_members | `p_session uuid` | `jsonb` | sql | DEFINER | não |  |
 | public.conv_svc_ai_admin_memories | `p_session uuid, p_subject text` | `jsonb` | sql | DEFINER | não |  |
@@ -285,6 +303,7 @@
 | public.conv_svc_ai_club_roster | — | `jsonb` | sql | DEFINER | não |  |
 | public.conv_svc_ai_confirm | `p_proposal uuid, p_message uuid` | `jsonb` | sql | DEFINER | não |  |
 | public.conv_svc_ai_context | `p_session uuid` | `jsonb` | sql | DEFINER | não |  |
+| public.conv_svc_ai_curator_ask | `p_session uuid, p jsonb` | `jsonb` | sql | DEFINER | não |  |
 | public.conv_svc_ai_expire_sessions | — | `integer` | sql | DEFINER | não |  |
 | public.conv_svc_ai_financial_context | — | `jsonb` | sql | DEFINER | não |  |
 | public.conv_svc_ai_find_courts | `p_label text` | `jsonb` | sql | DEFINER | não |  |
@@ -311,6 +330,7 @@
 | public.conv_svc_automation_test_payload | `p_actor uuid, p_id uuid` | `jsonb` | sql | DEFINER | não |  |
 | public.conv_svc_automation_tick | — | `jsonb` | sql | DEFINER | não |  |
 | public.conv_svc_available_slots | `p_date date, p_court uuid, p_duration integer` | `text[]` | sql | DEFINER | não |  |
+| public.conv_svc_birthdays_today | `p_today date` | `jsonb` | sql | DEFINER | não |  |
 | public.conv_svc_channel_delivery | — | `TABLE(inbound_token_hash text, bot_phone text, bot_lids tex…` | sql | DEFINER | não |  |
 | public.conv_svc_claim_due_followups | `p_limit integer` | `TABLE(followup_id uuid, conversation_id uuid, send_body tex…` | sql | DEFINER | não |  |
 | public.conv_svc_conversation_contact | `p_conversation uuid` | `TABLE(contact_id uuid, destination text, name text, avatar_…` | sql | DEFINER | não |  |

@@ -55,7 +55,7 @@
   {
    "nome": "useAsync",
    "arquivo": "components/finance/hooks.ts",
-   "usos": 25,
+   "usos": 26,
    "dados": "—"
   },
   {
@@ -79,7 +79,7 @@
   {
    "nome": "useAction",
    "arquivo": "components/finance/hooks.ts",
-   "usos": 7,
+   "usos": 8,
    "dados": "—"
   },
   {
@@ -161,6 +161,18 @@
    "dados": "—"
   },
   {
+   "nome": "useReceiptDraft",
+   "arquivo": "components/finance/member/useReceiptDraft.ts",
+   "usos": 1,
+   "dados": "—"
+  },
+  {
+   "nome": "useReceiptHints",
+   "arquivo": "components/finance/member/useReceiptDraft.ts",
+   "usos": 1,
+   "dados": "—"
+  },
+  {
    "nome": "useScoring",
    "arquivo": "components/TenisProPlayer/engine/useScoring.ts",
    "usos": 1,
@@ -195,6 +207,12 @@
    "arquivo": "components/conversations/useChatOverlay.ts",
    "usos": 0,
    "dados": "—"
+  },
+  {
+   "nome": "useMemberFinance",
+   "arquivo": "components/finance/MemberFinance.tsx",
+   "usos": 0,
+   "dados": "fin_member_charges(s) fin_member_credits(s) fin_receipt_charges(s) fin_receipt_submissions(s)"
   },
   {
    "nome": "useNewPlanPreview",
@@ -237,13 +255,13 @@
   {
    "nome": "Spinner",
    "arquivo": "components/finance/ui.tsx",
-   "usos": 26,
+   "usos": 28,
    "ui": false
   },
   {
    "nome": "Notice",
    "arquivo": "components/finance/ui.tsx",
-   "usos": 22,
+   "usos": 23,
    "ui": false
   },
   {
@@ -661,6 +679,12 @@
    "ui": false
   },
   {
+   "nome": "AgendaLoadError",
+   "arquivo": "components/agenda/AgendaLoadError.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
    "nome": "App",
    "arquivo": "App.tsx",
    "usos": 1,
@@ -787,8 +811,20 @@
    "ui": false
   },
   {
+   "nome": "ChargeCard",
+   "arquivo": "components/finance/member/ChargeCard.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
    "nome": "ChargeHistory",
    "arquivo": "components/finance/tabs/members/ChargeHistory.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "ChargePicker",
+   "arquivo": "components/finance/member/SendReceiptFields.tsx",
    "usos": 1,
    "ui": false
   },
@@ -949,6 +985,12 @@
    "ui": false
   },
   {
+   "nome": "FilePicker",
+   "arquivo": "components/finance/member/SendReceiptFields.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
    "nome": "FinanceProvider",
    "arquivo": "components/finance/FinanceContext.tsx",
    "usos": 1,
@@ -969,6 +1011,12 @@
   {
    "nome": "GroupDrawPage",
    "arquivo": "components/GroupDrawPage.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "HintsNotice",
+   "arquivo": "components/finance/member/SendReceiptFields.tsx",
    "usos": 1,
    "ui": false
   },
@@ -1075,6 +1123,12 @@
    "ui": false
   },
   {
+   "nome": "OcrNotice",
+   "arquivo": "components/finance/member/SendReceiptFields.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
    "nome": "OnboardingModal",
    "arquivo": "components/OnboardingModal.tsx",
    "usos": 1,
@@ -1099,6 +1153,12 @@
    "ui": false
   },
   {
+   "nome": "PaymentFields",
+   "arquivo": "components/finance/member/SendReceiptFields.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
    "nome": "PayPanel",
    "arquivo": "components/finance/tabs/pendencies/PendencyPanels.tsx",
    "usos": 1,
@@ -1107,6 +1167,12 @@
   {
    "nome": "PdfReader",
    "arquivo": "components/signatures/PdfReader.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "PendenciesCard",
+   "arquivo": "components/finance/member/StatementPanels.tsx",
    "usos": 1,
    "ui": false
   },
@@ -1219,6 +1285,12 @@
    "ui": false
   },
   {
+   "nome": "ReceiptsCard",
+   "arquivo": "components/finance/member/StatementPanels.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
    "nome": "ReceiptsTab",
    "arquivo": "components/finance/tabs/ReceiptsTab.tsx",
    "usos": 1,
@@ -1255,6 +1327,12 @@
    "ui": false
   },
   {
+   "nome": "RulesCard",
+   "arquivo": "components/finance/member/StatementPanels.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
    "nome": "RulesSummary",
    "arquivo": "components/finance/tabs/pendencies/RulesSummary.tsx",
    "usos": 1,
@@ -1267,6 +1345,12 @@
    "ui": false
   },
   {
+   "nome": "SendReceiptSheet",
+   "arquivo": "components/finance/member/SendReceiptSheet.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
    "nome": "SettingsTab",
    "arquivo": "components/finance/tabs/SettingsTab.tsx",
    "usos": 1,
@@ -1275,6 +1359,18 @@
   {
    "nome": "Stadium",
    "arquivo": "components/TenisProPlayer/components/Stadium.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "StatementHeader",
+   "arquivo": "components/finance/member/StatementPanels.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "StatementHistory",
+   "arquivo": "components/finance/member/StatementHistory.tsx",
    "usos": 1,
    "ui": false
   },
@@ -1376,6 +1472,12 @@
   },
   {
    "nome": "AdjustmentLine",
+   "arquivo": "components/finance/member/StatementHistory.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "AdjustmentLine",
    "arquivo": "components/finance/tabs/members/ChargeHistory.tsx",
    "usos": 0,
    "ui": false
@@ -1467,6 +1569,12 @@
   {
    "nome": "AmountLine",
    "arquivo": "components/finance/tabs/members/ChargeSheet.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "Amounts",
+   "arquivo": "components/finance/member/ChargeCard.tsx",
    "usos": 0,
    "ui": false
   },
@@ -1687,7 +1795,7 @@
    "ui": false
   },
   {
-   "nome": "ChargeCard",
+   "nome": "ChargeList",
    "arquivo": "components/finance/MemberFinance.tsx",
    "usos": 0,
    "ui": false
@@ -1737,6 +1845,12 @@
   {
    "nome": "ConversationsStandalonePage",
    "arquivo": "App.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "CopyPixButton",
+   "arquivo": "components/finance/member/StatementPanels.tsx",
    "usos": 0,
    "ui": false
   },
@@ -1933,6 +2047,12 @@
    "ui": false
   },
   {
+   "nome": "Heading",
+   "arquivo": "components/finance/member/ChargeCard.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
    "nome": "HolidaysSection",
    "arquivo": "components/finance/tabs/SettingsTab.tsx",
    "usos": 0,
@@ -2019,6 +2139,18 @@
   {
    "nome": "LancamentosTab",
    "arquivo": "components/AdminPanel.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "LateRows",
+   "arquivo": "components/finance/member/ChargeCard.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "Line",
+   "arquivo": "components/finance/member/ChargeCard.tsx",
    "usos": 0,
    "ui": false
   },
@@ -2137,6 +2269,12 @@
    "ui": false
   },
   {
+   "nome": "Notes",
+   "arquivo": "components/finance/member/ChargeCard.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
    "nome": "NotificationSettings",
    "arquivo": "components/NotificationSettings.tsx",
    "usos": 0,
@@ -2174,7 +2312,19 @@
   },
   {
    "nome": "PaymentLine",
+   "arquivo": "components/finance/member/StatementHistory.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "PaymentLine",
    "arquivo": "components/finance/tabs/members/ChargeHistory.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "PayToggle",
+   "arquivo": "components/finance/member/ChargeCard.tsx",
    "usos": 0,
    "ui": false
   },
@@ -2299,6 +2449,12 @@
    "ui": false
   },
   {
+   "nome": "ReceiptItem",
+   "arquivo": "components/finance/member/StatementPanels.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
    "nome": "ReceiptsTab",
    "arquivo": "components/finance/FinanceHub.tsx",
    "usos": 0,
@@ -2415,12 +2571,6 @@
   {
    "nome": "Section",
    "arquivo": "components/AppSettings.tsx",
-   "usos": 0,
-   "ui": false
-  },
-  {
-   "nome": "SendReceiptSheet",
-   "arquivo": "components/finance/MemberFinance.tsx",
    "usos": 0,
    "ui": false
   },
@@ -2740,6 +2890,15 @@
   },
   {
    "tipo": "rpc",
+   "nome": "conv_svc_birthdays_today",
+   "front": [],
+   "edge": [
+    "supabase/functions/joao-birthdays/index.ts:89"
+   ],
+   "telas": []
+  },
+  {
+   "tipo": "rpc",
    "nome": "conv_svc_channel_delivery",
    "front": [],
    "edge": [
@@ -2752,6 +2911,7 @@
    "nome": "conv_svc_finish_message",
    "front": [],
    "edge": [
+    "supabase/functions/joao-birthdays/index.ts:79",
     "supabase/functions/joao-daily-greeting/index.ts:181"
    ],
    "telas": []
@@ -2780,6 +2940,7 @@
    "nome": "conv_svc_queue_message",
    "front": [],
    "edge": [
+    "supabase/functions/joao-birthdays/index.ts:72",
     "supabase/functions/joao-daily-greeting/index.ts:172"
    ],
    "telas": []
@@ -2879,6 +3040,7 @@
    "nome": "joao_daily_secret_ok",
    "front": [],
    "edge": [
+    "supabase/functions/joao-birthdays/index.ts:24",
     "supabase/functions/joao-daily-greeting/index.ts:26"
    ],
    "telas": []
@@ -2999,8 +3161,8 @@
     "components/AdminPanel.tsx:533",
     "components/AdminPanel.tsx:597",
     "components/AdminReports.tsx:111",
-    "components/Agenda.tsx:1452",
-    "components/Agenda.tsx:1824",
+    "components/Agenda.tsx:1322",
+    "components/Agenda.tsx:1706",
     "components/Athletes.tsx:164",
     "components/ChallengeNotificationPopup.tsx:28",
     "components/ChallengeNotificationPopup.tsx:94",
@@ -3083,7 +3245,6 @@
    "tipo": "tabela",
    "nome": "championship_registrations",
    "front": [
-    "components/Agenda.tsx:1305",
     "components/ChampionshipAdmin.tsx:286",
     "components/ChampionshipAdmin.tsx:394",
     "components/ChampionshipAdmin.tsx:423",
@@ -3095,6 +3256,7 @@
     "components/creator/CreatorRegistration.tsx:143",
     "components/creator/CreatorRegistration.tsx:169",
     "components/creator/CreatorRegistration.tsx:216",
+    "lib/agenda/loadAgendaReservations.ts:79",
     "lib/championship/knockoutFromGroups.ts:164",
     "lib/championship/registration.ts:36",
     "lib/championship/registration.ts:72",
@@ -3114,7 +3276,6 @@
    "tipo": "tabela",
    "nome": "championship_rounds",
    "front": [
-    "components/Agenda.tsx:1282",
     "components/ChampionshipAdmin.tsx:291",
     "components/ChampionshipAdmin.tsx:614",
     "components/ChampionshipAdmin.tsx:654",
@@ -3125,6 +3286,7 @@
     "components/Championships.tsx:248",
     "components/Championships.tsx:326",
     "components/PublicChampionshipPage.tsx:77",
+    "lib/agenda/loadAgendaReservations.ts:47",
     "lib/championship/creation.ts:107",
     "lib/championship/rounds.ts:123",
     "lib/championship/rounds.ts:138",
@@ -3157,7 +3319,6 @@
    "nome": "championships",
    "front": [
     "App.tsx:66",
-    "components/Agenda.tsx:1282",
     "components/ChampionshipAdmin.tsx:204",
     "components/ChampionshipAdmin.tsx:452",
     "components/ChampionshipCreator.tsx:142",
@@ -3168,6 +3329,7 @@
     "components/Layout.tsx:76",
     "components/PublicChampionshipPage.tsx:57",
     "components/ResenhaOpenBracketView.tsx:26",
+    "lib/agenda/loadAgendaReservations.ts:47",
     "lib/championship/creation.ts:121",
     "lib/championship/creation.ts:145",
     "lib/championship/creation.ts:81",
@@ -3263,6 +3425,7 @@
    "nome": "conv_ai_settings",
    "front": [],
    "edge": [
+    "supabase/functions/joao-birthdays/index.ts:36",
     "supabase/functions/joao-daily-greeting/index.ts:109"
    ],
    "telas": []
@@ -3284,6 +3447,7 @@
    "front": [],
    "edge": [
     "supabase/functions/finance-receipt-whatsapp/index.ts:49",
+    "supabase/functions/joao-birthdays/index.ts:32",
     "supabase/functions/joao-daily-greeting/index.ts:99",
     "supabase/functions/whatsapp-webhook/index.ts:141",
     "supabase/functions/whatsapp-webhook/index.ts:80"
@@ -3295,6 +3459,7 @@
    "nome": "conv_groups",
    "front": [],
    "edge": [
+    "supabase/functions/joao-birthdays/index.ts:30",
     "supabase/functions/joao-daily-greeting/index.ts:97"
    ],
    "telas": []
@@ -3305,6 +3470,7 @@
    "front": [],
    "edge": [
     "supabase/functions/finance-receipt-whatsapp/index.ts:38",
+    "supabase/functions/joao-birthdays/index.ts:76",
     "supabase/functions/joao-daily-greeting/index.ts:105",
     "supabase/functions/joao-daily-greeting/index.ts:177",
     "supabase/functions/whatsapp-webhook/index.ts:152",
@@ -3320,7 +3486,7 @@
     "components/AdminPanel.tsx:271",
     "components/AdminPanel.tsx:435",
     "components/AdminReports.tsx:127",
-    "components/Agenda.tsx:1390",
+    "components/Agenda.tsx:1260",
     "components/Athletes.tsx:99",
     "components/ChallengeNotificationPopup.tsx:64",
     "components/Challenges.tsx:72",
@@ -3497,8 +3663,7 @@
     "components/AdminMatchCreator.tsx:149",
     "components/AdminPanel.tsx:515",
     "components/AdminReports.tsx:119",
-    "components/Agenda.tsx:1282",
-    "components/Agenda.tsx:1806",
+    "components/Agenda.tsx:1688",
     "components/Athletes.tsx:67",
     "components/Challenges.tsx:418",
     "components/Challenges.tsx:536",
@@ -3521,6 +3686,7 @@
     "components/PublicChampionshipPage.tsx:99",
     "components/SuperSet.tsx:110",
     "components/SuperSet.tsx:166",
+    "lib/agenda/loadAgendaReservations.ts:47",
     "lib/championship/bracket.ts:167",
     "lib/championship/bracket.ts:223",
     "lib/championship/bracket.ts:248",
@@ -3548,9 +3714,9 @@
     "components/AdminStudents.tsx:296",
     "components/AdminStudents.tsx:365",
     "components/AdminStudents.tsx:79",
-    "components/Agenda.tsx:1430",
-    "components/Agenda.tsx:1657",
-    "components/Agenda.tsx:2471",
+    "components/Agenda.tsx:1300",
+    "components/Agenda.tsx:1539",
+    "components/Agenda.tsx:2355",
     "components/FinanceiroAdmin.tsx:87",
     "components/ProfessorProfile.tsx:197",
     "components/ProfessorProfile.tsx:379",
@@ -3605,7 +3771,7 @@
     "components/AdminProfessors.tsx:176",
     "components/AdminProfessors.tsx:197",
     "components/AdminStudents.tsx:84",
-    "components/Agenda.tsx:1402",
+    "components/Agenda.tsx:1272",
     "components/ProfessorProfile.tsx:182"
    ],
    "edge": [],
@@ -3627,9 +3793,8 @@
     "components/AdminReports.tsx:90",
     "components/AdminStudents.tsx:85",
     "components/AdminUserEditor.tsx:125",
-    "components/Agenda.tsx:1220",
-    "components/Agenda.tsx:1305",
-    "components/Agenda.tsx:1402",
+    "components/Agenda.tsx:1229",
+    "components/Agenda.tsx:1272",
     "components/Athletes.tsx:646",
     "components/Challenges.tsx:418",
     "components/ChampionshipAdmin.tsx:241",
@@ -3658,6 +3823,7 @@
     "contexts/AuthContext.tsx:68",
     "contexts/AuthContext.tsx:88",
     "hooks/useReservations.ts:84",
+    "lib/agenda/loadAgendaReservations.ts:79",
     "lib/championship/knockoutFromGroups.ts:164",
     "lib/championship/registration.ts:36",
     "lib/conversations/api.ts:556",
@@ -3715,15 +3881,14 @@
     "components/AdminPanel.tsx:574",
     "components/AdminPanel.tsx:79",
     "components/AdminReports.tsx:78",
-    "components/Agenda.tsx:1246",
-    "components/Agenda.tsx:1501",
-    "components/Agenda.tsx:1539",
-    "components/Agenda.tsx:1559",
-    "components/Agenda.tsx:1588",
-    "components/Agenda.tsx:1642",
+    "components/Agenda.tsx:1383",
+    "components/Agenda.tsx:1421",
+    "components/Agenda.tsx:1441",
+    "components/Agenda.tsx:1470",
+    "components/Agenda.tsx:1524",
+    "components/Agenda.tsx:1597",
+    "components/Agenda.tsx:1605",
     "components/Agenda.tsx:1715",
-    "components/Agenda.tsx:1723",
-    "components/Agenda.tsx:1833",
     "components/Athletes.tsx:79",
     "components/ChallengeNotificationPopup.tsx:104",
     "components/Challenges.tsx:594",
@@ -3738,7 +3903,8 @@
     "hooks/useReservations.ts:113",
     "hooks/useReservations.ts:180",
     "hooks/useReservations.ts:253",
-    "hooks/useReservations.ts:279"
+    "hooks/useReservations.ts:279",
+    "lib/agenda/loadAgendaReservations.ts:33"
    ],
    "edge": [],
    "telas": []
@@ -3819,10 +3985,10 @@
     "components/AdminStudents.tsx:244",
     "components/AdminStudents.tsx:250",
     "components/AdminStudents.tsx:83",
-    "components/Agenda.tsx:1414",
-    "components/Agenda.tsx:1623",
-    "components/Agenda.tsx:2449",
-    "components/Agenda.tsx:2487",
+    "components/Agenda.tsx:1284",
+    "components/Agenda.tsx:1505",
+    "components/Agenda.tsx:2333",
+    "components/Agenda.tsx:2371",
     "components/ProfessorProfile.tsx:202",
     "components/ProfessorProfile.tsx:426",
     "components/ProfessorProfile.tsx:499",
@@ -3984,6 +4150,36 @@
    "deploy": "sem registro"
   },
   {
+   "nome": "joao-birthdays",
+   "verifyJwt": true,
+   "tabelas": [
+    "conv_ai_settings(s)",
+    "conv_conversations(s)",
+    "conv_groups(s)",
+    "conv_messages(u)"
+   ],
+   "rpc": [
+    "conv_svc_birthdays_today",
+    "conv_svc_finish_message",
+    "conv_svc_queue_message",
+    "joao_daily_secret_ok"
+   ],
+   "buckets": [],
+   "segredos": [
+    "STC_AI_API_KEY",
+    "STC_AI_BASE_URL",
+    "STC_UAZAPI_INSTANCE_TOKEN",
+    "SUPABASE_SECRET_KEY",
+    "SUPABASE_SERVICE_ROLE_KEY",
+    "SUPABASE_URL",
+    "UAZAPI_SERVER_URL"
+   ],
+   "hosts": [],
+   "shared": [],
+   "invocadaPor": [],
+   "deploy": "sem registro"
+  },
+  {
    "nome": "joao-daily-greeting",
    "verifyJwt": true,
    "tabelas": [
@@ -4139,6 +4335,7 @@
    "hosts": [],
    "shared": [
     "aiAgent/adminFiles.ts",
+    "aiAgent/adminPlan.ts",
     "aiAgent/adminReads.ts",
     "aiAgent/audio.ts",
     "aiAgent/capabilities.ts",
@@ -4146,6 +4343,7 @@
     "aiAgent/llm.ts",
     "aiAgent/prompts.ts",
     "aiAgent/studentCard.ts",
+    "aiAgent/topicState.ts",
     "aiAgent/turn.ts",
     "aiAgent/welcome.ts",
     "athleteProvision.ts",
@@ -4155,7 +4353,7 @@
     "uazWebhook.ts"
    ],
    "invocadaPor": [],
-   "deploy": "sem registro"
+   "deploy": "alterada desde o último deploy"
   }
  ],
  "alertas": [
@@ -4176,8 +4374,8 @@
   "Acesso a dados direto no componente: `AdminRules` (components/AdminRules.tsx:112) chama point_rules; o padrão do projeto é passar por hook/serviço",
   "Acesso a dados direto no componente: `AdminStudents` (components/AdminStudents.tsx:79) chama non_socio_students, student_profiles, professors, profiles, set_student_level, student_level_history, student_payments; o padrão do projeto é passar por hook/serviço",
   "Acesso a dados direto no componente: `AdminUserEditor` (components/AdminUserEditor.tsx:125) chama profiles, point_history; o padrão do projeto é passar por hook/serviço",
-  "Acesso a dados direto no componente: `Agenda` (components/Agenda.tsx:1220) chama profiles, reservations, matches, championships, championship_rounds, championship_registrations, courts, professors, student_profiles, non_socio_students, challenges; o padrão do projeto é passar por hook/serviço",
-  "Acesso a dados direto no componente: `AddReservationModal` (components/Agenda.tsx:2449) chama student_profiles, non_socio_students; o padrão do projeto é passar por hook/serviço",
+  "Acesso a dados direto no componente: `Agenda` (components/Agenda.tsx:1229) chama profiles, courts, professors, student_profiles, non_socio_students, challenges, reservations, matches; o padrão do projeto é passar por hook/serviço",
+  "Acesso a dados direto no componente: `AddReservationModal` (components/Agenda.tsx:2333) chama student_profiles, non_socio_students; o padrão do projeto é passar por hook/serviço",
   "Acesso a dados direto no componente: `AthleteProfile` (components/Athletes.tsx:67) chama matches, reservations, courts, point_history, championship_series, get_user_h2h_points, challenges; o padrão do projeto é passar por hook/serviço",
   "Acesso a dados direto no componente: `Athletes` (components/Athletes.tsx:646) chama profiles; o padrão do projeto é passar por hook/serviço",
   "Acesso a dados direto no componente: `ChallengeNotificationPopup` (components/ChallengeNotificationPopup.tsx:28) chama challenges, courts, reservations; o padrão do projeto é passar por hook/serviço",
@@ -4207,6 +4405,6 @@
   "Acesso a dados direto no componente: `DocumentDetail` (components/signatures/admin/DocumentDetail.tsx:137) chama sig_documents; o padrão do projeto é passar por hook/serviço",
   "Acesso a dados direto no componente: `AuthProvider` (contexts/AuthContext.tsx:68) chama profiles, admin_record_user_access, access_requests; o padrão do projeto é passar por hook/serviço",
   "Tabelas do mapa sem uso no código (front + edge): `Cliente_CRM`, `Memory Long`, `Memory Long_jp`, `Memory Test`, `alunos`, `aniversario_consulta`, `avaliacoes_semanais`, `championship_participants`, `championship_winners`, `class_change_events`, `conv_admin_alert_log`, `conv_admin_briefing_recipients`, `conv_admin_prefs`, `conv_ai_decisions`, `conv_ai_member_context`, `conv_ai_memory_candidates`, `conv_ai_sessions`, `conv_automation_recipients`, `conv_automation_runs`, `conv_automation_settings`, `conv_automation_versions`, `conv_automations`, `conv_booking_proposals`, `conv_channel`, `conv_followups`, `conv_notes`, `conv_quick_replies`, `conv_requests`, `conv_webhook_log`, `des`, `documentos_contexto`, `familia_compat_produto`, `fin_entries`, `fin_private.charge_payments_effective`, `fin_requests`, `historico_conversas`, `historico_treino`, `iatende_conversas`, `members`, `n8n_chat_histories`, `n8n_chat_histories_duplicate`, `n8n_chat_histories_evento`, `n8n_vectors`, `n8n_vectors2`, `n8n_vectors_treinador`, `patients_ebm`, `planos_treino`, `reservas`, `reservas2`, `reservation_participants`, `servicos`, `sig_events`, `sig_notifications`, `sig_private.challenges`, `sig_recipients`, `stock_automator_config`, `stores`, `students`, `subcategorias`, `support_messages`, `tabela_familia_iphone_map`, `tabela_modelos`, `tabela_sinonimo_modelo`, `tbl_embedding`, `tbl_embedding_valid`, `vw_familia_modelos_expandidos`",
-  "Edge functions sem chamada no front (webhook, cron ou outra função?): `conversation-operations`, `conversations-dispatch`, `finance-receipt-whatsapp`, `joao-admin-alerts`, `joao-admin-briefing`, `joao-daily-greeting`, `signature-dispatch`, `whatsapp-webhook`"
+  "Edge functions sem chamada no front (webhook, cron ou outra função?): `conversation-operations`, `conversations-dispatch`, `finance-receipt-whatsapp`, `joao-admin-alerts`, `joao-admin-briefing`, `joao-birthdays`, `joao-daily-greeting`, `signature-dispatch`, `whatsapp-webhook`"
  ]
 }
