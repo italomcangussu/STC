@@ -39,6 +39,11 @@ RUN printf 'server {\n\
   location = /manifest.json {\n\
     add_header Cache-Control "no-cache";\n\
   }\n\
+  location ~* \\.mjs$ {\n\
+    default_type text/javascript;\n\
+    expires 1y;\n\
+    add_header Cache-Control "public, immutable";\n\
+  }\n\
   location ~* \\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {\n\
     expires 1y;\n\
     add_header Cache-Control "public, immutable";\n\

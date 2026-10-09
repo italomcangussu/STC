@@ -15,11 +15,29 @@ export type PdfHandle = {
   destroy(): Promise<void>;
 };
 
+let workerUrl: Promise<string> | null = null;
+
+/**
+ * O worker do pdfjs é um `.mjs`. Hospedagens que o servem com tipo diferente de JavaScript (nginx sem
+ * `mjs` no mime.types, por exemplo) fazem o navegador recusar o módulo, e todo PDF vira "ilegível".
+ * Baixar o arquivo e entregá-lo como blob com o tipo certo não depende do servidor.
+ */
+function trustedWorkerUrl(url: string): Promise<string> {
+  workerUrl ??= fetch(url)
+    .then((r) => (r.ok ? r.text() : Promise.reject(new Error(`worker ${r.status}`))))
+    .then((code) => URL.createObjectURL(new Blob([code], { type: 'text/javascript' })))
+    .catch(() => {
+      workerUrl = null;
+      return url;
+    });
+  return workerUrl;
+}
+
 /** Abre o PDF a partir dos bytes (já conferidos pelo hash). Rejeita se o arquivo não for um PDF legível. */
 export async function openPdf(data: ArrayBuffer, opts: { skipSizes?: boolean } = {}): Promise<PdfHandle> {
   const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');
   const worker = await import('pdfjs-dist/legacy/build/pdf.worker.min.mjs?url');
-  pdfjs.GlobalWorkerOptions.workerSrc = worker.default;
+  pdfjs.GlobalWorkerOptions.workerSrc = await trustedWorkerUrl(worker.default);
 
   // O pdfjs entrega os bytes ao worker (a cópia original fica inutilizada): trabalha numa cópia.
   const task = pdfjs.getDocument({ data: new Uint8Array(data.slice(0)) });
