@@ -21,7 +21,7 @@ import type { Provision, ProvisionResult } from '../athleteProvision.ts';
 import { FORMS_DOMAINS, isAdminReadDomain, READ_MORE_DOMAINS, renderAdminRead, type AdminReadDomain } from './adminReads.ts';
 import { isFileKind, reportDoc, safeName, type FileKind, type FileKit } from './adminFiles.ts';
 import { receiptReceivedMessage, studentCardProposalMessage, studentCardSuccessMessage } from './studentCard.ts';
-import { openTopics, restoreConversationMemory, topicForIntent, trackConversationTopic, type TopicMode } from './topicState.ts';
+import { activeTopic, domainOf, bringsNewData, openTopics, recordTopicTurn, restoreTopics, selectTopic, topicIdFromRef, type TopicMode, type TopicSnapshot } from './topicState.ts';
 import { hearAudios, unheardOnly, UNCLEAR_AUDIO_REPLY } from './audio.ts';
 import { adminPendencyRefs, isAdminAssistant, systemPrompt, userPrompt, type AiSettings, type Ctx } from './prompts.ts';
 import { buildChatRequest, providerIdFrom, uazError, type UazCaller } from '../uazChat.ts';
@@ -150,6 +150,8 @@ export type Answer = {
   close: boolean;
   /** 'new' apenas quando realmente iniciar outro assunto; 'resume' recupera pendência anterior. */
   topic_mode?: TopicMode;
+  /** Referência do assunto pendente (t1, t2…) a que a fala se refere, quando há mais de um. */
+  topic_ref?: string | null;
   /** Resumo compactado da conversa (o agente reescreve a cada turno); ausente = manter o anterior. */
   summary?: string | null;
   /** Aprendizados sociais candidatos; o servidor só registra como pendentes para revisão. */
@@ -315,6 +317,7 @@ export function parseAnswer(output: string): Answer {
     transfer, handoff_kind: obj.handoff_kind === 'soft' || obj.handoff_kind === 'hard' ? obj.handoff_kind : transfer ? 'hard' : null,
     handoff_note: str(obj.handoff_note)?.slice(0, 500) ?? null, close: obj.close === true && !transfer,
     topic_mode: obj.topic_mode === 'new' || obj.topic_mode === 'resume' ? obj.topic_mode : 'continue',
+    topic_ref: str(obj.topic_ref)?.slice(0, 4) ?? null,
     summary: clipSummary(obj.summary),
     reaction: parseReaction(obj.reaction),
     ask_curator: parseCuratorAsk(obj.ask_curator),
@@ -1063,7 +1066,9 @@ const first = <T,>(r: RpcResult): T | null => (Array.isArray(r.data) ? (r.data[0
 
 export type TurnResult = { status: string; reason?: string; bubbles?: number; handoff?: string | null; action?: string | null };
 
-type Memory = { intent?: Intent; slots?: Slots; proposal_names?: string[]; pending_guest?: string | null; summary?: string; [k: string]: unknown };
+type Memory = { intent?: Intent; slots?: Slots; proposal_names?: string[]; pending_guest?: string | null; summary?: string;
+  /** Assuntos do solicitante (pendentes completos + encerrados recentes) e o que está em andamento agora. */
+  topics?: TopicSnapshot[]; active_topic_id?: string | null; [k: string]: unknown };
 
 type Decision = { bubbles: string[]; awaiting: boolean; close: boolean; action: string | null; memory: Memory; handoff?: { kind: 'soft' | 'hard'; note: string };
   /** Relatório do servidor: vai numa mensagem só, com as quebras de linha (sem picotar em microbolhas). */ verbatim?: boolean;
@@ -1309,7 +1314,9 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
     return { status: 'replied', bubbles: sent, handoff: null, action: 'admin_n3_refused' } as TurnResult;
   }
 
-  const memory = restoreConversationMemory((ctx.session?.memory ?? {}) as Memory, (ctx.prior_memory ?? null) as Memory);
+  // Assuntos pendentes do solicitante voltam do banco em qualquer sessão; a autorização de uma proposta antiga, não.
+  const memory = restoreTopics((ctx.session?.memory ?? {}) as Memory,
+    { durable: ctx.durable_topics, openProposalId: (ctx.open_proposal as Ctx | null)?.id as string | undefined, today });
 
   if (ctx.pro_tennis && looksLikeProTennisQuestion(buffered, (ctx.group_context ?? []) as Ctx[])) {
     const messages = proTennisDirectMessages(tennisQueryContext, ctx.pro_tennis);
@@ -1421,31 +1428,32 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
     }
   }
 
-  // Assuntos independentes: não misturar os slots de uma receita com outra tarefa.
-  // Ao voltar a uma pendência, recuperar somente seus dados próprios.
-  const selectedTopic = topicForIntent(memory, answer.intent, answer.topic_mode);
-  const changeOfAction = memory.intent !== undefined && ACTIONABLE.includes(memory.intent) && ACTIONABLE.includes(answer.intent) && memory.intent !== answer.intent;
-  const isNewAction = ['reservar', 'cancelar', 'remarcar', 'entrar', 'participantes', 'admin_financeiro', 'admin_acao'].includes(answer.intent);
-  const startFresh = answer.topic_mode === 'new' || (isNewAction && memory.intent !== undefined && memory.intent !== answer.intent && !selectedTopic) || (changeOfAction && !selectedTopic);
-  const baseSlots = selectedTopic?.slots as Slots | undefined ?? (startFresh ? undefined : memory.slots);
-  const slots = mergeSlots(baseSlots, answer.slots, startFresh);
+  // Resposta curta ("isso", "R$ 30", "Outras receitas") que o modelo classificou como informar/outro mas traz dado
+  // ou decisão para o assunto ativo continua ESSE assunto, em vez de se perder na memória solta.
+  const ativo = activeTopic(memory);
+  if (ativo && (answer.intent === 'informar' || answer.intent === 'outro') && !answer.transfer
+    && (bringsNewData(answer.slots, ativo.slots) || answer.ready || answer.customer_confirmed || answer.declined)) {
+    answer = { ...answer, intent: ativo.intent as Intent };
+  }
+  const topico = selectTopic(memory, answer.intent, answer.topic_mode, topicIdFromRef(memory, answer.topic_ref));
+  // Assuntos independentes não se misturam: retomar usa só os dados daquele assunto; tarefa nova começa limpa.
+  const slots = mergeSlots(baseSlotsFor(memory, answer, topico), answer.slots, !topico && startsFresh(memory, answer));
   // Resumo: o que o modelo reescreveu agora; senão o anterior; senão o do atendimento anterior da mesma pessoa.
   const summary = answer.summary ?? memory.summary ?? (typeof ctx.prior_summary === 'string' ? ctx.prior_summary : undefined);
   const nextMemory: Memory = { ...memory, intent: answer.intent, slots, ...(summary ? { summary } : {}) };
 
-  const d = await decide({ deps, ctx, answer, slots, memory: nextMemory, session, ultimaId: ultima?.id as string | undefined, today });
+  // A proposta aberta pertence a um assunto: "pode"/"não" sobre OUTRO assunto não confirma nem cancela a dela.
+  const ctxDoTurno = proposalBelongsElsewhere(ctx, topico) ? { ...ctx, open_proposal: null } : ctx;
+  const d = await decide({ deps, ctx: ctxDoTurno, answer, slots, memory: nextMemory, session, ultimaId: ultima?.id as string | undefined, today });
   if (anotados.length && !d.handoff) d.bubbles = [...d.bubbles, `📝 Anotei: ${anotados.join('; ')}.`];
-  // Compacta SOMENTE o assunto resolvido; as demais tarefas abertas continuam.
-  // 'done' e 'declined' não encerram a sessão se houver outro assunto pendente.
-  d.memory = trackConversationTopic({ ...nextMemory, ...d.memory, topics: nextMemory.topics, active_topic_id: nextMemory.active_topic_id }, {
-    intent: answer.intent, mode: answer.topic_mode, slots, summary,
-    action: d.action, awaiting: d.awaiting, close: d.close,
-    lastQuestion: d.bubbles.at(-1) ?? null,
+  // Só o assunto deste turno muda de estado; os demais pendentes continuam como estavam (o ativo anterior fica suspenso).
+  d.memory = recordTopicTurn({ ...nextMemory, ...d.memory, topics: nextMemory.topics, active_topic_id: nextMemory.active_topic_id }, {
+    topic: topico, intent: answer.intent, slots, summary, action: d.action, awaiting: d.awaiting, close: d.close,
+    declined: d.action === 'declined' || (answer.declined && d.close), lastQuestion: d.bubbles.at(-1) ?? null,
   });
   if (summary && !d.memory.summary) d.memory = { ...d.memory, summary };
-  const hasOpenTopics = openTopics(d.memory).length > 0;
-  const closeSession = d.close && !hasOpenTopics;
-  const awaitingContinuation = d.awaiting || hasOpenTopics;
+  // Agradecer ou encerrar um assunto não fecha a sessão enquanto houver outro pendente (que, de todo modo, está salvo).
+  const closeSession = d.close && openTopics(d.memory).length === 0;
   if (d.handoff && socioNoPrivado) {
     const enviadas = await entregar(cadence([MEMBER_FAIL]));
     await save(d.memory, 'member_no_handoff', { action: d.action, reason: d.handoff.note.slice(0, 200) }, false, false);
@@ -1468,8 +1476,28 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
     await db('conv_svc_ai_handoff', { p_session: session, p_kind: answer.handoff_kind ?? 'hard', p_note: answer.handoff_note || 'Transferida pela IA' });
   }
   await save(d.memory, answer.transfer ? `handoff_${answer.handoff_kind}` : d.close ? 'close' : d.action ?? 'reply',
-    { action: d.action, intent: answer.intent, bubbles: enviadas, ...(fallback || d.bubbles.some((b) => b.includes('Ainda não consigo realizar esse pedido')) ? { fallback: fallback ?? 'limitacao', limitation: true, asked: buffered.slice(0, 200) } : {}) }, awaitingContinuation, closeSession || (answer.transfer && answer.handoff_kind === 'hard'));
+    { action: d.action, intent: answer.intent, bubbles: enviadas, ...(fallback || d.bubbles.some((b) => b.includes('Ainda não consigo realizar esse pedido')) ? { fallback: fallback ?? 'limitacao', limitation: true, asked: buffered.slice(0, 200) } : {}) }, d.awaiting, closeSession || (answer.transfer && answer.handoff_kind === 'hard'));
   return { status: 'replied', bubbles: enviadas, handoff: answer.transfer ? answer.handoff_kind : null, action: d.action };
+}
+
+/** Dados de partida do turno: os do assunto retomado; nada se é tarefa nova; senão a memória solta (consultas). */
+function baseSlotsFor(memory: Memory, answer: Answer, topico: TopicSnapshot | null): Slots | undefined {
+  if (topico) return topico.slots as Slots;
+  return startsFresh(memory, answer) ? undefined : memory.slots;
+}
+
+/** Tarefa nova: pedida como nova, ou outra ação/domínio sem assunto pendente correspondente ("na verdade quero cancelar"). */
+function startsFresh(memory: Memory, answer: Answer): boolean {
+  if (answer.topic_mode === 'new') return true;
+  const trocouDeAcao = memory.intent !== undefined && ACTIONABLE.includes(memory.intent) && ACTIONABLE.includes(answer.intent) && memory.intent !== answer.intent;
+  const antes = domainOf(memory.intent);
+  const agora = domainOf(answer.intent);
+  return trocouDeAcao || (antes !== null && agora !== null && antes !== agora);
+}
+
+/** A proposta aberta só pode ser confirmada ou recusada pelo assunto que a recebeu (o único "aguardando confirmação"). */
+function proposalBelongsElsewhere(ctx: Ctx, topico: TopicSnapshot | null): boolean {
+  return Boolean((ctx.open_proposal as Ctx | null)?.id && topico && topico.status !== 'awaiting_confirmation');
 }
 
 /* ------------------------------- Decisão: o que o servidor executa ------------------------------- */
