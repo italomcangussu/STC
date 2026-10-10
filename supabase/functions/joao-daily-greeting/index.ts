@@ -102,7 +102,7 @@ async function group(){
 }
 async function history(cid){
   const since=new Date(Date.now()-30*86400000).toISOString();
-  const r=await db.from("conv_messages").select("body").eq("conversation_id",cid).eq("direction","outbound").in("origin",["ai","system"]).gte("created_at",since).order("created_at",{ascending:false}).limit(30);
+  const r=await db.from("conv_messages").select("body").eq("conversation_id",cid).eq("direction","outbound").in("origin",["ai","system"]).gte("created_at",since).order("created_at",{ascending:false}).limit(90);
   return (r.data||[]).map(x=>String(x.body||"")).filter(Boolean);
 }
 async function model(){
@@ -114,34 +114,87 @@ function hasCompleteMatch(text,fs){
   return fs.slice(0,12).some(f=>f?.players?.length>=2&&
     t.includes(norm(f.players[0].name))&&t.includes(norm(f.players[1].name)));
 }
-function fallback(fs){
-  const f=fs[0];
-  if(f?.players?.length>=2)return "Bom dia, tenistas! 🎾 Hoje tem "+f.players[0].name+" x "+f.players[1].name+" no "+f.tournament+". Enquanto eles brigam no circuito, por aqui a discussão continua sendo se a bola pegou ou não na linha. 😂";
-  return "Bom dia, tenistas! 🎾 Café tomado, raquete na mão e discussão sobre bola dentro ou fora oficialmente liberada.";
+
+function folded(s){return String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^\p{L}\p{N}\s]/gu," ").replace(/\s+/g," ").trim()}
+function theme(text){
+  const t=folded(text);
+  if(/(bola pegou|pegou ou nao|bola dentro|bola fora|na linha|da linha)/.test(t))return "linha";
+  if(/(bola na rede|pouca bola na rede|bateu na rede)/.test(t))return "rede";
+  if(/(ferias|nunca trabalha)/.test(t))return "ferias";
+  if(/(bets|apostas|palpite)/.test(t))return "apostas";
+  return null;
+}
+function repetition(text,h){
+  const t=folded(text), topic=theme(text);
+  const used=h.slice(0,60).filter(Boolean);
+  for(const [i,prev] of used.entries()){
+    const old=folded(prev);
+    if(t===old)return "identical";
+    if(topic && topic===theme(prev) && i<25)return "same_theme";
+    const a=new Set(t.split(" ").filter(x=>x.length>=5 && !["jogadores","torneio","tenistas","masters","circuito","enquanto"].includes(x)));
+    const b=new Set(old.split(" ").filter(x=>x.length>=5 && !["jogadores","torneio","tenistas","masters","circuito","enquanto"].includes(x)));
+    if(a.size>=5&&b.size>=5){
+      let n=0;for(const token of a)if(b.has(token))n++;
+      if(n/Math.min(a.size,b.size)>=0.78)return "similar_punchline";
+    }
+  }
+  return null;
+}
+function fallback(d,fs,h){
+  const f=fs[0], ps=f?.players||[];
+  const match=ps.length>=2 ? " Hoje tem "+(
+    ps.length===4 ? ps[0].name+" / "+ps[1].name+" x "+ps[2].name+" / "+ps[3].name
+      : ps[0].name+" x "+ps[1].name
+  )+" no "+f.tournament+"." : "";
+  const variants=[
+    "Bom dia, turma!"+match+" Bom sábado ou não, quem puder aproveite para bater uma bola.",
+    "Bom dia, pessoal!"+match+" Que seja um dia bom de quadra e de conversa.",
+    "Um ótimo dia para a turma do STC!"+match+" Aproveitem o clube.",
+    "Bom dia, tenistas!"+match+" Bom jogo para quem entrar em quadra hoje.",
+    "Bom dia, turma!"+match+" Um excelente dia para todo mundo.",
+    "Bom dia, pessoal do STC!"+match+" Que não falte disposição para jogar.",
+    "Passando para desejar bom dia à turma!"+match+" Aproveitem o dia.",
+    "Bom dia, STC!"+match+" Boa diversão para quem for jogar hoje."
+  ];
+  const k=Number(d.iso.replace(/-/g,""))%variants.length;
+  for(let i=0;i<variants.length;i++){
+    const candidate=variants[(k+i)%variants.length];
+    if(!repetition(candidate,h))return candidate;
+  }
+  return "Bom dia, pessoal!"+match+" Ótimo dia para todos.";
 }
 async function greeting(d,fs,h){
-  const fb=fallback(fs); if(!AIKEY)return fb;
+  const fb=fallback(d,fs,h);
+  if(!AIKEY){console.warn("JOAO_GREETING_FALLBACK",JSON.stringify({date:d.iso,reason:"missing_ai_key"}));return fb;}
   const clean=fs.slice(0,12).map(f=>({circuito:f.tour,torneio:f.tournament,categoria:f.group,rodada:f.round,estado:f.state,status:f.status,jogadores:f.players.map(p=>({nome:p.name,cabeca_de_chave:p.seed,pais:p.country}))}));
   const sys=[
     "Você é João Fonseca, assistente do Sobral Tênis Clube, escrevendo no grupo de sócios.",
-    "Crie UM bom dia curto, de 1 a 3 frases, natural, brasileiro, espontâneo e com resenha leve de tênis.",
-    "Priorize primeiro partidas ainda PROGRAMADAS ou EM ANDAMENTO hoje. Só use jogo já encerrado se não houver confronto futuro relevante.",
-    "Se houver ao menos uma partida confirmada, seja específico: cite o torneio e PELO MENOS UM confronto completo realmente programado hoje, dizendo os dois jogadores (ex.: Jogador A x Jogador B ou Jogador A enfrenta Jogador B). No máximo dois confrontos.",
-    "Dê preferência a brasileiros, nomes muito conhecidos, cabeças de chave altos e fases decisivas.",
-    "Nunca invente confronto, ranking mundial, horário, resultado, lesão ou notícia.",
-    "Não transforme em boletim esportivo. Não use markdown, hashtags nem pergunta obrigatória.",
-    "Evite repetir piadas, aberturas e estruturas das mensagens recentes.",
-    "Se não houver fato interessante, mande apenas um bom dia de tênis bem-humorado."
+    "Escreva um bom dia humano de 1 a 3 frases. O humor é opcional: não force piada, trocadilho ou frase de efeito.",
+    "Priorize primeiro partidas programadas ou em andamento hoje.",
+    "Se houver partida confirmada, cite ao menos um confronto completo e o torneio. Nunca invente dado.",
+    "Use somente os fatos fornecidos. Se os jogadores formarem duplas, não transforme colegas de dupla em adversários.",
+    "Não repita a estrutura, tema, punchline ou bordão das últimas mensagens. Evite particularmente bola na linha e bola na rede quando já usados.",
+    "Sem markdown, hashtags, boletim ou pergunta obrigatória. Varie o início e o final.",
   ].join("\n");
-  try{
-    const r=await fetch(AIBASE+"/chat/completions",{method:"POST",headers:{"content-type":"application/json",authorization:"Bearer "+AIKEY},body:JSON.stringify({model:await model(),temperature:.9,max_tokens:180,messages:[{role:"system",content:sys},{role:"user",content:JSON.stringify({data:d.iso,dia:d.weekday,fatos_confirmados:clean,mensagens_recentes:h.slice(0,20)})}]}),signal:AbortSignal.timeout(18000)});
-    if(!r.ok)return fb;
-    const j=await r.json().catch(()=>null);
-    const t=String(j?.choices?.[0]?.message?.content||"").trim();
-    if(!t||t.length>700)return fb;
-    if(fs.length&& !hasCompleteMatch(t,fs))return fb;
-    return t;
-  }catch{return fb}
+  let reason="unknown";
+  for(let attempt=0;attempt<2;attempt++){
+    try{
+      const more=attempt?"Tentativa de revisão: a mensagem anterior falhou. Escreva outra, realmente diferente, sem repetir tema ou conclusão.":null;
+      const messages=[{role:"system",content:sys},{role:"user",content:JSON.stringify({data:d.iso,dia:d.weekday,fatos_confirmados:clean,mensagens_recentes:h.slice(0,45),instrucao_extra:more})}];
+      const r=await fetch(AIBASE+"/chat/completions",{method:"POST",headers:{"content-type":"application/json",authorization:"Bearer "+AIKEY},body:JSON.stringify({model:await model(),max_tokens:400,messages}),signal:AbortSignal.timeout(22000)});
+      if(!r.ok){reason="provider_http_"+r.status;continue;}
+      const j=await r.json().catch(()=>null);
+      const t=String(j?.choices?.[0]?.message?.content||"").trim();
+      if(!t||t.length>700){reason="empty_or_invalid_length";continue;}
+      if(fs.length&&!hasCompleteMatch(t,fs)){reason="match_validation";continue;}
+      const repeated=repetition(t,h);
+      if(repeated){reason="repeated_"+repeated;continue;}
+      console.info("JOAO_GREETING_GENERATED",JSON.stringify({date:d.iso,attempt:attempt+1,history:h.length}));
+      return t;
+    }catch(e){reason=e instanceof Error&&e.name==="TimeoutError"?"timeout":"provider_exception";}
+  }
+  console.warn("JOAO_GREETING_FALLBACK",JSON.stringify({date:d.iso,reason,history:h.length}));
+  return fb;
 }
 async function idkey(iso){
   const b=new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode("joao-daily-greeting:"+iso))).slice(0,16);
