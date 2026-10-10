@@ -39,14 +39,14 @@ const DueSection: React.FC<{ s: FinSettings; holidays: FinHoliday[]; onSaved: ()
   const [offset, setOffset] = useState(String(s.due_month_offset));
   const [rule, setRule] = useState<NonBusinessRule>(s.non_business_rule);
   const [saturday, setSaturday] = useState(s.saturday_is_business);
-  const [horizon, setHorizon] = useState(String(s.horizon_months));
+  
   const [busy, setBusy] = useState(false);
 
   const cal = useMemo(() => buildCalendar(holidays.map((h) => ({ date: h.holiday_date, active: h.active })), saturday), [holidays, saturday]);
   const preview = useMemo(() => {
     const day = Number(dueDay);
     if (!(day >= 1 && day <= 31)) return [];
-    return [0, 1, 2, 3].map((i) => {
+    return [0].map((i) => {
       const comp = addMonths(firstOfMonth(today), i);
       return { comp, ...computeDueDate(comp, 1, { dueDay: day, monthOffset: Number(offset), nonBusinessRule: rule }, cal) };
     });
@@ -55,7 +55,7 @@ const DueSection: React.FC<{ s: FinSettings; holidays: FinHoliday[]; onSaved: ()
   const save = async () => {
     setBusy(true);
     try {
-      await saveSettings(s.version, { due_day: Number(dueDay), due_month_offset: Number(offset), non_business_rule: rule, saturday_is_business: saturday, horizon_months: Number(horizon) }, key);
+      await saveSettings(s.version, { due_day: Number(dueDay), due_month_offset: Number(offset), non_business_rule: rule, saturday_is_business: saturday, horizon_months: 0 }, key);
       notify.success('Regra de vencimento salva. Vale para as próximas cobranças geradas.'); renew(); onSaved();
     } catch (e) { notifyFinanceError(e, 'Não foi possível salvar.', 'finance_settings_save_failed'); }
     finally { setBusy(false); }
@@ -67,14 +67,14 @@ const DueSection: React.FC<{ s: FinSettings; holidays: FinHoliday[]; onSaved: ()
         <Field label="Dia do vencimento"><input inputMode="numeric" className={inputCls} value={dueDay} onChange={(e) => setDueDay(e.target.value.replace(/\D/g, '').slice(0, 2))} /></Field>
         <Field label="Vence no"><select className={inputCls} value={offset} onChange={(e) => setOffset(e.target.value)}><option value="0">mesmo mês cobrado</option><option value="1">mês seguinte ao cobrado</option><option value="2">2º mês seguinte</option></select></Field>
         <Field label="Se cair em dia não útil" className="col-span-2"><select className={inputCls} value={rule} onChange={(e) => setRule(e.target.value as NonBusinessRule)}><option value="next_business_day">Vai para o próximo dia útil</option><option value="previous_business_day">Vai para o dia útil anterior</option><option value="keep">Mantém a data</option></select></Field>
-        <Field label="Cobranças geradas à frente" hint="Meses futuros já previstos."><input inputMode="numeric" className={inputCls} value={horizon} onChange={(e) => setHorizon(e.target.value.replace(/\D/g, '').slice(0, 2))} /></Field>
+        <div className="col-span-2"><Notice tone="info" title="Competência atual">Mensalidades de outro mês só serão geradas e apresentadas a partir do dia 1º daquele mês. Cobranças de novembro não aparecem em outubro.</Notice></div>
         <label className="flex min-h-11 items-center gap-2 self-end text-sm font-bold text-stone-700"><input type="checkbox" className="h-5 w-5" checked={saturday} onChange={(e) => setSaturday(e.target.checked)} />Sábado é dia útil</label>
       </div>
       <div className="mt-3 space-y-1 rounded-2xl bg-stone-50 p-3 text-xs text-stone-600">
         <p className="font-black text-stone-500">Prévia (com os feriados ativos abaixo)</p>
         {preview.map((p) => <p key={p.comp}>Mensalidade de <b className="capitalize">{monthLabel(p.comp)}</b> vence em <b>{brDate(p.due)}</b>{p.adjusted ? ` (dia ${brDate(p.nominal).slice(0, 5)} não é útil)` : ''}</p>)}
       </div>
-      <div className="mt-3"><button className={btnPrimary} disabled={busy || !(Number(dueDay) >= 1 && Number(dueDay) <= 31) || Number(horizon) < 1} onClick={save}>Salvar vencimento</button></div>
+      <div className="mt-3"><button className={btnPrimary} disabled={busy || !(Number(dueDay) >= 1 && Number(dueDay) <= 31)} onClick={save}>Salvar vencimento</button></div>
     </Card>
   );
 };
