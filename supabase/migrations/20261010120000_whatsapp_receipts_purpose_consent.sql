@@ -84,7 +84,7 @@ begin
   select * into m from public.conv_messages where id=p_message;
   if s.id is null or s.status<>'awaiting_purpose'
     or m.id is null or m.conversation_id<>s.conversation_id or m.direction<>'inbound'
-    or m.kind<>'text' or m.created_at<s.created_at then
+    or m.kind<>'text' or m.created_at<(select created_at from public.conv_messages where id=s.source_message_id) then
     return jsonb_build_object('ok',false,'code','INTENT_NOT_ELIGIBLE');
   end if;
   if p_kind not in ('donation','membership','member_pendency','student_card','day_card','other')
@@ -197,11 +197,8 @@ begin
       left('Confirmado por WhatsApp: '||s.purpose_detail,500),
       coalesce(d->>'ocr_status','not_run'),d->'ocr',false,s.id,'whatsapp',s.source_message_id
     ) returning id into v_submission;
-    -- Somente cobranças do tipo que o remetente identificou; sem baixa automática.
-    insert into public.fin_receipt_charges(submission_id,charge_id)
-    select s.id,c.id from public.fin_member_charges c
-    where c.profile_id=s.profile_id and c.charge_type=s.purpose_kind and c.status in ('open','partial')
-    order by c.due_date limit 1;
+    -- Não vincular automaticamente competência nem cobrança: o envio pode ser de outro mês ou de terceiro.
+    -- O administrador escolhe a cobrança correta na revisão, e a quitação só ocorre após conferência.
     update fin_private.whatsapp_receipt_intents set status='confirmed',confirmation_message_id=p_message,
       finance_submission_id=v_submission,updated_at=now() where id=s.id;
     return jsonb_build_object('ok',true,'status','confirmed','kind',s.purpose_kind,
