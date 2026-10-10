@@ -7,13 +7,14 @@ const api = vi.hoisted(() => ({
   newRequestId: () => globalThis.crypto.randomUUID(),
   adjustCharge: vi.fn(), cancelCharge: vi.fn(), chargeHistory: vi.fn(), createPlan: vi.fn(), endPlan: vi.fn(), generateCharges: vi.fn(),
   listCharges: vi.fn(), listCredits: vi.fn(), listHolidays: vi.fn(), listMembersWithoutPlan: vi.fn(), listPlanPrices: vi.fn(), listPlans: vi.fn(),
-  registerPayment: vi.fn(), resolveCredit: vi.fn(), reversePayment: vi.fn(), setPlanPrice: vi.fn(), updatePlan: vi.fn(),
+  listPendencyMeta: vi.fn(), registerPayment: vi.fn(), resolveCredit: vi.fn(), reversePayment: vi.fn(), setPlanPrice: vi.fn(), updatePlan: vi.fn(),
 }));
 vi.mock('../../lib/finance/financeApi', () => api);
 
 import { ConfirmProvider } from '../../components/ui/ConfirmProvider';
 import { FinanceProvider } from '../../components/finance/FinanceContext';
 import MembersTab from '../../components/finance/tabs/MembersTab';
+import PlansTab from '../../components/finance/tabs/PlansTab';
 
 const settings = { id: true, due_day: 5, due_month_offset: 1, non_business_rule: 'next_business_day', saturday_is_business: false, horizon_months: 1, version: 1 } as FinSettings;
 
@@ -26,9 +27,9 @@ const charge = (id: string, name: string, over: Partial<ChargeStatementRow> = {}
 
 const plan = { id: 'pl1', profile_id: 'u1', start_on: '2026-01-10', ended_on: null, status: 'active', period_months: 1, version: 1, end_reason: null, profile: { name: 'João da Silva', avatar_url: null, is_active: true } };
 
-const mount = (s: FinSettings = settings) => render(
+const mount = (s: FinSettings = settings, tab: React.ReactNode = <MembersTab />) => render(
   <ConfirmProvider>
-    <FinanceProvider value={{ accounts: [], categories: [], settings: s, reload: vi.fn(), go: vi.fn() }}><MembersTab /></FinanceProvider>
+    <FinanceProvider value={{ accounts: [], categories: [], settings: s, reload: vi.fn(), go: vi.fn() }}>{tab}</FinanceProvider>
   </ConfirmProvider>,
 );
 
@@ -38,6 +39,7 @@ beforeEach(() => {
   api.listPlans.mockResolvedValue([plan]);
   api.listPlanPrices.mockResolvedValue([{ id: 'pr1', plan_id: 'pl1', effective_from: '2026-01-01', amount_cents: 15000, reason: null }]);
   api.listCredits.mockResolvedValue([]);
+  api.listPendencyMeta.mockResolvedValue([]);
   api.listHolidays.mockResolvedValue([]);
   api.listMembersWithoutPlan.mockResolvedValue([]);
 });
@@ -48,65 +50,55 @@ describe('Cobranças — busca por sócio', () => {
   it('"joao" acha "João da Silva" (sem acento, sem maiúsculas)', async () => {
     mount();
     await screen.findByText('Maria Conceição');
-    fireEvent.change(screen.getByRole('searchbox', { name: 'Buscar sócio' }), { target: { value: 'joao' } });
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Buscar cobrança' }), { target: { value: 'joao' } });
     await waitFor(() => expect(rowNames()).toEqual(['João da Silva']));
   });
 
   it('"CONCEICAO " (maiúsculas, sem cedilha, espaço no fim) acha "Maria Conceição"', async () => {
     mount();
     await screen.findByText('Ana Sócia');
-    fireEvent.change(screen.getByRole('searchbox', { name: 'Buscar sócio' }), { target: { value: 'CONCEICAO ' } });
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Buscar cobrança' }), { target: { value: 'CONCEICAO ' } });
     await waitFor(() => expect(rowNames()).toEqual(['Maria Conceição']));
   });
 
   it('o nome não vai ao banco (lá a comparação é sensível a acento) e digitar mais letras não refaz a consulta', async () => {
     mount();
     await screen.findByText('Ana Sócia');
-    const box = screen.getByRole('searchbox', { name: 'Buscar sócio' });
-    fireEvent.change(box, { target: { value: 'j' } });
-    await waitFor(() => expect(api.listCharges).toHaveBeenCalledTimes(2));
-    fireEvent.change(box, { target: { value: 'jo' } });
-    fireEvent.change(box, { target: { value: 'joa' } });
-    fireEvent.change(box, { target: { value: 'joao' } });
+    const box = screen.getByRole('searchbox', { name: 'Buscar cobrança' });
+    for (const t of ['j', 'jo', 'joa', 'joao']) fireEvent.change(box, { target: { value: t } });
     await waitFor(() => expect(rowNames()).toEqual(['João da Silva']));
-    expect(api.listCharges).toHaveBeenCalledTimes(2);
-    for (const call of api.listCharges.mock.calls) expect(call[0]).not.toHaveProperty('search');
-    // sem busca: 300 linhas; com busca: o máximo que o banco entrega
-    expect(api.listCharges.mock.calls[0][1]).toBe(300);
-    expect(api.listCharges.mock.calls[1][1]).toBe(1000);
+    // uma consulta só, com o máximo que a tela olha; buscar filtra o que já veio
+    expect(api.listCharges).toHaveBeenCalledTimes(1);
+    expect(api.listCharges.mock.calls[0][0]).not.toHaveProperty('search');
+    expect(api.listCharges.mock.calls[0][1]).toBe(1000);
   });
 
   it('sem resultado, diz o que foi procurado; limpar a busca traz tudo de volta', async () => {
     mount();
     await screen.findByText('Ana Sócia');
-    fireEvent.change(screen.getByRole('searchbox', { name: 'Buscar sócio' }), { target: { value: 'zzz' } });
-    expect(await screen.findByText('Nenhuma cobrança de “zzz”')).toBeInTheDocument();
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Buscar cobrança' }), { target: { value: 'zzz' } });
+    expect(await screen.findByText('Nada encontrado para “zzz”')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Limpar busca' }));
     await waitFor(() => expect(rowNames()).toHaveLength(3));
   });
 
-  it('avisa quando o banco tem mais cobranças do que a busca conseguiu olhar', async () => {
+  it('avisa quando o banco tem mais cobranças do que a lista, a busca e os totais conseguiram olhar', async () => {
     api.listCharges.mockResolvedValue([charge('1', 'João da Silva', { total_count: 1500 }), charge('2', 'Maria Conceição', { total_count: 1500 })]);
     mount();
-    await screen.findByText('Maria Conceição');
-    expect(screen.queryByText(/A busca olhou/)).toBeNull();
-    fireEvent.change(screen.getByRole('searchbox', { name: 'Buscar sócio' }), { target: { value: 'maria' } });
-    expect(await screen.findByText(/A busca olhou as 2 cobranças mais recentes de 1\.500/)).toBeInTheDocument();
+    expect(await screen.findByText(/Há 1\.500 cobranças neste filtro; só as 2 mais recentes/)).toBeInTheDocument();
   });
 });
 
-describe('Sócios e valores — carregamento', () => {
+describe('Mensalidades dos sócios (Cadastros) — carregamento', () => {
   it('lista as mensalidades cadastradas', async () => {
-    mount();
-    fireEvent.click(await screen.findByRole('tab', { name: 'Sócios e valores' }));
+    mount(settings, <PlansTab />);
     expect(await screen.findByText('João da Silva')).toBeInTheDocument();
     expect(screen.getByText('Ativa')).toBeInTheDocument();
   });
 
   it('se a consulta falhar mostra "Tentar de novo", e tentar de novo carrega', async () => {
     api.listPlans.mockRejectedValueOnce(new Error('falhou'));
-    mount();
-    fireEvent.click(await screen.findByRole('tab', { name: 'Sócios e valores' }));
+    mount(settings, <PlansTab />);
     fireEvent.click(await screen.findByRole('button', { name: 'Tentar de novo' }));
     expect(await screen.findByText('Ativa')).toBeInTheDocument();
     expect(api.listPlans).toHaveBeenCalledTimes(2);
@@ -120,8 +112,7 @@ describe('Nova mensalidade — formulário', () => {
   afterEach(() => { vi.useRealTimers(); });
 
   const abrir = async (s: FinSettings = noMesCobrado) => {
-    mount(s);
-    fireEvent.click(await screen.findByRole('tab', { name: 'Sócios e valores' }));
+    mount(s, <PlansTab />);
     fireEvent.click(await screen.findByRole('button', { name: 'Nova' }));
     return screen.findByLabelText('Valor da mensalidade') as Promise<HTMLInputElement>;
   };

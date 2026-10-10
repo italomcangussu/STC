@@ -3,7 +3,8 @@
  * para os componentes só desenharem e as contas ficarem testáveis num lugar.
  */
 import type { ChargeFilters } from './financeApi';
-import type { ChargePaymentRow, ChargeStatementRow, FinHoliday, FinSettings, MemberCreditRow } from './types';
+import type { ChargePaymentRow, ChargeStatementRow, FinHoliday, FinSettings, MemberCreditRow, MemberPendencyMeta } from './types';
+import { matchesSearch } from '../searchText';
 import { brDate, firstOfMonth, monthLabel, type IsoDate } from './dates';
 import { buildCalendar, CLUB_DEFAULT_DUE_RULE, type DueRule } from './calendar';
 import { generationHorizon, planCharges, type PeriodMonths, type PlanChargesResult } from './memberBilling';
@@ -82,11 +83,17 @@ export function chargeTotals(rows: ChargeStatementRow[]): ChargeTotals {
   return { due, overdue };
 }
 
+/** Mensalidade e pendência de sócio são a mesma coisa no banco (uma cobrança); o tipo é só um filtro. */
+export type ChargeTypeFilter = '' | 'membership' | 'member_pendency';
+
+export const CHARGE_TYPE_FILTERS: ReadonlyArray<readonly [ChargeTypeFilter, string]> = [['', 'Todas'], ['membership', 'Mensalidades'], ['member_pendency', 'Pendências']];
+
 export const CHARGE_STATUS_FILTERS = [['', 'Todas'], ['overdue', 'Vencidas'], ['open', 'Em aberto'], ['forecast', 'Previstas'], ['partial', 'Parciais'], ['in_review', 'Em análise'], ['paid', 'Pagas'], ['canceled', 'Canceladas']] as const;
 
 /** Os filtros que a pessoa mexe na tela de cobranças, como texto dos campos. */
 export interface ChargeFilterState {
   search: string;
+  type: ChargeTypeFilter;
   status: string;
   /** Mês no formato `YYYY-MM` (campo de mês); vazio = sem limite. */
   compFrom: string;
@@ -95,7 +102,7 @@ export interface ChargeFilterState {
   dueTo: string;
 }
 
-export const NO_CHARGE_FILTERS: ChargeFilterState = { search: '', status: '', compFrom: '', compTo: '', dueFrom: '', dueTo: '' };
+export const NO_CHARGE_FILTERS: ChargeFilterState = { search: '', type: '', status: '', compFrom: '', compTo: '', dueFrom: '', dueTo: '' };
 
 /**
  * Filtros da tela → filtros do banco. A busca por nome NÃO vai: lá a comparação é sensível a acento
@@ -108,7 +115,7 @@ export function chargeApiFilters(f: ChargeFilterState): ChargeFilters {
     competenceTo: f.compTo ? `${f.compTo}-01` : undefined,
     dueFrom: f.dueFrom || undefined,
     dueTo: f.dueTo || undefined,
-    chargeType: 'membership',
+    chargeType: f.type || undefined,
   };
 }
 
@@ -117,12 +124,33 @@ const rangeText = ({ from, to }: { from: string; to: string }, whenEmpty: string
 /** As linhas "Filtros" do arquivo exportado: o que estava na tela quando a pessoa clicou em exportar. */
 export function chargeExportFilters(f: ChargeFilterState, today: IsoDate): Array<{ label: string; value: string }> {
   return [
+    { label: 'Tipo', value: CHARGE_TYPE_FILTERS.find(([id]) => id === f.type)?.[1] ?? 'Todas' },
     { label: 'Situação', value: CHARGE_STATUS_FILTERS.find(([id]) => id === f.status)?.[1] ?? 'Todas' },
     { label: 'Busca', value: f.search || '—' },
     { label: 'Competência', value: rangeText({ from: f.compFrom, to: f.compTo }, 'todas') },
     { label: 'Vencimento', value: rangeText({ from: f.dueFrom, to: f.dueTo }, 'todos') },
     { label: 'Posição em', value: brDate(today) },
   ];
+}
+
+/** Uma linha da lista de cobranças de sócios; a pendência traz o que a descreve (motivo, convidado, régua). */
+export type MemberChargeRow = ChargeStatementRow & { meta?: MemberPendencyMeta };
+
+const matchesChargeSearch = (row: MemberChargeRow, search: string): boolean =>
+  !search.trim() || matchesSearch(search, `${row.profile_name} ${row.meta?.description ?? ''} ${row.meta?.guest_name ?? ''}`);
+
+/**
+ * Junta cada cobrança ao metadado de pendência (quando é pendência) e aplica a busca: nome do sócio
+ * e, nas pendências, também a descrição e o convidado. Sem acento e sem maiúsculas.
+ */
+export function memberChargeRows(statements: ChargeStatementRow[], metas: MemberPendencyMeta[], search: string): MemberChargeRow[] {
+  const byId = new Map(metas.map((m) => [m.id, m]));
+  return statements
+    .map((statement): MemberChargeRow => {
+      const meta = byId.get(statement.charge_id);
+      return meta ? { ...statement, meta } : statement;
+    })
+    .filter((row) => matchesChargeSearch(row, search));
 }
 
 /** Cobranças que um crédito do sócio pode abater: do mesmo sócio, com saldo e não canceladas. */

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import type { ChargePaymentRow, ChargeStatementRow, FinHoliday, FinSettings } from '../../lib/finance/types';
+import type { ChargePaymentRow, ChargeStatementRow, FinHoliday, FinSettings, MemberPendencyMeta } from '../../lib/finance/types';
 import {
   availableChargeActions, chargeApiFilters, chargeExportFilters, chargeTotals, creditResolution, creditTargets, effectivePayments, isSettled,
-  lastEffectivePayment, lateSuffix, NO_CHARGE_FILTERS, overdueCount, overdueSentence, previewNeedsAttention, previewNewPlan, previewSentence, shownAmountCents,
+  lastEffectivePayment, lateSuffix, memberChargeRows, NO_CHARGE_FILTERS, overdueCount, overdueSentence, previewNeedsAttention, previewNewPlan, previewSentence, shownAmountCents,
 } from '../../lib/finance/memberCharges';
 
 const payment = (over: Partial<ChargePaymentRow> = {}): ChargePaymentRow => ({
@@ -236,10 +236,15 @@ describe('o que o banco recebe ao resolver um crédito', () => {
 });
 
 describe('filtros da lista de cobranças', () => {
-  it('sem nada digitado só pede mensalidades; o nome nunca vai ao banco', () => {
+  it('sem tipo pede mensalidades e pendências juntas; o nome nunca vai ao banco', () => {
     expect(chargeApiFilters({ ...NO_CHARGE_FILTERS, search: 'joao' })).toEqual({
-      status: '', competenceFrom: undefined, competenceTo: undefined, dueFrom: undefined, dueTo: undefined, chargeType: 'membership',
+      status: '', competenceFrom: undefined, competenceTo: undefined, dueFrom: undefined, dueTo: undefined, chargeType: undefined,
     });
+  });
+
+  it('o filtro Tipo vira o tipo de cobrança do banco', () => {
+    expect(chargeApiFilters({ ...NO_CHARGE_FILTERS, type: 'membership' }).chargeType).toBe('membership');
+    expect(chargeApiFilters({ ...NO_CHARGE_FILTERS, type: 'member_pendency' }).chargeType).toBe('member_pendency');
   });
 
   it('competência vira o dia 1 do mês; vencimento segue como está', () => {
@@ -249,12 +254,29 @@ describe('filtros da lista de cobranças', () => {
 
   it('as linhas do arquivo exportado dizem o que estava na tela', () => {
     expect(chargeExportFilters(NO_CHARGE_FILTERS, '2026-10-06')).toEqual([
-      { label: 'Situação', value: 'Todas' }, { label: 'Busca', value: '—' }, { label: 'Competência', value: 'todas' },
+      { label: 'Tipo', value: 'Todas' }, { label: 'Situação', value: 'Todas' }, { label: 'Busca', value: '—' }, { label: 'Competência', value: 'todas' },
       { label: 'Vencimento', value: 'todos' }, { label: 'Posição em', value: '06/10/2026' },
     ]);
-    expect(chargeExportFilters({ ...NO_CHARGE_FILTERS, status: 'overdue', search: 'ana', compFrom: '2026-03', dueTo: '2026-09-30' }, '2026-10-06')).toEqual([
-      { label: 'Situação', value: 'Vencidas' }, { label: 'Busca', value: 'ana' }, { label: 'Competência', value: '2026-03 a …' },
+    expect(chargeExportFilters({ ...NO_CHARGE_FILTERS, type: 'member_pendency', status: 'overdue', search: 'ana', compFrom: '2026-03', dueTo: '2026-09-30' }, '2026-10-06')).toEqual([
+      { label: 'Tipo', value: 'Pendências' }, { label: 'Situação', value: 'Vencidas' }, { label: 'Busca', value: 'ana' }, { label: 'Competência', value: '2026-03 a …' },
       { label: 'Vencimento', value: '… a 2026-09-30' }, { label: 'Posição em', value: '06/10/2026' },
     ]);
+  });
+});
+
+describe('lista unificada de cobranças de sócios', () => {
+  const meta = { id: 'p1', description: 'Consumo do bar', guest_name: 'Carlos Convidado' } as MemberPendencyMeta;
+  const rows = [charge({ charge_id: 'm1', profile_name: 'Ana' }), charge({ charge_id: 'p1', profile_name: 'Beto' })];
+
+  it('a pendência ganha a descrição; a mensalidade fica como veio', () => {
+    const out = memberChargeRows(rows, [meta], '');
+    expect(out.find((r) => r.charge_id === 'p1')?.meta?.description).toBe('Consumo do bar');
+    expect(out.find((r) => r.charge_id === 'm1')?.meta).toBeUndefined();
+  });
+
+  it('a busca olha o nome do sócio e, na pendência, a descrição e o convidado (sem acento)', () => {
+    expect(memberChargeRows(rows, [meta], 'ana').map((r) => r.charge_id)).toEqual(['m1']);
+    expect(memberChargeRows(rows, [meta], 'BAR').map((r) => r.charge_id)).toEqual(['p1']);
+    expect(memberChargeRows(rows, [meta], 'carlos').map((r) => r.charge_id)).toEqual(['p1']);
   });
 });

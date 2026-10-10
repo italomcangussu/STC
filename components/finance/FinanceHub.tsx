@@ -1,9 +1,9 @@
 /**
- * Financeiro do clube (administrador). Reúne dashboard, DRE e fluxo de caixa;
- * Receber (mensalidades, pendências de sócio — com a régua de cobrança —, outras
- * receitas e aportes, comprovantes, alunos e Day Card); Pagar (contas a pagar:
- * despesas, retiradas e transferências; recorrências); e cadastros. Cada aba é
- * carregada sob demanda.
+ * Financeiro do clube (administrador). Reúne painel, DRE e fluxo de caixa;
+ * Receber (cobranças de sócios — mensalidades e pendências numa lista, com o tipo
+ * como filtro —, comprovantes, alunos e Day Card, outras receitas e aportes);
+ * Pagar (contas a pagar e recorrências); e cadastros (contas, mensalidades dos
+ * sócios, categorias, configurações). Cada aba é carregada sob demanda.
  *
  * Quem pode: o administrador (`is_admin()`), garantido no BANCO — esconder o botão
  * não é a proteção; as funções recusam qualquer outro papel.
@@ -16,10 +16,11 @@ import { ErrorBlock, SectionTabs, Spinner } from './ui';
 import { useAsync } from './hooks';
 import { useLiveRefresh } from '../../hooks/useLiveRefresh';
 import { useAdminEmbedded } from '../admin/AdminEmbedContext';
+import type { ChargeTypeFilter } from '../../lib/finance/memberCharges';
 
 const OverviewTab = lazy(() => import('./tabs/OverviewTab'));
 const MembersTab = lazy(() => import('./tabs/MembersTab'));
-const PendenciesTab = lazy(() => import('./tabs/PendenciesTab'));
+const PlansTab = lazy(() => import('./tabs/PlansTab'));
 const ReceiptsTab = lazy(() => import('./tabs/ReceiptsTab'));
 const StudentsTab = lazy(() => import('./tabs/StudentsTab'));
 const ReceivablesTab = lazy(() => import('./tabs/ReceivablesTab'));
@@ -34,26 +35,55 @@ const SettingsTab = lazy(() => import('./tabs/SettingsTab'));
 // eslint-disable-next-line react-refresh/only-export-components
 export const FINANCE_GROUPS = [
   { id: 'visao', label: 'Visão', tabs: [['overview', 'Painel'], ['dre', 'DRE'], ['cashflow', 'Fluxo de caixa']] },
-  { id: 'receber', label: 'Receber', tabs: [['members', 'Mensalidades'], ['pendencies', 'Pendências'], ['receivables', 'Outras receitas'], ['receipts', 'Comprovantes'], ['students', 'Alunos e Day Card']] },
+  { id: 'receber', label: 'Receber', tabs: [['members', 'Cobranças de sócios'], ['receipts', 'Comprovantes'], ['students', 'Alunos e Day Card'], ['receivables', 'Outras receitas']] },
   { id: 'pagar', label: 'Pagar', tabs: [['bills', 'Contas a pagar'], ['recurrences', 'Recorrências']] },
-  { id: 'cadastros', label: 'Cadastros', tabs: [['accounts', 'Contas'], ['categories', 'Categorias'], ['settings', 'Configurações']] },
+  { id: 'cadastros', label: 'Cadastros', tabs: [['accounts', 'Contas'], ['plans', 'Mensalidades dos sócios'], ['categories', 'Categorias'], ['settings', 'Configurações']] },
 ] as const;
 
 const ALL = FINANCE_GROUPS.flatMap((g) => g.tabs.map((t) => t[0] as string));
 const KEY = 'finance-hub-tab';
 
-const loadTab = (): string => {
-  try { const v = localStorage.getItem(KEY); if (v && ALL.includes(v)) return v; } catch { /* storage indisponível */ }
-  return 'overview';
+/**
+ * Abas que viraram filtro: o endereço antigo continua valendo e abre a lista já filtrada
+ * (links em Configurações, aba salva no aparelho antes da mudança).
+ */
+const ALIASES: Record<string, { tab: string; chargeType: ChargeTypeFilter }> = { pendencies: { tab: 'members', chargeType: 'member_pendency' } };
+
+const resolveTab = (id: string): { tab: string; chargeType: ChargeTypeFilter } | null =>
+  ALIASES[id] ?? (ALL.includes(id) ? { tab: id, chargeType: '' } : null);
+
+const loadTab = (): { tab: string; chargeType: ChargeTypeFilter } => {
+  try { const v = localStorage.getItem(KEY); const r = v ? resolveTab(v) : null; if (r) return r; } catch { /* storage indisponível */ }
+  return { tab: 'overview', chargeType: '' };
 };
+
+interface TabContext { chargeType: ChargeTypeFilter; onReceiptsChanged: () => void }
+
+/** Cada aba e como montá-la; aba desconhecida cai no Painel. */
+const TAB_VIEWS: Record<string, (ctx: TabContext) => React.ReactElement> = {
+  overview: () => <OverviewTab />,
+  dre: () => <DreTab />,
+  cashflow: () => <CashFlowTab />,
+  members: ({ chargeType }) => <MembersTab key={chargeType} initialType={chargeType} />,
+  receipts: ({ onReceiptsChanged }) => <ReceiptsTab onChanged={onReceiptsChanged} />,
+  students: () => <StudentsTab />,
+  receivables: () => <ReceivablesTab />,
+  bills: () => <BillsTab />,
+  recurrences: () => <RecurrencesTab />,
+  accounts: () => <AccountsTab />,
+  plans: () => <PlansTab />,
+  categories: () => <CategoriesTab />,
+  settings: () => <SettingsTab />,
+};
+
+const renderTab = (tab: string, ctx: TabContext) => (TAB_VIEWS[tab] ?? TAB_VIEWS.overview)(ctx);
 
 export const FinanceHub: React.FC = () => {
   const embedded = useAdminEmbedded();
-  const [tab, setTab] = useState(loadTab);
+  const [{ tab, chargeType }, setTarget] = useState(loadTab);
   const go = useCallback((id: string) => {
-    if (!ALL.includes(id)) return;
-    setTab(id);
-    try { localStorage.setItem(KEY, id); } catch { /* ignore */ }
+    const target = resolveTab(id);
+    if (target) setTarget(target);
   }, []);
 
   const refs = useAsync(async () => {
@@ -74,23 +104,7 @@ export const FinanceHub: React.FC = () => {
   if (!refs.data) return <Spinner label="Abrindo o financeiro…" />;
 
   const pendingCount = pending.data?.length ?? 0;
-  const body = (() => {
-    switch (tab) {
-      case 'members': return <MembersTab />;
-      case 'pendencies': return <PendenciesTab />;
-      case 'receipts': return <ReceiptsTab onChanged={pending.reload} />;
-      case 'students': return <StudentsTab />;
-      case 'receivables': return <ReceivablesTab />;
-      case 'bills': return <BillsTab />;
-      case 'recurrences': return <RecurrencesTab />;
-      case 'cashflow': return <CashFlowTab />;
-      case 'dre': return <DreTab />;
-      case 'accounts': return <AccountsTab />;
-      case 'categories': return <CategoriesTab />;
-      case 'settings': return <SettingsTab />;
-      default: return <OverviewTab />;
-    }
-  })();
+  const body = renderTab(tab, { chargeType, onReceiptsChanged: pending.reload });
 
   return (
     <FinanceProvider value={value}>
@@ -100,7 +114,7 @@ export const FinanceHub: React.FC = () => {
             <div className="rounded-2xl bg-linear-to-br from-emerald-500 to-emerald-600 p-3 text-white shadow-lg shadow-emerald-200"><Landmark size={24} /></div>
             <div>
               <h1 className="text-xl font-black tracking-tight text-stone-800 md:text-2xl">Financeiro do clube</h1>
-              <p className="text-xs font-medium text-stone-500">Mensalidades, pendências, pagamentos, contas, DRE e caixa</p>
+              <p className="text-xs font-medium text-stone-500">Cobranças, pagamentos, contas, DRE e caixa</p>
             </div>
           </div>
         )}

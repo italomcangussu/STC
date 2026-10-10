@@ -1,5 +1,5 @@
 import React from 'react';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ChargeStatementRow, FinAccount, FinSettings, MemberCreditRow } from '../../lib/finance/types';
 
@@ -8,7 +8,7 @@ import type { ChargeStatementRow, FinAccount, FinSettings, MemberCreditRow } fro
 const api = vi.hoisted(() => ({
   newRequestId: () => globalThis.crypto.randomUUID(),
   adjustCharge: vi.fn(), cancelCharge: vi.fn(), chargeHistory: vi.fn(), createPlan: vi.fn(), endPlan: vi.fn(), generateCharges: vi.fn(),
-  listCharges: vi.fn(), listCredits: vi.fn(), listHolidays: vi.fn(), listMembersWithoutPlan: vi.fn(), listPlanPrices: vi.fn(), listPlans: vi.fn(),
+  listCharges: vi.fn(), listCredits: vi.fn(), listPendencyMeta: vi.fn(), listHolidays: vi.fn(), listMembersWithoutPlan: vi.fn(), listPlanPrices: vi.fn(), listPlans: vi.fn(),
   profileNames: vi.fn(), registerPayment: vi.fn(), resolveCredit: vi.fn(), reversePayment: vi.fn(), setPlanPrice: vi.fn(), updatePlan: vi.fn(),
 }));
 vi.mock('../../lib/finance/financeApi', () => api);
@@ -16,6 +16,7 @@ vi.mock('../../lib/finance/financeApi', () => api);
 import { ConfirmProvider } from '../../components/ui/ConfirmProvider';
 import { FinanceProvider } from '../../components/finance/FinanceContext';
 import MembersTab from '../../components/finance/tabs/MembersTab';
+import PlansTab from '../../components/finance/tabs/PlansTab';
 import { notify } from '../../lib/notifications';
 
 const settings = { id: true, due_day: 5, due_month_offset: 1, non_business_rule: 'next_business_day', saturday_is_business: false, horizon_months: 1, version: 1 } as FinSettings;
@@ -38,9 +39,9 @@ const plan = (over: Record<string, unknown> = {}) => ({
   profile: { name: 'João da Silva', avatar_url: null, is_active: true }, ...over,
 });
 
-const mount = (accounts: FinAccount[] = [account]) => render(
+const mount = (accounts: FinAccount[] = [account], tab: React.ReactNode = <MembersTab />) => render(
   <ConfirmProvider>
-    <FinanceProvider value={{ accounts, categories: [], settings, reload: vi.fn(), go: vi.fn() }}><MembersTab /></FinanceProvider>
+    <FinanceProvider value={{ accounts, categories: [], settings, reload: vi.fn(), go: vi.fn() }}>{tab}</FinanceProvider>
   </ConfirmProvider>,
 );
 
@@ -55,6 +56,7 @@ beforeEach(() => {
   api.listPlans.mockResolvedValue([plan()]);
   api.listPlanPrices.mockResolvedValue([{ id: 'pr1', plan_id: 'pl1', effective_from: '2026-01-01', amount_cents: 15000, reason: 'Início' }]);
   api.listCredits.mockResolvedValue([]);
+  api.listPendencyMeta.mockResolvedValue([]);
   api.listHolidays.mockResolvedValue([]);
   api.listMembersWithoutPlan.mockResolvedValue([{ id: 'u7', name: 'Beto Novo' }]);
   api.profileNames.mockResolvedValue({});
@@ -70,7 +72,8 @@ const openCharge = async (name = 'Ana Sócia') => {
   fireEvent.click(await screen.findByText(name));
   return within(await screen.findByRole('dialog'));
 };
-const goPlans = async () => { fireEvent.click(await screen.findByRole('tab', { name: 'Sócios e valores' })); };
+/** "Sócios e valores" saiu da lista de cobranças: é Cadastros › Mensalidades dos sócios. */
+const goPlans = async () => { cleanup(); mount(undefined, <PlansTab />); };
 const confirmDialog = async (label: string) => fireEvent.click(await screen.findByRole('button', { name: label }));
 
 describe('Cobrança — registrar pagamento', () => {
@@ -290,15 +293,15 @@ describe('Cobrança — extrato e histórico', () => {
   });
 });
 
-describe('Gerar cobranças', () => {
+describe('Gerar mensalidades', () => {
   it('gera para todos, avisa o que faltou de preço e recarrega a lista', async () => {
     const sucesso = vi.spyOn(notify, 'success').mockImplementation(() => undefined as never);
     api.generateCharges.mockResolvedValue({ created: 3, missing_price: 1 });
     mount();
-    fireEvent.click(await screen.findByRole('button', { name: /Gerar cobranças/ }));
+    fireEvent.click(await screen.findByRole('button', { name: /Gerar mensalidades/ }));
 
     await waitFor(() => expect(api.generateCharges).toHaveBeenCalledWith(null, KEY));
-    expect(sucesso).toHaveBeenCalledWith('3 cobrança(s) gerada(s).', { description: '1 competência(s) sem preço definido não foram geradas.' });
+    expect(sucesso).toHaveBeenCalledWith('3 mensalidade(s) gerada(s).', { description: '1 competência(s) sem preço definido não foram geradas.' });
     await waitFor(() => expect(api.listCharges).toHaveBeenCalledTimes(2));
   });
 
@@ -306,7 +309,7 @@ describe('Gerar cobranças', () => {
     const sucesso = vi.spyOn(notify, 'success').mockImplementation(() => undefined as never);
     api.generateCharges.mockResolvedValue({ created: 0, missing_price: 0 });
     mount();
-    fireEvent.click(await screen.findByRole('button', { name: /Gerar cobranças/ }));
+    fireEvent.click(await screen.findByRole('button', { name: /Gerar mensalidades/ }));
 
     await waitFor(() => expect(sucesso).toHaveBeenCalledWith('Nada novo a gerar — tudo já está gerado.', { description: undefined }));
   });
@@ -442,7 +445,7 @@ describe('Créditos — resolver', () => {
     api.listCredits.mockResolvedValue([credit]);
     api.profileNames.mockResolvedValue({ u9: 'Carla Antiga' });
     mount();
-    fireEvent.click(await screen.findByRole('tab', { name: /Créditos/ }));
+    fireEvent.click(await screen.findByRole('button', { name: /Resolver créditos/ }));
     fireEvent.click(await screen.findByText('Carla Antiga'));
     return within(await screen.findByRole('dialog'));
   };
@@ -451,7 +454,7 @@ describe('Créditos — resolver', () => {
     api.listCredits.mockResolvedValue([credit]);
     api.profileNames.mockResolvedValue({ u9: 'Carla Antiga' });
     mount();
-    fireEvent.click(await screen.findByRole('tab', { name: /Créditos/ }));
+    fireEvent.click(await screen.findByRole('button', { name: /Resolver créditos/ }));
 
     expect(await screen.findByText(/Pagamento duplicado · 01\/10\/2026/)).toBeInTheDocument();
   });
