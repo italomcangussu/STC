@@ -4,11 +4,11 @@
  * movimentos, mas não contam como entrada nem saída do clube.
  */
 import React, { useMemo, useState } from 'react';
-import { Pencil } from 'lucide-react';
+import { Pencil, History } from 'lucide-react';
 import type { MovementRow } from '../../../lib/finance/types';
 import { CashMovementActions } from './CashMovementActions';
 import { Bar, CartesianGrid, ComposedChart, Legend, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { accountBalances, cashFlow, dreLines, movements } from '../../../lib/finance/financeApi';
+import { accountBalances, cashFlow, dreLines, movements, removedCashHistory } from '../../../lib/finance/financeApi';
 import { balanceSpec, exportFilename, movementsSpec, toCsv, type ReportSpec } from '../../../lib/finance/export';
 import { notifyFinanceError } from '../../../lib/finance/errors';
 import { buildDreStatement, composeDre, resolvePeriod, type Period } from '../../../lib/finance/reports';
@@ -34,6 +34,8 @@ const CashFlowTab: React.FC = () => {
   const [category, setCategory] = useState('');
   const [search, setSearch] = useState('');
   const [selectedMovement, setSelectedMovement] = useState<MovementRow | null>(null);
+  const [showRemoved, setShowRemoved] = useState(false);
+  const removed = useAsync(() => showRemoved ? removedCashHistory(100) : Promise.resolve([]), [showRemoved]);
 
   const flow = useAsync(() => cashFlow(period.from, period.to, gran, account || null), [period.from, period.to, gran, account]);
   const moves = useAsync(() => movements(period.from, period.to, { ...(account ? { account_id: account } : {}), ...(category ? { category_id: category } : {}), ...(search.trim() ? { search: search.trim() } : {}) }, MOVEMENTS_LIMIT, 0), [period.from, period.to, account, category, search]);
@@ -106,7 +108,7 @@ const CashFlowTab: React.FC = () => {
               <label className="flex min-h-11 items-center gap-2 text-xs font-bold text-stone-600"><input type="checkbox" className="h-5 w-5" checked={hideTransfers} onChange={(e) => setHideTransfers(e.target.checked)} />Ocultar transferências entre contas</label>
               <BalanceExport build={exportBalance} />
             </div>
-            <p className="mb-3 text-xs text-stone-500">Encontrou um lançamento incorreto? Use <b>Corrigir / excluir</b> no movimento. Contas pagas são anuladas com estorno auditável, sem apagar a história; valores automáticos devem ser corrigidos na origem.</p>
+            <p className="mb-3 text-xs text-stone-500">Exclua entradas e saídas registradas indevidamente. Pagamentos e estornos vinculados desaparecem juntos do caixa e dos saldos; as evidências ficam na auditoria.</p>
             {moves.error ? <ErrorBlock error={moves.error} onRetry={moves.reload} /> : moves.loading ? <Spinner /> : rows.length === 0 ? <Empty title="Nenhum movimento" /> : (
               <ul className="space-y-2">
                 {rows.slice(0, 300).map((m) => (
@@ -120,7 +122,7 @@ const CashFlowTab: React.FC = () => {
                             className="inline-flex min-h-11 items-center gap-1 rounded-lg px-2 text-xs font-bold text-saibro-700 hover:bg-saibro-50"
                             aria-label={`Corrigir ou excluir movimento: ${m.description}, ${brDate(m.occurred_on)}`}
                             onClick={() => setSelectedMovement(m)}>
-                            <Pencil size={14} /> Corrigir / excluir
+                            <Pencil size={14} /> Editar / excluir
                           </button>
                         </div>
                       </div>
@@ -132,6 +134,19 @@ const CashFlowTab: React.FC = () => {
             {rows.length > 300 && <p className="mt-2 text-xs text-stone-400">Mostrando 300 de {rows.length}. A exportação leva todos os movimentos filtrados.</p>}
             {(moves.data?.[0]?.total_count ?? 0) > MOVEMENTS_LIMIT && <div className="mt-2"><Notice tone="warn">Há mais de {MOVEMENTS_LIMIT.toLocaleString('pt-BR')} movimentos no filtro; só os mais recentes aparecem (e são exportados). Reduza o período ou use os filtros.</Notice></div>}
           </Card>
+          <button type="button" className={btnGhost} onClick={() => setShowRemoved(v => !v)} aria-expanded={showRemoved}>
+            <History size={16} /> {showRemoved ? 'Ocultar histórico de excluídos' : 'Ver histórico de excluídos'}
+          </button>
+          {showRemoved && <Card title="Arquivo de lançamentos excluídos" subtitle="Auditoria interna; não compõe caixa, saldos nem exportações.">
+            {removed.error ? <ErrorBlock error={removed.error} onRetry={removed.reload} /> : removed.loading ? <Spinner /> :
+              (removed.data ?? []).length === 0 ? <Empty title="Nenhum lançamento excluído" /> :
+              <ul className="space-y-2">
+                {(removed.data ?? []).map(d => <li key={d.source_type + '-' + d.source_id} className="rounded-xl border border-stone-100 bg-stone-50 p-3">
+                  <p className="text-xs font-bold text-stone-700">{d.reason}</p>
+                  <p className="mt-1 text-[11px] text-stone-500">{d.actor_name} · {new Date(d.removed_at).toLocaleString('pt-BR')} · {d.source_type}</p>
+                </li>)}
+              </ul>}
+          </Card>}
         </>
       )}
       <CashMovementActions
@@ -141,6 +156,7 @@ const CashFlowTab: React.FC = () => {
           setSelectedMovement(null);
           flow.reload();
           moves.reload();
+          removed.reload();
         }}
       />
     </div>
