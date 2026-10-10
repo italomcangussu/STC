@@ -220,7 +220,7 @@ export const EntrySheet: React.FC<{ entry: FinEntry | null; onClose: () => void;
       {mode === 'void' && (
         <div className="space-y-3 rounded-2xl border border-red-200 bg-red-50/40 p-3">
           <p className="text-sm font-black text-red-700">Excluir lançamento incorreto</p>
-          <Notice tone="warn">Este lançamento já movimentou dinheiro no sistema. A exclusão será lógica: o servidor fará os estornos contábeis necessários e cancelará o lançamento numa única operação. O comprovante e o histórico continuarão disponíveis para auditoria. Nenhuma transferência é realizada no banco.</Notice>
+          <Notice tone="warn">Esta exclusão tira o lançamento original e os estornos vinculados do fluxo de caixa e dos saldos. O comprovante e a auditoria permanecem arquivados; nenhuma transferência bancária será executada.</Notice>
           <p className="text-sm text-stone-700">Documento: <b>{formatBRL(e.amount_cents)}</b>. Valor contabilizado: <b>{formatBRL(e.paid_cents)}</b>.</p>
           <Field label="Por que este lançamento está errado? (obrigatório)">
             <textarea className={inputCls} rows={3} maxLength={500} value={reason} onChange={(ev) => setReason(ev.target.value)}
@@ -231,9 +231,9 @@ export const EntrySheet: React.FC<{ entry: FinEntry | null; onClose: () => void;
             <button className={btnDanger} disabled={busy || reason.trim().length < 8 || !(payments.data ?? []).some(p => p.kind === 'payment')} onClick={async () => {
               const ok = await confirm({
                 tone: 'danger',
-                title: 'Anular lançamento e estornar os pagamentos?',
+                title: 'Excluir lançamento e movimentos vinculados?',
                 description: 'O lançamento original e os estornos serão removidos juntos dos saldos e do fluxo de caixa. O registro de auditoria será preservado. Nenhum Pix será executado.',
-                confirmLabel: 'Anular lançamento',
+                confirmLabel: 'Excluir do caixa',
               });
               if (ok) {
                 const original = (payments.data ?? []).find((p) => p.kind === 'payment');
