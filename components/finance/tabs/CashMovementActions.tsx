@@ -11,6 +11,7 @@ import { entryForCashMovement, reversePayment } from '../../../lib/finance/finan
 import { notifyFinanceError } from '../../../lib/finance/errors';
 import { formatBRL } from '../../../lib/finance/money';
 import type { FinEntry, MovementRow } from '../../../lib/finance/types';
+import { cashCorrectionKind } from '../../../lib/finance/cashCorrection';
 import { brDate } from '../../../lib/finance/dates';
 import { useRequestKey } from '../hooks';
 import { useFinance } from '../FinanceContext';
@@ -18,19 +19,6 @@ import { EntrySheet } from './entries/EntrySheets';
 import { Field, Notice, Sheet, Spinner, btnDanger, btnGhost, btnPrimary, inputCls } from '../ui';
 
 type Props = { movement: MovementRow | null; onClose: () => void; onChanged: () => void };
-type CorrectionKind = 'entry' | 'member' | 'student' | 'daycard' | 'opening' | 'history';
-
-export function cashCorrectionKind(m: Pick<MovementRow,'source_type'>): CorrectionKind {
-  switch (m.source_type) {
-    case 'entry_payment': return 'entry';
-    case 'member_payment': return 'member';
-    case 'student_payment': return 'student';
-    case 'day_card': return 'daycard';
-    case 'opening': return 'opening';
-    default: return 'history';
-  }
-}
-
 export const CashMovementActions: React.FC<Props> = ({movement,onClose,onChanged}) => {
   const {go}=useFinance();
   const confirm=useConfirm();
@@ -46,7 +34,6 @@ export const CashMovementActions: React.FC<Props> = ({movement,onClose,onChanged
     setEntry(null);
     setError(null);
     setReason('');
-    renew();
     if(!movement||kind!=='entry')return;
     let active=true;
     setLoading(true);
