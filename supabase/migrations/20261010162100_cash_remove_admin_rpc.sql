@@ -100,6 +100,8 @@ begin
     if not found or v_account.opening_balance_cents=0 then raise exception 'INVALID_CASH_SOURCE'; end if;
     update public.fin_accounts set opening_balance_cents=0,version=version+1,
       updated_at=now(),updated_by=v_actor where id=p_source_id;
+    insert into fin_private.cash_removed(source_type,source_id,reason,actor_id,request_id,snapshot)
+    values('opening',v_account.id::text,v_reason,v_actor,p_request_id,to_jsonb(v_account));
     v_count:=1;
   end if;
 
