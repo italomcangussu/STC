@@ -11,7 +11,7 @@ import { entryForCashMovement, removeCashMovement } from '../../../lib/finance/f
 import { notifyFinanceError } from '../../../lib/finance/errors';
 import { formatBRL } from '../../../lib/finance/money';
 import type { FinEntry, MovementRow } from '../../../lib/finance/types';
-import { cashCorrectionKind } from '../../../lib/finance/cashCorrection';
+import { canRemoveCashMovement, cashCorrectionKind } from '../../../lib/finance/cashCorrection';
 import { brDate } from '../../../lib/finance/dates';
 import { useRequestKey } from '../hooks';
 import { useFinance } from '../FinanceContext';
@@ -57,7 +57,7 @@ export const CashMovementActions:React.FC<Props>=({movement,onClose,onChanged})=
     }finally{setLoadingEntry(false);}
   };
   const remove=async()=>{
-    if(reason.trim().length<8||busy)return;
+    if(reason.trim().length<8||busy||!canRemoveCashMovement(movement.source_type))return;
     const ok=await confirm({
       tone:'danger',
       title:'Excluir este lançamento por completo?',
@@ -93,13 +93,15 @@ export const CashMovementActions:React.FC<Props>=({movement,onClose,onChanged})=
         <p className="mt-2 font-bold">Use esta opção somente quando a movimentação não deveria existir na contabilidade. Se o dinheiro realmente entrou ou saiu da conta bancária, corrija a classificação em vez de excluí-lo.</p>
       </Notice>
 
+      {!canRemoveCashMovement(movement.source_type) && <Notice tone="bad">Este tipo de movimentação só pode ser corrigido na origem, para preservar os vínculos financeiros.</Notice>}
+
       <Field label="Motivo da exclusão (obrigatório)">
         <textarea className={inputCls} rows={3} maxLength={500} value={reason}
           onChange={ev=>setReason(ev.target.value)}
           placeholder="Ex.: lançamento duplicado; estorno contábil indevido; pagamento não realizado" />
       </Field>
 
-      <button className={btnDanger+' w-full'} disabled={busy||reason.trim().length<8}
+      <button className={btnDanger+' w-full'} disabled={busy||reason.trim().length<8||!canRemoveCashMovement(movement.source_type)}
         onClick={remove}><Trash2 size={16}/> Excluir lançamento do fluxo de caixa</button>
 
       <div className="flex flex-wrap gap-2">
