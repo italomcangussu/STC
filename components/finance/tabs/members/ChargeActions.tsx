@@ -14,14 +14,17 @@ const GenerateButton: React.FC<{ onGenerated: () => void }> = ({ onGenerated }) 
     });
     renew(); onGenerated();
   });
-  return <button className={`${btnGhost} flex-1 whitespace-nowrap sm:flex-none`} disabled={busy} onClick={generate}><CalendarPlus size={16} /> Gerar mensalidades</button>;
+  return <button className={`${btnGhost} px-3`} disabled={busy} onClick={generate}><CalendarPlus size={16} /> Gerar mensalidades</button>;
 };
 
-/** As ações da lista de cobranças: a primária (nova pendência) e as de rotina (gerar, régua). */
+/**
+ * As ações da lista de cobranças: a primária (nova pendência) ocupa a linha; as de rotina (gerar,
+ * régua) dividem a linha de baixo no celular, para não empurrar a lista para fora da tela.
+ */
 export const ChargeActions: React.FC<{ onGenerated: () => void; onNewPendency: () => void; onRules: () => void }> = ({ onGenerated, onNewPendency, onRules }) => (
-  <div className="flex w-full flex-wrap gap-2 sm:w-auto">
+  <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-row-reverse">
+    <button className={`${btnPrimary} col-span-2`} onClick={onNewPendency}><Plus size={16} /> Nova pendência</button>
     <GenerateButton onGenerated={onGenerated} />
-    <button className={`${btnGhost} flex-1 whitespace-nowrap sm:flex-none`} onClick={onRules}><Settings2 size={16} /> Configurar régua</button>
-    <button className={`${btnPrimary} flex-1 whitespace-nowrap sm:flex-none`} onClick={onNewPendency}><Plus size={16} /> Nova pendência</button>
+    <button className={`${btnGhost} px-3`} onClick={onRules}><Settings2 size={16} /> Configurar régua</button>
   </div>
 );

@@ -51,12 +51,10 @@ const DayCardItem: React.FC<{ row: DayCardRow; onChanged: () => void }> = ({ row
           <p className="truncate text-sm font-black text-stone-800">{row.guest_name}</p>
           <p className="text-xs text-stone-500">{brDate(row.occurred_on)}{row.booked_by ? ` · convidado de ${row.booked_by}` : ''}</p>
         </div>
-        <div className="shrink-0 text-right">
-          <p className="text-sm font-black tabular-nums">{formatBRL(row.charged_cents)}</p>
-          <Badge tone={row.exempt ? 'muted' : 'warn'}>{row.exempt ? 'Isento' : 'Cobrado'}</Badge>
-        </div>
+        <p className="shrink-0 text-sm font-black tabular-nums">{formatBRL(row.charged_cents)}</p>
       </div>
-      <div className="mt-2 flex justify-end">
+      <div className="mt-1 flex items-center justify-between gap-2">
+        <Badge tone={row.exempt ? 'muted' : 'warn'}>{row.exempt ? 'Isento' : 'Cobrado'}</Badge>
         <button className={`${btnGhost} min-h-11 px-3 text-xs`} disabled={busy} onClick={toggle}>{row.exempt ? 'Voltar a cobrar' : 'Isentar'}</button>
       </div>
     </Row>

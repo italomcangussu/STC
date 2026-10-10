@@ -52,9 +52,8 @@ const MembersTab: React.FC<{ initialType?: ChargeTypeFilter }> = ({ initialType 
 
   return (
     <div className="space-y-4">
-      <ChargesView list={list} onOpen={setSelected}
+      <ChargesView list={list} onOpen={setSelected} notice={<CreditsPanel credits={credits} />}
         actions={<ChargeActions onGenerated={list.reload} onNewPendency={() => sheets.setNewOpen(true)} onRules={() => sheets.openRules()} />} />
-      <CreditsPanel credits={credits} />
       {list.filters.type === 'member_pendency' && <RulesSummary settings={settings} onConfigure={() => sheets.openRules()} />}
 
       <NewPendencySheet open={sheets.newOpen} onClose={() => sheets.setNewOpen(false)} onDone={list.reload} onConfigure={() => sheets.openRules(true)} />

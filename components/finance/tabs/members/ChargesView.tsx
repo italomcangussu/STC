@@ -33,7 +33,7 @@ const FiltersCard: React.FC<{ list: ChargesList; actions: React.ReactNode }> = (
   return (
     <Card title="Cobranças de sócios" subtitle="Mensalidades e pendências: o que cada sócio deve ao clube." right={actions}>
       <div className="space-y-3">
-        <AdminSearch value={filters.search} onChange={(search) => change({ search })} placeholder="Buscar sócio, descrição ou convidado…" label="Buscar cobrança" />
+        <AdminSearch value={filters.search} onChange={(search) => change({ search })} placeholder="Sócio, descrição ou convidado" label="Buscar cobrança" />
         <SectionTabs variant="segmented" label="Tipo" value={filters.type} onChange={(type) => change({ type: type as ChargeTypeFilter })} items={CHARGE_TYPE_FILTERS.map(([id, label]) => ({ id, label }))} />
         <SectionTabs label="Situação" value={filters.status} onChange={(status) => change({ status })} items={CHARGE_STATUS_FILTERS.map(([id, label]) => ({ id, label }))} />
         <DateFilters list={list} />
@@ -76,7 +76,7 @@ const ChargeRow: React.FC<{ charge: MemberChargeRow; onOpen: (charge: MemberChar
       </div>
       <div className="shrink-0 text-right">
         <p className="text-sm font-black tabular-nums">{formatBRL(shownAmountCents(r))}</p>
-        <div className="mt-1 flex justify-end gap-1"><ChargeStatusBadge status={r.display_status} />{r.meta && !r.meta.collection_enabled && <Badge tone="neutral">Pausada</Badge>}</div>
+        <div className="mt-1 flex flex-col items-end gap-1"><ChargeStatusBadge status={r.display_status} />{r.meta && !r.meta.collection_enabled && <Badge tone="neutral">Pausada</Badge>}</div>
       </div>
     </div>
   </Row>
@@ -95,9 +95,10 @@ const ChargeRows: React.FC<{ list: ChargesList; onOpen: (charge: MemberChargeRow
 };
 
 /** Lista de cobranças de sócios: filtros (tipo, situação, datas), totais, exportação e a lista; tocar abre o extrato. */
-export const ChargesView: React.FC<{ list: ChargesList; actions: React.ReactNode; onOpen: (charge: MemberChargeRow) => void }> = ({ list, actions, onOpen }) => (
+export const ChargesView: React.FC<{ list: ChargesList; actions: React.ReactNode; notice?: React.ReactNode; onOpen: (charge: MemberChargeRow) => void }> = ({ list, actions, notice, onOpen }) => (
   <>
     <FiltersCard list={list} actions={actions} />
+    {notice}
     <Totals list={list} />
     <SummaryBar list={list} />
     <PartialNotice list={list} />
