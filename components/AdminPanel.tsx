@@ -1864,7 +1864,7 @@ export const AdminPanel: React.FC = () => {
     };
 
     return (
-        <div className="flex min-h-full flex-col bg-white">
+        <div className="admin-panel flex min-h-full w-full max-w-full min-w-0 flex-col overflow-x-clip bg-white">
             <header className="relative shrink-0 rounded-b-3xl bg-saibro-600 px-3 pb-12 pt-4 shadow-xl md:px-8 md:pt-6">
                 <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-b-3xl" aria-hidden>
                     <div className="absolute -right-16 -top-20 h-56 w-56 rounded-full bg-saibro-500/30 blur-3xl" />
@@ -1886,7 +1886,7 @@ export const AdminPanel: React.FC = () => {
                 id={PANEL_DOM_ID}
                 role="tabpanel"
                 {...(hasSectionTabs ? { 'aria-labelledby': tabDomId(activeTab) } : { 'aria-label': section.label })}
-                className="mx-auto w-full max-w-7xl flex-1 px-3 pb-8 md:px-8"
+                className="mx-auto w-full min-w-0 max-w-7xl flex-1 overflow-x-clip px-3 pb-8 md:px-8"
             >
                 <AdminSectionHeading section={section} />
                 <AdminEmbedProvider>

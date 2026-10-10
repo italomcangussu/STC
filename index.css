@@ -99,6 +99,18 @@
         padding: 0;
         overflow: hidden; /* Lock root scroll */
         -webkit-overflow-scrolling: touch;
+        /* Comportamento de app: sem rubber-band e sem rolagem lateral no documento. */
+        overscroll-behavior: none;
+        max-width: 100%;
+        /* O iOS reescala o texto ao girar o aparelho; em app isso só quebra o layout. */
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    #root {
+        max-width: 100%;
+        overflow-x: hidden;
     }
 
     body {
@@ -1951,6 +1963,84 @@ body.conv-standalone-locked {
     .conv-shell input:not([type='checkbox']):not([type='radio']),
     .conv-shell textarea,
     .conv-shell select {
+        font-size: 16px;
+    }
+}
+
+/* ---- Comportamento de app nativo (sempre ligado) ----
+   Regras de layout que não dependem da preferência "modo app nativo":
+   uma tela de app nunca desliza para o lado. */
+
+/* Área rolável principal do Layout: só rola na vertical. `overflow-y: auto`
+   promove o eixo X para `auto`, então qualquer filho 1px mais largo (tabela,
+   texto sem quebra, flex sem `min-w-0`) virava barra horizontal. Fora de
+   `@layer` para vencer os utilitários do Tailwind. */
+.app-scroll {
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    overscroll-behavior-x: none;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-gutter: auto;
+}
+
+/* Filhos diretos de contêineres flex/grid do painel podem encolher abaixo do
+   tamanho do conteúdo; sem isso o `min-width: auto` do flexbox empurra a tela. */
+.admin-panel,
+.admin-panel :is(section, article, form, fieldset, ul, ol, details) {
+    min-width: 0;
+}
+
+.admin-panel :is(img, video, canvas, iframe) {
+    max-width: 100%;
+}
+
+.admin-panel :is(p, h1, h2, h3, h4, h5, h6, li, td, th, label, span, a, button) {
+    overflow-wrap: break-word;
+}
+
+.admin-panel :is(pre, code) {
+    max-width: 100%;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+/* Tabelas e quadros largos rolam dentro do próprio cartão, nunca a página. */
+.admin-panel table {
+    max-width: 100%;
+}
+
+/* Faixa de seções do painel: rola de lado, mas sem arrastar a tela junto
+   (rubber-band) nem deixar a aba cortada ao meio. */
+.admin-tab-strip {
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+}
+
+.admin-tab-strip > * {
+    scroll-snap-align: center;
+}
+
+/* Toque: sem atraso de 300ms nem zoom por duplo toque nos controles, e sem
+   o destaque cinza do WebKit. */
+button,
+a,
+select,
+summary,
+label,
+[role="button"],
+[role="tab"],
+[role="option"] {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* iOS dá zoom ao focar campo com fonte < 16px e a tela fica deslocada para o
+   lado até o usuário dar pinça. No toque, todo campo de texto usa 16px. */
+@media (pointer: coarse) {
+    input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):not([type='file']),
+    textarea,
+    select {
         font-size: 16px;
     }
 }

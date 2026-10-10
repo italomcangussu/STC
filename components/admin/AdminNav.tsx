@@ -23,7 +23,10 @@ export const AdminNav: React.FC<{ active: AdminTabId; onGo: (id: AdminTabId) => 
 
     // Em telas estreitas a faixa de seções rola; garante que a aberta esteja à vista.
     useEffect(() => {
-        activeRef.current?.scrollIntoView?.({ inline: 'center', block: 'nearest' });
+        // Só o eixo X da faixa: `scrollIntoView` também rolaria a página e deslocaria a tela.
+        const el = activeRef.current;
+        const strip = el?.parentElement;
+        if (el && strip) strip.scrollTo?.({ left: el.offsetLeft - (strip.clientWidth - el.offsetWidth) / 2, behavior: 'smooth' });
     }, [active]);
 
     return (
@@ -51,7 +54,7 @@ export const AdminNav: React.FC<{ active: AdminTabId; onGo: (id: AdminTabId) => 
             </div>
 
             {group.sections.length > 1 && (
-                <div role="tablist" aria-label={group.label} className="flex gap-1 overflow-x-auto border-t border-stone-100 px-2 scrollbar-hide">
+                <div role="tablist" aria-label={group.label} className="admin-tab-strip flex gap-1 overflow-x-auto overflow-y-hidden border-t border-stone-100 px-2 scrollbar-hide">
                     {group.sections.map(s => {
                         const on = s.id === active;
                         const n = pending[s.id] ?? 0;

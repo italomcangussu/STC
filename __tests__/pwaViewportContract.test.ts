@@ -26,4 +26,19 @@ describe('PWA viewport shell contract', () => {
         expect(layoutTsx).not.toContain('h-dvh flex flex-col');
         expect(layoutTsx).not.toContain('pb-[calc(35px+env(safe-area-inset-bottom,20px))]');
     });
+
+    it('never lets the app shell or the admin panel scroll sideways', () => {
+        // `overflow-y-auto` sozinho promove o eixo X para `auto`: o main rolava de lado.
+        expect(layoutTsx).toMatch(/<main className="[^"]*\bapp-scroll\b[^"]*\boverflow-x-hidden\b/);
+        expect(indexCss).toMatch(/\.app-scroll\s*\{[^}]*overflow-x:\s*hidden/);
+        expect(indexCss).toMatch(/\.app-scroll\s*\{[^}]*overscroll-behavior-x:\s*none/);
+
+        const adminPanelTsx = readFileSync(resolve(root, 'components/AdminPanel.tsx'), 'utf8');
+        expect(adminPanelTsx).toMatch(/className="admin-panel [^"]*overflow-x-clip/);
+        expect(indexCss).toMatch(/\.admin-panel[^{]*\{[^}]*min-width:\s*0/);
+    });
+
+    it('keeps iOS from zooming into fields on touch devices', () => {
+        expect(indexCss).toMatch(/@media \(pointer: coarse\)\s*\{\s*input:not\(\[type='checkbox'\]\)[^}]*font-size:\s*16px/);
+    });
 });

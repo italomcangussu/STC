@@ -161,7 +161,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
     const filteredNav = navItems.filter(item => (!item.roles || item.roles.includes(currentUser.role)));
 
     return (
-        <div className="relative h-full flex flex-col md:flex-row overflow-hidden bg-clay-pattern">
+        <div className="relative h-full flex flex-col md:flex-row w-full max-w-full min-w-0 overflow-hidden bg-clay-pattern">
             {/* Mobile Header Bar (HIG Standard Navigation Bar) */}
             <header className="flex-none md:hidden bg-white/85 backdrop-blur-xl border-b border-saibro-200/80 px-4 py-3 flex justify-between items-center z-50 pt-safe sticky top-0 shadow-xs">
                 <div className="flex items-center gap-2.5">
@@ -418,8 +418,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
             </aside>
 
             {/* Main Content Area */}
-            <main className="flex-1 overflow-y-auto overscroll-contain relative custom-scrollbar">
-                <div className={`mx-auto ${view === 'admin-panel' ? 'w-full pb-main-content md:pb-4' : 'max-w-4xl p-4 md:p-6 pb-main-content md:pb-12'}`}>
+            <main className="app-scroll flex-1 min-h-0 min-w-0 overflow-y-auto overflow-x-hidden overscroll-contain relative custom-scrollbar">
+                <div className={`mx-auto min-w-0 ${view === 'admin-panel' ? 'w-full pb-main-content md:pb-4' : 'max-w-4xl p-4 md:p-6 pb-main-content md:pb-12'}`}>
                     {children}
                 </div>
             </main>
