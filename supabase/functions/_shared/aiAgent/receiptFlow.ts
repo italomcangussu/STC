@@ -25,9 +25,16 @@ export function createReceiptFlow(args: {
   service: any;
   chat: Chat | null;
   model: () => string | null;
+  authorizationSecret: string;
   finalize: (originalMessageId: string) => Promise<AnyRow>;
 }) {
-  const {service,chat,model,finalize}=args;
+  const {service,chat,model,authorizationSecret,finalize}=args;
+  async function proofMac(messageId:string,purposeMessageId:string,confirmationMessageId:string,purpose:string,subject:string){
+    const material=[messageId,purposeMessageId,confirmationMessageId,purpose,subject].join('|');
+    const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(authorizationSecret),{name:'HMAC',hash:'SHA-256'},false,['sign']);
+    const mac=new Uint8Array(await crypto.subtle.sign('HMAC',key,new TextEncoder().encode(material)));
+    return [...mac].map(b=>b.toString(16).padStart(2,'0')).join('');
+  }
   async function read(id: string): Promise<AnyRow | null> {
     const {data,error}=await service.from('conv_messages')
       .select('id,conversation_id,direction,kind,body,media_path,media_mime,created_at,meta')
@@ -93,7 +100,7 @@ export function createReceiptFlow(args: {
     const original=recent.find(m=>activeStages.has(String(m.meta?.stc_receipt_confirmation?.stage??'')));
     if(!original)return {handled:false};
     const state={...original.meta.stc_receipt_confirmation};
-    const decision=await classify(state.stage,userText,state,i.transcript??[]);
+    const decision=await classify(state.stage,String(last.body??userText),state,i.transcript??[]);
     const action=String(decision.action??'unknown');
     if(action==='unrelated')return {handled:false};
     if(action==='cancel'){
@@ -125,7 +132,8 @@ export function createReceiptFlow(args: {
           new Date(last.created_at).getTime()<=new Date(purposeMsg.created_at).getTime()) {
         return {handled:true,message:'Preciso confirmar novamente a finalidade deste arquivo antes de registrar.'};
       }
-      const accepted={...state,stage:'confirmed',confirmation_message_id:last.id,updated_at:new Date().toISOString()};
+      const mac=await proofMac(original.id,String(state.purpose_message_id),last.id,String(state.purpose),String(state.subject??''));
+      const accepted={...state,stage:'confirmed',confirmation_message_id:last.id,confirmation_mac:mac,updated_at:new Date().toISOString()};
       if(!(await persist(original,accepted)))return {handled:true,message:'Não consegui guardar sua confirmação; não fiz nenhum lançamento.'};
       const result=await finalize(original.id).catch(()=>({ok:false,reason:'FINALIZATION_UNAVAILABLE'}));
       if(result.ok&&result.registered)
