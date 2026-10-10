@@ -9,7 +9,7 @@ import { notify } from '../../../../lib/notifications';
 import { useConfirm } from '../../../../hooks/useConfirm';
 import { notifyFinanceError } from '../../../../lib/finance/errors';
 import {
-  cancelEntry, createEntry, DOCS_BUCKET, listAttachments, listEntryPayments, payEntry, removeAttachment, reverseEntryPayment, signedUrl, updateEntry,
+  cancelEntry, createEntry, DOCS_BUCKET, listAttachments, listEntryPayments, payEntry, removeAttachment, reverseEntryPayment, signedUrl, updateEntry, voidEntry,
   uploadAttachment,
 } from '../../../../lib/finance/financeApi';
 import type { EntryKind, FinEntry } from '../../../../lib/finance/types';
@@ -101,7 +101,7 @@ export const NewEntrySheet: React.FC<{ open: boolean; onClose: () => void; onDon
 // ------------------------------------------------------------------
 // Detalhe: pagar/receber, estornar, editar, cancelar, anexos
 // ------------------------------------------------------------------
-type Mode = null | 'pay' | 'edit' | 'cancel';
+type Mode = null | 'pay' | 'edit' | 'cancel' | 'void';
 
 export const EntrySheet: React.FC<{ entry: FinEntry | null; onClose: () => void; onChanged: () => void }> = ({ entry, onClose, onChanged }) => {
   const today = useToday();
@@ -180,7 +180,9 @@ export const EntrySheet: React.FC<{ entry: FinEntry | null; onClose: () => void;
         <div className="grid grid-cols-2 gap-2">
           {isDoc && ['pending', 'partial'].includes(e.status) && <button className={btnPrimary} onClick={() => start('pay')}>{incoming ? 'Receber' : 'Pagar'}</button>}
           {e.kind !== 'transfer' && <button className={btnGhost} onClick={() => start('edit')}>Editar</button>}
-          {!hasPayments && <button className={btnDanger} onClick={() => start('cancel')}>Cancelar lançamento</button>}
+          <button className={btnDanger} onClick={() => start(hasPayments ? 'void' : 'cancel')}>
+            {hasPayments ? 'Excluir lançamento incorreto' : 'Cancelar lançamento incorreto'}
+          </button>
         </div>
       )}
 
@@ -212,6 +214,30 @@ export const EntrySheet: React.FC<{ entry: FinEntry | null; onClose: () => void;
               description: desc.trim(), ...(isDoc ? { due_date: due || null, category_id: category || null } : {}),
               ...(isDoc && !hasPayments && amount && amount !== e.amount_cents ? { amount_cents: amount } : {}),
             }, hasPayments ? reason.trim() : null, key), 'Lançamento atualizado.')}>Salvar</button></div>
+        </div>
+      )}
+
+      {mode === 'void' && (
+        <div className="space-y-3 rounded-2xl border border-red-200 bg-red-50/40 p-3">
+          <p className="text-sm font-black text-red-700">Excluir lançamento incorreto</p>
+          <Notice tone="warn">Este lançamento já movimentou dinheiro no sistema. A exclusão será lógica: o servidor fará os estornos contábeis necessários e cancelará o lançamento numa única operação. O comprovante e o histórico continuarão disponíveis para auditoria. Nenhuma transferência é realizada no banco.</Notice>
+          <p className="text-sm text-stone-700">Documento: <b>{formatBRL(e.amount_cents)}</b>. Valor contabilizado: <b>{formatBRL(e.paid_cents)}</b>.</p>
+          <Field label="Por que este lançamento está errado? (obrigatório)">
+            <textarea className={inputCls} rows={3} maxLength={500} value={reason} onChange={(ev) => setReason(ev.target.value)}
+              placeholder="Ex.: valor lançado na conta errada; não houve esse pagamento" />
+          </Field>
+          <div className="flex flex-wrap gap-2">
+            <button className={btnGhost} onClick={() => setMode(null)} disabled={busy}>Voltar</button>
+            <button className={btnDanger} disabled={busy || reason.trim().length < 8} onClick={async () => {
+              const ok = await confirm({
+                tone: 'danger',
+                title: 'Anular lançamento e estornar os pagamentos?',
+                description: 'O saldo será compensado por lançamentos de estorno na data atual. O registro original permanecerá na auditoria. Essa ação exige um motivo e não executa Pix nem reembolso bancário.',
+                confirmLabel: 'Anular lançamento',
+              });
+              if (ok) await run(() => voidEntry(e.id, e.version, reason.trim(), key), 'Lançamento anulado; estornos registrados.');
+            }}>Confirmar exclusão</button>
+          </div>
         </div>
       )}
 
