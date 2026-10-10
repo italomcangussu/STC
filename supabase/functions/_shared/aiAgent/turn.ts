@@ -1316,7 +1316,7 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
     if (pendingReceipt) {
       const handled = await handleReceiptIntent({
         stage: pendingReceipt, messageId: ultima?.id as string | undefined,
-        mediaOnly: soMidia, text: buffered, transcript: (ctx.transcript ?? []) as Ctx[],
+        mediaOnly: deps.mediaOnly === true || soMidia, text: buffered, transcript: (ctx.transcript ?? []) as Ctx[],
         db, chat: deps.chat, model: settings.model,
       });
       if (handled) {
