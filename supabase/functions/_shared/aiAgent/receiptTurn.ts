@@ -5,8 +5,8 @@ import { runTurn } from './turn.ts';
 import { createReceiptFlow } from './receiptFlow.ts';
 import { buildChatRequest,providerIdFrom,uazError } from '../uazChat.ts';
 
-export function makeReceiptAwareTurn(opts:{service:any,chat:any,uaz:any,finalize:(messageId:string)=>Promise<any>,deps:any}) {
-  const {service,chat,uaz,deps,finalize}=opts;
+export function makeReceiptAwareTurn(opts:{service:any,chat:any,uaz:any,authorizationSecret:string,finalize:(messageId:string)=>Promise<any>,deps:any}) {
+  const {service,chat,uaz,deps,finalize,authorizationSecret}=opts;
   // Enviar as respostas de confirmação pelo mesmo canal auditável do João.
   async function answer(messageId:string,trigger:any,body:string,action:string,memory:any){
     const q=await service.rpc('conv_svc_queue_message',{
@@ -49,7 +49,7 @@ export function makeReceiptAwareTurn(opts:{service:any,chat:any,uaz:any,finalize
         if(!latestR.error&&latestR.data===true){
           // Instanciar a cada turno para usar o modelo REAL configurado no STC.
           const configuredFlow=createReceiptFlow({
-            service,chat,
+            service,chat,authorizationSecret,
             model:()=>String(ctx?.settings?.model??'').trim()||null,
             finalize,
           });
