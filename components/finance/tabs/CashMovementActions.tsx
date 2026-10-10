@@ -1,126 +1,119 @@
 /**
- * Corrigir na própria lista do Fluxo de Caixa.
- * Não apagar lançamentos contabilizados fisicamente: estorno + cancelamento
- * auditáveis; movimentos automáticos só podem ser corrigidos na sua origem.
+ * Exclusão administrativa completa no Fluxo de Caixa.
+ * UI confirma e explica o impacto; o servidor mantém a integridade dos
+ * pagamentos, créditos, reservas e do histórico de auditoria.
  */
 import React, { useEffect, useState } from 'react';
-import { AlertTriangle, ArrowUpRight, Pencil, Undo2 } from 'lucide-react';
+import { AlertTriangle, ArrowUpRight, Pencil, Trash2 } from 'lucide-react';
 import { notify } from '../../../lib/notifications';
 import { useConfirm } from '../../../hooks/useConfirm';
-import { entryForCashMovement, reversePayment } from '../../../lib/finance/financeApi';
+import { entryForCashMovement, removeCashMovement } from '../../../lib/finance/financeApi';
 import { notifyFinanceError } from '../../../lib/finance/errors';
 import { formatBRL } from '../../../lib/finance/money';
 import type { FinEntry, MovementRow } from '../../../lib/finance/types';
-import { cashCorrectionKind } from '../../../lib/finance/cashCorrection';
+import { canRemoveCashMovement, cashCorrectionKind } from '../../../lib/finance/cashCorrection';
 import { brDate } from '../../../lib/finance/dates';
 import { useRequestKey } from '../hooks';
 import { useFinance } from '../FinanceContext';
 import { EntrySheet } from './entries/EntrySheets';
-import { Field, Notice, Sheet, Spinner, btnDanger, btnGhost, btnPrimary, inputCls } from '../ui';
+import { Field, Notice, Sheet, btnDanger, btnGhost, btnPrimary, inputCls } from '../ui';
 
-type Props = { movement: MovementRow | null; onClose: () => void; onChanged: () => void };
-export const CashMovementActions: React.FC<Props> = ({movement,onClose,onChanged}) => {
+type Props={movement:MovementRow|null;onClose:()=>void;onChanged:()=>void};
+
+const impacts:Record<string,string>={
+  entry:'O lançamento manual, seus pagamentos e eventuais estornos deixam de compor o caixa. Se já estava pago, a baixa é desfeita e o documento é cancelado.',
+  member:'A baixa da mensalidade é desfeita, e sua entrada, crédito excedente e estorno deixam de compor o caixa. A cobrança volta ao status correspondente. Créditos já utilizados impedem a exclusão.',
+  history:'A entrada original e este estorno são retirados juntos da listagem e dos saldos. Não será gerado outro estorno.',
+  student:'O pagamento do aluno é cancelado na origem. Isso poderá afetar a validade do Card Mensal ou da aula avulsa.',
+  daycard:'A cobrança de Day Card fica isenta na reserva e sai do caixa e do DRE. A reserva não será apagada.',
+  opening:'O saldo inicial da conta será zerado. Isso recalcula todos os saldos históricos da conta.',
+};
+
+export const CashMovementActions:React.FC<Props>=({movement,onClose,onChanged})=>{
   const {go}=useFinance();
   const confirm=useConfirm();
-  const {key,renew}=useRequestKey();
-  const [entry,setEntry]=useState<FinEntry | null>(null);
-  const [loading,setLoading]=useState(false);
-  const [error,setError]=useState<string | null>(null);
+  const {key}=useRequestKey();
   const [reason,setReason]=useState('');
   const [busy,setBusy]=useState(false);
+  const [entry,setEntry]=useState<FinEntry|null>(null);
+  const [loadingEntry,setLoadingEntry]=useState(false);
+  const [editing,setEditing]=useState(false);
   const kind=movement?cashCorrectionKind(movement):'history';
 
   useEffect(()=>{
-    setEntry(null);
-    setError(null);
-    setReason('');
-    if(!movement||kind!=='entry')return;
-    let active=true;
-    setLoading(true);
-    entryForCashMovement(movement.source_id).then(e=>{
-      if(active)setEntry(e);
-    }).catch(e=>{
-      if(active)setError(e instanceof Error?e.message:'Não foi possível localizar a origem do pagamento.');
-    }).finally(()=>{if(active)setLoading(false);});
-    return ()=>{active=false;};
-    // O ID da origem é a chave do carregamento; não buscar novamente a cada render.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  },[movement?.source_id,kind]);
+    setReason('');setEditing(false);setEntry(null);
+  },[movement?.source_id,movement?.source_type]);
 
   if(!movement)return null;
   const close=()=>{if(!busy)onClose();};
   const navigate=(tab:string)=>{onClose();go(tab);};
-
-  if(kind==='entry'){
-    if(entry)return <EntrySheet key={entry.id} entry={entry} onClose={close} onChanged={()=>{
-      onChanged();onClose();
-    }}/>;
-    return <Sheet open onClose={close} title="Corrigir lançamento">
-      {loading?<Spinner label="Abrindo lançamento e seus pagamentos…" />:
-        <Notice tone="bad">{error||'Não foi possível localizar o documento. Nenhum registro foi modificado.'}</Notice>}
-      <button className={btnGhost} onClick={close}>Fechar</button>
-    </Sheet>;
-  }
-
-  const removeMemberPayment=async()=>{
-    if(!movement||reason.trim().length<8)return;
+  const openEdit=async()=>{
+    setLoadingEntry(true);
+    try{
+      const doc=await entryForCashMovement(movement.source_id);
+      setEntry(doc);setEditing(true);
+    }catch(e){
+      notifyFinanceError(e,'Não foi possível abrir o lançamento para edição.','finance_cash_edit_failed');
+    }finally{setLoadingEntry(false);}
+  };
+  const remove=async()=>{
+    if(reason.trim().length<8||busy||!canRemoveCashMovement(movement.source_type))return;
     const ok=await confirm({
       tone:'danger',
-      title:'Estornar pagamento de mensalidade?',
-      description:'A baixa será desfeita, a cobrança voltará a ficar em aberto conforme o saldo efetivo e o histórico manterá o pagamento e seu estorno. Não há transferência bancária automática.',
-      confirmLabel:'Confirmar estorno',
+      title:'Excluir este lançamento por completo?',
+      description:'A movimentação incorreta desaparecerá do fluxo e dos saldos calculados. Entradas e estornos vinculados sairão juntos. O histórico de auditoria será preservado e não haverá transação bancária.',
+      confirmLabel:'Excluir lançamento',
     });
     if(!ok)return;
     setBusy(true);
     try{
-      await reversePayment(movement.source_id,reason.trim(),key);
-      notify.success('Baixa anulada e estorno registrado no fluxo de caixa.');
-      renew();onChanged();onClose();
-    }catch(e){notifyFinanceError(e,'Não foi possível estornar a baixa.','finance_cash_payment_reverse_failed');}
-    finally{setBusy(false);}
+      await removeCashMovement(movement.source_type,movement.source_id,reason.trim(),key);
+      notify.success('Lançamento incorreto excluído do caixa e dos saldos.');
+      onChanged();onClose();
+    }catch(e){
+      notifyFinanceError(e,'Não foi possível excluir o lançamento.','finance_cash_remove_failed');
+    }finally{setBusy(false);}
   };
 
+  if(editing&&entry)return <EntrySheet key={entry.id} entry={entry}
+    onClose={()=>{setEditing(false);setEntry(null);}}
+    onChanged={()=>{onChanged();onClose();}}/>;
+
   const destination=kind==='opening'?'accounts':kind==='member'?'members':'students';
-  return <Sheet open onClose={close} title="Corrigir movimento" subtitle={brDate(movement.occurred_on)}>
-    <div className="space-y-3">
+  return <Sheet open onClose={close} title="Corrigir ou excluir lançamento" subtitle={brDate(movement.occurred_on)} closeOnBackdrop={false}>
+    <div className="space-y-4">
       <div className="rounded-2xl bg-stone-50 p-3">
         <p className="text-sm font-black text-stone-800">{movement.description}</p>
-        <p className="mt-1 text-xs text-stone-500">{movement.account_name} · {movement.source_type}</p>
+        <p className="mt-1 text-xs text-stone-500">{movement.account_name} · {brDate(movement.occurred_on)}</p>
         <p className="mt-2 text-lg font-black tabular-nums">{formatBRL(movement.amount_cents)}</p>
       </div>
-      {kind==='member' && <>
-        <Notice tone="warn" title="Pagamento de sócio">
-          É possível anular esta baixa, mas não apagar o comprovante ou reescrever o registro original. O estorno irá refletir no saldo hoje. Se for apenas um valor incorreto, faça uma nova baixa correta depois.
-        </Notice>
-        <Field label="Motivo do estorno (obrigatório)">
-          <textarea className={inputCls} rows={3} maxLength={500} value={reason}
-            onChange={e=>setReason(e.target.value)}
-            placeholder="Ex.: comprovante era uma doação para a campanha, não mensalidade" />
-        </Field>
-        <button className={btnDanger} disabled={busy||reason.trim().length<8} onClick={removeMemberPayment}>
-          <Undo2 size={16}/> Anular baixa incorreta
-        </button>
-      </>}
-      {kind==='student' && <Notice tone="warn" title="Recebimento de aluno">
-        Esse valor vem do Card Mensal ou da aula avulsa registrados no cadastro do aluno. Corrija ou cancele o pagamento no Painel de alunos; não crie uma exclusão duplicada no caixa.
-      </Notice>}
-      {kind==='daycard' && <Notice tone="warn" title="Day Card derivado">
-        Este movimento é calculado pela reserva e pela configuração de cobrança. Para corrigir um Day Card que não foi recebido, revise a isenção/cobrança no Painel de alunos. Ele não é uma baixa financeira independente.
-      </Notice>}
-      {kind==='opening' && <Notice tone="warn" title="Saldo inicial">
-        Este valor pertence ao saldo de abertura da conta, não a uma receita. Corrigir o saldo inicial altera toda a evolução histórica do saldo. Faça isso em Contas, conferindo com o extrato.
-      </Notice>}
-      {kind==='history' && <Notice tone="info" title="Movimento de auditoria">
-        Esta linha é um estorno, compensação ou evento histórico. Não é permitido apagá-la para evitar desbalanceamento; confira o lançamento original e sua contrapartida.
-      </Notice>}
+
+      <Notice tone="warn" title="Excluir lançamento incorreto">
+        {impacts[kind]}
+        <p className="mt-2 font-bold">Use esta opção somente quando a movimentação não deveria existir na contabilidade. Se o dinheiro realmente entrou ou saiu da conta bancária, corrija a classificação em vez de excluí-lo.</p>
+      </Notice>
+
+      {!canRemoveCashMovement(movement.source_type) && <Notice tone="bad">Este tipo de movimentação só pode ser corrigido na origem, para preservar os vínculos financeiros.</Notice>}
+
+      <Field label="Motivo da exclusão (obrigatório)">
+        <textarea className={inputCls} rows={3} maxLength={500} value={reason}
+          onChange={ev=>setReason(ev.target.value)}
+          placeholder="Ex.: lançamento duplicado; estorno contábil indevido; pagamento não realizado" />
+      </Field>
+
+      <button className={btnDanger+' w-full'} disabled={busy||reason.trim().length<8||!canRemoveCashMovement(movement.source_type)}
+        onClick={remove}><Trash2 size={16}/> Excluir lançamento do fluxo de caixa</button>
+
       <div className="flex flex-wrap gap-2">
-        {kind!=='history'&&<button className={btnPrimary} disabled={busy} onClick={()=>navigate(destination)}>
-          {kind==='opening'?<Pencil size={16}/>:<ArrowUpRight size={16}/>}
-          Abrir {kind==='opening'?'conta':kind==='member'?'mensalidades':'origem'}
+        {kind==='entry'&&<button className={btnPrimary} disabled={busy||loadingEntry} onClick={openEdit}>
+          {loadingEntry?'Abrindo…':<><Pencil size={16}/> Editar dados</>}
         </button>}
-        <button className={btnGhost} onClick={close} disabled={busy}>Fechar</button>
+        {kind!=='entry'&&kind!=='history'&&<button className={btnGhost} disabled={busy} onClick={()=>navigate(destination)}>
+          <ArrowUpRight size={16}/> Abrir {kind==='opening'?'conta':kind==='member'?'mensalidades':'origem'}
+        </button>}
+        <button className={btnGhost} disabled={busy} onClick={close}>Voltar</button>
       </div>
-      <p className="flex items-center gap-1 text-[11px] text-stone-500"><AlertTriangle size={13}/> Correções financeiras mantêm rastreabilidade e não executam Pix automaticamente.</p>
+      <p className="flex items-start gap-1 text-[11px] text-stone-500"><AlertTriangle size={14} className="shrink-0"/> A exclusão não executa Pix, reembolso bancário ou apaga comprovantes e registros de auditoria.</p>
     </div>
   </Sheet>;
 };

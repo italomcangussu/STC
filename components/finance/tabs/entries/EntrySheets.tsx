@@ -9,7 +9,7 @@ import { notify } from '../../../../lib/notifications';
 import { useConfirm } from '../../../../hooks/useConfirm';
 import { notifyFinanceError } from '../../../../lib/finance/errors';
 import {
-  cancelEntry, createEntry, DOCS_BUCKET, listAttachments, listEntryPayments, payEntry, removeAttachment, reverseEntryPayment, signedUrl, updateEntry, voidEntry,
+  cancelEntry, createEntry, DOCS_BUCKET, listAttachments, listEntryPayments, payEntry, removeAttachment, removeCashMovement, reverseEntryPayment, signedUrl, updateEntry,
   uploadAttachment,
 } from '../../../../lib/finance/financeApi';
 import type { EntryKind, FinEntry } from '../../../../lib/finance/types';
@@ -220,7 +220,7 @@ export const EntrySheet: React.FC<{ entry: FinEntry | null; onClose: () => void;
       {mode === 'void' && (
         <div className="space-y-3 rounded-2xl border border-red-200 bg-red-50/40 p-3">
           <p className="text-sm font-black text-red-700">Excluir lançamento incorreto</p>
-          <Notice tone="warn">Este lançamento já movimentou dinheiro no sistema. A exclusão será lógica: o servidor fará os estornos contábeis necessários e cancelará o lançamento numa única operação. O comprovante e o histórico continuarão disponíveis para auditoria. Nenhuma transferência é realizada no banco.</Notice>
+          <Notice tone="warn">Esta exclusão tira o lançamento original e os estornos vinculados do fluxo de caixa e dos saldos. O comprovante e a auditoria permanecem arquivados; nenhuma transferência bancária será executada.</Notice>
           <p className="text-sm text-stone-700">Documento: <b>{formatBRL(e.amount_cents)}</b>. Valor contabilizado: <b>{formatBRL(e.paid_cents)}</b>.</p>
           <Field label="Por que este lançamento está errado? (obrigatório)">
             <textarea className={inputCls} rows={3} maxLength={500} value={reason} onChange={(ev) => setReason(ev.target.value)}
@@ -228,14 +228,18 @@ export const EntrySheet: React.FC<{ entry: FinEntry | null; onClose: () => void;
           </Field>
           <div className="flex flex-wrap gap-2">
             <button className={btnGhost} onClick={() => setMode(null)} disabled={busy}>Voltar</button>
-            <button className={btnDanger} disabled={busy || reason.trim().length < 8} onClick={async () => {
+            <button className={btnDanger} disabled={busy || reason.trim().length < 8 || !(payments.data ?? []).some(p => p.kind === 'payment')} onClick={async () => {
               const ok = await confirm({
                 tone: 'danger',
-                title: 'Anular lançamento e estornar os pagamentos?',
-                description: 'O saldo será compensado por lançamentos de estorno na data atual. O registro original permanecerá na auditoria. Essa ação exige um motivo e não executa Pix nem reembolso bancário.',
-                confirmLabel: 'Anular lançamento',
+                title: 'Excluir lançamento e movimentos vinculados?',
+                description: 'O lançamento original e os estornos serão removidos juntos dos saldos e do fluxo de caixa. O registro de auditoria será preservado. Nenhum Pix será executado.',
+                confirmLabel: 'Excluir do caixa',
               });
-              if (ok) await run(() => voidEntry(e.id, e.version, reason.trim(), key), 'Lançamento anulado; estornos registrados.');
+              if (ok) {
+                const original = (payments.data ?? []).find((p) => p.kind === 'payment');
+                if (!original) { notify.error('Não foi possível localizar o pagamento original. Atualize a tela.'); return; }
+                await run(() => removeCashMovement('entry_payment', original.id, reason.trim(), key), 'Lançamento e estornos removidos do fluxo de caixa.');
+              }
             }}>Confirmar exclusão</button>
           </div>
         </div>

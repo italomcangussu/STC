@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cashCorrectionKind } from '../../lib/finance/cashCorrection';
+import { canRemoveCashMovement, cashCorrectionKind } from '../../lib/finance/cashCorrection';
 
 describe('Correção do fluxo de caixa — identificar origem antes de anular', () => {
   it.each([
@@ -12,6 +12,19 @@ describe('Correção do fluxo de caixa — identificar origem antes de anular', 
     ['other','history'],
   ] as const)('%s encaminha para %s', (source_type, expected) => {
     expect(cashCorrectionKind({source_type})).toBe(expected);
+  });
+
+  it.each(['entry_payment','member_payment','member_reversal','student_payment','day_card','opening'])(
+    'permite a exclusão administrativa de %s', source => {
+      expect(canRemoveCashMovement(source)).toBe(true);
+    }
+  );
+  it('bloqueia origens financeiras desconhecidas',()=>{
+    expect(canRemoveCashMovement('other')).toBe(false);
+  });
+  it('permite excluir o estorno antigo pelo modal mesmo sendo histórico',()=>{
+    expect(cashCorrectionKind({source_type:'member_reversal'})).toBe('history');
+    expect(canRemoveCashMovement('member_reversal')).toBe(true);
   });
 
   it('nunca libera exclusão de um Day Card derivado como documento manual',()=>{

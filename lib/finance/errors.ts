@@ -38,6 +38,10 @@ export const FINANCE_ERRORS: Record<string, FinanceErrorInfo> = {
   PAYMENT_DATE_BEFORE_LAST: M('A data é anterior ao último pagamento desta cobrança.', 'Registre na ordem em que o dinheiro entrou.'),
   PAYMENT_NOT_FOUND: M('Pagamento não encontrado.'),
   PAYMENT_ALREADY_REVERSED: M('Este pagamento já foi estornado.'),
+  CASH_ALREADY_REMOVED: M('Este lançamento já foi excluído do caixa.', 'Atualize a listagem para visualizar os valores corrigidos.'),
+  INVALID_CASH_SOURCE: M('Essa movimentação não pode ser excluída diretamente.', 'Confira o registro original antes de tentar novamente.'),
+  CASH_LINKED_CREDIT: M('Este lançamento está vinculado à devolução de um crédito do sócio.', 'Resolva o crédito primeiro para não causar divergências.'),
+
   ONLY_LAST_PAYMENT_REVERSIBLE: M('Só o último pagamento da cobrança pode ser estornado.', 'Estorne os mais recentes primeiro.'),
   CREDIT_ALREADY_USED: M('O crédito deste pagamento já foi usado.', 'Desfaça o uso do crédito antes de estornar.'),
   CREDIT_NOT_OPEN: M('Este crédito já foi resolvido.'),

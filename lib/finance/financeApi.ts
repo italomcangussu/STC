@@ -142,6 +142,24 @@ export const voidEntry = (id: string, version: number, reason: string, requestId
     p_request_id: requestId, p_id: id, p_expected_version: version, p_reason: reason,
   });
 
+/** Exclui um movimento incorreto da contabilidade de caixa, sem apagar sua
+ * evidência histórica. Para estornos elimina também a entrada original.
+ * O servidor concilia mensalidades, alunos, Day Cards e contas antes de ocultar.
+ */
+export const removeCashMovement = (
+  sourceType: MovementRow['source_type'], sourceId: string, reason: string, requestId = newRequestId(),
+) => call<{ removed: boolean; source_type: string; affected_movements: number }>('fin_remove_cash_movement', {
+  p_request_id: requestId, p_source_type: sourceType, p_source_id: sourceId, p_reason: reason,
+});
+
+export interface RemovedCashHistoryRow {
+  source_type: string; source_id: string; reason: string;
+  actor_name: string; removed_at: string;
+}
+export const removedCashHistory = (limit = 100) =>
+  rows<RemovedCashHistoryRow>('fin_removed_cash_history', { p_limit: limit });
+
+
 /** Relaciona linha do Fluxo de Caixa à origem manual usando o ID do pagamento.
  * Movimentos derivados de mensalidades/cards nunca são convertidos em fin_entries.
  */

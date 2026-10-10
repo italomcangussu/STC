@@ -13,3 +13,12 @@ export function cashCorrectionKind(m: Pick<MovementRow,'source_type'>): CashCorr
     default:return 'history';
   }
 }
+
+/** O servidor só aceita estas origens. Não oferecer exclusão em fontes desconhecidas. */
+export const REMOVABLE_CASH_SOURCES = [
+  'entry_payment','member_payment','member_reversal','student_payment','day_card','opening',
+] as const;
+
+export function canRemoveCashMovement(sourceType: string): boolean {
+  return REMOVABLE_CASH_SOURCES.some(type => type === sourceType);
+}
