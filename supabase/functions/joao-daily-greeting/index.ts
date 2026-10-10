@@ -165,22 +165,26 @@ function fallback(d,fs,h){
     ps.length===4 ? ps[0].name+" / "+ps[1].name+" x "+ps[2].name+" / "+ps[3].name
       : ps[0].name+" x "+ps[1].name
   )+" no "+f.tournament+"." : "";
-  const variants=[
-    "Bom dia, turma!"+match+" Bom jogo para quem for à quadra e bom descanso para quem não for.",
-    "Bom dia, pessoal!"+match+" Que seja um dia bom de quadra e de conversa.",
-    "Um ótimo dia para a turma do STC!"+match+" Aproveitem o clube.",
-    "Bom dia, tenistas!"+match+" Bom jogo para quem entrar em quadra hoje.",
-    "Bom dia, turma!"+match+" Um excelente dia para todo mundo.",
-    "Bom dia, pessoal do STC!"+match+" Que não falte disposição para jogar.",
-    "Passando para desejar bom dia à turma!"+match+" Aproveitem o dia.",
-    "Bom dia, STC!"+match+" Boa diversão para quem for jogar hoje."
+  const opens=[
+    "Bom dia, turma do STC!", "Bom dia, pessoal!", "Uma ótima manhã para a turma!",
+    "Bom dia, tenistas!", "Passando para desejar um excelente dia, STC!",
+    "Que seja um ótimo dia para todo mundo!", "Bom dia a todos!"
   ];
-  const k=Number(d.iso.replace(/-/g,""))%variants.length;
-  for(let i=0;i<variants.length;i++){
-    const candidate=variants[(k+i)%variants.length];
+  const closes=[
+    "Bom jogo para quem estiver na quadra.", "Aproveitem o clube e a companhia.",
+    "Quem for jogar, aproveite cada ponto.", "Que a manhã seja boa para todos.",
+    "Uma boa jornada para a turma.", "Bons jogos e um ótimo descanso para quem não for jogar.",
+    "Que seja um dia agradável para todos."
+  ];
+  const num=Number(d.iso.replace(/-/g,""));
+  // 49 combinações neutras, sem estoque de piadas nem frases sobre bola na linha/rede.
+  // A comparação com conv_messages é a trava final se uma combinação já tiver saído.
+  for(let i=0;i<opens.length*closes.length;i++){
+    const k=(num+i)%(opens.length*closes.length);
+    const candidate=opens[k%opens.length]+match+" "+closes[Math.floor(k/opens.length)];
     if(!repetition(candidate,h))return candidate;
   }
-  return "Bom dia, pessoal!"+match+" Ótimo dia para todos.";
+  return "Bom dia, pessoal!"+match+" Que seja um bom dia para vocês.";
 }
 async function greeting(d,fs,h,social){
   const fb=fallback(d,fs,h);
