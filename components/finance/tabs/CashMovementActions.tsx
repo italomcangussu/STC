@@ -16,7 +16,7 @@ import { brDate } from '../../../lib/finance/dates';
 import { useRequestKey } from '../hooks';
 import { useFinance } from '../FinanceContext';
 import { EntrySheet } from './entries/EntrySheets';
-import { Field, Notice, Sheet, Spinner, btnDanger, btnGhost, btnPrimary, inputCls } from '../ui';
+import { Field, Notice, Sheet, btnDanger, btnGhost, btnPrimary, inputCls } from '../ui';
 
 type Props={movement:MovementRow|null;onClose:()=>void;onChanged:()=>void};
 
@@ -104,7 +104,7 @@ export const CashMovementActions:React.FC<Props>=({movement,onClose,onChanged})=
 
       <div className="flex flex-wrap gap-2">
         {kind==='entry'&&<button className={btnPrimary} disabled={busy||loadingEntry} onClick={openEdit}>
-          {loadingEntry?<Spinner label="Abrindo…" />:<><Pencil size={16}/> Editar dados</>}
+          {loadingEntry?'Abrindo…':<><Pencil size={16}/> Editar dados</>}
         </button>}
         {kind!=='entry'&&kind!=='history'&&<button className={btnGhost} disabled={busy} onClick={()=>navigate(destination)}>
           <ArrowUpRight size={16}/> Abrir {kind==='opening'?'conta':kind==='member'?'mensalidades':'origem'}
