@@ -22,6 +22,7 @@ import type { Provision, ProvisionResult } from '../athleteProvision.ts';
 import { FORMS_DOMAINS, isAdminReadDomain, READ_MORE_DOMAINS, renderAdminRead, type AdminReadDomain } from './adminReads.ts';
 import { isFileKind, reportDoc, safeName, type FileKind, type FileKit } from './adminFiles.ts';
 import { receiptReceivedMessage, studentCardProposalMessage, studentCardSuccessMessage } from './studentCard.ts';
+import { handleReceiptIntent, type ReceiptStage } from './receiptIntent.ts';
 import { completeCurrentStep, nextActionStep, parsePlan, planClosing, planIntro, stepHeading, type AdminPlan } from './adminPlan.ts';
 import { activeTopic, domainOf, bringsNewData, openTopics, recordTopicTurn, restoreTopics, selectTopic, topicIdFromRef, type TopicMode, type TopicSnapshot } from './topicState.ts';
 import { hearAudios, unheardOnly, UNCLEAR_AUDIO_REPLY } from './audio.ts';
@@ -1106,7 +1107,7 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
   if (!(await latest())) return { status: 'superseded' };
 
   const ctx = ((await db('conv_svc_ai_context', { p_session: session })).data ?? ctx0) as Ctx;
-  if (deps.mediaOnly && (isGroup || !isAdminAssistant(ctx))) return { status: 'skip', reason: 'media_only' };
+  if (deps.mediaOnly && isGroup) return { status: 'skip', reason: 'media_only_group' };
 
   // Cargo da pessoa que fala com o João (memória aprovada): ele passa a tratá-la por ele.
   try {
@@ -1304,6 +1305,28 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
     await save((ctx.session?.memory ?? {}) as Memory, 'sticker_ignored', {}, false, false);
     return { status: 'replied', bubbles: 0, handoff: null, action: 'sticker_ignored' } as TurnResult;
   }
+  // Comprovante no privado: o OCR apenas prepara a leitura; finalidade e consentimento são obrigatórios.
+  // Prioridade sobre o antigo fluxo de Card Mensal: evita classificação por valor e por cobrança aberta.
+  if (!isGroup) {
+    let pendingReceipt: ReceiptStage | null = null;
+    try {
+      const qr = await db('conv_svc_receipt_stage', { p_conversation: conversation });
+      pendingReceipt = qr.data && typeof qr.data === 'object' ? qr.data as ReceiptStage : null;
+    } catch { /* implantação parcial: fluxo geral continua; jamais força baixa */ }
+    if (pendingReceipt) {
+      const handled = await handleReceiptIntent({
+        stage: pendingReceipt, messageId: ultima?.id as string | undefined,
+        mediaOnly: soMidia, text: buffered, transcript: (ctx.transcript ?? []) as Ctx[],
+        db, chat: deps.chat, model: settings.model,
+      });
+      if (handled) {
+        const sent = await entregar(cadence(handled.messages));
+        await save((ctx.session?.memory ?? {}) as Memory, handled.action, { receipt_stage_id: pendingReceipt.id, bubbles: sent }, true, false);
+        return { status: 'replied', bubbles: sent, handoff: null, action: handled.action } as TurnResult;
+      }
+    }
+  }
+  // Compatibilidade: só resposta genérica do assistente; nunca lançar ou quitar via mídia.
   // Administrador manda o comprovante: o servidor já leu (valor, data, favorecido); o João responde com o que leu, sem equipe.
   if (soMidia && !isGroup && isAdminAssistant(ctx) && ultima?.id && pendentes.every((t) => t.kind === 'image' || t.kind === 'document')) {
     let lido: Ctx | null = null;
