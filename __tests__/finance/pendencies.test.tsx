@@ -5,7 +5,7 @@ import type { ChargeStatementRow, FinAccount, FinCategory, FinSettings, MemberPe
 
 const api = vi.hoisted(() => ({
   newRequestId: () => globalThis.crypto.randomUUID(),
-  saveSettings: vi.fn(), listCharges: vi.fn(), listPendencyMeta: vi.fn(), listActiveMembers: vi.fn(), createMemberPendency: vi.fn(),
+  saveSettings: vi.fn(), listCharges: vi.fn(), listCredits: vi.fn(), generateCharges: vi.fn(), profileNames: vi.fn(), listPendencyMeta: vi.fn(), listActiveMembers: vi.fn(), createMemberPendency: vi.fn(),
   sendPendencyNow: vi.fn(), setPendencyCollection: vi.fn(), registerPayment: vi.fn(), cancelCharge: vi.fn(),
   listHolidays: vi.fn(), listAudit: vi.fn(),
 }));
@@ -14,7 +14,10 @@ vi.mock('../../lib/finance/financeApi', () => api);
 import { ConfirmProvider } from '../../components/ui/ConfirmProvider';
 import { FinanceProvider } from '../../components/finance/FinanceContext';
 import PendencyRulesSection from '../../components/finance/tabs/PendencyRulesSection';
-import PendenciesTab from '../../components/finance/tabs/PendenciesTab';
+import MembersTab from '../../components/finance/tabs/MembersTab';
+
+/** Pendências deixaram de ser aba: são o filtro "Pendências" da lista de cobranças de sócios. */
+const PendenciesTab: React.FC = () => <MembersTab initialType="member_pendency" />;
 import SettingsTab from '../../components/finance/tabs/SettingsTab';
 
 const account: FinAccount = { id: 'a1', name: 'Banco do clube', kind: 'bank', opening_balance_cents: 0, opening_date: '2026-01-01', is_default_receipts: true, active: true, position: 0, version: 1 };
@@ -52,6 +55,8 @@ const mount = (ui: React.ReactElement, s: FinSettings = settings(), ctx: { reloa
 
 beforeEach(() => {
   Object.values(api).forEach((f) => { if (typeof f === 'function' && 'mockReset' in f) (f as ReturnType<typeof vi.fn>).mockReset(); });
+  api.listCredits.mockResolvedValue([]);
+  api.profileNames.mockResolvedValue({});
   api.saveSettings.mockResolvedValue({});
   api.listCharges.mockResolvedValue([stmt(), stmt({ charge_id: 'c2', profile_id: 'u2', profile_name: 'Beto Sócio', total_due_cents: 1200, display_status: 'overdue', overdue: true })]);
   api.listPendencyMeta.mockResolvedValue([meta(), meta({ id: 'c2', profile_id: 'u2', description: 'Consumo do bar', pendency_kind: 'consumo', guest_name: null, guest_date: null, collection_enabled: false })]);
@@ -97,7 +102,7 @@ describe('Pendências (contas a receber)', () => {
   it('avisa que a lista e os totais estão incompletos quando há mais pendências que o limite carregado', async () => {
     api.listCharges.mockResolvedValue([stmt({ total_count: 7000 }), stmt({ charge_id: 'c2', profile_id: 'u2', profile_name: 'Beto Sócio', total_count: 7000 })]);
     mount(<PendenciesTab />);
-    expect(await screen.findByText(/7\.000 pendências/)).toBeInTheDocument();
+    expect(await screen.findByText(/7\.000 cobranças/)).toBeInTheDocument();
     expect(screen.getByText(/só as 2 mais recentes/)).toBeInTheDocument();
   });
 
@@ -111,10 +116,10 @@ describe('Pendências (contas a receber)', () => {
   it('lista com saldo em aberto, vencido e busca por convidado', async () => {
     mount(<PendenciesTab />);
     await screen.findByText('Day Card do convidado Carlos');
-    expect(api.listCharges).toHaveBeenCalledWith({ chargeType: 'member_pendency', status: '' }, 5000);
+    expect(api.listCharges).toHaveBeenCalledWith(expect.objectContaining({ chargeType: 'member_pendency', status: '' }), 1000);
     expect(screen.getByText('Consumo do bar')).toBeInTheDocument();
     expect(screen.getByText('Pausada')).toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText(/Buscar pendência/i), { target: { value: 'carlos' } });
+    fireEvent.change(screen.getByLabelText(/Buscar cobrança/i), { target: { value: 'carlos' } });
     expect(screen.queryByText('Consumo do bar')).not.toBeInTheDocument();
   });
 
@@ -224,13 +229,13 @@ describe('Régua de pendências dentro da aba Pendências', () => {
 });
 
 describe('Configurações não têm mais a régua de pendências', () => {
-  it('a seção Cobrança aponta para Receber › Pendências', async () => {
+  it('a seção Cobrança aponta para Receber › Cobranças de sócios, filtro Pendências', async () => {
     const go = vi.fn();
     mount(<SettingsTab />, settings(), { go });
     expect(await screen.findByText('Vencimento das mensalidades')).toBeInTheDocument();
     expect(screen.queryByLabelText(/^Dias da régua/)).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Salvar pendências e automação/ })).not.toBeInTheDocument();
-    expect(screen.getByText(/fica em Receber › Pendências/)).toBeInTheDocument();
+    expect(screen.getByText(/fica em Receber › Cobranças de sócios, no filtro Pendências/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Abrir Pendências/ }));
     expect(go).toHaveBeenCalledWith('pendencies');
   });

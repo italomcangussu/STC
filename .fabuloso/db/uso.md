@@ -1,7 +1,7 @@
 # Uso do banco pelo código
 > Gerado por `fabuloso.mjs react`; não edite. Front = app; edge = supabase/functions. Schema, RLS e gatilhos → `indice.md` e `tabelas/`.
 
-## Tabelas (58)
+## Tabelas (59)
 | Tabela | Operações | Front (arquivos) | Edge (arquivos) | Telas |
 |---|---|---|---|---|
 | access_requests | select, insert, update | 2 | 1 | 0 |
@@ -22,6 +22,7 @@
 | club_form_voter_receipts | select | 1 | 0 | 0 |
 | club_forms | select, insert, update, delete | 1 | 0 | 0 |
 | consumptions | select, insert, update | 2 | 0 | 0 |
+| conv_ai_memory_candidates | select | 0 | 1 | 0 |
 | conv_ai_settings | select | 0 | 2 | 0 |
 | conv_contacts | select | 0 | 2 | 0 |
 | conv_conversations | select | 0 | 4 | 0 |
@@ -71,7 +72,7 @@
 - update [edge]: supabase/functions/admin-athlete-access/index.ts:120, supabase/functions/admin-athlete-access/index.ts:150, supabase/functions/admin-athlete-access/index.ts:185
 
 ### admin_audit_logs
-- select: components/AdminPanel.tsx:1191, lib/finance/financeApi.ts:431
+- select: components/AdminPanel.tsx:1191, lib/finance/financeApi.ts:470
 
 ### announcements
 - select: App.tsx:114, components/AdminPanel.tsx:766
@@ -150,8 +151,11 @@
 - insert: components/Klanches.tsx:293
 - update: components/Klanches.tsx:332
 
+### conv_ai_memory_candidates
+- select [edge]: supabase/functions/joao-daily-greeting/index.ts:114
+
 ### conv_ai_settings
-- select [edge]: supabase/functions/joao-birthdays/index.ts:36, supabase/functions/joao-daily-greeting/index.ts:109
+- select [edge]: supabase/functions/joao-birthdays/index.ts:36, supabase/functions/joao-daily-greeting/index.ts:128
 
 ### conv_contacts
 - select [edge]: supabase/functions/finance-receipt-whatsapp/index.ts:52, supabase/functions/whatsapp-webhook/index.ts:139, supabase/functions/whatsapp-webhook/index.ts:80
@@ -163,8 +167,8 @@
 - select [edge]: supabase/functions/joao-birthdays/index.ts:30, supabase/functions/joao-daily-greeting/index.ts:97
 
 ### conv_messages
-- select [edge]: supabase/functions/finance-receipt-whatsapp/index.ts:38, supabase/functions/joao-daily-greeting/index.ts:105, supabase/functions/whatsapp-webhook/index.ts:152, supabase/functions/whatsapp-webhook/index.ts:80
-- update [edge]: supabase/functions/joao-birthdays/index.ts:76, supabase/functions/joao-daily-greeting/index.ts:177
+- select [edge]: supabase/functions/finance-receipt-whatsapp/index.ts:38, supabase/functions/joao-daily-greeting/index.ts:105, supabase/functions/joao-daily-greeting/index.ts:111, supabase/functions/whatsapp-webhook/index.ts:152, supabase/functions/whatsapp-webhook/index.ts:80
+- update [edge]: supabase/functions/joao-birthdays/index.ts:76, supabase/functions/joao-daily-greeting/index.ts:254
 
 ### courts
 - select: components/AdminPanel.tsx:1604, components/AdminPanel.tsx:271, components/AdminPanel.tsx:435, components/AdminReports.tsx:127, components/Agenda.tsx:1260, components/Athletes.tsx:99, components/ChallengeNotificationPopup.tsx:64, components/Challenges.tsx:72, components/ChampionshipInProgress.tsx:120, components/Championships.tsx:187, components/Dashboard.tsx:41, components/Klanches.tsx:169 +2
@@ -173,46 +177,46 @@
 - select: lib/finance/financeApi.ts:77
 
 ### fin_attachments
-- select: lib/finance/financeApi.ts:153
+- select: lib/finance/financeApi.ts:192
 
 ### fin_categories
 - select: lib/finance/financeApi.ts:86
 
 ### fin_charge_adjustments
-- select: lib/finance/financeApi.ts:270
+- select: lib/finance/financeApi.ts:309
 
 ### fin_charge_payments
-- select: lib/finance/financeApi.ts:269
+- select: lib/finance/financeApi.ts:308
 
 ### fin_entries_v
-- select: lib/finance/financeApi.ts:108
+- select: lib/finance/financeApi.ts:108, lib/finance/financeApi.ts:171
 
 ### fin_entry_payments
-- select: lib/finance/financeApi.ts:124
+- select: lib/finance/financeApi.ts:124, lib/finance/financeApi.ts:167
 
 ### fin_holidays
 - select: lib/finance/financeApi.ts:68
 
 ### fin_member_charges
-- select: lib/finance/financeApi.ts:216
+- select: lib/finance/financeApi.ts:255
 
 ### fin_member_credits
-- select: lib/finance/financeApi.ts:287
+- select: lib/finance/financeApi.ts:326
 
 ### fin_member_plan_prices
-- select: lib/finance/financeApi.ts:184
+- select: lib/finance/financeApi.ts:223
 
 ### fin_member_plans
-- select: lib/finance/financeApi.ts:179, lib/finance/financeApi.ts:308
+- select: lib/finance/financeApi.ts:218, lib/finance/financeApi.ts:347
 
 ### fin_receipt_charges
-- select: lib/finance/financeApi.ts:356, lib/finance/financeApi.ts:370
+- select: lib/finance/financeApi.ts:395, lib/finance/financeApi.ts:409
 
 ### fin_receipt_submissions
-- select: lib/finance/financeApi.ts:356, lib/finance/financeApi.ts:370
+- select: lib/finance/financeApi.ts:395, lib/finance/financeApi.ts:409
 
 ### fin_recurrences
-- select: lib/finance/financeApi.ts:140
+- select: lib/finance/financeApi.ts:179
 
 ### fin_settings
 - select: lib/finance/financeApi.ts:60
@@ -228,7 +232,7 @@
 - delete: components/MatchGenerationModal.tsx:108, lib/resenhaOpenService.ts:466
 
 ### non_socio_students
-- select: components/AdminProfessors.tsx:126, components/AdminStudents.tsx:79, components/Agenda.tsx:1300, components/FinanceiroAdmin.tsx:87, components/ProfessorProfile.tsx:197, lib/championship/registration.ts:36, lib/championship/registration.ts:9, lib/conversations/api.ts:557
+- select: components/AdminProfessors.tsx:126, components/AdminStudents.tsx:79, components/Agenda.tsx:1300, components/ProfessorProfile.tsx:197, lib/championship/registration.ts:36, lib/championship/registration.ts:9, lib/conversations/api.ts:557, lib/finance/studentFees.ts:54
 - insert: components/AdminStudents.tsx:173, components/Agenda.tsx:2355, components/ProfessorProfile.tsx:412
 - update: components/AdminStudents.tsx:161, components/AdminStudents.tsx:209, components/AdminStudents.tsx:225, components/AdminStudents.tsx:296, components/AdminStudents.tsx:365, components/Agenda.tsx:1539, components/ProfessorProfile.tsx:379, components/ProfessorProfile.tsx:615
 
@@ -270,9 +274,9 @@
 - select: components/AdminPanel.tsx:1559
 
 ### reservations
-- select: components/AdminPanel.tsx:270, components/AdminPanel.tsx:79, components/AdminReports.tsx:78, components/Agenda.tsx:1524, components/Athletes.tsx:79, components/Challenges.tsx:96, components/Dashboard.tsx:59, components/FinanceiroAdmin.tsx:59, components/Klanches.tsx:148, components/ProfessorProfile.tsx:237, components/SuperSet.tsx:58, hooks/useReservations.ts:113 +1
+- select: components/AdminPanel.tsx:270, components/AdminPanel.tsx:79, components/AdminReports.tsx:78, components/Agenda.tsx:1524, components/Athletes.tsx:79, components/Challenges.tsx:96, components/Dashboard.tsx:59, components/Klanches.tsx:148, components/ProfessorProfile.tsx:237, components/SuperSet.tsx:58, hooks/useReservations.ts:113, lib/agenda/loadAgendaReservations.ts:33
 - insert: components/AdminMatchCreator.tsx:131, components/AdminPanel.tsx:574, components/Agenda.tsx:1605, components/Challenges.tsx:594, hooks/useReservations.ts:180
-- update: components/AdminPanel.tsx:328, components/Agenda.tsx:1383, components/Agenda.tsx:1421, components/Agenda.tsx:1441, components/Agenda.tsx:1470, components/Agenda.tsx:1597, components/Agenda.tsx:1715, components/ChallengeNotificationPopup.tsx:104, components/FinanceiroAdmin.tsx:170, components/ProfessorProfile.tsx:661, hooks/useReservations.ts:253, hooks/useReservations.ts:279
+- update: components/AdminPanel.tsx:328, components/Agenda.tsx:1383, components/Agenda.tsx:1421, components/Agenda.tsx:1441, components/Agenda.tsx:1470, components/Agenda.tsx:1597, components/Agenda.tsx:1715, components/ChallengeNotificationPopup.tsx:104, components/ProfessorProfile.tsx:661, hooks/useReservations.ts:253, hooks/useReservations.ts:279, lib/finance/studentFees.ts:71
 
 ### sig_documents
 - select: components/signatures/admin/DocumentDetail.tsx:137, lib/signatures/admin.ts:87
@@ -290,10 +294,10 @@
 - select: components/AdminStudents.tsx:256, components/ProfessorProfile.tsx:543
 
 ### student_payments
-- select: components/AdminStudents.tsx:336, components/FinanceiroAdmin.tsx:108, components/ProfessorProfile.tsx:586
+- select: components/AdminStudents.tsx:336, components/ProfessorProfile.tsx:586, lib/finance/studentFees.ts:54
 - insert: components/AdminStudents.tsx:277, components/AdminStudents.tsx:354, components/ProfessorProfile.tsx:604
 - update: components/AdminStudents.tsx:344, components/ProfessorProfile.tsx:594
-- delete: components/FinanceiroAdmin.tsx:139
+- delete: lib/finance/studentFees.ts:66
 
 ### student_profiles
 - select: components/AdminStudents.tsx:83, components/Agenda.tsx:1284, components/ProfessorProfile.tsx:202
@@ -310,15 +314,15 @@
 - `conv_svc_apply_reaction`: — · [edge] supabase/functions/whatsapp-webhook/record.ts:98
 - `conv_svc_birthdays_today`: — · [edge] supabase/functions/joao-birthdays/index.ts:89
 - `conv_svc_channel_delivery`: — · [edge] supabase/functions/whatsapp-webhook/index.ts:167
-- `conv_svc_finish_message`: — · [edge] supabase/functions/joao-birthdays/index.ts:79, supabase/functions/joao-daily-greeting/index.ts:181
+- `conv_svc_finish_message`: — · [edge] supabase/functions/joao-birthdays/index.ts:79, supabase/functions/joao-daily-greeting/index.ts:258
 - `conv_svc_ingest_message`: — · [edge] supabase/functions/whatsapp-webhook/record.ts:48
 - `conv_svc_log_webhook`: — · [edge] supabase/functions/whatsapp-webhook/record.ts:177, supabase/functions/whatsapp-webhook/record.ts:42
-- `conv_svc_queue_message`: — · [edge] supabase/functions/joao-birthdays/index.ts:72, supabase/functions/joao-daily-greeting/index.ts:172
+- `conv_svc_queue_message`: — · [edge] supabase/functions/joao-birthdays/index.ts:72, supabase/functions/joao-daily-greeting/index.ts:249
 - `conv_svc_resolve_undecryptable`: — · [edge] supabase/functions/whatsapp-webhook/record.ts:90
 - `conv_svc_set_message_media`: — · [edge] supabase/functions/whatsapp-webhook/record.ts:152
 - `conv_svc_set_message_transcription`: — · [edge] supabase/functions/whatsapp-webhook/record.ts:174
 - `conv_svc_update_message_status`: — · [edge] supabase/functions/whatsapp-webhook/record.ts:128
-- `fin_submit_whatsapp_pendency_receipt`: — · [edge] supabase/functions/finance-receipt-whatsapp/index.ts:86
+- `fin_submit_whatsapp_pendency_receipt`: — · [edge] supabase/functions/finance-receipt-whatsapp/index.ts:88
 - `finish_championship`: components/ChampionshipAdmin.tsx:493
 - `get_admin_push_subscriptions`: — · [edge] supabase/functions/send-push/index.ts:55
 - `get_form_live_results`: lib/formsService.ts:302
@@ -354,5 +358,5 @@
 - tabela `reservations`: components/Dashboard.tsx:86
 
 ## Alertas (2)
-- Tabelas do mapa sem uso no código (front + edge): `Cliente_CRM`, `Memory Long`, `Memory Long_jp`, `Memory Test`, `alunos`, `aniversario_consulta`, `avaliacoes_semanais`, `championship_participants`, `championship_winners`, `class_change_events`, `conv_admin_alert_log`, `conv_admin_briefing_recipients`, `conv_admin_prefs`, `conv_ai_decisions`, `conv_ai_member_context`, `conv_ai_memory_candidates`, `conv_ai_sessions`, `conv_automation_recipients`, `conv_automation_runs`, `conv_automation_settings`, `conv_automation_versions`, `conv_automations`, `conv_booking_proposals`, `conv_channel`, `conv_followups`, `conv_notes`, `conv_quick_replies`, `conv_requests`, `conv_webhook_log`, `des`, `documentos_contexto`, `familia_compat_produto`, `fin_entries`, `fin_private.charge_payments_effective`, `fin_requests`, `historico_conversas`, `historico_treino`, `iatende_conversas`, `members`, `n8n_chat_histories`, `n8n_chat_histories_duplicate`, `n8n_chat_histories_evento`, `n8n_vectors`, `n8n_vectors2`, `n8n_vectors_treinador`, `patients_ebm`, `planos_treino`, `reservas`, `reservas2`, `reservation_participants`, `servicos`, `sig_events`, `sig_notifications`, `sig_private.challenges`, `sig_recipients`, `stock_automator_config`, `stores`, `students`, `subcategorias`, `support_messages`, `tabela_familia_iphone_map`, `tabela_modelos`, `tabela_sinonimo_modelo`, `tbl_embedding`, `tbl_embedding_valid`, `vw_familia_modelos_expandidos`
+- Tabelas do mapa sem uso no código (front + edge): `Cliente_CRM`, `Memory Long`, `Memory Long_jp`, `Memory Test`, `alunos`, `aniversario_consulta`, `avaliacoes_semanais`, `championship_participants`, `championship_winners`, `class_change_events`, `conv_admin_alert_log`, `conv_admin_briefing_recipients`, `conv_admin_prefs`, `conv_ai_decisions`, `conv_ai_member_context`, `conv_ai_sessions`, `conv_automation_recipients`, `conv_automation_runs`, `conv_automation_settings`, `conv_automation_versions`, `conv_automations`, `conv_booking_proposals`, `conv_channel`, `conv_followups`, `conv_notes`, `conv_quick_replies`, `conv_requests`, `conv_webhook_log`, `des`, `documentos_contexto`, `familia_compat_produto`, `fin_entries`, `fin_private.charge_payments_effective`, `fin_requests`, `historico_conversas`, `historico_treino`, `iatende_conversas`, `members`, `n8n_chat_histories`, `n8n_chat_histories_duplicate`, `n8n_chat_histories_evento`, `n8n_vectors`, `n8n_vectors2`, `n8n_vectors_treinador`, `patients_ebm`, `planos_treino`, `reservas`, `reservas2`, `reservation_participants`, `servicos`, `sig_events`, `sig_notifications`, `sig_private.challenges`, `sig_recipients`, `stock_automator_config`, `stores`, `students`, `subcategorias`, `support_messages`, `tabela_familia_iphone_map`, `tabela_modelos`, `tabela_sinonimo_modelo`, `tbl_embedding`, `tbl_embedding_valid`, `vw_familia_modelos_expandidos`
 - Edge functions sem chamada no front (webhook, cron ou outra função?): `conversation-operations`, `conversations-dispatch`, `finance-receipt-whatsapp`, `joao-admin-alerts`, `joao-admin-briefing`, `joao-birthdays`, `joao-daily-greeting`, `signature-dispatch`, `whatsapp-webhook`

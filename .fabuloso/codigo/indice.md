@@ -13,21 +13,21 @@ _nenhum_
 |---|---|---|---|---|---|
 | AdminEmbedContext | components/admin/AdminEmbedContext.tsx | AdminEmbedProvider | components/AdminPanel.tsx | useAdminEmbedded | 8 |
 | AuthContext | contexts/AuthContext.tsx | AuthProvider | App.tsx | useAuth | 7 |
-| ConfirmContext | hooks/useConfirm.ts | ConfirmProvider | App.tsx | useConfirm | 28 |
-| Ctx | components/finance/FinanceContext.tsx | FinanceProvider | components/finance/FinanceHub.tsx | useFinance | 18 |
+| ConfirmContext | hooks/useConfirm.ts | ConfirmProvider | App.tsx | useConfirm | 29 |
+| Ctx | components/finance/FinanceContext.tsx | FinanceProvider | components/finance/FinanceHub.tsx | useFinance | 19 |
 
 ## Stores (0)
 _nenhum_
 
-## Hooks próprios (34)
+## Hooks próprios (33)
 | Hook | Arquivo | Dados | Usado por |
 |---|---|---|---|
-| useConfirm | hooks/useConfirm.ts | — | 27 |
+| useConfirm | hooks/useConfirm.ts | — | 28 |
 | useAsync | components/finance/hooks.ts | — | 26 |
+| useFinance | components/finance/FinanceContext.tsx | — | 18 |
+| useRequestKey | components/finance/hooks.ts | — | 18 |
 | useToday | components/finance/hooks.ts | — | 18 |
-| useFinance | components/finance/FinanceContext.tsx | — | 17 |
-| useRequestKey | components/finance/hooks.ts | — | 17 |
-| useAction | components/finance/hooks.ts | — | 8 |
+| useAction | components/finance/hooks.ts | — | 9 |
 | useAdminEmbedded | components/admin/AdminEmbedContext.tsx | — | 7 |
 | useAuth | contexts/AuthContext.tsx | — | 6 |
 | useLiveRefresh | hooks/useLiveRefresh.ts | — | 4 |
@@ -35,10 +35,9 @@ _nenhum_
 | useAgendaRealtime | hooks/useAgendaRealtime.ts | — | 1 |
 | useAI | components/TenisProPlayer/engine/useAI.ts | — | 1 |
 | useBallPhysics | components/TenisProPlayer/engine/useBallPhysics.ts | — | 1 |
-| useChargesList | components/finance/tabs/members/useChargesList.ts | — | 1 |
+| useChargesList | components/finance/tabs/members/useChargesList.ts | fin_member_charges(s) | 1 |
 | useChatOverlay | components/conversations/useChatOverlay.ts | — | 1 |
 | useOrientation | components/TenisProPlayer/engine/useOrientation.ts | — | 1 |
-| usePendencies | components/finance/tabs/pendencies/usePendencies.ts | fin_member_charges(s) | 1 |
 | usePendingSignatures | lib/signatures/usePendingSignatures.ts | — | 1 |
 | usePlayerInput | components/TenisProPlayer/engine/usePlayerInput.ts | — | 1 |
 | useReceiptDraft | components/finance/member/useReceiptDraft.ts | — | 1 |
@@ -54,39 +53,39 @@ _nenhum_
 | useRealtimeSubscription | hooks/useRealtimeSubscription.ts | — | 0 |
 | useRealtimeSubscriptions | hooks/useRealtimeSubscription.ts | — | 0 |
 | useReservations | hooks/useReservations.ts | courts(s) profiles(s) reservations(s,i,u) | 0 |
-| useRulesSheet | components/finance/tabs/PendenciesTab.tsx | — | 0 |
+| useRulesSheet | components/finance/tabs/MembersTab.tsx | — | 0 |
 | useStandardModal | components/StandardModal.tsx | — | 0 |
 
 ## Componentes compartilhados (25 mais usados)
 | Componente | Arquivo | Usado por |
 |---|---|---|
-| Spinner | components/finance/ui.tsx | 28 |
+| Spinner | components/finance/ui.tsx | 26 |
 | Notice | components/finance/ui.tsx | 23 |
+| Sheet (ui) | components/ui/Sheet.tsx | 21 |
+| Field | components/finance/ui.tsx | 20 |
 | Badge | components/finance/ui.tsx | 19 |
-| Card | components/finance/ui.tsx | 19 |
-| Field | components/finance/ui.tsx | 19 |
-| Sheet (ui) | components/ui/Sheet.tsx | 19 |
-| Empty | components/finance/ui.tsx | 18 |
+| Card | components/finance/ui.tsx | 17 |
+| Empty | components/finance/ui.tsx | 16 |
 | StandardModal | components/StandardModal.tsx | 15 |
 | ErrorBlock | components/finance/ui.tsx | 14 |
-| Row | components/finance/ui.tsx | 13 |
 | MoneyInput | components/finance/ui.tsx | 12 |
-| SectionTabs | components/finance/ui.tsx | 11 |
+| Row | components/finance/ui.tsx | 12 |
+| SectionTabs | components/finance/ui.tsx | 8 |
 | Notice | components/signatures/ui.tsx | 7 |
 | Button | components/conversations/ui.tsx | 6 |
 | InlineAlert | components/conversations/ui.tsx | 6 |
 | Spinner | components/signatures/ui.tsx | 6 |
-| ChargeStatusBadge | components/finance/ui.tsx | 5 |
 | ExportButtons | components/finance/ui.tsx | 5 |
 | AccountSelect | components/finance/fields.tsx | 4 |
 | AdminPageHeader | components/admin/ui.tsx | 4 |
-| AdminSearch | components/admin/ui.tsx | 4 |
 | Badge | components/signatures/ui.tsx | 4 |
-| Money | components/finance/ui.tsx | 4 |
+| ChargeStatusBadge | components/finance/ui.tsx | 4 |
 | PeriodBar | components/finance/ui.tsx | 4 |
 | ActionPanel | components/finance/ActionPanel.tsx | 3 |
+| AdminSearch | components/admin/ui.tsx | 3 |
+| Avatar | components/conversations/ConversationCard.tsx | 3 |
 
-## Alertas (47)
+## Alertas (46)
 - Acesso a dados direto no componente: `PublicChampionshipEntry` (App.tsx:66) chama championships; o padrão do projeto é passar por hook/serviço
 - Acesso a dados direto no componente: `AnnouncementPopup` (App.tsx:114) chama announcements; o padrão do projeto é passar por hook/serviço
 - Acesso a dados direto no componente: `AdminLogin` (components/AdminLogin.tsx:32) chama profiles; o padrão do projeto é passar por hook/serviço
@@ -118,7 +117,6 @@ _nenhum_
 - Acesso a dados direto no componente: `Championships` (components/Championships.tsx:140) chama championships, profiles, courts, championship_registrations, championship_rounds, matches, championship_groups, championship_group_members, championship_admin_audit_logs; o padrão do projeto é passar por hook/serviço
 - Acesso a dados direto no componente: `Dashboard` (components/Dashboard.tsx:41) chama courts, profiles, reservations; o padrão do projeto é passar por hook/serviço
 - Acesso a dados direto no componente: `EditProfileModal` (components/EditProfileModal.tsx:79) chama profiles; o padrão do projeto é passar por hook/serviço
-- Acesso a dados direto no componente: `FinanceiroAdmin` (components/FinanceiroAdmin.tsx:59) chama reservations, non_socio_students, student_payments; o padrão do projeto é passar por hook/serviço
 - Acesso a dados direto no componente: `GroupDrawPage` (components/GroupDrawPage.tsx:84) chama championships, championship_registrations, profiles, championship_groups, championship_group_members; o padrão do projeto é passar por hook/serviço
 - Acesso a dados direto no componente: `Klanches` (components/Klanches.tsx:99) chama products, consumptions, profiles, reservations, courts; o padrão do projeto é passar por hook/serviço
 - Acesso a dados direto no componente: `Layout` (components/Layout.tsx:76) chama championships; o padrão do projeto é passar por hook/serviço

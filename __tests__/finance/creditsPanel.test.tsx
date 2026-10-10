@@ -6,7 +6,7 @@ import type { ChargeStatementRow, FinSettings, MemberCreditRow } from '../../lib
 const api = vi.hoisted(() => ({
   newRequestId: () => globalThis.crypto.randomUUID(),
   adjustCharge: vi.fn(), cancelCharge: vi.fn(), chargeHistory: vi.fn(), createPlan: vi.fn(), endPlan: vi.fn(), generateCharges: vi.fn(),
-  listCharges: vi.fn(), listCredits: vi.fn(), listHolidays: vi.fn(), listMembersWithoutPlan: vi.fn(), listPlanPrices: vi.fn(), listPlans: vi.fn(),
+  listCharges: vi.fn(), listCredits: vi.fn(), listPendencyMeta: vi.fn(), listHolidays: vi.fn(), listMembersWithoutPlan: vi.fn(), listPlanPrices: vi.fn(), listPlans: vi.fn(),
   profileNames: vi.fn(), registerPayment: vi.fn(), resolveCredit: vi.fn(), reversePayment: vi.fn(), setPlanPrice: vi.fn(), updatePlan: vi.fn(),
 }));
 vi.mock('../../lib/finance/financeApi', () => api);
@@ -36,13 +36,14 @@ const mount = () => render(
 
 const openCredits = async () => {
   mount();
-  fireEvent.click(await screen.findByRole('tab', { name: /Créditos/ }));
+  fireEvent.click(await screen.findByRole('button', { name: /Resolver créditos/ }));
   await screen.findByText('Créditos de sócios');
 };
 
 beforeEach(() => {
   Object.values(api).forEach((f) => { if (typeof f === 'function' && 'mockReset' in f) (f as ReturnType<typeof vi.fn>).mockReset(); });
   api.listCharges.mockResolvedValue([]);
+  api.listPendencyMeta.mockResolvedValue([]);
   api.listPlans.mockResolvedValue([]);
   api.listPlanPrices.mockResolvedValue([]);
   api.listHolidays.mockResolvedValue([]);
@@ -84,11 +85,12 @@ describe('Créditos de sócios — leituras sem corte', () => {
     await waitFor(() => expect(screen.getAllByRole('option').filter((o) => /R\$/.test(o.textContent ?? ''))).toHaveLength(1));
   });
 
-  it('sem nenhum crédito em aberto mostra o vazio e não pede o nome de ninguém', async () => {
+  it('sem nenhum crédito em aberto não mostra aviso nem pede o nome de ninguém', async () => {
     api.listCredits.mockResolvedValue([]);
-    await openCredits();
+    mount();
 
-    expect(await screen.findByText('Nenhum crédito em aberto')).toBeInTheDocument();
+    await waitFor(() => expect(api.listCredits).toHaveBeenCalled());
+    expect(screen.queryByRole('button', { name: /Resolver créditos/ })).toBeNull();
     expect(api.profileNames.mock.calls.every(([ids]) => ids.length === 0)).toBe(true);
   });
 });

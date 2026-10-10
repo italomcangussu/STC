@@ -138,7 +138,7 @@ export const StatCard: React.FC<{ indicator: keyof typeof INDICATOR_DEFINITIONS;
         <p className="text-[11px] font-black uppercase tracking-wider text-stone-400">{def.label}</p>
         <button onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-label={`Como é calculado: ${def.label}`} className="-m-2 flex h-11 w-11 items-center justify-center text-stone-300 hover:text-saibro-600"><Info size={16} /></button>
       </div>
-      <p className={`text-2xl font-black tabular-nums ${tone === 'bad' ? 'text-red-600' : tone === 'good' ? 'text-emerald-600' : 'text-stone-800'}`}>{value}</p>
+      <p className={`whitespace-nowrap text-xl font-black tabular-nums sm:text-2xl ${tone === 'bad' ? 'text-red-600' : tone === 'good' ? 'text-emerald-600' : 'text-stone-800'}`}>{value}</p>
       {sub && <p className="mt-0.5 text-xs text-stone-500">{sub}</p>}
       <div className="mt-2"><BasisTag basis={def.basis} /></div>
       {open && (

@@ -7,7 +7,7 @@ import type { ChargeStatementRow, FinAccount, FinCategory, FinSettings, MemberPe
 // pela porta pública da aba, para a divisão do arquivo não mudar nenhuma chamada ao banco.
 const api = vi.hoisted(() => ({
   newRequestId: () => globalThis.crypto.randomUUID(),
-  saveSettings: vi.fn(), listCharges: vi.fn(), listPendencyMeta: vi.fn(), listActiveMembers: vi.fn(), createMemberPendency: vi.fn(),
+  saveSettings: vi.fn(), listCharges: vi.fn(), listCredits: vi.fn(), generateCharges: vi.fn(), profileNames: vi.fn(), listPendencyMeta: vi.fn(), listActiveMembers: vi.fn(), createMemberPendency: vi.fn(),
   sendPendencyNow: vi.fn(), setPendencyCollection: vi.fn(), registerPayment: vi.fn(), cancelCharge: vi.fn(),
   listHolidays: vi.fn(), listAudit: vi.fn(),
 }));
@@ -15,7 +15,10 @@ vi.mock('../../lib/finance/financeApi', () => api);
 
 import { ConfirmProvider } from '../../components/ui/ConfirmProvider';
 import { FinanceProvider } from '../../components/finance/FinanceContext';
-import PendenciesTab from '../../components/finance/tabs/PendenciesTab';
+import MembersTab from '../../components/finance/tabs/MembersTab';
+
+/** Pendências deixaram de ser aba: são o filtro "Pendências" da lista de cobranças de sócios. */
+const PendenciesTab: React.FC = () => <MembersTab initialType="member_pendency" />;
 import { notify } from '../../lib/notifications';
 
 const account = { id: 'a1', name: 'Banco do clube', kind: 'bank', opening_balance_cents: 0, opening_date: '2026-01-01', is_default_receipts: true, active: true, position: 0, version: 1 } as FinAccount;
@@ -54,6 +57,8 @@ beforeEach(() => {
   vi.useFakeTimers({ toFake: ['Date'] });
   vi.setSystemTime(new Date('2026-10-06T15:00:00Z')); // "hoje" no clube: 06/10/2026
   Object.values(api).forEach((f) => { if (typeof f === 'function' && 'mockReset' in f) (f as ReturnType<typeof vi.fn>).mockReset(); });
+  api.listCredits.mockResolvedValue([]);
+  api.profileNames.mockResolvedValue({});
   api.listCharges.mockResolvedValue([stmt()]);
   api.listPendencyMeta.mockResolvedValue([meta()]);
   api.listActiveMembers.mockResolvedValue([{ id: 'u1', name: 'Ana Sócia', phone: null }, { id: 'u2', name: 'Beto Sócio', phone: null }]);
@@ -362,7 +367,7 @@ describe('Pendências — lista e resumo da régua', () => {
     mount();
     await screen.findByText('Pendência c1');
 
-    expect(screen.getByText('Saldo em aberto').nextSibling).toHaveTextContent('R$ 62,00');
+    expect(screen.getByText('A receber').nextSibling).toHaveTextContent('R$ 62,00');
     expect(screen.getByText('Vencido').nextSibling).toHaveTextContent('R$ 12,00');
   });
 
@@ -371,12 +376,12 @@ describe('Pendências — lista e resumo da régua', () => {
     await screen.findByText('Day Card do convidado Carlos');
     api.listCharges.mockRejectedValueOnce(new Error('falhou'));
     fireEvent.click(screen.getByRole('tab', { name: 'Vencidas' }));
-    expect(await screen.findByText('Não foi possível carregar as pendências.')).toBeInTheDocument();
-    expect(api.listCharges).toHaveBeenLastCalledWith({ chargeType: 'member_pendency', status: 'overdue' }, 5000);
+    expect(await screen.findByRole('button', { name: 'Tentar de novo' })).toBeInTheDocument();
+    expect(api.listCharges).toHaveBeenLastCalledWith(expect.objectContaining({ chargeType: 'member_pendency', status: 'overdue' }), 1000);
 
     api.listCharges.mockResolvedValue([]);
     fireEvent.click(screen.getByRole('tab', { name: 'Pagas' }));
-    expect(await screen.findByText('Nenhuma pendência neste filtro')).toBeInTheDocument();
+    expect(await screen.findByText('Nenhuma cobrança com estes filtros')).toBeInTheDocument();
   });
 
   it('o tipo da pendência aparece por extenso na linha', async () => {

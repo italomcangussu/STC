@@ -4,7 +4,7 @@
  * (inclusive a escolha "não cobrar encargos"), nenhuma multa ou juro é calculada.
  *
  * A régua das pendências de sócio (dias, PIX, encargos próprios) NÃO fica aqui:
- * mora em Receber › Pendências › "Configurar régua", junto do que ela cobra.
+ * mora em Receber › Cobranças de sócios › "Configurar régua", junto do que ela cobra.
  */
 import React, { useEffect, useMemo, useState } from 'react';
 import { ArrowRight, BellRing, CalendarDays, History, Percent, Settings2 } from 'lucide-react';
@@ -293,11 +293,11 @@ const SettingsTab: React.FC = () => {
           <FeesSection s={settings} onSaved={reloadAll} />
           <Notice tone="info">
             <span className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <span className="flex items-start gap-1.5"><BellRing size={14} className="mt-0.5 shrink-0" />A régua de pendências de sócios (dias de envio, PIX, multa e juros) fica em Receber › Pendências.</span>
+              <span className="flex items-start gap-1.5"><BellRing size={14} className="mt-0.5 shrink-0" />A régua de pendências de sócios (dias de envio, PIX, multa e juros) fica em Receber › Cobranças de sócios, no filtro Pendências.</span>
               <button className={`${btnGhost} w-full shrink-0 sm:w-auto`} onClick={() => go('pendencies')}>Abrir Pendências <ArrowRight size={16} /></button>
             </span>
           </Notice>
-          <Notice tone="info"><span className="flex items-start gap-1.5"><Percent size={14} className="mt-0.5 shrink-0" />Descontos e dispensas de encargo são feitos cobrança a cobrança (aba Mensalidades), sempre com justificativa e registro de quem autorizou.</span></Notice>
+          <Notice tone="info"><span className="flex items-start gap-1.5"><Percent size={14} className="mt-0.5 shrink-0" />Descontos e dispensas de encargo são feitos cobrança a cobrança (Receber › Cobranças de sócios), sempre com justificativa e registro de quem autorizou.</span></Notice>
         </>
       )}
       {view === 'calendar' && (holidays.error ? <ErrorBlock error={holidays.error} onRetry={holidays.reload} /> : <HolidaysSection holidays={holidays.data ?? []} onChanged={holidays.reload} />)}

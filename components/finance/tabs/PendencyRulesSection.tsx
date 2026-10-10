@@ -1,6 +1,6 @@
 /**
  * Régua de cobrança das pendências de sócio: ativa/pausada, PIX, dias de envio,
- * carência, multa e juros. Abre a partir de Receber › Pendências ("Configurar
+ * carência, multa e juros. Abre a partir de Receber › Cobranças de sócios ("Configurar
  * régua"), dentro de uma folha (`bare`); sem `bare`, ainda se embrulha num Card.
  */
 import React, { useEffect, useMemo, useState } from 'react';

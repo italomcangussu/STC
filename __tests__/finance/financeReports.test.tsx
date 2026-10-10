@@ -9,10 +9,11 @@ const api = vi.hoisted(() => ({
   cashFlow: vi.fn(), movements: vi.fn(), receiptQueue: vi.fn(), listAccounts: vi.fn(), listCategories: vi.fn(), getSettings: vi.fn(),
   listEntries: vi.fn(), createEntry: vi.fn(), listEntryPayments: vi.fn(), listAttachments: vi.fn(), payEntry: vi.fn(),
   dayCardRows: vi.fn(), listCharges: vi.fn(), listPlans: vi.fn(), listCredits: vi.fn(), chargeHistory: vi.fn(), adjustCharge: vi.fn(), registerPayment: vi.fn(), listHolidays: vi.fn(),
-  generateCharges: vi.fn(), listMembersWithoutPlan: vi.fn(), createPlan: vi.fn(),
+  generateCharges: vi.fn(), listMembersWithoutPlan: vi.fn(), createPlan: vi.fn(), listPendencyMeta: vi.fn(), profileNames: vi.fn(),
 }));
 vi.mock('../../lib/finance/financeApi', () => api);
-vi.mock('../../components/FinanceiroAdmin', () => ({ FinanceiroAdmin: ({ dayCardPriceCents }: { dayCardPriceCents?: number }) => <div data-testid="painel-alunos">valor do Day Card: {dayCardPriceCents}</div> }));
+const fees = vi.hoisted(() => ({ listStudentPayments: vi.fn(), exemptDayCard: vi.fn(), chargeDayCardAgain: vi.fn(), deleteStudentPayment: vi.fn() }));
+vi.mock('../../lib/finance/studentFees', async (original) => ({ ...(await original<object>()), ...fees }));
 // recharts mede o DOM; nos testes de números ele só atrapalha.
 vi.mock('recharts', () => {
   const Pass = ({ children }: { children?: React.ReactNode }) => <div>{children}</div>;
@@ -74,6 +75,9 @@ beforeEach(() => {
   api.listCharges.mockResolvedValue([]);
   api.listPlans.mockResolvedValue([]);
   api.listCredits.mockResolvedValue([]);
+  api.listPendencyMeta.mockResolvedValue([]);
+  api.profileNames.mockResolvedValue({});
+  fees.listStudentPayments.mockResolvedValue([]);
 });
 
 describe('Painel — período visível e definição de cada indicador', () => {
@@ -102,11 +106,28 @@ describe('Painel — período visível e definição de cada indicador', () => {
     expect(await screen.findByText(/encargos de atraso ainda não foram configurados/i)).toBeInTheDocument();
   });
 
-  it('navega entre as áreas (Receber → Mensalidades) sem recarregar', async () => {
+  it('navega entre as áreas (Receber → Cobranças de sócios) sem recarregar', async () => {
     render(<ConfirmProvider><FinanceHub /></ConfirmProvider>);
     await screen.findByText(/Período selecionado:/);
     fireEvent.click(screen.getByRole('tab', { name: 'Receber' }));
-    expect(await screen.findByRole('tab', { name: /Sócios e valores/ })).toBeInTheDocument();
+    expect(await screen.findByRole('tab', { name: 'Cobranças de sócios' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.queryByRole('tab', { name: 'Mensalidades dos sócios' })).toBeNull();
+  });
+
+  it('Pendências virou filtro: o endereço antigo abre Cobranças de sócios já filtrada', async () => {
+    localStorage.setItem('finance-hub-tab', 'pendencies');
+    render(<ConfirmProvider><FinanceHub /></ConfirmProvider>);
+    expect(await screen.findByRole('tab', { name: 'Cobranças de sócios' })).toHaveAttribute('aria-selected', 'true');
+    expect(await screen.findByRole('tab', { name: 'Pendências' })).toHaveAttribute('aria-selected', 'true');
+    await waitFor(() => expect(api.listCharges).toHaveBeenCalledWith(expect.objectContaining({ chargeType: 'member_pendency' }), 1000));
+  });
+
+  it('o valor de cada sócio é cadastro: Cadastros › Mensalidades dos sócios', async () => {
+    render(<ConfirmProvider><FinanceHub /></ConfirmProvider>);
+    await screen.findByText(/Período selecionado:/);
+    fireEvent.click(screen.getByRole('tab', { name: 'Cadastros' }));
+    fireEvent.click(await screen.findByRole('tab', { name: 'Mensalidades dos sócios' }));
+    expect(await screen.findByText('Nenhuma mensalidade cadastrada')).toBeInTheDocument();
   });
 });
 
@@ -226,19 +247,18 @@ describe('Alunos e Day Card — vocabulário e regras do clube', () => {
     ]);
     mount(<StudentsTab />);
     expect(await screen.findByText('Convidado Fulano')).toBeInTheDocument();
-    expect(screen.getByText(/reserva de Ana Sócia/)).toBeInTheDocument();
+    expect(screen.getByText(/convidado de Ana Sócia/)).toBeInTheDocument();
     expect(screen.getByText('Isento')).toBeInTheDocument();
     expect(screen.getByText(/taxa do convidado de um sócio, para ter acesso ao clube por um dia/i)).toBeInTheDocument();
     expect(screen.getAllByText(/pagamento registrado/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/é pago pelo próprio aluno, por hora\/aula/i)).toBeInTheDocument();
-    expect(screen.getByText(/1 cobrado\(s\) · 1 isento\(s\)/)).toBeInTheDocument();
+    expect(screen.getByText(/1 cobrado\(s\) a R\$\s50,00 · 1 isento\(s\)/)).toBeInTheDocument();
   });
 
-  it('o painel de alunos recebe o valor do Day Card configurado', async () => {
+  it('o Day Card mostra o valor configurado pelo clube', async () => {
     api.dayCardRows.mockResolvedValue([]);
     mount(<StudentsTab />, { settings: settings({ day_card_price_cents: 6500 }) });
-    fireEvent.click(await screen.findByRole('tab', { name: 'Painel de alunos' }));
-    expect(await screen.findByTestId('painel-alunos')).toHaveTextContent('valor do Day Card: 6500');
+    expect(await screen.findByText(/0 cobrado\(s\) a R\$\s65,00/)).toBeInTheDocument();
   });
 
   it('o hub não tem mais área de professores: repasse não é assunto do financeiro do clube', async () => {
