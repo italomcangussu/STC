@@ -42,11 +42,18 @@ describe('João: comprovantes sem classificação presumida',()=>{
     expect(d.db).not.toHaveBeenCalled();
   });
   it('só confirma proposta em segundo turno, não o primeiro comprovante',async()=>{
-    const d=call({stage:stage({status:'awaiting_confirmation',purpose_kind:'donation',purpose_detail:'campanha'}),text:'confirmo'});
+    const d=call({stage:stage({status:'awaiting_confirmation',purpose_kind:'donation',purpose_detail:'campanha'}),text:'confirmo',transcript:[...transcript,{direction:'outbound',kind:'text',body:'Vou classificar o comprovante de R$ 30,00 como doação. Confirma?'}]});
     const r=await handleReceiptIntent(d.turn);
     expect(d.db).toHaveBeenCalledWith('conv_svc_receipt_confirm',
       expect.objectContaining({p_stage:d.turn.stage.id,p_message:d.turn.messageId}));
     expect(r?.messages.join(' ')).toMatch(/conferir/i);
+  });
+  it('um sim após outra pergunta nunca confirma comprovante antigo',async()=>{
+    const d=call({stage:stage({status:'awaiting_confirmation',purpose_kind:'donation',purpose_detail:'campanha'}),text:'sim',
+      transcript:[...transcript,{direction:'outbound',kind:'text',body:'Vou classificar o comprovante de R$ 30,00. Confirma?'},{direction:'inbound',kind:'text',body:'E a quadra de amanhã?'},{direction:'outbound',kind:'text',body:'Quer reservar a quadra de amanhã?'}]});
+    const result=await handleReceiptIntent(d.turn);
+    expect(result).toBeNull();
+    expect(d.db).not.toHaveBeenCalled();
   });
   it('corrige finalidade sem executar o lançamento financeiro',async()=>{
     const d=call({stage:stage({status:'awaiting_confirmation'}),text:'não'});
