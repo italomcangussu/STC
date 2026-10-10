@@ -9,7 +9,7 @@ import { notify } from '../../../../lib/notifications';
 import { useConfirm } from '../../../../hooks/useConfirm';
 import { notifyFinanceError } from '../../../../lib/finance/errors';
 import {
-  cancelEntry, createEntry, DOCS_BUCKET, listAttachments, listEntryPayments, payEntry, removeAttachment, reverseEntryPayment, signedUrl, updateEntry, voidEntry,
+  cancelEntry, createEntry, DOCS_BUCKET, listAttachments, listEntryPayments, payEntry, removeAttachment, removeCashMovement, reverseEntryPayment, signedUrl, updateEntry,
   uploadAttachment,
 } from '../../../../lib/finance/financeApi';
 import type { EntryKind, FinEntry } from '../../../../lib/finance/types';
@@ -228,14 +228,18 @@ export const EntrySheet: React.FC<{ entry: FinEntry | null; onClose: () => void;
           </Field>
           <div className="flex flex-wrap gap-2">
             <button className={btnGhost} onClick={() => setMode(null)} disabled={busy}>Voltar</button>
-            <button className={btnDanger} disabled={busy || reason.trim().length < 8} onClick={async () => {
+            <button className={btnDanger} disabled={busy || reason.trim().length < 8 || !(payments.data ?? []).some(p => p.kind === 'payment')} onClick={async () => {
               const ok = await confirm({
                 tone: 'danger',
                 title: 'Anular lançamento e estornar os pagamentos?',
-                description: 'O saldo será compensado por lançamentos de estorno na data atual. O registro original permanecerá na auditoria. Essa ação exige um motivo e não executa Pix nem reembolso bancário.',
+                description: 'O lançamento original e os estornos serão removidos juntos dos saldos e do fluxo de caixa. O registro de auditoria será preservado. Nenhum Pix será executado.',
                 confirmLabel: 'Anular lançamento',
               });
-              if (ok) await run(() => voidEntry(e.id, e.version, reason.trim(), key), 'Lançamento anulado; estornos registrados.');
+              if (ok) {
+                const original = (payments.data ?? []).find((p) => p.kind === 'payment');
+                if (!original) { notify.error('Não foi possível localizar o pagamento original. Atualize a tela.'); return; }
+                await run(() => removeCashMovement('entry_payment', original.id, reason.trim(), key), 'Lançamento e estornos removidos do fluxo de caixa.');
+              }
             }}>Confirmar exclusão</button>
           </div>
         </div>
