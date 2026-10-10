@@ -45,7 +45,7 @@ begin
     end loop;
   end loop;
   return jsonb_build_object('created', v_created, 'existing', v_existing, 'missing_price', v_missing);
-end $function$
+end $function$;
 
 
 create or replace function fin_private.ensure_member_charges(p_profile uuid, p_extend boolean)
@@ -111,7 +111,7 @@ begin
   where (nullif(p_filters->>'status', '') is null or y.dstatus = (p_filters->>'status'))
   order by y.due_date desc, y.pname, y.id
   limit greatest(p_limit, 0) offset greatest(p_offset, 0);
-end $function$
+end $function$;
 
 
 alter policy fin_member_charges_read on public.fin_member_charges
