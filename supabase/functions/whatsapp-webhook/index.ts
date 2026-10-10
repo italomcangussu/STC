@@ -5,7 +5,7 @@ import { uazCaller } from '../_shared/uazChat.ts';
 import { recordInbound, type RecordDeps } from './record.ts';
 import { buildAdminPush } from './pushNotify.ts';
 import { chatClient } from '../_shared/aiAgent/llm.ts';
-import { runTurn } from '../_shared/aiAgent/turn.ts';
+import { makeReceiptAwareTurn } from '../_shared/aiAgent/receiptTurn.ts';
 import { renderPdf } from '../_shared/aiAgent/adminFiles.ts';
 import { jsPDF } from 'npm:jspdf@4.2.0';
 import { makeProvision } from '../_shared/athleteProvision.ts';
@@ -69,9 +69,15 @@ async function processFinancialReceiptMedia(messageId: string) {
       body: JSON.stringify({ message_id: messageId }),
       signal: AbortSignal.timeout(120000),
     });
-    if (!res.ok) console.error('finance-receipt-whatsapp', res.status);
+    if (!res.ok) {
+      console.error('finance-receipt-whatsapp', res.status);
+      return {ok:false,reason:'RECEIPT_ENDPOINT_ERROR'};
+    }
+    const result=await res.json();
+    return {ok:result.ok===true,registered:result.registered===true,result};
   } catch (err) {
     console.error('finance-receipt-whatsapp', err instanceof Error ? err.message : 'erro');
+    return {ok:false,reason:'RECEIPT_ENDPOINT_UNAVAILABLE'};
   }
 }
 
@@ -99,15 +105,18 @@ async function notifyAdminsPush(messageId: string) {
 }
 
 // O turno espera o buffer e a chamada ao modelo: roda em segundo plano, a UazAPI já recebeu o 200.
-const runAiTurn = (messageId: string, mediaOnly = false) => runTurn(messageId, {
-  db: (name, args) => service.rpc(name, args),
-  chat: aiChat,
-  uaz,
-  sleep: (ms) => new Promise((r) => setTimeout(r, ms)),
-  provision: makeProvision(service),
-  mediaOnly,
-  files: filesKit,
-}).catch((e) => console.error('ai-turn', e instanceof Error ? e.message : 'erro'));
+const receiptAwareTurn = makeReceiptAwareTurn({
+  service,chat:aiChat,uaz,finalize:processFinancialReceiptMedia,
+  deps:{
+    db:(name,args)=>service.rpc(name,args),
+    chat:aiChat,uaz,
+    sleep:(ms)=>new Promise((r)=>setTimeout(r,ms)),
+    provision:makeProvision(service),files:filesKit,
+  },
+});
+const runAiTurn = (messageId: string, mediaOnly = false) =>
+  receiptAwareTurn(messageId,mediaOnly).catch((e) =>
+    console.error('ai-turn',e instanceof Error?e.message:'erro'));
 
 const recordDeps: RecordDeps = {
   rpc: (name, args) => service.rpc(name, args),
