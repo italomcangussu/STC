@@ -4,6 +4,9 @@
  * movimentos, mas não contam como entrada nem saída do clube.
  */
 import React, { useMemo, useState } from 'react';
+import { Pencil } from 'lucide-react';
+import type { MovementRow } from '../../../lib/finance/types';
+import { CashMovementActions } from './CashMovementActions';
 import { Bar, CartesianGrid, ComposedChart, Legend, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { accountBalances, cashFlow, dreLines, movements } from '../../../lib/finance/financeApi';
 import { balanceSpec, exportFilename, movementsSpec, toCsv, type ReportSpec } from '../../../lib/finance/export';
@@ -30,6 +33,7 @@ const CashFlowTab: React.FC = () => {
   const [hideTransfers, setHideTransfers] = useState(false);
   const [category, setCategory] = useState('');
   const [search, setSearch] = useState('');
+  const [selectedMovement, setSelectedMovement] = useState<MovementRow | null>(null);
 
   const flow = useAsync(() => cashFlow(period.from, period.to, gran, account || null), [period.from, period.to, gran, account]);
   const moves = useAsync(() => movements(period.from, period.to, { ...(account ? { account_id: account } : {}), ...(category ? { category_id: category } : {}), ...(search.trim() ? { search: search.trim() } : {}) }, MOVEMENTS_LIMIT, 0), [period.from, period.to, account, category, search]);
@@ -102,6 +106,7 @@ const CashFlowTab: React.FC = () => {
               <label className="flex min-h-11 items-center gap-2 text-xs font-bold text-stone-600"><input type="checkbox" className="h-5 w-5" checked={hideTransfers} onChange={(e) => setHideTransfers(e.target.checked)} />Ocultar transferências entre contas</label>
               <BalanceExport build={exportBalance} />
             </div>
+            <p className="mb-3 text-xs text-stone-500">Encontrou um lançamento incorreto? Use <b>Corrigir / excluir</b> no movimento. Contas pagas são anuladas com estorno auditável, sem apagar a história; valores automáticos devem ser corrigidos na origem.</p>
             {moves.error ? <ErrorBlock error={moves.error} onRetry={moves.reload} /> : moves.loading ? <Spinner /> : rows.length === 0 ? <Empty title="Nenhum movimento" /> : (
               <ul className="space-y-2">
                 {rows.slice(0, 300).map((m) => (
@@ -109,7 +114,15 @@ const CashFlowTab: React.FC = () => {
                     <Row>
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0"><p className="truncate text-sm font-bold text-stone-800">{m.description}</p><p className="text-xs text-stone-500">{brDate(m.occurred_on)} · {m.account_name}{m.category_name ? ` · ${m.category_name}` : ''}{m.is_transfer ? ' · transferência' : ''}</p></div>
-                        <Money cents={m.amount_cents} className="text-sm font-black" signed />
+                        <div className="flex shrink-0 flex-col items-end gap-1">
+                          <Money cents={m.amount_cents} className="text-sm font-black" signed />
+                          <button type="button"
+                            className="inline-flex min-h-11 items-center gap-1 rounded-lg px-2 text-xs font-bold text-saibro-700 hover:bg-saibro-50"
+                            aria-label={`Corrigir ou excluir movimento: ${m.description}, ${brDate(m.occurred_on)}`}
+                            onClick={() => setSelectedMovement(m)}>
+                            <Pencil size={14} /> Corrigir / excluir
+                          </button>
+                        </div>
                       </div>
                     </Row>
                   </li>
@@ -121,6 +134,15 @@ const CashFlowTab: React.FC = () => {
           </Card>
         </>
       )}
+      <CashMovementActions
+        movement={selectedMovement}
+        onClose={() => setSelectedMovement(null)}
+        onChanged={() => {
+          setSelectedMovement(null);
+          flow.reload();
+          moves.reload();
+        }}
+      />
     </div>
   );
 };
