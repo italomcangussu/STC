@@ -64,7 +64,7 @@ const DayCardItem: React.FC<{ row: DayCardRow; onChanged: () => void }> = ({ row
 };
 
 const DayCardCard: React.FC<{ rows: DayCardRow[]; period: Period; onChanged: () => void }> = ({ rows, period, onChanged }) => (
-  <Card title="Day Card dos convidados" subtitle="Vem da reserva com convidado. Isentar zera o valor na DRE (e no caixa, se o Day Card entra no caixa)."
+  <Card title="Day Card dos convidados" subtitle="Taxa do convidado de um sócio, para ter acesso ao clube por um dia. Vem da reserva, não de pagamento registrado; isentar zera o valor."
     right={<ExportButtons disabled={rows.length === 0} getSpec={() => dayCardSpec(rows, { period, generatedAt: new Date().toISOString() })} />}>
     {rows.length === 0 ? <Empty icon={<Users size={28} />} title="Nenhum convidado no período" hint="Aparece aqui toda reserva de amistoso com convidado." /> : (
       <ul className="space-y-2">{rows.slice(0, SHOWN).map((r) => <li key={r.reservation_id}><DayCardItem row={r} onChanged={onChanged} /></li>)}</ul>
@@ -100,7 +100,7 @@ const PaymentItem: React.FC<{ payment: StudentPaymentRow; onChanged: () => void 
 };
 
 const PaymentsCard: React.FC<{ rows: StudentPaymentRow[]; onChanged: () => void }> = ({ rows, onChanged }) => (
-  <Card title="Pagamentos de alunos" subtitle="Card Mensal e Aula avulsa registrados no cadastro do aluno.">
+  <Card title="Pagamentos de alunos" subtitle="Card Mensal e Aula avulsa: o pagamento registrado no cadastro do aluno.">
     {rows.length === 0 ? <Empty icon={<CreditCard size={28} />} title="Nenhum pagamento no período" hint="Os pagamentos são registrados no cadastro do aluno, em Pessoas › Alunos." /> : (
       <ul className="space-y-2">{rows.map((p) => <li key={p.id}><PaymentItem payment={p} onChanged={onChanged} /></li>)}</ul>
     )}
