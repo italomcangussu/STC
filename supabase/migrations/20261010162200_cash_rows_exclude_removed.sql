@@ -74,9 +74,9 @@ begin
   select u.st, u.sid, u.leg, u.d, u.flow, u.descr, u.cat, u.acct, u.amt, u.tr, u.org, u.prof
   from u left join public.fin_accounts a on a.id = u.acct
   where (a.id is null or u.d >= a.opening_date)
-    and not exists (
+    and (u.st='opening' or not exists (
       select 1 from fin_private.cash_removed d
       where d.source_type=u.st and d.source_id=u.sid
-    );
+    ));
 end $function$
 
