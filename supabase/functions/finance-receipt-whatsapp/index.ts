@@ -50,9 +50,11 @@ Deno.serve(async(req)=>{
   if(!conv||conv.kind!=='direct'||!conv.contact_id) return json(200,{skipped:true,reason:'NOT_DIRECT_CHAT'});
 
   const {data:contact}=await service.from('conv_contacts').select('profile_id,link_status').eq('id',conv.contact_id).maybeSingle();
-  if(!contact?.profile_id||!['linked','manual'].includes(String(contact.link_status))) return json(200,{skipped:true,reason:'CONTACT_NOT_LINKED'});
+  if(!contact) return json(200,{skipped:true,reason:'CONTACT_NOT_FOUND'});
+  // Contribuidores da campanha podem não ser sócios: nunca associar a mensalidade do encaminhador.
 
-  // Cobranças em aberto (e a mensalidade do mês, se ainda não foi gerada) são resolvidas no banco.
+  // SOMENTE leitura temporária da mídia. Nenhuma cobrança é selecionada, aprovada ou paga aqui.
+  // O banco mantém uma intenção pendente até o remetente declarar a finalidade e confirmar.
 
   const {data:file,error:downErr}=await service.storage.from(SOURCE_BUCKET).download(msg.media_path);
   if(downErr||!file) return json(500,{error:'MEDIA_DOWNLOAD_FAILED'});
@@ -62,7 +64,7 @@ Deno.serve(async(req)=>{
   const hash=await sha256(bytes);
   const submissionId=crypto.randomUUID();
   const name=safeName(String(msg.media_name||'comprovante'),mime);
-  const storagePath=`${contact.profile_id}/${submissionId}/${name}`;
+  const storagePath=`${contact.profile_id||'whatsapp'}/${submissionId}/${name}`;
 
   const up=await service.storage.from(RECEIPTS_BUCKET).upload(storagePath,bytes,{contentType:mime,upsert:false});
   if(up.error) return json(500,{error:'RECEIPT_UPLOAD_FAILED'});
