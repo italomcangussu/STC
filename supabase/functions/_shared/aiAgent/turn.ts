@@ -14,6 +14,7 @@
 //   * uma chamada ao modelo por turno (a memória volta no mesmo JSON).
 
 import { extrairObjeto, repararJson, stripCodeFence } from './jsonRepair.ts';
+import { repeatedHumor, noveltyHint, looksHumorous, humorTopic } from './humor.ts';
 import type { Chat } from './llm.ts';
 import { ADMIN_READS, LIMITATION_PHRASE, n3Reply, renderCapabilities } from './capabilities.ts';
 import { sendWelcome } from './welcome.ts';
@@ -184,7 +185,7 @@ export function turnTemperature(isGroup: boolean, ctx: Ctx, memory: { slots?: Sl
   if (!isGroup || ctx.open_proposal) return 0.2;
   const slots = memory.slots ?? {};
   const emAndamento = SLOT_KEYS.some((k) => { const v = slots[k]; return Array.isArray(v) ? v.length > 0 : Boolean(v); });
-  return emAndamento ? 0.2 : 0.45;
+  return emAndamento ? 0.2 : 0.62;
 }
 
 /* ------------------------------- Parse (soft-fail) ------------------------------- */
@@ -1407,6 +1408,59 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
       }
       answer = { ...answer, ...(answer.transfer ? { intent: 'outro' as Intent, ready: false, customer_confirmed: false, awaiting: true, transfer: false, handoff_kind: null, handoff_note: null, close: false } : {}),
         messages: falas.length ? falas : [memberKeep(messageId)] };
+    }
+  }
+
+
+  // Filtro semântico APENAS para a conversa social no grupo. Não toca em reservas,
+  // confirmações, consultas financeiras, tópicos pendentes ou ações administrativas.
+  let humorSource: 'normal' | 'regenerated' | 'neutral' | null = null;
+  let humorReason: string | null = null;
+  if (isGroup && !ctx.open_proposal && !answer.ready && !answer.awaiting
+      && !answer.customer_confirmed && !answer.declined && !answer.transfer
+      && !answer.close && (answer.intent === 'outro' || answer.intent === 'informar')
+      && answer.messages.length) {
+    const older = Array.isArray(ctx.joao_own_lines) ? ctx.joao_own_lines.map(String).filter(Boolean) : [];
+    const initial = answer.messages.join(' ');
+    if (looksHumorous(initial)) {
+      humorSource = 'normal';
+      humorReason = repeatedHumor(initial, older);
+      if (humorReason && deps.chat) {
+        // Segunda chance de criação: só reaproveita o texto, nunca troca intenção nem executa ações.
+        try {
+          const second = await deps.chat([
+            { role: 'system', content: systemPrompt(settings, ctx) + '\n\n' + noveltyHint(older) },
+            { role: 'user', content: userPrompt(ctx, memory, buffered) },
+          ], { model: settings.model, temperature: 0.74, maxTokens: answerBudget(ctx), json: true });
+          const alternative = parseAnswer(second.output);
+          const text = alternative.messages.join(' ');
+          if (alternative.messages.length > 0 && alternative.messages.length <= 3
+              && !alternative.ready && !alternative.awaiting && !alternative.customer_confirmed
+              && !alternative.transfer && !alternative.declined && !alternative.close
+              && !repeatedHumor(text, older) && !claimsSuccess(text)) {
+            answer = { ...answer, messages: alternative.messages };
+            humorSource = 'regenerated';
+          }
+        } catch (e) {
+          console.warn('JOAO_HUMOR_RETRY_ERROR', e instanceof Error ? e.name : 'unknown');
+        }
+        if (humorSource !== 'regenerated') {
+          // Evita reciclar a piada no cumprimento, mesmo que o modelo falhe de novo.
+          // Para uma pergunta real, mantém a resposta original: conteúdo > humor.
+          const said = buffered.toLowerCase();
+          if (/\b(bom dia|bom sabado|boa tarde|boa noite|otimo sabado)\b/i.test(said.normalize('NFD').replace(/[\u0300-\u036f]/g, ''))) {
+            const greeting = /boa noite/i.test(said) ? 'Boa noite!' : /boa tarde/i.test(said) ? 'Boa tarde!' : 'Bom dia!';
+            answer = { ...answer, messages: [greeting + ' Tudo de bom para a turma do STC.'] };
+            humorSource = 'neutral';
+          } else if (!said.includes('?')) {
+            answer = { ...answer, messages: ['Boa! A turma está animada hoje.'] };
+            humorSource = 'neutral';
+          }
+        }
+        console.info('JOAO_HUMOR_REPETITION', JSON.stringify({
+          reason: humorReason, result: humorSource, theme: humorTopic(initial), history: older.length,
+        }));
+      }
     }
   }
 
