@@ -106,7 +106,7 @@ async function notifyAdminsPush(messageId: string) {
 
 // O turno espera o buffer e a chamada ao modelo: roda em segundo plano, a UazAPI já recebeu o 200.
 const receiptAwareTurn = makeReceiptAwareTurn({
-  service,chat:aiChat,uaz,finalize:processFinancialReceiptMedia,
+  service,chat:aiChat,uaz,authorizationSecret:secret,finalize:processFinancialReceiptMedia,
   deps:{
     db:(name,args)=>service.rpc(name,args),
     chat:aiChat,uaz,
