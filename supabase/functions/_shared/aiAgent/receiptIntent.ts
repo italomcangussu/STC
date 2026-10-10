@@ -15,7 +15,7 @@ const campaign=/\b(campanha|criancas|dia das criancas|doacao|contribuicao|brinqu
 
 export async function handleReceiptIntent(t:Turn):Promise<Response>{
  const s=t.stage;
- const prev=t.transcript.filter(x=>x.direction==='inbound'&&x.kind==='text').slice(-8).map(x=>String(x.body||'')).join('\n');
+ const prev=t.transcript.filter(x=>x.direction==='inbound'&&x.kind==='text').slice(0,8).reverse().map(x=>String(x.body||'')).join('\n');
  const amount=br(s.amount_cents);
  if(t.mediaOnly){
    if(campaign.test(normal(prev))) return {action:'receipt_purpose_requested',messages:['Recebi o comprovante ('+amount+'). Pelo que conversamos, pode ser uma contribuição para a campanha do Dia das Crianças. Confirma que é dessa campanha ou me diz a finalidade correta? Ainda não lancei nada no caixa.']};
@@ -43,7 +43,7 @@ export async function handleReceiptIntent(t:Turn):Promise<Response>{
    return null;
  }
  if(s.status!=='awaiting_purpose')return null;
- const lastBot=t.transcript.filter(x=>x.direction==='outbound').slice(-2).map(x=>String(x.body||'')).join('\n');
+ const lastBot=t.transcript.filter(x=>x.direction==='outbound').slice(0,2).reverse().map(x=>String(x.body||'')).join('\n');
  if(!t.chat||!t.model)return {action:'receipt_purpose_requested',messages:['Qual é a finalidade desse comprovante? Preciso que me diga antes de montar o resumo para confirmação.']};
  let parsed:{action?:string;purpose_kind?:string;purpose_detail?:string}={};
  try{
