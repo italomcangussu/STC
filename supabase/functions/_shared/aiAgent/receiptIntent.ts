@@ -30,6 +30,10 @@ export async function handleReceiptIntent(t:Turn):Promise<Response>{
      return {action:'receipt_error',messages:['Não consegui corrigir essa proposta. Pode repetir o que o pagamento representa?']};
    }
    if(yes.test(clean)){
+     // Um "sim" só vale se a ÚLTIMA fala do João for esta proposta financeira,
+     // não uma nova reserva ou qualquer outra pergunta aberta na conversa.
+     const lastOutgoing=t.transcript.filter(x=>x.direction==='outbound').slice(-1)[0];
+     if(!/^Vou classificar o comprovante\b/i.test(String(lastOutgoing?.body||''))) return null;
      const r=await t.db('conv_svc_receipt_confirm',{p_stage:s.id,p_message:t.messageId});
      const result=r.data as {ok?:boolean;status?:string;reason?:string;kind?:string;code?:string}|null;
      if(!result?.ok)return {action:'receipt_not_confirmed',messages:['Não consegui validar a confirmação dessa proposta. Pode responder "confirmo" à descrição que enviei? Nenhum valor foi baixado.']};
