@@ -134,4 +134,8 @@ where c.charge_type='membership'
   and not exists (
     select 1 from fin_private.charge_payments_effective p where p.charge_id=c.id
   );
+-- Horizonte de previsao 0: nao anunciar geracao antecipada nas configuracoes.
+update public.fin_settings set horizon_months=0, version=version+1, updated_at=now()
+where horizon_months<>0;
+
 -- Pagamentos indevidos exigem conciliacao individual, realizada apos a migracao.
