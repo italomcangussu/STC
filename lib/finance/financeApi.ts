@@ -136,6 +136,27 @@ export const reverseEntryPayment = (paymentId: string, reason: string, requestId
 export const cancelEntry = (id: string, version: number, reason: string, requestId = newRequestId()) =>
   call('fin_cancel_entry', { p_request_id: requestId, p_id: id, p_expected_version: version, p_reason: reason });
 
+/** Excluir lançamento incorreto = anular com estornos e auditoria; nunca DELETE físico. */
+export const voidEntry = (id: string, version: number, reason: string, requestId = newRequestId()) =>
+  call<{ id: string; canceled: boolean; reversed_payments: number }>('fin_void_entry', {
+    p_request_id: requestId, p_id: id, p_expected_version: version, p_reason: reason,
+  });
+
+/** Relaciona linha do Fluxo de Caixa à origem manual usando o ID do pagamento.
+ * Movimentos derivados de mensalidades/cards nunca são convertidos em fin_entries.
+ */
+export async function entryForCashMovement(paymentId: string): Promise<FinEntry> {
+  const { data: payment, error: paymentError } = await supabase
+    .from('fin_entry_payments').select('entry_id').eq('id', paymentId).single();
+  if (paymentError) throw paymentError;
+  if (!payment?.entry_id) throw new Error('PAYMENT_NOT_FOUND');
+  const { data: entry, error: entryError } = await supabase
+    .from('fin_entries_v').select('*').eq('id', payment.entry_id).single();
+  if (entryError) throw entryError;
+  if (!entry) throw new Error('ENTRY_NOT_FOUND');
+  return entry as FinEntry;
+}
+
 export async function listRecurrences(): Promise<FinRecurrence[]> {
   const { data, error } = await supabase.from('fin_recurrences').select('*').order('description');
   if (error) throw error;
