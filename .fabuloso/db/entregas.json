@@ -27,9 +27,13 @@
     "conversation-operations": "ecf5f3e1e26d",
     "conversations-dispatch": "cd05ca0b635b",
     "finance-receipt-whatsapp": "e8b8566e874b",
+    "joao-admin-alerts": "e2c7fe6dbe34",
+    "joao-admin-briefing": "0abfe6ffe8ef",
     "joao-birthdays": "c724aa7a2cb4",
     "joao-daily-greeting": "8b7885d0dabe",
     "send-push": "069d787cddab",
+    "signature-dispatch": "db02ff193f6d",
+    "signature-operations": "bcc6c73d84db",
     "whatsapp-webhook": "8fd452035772"
   }
 }
