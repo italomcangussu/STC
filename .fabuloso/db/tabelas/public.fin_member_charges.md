@@ -65,7 +65,7 @@ public.fin_charge_adjustments.charge_id, public.fin_charge_payments.charge_id, p
 - "fin_member_charges_no_delete_policy" — DELETE para anon, authenticated · using `false`
 - "fin_member_charges_no_insert" — INSERT para anon, authenticated · check `false`
 - "fin_member_charges_no_update" — UPDATE para anon, authenticated · using `false` · check `false`
-- "fin_member_charges_read" — SELECT para authenticated · using `(is_admin() OR (profile_id = ( SELECT auth.uid() AS uid)))`
+- "fin_member_charges_read" — SELECT para authenticated · using `((is_admin() OR (profile_id = ( SELECT auth.uid() AS uid))) AND ((charge_type <> 'membership'::text) OR (competence_month <= (date_trunc('month'::text, (now() AT TIME ZONE 'America/Fortaleza'::text)))::date)))`
 
 ## Gatilhos
 - fin_member_charges_audit — AFTER INSERT OR UPDATE → fin_private.audit_row()

@@ -23,8 +23,8 @@
 - FK (trigger_message_id) → public.conv_messages(id)
 - CHECK conv_ai_sessions_status_check: `CHECK ((status = ANY (ARRAY['open'::text, 'done'::text, 'expired'::text, 'handoff'::text])))`
 
-## Referenciada por (3)
-public.conv_ai_decisions.session_id, public.conv_booking_proposals.session_id, public.conv_messages.ai_session_id
+## Referenciada por (4)
+public.conv_ai_decisions.session_id, public.conv_ai_topics.session_id, public.conv_booking_proposals.session_id, public.conv_messages.ai_session_id
 
 ## Índices
 - conv_ai_sessions_conversation_idx: `btree (conversation_id, status)`
@@ -32,6 +32,9 @@ public.conv_ai_decisions.session_id, public.conv_booking_proposals.session_id, p
 
 ## Políticas RLS
 - "conv_ai_sessions_admin_read" — SELECT para authenticated · using `is_admin()`
+
+## Gatilhos
+- conv_ai_sessions_sync_topics — AFTER INSERT OR UPDATE OF memory → conv_private.ai_sync_topics()
 
 ## Grants
 - anon: — · authenticated: s (s=select i=insert u=update d=delete)

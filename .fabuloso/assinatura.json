@@ -1,7 +1,7 @@
 {
-  "versao": 2,
-  "geradoEm": "2026-10-08T10:31:11.571Z",
-  "commit": "c4668f7f",
+  "versao": 3,
+  "geradoEm": "2026-10-13T10:34:29.370Z",
+  "commit": "9df7ae5b",
   "pastas": [
     "__tests__",
     "__tests__/admin",
@@ -12,6 +12,7 @@
     "components",
     "components/TenisProPlayer",
     "components/admin",
+    "components/agenda",
     "components/conversations",
     "components/creator",
     "components/finance",
@@ -28,6 +29,7 @@
     "docs/superpowers",
     "hooks",
     "lib",
+    "lib/agenda",
     "lib/championship",
     "lib/conversations",
     "lib/finance",
@@ -39,22 +41,23 @@
     "supabase",
     "supabase/functions",
     "supabase/migrations",
+    "supabase/tests",
     "tasks"
   ],
   "agentmap": {
-    "arquivos": 519,
-    "sha": "c4668f7",
+    "arquivos": 559,
+    "sha": "9df7ae5",
     "hubs": [
       "lib/supabase.ts",
-      "dist/assets/react-vendor-CcCdIb5n.js",
-      "types.ts",
-      "dist/assets/icons-vendor-DABEqPAo.js",
-      "__tests__/finance/sql/harness.ts",
       "lib/finance/dates.ts",
+      "types.ts",
+      "__tests__/finance/sql/harness.ts",
+      "components/finance/ui.tsx",
       "__tests__/conversations/sql/harness.ts",
-      "supabase/functions/_shared/uazChat.ts",
       "lib/logger.ts",
-      "components/finance/ui.tsx"
+      "lib/finance/money.ts",
+      "supabase/functions/_shared/uazChat.ts",
+      "dist/assets/react-vendor-CcCdIb5n.js"
     ]
   },
   "skillsPorPerfil": {
@@ -469,7 +472,7 @@
       {
         "name": "fabuloso",
         "origem": "global",
-        "hash": "6cecb4a8af79"
+        "hash": "74a84975bae8"
       },
       {
         "name": "fabuloso-codex",
@@ -529,7 +532,7 @@
       {
         "name": "imagegen",
         "origem": "global",
-        "hash": "a947514072cf"
+        "hash": "f549d16f276a"
       },
       {
         "name": "imagegen-frontend-mobile",
@@ -604,7 +607,7 @@
       {
         "name": "openai-docs",
         "origem": "global",
-        "hash": "cc539af365c7"
+        "hash": "2a860a157e27"
       },
       {
         "name": "performance-profiler",
@@ -625,11 +628,6 @@
         "name": "Plugin Structure",
         "origem": "plugin",
         "hash": "c269e921160e"
-      },
-      {
-        "name": "plugin-creator",
-        "origem": "global",
-        "hash": "329d2e945e2e"
       },
       {
         "name": "push-validator",
@@ -662,6 +660,11 @@
         "hash": "d3795655c9b3"
       },
       {
+        "name": "review-agent",
+        "origem": "global",
+        "hash": "f53558561e05"
+      },
+      {
         "name": "simulador-ios",
         "origem": "global",
         "hash": "ea7006f7bdfb"
@@ -674,7 +677,7 @@
       {
         "name": "skill-creator",
         "origem": "global",
-        "hash": "e6b443a863e3"
+        "hash": "26851dd4ef55"
       },
       {
         "name": "skill-installer",

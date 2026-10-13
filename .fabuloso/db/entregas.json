@@ -1,10 +1,9 @@
 {
-  "aplicadas": [
-    "20261008124729",
-    "20261008150000"
-  ],
+  "aplicadas": [],
   "jaNoRemoto": [],
   "edge": {
+    "admin-athlete-access": "9013142dd6c7",
+    "send-push": "069d787cddab",
     "whatsapp-webhook": "63fd221a0b66"
   }
 }

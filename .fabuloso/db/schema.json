@@ -8,7 +8,7 @@
     "public",
     "sig_private"
   ],
-  "ultima_migracao": "20261008150000",
+  "ultima_migracao": "20261010112046",
   "extensoes": [
     "pg_cron 1.6.4",
     "pg_net 0.19.5",
@@ -20,6 +20,149 @@
     "vector 0.8.0"
   ],
   "tabelas": [
+    {
+      "schema": "fin_private",
+      "nome": "cash_removed",
+      "tipo": "r",
+      "rls": true,
+      "rls_forcado": false,
+      "linhas_est": "0",
+      "opcoes": null,
+      "comentario": null,
+      "acesso": {
+        "anon": "",
+        "authenticated": ""
+      },
+      "definicao": null,
+      "colunas": [
+        {
+          "nome": "source_type",
+          "tipo": "text",
+          "nulo": false,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "source_id",
+          "tipo": "text",
+          "nulo": false,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "reason",
+          "tipo": "text",
+          "nulo": false,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "actor_id",
+          "tipo": "uuid",
+          "nulo": false,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "occurred_at",
+          "tipo": "timestamp with time zone",
+          "nulo": false,
+          "padrao": "now()",
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "request_id",
+          "tipo": "uuid",
+          "nulo": false,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "snapshot",
+          "tipo": "jsonb",
+          "nulo": false,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        }
+      ],
+      "restricoes": [
+        {
+          "nome": "cash_removed_reason_check",
+          "tipo": "c",
+          "def": "CHECK (((length(reason) >= 8) AND (length(reason) <= 500)))",
+          "colunas": [
+            "reason"
+          ],
+          "ref": null,
+          "ref_colunas": null,
+          "ao_apagar": null
+        },
+        {
+          "nome": "cash_removed_source_type_check",
+          "tipo": "c",
+          "def": "CHECK ((source_type = ANY (ARRAY['entry_payment'::text, 'member_payment'::text, 'member_reversal'::text, 'student_payment'::text, 'day_card'::text, 'opening'::text])))",
+          "colunas": [
+            "source_type"
+          ],
+          "ref": null,
+          "ref_colunas": null,
+          "ao_apagar": null
+        },
+        {
+          "nome": "cash_removed_actor_id_fkey",
+          "tipo": "f",
+          "def": "FOREIGN KEY (actor_id) REFERENCES profiles(id)",
+          "colunas": [
+            "actor_id"
+          ],
+          "ref": "public.profiles",
+          "ref_colunas": [
+            "id"
+          ],
+          "ao_apagar": "a"
+        },
+        {
+          "nome": "cash_removed_pkey",
+          "tipo": "p",
+          "def": "PRIMARY KEY (source_type, source_id)",
+          "colunas": [
+            "source_type",
+            "source_id"
+          ],
+          "ref": null,
+          "ref_colunas": null,
+          "ao_apagar": null
+        }
+      ],
+      "indices": [
+        {
+          "nome": "cash_removed_pkey",
+          "def": "CREATE UNIQUE INDEX cash_removed_pkey ON fin_private.cash_removed USING btree (source_type, source_id)",
+          "unico": true,
+          "pk": true,
+          "colunas": [
+            "source_type",
+            "source_id"
+          ]
+        }
+      ],
+      "politicas": [],
+      "gatilhos": []
+    },
     {
       "schema": "fin_private",
       "nome": "charge_payments_effective",
@@ -200,6 +343,340 @@
       ],
       "restricoes": [],
       "indices": [],
+      "politicas": [],
+      "gatilhos": []
+    },
+    {
+      "schema": "fin_private",
+      "nome": "whatsapp_receipt_intents",
+      "tipo": "r",
+      "rls": false,
+      "rls_forcado": false,
+      "linhas_est": "0",
+      "opcoes": null,
+      "comentario": null,
+      "acesso": {
+        "anon": "",
+        "authenticated": ""
+      },
+      "definicao": null,
+      "colunas": [
+        {
+          "nome": "id",
+          "tipo": "uuid",
+          "nulo": false,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "source_message_id",
+          "tipo": "uuid",
+          "nulo": false,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "conversation_id",
+          "tipo": "uuid",
+          "nulo": false,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "profile_id",
+          "tipo": "uuid",
+          "nulo": true,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "contact_id",
+          "tipo": "uuid",
+          "nulo": false,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "original_data",
+          "tipo": "jsonb",
+          "nulo": false,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "status",
+          "tipo": "text",
+          "nulo": false,
+          "padrao": "'awaiting_purpose'::text",
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "purpose_kind",
+          "tipo": "text",
+          "nulo": true,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "purpose_detail",
+          "tipo": "text",
+          "nulo": true,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "purpose_message_id",
+          "tipo": "uuid",
+          "nulo": true,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "confirmation_message_id",
+          "tipo": "uuid",
+          "nulo": true,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "finance_entry_id",
+          "tipo": "uuid",
+          "nulo": true,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "finance_submission_id",
+          "tipo": "uuid",
+          "nulo": true,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "created_at",
+          "tipo": "timestamp with time zone",
+          "nulo": false,
+          "padrao": "now()",
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "updated_at",
+          "tipo": "timestamp with time zone",
+          "nulo": false,
+          "padrao": "now()",
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        }
+      ],
+      "restricoes": [
+        {
+          "nome": "whatsapp_receipt_intents_purpose_kind_check",
+          "tipo": "c",
+          "def": "CHECK ((purpose_kind = ANY (ARRAY['donation'::text, 'membership'::text, 'member_pendency'::text, 'student_card'::text, 'day_card'::text, 'other'::text])))",
+          "colunas": [
+            "purpose_kind"
+          ],
+          "ref": null,
+          "ref_colunas": null,
+          "ao_apagar": null
+        },
+        {
+          "nome": "whatsapp_receipt_intents_status_check",
+          "tipo": "c",
+          "def": "CHECK ((status = ANY (ARRAY['awaiting_purpose'::text, 'awaiting_confirmation'::text, 'confirmed'::text, 'needs_review'::text, 'canceled'::text])))",
+          "colunas": [
+            "status"
+          ],
+          "ref": null,
+          "ref_colunas": null,
+          "ao_apagar": null
+        },
+        {
+          "nome": "whatsapp_receipt_intents_confirmation_message_id_fkey",
+          "tipo": "f",
+          "def": "FOREIGN KEY (confirmation_message_id) REFERENCES conv_messages(id)",
+          "colunas": [
+            "confirmation_message_id"
+          ],
+          "ref": "public.conv_messages",
+          "ref_colunas": [
+            "id"
+          ],
+          "ao_apagar": "a"
+        },
+        {
+          "nome": "whatsapp_receipt_intents_contact_id_fkey",
+          "tipo": "f",
+          "def": "FOREIGN KEY (contact_id) REFERENCES conv_contacts(id)",
+          "colunas": [
+            "contact_id"
+          ],
+          "ref": "public.conv_contacts",
+          "ref_colunas": [
+            "id"
+          ],
+          "ao_apagar": "a"
+        },
+        {
+          "nome": "whatsapp_receipt_intents_conversation_id_fkey",
+          "tipo": "f",
+          "def": "FOREIGN KEY (conversation_id) REFERENCES conv_conversations(id)",
+          "colunas": [
+            "conversation_id"
+          ],
+          "ref": "public.conv_conversations",
+          "ref_colunas": [
+            "id"
+          ],
+          "ao_apagar": "a"
+        },
+        {
+          "nome": "whatsapp_receipt_intents_finance_entry_id_fkey",
+          "tipo": "f",
+          "def": "FOREIGN KEY (finance_entry_id) REFERENCES fin_entries(id)",
+          "colunas": [
+            "finance_entry_id"
+          ],
+          "ref": "public.fin_entries",
+          "ref_colunas": [
+            "id"
+          ],
+          "ao_apagar": "a"
+        },
+        {
+          "nome": "whatsapp_receipt_intents_finance_submission_id_fkey",
+          "tipo": "f",
+          "def": "FOREIGN KEY (finance_submission_id) REFERENCES fin_receipt_submissions(id)",
+          "colunas": [
+            "finance_submission_id"
+          ],
+          "ref": "public.fin_receipt_submissions",
+          "ref_colunas": [
+            "id"
+          ],
+          "ao_apagar": "a"
+        },
+        {
+          "nome": "whatsapp_receipt_intents_profile_id_fkey",
+          "tipo": "f",
+          "def": "FOREIGN KEY (profile_id) REFERENCES profiles(id)",
+          "colunas": [
+            "profile_id"
+          ],
+          "ref": "public.profiles",
+          "ref_colunas": [
+            "id"
+          ],
+          "ao_apagar": "a"
+        },
+        {
+          "nome": "whatsapp_receipt_intents_purpose_message_id_fkey",
+          "tipo": "f",
+          "def": "FOREIGN KEY (purpose_message_id) REFERENCES conv_messages(id)",
+          "colunas": [
+            "purpose_message_id"
+          ],
+          "ref": "public.conv_messages",
+          "ref_colunas": [
+            "id"
+          ],
+          "ao_apagar": "a"
+        },
+        {
+          "nome": "whatsapp_receipt_intents_source_message_id_fkey",
+          "tipo": "f",
+          "def": "FOREIGN KEY (source_message_id) REFERENCES conv_messages(id)",
+          "colunas": [
+            "source_message_id"
+          ],
+          "ref": "public.conv_messages",
+          "ref_colunas": [
+            "id"
+          ],
+          "ao_apagar": "a"
+        },
+        {
+          "nome": "whatsapp_receipt_intents_pkey",
+          "tipo": "p",
+          "def": "PRIMARY KEY (id)",
+          "colunas": [
+            "id"
+          ],
+          "ref": null,
+          "ref_colunas": null,
+          "ao_apagar": null
+        },
+        {
+          "nome": "whatsapp_receipt_intents_source_message_id_key",
+          "tipo": "u",
+          "def": "UNIQUE (source_message_id)",
+          "colunas": [
+            "source_message_id"
+          ],
+          "ref": null,
+          "ref_colunas": null,
+          "ao_apagar": null
+        }
+      ],
+      "indices": [
+        {
+          "nome": "whatsapp_receipt_intents_pending_idx",
+          "def": "CREATE INDEX whatsapp_receipt_intents_pending_idx ON fin_private.whatsapp_receipt_intents USING btree (conversation_id, created_at) WHERE (status = ANY (ARRAY['awaiting_purpose'::text, 'awaiting_confirmation'::text]))",
+          "unico": false,
+          "pk": false,
+          "colunas": [
+            "conversation_id",
+            "created_at"
+          ]
+        },
+        {
+          "nome": "whatsapp_receipt_intents_pkey",
+          "def": "CREATE UNIQUE INDEX whatsapp_receipt_intents_pkey ON fin_private.whatsapp_receipt_intents USING btree (id)",
+          "unico": true,
+          "pk": true,
+          "colunas": [
+            "id"
+          ]
+        },
+        {
+          "nome": "whatsapp_receipt_intents_source_message_id_key",
+          "def": "CREATE UNIQUE INDEX whatsapp_receipt_intents_source_message_id_key ON fin_private.whatsapp_receipt_intents USING btree (source_message_id)",
+          "unico": true,
+          "pk": false,
+          "colunas": [
+            "source_message_id"
+          ]
+        }
+      ],
       "politicas": [],
       "gatilhos": []
     },
@@ -7139,7 +7616,15 @@
           "check": null
         }
       ],
-      "gatilhos": []
+      "gatilhos": [
+        {
+          "nome": "conv_ai_sessions_sync_topics",
+          "def": "CREATE TRIGGER conv_ai_sessions_sync_topics AFTER INSERT OR UPDATE OF memory ON public.conv_ai_sessions FOR EACH ROW EXECUTE FUNCTION conv_private.ai_sync_topics()",
+          "funcao": "conv_private.ai_sync_topics",
+          "ativo": true,
+          "externo": false
+        }
+      ]
     },
     {
       "schema": "public",
@@ -7438,11 +7923,313 @@
     },
     {
       "schema": "public",
-      "nome": "conv_automation_recipients",
+      "nome": "conv_ai_topics",
       "tipo": "r",
       "rls": true,
       "rls_forcado": false,
       "linhas_est": "0",
+      "opcoes": null,
+      "comentario": null,
+      "acesso": {
+        "anon": "",
+        "authenticated": ""
+      },
+      "definicao": null,
+      "colunas": [
+        {
+          "nome": "id",
+          "tipo": "uuid",
+          "nulo": false,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "conversation_id",
+          "tipo": "uuid",
+          "nulo": false,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "requester_contact_id",
+          "tipo": "uuid",
+          "nulo": false,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "session_id",
+          "tipo": "uuid",
+          "nulo": true,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "intent",
+          "tipo": "text",
+          "nulo": false,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "domain",
+          "tipo": "text",
+          "nulo": false,
+          "padrao": "'outro'::text",
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "status",
+          "tipo": "text",
+          "nulo": false,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "slots",
+          "tipo": "jsonb",
+          "nulo": false,
+          "padrao": "'{}'::jsonb",
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "summary",
+          "tipo": "text",
+          "nulo": false,
+          "padrao": "''::text",
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "last_question",
+          "tipo": "text",
+          "nulo": true,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "next_step",
+          "tipo": "text",
+          "nulo": true,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "decisions",
+          "tipo": "jsonb",
+          "nulo": false,
+          "padrao": "'[]'::jsonb",
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "outcome",
+          "tipo": "text",
+          "nulo": true,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "proposal_id",
+          "tipo": "uuid",
+          "nulo": true,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "close_reason",
+          "tipo": "text",
+          "nulo": true,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "created_at",
+          "tipo": "timestamp with time zone",
+          "nulo": false,
+          "padrao": "now()",
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "updated_at",
+          "tipo": "timestamp with time zone",
+          "nulo": false,
+          "padrao": "now()",
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "closed_at",
+          "tipo": "timestamp with time zone",
+          "nulo": true,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        }
+      ],
+      "restricoes": [
+        {
+          "nome": "conv_ai_topics_domain_check",
+          "tipo": "c",
+          "def": "CHECK ((domain = ANY (ARRAY['agenda'::text, 'admin'::text, 'outro'::text])))",
+          "colunas": [
+            "domain"
+          ],
+          "ref": null,
+          "ref_colunas": null,
+          "ao_apagar": null
+        },
+        {
+          "nome": "conv_ai_topics_intent_check",
+          "tipo": "c",
+          "def": "CHECK (((length(intent) >= 1) AND (length(intent) <= 40)))",
+          "colunas": [
+            "intent"
+          ],
+          "ref": null,
+          "ref_colunas": null,
+          "ao_apagar": null
+        },
+        {
+          "nome": "conv_ai_topics_status_check",
+          "tipo": "c",
+          "def": "CHECK ((status = ANY (ARRAY['awaiting_data'::text, 'awaiting_confirmation'::text, 'suspended'::text, 'completed'::text, 'canceled'::text, 'archived'::text])))",
+          "colunas": [
+            "status"
+          ],
+          "ref": null,
+          "ref_colunas": null,
+          "ao_apagar": null
+        },
+        {
+          "nome": "conv_ai_topics_conversation_id_fkey",
+          "tipo": "f",
+          "def": "FOREIGN KEY (conversation_id) REFERENCES conv_conversations(id)",
+          "colunas": [
+            "conversation_id"
+          ],
+          "ref": "public.conv_conversations",
+          "ref_colunas": [
+            "id"
+          ],
+          "ao_apagar": "a"
+        },
+        {
+          "nome": "conv_ai_topics_proposal_id_fkey",
+          "tipo": "f",
+          "def": "FOREIGN KEY (proposal_id) REFERENCES conv_booking_proposals(id) ON DELETE SET NULL",
+          "colunas": [
+            "proposal_id"
+          ],
+          "ref": "public.conv_booking_proposals",
+          "ref_colunas": [
+            "id"
+          ],
+          "ao_apagar": "n"
+        },
+        {
+          "nome": "conv_ai_topics_requester_contact_id_fkey",
+          "tipo": "f",
+          "def": "FOREIGN KEY (requester_contact_id) REFERENCES conv_contacts(id)",
+          "colunas": [
+            "requester_contact_id"
+          ],
+          "ref": "public.conv_contacts",
+          "ref_colunas": [
+            "id"
+          ],
+          "ao_apagar": "a"
+        },
+        {
+          "nome": "conv_ai_topics_session_id_fkey",
+          "tipo": "f",
+          "def": "FOREIGN KEY (session_id) REFERENCES conv_ai_sessions(id)",
+          "colunas": [
+            "session_id"
+          ],
+          "ref": "public.conv_ai_sessions",
+          "ref_colunas": [
+            "id"
+          ],
+          "ao_apagar": "a"
+        },
+        {
+          "nome": "conv_ai_topics_pkey",
+          "tipo": "p",
+          "def": "PRIMARY KEY (id)",
+          "colunas": [
+            "id"
+          ],
+          "ref": null,
+          "ref_colunas": null,
+          "ao_apagar": null
+        }
+      ],
+      "indices": [
+        {
+          "nome": "conv_ai_topics_owner_idx",
+          "def": "CREATE INDEX conv_ai_topics_owner_idx ON public.conv_ai_topics USING btree (conversation_id, requester_contact_id, status, updated_at DESC)",
+          "unico": false,
+          "pk": false,
+          "colunas": [
+            "conversation_id",
+            "requester_contact_id",
+            "status",
+            "updated_at"
+          ]
+        },
+        {
+          "nome": "conv_ai_topics_pkey",
+          "def": "CREATE UNIQUE INDEX conv_ai_topics_pkey ON public.conv_ai_topics USING btree (id)",
+          "unico": true,
+          "pk": true,
+          "colunas": [
+            "id"
+          ]
+        }
+      ],
+      "politicas": [],
+      "gatilhos": []
+    },
+    {
+      "schema": "public",
+      "nome": "conv_automation_recipients",
+      "tipo": "r",
+      "rls": true,
+      "rls_forcado": false,
+      "linhas_est": "<100",
       "opcoes": null,
       "comentario": null,
       "acesso": {
@@ -16118,7 +16905,7 @@
           "papeis": [
             "authenticated"
           ],
-          "using": "(is_admin() OR (profile_id = ( SELECT auth.uid() AS uid)))",
+          "using": "((is_admin() OR (profile_id = ( SELECT auth.uid() AS uid))) AND ((charge_type <> 'membership'::text) OR (competence_month <= (date_trunc('month'::text, (now() AT TIME ZONE 'America/Fortaleza'::text)))::date)))",
           "check": null
         }
       ],
@@ -29224,6 +30011,19 @@
       "comentario": null
     },
     {
+      "nome": "conv_private.ai_context_continuity",
+      "args": "p_session uuid",
+      "retorno": "jsonb",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
       "nome": "conv_private.ai_curator_ask",
       "args": "p_session uuid, p jsonb",
       "retorno": "jsonb",
@@ -29526,6 +30326,19 @@
       "nome": "conv_private.ai_student_card_propose",
       "args": "p_session uuid, p jsonb",
       "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.ai_sync_topics",
+      "args": "",
+      "retorno": "trigger",
       "linguagem": "plpgsql",
       "tipo": "f",
       "security_definer": true,
@@ -32929,6 +33742,58 @@
       "comentario": null
     },
     {
+      "nome": "public.conv_svc_receipt_confirm",
+      "args": "p_stage uuid, p_message uuid",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "public.conv_svc_receipt_purpose",
+      "args": "p_stage uuid, p_message uuid, p_kind text, p_detail text",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "public.conv_svc_receipt_revise",
+      "args": "p_stage uuid, p_message uuid",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "public.conv_svc_receipt_stage",
+      "args": "p_conversation uuid",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
       "nome": "public.conv_svc_resolve_undecryptable",
       "args": "p_provider_id text, p_body text, p_kind text",
       "retorno": "void",
@@ -33553,6 +34418,32 @@
       "comentario": null
     },
     {
+      "nome": "public.fin_remove_cash_movement",
+      "args": "p_request_id uuid, p_source_type text, p_source_id uuid, p_reason text",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": true,
+      "comentario": null
+    },
+    {
+      "nome": "public.fin_removed_cash_history",
+      "args": "p_limit integer",
+      "retorno": "TABLE(source_type text, source_id text, reason text, actor_name text, removed_at timestamp with time zone)",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": true,
+      "comentario": null
+    },
+    {
       "nome": "public.fin_resolve_credit",
       "args": "p_request_id uuid, p_credit uuid, p_action text, p_data jsonb",
       "retorno": "jsonb",
@@ -33776,6 +34667,19 @@
     {
       "nome": "public.fin_update_member_plan",
       "args": "p_request_id uuid, p_plan_id uuid, p_expected_version integer, p_data jsonb",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": true,
+      "comentario": null
+    },
+    {
+      "nome": "public.fin_void_entry",
+      "args": "p_request_id uuid, p_id uuid, p_expected_version integer, p_reason text",
       "retorno": "jsonb",
       "linguagem": "plpgsql",
       "tipo": "f",

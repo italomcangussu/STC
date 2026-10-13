@@ -1,5 +1,5 @@
 # Funções
-> 495 funções nos schemas conv_private, fin_private, public, sig_private. Corpo completo sob demanda: `select pg_get_functiondef('<schema.nome>(<args>)'::regprocedure)`.
+> 504 funções nos schemas conv_private, fin_private, public, sig_private. Corpo completo sob demanda: `select pg_get_functiondef('<schema.nome>(<args>)'::regprocedure)`.
 
 | Função | Argumentos | Retorno | Ling. | Segurança | anon | Nota |
 |---|---|---|---|---|---|---|
@@ -57,6 +57,7 @@
 | conv_private.ai_confirm_wave6_step | `p_proposal uuid, p_message uuid` | `jsonb` | plpgsql | DEFINER | não |  |
 | conv_private.ai_confirm_wave7_step | `p_proposal uuid, p_message uuid` | `jsonb` | plpgsql | DEFINER | não |  |
 | conv_private.ai_context | `p_session uuid` | `jsonb` | plpgsql | DEFINER | não |  |
+| conv_private.ai_context_continuity | `p_session uuid` | `jsonb` | sql | DEFINER | não |  |
 | conv_private.ai_curator_ask | `p_session uuid, p jsonb` | `jsonb` | plpgsql | DEFINER | não |  |
 | conv_private.ai_expire_sessions | — | `integer` | plpgsql | DEFINER | não |  |
 | conv_private.ai_financial_context | — | `jsonb` | sql | DEFINER | sim |  |
@@ -81,6 +82,7 @@
 | conv_private.ai_save_turn | `p_session uuid, p_memory jsonb, p_decision text, p_payload jsonb, p_awaiting boolean, p_c…` | `void` | plpgsql | DEFINER | não |  |
 | conv_private.ai_slot_games | `p_court uuid, p_date date, p_start_min integer, p_end_min integer, p_requester uuid` | `jsonb` | sql | DEFINER | não |  |
 | conv_private.ai_student_card_propose | `p_session uuid, p jsonb` | `jsonb` | plpgsql | DEFINER | não |  |
+| conv_private.ai_sync_topics | — | `trigger` | plpgsql | DEFINER | não |  |
 | conv_private.ai_trigger | `p_message uuid` | `jsonb` | plpgsql | DEFINER | não |  |
 | conv_private.apply_delete | `p_provider_id text` | `void` | sql | DEFINER | não |  |
 | conv_private.apply_edit | `p_provider_id text, p_body text` | `void` | sql | DEFINER | não |  |
@@ -342,6 +344,10 @@
 | public.conv_svc_mark_unread | `p_conversation uuid` | `void` | sql | DEFINER | não |  |
 | public.conv_svc_message_target | `p_message uuid` | `TABLE(provider_message_id text, destination text, direction…` | sql | DEFINER | não |  |
 | public.conv_svc_queue_message | `p_conversation uuid, p jsonb, p_author uuid, p_key uuid, p_origin text, p_session uuid, p…` | `TABLE(message_id uuid, destination text, already_sent boole…` | sql | DEFINER | não |  |
+| public.conv_svc_receipt_confirm | `p_stage uuid, p_message uuid` | `jsonb` | plpgsql | DEFINER | não |  |
+| public.conv_svc_receipt_purpose | `p_stage uuid, p_message uuid, p_kind text, p_detail text` | `jsonb` | plpgsql | DEFINER | não |  |
+| public.conv_svc_receipt_revise | `p_stage uuid, p_message uuid` | `jsonb` | plpgsql | DEFINER | não |  |
+| public.conv_svc_receipt_stage | `p_conversation uuid` | `jsonb` | plpgsql | DEFINER | não |  |
 | public.conv_svc_resolve_undecryptable | `p_provider_id text, p_body text, p_kind text` | `void` | sql | DEFINER | não |  |
 | public.conv_svc_set_avatar | `p_contact uuid, p_url text` | `void` | sql | DEFINER | não |  |
 | public.conv_svc_set_message_media | `p_provider_id text, p_path text, p_mime text` | `uuid` | sql | DEFINER | não |  |
@@ -390,6 +396,8 @@
 | public.fin_register_payment | `p_request_id uuid, p_charge uuid, p_amount_cents bigint, p_paid_on date, p_method text, p…` | `jsonb` | plpgsql | DEFINER | não |  |
 | public.fin_reject_receipt | `p_request_id uuid, p_submission_id uuid, p_reason text` | `jsonb` | plpgsql | DEFINER | não |  |
 | public.fin_remove_attachment | `p_request_id uuid, p_id uuid, p_reason text` | `jsonb` | plpgsql | DEFINER | não |  |
+| public.fin_remove_cash_movement | `p_request_id uuid, p_source_type text, p_source_id uuid, p_reason text` | `jsonb` | plpgsql | DEFINER | não |  |
+| public.fin_removed_cash_history | `p_limit integer` | `TABLE(source_type text, source_id text, reason text, actor_…` | plpgsql | DEFINER | não |  |
 | public.fin_resolve_credit | `p_request_id uuid, p_credit uuid, p_action text, p_data jsonb` | `jsonb` | plpgsql | DEFINER | não |  |
 | public.fin_reverse_entry_payment | `p_request_id uuid, p_payment_id uuid, p_reason text` | `jsonb` | plpgsql | DEFINER | não |  |
 | public.fin_reverse_payment | `p_request_id uuid, p_payment_id uuid, p_reason text` | `jsonb` | plpgsql | DEFINER | não |  |
@@ -408,6 +416,7 @@
 | public.fin_submit_whatsapp_pendency_receipt | `p_message uuid, p_submission uuid, p_data jsonb` | `jsonb` | plpgsql | DEFINER | não |  |
 | public.fin_update_entry | `p_request_id uuid, p_id uuid, p_expected_version integer, p_data jsonb, p_reason text` | `jsonb` | plpgsql | DEFINER | não |  |
 | public.fin_update_member_plan | `p_request_id uuid, p_plan_id uuid, p_expected_version integer, p_data jsonb` | `jsonb` | plpgsql | DEFINER | não |  |
+| public.fin_void_entry | `p_request_id uuid, p_id uuid, p_expected_version integer, p_reason text` | `jsonb` | plpgsql | DEFINER | não |  |
 | public.finish_championship | `p_championship_id uuid` | `jsonb` | plpgsql | DEFINER | sim |  |
 | public.get_active_user_points | — | `TABLE(user_id uuid, total_points bigint)` | plpgsql | invoker | sim |  |
 | public.get_admin_push_subscriptions | — | `TABLE(id uuid, user_id uuid, endpoint text, keys jsonb)` | sql | DEFINER | não | Retorna todas as assinaturas push ativas dos administradores do clube |

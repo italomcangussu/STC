@@ -1,7 +1,7 @@
 {
-  "geradoEm": "2026-10-09T15:53:50.643Z",
+  "geradoEm": "2026-10-13T10:33:52.551Z",
   "fonte": "api supabase (smztsayzldjmkzmufqcz)",
-  "hash": "4bb04c99af56",
+  "hash": "6f83844532c8",
   "banco": "postgres",
   "schemas": [
     "conv_private",
@@ -9,14 +9,14 @@
     "public",
     "sig_private"
   ],
-  "tabelas": 124,
-  "funcoes": 495,
+  "tabelas": 127,
+  "funcoes": 504,
   "alertas": {
     "alta": 25,
     "media": 13,
-    "info": 142
+    "info": 154
   },
-  "ultimaMigracaoRemota": "20261008150000",
-  "ultimaMigracaoLocal": "20261009121500",
+  "ultimaMigracaoRemota": "20261010112046",
+  "ultimaMigracaoLocal": "20261010162400",
   "projectRef": "smztsayzldjmkzmufqcz"
 }

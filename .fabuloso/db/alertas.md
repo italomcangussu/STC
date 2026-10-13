@@ -38,6 +38,14 @@
 - [média] public.upsert_crm_lead — SECURITY DEFINER sem search_path fixo
 - [média] public.vw_familia_modelos_expandidos — view sem security_invoker legível por anon — ignora o RLS das tabelas de origem
 - [info] 95 funções — SECURITY DEFINER executáveis por anon (coluna anon em funcoes.md) — confirme quais RPCs devem ser públicas
+- [info] fin_private.cash_removed — RLS ligado sem políticas — ninguém acessa pela API (ok se for só service_role)
+- [info] fin_private.cash_removed — FK (actor_id) → public.profiles sem índice
+- [info] fin_private.whatsapp_receipt_intents — FK (confirmation_message_id) → public.conv_messages sem índice
+- [info] fin_private.whatsapp_receipt_intents — FK (contact_id) → public.conv_contacts sem índice
+- [info] fin_private.whatsapp_receipt_intents — FK (finance_entry_id) → public.fin_entries sem índice
+- [info] fin_private.whatsapp_receipt_intents — FK (finance_submission_id) → public.fin_receipt_submissions sem índice
+- [info] fin_private.whatsapp_receipt_intents — FK (profile_id) → public.profiles sem índice
+- [info] fin_private.whatsapp_receipt_intents — FK (purpose_message_id) → public.conv_messages sem índice
 - [info] public.access_requests — FK (decided_by) → public.profiles sem índice
 - [info] public.alunos — RLS ligado sem políticas — ninguém acessa pela API (ok se for só service_role)
 - [info] public.aniversario_consulta — RLS ligado sem políticas — ninguém acessa pela API (ok se for só service_role)
@@ -74,6 +82,10 @@
 - [info] public.conv_ai_sessions — FK (requester_contact_id) → public.conv_contacts sem índice
 - [info] public.conv_ai_sessions — FK (trigger_message_id) → public.conv_messages sem índice
 - [info] public.conv_ai_settings — FK (created_by) → public.profiles sem índice
+- [info] public.conv_ai_topics — RLS ligado sem políticas — ninguém acessa pela API (ok se for só service_role)
+- [info] public.conv_ai_topics — FK (proposal_id) → public.conv_booking_proposals sem índice
+- [info] public.conv_ai_topics — FK (requester_contact_id) → public.conv_contacts sem índice
+- [info] public.conv_ai_topics — FK (session_id) → public.conv_ai_sessions sem índice
 - [info] public.conv_automation_recipients — FK (automation_id) → public.conv_automations sem índice
 - [info] public.conv_automation_recipients — FK (message_id) → public.conv_messages sem índice
 - [info] public.conv_automation_recipients — FK (profile_id) → public.profiles sem índice

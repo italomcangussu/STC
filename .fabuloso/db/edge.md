@@ -3,7 +3,7 @@
 
 | Função | verify_jwt | Tabelas | RPC | Segredos | Hosts externos | _shared | Invocada por | Deploy |
 |---|---|---|---|---|---|---|---|---|
-| admin-athlete-access | sim | access_requests(s,u) profiles(s,u,U) | — | SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_URL | — | athleteProvision.ts | components/AdminPanel.tsx:1227 | sem registro |
+| admin-athlete-access | sim | access_requests(s,u) profiles(s,u,U) | — | SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_URL | — | athleteProvision.ts | components/AdminPanel.tsx:1227 | em dia |
 | conversation-operations | sim | profiles(s) | — | STC_AI_API_KEY, STC_PUBLIC_ORIGIN, STC_UAZAPI_INSTANCE_TOKEN, SUPABASE_ANON_KEY, SUPABASE_PUBLISHABLE_KEY, SUPABASE_SECRET_KEY, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_URL, UAZAPI_SERVER_URL | — | adminRequest.ts, serveAdmin.ts, uazChat.ts, whatsappInstance.ts | — | sem registro |
 | conversations-dispatch | sim | — | — | STC_DISPATCH_SECRET, STC_UAZAPI_INSTANCE_TOKEN, SUPABASE_SECRET_KEY, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_URL, UAZAPI_SERVER_URL | — | dispatch.ts, uazChat.ts | — | sem registro |
 | finance-receipt-whatsapp | sim | conv_contacts(s) conv_conversations(s) conv_messages(s) | fin_submit_whatsapp_pendency_receipt | STC_OCR_LANG_PATH, SUPABASE_SECRET_KEY, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_URL | — | financeReceiptOcr.ts | — | sem registro |

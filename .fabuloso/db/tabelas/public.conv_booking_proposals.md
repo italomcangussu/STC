@@ -35,6 +35,9 @@
 - CHECK conv_booking_proposals_status_check: `CHECK ((status = ANY (ARRAY['open'::text, 'confirmed'::text, 'failed'::text, 'expired'::text, 'canceled'::text])))`
 - CHECK conv_proposal_confirmed_consistent: `CHECK (((status <> 'confirmed'::text) OR (confirmed_at IS NOT NULL)))`
 
+## Referenciada por (1)
+public.conv_ai_topics.proposal_id
+
 ## Índices
 - conv_booking_proposals_request_key_key: `btree (request_key)` único
 - conv_proposals_conversation_idx: `btree (conversation_id, created_at DESC)`

@@ -1,6 +1,6 @@
 -- base.sql — DDL do schema remoto. Gerado por `fabuloso.mjs db`; não edite.
 -- É a base do banco de teste em PGlite (`fabuloso.mjs pg`): schema real do remoto + migrations locais pendentes.
---@@ meta {"versao":1,"postgres":"17.6","schemas":["conv_private","fin_private","public","sig_private"],"extensoes":[{"nome":"pg_cron","schema":"pg_catalog"},{"nome":"pg_net","schema":"extensions"},{"nome":"pg_stat_statements","schema":"extensions"},{"nome":"pgcrypto","schema":"extensions"},{"nome":"supabase_vault","schema":"vault"},{"nome":"uuid-ossp","schema":"extensions"},{"nome":"vector","schema":"public"}],"papeis":["anon","authenticated","authenticator","cli_login_postgres","dashboard_user","pgbouncer","postgres","service_role","supabase_auth_admin","supabase_etl_admin","supabase_functions_admin","supabase_privileged_role","supabase_read_only_user","supabase_realtime_admin","supabase_replication_admin","supabase_storage_admin"],"migracoes":["20251228080214","20251228081253","20251228083254","20251228083507","20251228083944","20251228085506","20251228085656","20251228085817","20251228113842","20251228114731","20251228115147","20251228214931","20251228220119","20251228220952","20251230094628","20251230103441","20251230111220","20260101134906","20260101134940","20260101141731","20260101155936","20260103141626","20260103153236","20260103153329","20260103153404","20260103153757","20260115192527","20260119084237","20260119084321","20260119085322","20260119090000","20260119090225","20260119141114","20260123101818","20260123101853","20260123104620","20260123125031","20260124215137","20260125081739","20260125102639","20260125174723","20260127175350","20260127175608","20260128133915","20260129075257","20260129075631","20260129083027","20260129145632","20260131091223","20260203185748","20260205232352","20260205232412","20260212105246","20260212113107","20260212121128","20260213083000","20260215123000","20260216090000","20260216123000","20260323073000","20260421153000","20260421184125","20260422100000","20260422100100","20260422100200","20260422100300","20260422100400","20260422113000","20260422124000","20260422130000","20260422143000","20260422150000","20260427134500","20260427135800","20260427140500","20260502000001","20260502000002","20260519072400","20260519073500","20260519074500","20260519075000","20260519080000","20260519081000","20260519082000","20260805085500","20260805091000","20260807120000","20260807140000","20260807160000","20260807180000","20260807200000","20260808120000","20260824120000","20260824121000","20260824140000","20260912090000","20260912100000","20260930120000","20260930123000","20261005161200","20261006100000","20261006100100","20261006100200","20261006100300","20261006100400","20261006100500","20261007064837","20261007070656","20261007100000","20261007100100","20261007100200","20261007100300","20261007100400","20261007100500","20261007100600","20261007100700","20261007100800","20261007100900","20261007101000","20261007101100","20261007101200","20261007101210","20261007101300","20261007101400","20261007110000","20261007120000","20261007120100","20261007120200","20261007130000","20261007135553","20261007140000","20261007140144","20261007140427","20261007140831","20261007141000","20261007150000","20261007150010","20261007150100","20261007160000","20261007170000","20261007180000","20261007190000","20261007200000","20261007210000","20261007220000","20261007230000","20261007240000","20261007250000","20261007250100","20261007260000","20261007260100","20261007270000","20261007280000","20261007290000","20261007290100","20261007300000","20261007310000","20261007320000","20261007330000","20261007340000","20261007350000","20261007360000","20261007370000","20261007380000","20261007390000","20261007400000","20261008101944","20261008102600","20261008124729","20261008130005","20261008130203","20261008130745","20261008132237","20261008132335","20261008132419","20261008135821","20261008135824","20261008143837","20261008150000"]}
+--@@ meta {"versao":1,"postgres":"17.6","schemas":["conv_private","fin_private","public","sig_private"],"extensoes":[{"nome":"pg_cron","schema":"pg_catalog"},{"nome":"pg_net","schema":"extensions"},{"nome":"pg_stat_statements","schema":"extensions"},{"nome":"pgcrypto","schema":"extensions"},{"nome":"supabase_vault","schema":"vault"},{"nome":"uuid-ossp","schema":"extensions"},{"nome":"vector","schema":"public"}],"papeis":["anon","authenticated","authenticator","cli_login_postgres","dashboard_user","pgbouncer","postgres","service_role","supabase_auth_admin","supabase_etl_admin","supabase_functions_admin","supabase_privileged_role","supabase_read_only_user","supabase_realtime_admin","supabase_replication_admin","supabase_storage_admin"],"migracoes":["20251228080214","20251228081253","20251228083254","20251228083507","20251228083944","20251228085506","20251228085656","20251228085817","20251228113842","20251228114731","20251228115147","20251228214931","20251228220119","20251228220952","20251230094628","20251230103441","20251230111220","20260101134906","20260101134940","20260101141731","20260101155936","20260103141626","20260103153236","20260103153329","20260103153404","20260103153757","20260115192527","20260119084237","20260119084321","20260119085322","20260119090000","20260119090225","20260119141114","20260123101818","20260123101853","20260123104620","20260123125031","20260124215137","20260125081739","20260125102639","20260125174723","20260127175350","20260127175608","20260128133915","20260129075257","20260129075631","20260129083027","20260129145632","20260131091223","20260203185748","20260205232352","20260205232412","20260212105246","20260212113107","20260212121128","20260213083000","20260215123000","20260216090000","20260216123000","20260323073000","20260421153000","20260421184125","20260422100000","20260422100100","20260422100200","20260422100300","20260422100400","20260422113000","20260422124000","20260422130000","20260422143000","20260422150000","20260427134500","20260427135800","20260427140500","20260502000001","20260502000002","20260519072400","20260519073500","20260519074500","20260519075000","20260519080000","20260519081000","20260519082000","20260805085500","20260805091000","20260807120000","20260807140000","20260807160000","20260807180000","20260807200000","20260808120000","20260824120000","20260824121000","20260824140000","20260912090000","20260912100000","20260930120000","20260930123000","20261005161200","20261006100000","20261006100100","20261006100200","20261006100300","20261006100400","20261006100500","20261007064837","20261007070656","20261007100000","20261007100100","20261007100200","20261007100300","20261007100400","20261007100500","20261007100600","20261007100700","20261007100800","20261007100900","20261007101000","20261007101100","20261007101200","20261007101210","20261007101300","20261007101400","20261007110000","20261007120000","20261007120100","20261007120200","20261007130000","20261007135553","20261007140000","20261007140144","20261007140427","20261007140831","20261007141000","20261007150000","20261007150010","20261007150100","20261007160000","20261007170000","20261007180000","20261007190000","20261007200000","20261007210000","20261007220000","20261007230000","20261007240000","20261007250000","20261007250100","20261007260000","20261007260100","20261007270000","20261007280000","20261007290000","20261007290100","20261007300000","20261007310000","20261007320000","20261007330000","20261007340000","20261007350000","20261007360000","20261007370000","20261007380000","20261007390000","20261007400000","20261008101944","20261008102600","20261008124729","20261008130005","20261008130203","20261008130745","20261008132237","20261008132335","20261008132419","20261008135821","20261008135824","20261008143837","20261008150000","20261009121500","20261010084210","20261010090024","20261010090914","20261010091225","20261010094921","20261010102037","20261010102042","20261010102047","20261010102051","20261010102254","20261010112046"]}
 --@@ 10 schema conv_private
 create schema if not exists conv_private;
 --@@ 10 schema fin_private
@@ -31,6 +31,34 @@ create sequence if not exists public.subcategorias_id_seq as integer increment b
 create sequence if not exists public.tabela_modelos_id_seq as bigint increment by 1 minvalue 1 maxvalue 9223372036854775807 start with 1 cache 1;
 --@@ 30 sequencia public.tabela_sinonimo_modelo_id_seq
 create sequence if not exists public.tabela_sinonimo_modelo_id_seq as bigint increment by 1 minvalue 1 maxvalue 9223372036854775807 start with 1 cache 1;
+--@@ 40 tabela fin_private.cash_removed
+create table fin_private.cash_removed (
+  source_type text not null,
+  source_id text not null,
+  reason text not null,
+  actor_id uuid not null,
+  occurred_at timestamp with time zone not null,
+  request_id uuid not null,
+  snapshot jsonb not null
+);
+--@@ 40 tabela fin_private.whatsapp_receipt_intents
+create table fin_private.whatsapp_receipt_intents (
+  id uuid not null,
+  source_message_id uuid not null,
+  conversation_id uuid not null,
+  profile_id uuid,
+  contact_id uuid not null,
+  original_data jsonb not null,
+  status text not null,
+  purpose_kind text,
+  purpose_detail text,
+  purpose_message_id uuid,
+  confirmation_message_id uuid,
+  finance_entry_id uuid,
+  finance_submission_id uuid,
+  created_at timestamp with time zone not null,
+  updated_at timestamp with time zone not null
+);
 --@@ 40 tabela public."Cliente_CRM"
 create table public."Cliente_CRM" (
   id bigint not null,
@@ -501,6 +529,27 @@ create table public.conv_ai_settings (
   proposal_ttl_minutes integer not null,
   created_by uuid,
   created_at timestamp with time zone not null
+);
+--@@ 40 tabela public.conv_ai_topics
+create table public.conv_ai_topics (
+  id uuid not null,
+  conversation_id uuid not null,
+  requester_contact_id uuid not null,
+  session_id uuid,
+  intent text not null,
+  domain text not null,
+  status text not null,
+  slots jsonb not null,
+  summary text not null,
+  last_question text,
+  next_step text,
+  decisions jsonb not null,
+  outcome text,
+  proposal_id uuid,
+  close_reason text,
+  created_at timestamp with time zone not null,
+  updated_at timestamp with time zone not null,
+  closed_at timestamp with time zone
 );
 --@@ 40 tabela public.conv_automation_recipients
 create table public.conv_automation_recipients (
@@ -4704,6 +4753,29 @@ begin
     'transcript', v_transcript, 'older_messages', v_older, 'prior_summary', v_prior,
     'agenda', conv_private.ai_agenda(v_prof_id));
 end $function$;
+--@@ 45 funcao conv_private.ai_context_continuity(p_session uuid)
+CREATE OR REPLACE FUNCTION conv_private.ai_context_continuity(p_session uuid)
+ RETURNS jsonb
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+  with s as (select conversation_id, requester_contact_id from public.conv_ai_sessions where id = p_session)
+  select conv_private.ai_context(p_session) || jsonb_build_object(
+    'durable_topics', coalesce((
+      select jsonb_agg(to_jsonb(x) order by x.updated_at)
+      from (select t.id, t.intent, t.domain, t.status, t.slots, t.summary, t.last_question, t.next_step, t.decisions,
+                   t.outcome, t.proposal_id, t.created_at, t.updated_at
+              from public.conv_ai_topics t join s on s.conversation_id = t.conversation_id and s.requester_contact_id = t.requester_contact_id
+             where t.status in ('awaiting_data', 'awaiting_confirmation', 'suspended')
+             order by t.updated_at desc limit 30) x), '[]'::jsonb),
+    'topic_outcomes', coalesce((
+      select jsonb_agg(to_jsonb(x) order by x.closed_at)
+      from (select t.id, t.intent, t.status, t.summary, t.outcome, t.close_reason, t.closed_at
+              from public.conv_ai_topics t join s on s.conversation_id = t.conversation_id and s.requester_contact_id = t.requester_contact_id
+             where t.status in ('completed', 'canceled') and t.closed_at > now() - interval '30 days'
+             order by t.closed_at desc limit 5) x), '[]'::jsonb))
+$function$;
 --@@ 45 funcao conv_private.ai_curator_ask(p_session uuid, p jsonb)
 CREATE OR REPLACE FUNCTION conv_private.ai_curator_ask(p_session uuid, p jsonb)
  RETURNS jsonb
@@ -5204,16 +5276,17 @@ CREATE OR REPLACE FUNCTION conv_private.ai_own_lines(p_session uuid)
  STABLE SECURITY DEFINER
  SET search_path TO ''
 AS $function$
-  select coalesce(jsonb_agg(x.body order by x.created_at), '[]'::jsonb)
+  select coalesce(jsonb_agg(x.body order by x.created_at desc), '[]'::jsonb)
   from (
-    select left(m.body, 200) as body, m.created_at
+    select left(m.body, 400) as body, m.created_at
     from public.conv_messages m
     where m.conversation_id = (select s.conversation_id from public.conv_ai_sessions s where s.id = p_session)
       and m.direction = 'outbound' and m.origin in ('ai', 'system')
-      and m.deleted_at is null and m.kind = 'text' and nullif(trim(m.body), '') is not null
-      and m.created_at > now() - interval '3 days'
+      and m.deleted_at is null and m.kind = 'text'
+      and nullif(trim(m.body), '') is not null
+      and m.created_at > now() - interval '30 days'
     order by m.created_at desc
-    limit 14
+    limit 70
   ) x $function$;
 --@@ 45 funcao conv_private.ai_propose(p_session uuid, p jsonb)
 CREATE OR REPLACE FUNCTION conv_private.ai_propose(p_session uuid, p jsonb)
@@ -5610,6 +5683,64 @@ begin
   return jsonb_build_object('ok', true, 'proposal_id', v_id, 'action', 'student_card_renew', 'summary', v_payload);
 exception when invalid_text_representation or invalid_datetime_format or datetime_field_overflow or numeric_value_out_of_range then
   return conv_private.vfail('INVALID_DATA', 'Algum dado veio num formato que não entendi (data ou valor).');
+end $function$;
+--@@ 45 funcao conv_private.ai_sync_topics()
+CREATE OR REPLACE FUNCTION conv_private.ai_sync_topics()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare
+  t jsonb;
+  v_id uuid; v_status text; v_updated timestamptz; v_created timestamptz; v_proposal uuid; v_closed boolean;
+begin
+  if jsonb_typeof(new.memory -> 'topics') is distinct from 'array' then return new; end if;
+  for t in select x from jsonb_array_elements(new.memory -> 'topics') x loop
+    begin
+      v_id := (t ->> 'id')::uuid;
+      v_status := t ->> 'status';
+      v_updated := least(coalesce((t ->> 'updated_at')::timestamptz, now()), now() + interval '1 minute');
+      v_created := least(coalesce((t ->> 'created_at')::timestamptz, v_updated), v_updated);
+      v_closed := v_status in ('completed', 'canceled', 'archived');
+      v_proposal := null;
+      if v_status = 'awaiting_confirmation' then
+        -- A proposta aberta desta sessão, criada neste turno ou antes: só referência, nunca autorização.
+        select bp.id into v_proposal from public.conv_booking_proposals bp
+         where bp.session_id = new.id and bp.status = 'open' order by bp.created_at desc limit 1;
+      end if;
+
+      insert into public.conv_ai_topics as cur (id, conversation_id, requester_contact_id, session_id, intent, domain, status, slots,
+        summary, last_question, next_step, decisions, outcome, proposal_id, close_reason, created_at, updated_at, closed_at)
+      values (v_id, new.conversation_id, new.requester_contact_id, new.id, left(t ->> 'intent', 40),
+        case when t ->> 'domain' in ('agenda', 'admin') then t ->> 'domain' else 'outro' end, v_status,
+        case when jsonb_typeof(t -> 'slots') = 'object' then t -> 'slots' else '{}'::jsonb end,
+        left(coalesce(t ->> 'summary', ''), 600), left(t ->> 'last_question', 400), left(t ->> 'next_step', 200),
+        case when jsonb_typeof(t -> 'decisions') = 'array' then t -> 'decisions' else '[]'::jsonb end,
+        left(t ->> 'outcome', 200), v_proposal, left(t ->> 'close_reason', 200), v_created, v_updated,
+        case when v_closed then v_updated end)
+      on conflict (id) do update set
+        session_id = excluded.session_id, intent = excluded.intent, domain = excluded.domain, status = excluded.status,
+        slots = excluded.slots, summary = excluded.summary, last_question = excluded.last_question, next_step = excluded.next_step,
+        decisions = excluded.decisions, outcome = excluded.outcome,
+        proposal_id = case when excluded.status = 'awaiting_confirmation' then coalesce(excluded.proposal_id, cur.proposal_id) else cur.proposal_id end,
+        close_reason = excluded.close_reason, updated_at = excluded.updated_at, closed_at = excluded.closed_at
+      where cur.conversation_id = excluded.conversation_id
+        and cur.requester_contact_id = excluded.requester_contact_id
+        and cur.status not in ('completed', 'canceled', 'archived')
+        and excluded.updated_at >= cur.updated_at;
+
+      -- Assunto cancelado: a proposta dele não pode mais ser confirmada.
+      if v_status = 'canceled' then
+        update public.conv_booking_proposals bp set status = 'canceled'
+          from public.conv_ai_topics tp
+         where tp.id = v_id and tp.status = 'canceled' and bp.id = tp.proposal_id and bp.status = 'open';
+      end if;
+    exception when others then
+      raise warning 'ai_sync_topics: assunto ignorado (%)', sqlerrm;
+    end;
+  end loop;
+  return new;
 end $function$;
 --@@ 45 funcao conv_private.ai_trigger(p_message uuid)
 CREATE OR REPLACE FUNCTION conv_private.ai_trigger(p_message uuid)
@@ -7092,19 +7223,31 @@ CREATE OR REPLACE FUNCTION conv_private.is_semantic_acceptance(p text, p_allow_c
  IMMUTABLE
  SET search_path TO ''
 AS $function$
-declare t text; w text; n integer := 0;
-  blockers text[] := array['nao','nunca','jamais','cancela','cancelar','cancelei','desisto','desisti','outro','outra','outros','outras','troca','trocar',
-    'muda','mudar','depois','talvez','ver','pensar','acho','mas','porem','ou','espera','aguarda','antes','so','apenas','tambem','alem','menos'];
+declare
+  t text;
+  words text[];
+  accept text[] := array[
+    'sim','s','isso','exato','exatamente','certo','certinho','correto','perfeito','confirmo','confirma','confirmar','confirmado','confirmada',
+    'pode','claro','ok','okay','oks','fechado','fechou','combinado','beleza','blz','positivo','aham','uhum','bora','vamos','topo','aceito',
+    'autorizo','autorizado','autorizada','aprovado','aprovada','aprovo','aprova','manda','mande','prossiga','prossegue','segue','siga',
+    'lanca','lance','lancar','registra','registre','registrar','faz','faca','fazer','executa','execute','envia','envie','enviar','posta','poste',
+    'marca','marque','reserva','reserve','entro','cadastra','cadastre','baixa','essa','esse','show','dale','partiu','top','massa'];
+  blockers text[] := array[
+    'nao','n','nunca','jamais','negativo','nem','nada','nope','recuso','recusado','desisto','desisti','errado','errada','incorreto',
+    'talvez','depois','ver','pensar','acho','duvida','mas','porem','contudo','entretanto','ou','se','espera','espere','aguarda','aguarde',
+    'perai','calma','antes','ainda','so','apenas','tambem','alem','menos','outro','outra','outros','outras','troca','trocar','muda','mudar',
+    'altera','alterar','corrige','corrigir','deixa','deixe','deixar','esquece','esqueca','ignora','ignore','ignorar','pare','parar',
+    'segura','segure','reconsidera','reconsiderar'];
 begin
   if p is null or length(p) > 160 or position('?' in p) > 0 then return false; end if;
-  t := conv_private.fold(p);
-  t := regexp_replace(t, '[^a-z ]', ' ', 'g');
-  for w in select x from regexp_split_to_table(btrim(t), '\s+') x where x <> '' loop
-    n := n + 1;
-    -- "cancela/cancelar" só barra quando a proposta NÃO é de cancelamento ("sim, pode cancelar" aceita um cancelamento).
-    if w = any (blockers) and not (p_allow_cancel and w in ('cancela', 'cancelar')) then return false; end if;
-  end loop;
-  return n > 0;
+  t := btrim(regexp_replace(regexp_replace(conv_private.fold(p), '[^a-z ]', ' ', 'g'), '\s+', ' ', 'g'));
+  if t = '' then return false; end if;
+  words := string_to_array(t, ' ');
+  if cardinality(words) > 12 then return false; end if;
+  -- "cancela/cancelar" só é aceite quando a proposta É de cancelamento ("sim, pode cancelar").
+  if not p_allow_cancel then blockers := blockers || array['cancela','cancelar','cancelei','cancelado','cancelada','cancele']; end if;
+  if words && blockers then return false; end if;
+  return words && accept;
 end $function$;
 --@@ 45 funcao conv_private.join_check(p_reservation uuid, p_profile uuid)
 CREATE OR REPLACE FUNCTION conv_private.join_check(p_reservation uuid, p_profile uuid)
@@ -8399,6 +8542,7 @@ declare
 begin
   select * into s from public.fin_receipt_submissions where id=p_submission for update;
   if not found then return jsonb_build_object('approved',false,'reason','RECEIPT_NOT_FOUND'); end if;
+  if s.source = 'whatsapp' and not exists (select 1 from fin_private.whatsapp_receipt_intents wi where wi.id=s.id and wi.status='confirmed' and wi.purpose_kind in ('membership','member_pendency') and wi.confirmation_message_id is not null) then return jsonb_build_object('approved',false,'reason','PURPOSE_CONFIRMATION_REQUIRED'); end if;
   if s.status not in ('submitted','in_review') then return jsonb_build_object('approved',false,'reason','RECEIPT_NOT_PENDING'); end if;
   if s.ocr_status<>'ok' or s.ocr is null then return jsonb_build_object('approved',false,'reason','OCR_NOT_OK'); end if;
   if s.possible_duplicate then return jsonb_build_object('approved',false,'reason','POSSIBLE_DUPLICATE'); end if;
@@ -8601,7 +8745,11 @@ begin
   -- Antes da data de saldo inicial de uma conta o movimento já está dentro do saldo informado.
   select u.st, u.sid, u.leg, u.d, u.flow, u.descr, u.cat, u.acct, u.amt, u.tr, u.org, u.prof
   from u left join public.fin_accounts a on a.id = u.acct
-  where a.id is null or u.d >= a.opening_date;
+  where (a.id is null or u.d >= a.opening_date)
+    and (u.st='opening' or not exists (
+      select 1 from fin_private.cash_removed d
+      where d.source_type=u.st and d.source_id=u.sid
+    ));
 end $function$;
 --@@ 45 funcao fin_private.category_id(p_key text)
 CREATE OR REPLACE FUNCTION fin_private.category_id(p_key text)
@@ -8631,7 +8779,9 @@ begin
     from public.fin_member_charges c
     join public.profiles pr on pr.id = c.profile_id
     cross join lateral fin_private.charge_statement(c.id, p_as_of) st
-    where (p_profile is null or c.profile_id = p_profile)
+    where (c.charge_type <> 'membership' or
+           c.competence_month <= date_trunc('month', fin_private.today()::timestamp)::date)
+      and (p_profile is null or c.profile_id = p_profile)
       and (p_ids is null or c.id = any(p_ids))
       and (v_search is null or pr.name ilike '%' || v_search || '%')
       and (nullif(p_filters->>'profile_id', '') is null or c.profile_id = (p_filters->>'profile_id')::uuid)
@@ -8813,14 +8963,15 @@ declare v_price bigint;
 begin
   select day_card_price_cents into v_price from public.fin_settings;
   return query
-  select r.id, r.date, trim(r.guest_name),
-    (select p.name from public.profiles p where p.id = r.creator_id),
-    (r.payment_status::text = 'exempt'),
-    case when r.payment_status::text = 'exempt' then 0::bigint else v_price end
+  select r.id,r.date,trim(r.guest_name),
+         (select p.name from public.profiles p where p.id=r.creator_id),
+         (r.payment_status::text='exempt' or cd.source_id is not null),
+         case when r.payment_status::text='exempt' or cd.source_id is not null then 0::bigint else v_price end
   from public.reservations r
-  where r.type = 'Play' and nullif(trim(coalesce(r.guest_name, '')), '') is not null
-    and r.date between p_from and p_to and coalesce(r.status, 'active') <> 'cancelled'
-  order by r.date, r.id;
+  left join fin_private.cash_removed cd on cd.source_type='day_card' and cd.source_id=r.id::text
+  where r.type='Play' and nullif(trim(coalesce(r.guest_name,'')),'') is not null
+    and r.date between p_from and p_to and coalesce(r.status,'active')<>'cancelled'
+  order by r.date,r.id;
 end $function$;
 --@@ 45 funcao fin_private.dre_lines(p_from date, p_to date)
 CREATE OR REPLACE FUNCTION fin_private.dre_lines(p_from date, p_to date)
@@ -8892,11 +9043,13 @@ begin
     'Multa e juros de mora', c.profile_id
   from public.fin_charge_payments p join public.fin_member_charges c on c.id = p.charge_id
   where p.kind = 'payment' and p.fine_cents + p.interest_cents > 0 and p.paid_on between p_from and p_to
+    and not exists (select 1 from fin_private.cash_removed cr where cr.source_type='member_payment' and cr.source_id=p.id::text)
   union all
   select fin_private.category_id('refunds'), -(p.fine_cents + p.interest_cents)::bigint, 'member_fee_reversal', p.id::text, p.paid_on,
     'Estorno de multa e juros', c.profile_id
   from public.fin_charge_payments p join public.fin_member_charges c on c.id = p.charge_id
   where p.kind = 'reversal' and p.fine_cents + p.interest_cents > 0 and p.paid_on between p_from and p_to
+    and not exists (select 1 from fin_private.cash_removed cr where cr.source_type='member_reversal' and cr.source_id=p.id::text)
   union all
   -- 3. Card Mensal e Aula avulsa dos alunos não-sócios: o que foi PAGO e registrado em `student_payments`
   --    (ATIVOS, pela data do pagamento). Validade além do dia = Card Mensal; no próprio dia = Aula avulsa
@@ -8997,30 +9150,13 @@ CREATE OR REPLACE FUNCTION fin_private.ensure_member_charges(p_profile uuid, p_e
  SECURITY DEFINER
  SET search_path TO ''
 AS $function$
-declare pl public.fin_member_plans%rowtype; fs public.fin_settings%rowtype; v_next date; v_before integer; v_after integer;
+declare pl public.fin_member_plans%rowtype; v_before integer; v_after integer;
 begin
   select count(*) into v_before from public.fin_member_charges where profile_id=p_profile;
   for pl in select * from public.fin_member_plans where profile_id=p_profile and status='active' order by created_at loop
     perform fin_private.generate_charges(pl.id,fin_private.today());
   end loop;
-
-  if p_extend and not exists(
-    select 1 from public.fin_member_charges c
-    cross join lateral fin_private.charge_statement(c.id,fin_private.today()) st
-    where c.profile_id=p_profile and c.status in ('open','partial') and st.total_due>0
-  ) then
-    select * into fs from public.fin_settings where id;
-    for pl in select * from public.fin_member_plans where profile_id=p_profile and status='active' order by created_at loop
-      select coalesce((max(c.competence_month)+make_interval(months=>pl.period_months))::date,
-                      date_trunc('month',pl.start_on::timestamp)::date)
-        into v_next from public.fin_member_charges c where c.plan_id=pl.id;
-      if pl.ended_on is null or v_next<=pl.ended_on then
-        -- generate_charges vai até mês(p_today)+horizonte: este p_today faz o limite cair na próxima competência.
-        perform fin_private.generate_charges(pl.id,(v_next-make_interval(months=>fs.horizon_months))::date);
-      end if;
-    end loop;
-  end if;
-
+  -- p_extend permanece por compatibilidade; extensao futura nao e permitida.
   select count(*) into v_after from public.fin_member_charges where profile_id=p_profile;
   return v_after-v_before;
 end $function$;
@@ -9068,7 +9204,11 @@ declare s public.fin_settings%rowtype; pl public.fin_member_plans%rowtype; v_unt
   v_due date; v_n integer; v_created integer := 0; v_existing integer := 0; v_missing integer := 0;
 begin
   select * into s from public.fin_settings;
-  v_until := (date_trunc('month', p_today::timestamp) + make_interval(months => s.horizon_months))::date;
+  -- Limite incondicional: mensalidade so na competencia iniciada em Fortaleza.
+  v_until := least(
+    (date_trunc('month', p_today::timestamp) + make_interval(months => s.horizon_months))::date,
+    date_trunc('month', fin_private.today()::timestamp)::date
+  );
   for pl in select * from public.fin_member_plans where status = 'active' and (p_plan is null or id = p_plan) order by created_at loop
     perform fin_private.ensure_holidays(extract(year from pl.start_on)::integer, extract(year from v_until)::integer + 1);
     v_cursor := date_trunc('month', pl.start_on::timestamp)::date;
@@ -9082,7 +9222,16 @@ begin
           coalesce(pl.due_month_offset, s.due_month_offset), s.non_business_rule);
         insert into public.fin_member_charges(plan_id, profile_id, competence_month, period_months, due_date, original_amount_cents, created_by, updated_by)
         values (pl.id, pl.profile_id, v_cursor, pl.period_months, v_due, v_amount, auth.uid(), auth.uid())
-        on conflict (plan_id, competence_month) do nothing;
+        on conflict (plan_id, competence_month) do update
+          set status='open', canceled_at=null, canceled_by=null, cancel_reason=null,
+              version=fin_member_charges.version+1, updated_at=now(), updated_by=auth.uid()
+          where fin_member_charges.status='canceled'
+            and fin_member_charges.source='generated'
+            and fin_member_charges.cancel_reason='COMPETENCE_GENERATED_EARLY_20261010'
+            and not exists (
+              select 1 from fin_private.charge_payments_effective ep
+              where ep.charge_id=fin_member_charges.id
+            );
         get diagnostics v_n = row_count;
         if v_n > 0 then v_created := v_created + 1; else v_existing := v_existing + 1; end if;
       end if;
@@ -11041,7 +11190,7 @@ CREATE OR REPLACE FUNCTION public.conv_svc_ai_context(p_session uuid)
  LANGUAGE sql
  SECURITY DEFINER
  SET search_path TO ''
-AS $function$ select conv_private.ai_context(p_session) $function$;
+AS $function$ select conv_private.ai_context_continuity(p_session) $function$;
 --@@ 45 funcao public.conv_svc_ai_curator_ask(p_session uuid, p jsonb)
 CREATE OR REPLACE FUNCTION public.conv_svc_ai_curator_ask(p_session uuid, p jsonb)
  RETURNS jsonb
@@ -11350,6 +11499,172 @@ CREATE OR REPLACE FUNCTION public.conv_svc_queue_message(p_conversation uuid, p 
  SET search_path TO ''
 AS $function$
   select * from conv_private.queue_message(p_conversation, p, p_author, p_key, p_origin, p_session, p_recipient) $function$;
+--@@ 45 funcao public.conv_svc_receipt_confirm(p_stage uuid, p_message uuid)
+CREATE OR REPLACE FUNCTION public.conv_svc_receipt_confirm(p_stage uuid, p_message uuid)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare
+  s fin_private.whatsapp_receipt_intents%rowtype; m public.conv_messages%rowtype;
+  d jsonb; v_amount bigint; v_date date; v_cat uuid; v_entry uuid; v_submission uuid;
+  v_hash text; v_dupe boolean; v_count integer;
+begin
+  if coalesce(auth.role(),'')<>'service_role' then raise exception 'FORBIDDEN'; end if;
+  select * into s from fin_private.whatsapp_receipt_intents where id=p_stage for update;
+  select * into m from public.conv_messages where id=p_message;
+  if s.id is null then return jsonb_build_object('ok',false,'code','NOT_FOUND'); end if;
+  if s.status='confirmed' or s.status='needs_review' then
+    return jsonb_build_object('ok',true,'replayed',true,'status',s.status,'finance_entry_id',s.finance_entry_id,'finance_submission_id',s.finance_submission_id);
+  end if;
+  if s.status<>'awaiting_confirmation' or m.id is null or m.direction<>'inbound'
+    or m.conversation_id<>s.conversation_id or m.kind<>'text'
+    or m.created_at<=(select created_at from public.conv_messages where id=s.purpose_message_id)
+    or not exists ( -- SCOPE_LAST_RECEIPT_PROPOSAL
+       select 1 from public.conv_messages last_question       where last_question.id = (         select last.id from public.conv_messages last         where last.conversation_id=s.conversation_id           and last.direction='outbound' and last.created_at<m.created_at         order by last.created_at desc,last.id desc limit 1)         and last_question.body ilike 'Vou classificar o comprovante%')
+    or trim(coalesce(m.body,'')) !~* '^(sim|confirmo|confirmado|pode registrar|pode lancar|pode lançar|isso mesmo|correto|exatamente|certo|ok)[[:punct:][:space:]]*$'
+  then return jsonb_build_object('ok',false,'code','EXPLICIT_CONFIRMATION_REQUIRED');
+  end if;
+  d:=s.original_data;
+  v_amount:=nullif(d->>'declared_amount_cents','')::bigint;
+  v_date:=nullif(d->>'declared_paid_on','')::date;
+  v_hash:=lower(coalesce(d->>'content_sha256',''));
+  if v_amount is null or v_amount<=0 or v_date is null or v_date>(now() at time zone 'America/Fortaleza')::date
+    or v_hash !~ '^[0-9a-f]{64}$' then
+    update fin_private.whatsapp_receipt_intents set status='needs_review',
+      confirmation_message_id=p_message,updated_at=now() where id=s.id;
+    return jsonb_build_object('ok',true,'status','needs_review','reason','PAYMENT_DATA_MISSING');
+  end if;
+  -- Hash + valor + data não podem contar duas vezes nem em mensalidade nem em doação.
+  select exists(
+    select 1 from fin_private.whatsapp_receipt_intents other
+    where other.id<>s.id and other.original_data->>'content_sha256'=v_hash
+      and other.status in ('confirmed','needs_review')
+  ) into v_dupe;
+  if v_dupe then
+    update fin_private.whatsapp_receipt_intents set status='needs_review',confirmation_message_id=p_message,updated_at=now() where id=s.id;
+    return jsonb_build_object('ok',true,'status','needs_review','reason','POSSIBLE_DUPLICATE');
+  end if;
+  if s.purpose_kind='donation' then
+    select id into v_cat from public.fin_categories where kind='revenue' and system_key='donations_campaigns' limit 1;
+    if v_cat is null then
+      insert into public.fin_categories(name,kind,dre_line,system_key,active)
+      values('Doações e campanhas','revenue','revenue','donations_campaigns',true)
+      returning id into v_cat;
+    end if;
+    insert into public.fin_entries(kind,status,description,category_id,amount_cents,competence_date,due_date,notes,request_id)
+    values('revenue','pending',left('Doação - '||s.purpose_detail,140),v_cat,v_amount,v_date,v_date,
+      left('Recebida pelo João, confirmada pelo remetente. PENDENTE DE CONFERÊNCIA BANCÁRIA. Comprovante: '||
+           coalesce(d->>'storage_path',''),1000),s.id)
+    returning id into v_entry;
+    -- Saldo do caixa só muda quando o administrador marcar a receita como paga.
+    update fin_private.whatsapp_receipt_intents set status='confirmed',confirmation_message_id=p_message,
+      finance_entry_id=v_entry,updated_at=now() where id=s.id;
+    return jsonb_build_object('ok',true,'status','confirmed','kind','donation',
+      'finance_entry_id',v_entry,'paid',false);
+  elsif s.purpose_kind in ('membership','member_pendency') and s.profile_id is not null then
+    select exists(select 1 from public.fin_receipt_submissions r where r.content_sha256=v_hash and r.status in ('submitted','in_review','approved'))
+      into v_dupe;
+    if v_dupe then
+      update fin_private.whatsapp_receipt_intents set status='needs_review',
+        confirmation_message_id=p_message,updated_at=now() where id=s.id;
+      return jsonb_build_object('ok',true,'status','needs_review','reason','POSSIBLE_DUPLICATE');
+    end if;
+    insert into public.fin_receipt_submissions(
+      id,profile_id,status,storage_path,file_name,content_type,size_bytes,content_sha256,
+      declared_amount_cents,declared_paid_on,declared_reference,member_note,ocr_status,ocr,
+      possible_duplicate,request_id,source,source_message_id
+    ) values (
+      s.id,s.profile_id,'submitted',d->>'storage_path',d->>'file_name',d->>'content_type',
+      (d->>'size_bytes')::integer,v_hash,v_amount,v_date,d->>'declared_reference',
+      left('Confirmado por WhatsApp: '||s.purpose_detail,500),
+      coalesce(d->>'ocr_status','not_run'),d->'ocr',false,s.id,'whatsapp',s.source_message_id
+    ) returning id into v_submission;
+    -- Não vincular automaticamente competência nem cobrança: o envio pode ser de outro mês ou de terceiro.
+    -- O administrador escolhe a cobrança correta na revisão, e a quitação só ocorre após conferência.
+    update fin_private.whatsapp_receipt_intents set status='confirmed',confirmation_message_id=p_message,
+      finance_submission_id=v_submission,updated_at=now() where id=s.id;
+    return jsonb_build_object('ok',true,'status','confirmed','kind',s.purpose_kind,
+      'finance_submission_id',v_submission,'paid',false);
+  else
+    -- Card Mensal/Day Card e outros pagamentos exigem motor de domínio, sem forçar mensalidade de sócio.
+    update fin_private.whatsapp_receipt_intents set status='needs_review',confirmation_message_id=p_message,
+      updated_at=now() where id=s.id;
+    return jsonb_build_object('ok',true,'status','needs_review','kind',s.purpose_kind,
+      'reason','SPECIAL_PAYMENT_REQUIRES_REVIEW');
+  end if;
+end $function$;
+--@@ 45 funcao public.conv_svc_receipt_purpose(p_stage uuid, p_message uuid, p
+CREATE OR REPLACE FUNCTION public.conv_svc_receipt_purpose(p_stage uuid, p_message uuid, p_kind text, p_detail text)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare s fin_private.whatsapp_receipt_intents%rowtype; m public.conv_messages%rowtype;
+begin
+  if coalesce(auth.role(),'')<>'service_role' then raise exception 'FORBIDDEN'; end if;
+  select * into s from fin_private.whatsapp_receipt_intents where id=p_stage for update;
+  select * into m from public.conv_messages where id=p_message;
+  if s.id is null or s.status<>'awaiting_purpose'
+    or m.id is null or m.conversation_id<>s.conversation_id or m.direction<>'inbound'
+    or m.kind<>'text' or m.created_at<(select created_at from public.conv_messages where id=s.source_message_id) then
+    return jsonb_build_object('ok',false,'code','INTENT_NOT_ELIGIBLE');
+  end if;
+  if p_kind not in ('donation','membership','member_pendency','student_card','day_card','other')
+    or length(trim(coalesce(p_detail,'')))<3 then
+    return jsonb_build_object('ok',false,'code','PURPOSE_UNCLEAR');
+  end if;
+  update fin_private.whatsapp_receipt_intents
+    set purpose_kind=p_kind,purpose_detail=left(trim(p_detail),240),purpose_message_id=p_message,
+      status='awaiting_confirmation',updated_at=now()
+  where id=p_stage;
+  return jsonb_build_object('ok',true,'status','awaiting_confirmation');
+end $function$;
+--@@ 45 funcao public.conv_svc_receipt_revise(p_stage uuid, p_message uuid)
+CREATE OR REPLACE FUNCTION public.conv_svc_receipt_revise(p_stage uuid, p_message uuid)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare s fin_private.whatsapp_receipt_intents%rowtype; m public.conv_messages%rowtype;
+begin
+  if coalesce(auth.role(),'')<>'service_role' then raise exception 'FORBIDDEN'; end if;
+  select * into s from fin_private.whatsapp_receipt_intents where id=p_stage for update;
+  select * into m from public.conv_messages where id=p_message;
+  if s.id is null or s.status<>'awaiting_confirmation' or m.id is null
+    or m.conversation_id<>s.conversation_id or m.direction<>'inbound'
+    or m.created_at<=(select created_at from public.conv_messages where id=s.purpose_message_id) then
+    return jsonb_build_object('ok',false,'code','REVISION_NOT_ELIGIBLE');
+  end if;
+  update fin_private.whatsapp_receipt_intents
+    set status='awaiting_purpose',purpose_kind=null,purpose_detail=null,purpose_message_id=null,updated_at=now()
+  where id=p_stage;
+  return jsonb_build_object('ok',true);
+end $function$;
+--@@ 45 funcao public.conv_svc_receipt_stage(p_conversation uuid)
+CREATE OR REPLACE FUNCTION public.conv_svc_receipt_stage(p_conversation uuid)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ STABLE SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare s fin_private.whatsapp_receipt_intents%rowtype;
+begin
+  if coalesce(auth.role(),'')<>'service_role' then raise exception 'FORBIDDEN'; end if;
+  select * into s from fin_private.whatsapp_receipt_intents
+  where conversation_id=p_conversation and status in ('awaiting_purpose','awaiting_confirmation')
+  order by created_at,id limit 1;
+  if not found then return null; end if;
+  return jsonb_build_object('id',s.id,'source_message_id',s.source_message_id,'status',s.status,
+    'purpose_kind',s.purpose_kind,'purpose_detail',s.purpose_detail,
+    'amount_cents',s.original_data->>'declared_amount_cents',
+    'paid_on',s.original_data->>'declared_paid_on',
+    'ocr_status',s.original_data->>'ocr_status','payee',s.original_data->'ocr'->>'payee',
+    'created_at',s.created_at);
+end $function$;
 --@@ 45 funcao public.conv_svc_resolve_undecryptable(p_provider_id text, p_bod
 CREATE OR REPLACE FUNCTION public.conv_svc_resolve_undecryptable(p_provider_id text, p_body text, p_kind text)
  RETURNS void
@@ -12297,6 +12612,132 @@ begin
   if not found then raise exception 'ATTACHMENT_NOT_FOUND'; end if;
   return fin_private.finish_op(p_request_id, jsonb_build_object('id', p_id));
 end $function$;
+--@@ 45 funcao public.fin_remove_cash_movement(p_request_id uuid, p_source_typ
+CREATE OR REPLACE FUNCTION public.fin_remove_cash_movement(p_request_id uuid, p_source_type text, p_source_id uuid, p_reason text)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare
+  v_actor uuid;
+  v_replay jsonb;
+  v_reason text := trim(coalesce(p_reason,''));
+  v_entry public.fin_entries%rowtype;
+  v_entry_payment public.fin_entry_payments%rowtype;
+  v_payment public.fin_charge_payments%rowtype;
+  v_reversal public.fin_charge_payments%rowtype;
+  v_student public.student_payments%rowtype;
+  v_res public.reservations%rowtype;
+  v_account public.fin_accounts%rowtype;
+  v_count integer := 0;
+begin
+  v_actor:=fin_private.require_admin();
+  if p_request_id is null or p_source_id is null then raise exception 'INVALID_ENTRY'; end if;
+  if length(v_reason)<8 or length(v_reason)>500 then raise exception 'REASON_REQUIRED'; end if;
+  if p_source_type not in ('entry_payment','member_payment','member_reversal','student_payment','day_card','opening')
+  then raise exception 'INVALID_CASH_SOURCE'; end if;
+  v_replay:=fin_private.begin_op(p_request_id,'cash_remove',v_reason);
+  if v_replay is not null then return v_replay; end if;
+  if exists(select 1 from fin_private.cash_removed
+            where source_type=p_source_type and source_id=p_source_id::text)
+  then raise exception 'CASH_ALREADY_REMOVED'; end if;
+
+  if p_source_type='entry_payment' then
+    select * into v_entry_payment from public.fin_entry_payments where id=p_source_id;
+    if not found then raise exception 'PAYMENT_NOT_FOUND'; end if;
+    select * into v_entry from public.fin_entries where id=v_entry_payment.entry_id for update;
+    if not found then raise exception 'ENTRY_NOT_FOUND'; end if;
+    if v_entry.kind='member_refund' or exists (
+      select 1 from public.fin_member_credits where refund_entry_id=v_entry.id
+    ) then raise exception 'CASH_LINKED_CREDIT'; end if;
+    if v_entry.status<>'canceled' then
+      perform public.fin_void_entry(gen_random_uuid(),v_entry.id,v_entry.version,v_reason);
+    end if;
+    for v_entry_payment in
+      select * from public.fin_entry_payments where entry_id=v_entry.id order by created_at,id
+    loop
+      insert into fin_private.cash_removed(source_type,source_id,reason,actor_id,request_id,snapshot)
+      values('entry_payment',v_entry_payment.id::text,v_reason,v_actor,p_request_id,
+        jsonb_build_object('entry',to_jsonb(v_entry),'payment',to_jsonb(v_entry_payment)))
+      on conflict(source_type,source_id) do nothing;
+      v_count:=v_count+1;
+    end loop;
+
+  elsif p_source_type in ('member_payment','member_reversal') then
+    if p_source_type='member_reversal' then
+      select * into v_reversal from public.fin_charge_payments where id=p_source_id and kind='reversal';
+      if not found then raise exception 'PAYMENT_NOT_FOUND'; end if;
+      select * into v_payment from public.fin_charge_payments
+      where id=v_reversal.reverses_payment_id and kind='payment';
+    else
+      select * into v_payment from public.fin_charge_payments where id=p_source_id and kind='payment';
+    end if;
+    if v_payment.id is null then raise exception 'PAYMENT_NOT_FOUND'; end if;
+    perform 1 from public.fin_member_charges where id=v_payment.charge_id for update;
+    select * into v_reversal from public.fin_charge_payments
+    where reverses_payment_id=v_payment.id;
+    if v_reversal.id is null then
+      -- Motor atual valida ordem dos pagamentos e possíveis créditos utilizados.
+      perform public.fin_reverse_payment(gen_random_uuid(),v_payment.id,v_reason);
+      select * into v_reversal from public.fin_charge_payments
+      where reverses_payment_id=v_payment.id;
+    end if;
+    if v_reversal.id is null then raise exception 'PAYMENT_NOT_FOUND'; end if;
+    insert into fin_private.cash_removed(source_type,source_id,reason,actor_id,request_id,snapshot)
+    values('member_payment',v_payment.id::text,v_reason,v_actor,p_request_id,to_jsonb(v_payment))
+    on conflict(source_type,source_id) do nothing;
+    insert into fin_private.cash_removed(source_type,source_id,reason,actor_id,request_id,snapshot)
+    values('member_reversal',v_reversal.id::text,v_reason,v_actor,p_request_id,to_jsonb(v_reversal))
+    on conflict(source_type,source_id) do nothing;
+    v_count:=2;
+
+  elsif p_source_type='student_payment' then
+    select * into v_student from public.student_payments where id=p_source_id for update;
+    if not found or v_student.status<>'active' then raise exception 'PAYMENT_NOT_FOUND'; end if;
+    update public.student_payments set status='cancelled',cancelled_reason=v_reason
+    where id=v_student.id;
+    insert into fin_private.cash_removed(source_type,source_id,reason,actor_id,request_id,snapshot)
+    values('student_payment',v_student.id::text,v_reason,v_actor,p_request_id,to_jsonb(v_student));
+    v_count:=1;
+
+  elsif p_source_type='day_card' then
+    select * into v_res from public.reservations where id=p_source_id for update;
+    if not found or v_res.type<>'Play' or nullif(trim(coalesce(v_res.guest_name,'')),'') is null
+       or coalesce(v_res.status,'active')='cancelled'
+       or v_res.payment_status::text='exempt'
+    then raise exception 'INVALID_CASH_SOURCE'; end if;
+    insert into fin_private.cash_removed(source_type,source_id,reason,actor_id,request_id,snapshot)
+    values('day_card',v_res.id::text,v_reason,v_actor,p_request_id,to_jsonb(v_res));
+    v_count:=1;
+
+  elsif p_source_type='opening' then
+    select * into v_account from public.fin_accounts where id=p_source_id for update;
+    if not found or v_account.opening_balance_cents=0 then raise exception 'INVALID_CASH_SOURCE'; end if;
+    update public.fin_accounts set opening_balance_cents=0,version=version+1,
+      updated_at=now(),updated_by=v_actor where id=p_source_id;
+    insert into fin_private.cash_removed(source_type,source_id,reason,actor_id,request_id,snapshot)
+    values('opening',v_account.id::text,v_reason,v_actor,p_request_id,to_jsonb(v_account));
+    v_count:=1;
+  end if;
+
+  return fin_private.finish_op(p_request_id,jsonb_build_object(
+    'removed',true,'source_type',p_source_type,'source_id',p_source_id,'affected_movements',v_count
+  ));
+end $function$;
+--@@ 45 funcao public.fin_removed_cash_history(p_limit integer)
+CREATE OR REPLACE FUNCTION public.fin_removed_cash_history(p_limit integer DEFAULT 100)
+ RETURNS TABLE(source_type text, source_id text, reason text, actor_name text, removed_at timestamp with time zone)
+ LANGUAGE plpgsql
+ STABLE SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+begin
+  perform fin_private.require_admin();
+  return query select d.source_type,d.source_id,d.reason,coalesce(pr.name,'Administrador'),d.occurred_at
+  from fin_private.cash_removed d left join public.profiles pr on pr.id=d.actor_id
+  order by d.occurred_at desc limit least(greatest(p_limit,1),300);
+end $function$;
 --@@ 45 funcao public.fin_resolve_credit(p_request_id uuid, p_credit uuid, p_a
 CREATE OR REPLACE FUNCTION public.fin_resolve_credit(p_request_id uuid, p_credit uuid, p_action text, p_data jsonb)
  RETURNS jsonb
@@ -12907,96 +13348,30 @@ CREATE OR REPLACE FUNCTION public.fin_submit_whatsapp_pendency_receipt(p_message
  SECURITY DEFINER
  SET search_path TO ''
 AS $function$
-declare
-  v_role text:=coalesce(auth.role(),'');
-  v_profile uuid; v_media text; v_mime text; v_name text; v_existing uuid; v_ids uuid[];
-  v_amount bigint; v_paid_on date; v_ocr jsonb; v_auto jsonb; v_hash text; v_size bigint; v_review_notice uuid;
-  v_ocr_status text; v_generated integer;
+declare v_conv uuid; v_contact uuid; v_profile uuid; v_existing uuid; v_status text;
 begin
-  if v_role <> 'service_role' then raise exception 'FORBIDDEN'; end if;
-
-  select ct.profile_id,m.media_path,m.media_mime,coalesce(m.media_name,'comprovante')
-    into v_profile,v_media,v_mime,v_name
+  if coalesce(auth.role(),'')<>'service_role' then raise exception 'FORBIDDEN'; end if;
+  select m.conversation_id,cv.contact_id,ct.profile_id
+    into v_conv,v_contact,v_profile
   from public.conv_messages m
   join public.conv_conversations cv on cv.id=m.conversation_id and cv.kind='direct'
   join public.conv_contacts ct on ct.id=cv.contact_id
-  where m.id=p_message and m.direction='inbound'
-    and m.media_path is not null
-    and ct.profile_id is not null
-    and ct.link_status in ('linked','manual');
-  if not found then raise exception 'WHATSAPP_RECEIPT_NOT_ELIGIBLE'; end if;
-
-  select id into v_existing from public.fin_receipt_submissions where source_message_id=p_message;
-  if v_existing is not null then
-    return jsonb_build_object('id',v_existing,'duplicate',true,
-      'status',(select status from public.fin_receipt_submissions where id=v_existing));
+  where m.id=p_message and m.direction='inbound' and m.kind in ('image','document')
+    and m.media_path is not null;
+  if v_conv is null then return jsonb_build_object('skipped',true,'reason','NOT_ELIGIBLE_DIRECT_RECEIPT'); end if;
+  if coalesce(p_data->>'storage_path','')='' or
+     coalesce(p_data->>'content_sha256','') !~ '^[0-9a-f]{64}$'
+     or coalesce(nullif(p_data->>'size_bytes','')::bigint,0) not between 1 and 10485760 then
+    raise exception 'INVALID_STAGED_RECEIPT';
   end if;
-
-  v_ocr_status:=coalesce(nullif(p_data->>'ocr_status',''),'not_run');
-  -- Só gera mensalidade (inclusive a próxima, para pagamento adiantado) se o arquivo parece mesmo um comprovante.
-  v_generated:=fin_private.ensure_member_charges(v_profile,v_ocr_status='ok');
-
-  -- Mensalidades e pendências em aberto, da mais antiga para a mais nova.
-  select coalesce(array_agg(c.id order by (c.due_date>=fin_private.today()),c.due_date,c.id),'{}')
-    into v_ids
-  from public.fin_member_charges c
-  cross join lateral fin_private.charge_statement(c.id,fin_private.today()) st
-  where c.profile_id=v_profile and c.charge_type in ('membership','member_pendency')
-    and c.status in ('open','partial') and st.total_due>0;
-  -- Nada em aberto e nada legível: provavelmente não é comprovante (foto qualquer).
-  if cardinality(v_ids)=0 and v_ocr_status<>'ok' then
-    return jsonb_build_object('skipped',true,'reason','NO_OPEN_CHARGES');
-  end if;
-
-  v_amount:=nullif(p_data->>'declared_amount_cents','')::bigint;
-  v_paid_on:=nullif(p_data->>'declared_paid_on','')::date;
-  v_ocr:=p_data->'ocr';
-  v_hash:=lower(coalesce(p_data->>'content_sha256',''));
-  v_size:=coalesce(nullif(p_data->>'size_bytes','')::bigint,0);
-
-  if v_hash !~ '^[0-9a-f]{64}$' then raise exception 'INVALID_HASH'; end if;
-  if v_size<=0 or v_size>10485760 then raise exception 'INVALID_SIZE'; end if;
-  if coalesce(p_data->>'storage_path','')='' then raise exception 'INVALID_STORAGE_PATH'; end if;
-
-  insert into public.fin_receipt_submissions(
-    id,profile_id,status,storage_path,file_name,content_type,size_bytes,content_sha256,
-    declared_amount_cents,declared_paid_on,declared_reference,member_note,
-    ocr_status,ocr,possible_duplicate,request_id,source,source_message_id,created_at,updated_at
-  ) values(
-    p_submission,v_profile,'submitted',p_data->>'storage_path',
-    coalesce(nullif(p_data->>'file_name',''),v_name),
-    coalesce(nullif(p_data->>'content_type',''),v_mime,'application/octet-stream'),
-    v_size,v_hash,v_amount,v_paid_on,nullif(p_data->>'declared_reference',''),
-    'Comprovante recebido pelo WhatsApp institucional',
-    v_ocr_status,v_ocr,false,p_submission,'whatsapp',p_message,now(),now()
-  );
-
-  insert into public.fin_receipt_charges(submission_id,charge_id)
-  select p_submission,unnest(v_ids);
-
-  update public.fin_receipt_submissions s set possible_duplicate=exists(
-    select 1 from public.fin_receipt_submissions o
-    where o.id<>s.id and o.profile_id=s.profile_id and o.content_sha256=s.content_sha256
-  ) where s.id=p_submission;
-
-  v_auto:=fin_private.auto_approve_pendency_receipt(p_submission);
-
-  if not coalesce((v_auto->>'approved')::boolean,false) then
-    v_review_notice:=conv_private.queue_pendency_receipt_review_notice(v_profile,p_submission);
-  end if;
-
-  return jsonb_build_object(
-    'id',p_submission,
-    'duplicate',false,
-    'status',(select status from public.fin_receipt_submissions where id=p_submission),
-    'auto_approved',coalesce((v_auto->>'approved')::boolean,false),
-    'auto_reason',v_auto->>'reason',
-    'profile_id',v_profile,
-    'charge_ids',to_jsonb(v_ids),
-    'generated_charges',v_generated,
-    'payment_ids',coalesce(v_auto->'payment_ids','[]'::jsonb),
-    'review_notice_recipient_id',v_review_notice
-  );
+  insert into fin_private.whatsapp_receipt_intents
+    (id,source_message_id,conversation_id,profile_id,contact_id,original_data)
+  values(p_submission,p_message,v_conv,v_profile,v_contact,p_data)
+  on conflict(source_message_id) do nothing;
+  select id,status into v_existing,v_status
+    from fin_private.whatsapp_receipt_intents where source_message_id=p_message;
+  return jsonb_build_object('staged',true,'id',v_existing,'status',v_status,'requires_user_confirmation',true,
+    'auto_approved',false,'payment_ids','[]'::jsonb);
 end $function$;
 --@@ 45 funcao public.fin_update_entry(p_request_id uuid, p_id uuid, p_expecte
 CREATE OR REPLACE FUNCTION public.fin_update_entry(p_request_id uuid, p_id uuid, p_expected_version integer, p_data jsonb, p_reason text)
@@ -13068,6 +13443,77 @@ begin
     version = version + 1, updated_at = now(), updated_by = v_actor where id = p_plan_id;
   return fin_private.finish_op(p_request_id, jsonb_build_object('id', p_plan_id, 'version', pl.version + 1));
 end $function$;
+--@@ 45 funcao public.fin_void_entry(p_request_id uuid, p_id uuid, p_expected_
+CREATE OR REPLACE FUNCTION public.fin_void_entry(p_request_id uuid, p_id uuid, p_expected_version integer, p_reason text)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare
+  v_actor uuid;
+  v_replay jsonb;
+  v_entry public.fin_entries%rowtype;
+  v_payment public.fin_entry_payments%rowtype;
+  v_reversed integer := 0;
+  v_reason text := trim(coalesce(p_reason,''));
+begin
+  v_actor := fin_private.require_admin();
+  if length(v_reason) < 8 or length(v_reason) > 500 then
+    raise exception 'REASON_REQUIRED';
+  end if;
+  if p_id is null or p_expected_version is null then raise exception 'INVALID_ENTRY'; end if;
+  v_replay := fin_private.begin_op(p_request_id, 'entry_void', v_reason);
+  if v_replay is not null then return v_replay; end if;
+
+  select * into v_entry from public.fin_entries where id = p_id for update;
+  if not found then raise exception 'ENTRY_NOT_FOUND'; end if;
+  if v_entry.version <> p_expected_version then raise exception 'VERSION_CONFLICT'; end if;
+  if v_entry.status = 'canceled' then raise exception 'ENTRY_CANCELED'; end if;
+
+  -- Não há pagamentos em fonte derivada nesta tabela. Para documentos pagos,
+  -- nunca apagar a linha financeira original nem o comprovante.
+  -- Reverter somente o que permanece efetivo, evitando duplo estorno.
+  for v_payment in
+    select p.* from public.fin_entry_payments p
+    where p.entry_id = p_id and p.kind = 'payment'
+      and not exists (
+        select 1 from public.fin_entry_payments r
+        where r.reverses_payment_id = p.id
+      )
+    order by p.created_at,p.id
+  loop
+    insert into public.fin_entry_payments (
+      entry_id,kind,amount_cents,paid_on,account_id,
+      reverses_payment_id,note,actor_id,request_id
+    ) values (
+      v_payment.entry_id,'reversal',v_payment.amount_cents,
+      fin_private.today(),v_payment.account_id,v_payment.id,
+      left('Anulação de lançamento incorreto: ' || v_reason,500),
+      v_actor,gen_random_uuid()
+    );
+    v_reversed := v_reversed + 1;
+  end loop;
+
+  if fin_private.entry_paid_cents(p_id) <> 0 then
+    raise exception 'ENTRY_HAS_PAYMENTS';
+  end if;
+
+  update public.fin_entries
+  set status = 'canceled',
+      canceled_at = now(), canceled_by = v_actor,
+      cancel_reason = v_reason,
+      settled_on = null, adjustment_cents = 0,
+      version = version + 1,
+      updated_at = now(), updated_by = v_actor
+  where id = p_id;
+
+  return fin_private.finish_op(p_request_id,jsonb_build_object(
+    'id',p_id,'version',v_entry.version+1,
+    'reversed_payments',v_reversed,'canceled',true
+  ));
+end
+$function$;
 --@@ 45 funcao public.finish_championship(p_championship_id uuid)
 CREATE OR REPLACE FUNCTION public.finish_championship(p_championship_id uuid)
  RETURNS jsonb
@@ -16454,6 +16900,14 @@ CREATE OR REPLACE FUNCTION sig_private.ts(p timestamp with time zone)
  SET search_path TO ''
 AS $function$
   select to_char(p at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') $function$;
+--@@ 50 default fin_private.cash_removed.occurred_at
+alter table fin_private.cash_removed alter column occurred_at set default now();
+--@@ 50 default fin_private.whatsapp_receipt_intents.created_at
+alter table fin_private.whatsapp_receipt_intents alter column created_at set default now();
+--@@ 50 default fin_private.whatsapp_receipt_intents.status
+alter table fin_private.whatsapp_receipt_intents alter column status set default 'awaiting_purpose'::text;
+--@@ 50 default fin_private.whatsapp_receipt_intents.updated_at
+alter table fin_private.whatsapp_receipt_intents alter column updated_at set default now();
 --@@ 50 default public."Cliente_CRM"."credito_aniversário"
 alter table public."Cliente_CRM" alter column "credito_aniversário" set default false;
 --@@ 50 default public."Cliente_CRM".created_at
@@ -16710,6 +17164,18 @@ alter table public.conv_ai_settings alter column model set default ''::text;
 alter table public.conv_ai_settings alter column persona_name set default 'Assistente do STC'::text;
 --@@ 50 default public.conv_ai_settings.proposal_ttl_minutes
 alter table public.conv_ai_settings alter column proposal_ttl_minutes set default 20;
+--@@ 50 default public.conv_ai_topics.created_at
+alter table public.conv_ai_topics alter column created_at set default now();
+--@@ 50 default public.conv_ai_topics.decisions
+alter table public.conv_ai_topics alter column decisions set default '[]'::jsonb;
+--@@ 50 default public.conv_ai_topics.domain
+alter table public.conv_ai_topics alter column domain set default 'outro'::text;
+--@@ 50 default public.conv_ai_topics.slots
+alter table public.conv_ai_topics alter column slots set default '{}'::jsonb;
+--@@ 50 default public.conv_ai_topics.summary
+alter table public.conv_ai_topics alter column summary set default ''::text;
+--@@ 50 default public.conv_ai_topics.updated_at
+alter table public.conv_ai_topics alter column updated_at set default now();
 --@@ 50 default public.conv_automation_recipients.attempts
 alter table public.conv_automation_recipients alter column attempts set default 0;
 --@@ 50 default public.conv_automation_recipients.created_at
@@ -17384,6 +17850,20 @@ alter sequence public.subcategorias_id_seq owned by public.subcategorias.id;
 alter sequence public.tabela_modelos_id_seq owned by public.tabela_modelos.id;
 --@@ 51 sequencia-dona public.tabela_sinonimo_modelo_id_seq
 alter sequence public.tabela_sinonimo_modelo_id_seq owned by public.tabela_sinonimo_modelo.id;
+--@@ 55 restricao fin_private.cash_removed.cash_removed_pkey
+alter table fin_private.cash_removed add constraint cash_removed_pkey PRIMARY KEY (source_type, source_id);
+--@@ 55 restricao fin_private.cash_removed.cash_removed_reason_check
+alter table fin_private.cash_removed add constraint cash_removed_reason_check CHECK (((length(reason) >= 8) AND (length(reason) <= 500)));
+--@@ 55 restricao fin_private.cash_removed.cash_removed_source_type_check
+alter table fin_private.cash_removed add constraint cash_removed_source_type_check CHECK ((source_type = ANY (ARRAY['entry_payment'::text, 'member_payment'::text, 'member_reversal'::text, 'student_payment'::text, 'day_card'::text, 'opening'::text])));
+--@@ 55 restricao fin_private.whatsapp_receipt_intents.whatsapp_receipt_intents_p
+alter table fin_private.whatsapp_receipt_intents add constraint whatsapp_receipt_intents_pkey PRIMARY KEY (id);
+--@@ 55 restricao fin_private.whatsapp_receipt_intents.whatsapp_receipt_intents_p
+alter table fin_private.whatsapp_receipt_intents add constraint whatsapp_receipt_intents_purpose_kind_check CHECK ((purpose_kind = ANY (ARRAY['donation'::text, 'membership'::text, 'member_pendency'::text, 'student_card'::text, 'day_card'::text, 'other'::text])));
+--@@ 55 restricao fin_private.whatsapp_receipt_intents.whatsapp_receipt_intents_s
+alter table fin_private.whatsapp_receipt_intents add constraint whatsapp_receipt_intents_source_message_id_key UNIQUE (source_message_id);
+--@@ 55 restricao fin_private.whatsapp_receipt_intents.whatsapp_receipt_intents_s
+alter table fin_private.whatsapp_receipt_intents add constraint whatsapp_receipt_intents_status_check CHECK ((status = ANY (ARRAY['awaiting_purpose'::text, 'awaiting_confirmation'::text, 'confirmed'::text, 'needs_review'::text, 'canceled'::text])));
 --@@ 55 restricao public."Cliente_CRM"."Cliente_CRM_pkey"
 alter table public."Cliente_CRM" add constraint "Cliente_CRM_pkey" PRIMARY KEY (id);
 --@@ 55 restricao public."Memory Long"."Memory Long_pkey"
@@ -17556,6 +18036,14 @@ alter table public.conv_ai_settings add constraint conv_ai_settings_pkey PRIMARY
 alter table public.conv_ai_settings add constraint conv_ai_settings_proposal_ttl_minutes_check CHECK (((proposal_ttl_minutes >= 2) AND (proposal_ttl_minutes <= 120)));
 --@@ 55 restricao public.conv_ai_settings.conv_ai_settings_version_check
 alter table public.conv_ai_settings add constraint conv_ai_settings_version_check CHECK ((version > 0));
+--@@ 55 restricao public.conv_ai_topics.conv_ai_topics_domain_check
+alter table public.conv_ai_topics add constraint conv_ai_topics_domain_check CHECK ((domain = ANY (ARRAY['agenda'::text, 'admin'::text, 'outro'::text])));
+--@@ 55 restricao public.conv_ai_topics.conv_ai_topics_intent_check
+alter table public.conv_ai_topics add constraint conv_ai_topics_intent_check CHECK (((length(intent) >= 1) AND (length(intent) <= 40)));
+--@@ 55 restricao public.conv_ai_topics.conv_ai_topics_pkey
+alter table public.conv_ai_topics add constraint conv_ai_topics_pkey PRIMARY KEY (id);
+--@@ 55 restricao public.conv_ai_topics.conv_ai_topics_status_check
+alter table public.conv_ai_topics add constraint conv_ai_topics_status_check CHECK ((status = ANY (ARRAY['awaiting_data'::text, 'awaiting_confirmation'::text, 'suspended'::text, 'completed'::text, 'canceled'::text, 'archived'::text])));
 --@@ 55 restricao public.conv_automation_recipients.conv_automation_recipients_bo
 alter table public.conv_automation_recipients add constraint conv_automation_recipients_body_check CHECK (((body IS NULL) OR (length(body) <= 1000)));
 --@@ 55 restricao public.conv_automation_recipients.conv_automation_recipients_di
@@ -18350,6 +18838,8 @@ create or replace view public.vw_familia_modelos_expandidos as  SELECT t.familia
            FROM tabela_familia_iphone_map
           WHERE tabela_familia_iphone_map.modelo_canonico IS NOT NULL AND tabela_familia_iphone_map.modelo_canonico <> '__ALL_MODELOS__'::text
           GROUP BY tabela_familia_iphone_map.familia_id) a USING (familia_id);
+--@@ 65 indice fin_private.whatsapp_receipt_intents_pending_idx
+CREATE INDEX whatsapp_receipt_intents_pending_idx ON fin_private.whatsapp_receipt_intents USING btree (conversation_id, created_at) WHERE (status = ANY (ARRAY['awaiting_purpose'::text, 'awaiting_confirmation'::text]));
 --@@ 65 indice public.access_requests_phone_normalized_key
 CREATE UNIQUE INDEX access_requests_phone_normalized_key ON public.access_requests USING btree (phone_normalized);
 --@@ 65 indice public.access_requests_status_created_at_idx
@@ -18374,6 +18864,8 @@ CREATE INDEX conv_ai_memory_candidates_subject_idx ON public.conv_ai_memory_cand
 CREATE INDEX conv_ai_sessions_conversation_idx ON public.conv_ai_sessions USING btree (conversation_id, status);
 --@@ 65 indice public.conv_ai_sessions_one_open
 CREATE UNIQUE INDEX conv_ai_sessions_one_open ON public.conv_ai_sessions USING btree (conversation_id, requester_contact_id) WHERE (status = 'open'::text);
+--@@ 65 indice public.conv_ai_topics_owner_idx
+CREATE INDEX conv_ai_topics_owner_idx ON public.conv_ai_topics USING btree (conversation_id, requester_contact_id, status, updated_at DESC);
 --@@ 65 indice public.conv_automation_recipients_contact_idx
 CREATE INDEX conv_automation_recipients_contact_idx ON public.conv_automation_recipients USING btree (contact_id) WHERE (contact_id IS NOT NULL);
 --@@ 65 indice public.conv_automation_recipients_dedupe
@@ -18652,6 +19144,24 @@ CREATE UNIQUE INDEX uidx_championship_rounds_champ_class_number ON public.champi
 CREATE UNIQUE INDEX uidx_championship_series_edition_year ON public.championships USING btree (series_id, edition_year) WHERE ((series_id IS NOT NULL) AND (edition_year IS NOT NULL));
 --@@ 65 indice sig_private.sig_challenges_lookup_idx
 CREATE INDEX sig_challenges_lookup_idx ON sig_private.challenges USING btree (profile_id, document_id, created_at DESC);
+--@@ 70 fk fin_private.cash_removed.cash_removed_actor_id_fkey
+alter table fin_private.cash_removed add constraint cash_removed_actor_id_fkey FOREIGN KEY (actor_id) REFERENCES profiles(id);
+--@@ 70 fk fin_private.whatsapp_receipt_intents.whatsapp_receipt_intents_c
+alter table fin_private.whatsapp_receipt_intents add constraint whatsapp_receipt_intents_confirmation_message_id_fkey FOREIGN KEY (confirmation_message_id) REFERENCES conv_messages(id);
+--@@ 70 fk fin_private.whatsapp_receipt_intents.whatsapp_receipt_intents_c
+alter table fin_private.whatsapp_receipt_intents add constraint whatsapp_receipt_intents_contact_id_fkey FOREIGN KEY (contact_id) REFERENCES conv_contacts(id);
+--@@ 70 fk fin_private.whatsapp_receipt_intents.whatsapp_receipt_intents_c
+alter table fin_private.whatsapp_receipt_intents add constraint whatsapp_receipt_intents_conversation_id_fkey FOREIGN KEY (conversation_id) REFERENCES conv_conversations(id);
+--@@ 70 fk fin_private.whatsapp_receipt_intents.whatsapp_receipt_intents_f
+alter table fin_private.whatsapp_receipt_intents add constraint whatsapp_receipt_intents_finance_entry_id_fkey FOREIGN KEY (finance_entry_id) REFERENCES fin_entries(id);
+--@@ 70 fk fin_private.whatsapp_receipt_intents.whatsapp_receipt_intents_f
+alter table fin_private.whatsapp_receipt_intents add constraint whatsapp_receipt_intents_finance_submission_id_fkey FOREIGN KEY (finance_submission_id) REFERENCES fin_receipt_submissions(id);
+--@@ 70 fk fin_private.whatsapp_receipt_intents.whatsapp_receipt_intents_p
+alter table fin_private.whatsapp_receipt_intents add constraint whatsapp_receipt_intents_profile_id_fkey FOREIGN KEY (profile_id) REFERENCES profiles(id);
+--@@ 70 fk fin_private.whatsapp_receipt_intents.whatsapp_receipt_intents_p
+alter table fin_private.whatsapp_receipt_intents add constraint whatsapp_receipt_intents_purpose_message_id_fkey FOREIGN KEY (purpose_message_id) REFERENCES conv_messages(id);
+--@@ 70 fk fin_private.whatsapp_receipt_intents.whatsapp_receipt_intents_s
+alter table fin_private.whatsapp_receipt_intents add constraint whatsapp_receipt_intents_source_message_id_fkey FOREIGN KEY (source_message_id) REFERENCES conv_messages(id);
 --@@ 70 fk public.access_requests.access_requests_decided_by_fkey
 alter table public.access_requests add constraint access_requests_decided_by_fkey FOREIGN KEY (decided_by) REFERENCES profiles(id);
 --@@ 70 fk public.admin_audit_logs.admin_audit_logs_actor_user_id_fkey
@@ -18758,6 +19268,14 @@ alter table public.conv_ai_sessions add constraint conv_ai_sessions_requester_co
 alter table public.conv_ai_sessions add constraint conv_ai_sessions_trigger_message_id_fkey FOREIGN KEY (trigger_message_id) REFERENCES conv_messages(id);
 --@@ 70 fk public.conv_ai_settings.conv_ai_settings_created_by_fkey
 alter table public.conv_ai_settings add constraint conv_ai_settings_created_by_fkey FOREIGN KEY (created_by) REFERENCES profiles(id);
+--@@ 70 fk public.conv_ai_topics.conv_ai_topics_conversation_id_fkey
+alter table public.conv_ai_topics add constraint conv_ai_topics_conversation_id_fkey FOREIGN KEY (conversation_id) REFERENCES conv_conversations(id);
+--@@ 70 fk public.conv_ai_topics.conv_ai_topics_proposal_id_fkey
+alter table public.conv_ai_topics add constraint conv_ai_topics_proposal_id_fkey FOREIGN KEY (proposal_id) REFERENCES conv_booking_proposals(id) ON DELETE SET NULL;
+--@@ 70 fk public.conv_ai_topics.conv_ai_topics_requester_contact_id_fkey
+alter table public.conv_ai_topics add constraint conv_ai_topics_requester_contact_id_fkey FOREIGN KEY (requester_contact_id) REFERENCES conv_contacts(id);
+--@@ 70 fk public.conv_ai_topics.conv_ai_topics_session_id_fkey
+alter table public.conv_ai_topics add constraint conv_ai_topics_session_id_fkey FOREIGN KEY (session_id) REFERENCES conv_ai_sessions(id);
 --@@ 70 fk public.conv_automation_recipients.conv_automation_recipients_au
 alter table public.conv_automation_recipients add constraint conv_automation_recipients_automation_id_fkey FOREIGN KEY (automation_id) REFERENCES conv_automations(id);
 --@@ 70 fk public.conv_automation_recipients.conv_automation_recipients_co
@@ -19120,6 +19638,8 @@ CREATE TRIGGER trg_sync_championship_registration_flags BEFORE INSERT OR UPDATE 
 CREATE TRIGGER update_championships_updated_at BEFORE UPDATE ON public.championships FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 --@@ 75 gatilho public.consumptions.trg_admin_audit_consumptions
 CREATE TRIGGER trg_admin_audit_consumptions AFTER INSERT OR DELETE OR UPDATE ON public.consumptions FOR EACH ROW EXECUTE FUNCTION admin_audit_table_changes();
+--@@ 75 gatilho public.conv_ai_sessions.conv_ai_sessions_sync_topics
+CREATE TRIGGER conv_ai_sessions_sync_topics AFTER INSERT OR UPDATE OF memory ON public.conv_ai_sessions FOR EACH ROW EXECUTE FUNCTION conv_private.ai_sync_topics();
 --@@ 75 gatilho public.conv_automation_recipients.conv_automation_recipients_no
 CREATE TRIGGER conv_automation_recipients_no_delete BEFORE DELETE ON public.conv_automation_recipients FOR EACH ROW EXECUTE FUNCTION conv_private.no_delete();
 --@@ 75 gatilho public.conv_automation_versions.conv_automation_versions_immuta
@@ -19272,6 +19792,8 @@ CREATE TRIGGER trg_student_profiles_default_professor BEFORE INSERT OR UPDATE OF
 CREATE TRIGGER update_students_updated_at BEFORE UPDATE ON public.students FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 --@@ 75 gatilho public.support_messages.update_support_messages_updated_at
 CREATE TRIGGER update_support_messages_updated_at BEFORE UPDATE ON public.support_messages FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+--@@ 80 rls fin_private.cash_removed
+alter table fin_private.cash_removed enable row level security;
 --@@ 80 rls public."Cliente_CRM"
 alter table public."Cliente_CRM" enable row level security;
 --@@ 80 rls public."Memory Long"
@@ -19340,6 +19862,8 @@ alter table public.conv_ai_memory_candidates enable row level security;
 alter table public.conv_ai_sessions enable row level security;
 --@@ 80 rls public.conv_ai_settings
 alter table public.conv_ai_settings enable row level security;
+--@@ 80 rls public.conv_ai_topics
+alter table public.conv_ai_topics enable row level security;
 --@@ 80 rls public.conv_automation_recipients
 alter table public.conv_automation_recipients enable row level security;
 --@@ 80 rls public.conv_automation_runs
@@ -19744,7 +20268,7 @@ create policy fin_member_charges_no_insert on public.fin_member_charges as permi
 --@@ 82 politica public.fin_member_charges.fin_member_charges_no_update
 create policy fin_member_charges_no_update on public.fin_member_charges as permissive for update to anon, authenticated using (false) with check (false);
 --@@ 82 politica public.fin_member_charges.fin_member_charges_read
-create policy fin_member_charges_read on public.fin_member_charges as permissive for select to authenticated using ((is_admin() OR (profile_id = ( SELECT auth.uid() AS uid))));
+create policy fin_member_charges_read on public.fin_member_charges as permissive for select to authenticated using (((is_admin() OR (profile_id = ( SELECT auth.uid() AS uid))) AND ((charge_type <> 'membership'::text) OR (competence_month <= (date_trunc('month'::text, (now() AT TIME ZONE 'America/Fortaleza'::text)))::date))));
 --@@ 82 politica public.fin_member_credits.fin_member_credits_no_delete_policy
 create policy fin_member_credits_no_delete_policy on public.fin_member_credits as permissive for delete to anon, authenticated using (false);
 --@@ 82 politica public.fin_member_credits.fin_member_credits_no_insert
@@ -20188,6 +20712,8 @@ revoke all on routine conv_private.ai_confirm_wave6_step(uuid,uuid) from public,
 revoke all on routine conv_private.ai_confirm_wave7_step(uuid,uuid) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao conv_private.ai_context(uuid)
 revoke all on routine conv_private.ai_context(uuid) from public, anon, authenticated, service_role;
+--@@ 89 revoke-funcao conv_private.ai_context_continuity(uuid)
+revoke all on routine conv_private.ai_context_continuity(uuid) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao conv_private.ai_curator_ask(uuid,jsonb)
 revoke all on routine conv_private.ai_curator_ask(uuid,jsonb) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao conv_private.ai_expire_sessions()
@@ -20234,6 +20760,8 @@ revoke all on routine conv_private.ai_save_turn(uuid,jsonb,text,jsonb,boolean,bo
 revoke all on routine conv_private.ai_slot_games(uuid,date,integer,integer,uuid) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao conv_private.ai_student_card_propose(uuid,jsonb)
 revoke all on routine conv_private.ai_student_card_propose(uuid,jsonb) from public, anon, authenticated, service_role;
+--@@ 89 revoke-funcao conv_private.ai_sync_topics()
+revoke all on routine conv_private.ai_sync_topics() from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao conv_private.ai_trigger(uuid)
 revoke all on routine conv_private.ai_trigger(uuid) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao conv_private.apply_delete(text)
@@ -20514,6 +21042,14 @@ revoke all on routine conv_svc_mark_unread(uuid) from public, anon, authenticate
 revoke all on routine conv_svc_message_target(uuid) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao conv_svc_queue_message(uuid,jsonb,uuid,uuid,text,uuid,uuid)
 revoke all on routine conv_svc_queue_message(uuid,jsonb,uuid,uuid,text,uuid,uuid) from public, anon, authenticated, service_role;
+--@@ 89 revoke-funcao conv_svc_receipt_confirm(uuid,uuid)
+revoke all on routine conv_svc_receipt_confirm(uuid,uuid) from public, anon, authenticated, service_role;
+--@@ 89 revoke-funcao conv_svc_receipt_purpose(uuid,uuid,text,text)
+revoke all on routine conv_svc_receipt_purpose(uuid,uuid,text,text) from public, anon, authenticated, service_role;
+--@@ 89 revoke-funcao conv_svc_receipt_revise(uuid,uuid)
+revoke all on routine conv_svc_receipt_revise(uuid,uuid) from public, anon, authenticated, service_role;
+--@@ 89 revoke-funcao conv_svc_receipt_stage(uuid)
+revoke all on routine conv_svc_receipt_stage(uuid) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao conv_svc_resolve_undecryptable(text,text,text)
 revoke all on routine conv_svc_resolve_undecryptable(text,text,text) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao conv_svc_set_avatar(uuid,text)
@@ -20600,6 +21136,8 @@ revoke all on routine fin_pay_entry(uuid,uuid,integer,jsonb) from public, anon, 
 revoke all on routine fin_payables_summary(date) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao fin_private.auto_approve_pendency_receipt(uuid)
 revoke all on routine fin_private.auto_approve_pendency_receipt(uuid) from public, anon, authenticated, service_role;
+--@@ 89 revoke fin_private.cash_removed
+revoke all on table fin_private.cash_removed from anon, authenticated, service_role;
 --@@ 89 revoke fin_private.charge_payments_effective
 revoke all on table fin_private.charge_payments_effective from anon, authenticated, service_role;
 --@@ 89 revoke-funcao fin_private.cnpj_matches(text,text)
@@ -20610,6 +21148,8 @@ revoke all on routine fin_private.ensure_member_charges(uuid,boolean) from publi
 revoke all on routine fin_private.fold_text(text) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao fin_private.payee_matches(text,text[])
 revoke all on routine fin_private.payee_matches(text,text[]) from public, anon, authenticated, service_role;
+--@@ 89 revoke fin_private.whatsapp_receipt_intents
+revoke all on table fin_private.whatsapp_receipt_intents from anon, authenticated, service_role;
 --@@ 89 revoke-funcao fin_public_settings()
 revoke all on routine fin_public_settings() from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao fin_receipt_queue(text,integer,integer)
@@ -20622,6 +21162,10 @@ revoke all on routine fin_register_payment(uuid,uuid,bigint,date,text,uuid,text)
 revoke all on routine fin_reject_receipt(uuid,uuid,text) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao fin_remove_attachment(uuid,uuid,text)
 revoke all on routine fin_remove_attachment(uuid,uuid,text) from public, anon, authenticated, service_role;
+--@@ 89 revoke-funcao fin_remove_cash_movement(uuid,text,uuid,text)
+revoke all on routine fin_remove_cash_movement(uuid,text,uuid,text) from public, anon, authenticated, service_role;
+--@@ 89 revoke-funcao fin_removed_cash_history(integer)
+revoke all on routine fin_removed_cash_history(integer) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao fin_resolve_credit(uuid,uuid,text,jsonb)
 revoke all on routine fin_resolve_credit(uuid,uuid,text,jsonb) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao fin_reverse_entry_payment(uuid,uuid,text)
@@ -20658,6 +21202,8 @@ revoke all on routine fin_submit_whatsapp_pendency_receipt(uuid,uuid,jsonb) from
 revoke all on routine fin_update_entry(uuid,uuid,integer,jsonb,text) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao fin_update_member_plan(uuid,uuid,integer,jsonb)
 revoke all on routine fin_update_member_plan(uuid,uuid,integer,jsonb) from public, anon, authenticated, service_role;
+--@@ 89 revoke-funcao fin_void_entry(uuid,uuid,integer,text)
+revoke all on routine fin_void_entry(uuid,uuid,integer,text) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao finish_championship(uuid)
 revoke all on routine finish_championship(uuid) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao get_active_user_points()
@@ -20782,6 +21328,8 @@ revoke all on table public.conv_ai_memory_candidates from anon, authenticated, s
 revoke all on table public.conv_ai_sessions from anon, authenticated, service_role;
 --@@ 89 revoke public.conv_ai_settings
 revoke all on table public.conv_ai_settings from anon, authenticated, service_role;
+--@@ 89 revoke public.conv_ai_topics
+revoke all on table public.conv_ai_topics from anon, authenticated, service_role;
 --@@ 89 revoke public.conv_automation_recipients
 revoke all on table public.conv_automation_recipients from anon, authenticated, service_role;
 --@@ 89 revoke public.conv_automation_runs
@@ -21442,6 +21990,14 @@ grant execute on routine conv_svc_mark_unread(uuid) to service_role;
 grant execute on routine conv_svc_message_target(uuid) to service_role;
 --@@ 90 grant-funcao conv_svc_queue_message(uuid,jsonb,uuid,uuid,text,uuid,uuid)→s
 grant execute on routine conv_svc_queue_message(uuid,jsonb,uuid,uuid,text,uuid,uuid) to service_role;
+--@@ 90 grant-funcao conv_svc_receipt_confirm(uuid,uuid)→service_role
+grant execute on routine conv_svc_receipt_confirm(uuid,uuid) to service_role;
+--@@ 90 grant-funcao conv_svc_receipt_purpose(uuid,uuid,text,text)→service_role
+grant execute on routine conv_svc_receipt_purpose(uuid,uuid,text,text) to service_role;
+--@@ 90 grant-funcao conv_svc_receipt_revise(uuid,uuid)→service_role
+grant execute on routine conv_svc_receipt_revise(uuid,uuid) to service_role;
+--@@ 90 grant-funcao conv_svc_receipt_stage(uuid)→service_role
+grant execute on routine conv_svc_receipt_stage(uuid) to service_role;
 --@@ 90 grant-funcao conv_svc_resolve_undecryptable(text,text,text)→service_role
 grant execute on routine conv_svc_resolve_undecryptable(text,text,text) to service_role;
 --@@ 90 grant-funcao conv_svc_set_avatar(uuid,text)→service_role
@@ -21622,6 +22178,14 @@ grant execute on routine fin_reject_receipt(uuid,uuid,text) to service_role;
 grant execute on routine fin_remove_attachment(uuid,uuid,text) to authenticated;
 --@@ 90 grant-funcao fin_remove_attachment(uuid,uuid,text)→service_role
 grant execute on routine fin_remove_attachment(uuid,uuid,text) to service_role;
+--@@ 90 grant-funcao fin_remove_cash_movement(uuid,text,uuid,text)→authenticated
+grant execute on routine fin_remove_cash_movement(uuid,text,uuid,text) to authenticated;
+--@@ 90 grant-funcao fin_remove_cash_movement(uuid,text,uuid,text)→service_role
+grant execute on routine fin_remove_cash_movement(uuid,text,uuid,text) to service_role;
+--@@ 90 grant-funcao fin_removed_cash_history(integer)→authenticated
+grant execute on routine fin_removed_cash_history(integer) to authenticated;
+--@@ 90 grant-funcao fin_removed_cash_history(integer)→service_role
+grant execute on routine fin_removed_cash_history(integer) to service_role;
 --@@ 90 grant-funcao fin_resolve_credit(uuid,uuid,text,jsonb)→authenticated
 grant execute on routine fin_resolve_credit(uuid,uuid,text,jsonb) to authenticated;
 --@@ 90 grant-funcao fin_resolve_credit(uuid,uuid,text,jsonb)→service_role
@@ -21692,6 +22256,10 @@ grant execute on routine fin_update_entry(uuid,uuid,integer,jsonb,text) to servi
 grant execute on routine fin_update_member_plan(uuid,uuid,integer,jsonb) to authenticated;
 --@@ 90 grant-funcao fin_update_member_plan(uuid,uuid,integer,jsonb)→service_role
 grant execute on routine fin_update_member_plan(uuid,uuid,integer,jsonb) to service_role;
+--@@ 90 grant-funcao fin_void_entry(uuid,uuid,integer,text)→authenticated
+grant execute on routine fin_void_entry(uuid,uuid,integer,text) to authenticated;
+--@@ 90 grant-funcao fin_void_entry(uuid,uuid,integer,text)→service_role
+grant execute on routine fin_void_entry(uuid,uuid,integer,text) to service_role;
 --@@ 90 grant-funcao finish_championship(uuid)→anon
 grant execute on routine finish_championship(uuid) to anon;
 --@@ 90 grant-funcao finish_championship(uuid)→authenticated
@@ -22076,6 +22644,8 @@ grant delete, insert, maintain, references, select, trigger, truncate, update on
 grant select on table public.conv_ai_settings to authenticated;
 --@@ 90 grant public.conv_ai_settings→service_role
 grant delete, insert, maintain, references, select, trigger, truncate, update on table public.conv_ai_settings to service_role;
+--@@ 90 grant public.conv_ai_topics→service_role
+grant delete, insert, maintain, references, select, trigger, truncate, update on table public.conv_ai_topics to service_role;
 --@@ 90 grant public.conv_automation_recipients→authenticated
 grant select on table public.conv_automation_recipients to authenticated;
 --@@ 90 grant public.conv_automation_recipients→service_role
