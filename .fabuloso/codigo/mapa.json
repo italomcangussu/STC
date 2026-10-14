@@ -47,15 +47,15 @@
  "stores": [],
  "hooks": [
   {
-   "nome": "useConfirm",
-   "arquivo": "hooks/useConfirm.ts",
+   "nome": "useAsync",
+   "arquivo": "components/finance/hooks.ts",
    "usos": 28,
    "dados": "—"
   },
   {
-   "nome": "useAsync",
-   "arquivo": "components/finance/hooks.ts",
-   "usos": 26,
+   "nome": "useConfirm",
+   "arquivo": "hooks/useConfirm.ts",
+   "usos": 28,
    "dados": "—"
   },
   {
@@ -249,7 +249,7 @@
   {
    "nome": "Spinner",
    "arquivo": "components/finance/ui.tsx",
-   "usos": 26,
+   "usos": 27,
    "ui": false
   },
   {
@@ -279,25 +279,25 @@
   {
    "nome": "Card",
    "arquivo": "components/finance/ui.tsx",
-   "usos": 17,
+   "usos": 18,
    "ui": false
   },
   {
    "nome": "Empty",
    "arquivo": "components/finance/ui.tsx",
-   "usos": 16,
+   "usos": 17,
+   "ui": false
+  },
+  {
+   "nome": "ErrorBlock",
+   "arquivo": "components/finance/ui.tsx",
+   "usos": 15,
    "ui": false
   },
   {
    "nome": "StandardModal",
    "arquivo": "components/StandardModal.tsx",
    "usos": 15,
-   "ui": false
-  },
-  {
-   "nome": "ErrorBlock",
-   "arquivo": "components/finance/ui.tsx",
-   "usos": 14,
    "ui": false
   },
   {
@@ -315,7 +315,7 @@
   {
    "nome": "SectionTabs",
    "arquivo": "components/finance/ui.tsx",
-   "usos": 8,
+   "usos": 9,
    "ui": false
   },
   {
@@ -501,6 +501,18 @@
   {
    "nome": "ChipGroup",
    "arquivo": "components/admin/ui.tsx",
+   "usos": 2,
+   "ui": false
+  },
+  {
+   "nome": "ClubOverview",
+   "arquivo": "components/finance/ClubOverview.tsx",
+   "usos": 2,
+   "ui": false
+  },
+  {
+   "nome": "Dashboard",
+   "arquivo": "components/Dashboard.tsx",
    "usos": 2,
    "ui": false
   },
@@ -853,6 +865,12 @@
    "ui": false
   },
   {
+   "nome": "ClubFinanceDashboard",
+   "arquivo": "components/finance/ClubFinanceDashboard.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
    "nome": "CodeSheet",
    "arquivo": "components/signatures/CodeSheet.tsx",
    "usos": 1,
@@ -933,12 +951,6 @@
   {
    "nome": "CreditsPanel",
    "arquivo": "components/finance/tabs/members/CreditsPanel.tsx",
-   "usos": 1,
-   "ui": false
-  },
-  {
-   "nome": "Dashboard",
-   "arquivo": "components/Dashboard.tsx",
    "usos": 1,
    "ui": false
   },
@@ -1335,6 +1347,12 @@
   {
    "nome": "ScoreModal",
    "arquivo": "components/ScoreModal.tsx",
+   "usos": 1,
+   "ui": false
+  },
+  {
+   "nome": "SectionTitle",
+   "arquivo": "components/finance/ClubOverview.tsx",
    "usos": 1,
    "ui": false
   },
@@ -1879,8 +1897,14 @@
    "ui": false
   },
   {
-   "nome": "Dashboard",
+   "nome": "DashboardTabs",
    "arquivo": "App.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "DashboardTabs",
+   "arquivo": "components/dashboard/DashboardTabs.tsx",
    "usos": 0,
    "ui": false
   },
@@ -1989,6 +2013,18 @@
   {
    "nome": "FinanceHub",
    "arquivo": "components/AdminPanel.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "FixedExpenseItem",
+   "arquivo": "components/finance/ClubFinanceDashboard.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "FixedExpensesList",
+   "arquivo": "components/finance/ClubFinanceDashboard.tsx",
    "usos": 0,
    "ui": false
   },
@@ -2426,7 +2462,7 @@
   },
   {
    "nome": "PositionCards",
-   "arquivo": "components/finance/tabs/OverviewTab.tsx",
+   "arquivo": "components/finance/ClubOverview.tsx",
    "usos": 0,
    "ui": false
   },
@@ -2516,7 +2552,7 @@
   },
   {
    "nome": "ResultCards",
-   "arquivo": "components/finance/tabs/OverviewTab.tsx",
+   "arquivo": "components/finance/ClubOverview.tsx",
    "usos": 0,
    "ui": false
   },
@@ -2583,12 +2619,6 @@
   {
    "nome": "Section",
    "arquivo": "components/AppSettings.tsx",
-   "usos": 0,
-   "ui": false
-  },
-  {
-   "nome": "SectionTitle",
-   "arquivo": "components/finance/tabs/OverviewTab.tsx",
    "usos": 0,
    "ui": false
   },
@@ -2714,7 +2744,7 @@
   },
   {
    "nome": "TrendChart",
-   "arquivo": "components/finance/tabs/OverviewTab.tsx",
+   "arquivo": "components/finance/ClubOverview.tsx",
    "usos": 0,
    "ui": false
   },
@@ -3168,7 +3198,7 @@
    "nome": "admin_audit_logs",
    "front": [
     "components/AdminPanel.tsx:1191",
-    "lib/finance/financeApi.ts:470"
+    "lib/finance/financeApi.ts:473"
    ],
    "edge": [],
    "telas": []
@@ -3550,7 +3580,7 @@
    "tipo": "tabela",
    "nome": "fin_accounts",
    "front": [
-    "lib/finance/financeApi.ts:77"
+    "lib/finance/financeApi.ts:78"
    ],
    "edge": [],
    "telas": []
@@ -3559,7 +3589,7 @@
    "tipo": "tabela",
    "nome": "fin_attachments",
    "front": [
-    "lib/finance/financeApi.ts:192"
+    "lib/finance/financeApi.ts:193"
    ],
    "edge": [],
    "telas": []
@@ -3568,7 +3598,7 @@
    "tipo": "tabela",
    "nome": "fin_categories",
    "front": [
-    "lib/finance/financeApi.ts:86"
+    "lib/finance/financeApi.ts:87"
    ],
    "edge": [],
    "telas": []
@@ -3577,7 +3607,7 @@
    "tipo": "tabela",
    "nome": "fin_charge_adjustments",
    "front": [
-    "lib/finance/financeApi.ts:309"
+    "lib/finance/financeApi.ts:310"
    ],
    "edge": [],
    "telas": []
@@ -3586,7 +3616,7 @@
    "tipo": "tabela",
    "nome": "fin_charge_payments",
    "front": [
-    "lib/finance/financeApi.ts:308"
+    "lib/finance/financeApi.ts:309"
    ],
    "edge": [],
    "telas": []
@@ -3595,8 +3625,8 @@
    "tipo": "tabela",
    "nome": "fin_entries_v",
    "front": [
-    "lib/finance/financeApi.ts:108",
-    "lib/finance/financeApi.ts:171"
+    "lib/finance/financeApi.ts:109",
+    "lib/finance/financeApi.ts:172"
    ],
    "edge": [],
    "telas": []
@@ -3605,8 +3635,8 @@
    "tipo": "tabela",
    "nome": "fin_entry_payments",
    "front": [
-    "lib/finance/financeApi.ts:124",
-    "lib/finance/financeApi.ts:167"
+    "lib/finance/financeApi.ts:125",
+    "lib/finance/financeApi.ts:168"
    ],
    "edge": [],
    "telas": []
@@ -3615,7 +3645,7 @@
    "tipo": "tabela",
    "nome": "fin_holidays",
    "front": [
-    "lib/finance/financeApi.ts:68"
+    "lib/finance/financeApi.ts:69"
    ],
    "edge": [],
    "telas": []
@@ -3624,7 +3654,7 @@
    "tipo": "tabela",
    "nome": "fin_member_charges",
    "front": [
-    "lib/finance/financeApi.ts:255"
+    "lib/finance/financeApi.ts:256"
    ],
    "edge": [],
    "telas": []
@@ -3633,7 +3663,7 @@
    "tipo": "tabela",
    "nome": "fin_member_credits",
    "front": [
-    "lib/finance/financeApi.ts:326"
+    "lib/finance/financeApi.ts:327"
    ],
    "edge": [],
    "telas": []
@@ -3642,7 +3672,7 @@
    "tipo": "tabela",
    "nome": "fin_member_plan_prices",
    "front": [
-    "lib/finance/financeApi.ts:223"
+    "lib/finance/financeApi.ts:224"
    ],
    "edge": [],
    "telas": []
@@ -3651,8 +3681,8 @@
    "tipo": "tabela",
    "nome": "fin_member_plans",
    "front": [
-    "lib/finance/financeApi.ts:218",
-    "lib/finance/financeApi.ts:347"
+    "lib/finance/financeApi.ts:219",
+    "lib/finance/financeApi.ts:348"
    ],
    "edge": [],
    "telas": []
@@ -3661,8 +3691,8 @@
    "tipo": "tabela",
    "nome": "fin_receipt_charges",
    "front": [
-    "lib/finance/financeApi.ts:395",
-    "lib/finance/financeApi.ts:409"
+    "lib/finance/financeApi.ts:396",
+    "lib/finance/financeApi.ts:410"
    ],
    "edge": [],
    "telas": []
@@ -3671,8 +3701,8 @@
    "tipo": "tabela",
    "nome": "fin_receipt_submissions",
    "front": [
-    "lib/finance/financeApi.ts:395",
-    "lib/finance/financeApi.ts:409"
+    "lib/finance/financeApi.ts:396",
+    "lib/finance/financeApi.ts:410"
    ],
    "edge": [],
    "telas": []
@@ -3681,7 +3711,7 @@
    "tipo": "tabela",
    "nome": "fin_recurrences",
    "front": [
-    "lib/finance/financeApi.ts:179"
+    "lib/finance/financeApi.ts:180"
    ],
    "edge": [],
    "telas": []
@@ -3690,7 +3720,7 @@
    "tipo": "tabela",
    "nome": "fin_settings",
    "front": [
-    "lib/finance/financeApi.ts:60"
+    "lib/finance/financeApi.ts:61"
    ],
    "edge": [],
    "telas": []
@@ -3875,8 +3905,8 @@
     "lib/championship/knockoutFromGroups.ts:164",
     "lib/championship/registration.ts:36",
     "lib/conversations/api.ts:556",
-    "lib/finance/financeApi.ts:338",
-    "lib/finance/financeApi.ts:346",
+    "lib/finance/financeApi.ts:339",
+    "lib/finance/financeApi.ts:347",
     "lib/formsService.ts:318",
     "lib/rankingService.ts:112",
     "lib/resenhaOpenService.ts:245",
@@ -4100,7 +4130,7 @@
     "whatsappInstance.ts"
    ],
    "invocadaPor": [],
-   "deploy": "sem registro"
+   "deploy": "em dia"
   },
   {
    "nome": "conversations-dispatch",
@@ -4122,7 +4152,7 @@
     "uazChat.ts"
    ],
    "invocadaPor": [],
-   "deploy": "sem registro"
+   "deploy": "em dia"
   },
   {
    "nome": "finance-receipt-whatsapp",
@@ -4147,7 +4177,7 @@
     "financeReceiptOcr.ts"
    ],
    "invocadaPor": [],
-   "deploy": "sem registro"
+   "deploy": "em dia"
   },
   {
    "nome": "joao-admin-alerts",
@@ -4171,7 +4201,7 @@
     "uazChat.ts"
    ],
    "invocadaPor": [],
-   "deploy": "sem registro"
+   "deploy": "em dia"
   },
   {
    "nome": "joao-admin-briefing",
@@ -4194,7 +4224,7 @@
     "uazChat.ts"
    ],
    "invocadaPor": [],
-   "deploy": "sem registro"
+   "deploy": "em dia"
   },
   {
    "nome": "joao-birthdays",
@@ -4224,7 +4254,7 @@
    "hosts": [],
    "shared": [],
    "invocadaPor": [],
-   "deploy": "sem registro"
+   "deploy": "em dia"
   },
   {
    "nome": "joao-daily-greeting",
@@ -4254,7 +4284,7 @@
    "hosts": [],
    "shared": [],
    "invocadaPor": [],
-   "deploy": "sem registro"
+   "deploy": "em dia"
   },
   {
    "nome": "send-push",
@@ -4280,7 +4310,7 @@
    "invocadaPor": [
     "lib/notificationService.ts:17"
    ],
-   "deploy": "sem registro"
+   "deploy": "em dia"
   },
   {
    "nome": "signature-dispatch",
@@ -4305,7 +4335,7 @@
     "uazChat.ts"
    ],
    "invocadaPor": [],
-   "deploy": "sem registro"
+   "deploy": "em dia"
   },
   {
    "nome": "signature-operations",
@@ -4345,7 +4375,7 @@
    "invocadaPor": [
     "lib/signatures/api.ts:25"
    ],
-   "deploy": "sem registro"
+   "deploy": "em dia"
   },
   {
    "nome": "whatsapp-webhook",
@@ -4403,7 +4433,7 @@
     "uazWebhook.ts"
    ],
    "invocadaPor": [],
-   "deploy": "alterada desde o último deploy"
+   "deploy": "em dia"
   }
  ],
  "alertas": [

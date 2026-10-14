@@ -22,8 +22,8 @@ _nenhum_
 ## Hooks próprios (33)
 | Hook | Arquivo | Dados | Usado por |
 |---|---|---|---|
+| useAsync | components/finance/hooks.ts | — | 28 |
 | useConfirm | hooks/useConfirm.ts | — | 28 |
-| useAsync | components/finance/hooks.ts | — | 26 |
 | useFinance | components/finance/FinanceContext.tsx | — | 18 |
 | useRequestKey | components/finance/hooks.ts | — | 18 |
 | useToday | components/finance/hooks.ts | — | 18 |
@@ -59,18 +59,18 @@ _nenhum_
 ## Componentes compartilhados (25 mais usados)
 | Componente | Arquivo | Usado por |
 |---|---|---|
-| Spinner | components/finance/ui.tsx | 26 |
+| Spinner | components/finance/ui.tsx | 27 |
 | Notice | components/finance/ui.tsx | 23 |
 | Sheet (ui) | components/ui/Sheet.tsx | 21 |
 | Field | components/finance/ui.tsx | 20 |
 | Badge | components/finance/ui.tsx | 19 |
-| Card | components/finance/ui.tsx | 17 |
-| Empty | components/finance/ui.tsx | 16 |
+| Card | components/finance/ui.tsx | 18 |
+| Empty | components/finance/ui.tsx | 17 |
+| ErrorBlock | components/finance/ui.tsx | 15 |
 | StandardModal | components/StandardModal.tsx | 15 |
-| ErrorBlock | components/finance/ui.tsx | 14 |
 | MoneyInput | components/finance/ui.tsx | 12 |
 | Row | components/finance/ui.tsx | 12 |
-| SectionTabs | components/finance/ui.tsx | 8 |
+| SectionTabs | components/finance/ui.tsx | 9 |
 | Notice | components/signatures/ui.tsx | 7 |
 | Button | components/conversations/ui.tsx | 6 |
 | InlineAlert | components/conversations/ui.tsx | 6 |

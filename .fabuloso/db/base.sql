@@ -1,6 +1,6 @@
 -- base.sql — DDL do schema remoto. Gerado por `fabuloso.mjs db`; não edite.
 -- É a base do banco de teste em PGlite (`fabuloso.mjs pg`): schema real do remoto + migrations locais pendentes.
---@@ meta {"versao":1,"postgres":"17.6","schemas":["conv_private","fin_private","public","sig_private"],"extensoes":[{"nome":"pg_cron","schema":"pg_catalog"},{"nome":"pg_net","schema":"extensions"},{"nome":"pg_stat_statements","schema":"extensions"},{"nome":"pgcrypto","schema":"extensions"},{"nome":"supabase_vault","schema":"vault"},{"nome":"uuid-ossp","schema":"extensions"},{"nome":"vector","schema":"public"}],"papeis":["anon","authenticated","authenticator","cli_login_postgres","dashboard_user","pgbouncer","postgres","service_role","supabase_auth_admin","supabase_etl_admin","supabase_functions_admin","supabase_privileged_role","supabase_read_only_user","supabase_realtime_admin","supabase_replication_admin","supabase_storage_admin"],"migracoes":["20251228080214","20251228081253","20251228083254","20251228083507","20251228083944","20251228085506","20251228085656","20251228085817","20251228113842","20251228114731","20251228115147","20251228214931","20251228220119","20251228220952","20251230094628","20251230103441","20251230111220","20260101134906","20260101134940","20260101141731","20260101155936","20260103141626","20260103153236","20260103153329","20260103153404","20260103153757","20260115192527","20260119084237","20260119084321","20260119085322","20260119090000","20260119090225","20260119141114","20260123101818","20260123101853","20260123104620","20260123125031","20260124215137","20260125081739","20260125102639","20260125174723","20260127175350","20260127175608","20260128133915","20260129075257","20260129075631","20260129083027","20260129145632","20260131091223","20260203185748","20260205232352","20260205232412","20260212105246","20260212113107","20260212121128","20260213083000","20260215123000","20260216090000","20260216123000","20260323073000","20260421153000","20260421184125","20260422100000","20260422100100","20260422100200","20260422100300","20260422100400","20260422113000","20260422124000","20260422130000","20260422143000","20260422150000","20260427134500","20260427135800","20260427140500","20260502000001","20260502000002","20260519072400","20260519073500","20260519074500","20260519075000","20260519080000","20260519081000","20260519082000","20260805085500","20260805091000","20260807120000","20260807140000","20260807160000","20260807180000","20260807200000","20260808120000","20260824120000","20260824121000","20260824140000","20260912090000","20260912100000","20260930120000","20260930123000","20261005161200","20261006100000","20261006100100","20261006100200","20261006100300","20261006100400","20261006100500","20261007064837","20261007070656","20261007100000","20261007100100","20261007100200","20261007100300","20261007100400","20261007100500","20261007100600","20261007100700","20261007100800","20261007100900","20261007101000","20261007101100","20261007101200","20261007101210","20261007101300","20261007101400","20261007110000","20261007120000","20261007120100","20261007120200","20261007130000","20261007135553","20261007140000","20261007140144","20261007140427","20261007140831","20261007141000","20261007150000","20261007150010","20261007150100","20261007160000","20261007170000","20261007180000","20261007190000","20261007200000","20261007210000","20261007220000","20261007230000","20261007240000","20261007250000","20261007250100","20261007260000","20261007260100","20261007270000","20261007280000","20261007290000","20261007290100","20261007300000","20261007310000","20261007320000","20261007330000","20261007340000","20261007350000","20261007360000","20261007370000","20261007380000","20261007390000","20261007400000","20261008101944","20261008102600","20261008124729","20261008130005","20261008130203","20261008130745","20261008132237","20261008132335","20261008132419","20261008135821","20261008135824","20261008143837","20261008150000","20261009121500","20261010084210","20261010090024","20261010090914","20261010091225","20261010094921","20261010102037","20261010102042","20261010102047","20261010102051","20261010102254","20261010112046"]}
+--@@ meta {"versao":1,"postgres":"17.6","schemas":["conv_private","fin_private","public","sig_private"],"extensoes":[{"nome":"pg_cron","schema":"pg_catalog"},{"nome":"pg_net","schema":"extensions"},{"nome":"pg_stat_statements","schema":"extensions"},{"nome":"pgcrypto","schema":"extensions"},{"nome":"supabase_vault","schema":"vault"},{"nome":"uuid-ossp","schema":"extensions"},{"nome":"vector","schema":"public"}],"papeis":["anon","authenticated","authenticator","cli_login_postgres","dashboard_user","pgbouncer","postgres","service_role","supabase_auth_admin","supabase_etl_admin","supabase_functions_admin","supabase_privileged_role","supabase_read_only_user","supabase_realtime_admin","supabase_replication_admin","supabase_storage_admin"],"migracoes":["20251228080214","20251228081253","20251228083254","20251228083507","20251228083944","20251228085506","20251228085656","20251228085817","20251228113842","20251228114731","20251228115147","20251228214931","20251228220119","20251228220952","20251230094628","20251230103441","20251230111220","20260101134906","20260101134940","20260101141731","20260101155936","20260103141626","20260103153236","20260103153329","20260103153404","20260103153757","20260115192527","20260119084237","20260119084321","20260119085322","20260119090000","20260119090225","20260119141114","20260123101818","20260123101853","20260123104620","20260123125031","20260124215137","20260125081739","20260125102639","20260125174723","20260127175350","20260127175608","20260128133915","20260129075257","20260129075631","20260129083027","20260129145632","20260131091223","20260203185748","20260205232352","20260205232412","20260212105246","20260212113107","20260212121128","20260213083000","20260215123000","20260216090000","20260216123000","20260323073000","20260421153000","20260421184125","20260422100000","20260422100100","20260422100200","20260422100300","20260422100400","20260422113000","20260422124000","20260422130000","20260422143000","20260422150000","20260427134500","20260427135800","20260427140500","20260502000001","20260502000002","20260519072400","20260519073500","20260519074500","20260519075000","20260519080000","20260519081000","20260519082000","20260805085500","20260805091000","20260807120000","20260807140000","20260807160000","20260807180000","20260807200000","20260808120000","20260824120000","20260824121000","20260824140000","20260912090000","20260912100000","20260930120000","20260930123000","20261005161200","20261006100000","20261006100100","20261006100200","20261006100300","20261006100400","20261006100500","20261007064837","20261007070656","20261007100000","20261007100100","20261007100200","20261007100300","20261007100400","20261007100500","20261007100600","20261007100700","20261007100800","20261007100900","20261007101000","20261007101100","20261007101200","20261007101210","20261007101300","20261007101400","20261007110000","20261007120000","20261007120100","20261007120200","20261007130000","20261007135553","20261007140000","20261007140144","20261007140427","20261007140831","20261007141000","20261007150000","20261007150010","20261007150100","20261007160000","20261007170000","20261007180000","20261007190000","20261007200000","20261007210000","20261007220000","20261007230000","20261007240000","20261007250000","20261007250100","20261007260000","20261007260100","20261007270000","20261007280000","20261007290000","20261007290100","20261007300000","20261007310000","20261007320000","20261007330000","20261007340000","20261007350000","20261007360000","20261007370000","20261007380000","20261007390000","20261007400000","20261008101944","20261008102600","20261008124729","20261008130005","20261008130203","20261008130745","20261008132237","20261008132335","20261008132419","20261008135821","20261008135824","20261008143837","20261008150000","20261009121500","20261010084210","20261010090024","20261010090914","20261010091225","20261010094921","20261010102037","20261010102042","20261010102047","20261010102051","20261010102254","20261010112046","20261014131036"]}
 --@@ 10 schema conv_private
 create schema if not exists conv_private;
 --@@ 10 schema fin_private
@@ -9402,6 +9402,19 @@ begin
   end if;
   return auth.uid();
 end $function$;
+--@@ 45 funcao fin_private.require_member_reader()
+CREATE OR REPLACE FUNCTION fin_private.require_member_reader()
+ RETURNS uuid
+ LANGUAGE plpgsql
+ STABLE SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+begin
+  if auth.uid() is null or not (public.is_admin() or fin_private.is_active_member(auth.uid())) then
+    raise exception 'FINANCE_FORBIDDEN' using errcode = '42501';
+  end if;
+  return auth.uid();
+end $function$;
 --@@ 45 funcao fin_private.seed_holidays(p_year integer)
 CREATE OR REPLACE FUNCTION fin_private.seed_holidays(p_year integer)
  RETURNS integer
@@ -11841,7 +11854,7 @@ CREATE OR REPLACE FUNCTION public.fin_account_balances(p_at date DEFAULT NULL::d
  SET search_path TO ''
 AS $function$
 begin
-  perform fin_private.require_admin();
+  perform fin_private.require_member_reader();
   return query select * from fin_private.account_balances(coalesce(p_at, fin_private.today()));
 end $function$;
 --@@ 45 funcao public.fin_active_members()
@@ -12050,6 +12063,22 @@ begin
     raise exception 'FINANCE_FORBIDDEN' using errcode = '42501';
   end if;
   return query select * from fin_private.charge_rows(null, p_ids, '{}'::jsonb, coalesce(p_as_of, fin_private.today()), 1000, 0);
+end $function$;
+--@@ 45 funcao public.fin_club_fixed_expenses()
+CREATE OR REPLACE FUNCTION public.fin_club_fixed_expenses()
+ RETURNS TABLE(id uuid, description text, supplier text, category_name text, amount_cents bigint, frequency text, due_day smallint, start_month date, end_month date)
+ LANGUAGE plpgsql
+ STABLE SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare v_month date := date_trunc('month', fin_private.today()::timestamp)::date;
+begin
+  perform fin_private.require_member_reader();
+  return query
+  select r.id, r.description, r.supplier, c.name, r.amount_cents, r.frequency, r.due_day, r.start_month, r.end_month
+  from public.fin_recurrences r join public.fin_categories c on c.id = r.category_id
+  where r.active and (r.end_month is null or r.end_month >= v_month)
+  order by r.amount_cents desc, r.description, r.id;
 end $function$;
 --@@ 45 funcao public.fin_create_entry(p_request_id uuid, p_data jsonb)
 CREATE OR REPLACE FUNCTION public.fin_create_entry(p_request_id uuid, p_data jsonb)
@@ -12278,7 +12307,7 @@ CREATE OR REPLACE FUNCTION public.fin_dre_lines(p_from date, p_to date)
 AS $function$
 declare v_len integer;
 begin
-  perform fin_private.require_admin();
+  perform fin_private.require_member_reader();
   perform fin_private.check_period(p_from, p_to);
   v_len := p_to - p_from + 1;
   return query
@@ -12413,7 +12442,7 @@ CREATE OR REPLACE FUNCTION public.fin_monthly_trend(p_to date DEFAULT NULL::date
 AS $function$
 declare v_to date := date_trunc('month', coalesce(p_to, fin_private.today())::timestamp)::date; v_from date;
 begin
-  perform fin_private.require_admin();
+  perform fin_private.require_member_reader();
   if p_months < 1 or p_months > 36 then raise exception 'INVALID_PERIOD'; end if;
   v_from := (v_to - make_interval(months => p_months - 1))::date;
   return query
@@ -12497,7 +12526,7 @@ CREATE OR REPLACE FUNCTION public.fin_payables_summary(p_as_of date DEFAULT NULL
 AS $function$
 declare v_asof date := coalesce(p_as_of, fin_private.today());
 begin
-  perform fin_private.require_admin();
+  perform fin_private.require_member_reader();
   return query
   select coalesce(sum(remaining_cents) filter (where kind = 'expense'), 0)::bigint,
     count(*) filter (where kind = 'expense' and due_date < v_asof),
@@ -12548,7 +12577,7 @@ CREATE OR REPLACE FUNCTION public.fin_receivables_summary(p_as_of date DEFAULT N
 AS $function$
 declare v_asof date := coalesce(p_as_of, fin_private.today());
 begin
-  perform fin_private.require_admin();
+  perform fin_private.require_member_reader();
   return query
   with r as (select * from fin_private.charge_rows(null, null, '{}'::jsonb, v_asof, 100000, 0) where stored_status in ('open', 'partial'))
   select count(*), coalesce(sum(total_due_cents), 0)::bigint,
@@ -21096,6 +21125,8 @@ revoke all on routine fin_cash_flow(date,date,text,uuid) from public, anon, auth
 revoke all on routine fin_charge_statements(jsonb,date,integer,integer) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao fin_charge_statements_by_ids(uuid[],date)
 revoke all on routine fin_charge_statements_by_ids(uuid[],date) from public, anon, authenticated, service_role;
+--@@ 89 revoke-funcao fin_club_fixed_expenses()
+revoke all on routine fin_club_fixed_expenses() from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao fin_create_entry(uuid,jsonb)
 revoke all on routine fin_create_entry(uuid,jsonb) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao fin_create_member_pendency(uuid,jsonb)
@@ -21148,6 +21179,8 @@ revoke all on routine fin_private.ensure_member_charges(uuid,boolean) from publi
 revoke all on routine fin_private.fold_text(text) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao fin_private.payee_matches(text,text[])
 revoke all on routine fin_private.payee_matches(text,text[]) from public, anon, authenticated, service_role;
+--@@ 89 revoke-funcao fin_private.require_member_reader()
+revoke all on routine fin_private.require_member_reader() from public, anon, authenticated, service_role;
 --@@ 89 revoke fin_private.whatsapp_receipt_intents
 revoke all on table fin_private.whatsapp_receipt_intents from anon, authenticated, service_role;
 --@@ 89 revoke-funcao fin_public_settings()
@@ -22078,6 +22111,10 @@ grant execute on routine fin_charge_statements(jsonb,date,integer,integer) to se
 grant execute on routine fin_charge_statements_by_ids(uuid[],date) to authenticated;
 --@@ 90 grant-funcao fin_charge_statements_by_ids(uuid[],date)→service_role
 grant execute on routine fin_charge_statements_by_ids(uuid[],date) to service_role;
+--@@ 90 grant-funcao fin_club_fixed_expenses()→authenticated
+grant execute on routine fin_club_fixed_expenses() to authenticated;
+--@@ 90 grant-funcao fin_club_fixed_expenses()→service_role
+grant execute on routine fin_club_fixed_expenses() to service_role;
 --@@ 90 grant-funcao fin_create_entry(uuid,jsonb)→authenticated
 grant execute on routine fin_create_entry(uuid,jsonb) to authenticated;
 --@@ 90 grant-funcao fin_create_entry(uuid,jsonb)→service_role

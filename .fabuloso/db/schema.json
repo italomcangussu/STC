@@ -8,7 +8,7 @@
     "public",
     "sig_private"
   ],
-  "ultima_migracao": "20261010112046",
+  "ultima_migracao": "20261014131036",
   "extensoes": [
     "pg_cron 1.6.4",
     "pg_net 0.19.5",
@@ -32143,6 +32143,19 @@
       "comentario": null
     },
     {
+      "nome": "fin_private.require_member_reader",
+      "args": "",
+      "retorno": "uuid",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
       "nome": "fin_private.seed_holidays",
       "args": "p_year integer",
       "retorno": "integer",
@@ -34083,6 +34096,19 @@
       "nome": "public.fin_charge_statements_by_ids",
       "args": "p_ids uuid[], p_as_of date",
       "retorno": "TABLE(charge_id uuid, plan_id uuid, profile_id uuid, profile_name text, competence_month date, period_months smallint, due_date date, original_amount_cents bigint, stored_status text, display_status text, in_review boolean, principal_base_cents bigint, principal_paid_cents bigint, principal_remaining_cents bigint, days_late integer, fine_due_cents bigint, interest_due_cents bigint, fees_due_cents bigint, fees_paid_cents bigint, fees_waived_cents bigint, total_due_cents bigint, fees_configured boolean, overdue boolean, last_payment_on date, cancel_reason text, total_count bigint)",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": true,
+      "comentario": null
+    },
+    {
+      "nome": "public.fin_club_fixed_expenses",
+      "args": "",
+      "retorno": "TABLE(id uuid, description text, supplier text, category_name text, amount_cents bigint, frequency text, due_day smallint, start_month date, end_month date)",
       "linguagem": "plpgsql",
       "tipo": "f",
       "security_definer": true,

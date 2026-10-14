@@ -1,7 +1,7 @@
 {
   "versao": 3,
-  "geradoEm": "2026-10-13T10:34:29.370Z",
-  "commit": "9df7ae5b",
+  "geradoEm": "2026-10-14T16:14:30.041Z",
+  "commit": "4ea5639e",
   "pastas": [
     "__tests__",
     "__tests__/admin",
@@ -15,6 +15,7 @@
     "components/agenda",
     "components/conversations",
     "components/creator",
+    "components/dashboard",
     "components/finance",
     "components/signatures",
     "components/ui",
@@ -45,19 +46,19 @@
     "tasks"
   ],
   "agentmap": {
-    "arquivos": 559,
-    "sha": "9df7ae5",
+    "arquivos": 603,
+    "sha": "4ea5639",
     "hubs": [
       "lib/supabase.ts",
+      "dist/assets/react-vendor-CcCdIb5n.js",
       "lib/finance/dates.ts",
       "types.ts",
       "__tests__/finance/sql/harness.ts",
+      "dist/assets/icons-vendor-Bd_-vDZl.js",
       "components/finance/ui.tsx",
       "__tests__/conversations/sql/harness.ts",
-      "lib/logger.ts",
       "lib/finance/money.ts",
-      "supabase/functions/_shared/uazChat.ts",
-      "dist/assets/react-vendor-CcCdIb5n.js"
+      "lib/logger.ts"
     ]
   },
   "skillsPorPerfil": {

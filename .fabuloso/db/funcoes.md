@@ -1,5 +1,5 @@
 # Funções
-> 504 funções nos schemas conv_private, fin_private, public, sig_private. Corpo completo sob demanda: `select pg_get_functiondef('<schema.nome>(<args>)'::regprocedure)`.
+> 506 funções nos schemas conv_private, fin_private, public, sig_private. Corpo completo sob demanda: `select pg_get_functiondef('<schema.nome>(<args>)'::regprocedure)`.
 
 | Função | Argumentos | Retorno | Ling. | Segurança | anon | Nota |
 |---|---|---|---|---|---|---|
@@ -221,6 +221,7 @@
 | fin_private.recurrence_due_date | `p_competence date, p_day integer, p_offset integer` | `date` | sql | invoker | sim |  |
 | fin_private.refresh_charge_status | `p_charge uuid` | `text` | plpgsql | DEFINER | sim |  |
 | fin_private.require_admin | — | `uuid` | plpgsql | DEFINER | sim |  |
+| fin_private.require_member_reader | — | `uuid` | plpgsql | DEFINER | não |  |
 | fin_private.seed_holidays | `p_year integer` | `integer` | plpgsql | DEFINER | sim |  |
 | fin_private.statement_json | `p_charge uuid, p_as_of date` | `jsonb` | sql | DEFINER | sim |  |
 | fin_private.today | — | `date` | sql | invoker | sim |  |
@@ -371,6 +372,7 @@
 | public.fin_cash_flow | `p_from date, p_to date, p_granularity text, p_account uuid` | `TABLE(bucket_start date, bucket_end date, opening_cents big…` | plpgsql | DEFINER | não |  |
 | public.fin_charge_statements | `p_filters jsonb, p_as_of date, p_limit integer, p_offset integer` | `TABLE(charge_id uuid, plan_id uuid, profile_id uuid, profil…` | plpgsql | DEFINER | não |  |
 | public.fin_charge_statements_by_ids | `p_ids uuid[], p_as_of date` | `TABLE(charge_id uuid, plan_id uuid, profile_id uuid, profil…` | plpgsql | DEFINER | não |  |
+| public.fin_club_fixed_expenses | — | `TABLE(id uuid, description text, supplier text, category_na…` | plpgsql | DEFINER | não |  |
 | public.fin_create_entry | `p_request_id uuid, p_data jsonb` | `jsonb` | plpgsql | DEFINER | não |  |
 | public.fin_create_member_pendency | `p_request_id uuid, p_data jsonb` | `jsonb` | plpgsql | DEFINER | não |  |
 | public.fin_create_member_plan | `p_request_id uuid, p_data jsonb` | `jsonb` | plpgsql | DEFINER | não |  |

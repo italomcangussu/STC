@@ -72,7 +72,7 @@
 - update [edge]: supabase/functions/admin-athlete-access/index.ts:120, supabase/functions/admin-athlete-access/index.ts:150, supabase/functions/admin-athlete-access/index.ts:185
 
 ### admin_audit_logs
-- select: components/AdminPanel.tsx:1191, lib/finance/financeApi.ts:470
+- select: components/AdminPanel.tsx:1191, lib/finance/financeApi.ts:473
 
 ### announcements
 - select: App.tsx:114, components/AdminPanel.tsx:766
@@ -174,52 +174,52 @@
 - select: components/AdminPanel.tsx:1604, components/AdminPanel.tsx:271, components/AdminPanel.tsx:435, components/AdminReports.tsx:127, components/Agenda.tsx:1260, components/Athletes.tsx:99, components/ChallengeNotificationPopup.tsx:64, components/Challenges.tsx:72, components/ChampionshipInProgress.tsx:120, components/Championships.tsx:187, components/Dashboard.tsx:41, components/Klanches.tsx:169 +2
 
 ### fin_accounts
-- select: lib/finance/financeApi.ts:77
+- select: lib/finance/financeApi.ts:78
 
 ### fin_attachments
-- select: lib/finance/financeApi.ts:192
+- select: lib/finance/financeApi.ts:193
 
 ### fin_categories
-- select: lib/finance/financeApi.ts:86
+- select: lib/finance/financeApi.ts:87
 
 ### fin_charge_adjustments
-- select: lib/finance/financeApi.ts:309
+- select: lib/finance/financeApi.ts:310
 
 ### fin_charge_payments
-- select: lib/finance/financeApi.ts:308
+- select: lib/finance/financeApi.ts:309
 
 ### fin_entries_v
-- select: lib/finance/financeApi.ts:108, lib/finance/financeApi.ts:171
+- select: lib/finance/financeApi.ts:109, lib/finance/financeApi.ts:172
 
 ### fin_entry_payments
-- select: lib/finance/financeApi.ts:124, lib/finance/financeApi.ts:167
+- select: lib/finance/financeApi.ts:125, lib/finance/financeApi.ts:168
 
 ### fin_holidays
-- select: lib/finance/financeApi.ts:68
+- select: lib/finance/financeApi.ts:69
 
 ### fin_member_charges
-- select: lib/finance/financeApi.ts:255
+- select: lib/finance/financeApi.ts:256
 
 ### fin_member_credits
-- select: lib/finance/financeApi.ts:326
+- select: lib/finance/financeApi.ts:327
 
 ### fin_member_plan_prices
-- select: lib/finance/financeApi.ts:223
+- select: lib/finance/financeApi.ts:224
 
 ### fin_member_plans
-- select: lib/finance/financeApi.ts:218, lib/finance/financeApi.ts:347
+- select: lib/finance/financeApi.ts:219, lib/finance/financeApi.ts:348
 
 ### fin_receipt_charges
-- select: lib/finance/financeApi.ts:395, lib/finance/financeApi.ts:409
+- select: lib/finance/financeApi.ts:396, lib/finance/financeApi.ts:410
 
 ### fin_receipt_submissions
-- select: lib/finance/financeApi.ts:395, lib/finance/financeApi.ts:409
+- select: lib/finance/financeApi.ts:396, lib/finance/financeApi.ts:410
 
 ### fin_recurrences
-- select: lib/finance/financeApi.ts:179
+- select: lib/finance/financeApi.ts:180
 
 ### fin_settings
-- select: lib/finance/financeApi.ts:60
+- select: lib/finance/financeApi.ts:61
 
 ### head_to_head_points
 - select: lib/rankingService.ts:173
