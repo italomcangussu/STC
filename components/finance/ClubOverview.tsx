@@ -13,7 +13,8 @@ type Data = { recv: ReceivablesSummary; pay: PayablesSummary; balances: AccountB
 type Model = { cur: DreSummary; prev: DreSummary; balance: number; delinq: ReturnType<typeof delinquencyRate>; fc: ReturnType<typeof cashForecast30d> };
 
 export const SectionTitle: React.FC<{ title: string; hint: string }> = ({ title, hint }) => (
-  <div className="px-1"><h3 className="text-sm font-black text-stone-800">{title}</h3><p className="text-xs text-stone-500">{hint}</p></div>
+  // Fundo claro: no Dashboard do sócio o título fica sobre a foto do app.
+  <div className="w-fit max-w-full rounded-xl bg-white/85 px-3 py-1.5 backdrop-blur-sm"><h3 className="text-sm font-black text-stone-800">{title}</h3><p className="text-xs text-stone-600">{hint}</p></div>
 );
 
 /** Posição de hoje: não depende do período escolhido. */

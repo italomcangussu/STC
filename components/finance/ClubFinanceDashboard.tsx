@@ -19,6 +19,9 @@ const FixedExpenseItem: React.FC<{ row: FixedExpenseRow }> = ({ row }) => (
   </li>
 );
 
+const fixedExpensesSubtitle = (rows: FixedExpenseRow[]) =>
+  rows.some((row) => row.frequency !== 'monthly') ? `${rows.length} saída(s) · trimestrais e anuais divididas pelos meses` : `${rows.length} saída(s) mensais`;
+
 const FixedExpensesList: React.FC = () => {
   const data = useAsync(clubFixedExpenses, []);
   const rows = data.data ?? [];
@@ -35,7 +38,7 @@ const FixedExpensesList: React.FC = () => {
       <SectionTitle title="Saídas fixas" hint="Despesas recorrentes do clube, da maior para a menor." />
       <Card
         title={rows.length > 0 ? `${formatBRL(totalMonthlyEquivalentCents(rows))} por mês` : undefined}
-        subtitle={rows.length > 0 ? `${rows.length} saída(s) · trimestrais e anuais divididas pelos meses` : undefined}
+        subtitle={rows.length > 0 ? fixedExpensesSubtitle(rows) : undefined}
       >
         {content()}
       </Card>
