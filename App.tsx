@@ -19,7 +19,7 @@ import { supabase } from './lib/supabase';
 // O Dashboard é a única tela que usa `recharts` (~109 kB comprimidos). Estático,
 // ele cobrava esse peso de todo sócio que abre o app na Agenda e nunca clica em
 // Dashboard.
-const Dashboard = lazy(() => import('./components/Dashboard').then(m => ({ default: m.Dashboard })));
+const DashboardTabs = lazy(() => import('./components/dashboard/DashboardTabs').then(m => ({ default: m.DashboardTabs })));
 const Klanches = lazy(() => import('./components/Klanches').then(m => ({ default: m.Klanches })));
 const TenisProPlayer = lazy(() => import('./components/TenisProPlayer').then(m => ({ default: m.TenisProPlayer })));
 const ProfessorProfile = lazy(() => import('./components/ProfessorProfile').then(m => ({ default: m.ProfessorProfile })));
@@ -236,7 +236,7 @@ const AppContent: React.FC = () => {
         }>
           <div key={view} className="animate-page-enter">
             {view === 'agenda' && <Agenda currentUser={currentUser} />}
-            {view === 'dashboard' && <Dashboard />}
+            {view === 'dashboard' && <DashboardTabs />}
             {view === 'klanches' && <Klanches currentUser={currentUser} />}
             {view === 'desafios' && <ChallengesView currentUser={currentUser} />}
             {view === 'superset' && <SuperSet />}

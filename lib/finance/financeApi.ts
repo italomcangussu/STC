@@ -14,6 +14,7 @@ import type {
   MemberPaymentSettings, MemberPendencyMeta, PayablesSummary, PlanPriceRow, PublicSettings, ReceiptQueueRow, ReceiptRow, ReceivablesSummary,
 } from './types';
 import type { IsoDate } from './dates';
+import type { FixedExpenseRow } from './fixedExpenses';
 import { RECEIPT_TYPES, receiptStoragePath, type ReceiptMime } from './receiptFile';
 import { sendPushNotification } from '../notificationService';
 import { receiptDecisionNotice } from './receipts';
@@ -465,6 +466,8 @@ export const cashFlow = (from: IsoDate, to: IsoDate, granularity: 'day' | 'week'
 export const receivablesSummary = async () => (await rows<ReceivablesSummary>('fin_receivables_summary'))[0];
 export const payablesSummary = async () => (await rows<PayablesSummary>('fin_payables_summary'))[0];
 export const monthlyTrend = (months = 6) => rows<MonthlyTrendRow>('fin_monthly_trend', { p_to: null, p_months: months });
+/** Saídas fixas do clube (recorrências ativas e vigentes): leitura aberta ao sócio ativo. */
+export const clubFixedExpenses = () => rows<FixedExpenseRow>('fin_club_fixed_expenses');
 
 export async function listAudit(limit = 100, tableName?: string): Promise<AuditRow[]> {
   let q = supabase.from('admin_audit_logs').select('id, occurred_at, action, table_name, record_id, actor_name_snapshot, target_name_snapshot, changed_fields, metadata')
