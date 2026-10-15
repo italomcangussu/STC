@@ -61,6 +61,7 @@ Rota = aba/view em `App.tsx` (sem router). Dados exatos → `.fabuloso/db/uso.md
 - `*.md` na raiz — documentação/auditorias (muitas, não são fonte de verdade)
 
 ## Convenções que o código não mostra
+- Migration aplicada pelo conector MCP do Supabase (`apply_migration`) é gravada com a versão do momento, não a do arquivo: logo depois, renomeie o arquivo (`git mv`) para `<versão remota>_<nome remoto>.sql`. Versão diferente nos dois lados faz o `supabase db push` falhar (`DbPushMissingLocalError`). Conferência: `supabase db push --dry-run` precisa dizer "Remote database is up to date".
 - Fuso do clube: Fortaleza (`getNowInFortaleza` em `utils.ts`). Dinheiro do financeiro: sempre centavos inteiros (`*_cents`); `student_payments.amount` (NUMERIC legado) só é convertido na leitura.
 - Papéis de membro em `MEMBER_ROLES` (`utils.ts`); confirmações via `useConfirm`.
 - Erros: `lib/logger.ts` + `lib/humanErrors.ts`.
