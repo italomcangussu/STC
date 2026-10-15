@@ -274,7 +274,7 @@ describe('Detalhe do lançamento', () => {
 
   it('despesa pendente: pagar, editar e cancelar; transferência não edita; com pagamento não cancela', () => {
     const a = abrir(entry('expense'));
-    expect(a.dlg.getAllByRole('button').map((b) => b.textContent)).toEqual(expect.arrayContaining(['Pagar', 'Editar', 'Cancelar lançamento']));
+    expect(a.dlg.getAllByRole('button').map((b) => b.textContent)).toEqual(expect.arrayContaining(['Pagar', 'Editar', 'Cancelar lançamento incorreto']));
   });
 
   it('transferência paga: sem pagar nem editar (só cancelar enquanto não houve dinheiro movimentado)', () => {
@@ -289,7 +289,7 @@ describe('Detalhe do lançamento', () => {
 
     expect(dlg.getByRole('button', { name: 'Editar' })).toBeInTheDocument();
     expect(dlg.queryByRole('button', { name: 'Pagar' })).toBeNull();
-    expect(dlg.queryByRole('button', { name: 'Cancelar lançamento' })).toBeNull();
+    expect(dlg.queryByRole('button', { name: /Cancelar lançamento/ })).toBeNull();
   });
 
   describe('pagar / receber', () => {
@@ -430,7 +430,7 @@ describe('Detalhe do lançamento', () => {
   describe('cancelar', () => {
     it('exige motivo de 5+ caracteres e envia a versão', async () => {
       const { dlg, onChanged } = abrir(entry('expense'));
-      fireEvent.click(dlg.getByRole('button', { name: 'Cancelar lançamento' }));
+      fireEvent.click(dlg.getByRole('button', { name: 'Cancelar lançamento incorreto' }));
       const cancelar = dlg.getByRole('button', { name: 'Cancelar lançamento' });
       expect(cancelar).toBeDisabled();
       fireEvent.change(dlg.getByLabelText(/^Motivo/), { target: { value: 'Lançada em duplicidade' } });
