@@ -16,6 +16,7 @@ import { failure, resolve } from './turnOutcome.ts';
 import { isAdminAssistant } from './promptAdmin.ts';
 import { sendWelcome } from './welcome.ts';
 import { consultarDisponibilidade } from './availability.ts';
+import { aulasEmLote, canBatchLessons, lessonsConfirmed } from './lessonsBatch.ts';
 
 /* ------------------------------- Plano composto do assessor ------------------------------- */
 
@@ -117,6 +118,7 @@ export async function decide(i: DecideInput): Promise<Decision> {
       }
       return { bubbles: [done?.message ?? 'Não consegui concluir o cadastro. Confira no painel.'], awaiting: true, close: false, action: `failed:${done?.code ?? 'ONBOARD'}`, memory };
     }
+    if ((ctx.open_proposal as Ctx).action === 'lessons_batch') return lessonsConfirmed(res as Parameters<typeof lessonsConfirmed>[0], i, memory);
     if (res?.ok && res.summary && isAdminProposalAction(res.action)) {
       return { bubbles: [adminSuccessMessage(res.action as unknown as AdminAction, res.summary as unknown as Ctx)], awaiting: false, close: false,
         action: 'admin_confirmed', memory: { intent: answer.intent, slots: {} } };
@@ -141,6 +143,9 @@ export async function decide(i: DecideInput): Promise<Decision> {
 
   // 2b) "Quem marcou esse horário?" / "me adiciona nessa reserva": o servidor mostra quem está e oferece entrar. O modelo não escreve nada.
   if (answer.intent === 'entrar' && !answer.transfer) return entrarNoJogo(i, memory);
+
+  // 2b') Professor ou assessor manda a lista de aulas: confere tudo e propõe numa mensagem só.
+  if (answer.intent === 'aulas_lote' && canBatchLessons(ctx) && !answer.transfer) return aulasEmLote(i, memory);
 
   // 2c) "Tem quadra livre?", "quais horários livres?" — consulta real ao motor, sem exigir participantes e sem handoff.
   if (answer.intent === 'consultar_disponibilidade' && !answer.transfer) return consultarDisponibilidade(i, memory);

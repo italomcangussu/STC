@@ -7,6 +7,7 @@ import { isFileKind } from './adminFiles.ts';
 import { parsePlan } from './adminPlan.ts';
 import { parseBirthday } from './adminAssistant.ts';
 import { participantes } from './decide.ts';
+import { parseLessons } from './lessonsBatch.ts';
 import { ADJUST_KINDS, ADM_ACTIONS, type AdmAction, type Answer, FIN_ACTIONS, type FinAction, type FormQuestionSlot, type Intent, PAY_METHODS, PENDENCY_KINDS, type PayMethod, type PendencyKind, QUESTION_TYPES, type Slots } from './turnTypes.ts';
 
 export const REACTIONS = ['👍', '😂', '🎾', '🔥', '👏', '❤️', '🙌', '💪', '😅', '🤝'] as const;
@@ -44,7 +45,7 @@ function lerJson(output: string): Record<string, unknown> | null {
 
 const str = (v: unknown): string | null => (typeof v === 'string' && v.trim() ? v.trim() : null);
 const strList = (v: unknown): string[] => (Array.isArray(v) ? v.map((x) => String(x ?? '').trim()).filter(Boolean).slice(0, 8) : []);
-const INTENTS: Intent[] = ['reservar', 'cancelar', 'remarcar', 'consultar', 'consultar_disponibilidade', 'informar', 'entrar', 'participantes', 'admin_financeiro', 'admin_consulta', 'admin_acao', 'outro'];
+const INTENTS: Intent[] = ['reservar', 'cancelar', 'remarcar', 'consultar', 'consultar_disponibilidade', 'informar', 'entrar', 'participantes', 'aulas_lote', 'admin_financeiro', 'admin_consulta', 'admin_acao', 'outro'];
 export const ACTIONABLE: Intent[] = ['reservar', 'cancelar', 'remarcar'];
 
 /**
@@ -66,6 +67,7 @@ export function parseSlots(raw: unknown): Slots {
   if ('guest_name' in o) out.guest_name = str(o.guest_name);
   if ('professor_name' in o) out.professor_name = str(o.professor_name);
   if ('student_names' in o) out.student_names = strList(o.student_names);
+  if ('lessons' in o) out.lessons = parseLessons(o.lessons) ?? [];
   if ('reservation_ref' in o) out.reservation_ref = str(o.reservation_ref);
   if ('add_names' in o) out.add_names = strList(o.add_names);
   if ('remove_names' in o) out.remove_names = strList(o.remove_names);
@@ -171,6 +173,7 @@ export function parseAnswer(output: string): Answer {
     summary: clipSummary(obj.summary),
     reaction: parseReaction(obj.reaction),
     ask_curator: parseCuratorAsk(obj.ask_curator),
+    silent: obj.silent === true && !transfer,
     memory_candidates: Array.isArray(obj.memory_candidates)
       ? obj.memory_candidates.slice(0, 2).map((x) => {
           const m = x && typeof x === 'object' && !Array.isArray(x) ? x as Record<string, unknown> : {};

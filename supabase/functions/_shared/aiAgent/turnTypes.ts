@@ -41,6 +41,8 @@ export type Slots = {
   guest_name?: string | null;
   professor_name?: string | null;
   student_names?: string[];
+  /** Aulas em lote (professor ou assessor): a lista inteira de uma vez. */
+  lessons?: Lesson[];
   reservation_ref?: string | null;
   /** Mexer nos atletas de uma reserva existente (sair, retirar, adicionar). */
   add_names?: string[];
@@ -121,7 +123,9 @@ export const ADJUST_KINDS = ['discount', 'increase', 'fee_waiver'] as const;
 export const PENDENCY_KINDS: PendencyKind[] = ['day_card', 'consumo', 'evento', 'multa', 'dano_reposicao', 'outros'];
 export const PAY_METHODS: PayMethod[] = ['pix', 'transfer', 'cash', 'card', 'other'];
 
-export type Intent = 'reservar' | 'cancelar' | 'remarcar' | 'consultar' | 'consultar_disponibilidade' | 'informar' | 'entrar' | 'participantes' | 'admin_financeiro' | 'admin_consulta' | 'admin_acao' | 'outro';
+export type Intent = 'reservar' | 'cancelar' | 'remarcar' | 'consultar' | 'consultar_disponibilidade' | 'informar' | 'entrar' | 'participantes' | 'aulas_lote' | 'admin_financeiro' | 'admin_consulta' | 'admin_acao' | 'outro';
+
+export type Lesson = { date: string; start: string; end: string | null; student_names: string[] };
 
 export type Answer = {
   messages: string[];
@@ -149,6 +153,8 @@ export type Answer = {
   reaction?: string | null;
   /** No grupo, citaram alguém de quem o João não sabe nada: ele pergunta ao presidente no privado (o servidor freia). */
   ask_curator?: { subject_name: string; question: string } | null;
+  /** Assessor de outro assistente: a mensagem não pede nada (aviso, "vou conferir e te mando"); o João não responde. */
+  silent?: boolean;
 };
 
 /** Reações que o João pode dar. O modelo escolhe; o servidor só aceita estas (e nunca reage em nome de outro assunto). */

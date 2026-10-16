@@ -3,6 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { delegateOverLimit, isCourtesyOnly } from '../../supabase/functions/_shared/aiAgent/delegate';
 import { actingFor, financialContextText, requesterText } from '../../supabase/functions/_shared/aiAgent/prompts';
+import { groupLessons, lessonDuration, lessonsProposalMessage, parseLessons } from '../../supabase/functions/_shared/aiAgent/lessonsBatch';
 
 const professor = { id: 'P1', name: 'Diego Memória', is_admin: false, is_member: true, professor_id: 'PR1' };
 const acting_for = { kind: 'professor_assistant', principal_profile_id: 'P1', principal_name: 'Diego Memória', professor_id: 'PR1' };
@@ -70,5 +71,28 @@ describe('trava entre robôs', () => {
     expect(delegateOverLimit(troca(7, 0))).toBe(false);
     expect(delegateOverLimit(troca(8, 0))).toBe(true);
     expect(delegateOverLimit([...troca(8, 0), ...troca(1, 30)])).toBe(false);   // as antigas saíram da janela
+  });
+});
+
+describe('aulas em lote: regras puras', () => {
+  it('alunos no mesmo dia e horário viram uma aula só; item sem data ou início é descartado', () => {
+    const l = parseLessons([
+      { date: '2026-10-19', start: '19:30', end: '20:00', student_names: ['José'] },
+      { date: '2026-10-19', start: '19:30', end: '20:00', student_names: ['Vinícius', 'José'] },
+      { date: '19/10', start: '19:30', student_names: ['X'] },
+      { date: '2026-10-20', start: '7h', student_names: ['Y'] },
+    ]) ?? [];
+    expect(l).toHaveLength(2);
+    expect(groupLessons(l)).toEqual([{ date: '2026-10-19', start: '19:30', end: '20:00', student_names: ['José', 'Vinícius'] }]);
+    expect(lessonDuration({ date: '2026-10-19', start: '19:30', end: '19:45', student_names: [] })).toBe(15);
+    expect(lessonDuration({ date: '2026-10-19', start: '19:30', end: null, student_names: [] })).toBe(30);
+  });
+
+  it('o resumo diz em linguagem simples por que cada aula não entra', () => {
+    const t = lessonsProposalMessage({ accepted: [{ date: '2026-10-19', start: '20:00', end: '20:30', label: 'José' }],
+      rejected: [{ date: '2026-10-19', start: '19:45', label: 'Matheus', code: 'INVALID_START' }] }, [], '2026-10-16');
+    expect(t).toContain('Posso marcar 1 aula');
+    expect(t).toContain('Matheus: a aula começa em hora cheia ou meia hora');
+    expect(t).not.toContain('INVALID_START');
   });
 });

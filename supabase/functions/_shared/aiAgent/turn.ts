@@ -470,6 +470,11 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
     return transferir(answer.handoff_kind ?? 'hard', answer.handoff_note || 'A IA pediu ajuda da equipe.', memory);
   }
 
+  // Outro assistente mandou só um aviso ("vou conferir e te mando"): nada a responder, a conversa não vira pingue-pongue.
+  if (answer.silent && actingFor(ctx) && !answer.ready && !answer.customer_confirmed && !answer.declined) {
+    await save({ ...memory, ...(answer.summary ? { summary: answer.summary } : {}) }, 'delegate_silent', { intent: answer.intent }, false, false);
+    return { status: 'skip', reason: 'delegate_silent' };
+  }
   // Reação: um amigo curte a mensagem antes de (ou em vez de) falar. Sozinha só vale para conversa solta
   // (agradecimento, notícia boa, piada): nada operacional, sem proposta aberta e sem pergunta pendente.
   if (answer.reaction && !answer.transfer) {
