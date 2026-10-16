@@ -1351,6 +1351,8 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
       }
     }
   }
+  // Mídia solta de quem não é administrador, sem comprovante em análise: segue só pelo financeiro, o João não pergunta nada.
+  if (deps.mediaOnly && !isAdminAssistant(ctx)) return { status: 'skip', reason: 'media_only' };
   // Compatibilidade: só resposta genérica do assistente; nunca lançar ou quitar via mídia.
   // Administrador manda o comprovante: o servidor já leu (valor, data, favorecido); o João responde com o que leu, sem equipe.
   if (soMidia && !isGroup && isAdminAssistant(ctx) && ultima?.id && pendentes.every((t) => t.kind === 'image' || t.kind === 'document')) {
