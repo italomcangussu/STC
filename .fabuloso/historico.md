@@ -173,3 +173,9 @@ Orquestrador Sonnet 5.5 (sem subagentes, a pedido). Criados `20261007260000_conv
 - Contexto: `arquitetura.md` (fronteira Conversas e fluxo Conversas/João). Testes: `supabase/tests/pglite/joao_assessor_professor.sql`, `__tests__/conversations/aiDelegate.test.ts`.
 - Entrega: migration `20261016161000_conversations_professor_delegate` aplicada pela CLI (`supabase db push`), versão igual nos dois lados; `whatsapp-webhook` deployada (v81, verify_jwt false).
 - Pendências: `entregas.json` lista outras edge functions como alteradas desde o último deploy (admin-athlete-access, conversation-operations, conversations-dispatch, finance-receipt-whatsapp, joao-*, send-push, signature-*), fora desta tarefa e não deployadas; conferir em outra sessão. Teste de ponta a ponta com o assessor real fica com o usuário.
+
+## 2026-10-16 — Divisão de turn.ts e prompts.ts por assunto (orquestrador Sonnet 5.5)
+- Tarefa: refatoração estrutural, sem mudança de comportamento, de `supabase/functions/_shared/aiAgent/turn.ts` (~2600 linhas) e `prompts.ts` (~720). Commit `eb8e686`.
+- `turn.ts` ficou só com `runTurn` (~540 linhas) e `prompts.ts` só com `userPrompt`, ambos re-exportando a API pública antiga. Novos módulos: turnTypes, answerParse, cadence, serverRules, proTennis, serverTexts, mentions, agendaLookup, decide, availability, adminAssistant, adminMessages, adminFinance, turnOutcome, promptTypes, promptSystem, promptContext, promptAdmin, promptSocial. `audio.ts` importa `Ctx` de `promptTypes.ts`.
+- Contexto: `arquitetura.md` (módulo Conversas) cita a nova estrutura e a regra de que código novo vai no módulo do assunto, não em `turn.ts`/`prompts.ts`; `turn.ts::cadence` virou `aiAgent/cadence.ts`.
+- Entrega: `whatsapp-webhook` deployada em 2026-10-16. Sem migration. Testes: 54 arquivos/687 de Conversas passam; `deno check` limpo nas 12 funções.
