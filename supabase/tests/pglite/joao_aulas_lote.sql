@@ -67,3 +67,23 @@ do $$ begin
   assert conv_private.ai_propose('00000000-0000-0000-0000-00000000e001', '{"action":"cancel","reservation_id":"00000000-0000-0000-0000-000000000099"}')->>'code' = 'RESERVATION_NOT_FOUND',
     'cancelar segue pelo ai_propose anterior';
 end $$;
+
+-- 5) busca de aluno tolerante: "Matheus Martins" acha "Matheus", "Ronaldo Rezende" acha "Ronaldo Resende";
+--    quem não existe continua sem resultado, e a busca de SÓCIO não fica frouxa
+insert into public.non_socio_students (id, name, plan_type, plan_status, master_expiration_date) values
+  ('00000000-0000-0000-0000-000000000b03', 'Matheus', 'Card Mensal', 'active', current_date + 60),
+  ('00000000-0000-0000-0000-000000000b04', 'Ronaldo Resende', 'Card Mensal', 'active', current_date + 60);
+insert into public.non_socio_students (id, name, plan_type, plan_status, is_active) values
+  ('00000000-0000-0000-0000-000000000b05', 'Matheus', 'Card Mensal', 'active', false);
+create temp table sp_socio as select fab.usuario('carlos@x.com') as id;
+insert into public.profiles (id, name, role) select id, 'Carlos Resende', 'socio' from sp_socio on conflict (id) do update set name = excluded.name, role = excluded.role;
+do $$
+declare r jsonb := conv_private.ai_resolve_people(array['Matheus Martins', 'Ronaldo Rezende', 'Guilherme', 'José Martins'], 'student');
+begin
+  assert r->0->>'status' = 'unique' and r->0->'matches'->0->>'name' = 'Matheus', 'Matheus Martins deveria achar o Matheus ativo: ' || (r->0)::text;
+  assert r->1->>'status' = 'unique' and r->1->'matches'->0->>'name' = 'Ronaldo Resende', 'Rezende deveria achar Resende: ' || (r->1)::text;
+  assert r->2->>'status' = 'none', 'Guilherme não existe';
+  assert r->3->>'status' = 'unique' and r->3->'matches'->0->>'name' = 'José Martins', 'nome exato continua exato';
+  assert conv_private.ai_resolve_people(array['Carlos Rezende'], 'member')->0->>'status' = 'none', 'busca de sócio não usa a grafia aproximada';
+  assert conv_private.fold_loose('Rezende Matthews') = 'resende matews', 'normalização: ' || conv_private.fold_loose('Rezende Matthews');
+end $$;

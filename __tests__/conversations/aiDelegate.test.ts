@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { delegateOverLimit, isCourtesyOnly } from '../../supabase/functions/_shared/aiAgent/delegate';
 import { actingFor, financialContextText, requesterText } from '../../supabase/functions/_shared/aiAgent/prompts';
-import { groupLessons, lessonDuration, lessonsProposalMessage, parseLessons } from '../../supabase/functions/_shared/aiAgent/lessonsBatch';
+import { groupLessons, lessonDuration, lessonsProposalMessage, parseLessons, studentIssue } from '../../supabase/functions/_shared/aiAgent/lessonsBatch';
 
 const professor = { id: 'P1', name: 'Diego Memória', is_admin: false, is_member: true, professor_id: 'PR1' };
 const acting_for = { kind: 'professor_assistant', principal_profile_id: 'P1', principal_name: 'Diego Memória', professor_id: 'PR1' };
@@ -94,5 +94,12 @@ describe('aulas em lote: regras puras', () => {
     expect(t).toContain('Posso marcar 1 aula');
     expect(t).toContain('Matheus: a aula começa em hora cheia ou meia hora');
     expect(t).not.toContain('INVALID_START');
+  });
+});
+
+describe('aulas em lote: aluno não achado', () => {
+  it('diz que não está cadastrado no STC e como resolver; ambíguo pede qual', () => {
+    expect(studentIssue('Não encontrei o aluno "Guilherme". Qual o nome completo?')).toBe('Guilherme não está cadastrado como aluno no STC (cadastre pelo app ou peça à diretoria)');
+    expect(studentIssue('Tenho mais de um "Vinícius": Vinícius A e Vinícius B. Qual deles?')).toBe('há mais de um "Vinícius": Vinícius A e Vinícius B; diga qual');
   });
 });

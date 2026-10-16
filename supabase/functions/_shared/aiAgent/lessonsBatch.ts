@@ -92,12 +92,19 @@ async function toItems(i: DecideInput, groups: Lesson[]): Promise<{ items: Item[
     const label = listaNomes(g.student_names) || 'sem aluno';
     if (!g.student_names.length) { rejected.push({ label, date: g.date, start: g.start, message: 'faltou o nome do aluno' }); continue; }
     const r = await resolve(i.deps.db, g.student_names, 'student');
-    if (r.ask) { rejected.push({ label, date: g.date, start: g.start, message: r.ask.replace(/\?$/, '').replace(/\. Qual.*$/, '') }); continue; }
+    if (r.ask) { rejected.push({ label, date: g.date, start: g.start, message: studentIssue(r.ask) }); continue; }
     items.push({ label: listaNomes(r.names), date: g.date, start: g.start, duration: lessonDuration(g),
       participant_ids: r.matches.filter((m) => m.kind === 'socio').map((m) => m.id),
       non_socio_student_ids: r.matches.filter((m) => m.kind === 'non_socio').map((m) => m.id) });
   }
   return { items, rejected };
+}
+
+/** Aluno não achado ou ambíguo, dito como algo que o professor resolve (cadastro no STC ou nome certo). */
+export function studentIssue(ask: string): string {
+  const ausente = ask.match(/^Não encontrei o aluno "(.+)"/);
+  if (ausente) return `${ausente[1]} não está cadastrado como aluno no STC (cadastre pelo app ou peça à diretoria)`;
+  return ask.replace(/^Tenho mais de um/, 'há mais de um').replace(/\. Qual deles\?$/, '; diga qual');
 }
 
 const ask = (text: string, memory: Memory): Decision => ({ bubbles: [text], awaiting: true, close: false, action: 'ask', memory });
