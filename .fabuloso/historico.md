@@ -179,3 +179,8 @@ Orquestrador Sonnet 5.5 (sem subagentes, a pedido). Criados `20261007260000_conv
 - `turn.ts` ficou só com `runTurn` (~540 linhas) e `prompts.ts` só com `userPrompt`, ambos re-exportando a API pública antiga. Novos módulos: turnTypes, answerParse, cadence, serverRules, proTennis, serverTexts, mentions, agendaLookup, decide, availability, adminAssistant, adminMessages, adminFinance, turnOutcome, promptTypes, promptSystem, promptContext, promptAdmin, promptSocial. `audio.ts` importa `Ctx` de `promptTypes.ts`.
 - Contexto: `arquitetura.md` (módulo Conversas) cita a nova estrutura e a regra de que código novo vai no módulo do assunto, não em `turn.ts`/`prompts.ts`; `turn.ts::cadence` virou `aiAgent/cadence.ts`.
 - Entrega: `whatsapp-webhook` deployada em 2026-10-16. Sem migration. Testes: 54 arquivos/687 de Conversas passam; `deno check` limpo nas 12 funções.
+
+## 2026-10-16 — Assessor de professor sem transferência para humano (orquestrador Opus 5.5)
+- Problema: a conversa do assessor do Prof. Diego Memória foi transferida (hard) às 10:38, antes da delegação existir, e ficou em `human`; as mensagens das 14:49 não tiveram resposta. `ai_handoff` só reconhecia sócio pelo telefone vinculado.
+- Correção: migration `20261016180000_conversations_delegate_no_handoff` (delegação válida = sócio no privado; devolve à IA conversas de assessores presas em `human` por transferência da IA) + `turn.ts` (`socioNoPrivado` inclui `actingFor`). Commit `3bdc390`. Aplicada no remoto; `whatsapp-webhook` deployada.
+- Mensagem ao Diego (pedido da diretoria) enviada como retorno agendado (`conv_followups`, criado via API de gestão) porque não havia sessão de admin para `conversation-operations`.
