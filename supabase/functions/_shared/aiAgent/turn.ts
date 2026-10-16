@@ -27,7 +27,8 @@ import { handleReceiptIntent, type ReceiptStage } from './receiptIntent.ts';
 import { completeCurrentStep, nextActionStep, parsePlan, planClosing, planIntro, stepHeading, type AdminPlan } from './adminPlan.ts';
 import { activeTopic, domainOf, bringsNewData, openTopics, recordTopicTurn, restoreTopics, selectTopic, topicIdFromRef, type TopicMode, type TopicSnapshot } from './topicState.ts';
 import { hearAudios, unheardOnly, UNCLEAR_AUDIO_REPLY } from './audio.ts';
-import { adminPendencyRefs, isAdminAssistant, systemPrompt, userPrompt, type AiSettings, type Ctx } from './prompts.ts';
+import { actingFor, adminPendencyRefs, isAdminAssistant, systemPrompt, userPrompt, type AiSettings, type Ctx } from './prompts.ts';
+import { delegateSilence } from './delegate.ts';
 import { buildChatRequest, providerIdFrom, uazError, type UazCaller } from '../uazChat.ts';
 
 type RpcResult = { data: unknown; error: { message: string } | null };
@@ -1312,6 +1313,12 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
     return { status: 'handoff', handoff: kind } as TurnResult;
   };
 
+  // Assessor de professor (outro robô): não responde cortesia nem entra em laço de resposta.
+  const quieto = !isGroup && actingFor(ctx) ? delegateSilence((ctx.transcript ?? []) as Ctx[], soMidia ? '' : buffered) : null;
+  if (quieto) {
+    await save((ctx.session?.memory ?? {}) as Memory, quieto, {}, false, false);
+    return { status: 'skip', reason: quieto };
+  }
   // Regras que não dependem do modelo.
   if (!deps.chat || !settings.model) return transferir('hard', 'Agente de IA sem provedor ou modelo configurado.', null, socioNoPrivado);
   // max_turns é um limiar para resumir contexto, NUNCA para interromper um assunto.

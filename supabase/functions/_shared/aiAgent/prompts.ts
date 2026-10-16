@@ -63,7 +63,7 @@ A persona é uma brincadeira interna inspirada no tenista João Fonseca: no univ
 - Em resenha social, 0–1 emoji pode aparecer naturalmente (por exemplo 😂), mas não transforme toda resposta em meme nem repita bordão.
 - Use o primeiro nome só quando ficar natural; não precisa chamar pelo nome em toda resposta.
 - Mensagens marcadas como "enviado manualmente pela equipe em seu nome" foram escritas por um atendente, mas a pessoa as recebeu como SUAS. Trate tudo o que elas dizem, prometem ou perguntam como algo que você mesmo falou: continue dali, sem repetir, sem contradizer e sem dizer que "a equipe" falou.
-- ${ctx.is_group ? 'ESTA CONVERSA É UM GRUPO: você entra quando é chamado pelo @, quando alguém usa a função Responder do WhatsApp sobre uma mensagem sua, ou enquanto conclui uma solicitação que já começou. Responda a quem chamou, mas pode entender o papo recente do grupo e falar de pessoas presentes quando isso for relevante. STATUS DE ALUNOS/CARDS, DAY CARDS DE CONVIDADOS e PENDÊNCIAS DE SÓCIO recebidos do sistema são contexto autorizado para consulta por qualquer membro deste grupo fechado. Pode informar situação, validade, vencimento, tipo de plano, professor e pagamento quando isso responder à pergunta. Ainda assim, nunca exponha telefone, ids internos, chaves ou dados que não estejam no CONTEXTO permitido. No grupo, NUNCA faça handoff, NUNCA diga que vai pedir para equipe/atendente ajudar e NUNCA anuncie transferência. Se não souber, não invente; diga apenas que não tem a informação confirmada quando precisar responder e deixe o grupo seguir.' : isAdminAssistant(ctx) ? 'Conversa individual com um ADMINISTRADOR: além de colega, você é o assessor administrativo dele. Pode consultar o financeiro completo do clube (alunos/cards, Day Cards, pendências de todos os sócios) e preparar lançamentos (veja ASSESSOR ADMINISTRATIVO). Seja direto e objetivo nesses assuntos.' : 'Conversa individual: em financeiro, informe somente as pendências do próprio solicitante e o PIX do clube; nunca exponha pendências de outro sócio.'}
+- ${ctx.is_group ? 'ESTA CONVERSA É UM GRUPO: você entra quando é chamado pelo @, quando alguém usa a função Responder do WhatsApp sobre uma mensagem sua, ou enquanto conclui uma solicitação que já começou. Responda a quem chamou, mas pode entender o papo recente do grupo e falar de pessoas presentes quando isso for relevante. STATUS DE ALUNOS/CARDS, DAY CARDS DE CONVIDADOS e PENDÊNCIAS DE SÓCIO recebidos do sistema são contexto autorizado para consulta por qualquer membro deste grupo fechado. Pode informar situação, validade, vencimento, tipo de plano, professor e pagamento quando isso responder à pergunta. Ainda assim, nunca exponha telefone, ids internos, chaves ou dados que não estejam no CONTEXTO permitido. No grupo, NUNCA faça handoff, NUNCA diga que vai pedir para equipe/atendente ajudar e NUNCA anuncie transferência. Se não souber, não invente; diga apenas que não tem a informação confirmada quando precisar responder e deixe o grupo seguir.' : isAdminAssistant(ctx) ? 'Conversa individual com um ADMINISTRADOR: além de colega, você é o assessor administrativo dele. Pode consultar o financeiro completo do clube (alunos/cards, Day Cards, pendências de todos os sócios) e preparar lançamentos (veja ASSESSOR ADMINISTRATIVO). Seja direto e objetivo nesses assuntos.' : 'Conversa individual: em financeiro, informe somente as pendências do próprio solicitante e o PIX do clube; nunca exponha pendências de outro sócio. Se o solicitante for professor (ou o assessor dele), pode informar situação, validade/vencimento e pagamento dos alunos DELE que estiverem em ALUNOS/CARDS.'}
 
 # CARDÁPIO DE RESENHA (ideias para puxar assunto no grupo quando a diretoria pedir; adapte com a MEMÓRIA DO GRUPO, nunca invente fato)
 - Sumiço: "cadê o Fulano? Não aparece nas reservas nem no clube... trabalhando muito ou só marcando por fora do app?" (com o negócio dele: óculos, iPhone, restaurante, sorveteria, motos).
@@ -238,8 +238,24 @@ export function requesterText(ctx: Ctx): string {
   const r = (ctx.requester ?? {}) as Ctx;
   const p = r.profile as Ctx | null;
   if (!p) return 'Cadastro NÃO identificado por este telefone (não dá para fazer reserva; se pedir, explique e transfira em "soft").';
+  const acting = actingFor(ctx);
+  if (acting) return delegateText(acting, p);
   return [`Nome: ${p.name}`, ...(r.title ? [`Cargo no clube: ${r.title} (chame por ele de vez em quando, sem exagero; o apelido "Vice" para vice-presidente é natural)`] : []), `Sócio ativo: ${p.is_member ? 'sim' : 'não'}`, `Administrador: ${p.is_admin ? 'sim' : 'não'}`,
     `Professor: ${p.professor_id ? 'sim' : 'não'}`].join('\n');
+}
+
+/** Assessor de professor: o contato fala em nome do professor (cadastrado pela diretoria em `conv_contact_delegates`). */
+export function actingFor(ctx: Ctx): Ctx | null {
+  const a = ((ctx.requester ?? {}) as Ctx).acting_for as Ctx | null | undefined;
+  return a && a.kind === 'professor_assistant' ? a : null;
+}
+
+function delegateText(acting: Ctx, p: Ctx): string {
+  return [`Quem escreve é o ASSESSOR do professor ${acting.principal_name} (outro assistente, autorizado pela diretoria a falar em nome dele).`,
+    `Trate cada pedido como se fosse do próprio professor ${p.name}: marcar, remarcar e cancelar aula dele e o Play dele, consultar a agenda e a situação dos alunos DELE (validade/vencimento do card, pagamento).`,
+    'Não é administrador: financeiro do clube, pendências de sócios e ações de diretoria ficam fora.',
+    'O assessor costuma ser um robô: responda objetivo, sem resenha nem emoji, e só confirme o que o sistema confirmou.',
+    `Nome (em nome de quem fala): ${p.name}`, `Sócio ativo: ${p.is_member ? 'sim' : 'não'}`, 'Administrador: não', 'Professor: sim'].join('\n');
 }
 
 export function courtsText(ctx: Ctx): string {
@@ -377,6 +393,13 @@ function clubBalancesText(ctx: Ctx): string {
   return `\n\nSALDO DAS CONTAS DO CLUBE (caixa, banco etc.; "saldo do clube" = total):\n${linhas}\nTOTAL: ${moneyBR(Number(b.total_cents) / 100)}`;
 }
 
+/** Professor (ou o assessor dele) no privado vê só os alunos DELE. */
+function professorStudents(students: Ctx[], requester: Ctx | undefined): Ctx[] {
+  const nome = fold(String(requester?.name ?? '').trim());
+  if (!requester?.professor_id || !nome) return [];
+  return students.filter((s) => fold(String(s.professor ?? '').trim()) === nome);
+}
+
 export function financialContextText(ctx: Ctx, buffered = ''): string {
   const fin = (ctx.financial_context ?? {}) as Ctx;
   const students = Array.isArray(fin.students) ? fin.students as Ctx[] : [];
@@ -403,8 +426,10 @@ export function financialContextText(ctx: Ctx, buffered = ''): string {
 
   const admin = isAdminAssistant(ctx);
   const wide = ctx.is_group || admin;
-  const namedStudents = students.filter((s) => nameHit(s.name));
-  const studentRows = wide ? (namedStudents.length ? namedStudents : financeTerms ? students : []) : [];
+  const ownStudents = wide ? [] : professorStudents(students, requester);
+  const visibleStudents = wide ? students : ownStudents;
+  const namedStudents = visibleStudents.filter((s) => nameHit(s.name));
+  const studentRows = wide || ownStudents.length ? (namedStudents.length ? namedStudents : financeTerms ? visibleStudents : []) : [];
   const studentText = studentRows.length
     ? studentRows.map((s) => {
         const status = String(s.card_status ?? 'unknown').toUpperCase();
@@ -417,7 +442,7 @@ export function financialContextText(ctx: Ctx, buffered = ''): string {
         const hist = s.record_active === false ? ' | cadastro histórico/inativo' : '';
         return `- ${String(s.name ?? '').trim()} | ${s.plan_type ?? 'sem plano'} | ${status}${validade}${professor}${resp}${pagou}${hist}`;
       }).join('\n')
-    : wide ? '(nenhum aluno/card relevante encontrado para esta conversa)' : '(não exposto no privado)';
+    : wide || ownStudents.length ? '(nenhum aluno/card relevante encontrado para esta conversa)' : '(não exposto no privado)';
 
   const dayCardTerms = /\b(day\s*card|convidad|pago|pagamento|pendente|isento)\b/.test(conversa);
   const namedDay = dayCards.filter((d) => nameHit(d.guest_name) || nameHit(d.booked_by));
@@ -436,7 +461,7 @@ export function financialContextText(ctx: Ctx, buffered = ''): string {
   const namedPendency = pendencies.filter((p) => nameHit(p.member_name) || nameHit(p.guest_name));
   const pendencyRows = ctx.is_group
     ? (namedPendency.length ? namedPendency : financeTerms ? pendencies.filter((p) => ['open', 'partial'].includes(String(p.status))).slice(0, 30) : [])
-    : pendencies.filter(ownPendency);
+    : actingFor(ctx) ? [] : pendencies.filter(ownPendency);
 
   // Administrador no privado: todas as em aberto, numeradas (p1, p2…) para ele apontar a pendência numa ação.
   const refById = new Map(adminPendencyRefs(ctx).map((r) => [r.id, r.ref]));
