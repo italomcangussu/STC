@@ -64,3 +64,14 @@ select fab.espera_linhas('select 1 from public.conv_contact_delegates', 0);
 select fab.espera_erro($$insert into public.conv_contact_delegates (contact_id, principal_profile_id) values ('00000000-0000-0000-0000-00000000c002', auth.uid())$$, 'permission denied');
 select fab.como('authenticated', (select adm from u));
 select fab.espera_linhas('select 1 from public.conv_contact_delegates', 1);
+
+-- 7) o assessor nunca vai para atendimento humano: a transferência da IA é bloqueada e só fica a auditoria
+select fab.dono();
+select conv_private.ai_handoff('00000000-0000-0000-0000-00000000e001', 'hard', 'teste');
+do $$ begin
+  assert (select ai_status from public.conv_conversations where id = '00000000-0000-0000-0000-00000000d001') = 'ai', 'assessor não pode ir para humano';
+  assert (select status from public.conv_ai_sessions where id = '00000000-0000-0000-0000-00000000e001') = 'open', 'a sessão do assessor segue aberta';
+end $$;
+-- quem não tem cadastro nem delegação continua podendo ser transferido
+select conv_private.ai_handoff('00000000-0000-0000-0000-00000000e002', 'hard', 'teste');
+do $$ begin assert (select ai_status from public.conv_conversations where id = '00000000-0000-0000-0000-00000000d002') = 'human', 'desconhecido segue indo para humano'; end $$;

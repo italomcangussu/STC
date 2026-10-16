@@ -228,8 +228,8 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
   const save = (memory: Memory | null, decision: string, payload: Record<string, unknown>, awaiting: boolean, close: boolean) =>
     db('conv_svc_ai_save_turn', { p_session: session, p_memory: memory, p_decision: decision, p_payload: payload, p_awaiting: awaiting, p_close: close });
 
-  // Trava: sócio (ou admin) no privado nunca vai para atendimento humano. O banco também recusa (ai_handoff).
-  const socioNoPrivado = !isGroup && ((ctx.requester as Ctx | undefined)?.profile as Ctx | undefined)?.is_member === true;
+  // Trava: sócio (ou admin) e assessor de professor no privado nunca vão para atendimento humano. O banco também recusa (ai_handoff).
+  const socioNoPrivado = !isGroup && (((ctx.requester as Ctx | undefined)?.profile as Ctx | undefined)?.is_member === true || actingFor(ctx) !== null);
 
   const transferir = async (kind: 'soft' | 'hard', note: string, memory: Memory | null, falar = true, opts: { texto?: string; fechar?: boolean } = {}) => {
     if (socioNoPrivado) {
