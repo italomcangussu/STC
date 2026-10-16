@@ -1,6 +1,7 @@
 {
   "aplicadas": [
-    "20261016180000"
+    "20261016180000",
+    "20261016190000"
   ],
   "jaNoRemoto": [],
   "edge": {
@@ -15,6 +16,6 @@
     "send-push": "0d28132ff495",
     "signature-dispatch": "0984cf81baf1",
     "signature-operations": "6d6a2b33ede9",
-    "whatsapp-webhook": "c7462ac409a1"
+    "whatsapp-webhook": "f50b3724692e"
   }
 }

@@ -184,3 +184,8 @@ Orquestrador Sonnet 5.5 (sem subagentes, a pedido). Criados `20261007260000_conv
 - Problema: a conversa do assessor do Prof. Diego Memória foi transferida (hard) às 10:38, antes da delegação existir, e ficou em `human`; as mensagens das 14:49 não tiveram resposta. `ai_handoff` só reconhecia sócio pelo telefone vinculado.
 - Correção: migration `20261016180000_conversations_delegate_no_handoff` (delegação válida = sócio no privado; devolve à IA conversas de assessores presas em `human` por transferência da IA) + `turn.ts` (`socioNoPrivado` inclui `actingFor`). Commit `3bdc390`. Aplicada no remoto; `whatsapp-webhook` deployada.
 - Mensagem ao Diego (pedido da diretoria) enviada como retorno agendado (`conv_followups`, criado via API de gestão) porque não havia sessão de admin para `conversation-operations`.
+
+## 2026-10-16 — Aulas em lote e protocolo entre assistentes (orquestrador Opus 5.5)
+- Problema: o assessor do Prof. Diego mandava a semana inteira e o João só tratava uma reserva por vez ("não entendi" em laço); respondia avisos sem pedido.
+- Feito: migration `20261016190000_conversations_lessons_batch` (commit `22399e5`) + `lessonsBatch.ts`, `promptDelegate.ts`, intent `aulas_lote`, `silent` (commit `3facfb1`); harness de `__tests__/conversations/sql` passa a aplicar as migrations `2026101*_conversations_*`. Aplicado no remoto e `whatsapp-webhook` deployada.
+- Regras do clube que barram a lista do Diego: aula 30 min, início em :00/:30, não-sócio só 5h–12h ou 20h+ (exceto domingo). Pedido de ajuste do lado do Meu Assessor enviado à sessão "Gaps nas conversas do Diego".
