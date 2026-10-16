@@ -189,3 +189,6 @@ Orquestrador Sonnet 5.5 (sem subagentes, a pedido). Criados `20261007260000_conv
 - Problema: o assessor do Prof. Diego mandava a semana inteira e o João só tratava uma reserva por vez ("não entendi" em laço); respondia avisos sem pedido.
 - Feito: migration `20261016190000_conversations_lessons_batch` (commit `22399e5`) + `lessonsBatch.ts`, `promptDelegate.ts`, intent `aulas_lote`, `silent` (commit `3facfb1`); harness de `__tests__/conversations/sql` passa a aplicar as migrations `2026101*_conversations_*`. Aplicado no remoto e `whatsapp-webhook` deployada.
 - Regras do clube que barram a lista do Diego: aula 30 min, início em :00/:30, não-sócio só 5h–12h ou 20h+ (exceto domingo). Pedido de ajuste do lado do Meu Assessor enviado à sessão "Gaps nas conversas do Diego".
+
+## 2026-10-16 — Busca de aluno tolerante a grafia (orquestrador Opus 5.5)
+- No lote real do assessor, 7 aulas voltaram "Não encontrei o aluno". Causa: a busca parcial exigia toda palavra pedida no nome cadastrado ("Matheus Martins" × "Matheus"; "Rezende" × "Resende"). Migration `20261016200000_conversations_student_loose_match` (nível aproximado só para aluno) + motivo "não está cadastrado como aluno no STC". Aplicada; `whatsapp-webhook` deployada. Conferido no remoto: Matheus, Ronaldo Resende e Vinícius Frota achados; José Martins e Guilherme não existem no STC.
