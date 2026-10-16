@@ -962,7 +962,7 @@ describe('João mais gente: reação, memória aprovada, resultados e falas rece
     const [msg] = await q<any>(w.db, `select reactions from public.conv_messages where id = '${m.message_id}'`);
     expect(msg.reactions).toEqual({ staff: '🙌' });                       // a reação do João aparece na caixa, no lado "nosso"
     expect((await decisions(w)).map((d) => d.decision)).toEqual(['reaction']);
-    expect(s.calls[0].temperature).toBe(0.45);
+    expect(s.calls[0].temperature).toBe(0.75);
     expect(s.calls[0].user).toContain('MOMENTO DO DIA:');
   }, 120000);
 

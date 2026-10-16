@@ -18,6 +18,7 @@ import { repeatedHumor, noveltyHint, looksHumorous, humorTopic } from './humor.t
 import type { Chat } from './llm.ts';
 import { ADMIN_READS, LIMITATION_PHRASE, n3Reply, renderCapabilities } from './capabilities.ts';
 import { sendWelcome } from './welcome.ts';
+import { toWhatsApp } from './whatsappFormat.ts';
 import type { Provision, ProvisionResult } from '../athleteProvision.ts';
 import { FORMS_DOMAINS, isAdminReadDomain, READ_MORE_DOMAINS, renderAdminRead, type AdminReadDomain } from './adminReads.ts';
 import { isFileKind, reportDoc, safeName, type FileKind, type FileKit } from './adminFiles.ts';
@@ -182,11 +183,14 @@ export function parseReaction(v: unknown): string | null {
  * firmes para o modelo não "criar" dado. Temperatura mais alta só onde o erro não custa nada.
  */
 const SLOT_KEYS: (keyof Slots)[] = ['date', 'start', 'court_label', 'participant_names', 'reservation_ref', 'add_names', 'remove_names', 'guest_name', 'professor_name', 'student_names'];
+/** Resenha solta no grupo: temperatura alta para a tirada sair espontânea; assunto operacional fica firme. */
+const HUMOR_TEMPERATURE = 0.75;
+
 export function turnTemperature(isGroup: boolean, ctx: Ctx, memory: { slots?: Slots }): number {
   if (!isGroup || ctx.open_proposal) return 0.2;
   const slots = memory.slots ?? {};
   const emAndamento = SLOT_KEYS.some((k) => { const v = slots[k]; return Array.isArray(v) ? v.length > 0 : Boolean(v); });
-  return emAndamento ? 0.2 : 0.62;
+  return emAndamento ? 0.2 : HUMOR_TEMPERATURE;
 }
 
 /* ------------------------------- Parse (soft-fail) ------------------------------- */
@@ -362,33 +366,54 @@ export function mergeSlots(prev: Slots | undefined, next: Slots, reset = false):
 
 const MAX_BUBBLES = 4;
 const MAX_CHARS = 320;
+const MAX_BLOCK_CHARS = 1200;
 
-/** Cada item vindo do modelo já é uma microbolha. Só quebramos automaticamente linhas explícitas ou textos muito longos. */
+/**
+ * Cada item vindo do modelo é uma bolha. Texto com quebra de linha (lista, agenda, placar) fica inteiro numa
+ * bolha, com as linhas preservadas; só um bloco grande demais é dividido entre parágrafos. Frase corrida longa
+ * é cortada em fim de frase.
+ */
 function naturalParts(message: string): string[] {
-  const seeds = message.split(/\n+/).map((x) => x.trim()).filter(Boolean);
+  const texto = toWhatsApp(message);
+  if (!texto) return [];
+  return texto.includes('\n') ? blockParts(texto) : sentenceParts(texto);
+}
+
+function blockParts(texto: string): string[] {
   const out: string[] = [];
-  for (const seed of seeds) {
-    let rest = seed;
-    while (rest.length > MAX_CHARS) {
-      const janela = rest.slice(0, MAX_CHARS + 1);
-      let corte = -1;
-      const fim = /[.!?;…,:](?=\s)/g;
-      let x: RegExpExecArray | null;
-      while ((x = fim.exec(janela)) !== null) if (x.index + 1 >= MAX_CHARS / 2) corte = x.index + 1;
-      if (corte < 0) corte = janela.lastIndexOf(' ') > 0 ? janela.lastIndexOf(' ') : MAX_CHARS;
-      out.push(rest.slice(0, corte).trim());
-      rest = rest.slice(corte).trim();
-    }
-    if (rest) out.push(rest);
+  let atual = '';
+  for (const paragrafo of texto.split(/\n{2,}/)) {
+    const junto = atual ? `${atual}\n\n${paragrafo}` : paragrafo;
+    if (junto.length <= MAX_BLOCK_CHARS) { atual = junto; continue; }
+    if (atual) out.push(atual);
+    atual = paragrafo;
   }
+  if (atual) out.push(atual);
+  return out.flatMap((p) => (p.length > MAX_BLOCK_CHARS ? p.split('\n').flatMap(sentenceParts) : [p]));
+}
+
+function sentenceParts(seed: string): string[] {
+  const out: string[] = [];
+  let rest = seed.trim();
+  while (rest.length > MAX_CHARS) {
+    const janela = rest.slice(0, MAX_CHARS + 1);
+    let corte = -1;
+    const fim = /[.!?;…,:](?=\s)/g;
+    let x: RegExpExecArray | null;
+    while ((x = fim.exec(janela)) !== null) if (x.index + 1 >= MAX_CHARS / 2) corte = x.index + 1;
+    if (corte < 0) corte = janela.lastIndexOf(' ') > 0 ? janela.lastIndexOf(' ') : MAX_CHARS;
+    out.push(rest.slice(0, corte).trim());
+    rest = rest.slice(corte).trim();
+  }
+  if (rest) out.push(rest);
   return out;
 }
 
-/** No máximo 4 microbolhas, com tempo de "digitando" inclusive antes da primeira. */
+/** No máximo 4 bolhas, com tempo de "digitando" inclusive antes da primeira. O excedente vai para a última, em parágrafo próprio. */
 export function cadence(messages: string[]): { text: string; delayMs: number }[] {
   const partes = messages.flatMap(naturalParts);
   const bolhas = partes.slice(0, MAX_BUBBLES);
-  if (partes.length > MAX_BUBBLES) bolhas[MAX_BUBBLES - 1] = partes.slice(MAX_BUBBLES - 1).join(' ');
+  if (partes.length > MAX_BUBBLES) bolhas[MAX_BUBBLES - 1] = partes.slice(MAX_BUBBLES - 1).join('\n\n');
   return bolhas.map((text, i) => ({
     text,
     delayMs: i === 0

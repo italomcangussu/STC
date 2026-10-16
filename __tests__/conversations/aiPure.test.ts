@@ -110,6 +110,24 @@ describe('quadras, horários e cadência', () => {
     expect(bolhas.slice(0, 3).every((b) => b.text.length <= 320)).toBe(true);
     expect(cadence(['  ', ''])).toEqual([]);
   });
+  it('lista com quebra de linha fica numa bolha só, com as linhas preservadas', () => {
+    const agenda = '*Hoje — 4ª classe*\n19h — Diego (STC) x Josiel\n21h — Thieslley (STC) x Mardes\n\n*Sábado*\nMário (STC) x Philipe';
+    expect(cadence(['Organizando por dia e classe:', agenda]).map((b) => b.text)).toEqual(['Organizando por dia e classe:', agenda]);
+  });
+  it('excedente de bolhas entra na última sem perder as quebras de linha', () => {
+    const textos = cadence(['a', 'b', 'c', 'd', 'e\nf']).map((b) => b.text);
+    expect(textos).toHaveLength(4);
+    expect(textos[3]).toBe('d\n\ne\nf');
+  });
+  it('bloco grande demais é dividido entre parágrafos, nunca no meio de uma linha', () => {
+    const paragrafo = Array.from({ length: 20 }, (_, i) => `Linha ${i} com algum texto do jogo`).join('\n');
+    const bolhas = cadence([`${paragrafo}\n\n${paragrafo}\n\n${paragrafo}`]).map((b) => b.text);
+    expect(bolhas.length).toBeGreaterThan(1);
+    expect(bolhas.every((b) => b.startsWith('Linha 0'))).toBe(true);
+  });
+  it('Markdown do modelo vira formatação de WhatsApp', () => {
+    expect(cadence(['## Hoje\n- **Diego** x Josiel\n- ~~22h~~ 21h'])[0].text).toBe('*Hoje*\n• *Diego* x Josiel\n• ~22h~ 21h');
+  });
   it('palavra de transferência ignora acento e caixa', () => {
     expect(asksForHuman('Quero falar com um ATENDENTE', ['atendente'])).toBe(true);
     expect(asksForHuman('Atendênte', ['atendente'])).toBe(true);
@@ -243,8 +261,8 @@ describe('João mais gente: reação, temperatura e contexto de amigo', () => {
   });
 
   it('humor solto só em grupo sem nada em andamento; reserva, proposta e conversa direta ficam firmes', () => {
-    expect(turnTemperature(true, { open_proposal: null }, {})).toBe(0.45);
-    expect(turnTemperature(true, { open_proposal: null }, { slots: { type: 'Play', duration: 60, participants_known: false } })).toBe(0.45);
+    expect(turnTemperature(true, { open_proposal: null }, {})).toBe(0.75);
+    expect(turnTemperature(true, { open_proposal: null }, { slots: { type: 'Play', duration: 60, participants_known: false } })).toBe(0.75);
     expect(turnTemperature(true, { open_proposal: null }, { slots: { date: '2026-10-08' } })).toBe(0.2);
     expect(turnTemperature(true, { open_proposal: null }, { slots: { participant_names: ['Beto'] } })).toBe(0.2);
     expect(turnTemperature(true, { open_proposal: { id: 'p' } }, {})).toBe(0.2);
