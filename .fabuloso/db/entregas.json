@@ -3,16 +3,16 @@
   "jaNoRemoto": [],
   "edge": {
     "admin-athlete-access": "8943e49b9df0",
-    "conversation-operations": "ecf5f3e1e26d",
-    "conversations-dispatch": "cd05ca0b635b",
-    "finance-receipt-whatsapp": "e8b8566e874b",
-    "joao-admin-alerts": "e2c7fe6dbe34",
-    "joao-admin-briefing": "0abfe6ffe8ef",
-    "joao-birthdays": "c724aa7a2cb4",
-    "joao-daily-greeting": "8b7885d0dabe",
-    "send-push": "069d787cddab",
-    "signature-dispatch": "db02ff193f6d",
-    "signature-operations": "bcc6c73d84db",
+    "conversation-operations": "f3d35229bc90",
+    "conversations-dispatch": "a4b8e75d81dd",
+    "finance-receipt-whatsapp": "ac42eb39df81",
+    "joao-admin-alerts": "bb691f967077",
+    "joao-admin-briefing": "75df544abfe9",
+    "joao-birthdays": "eaa6c10f9a56",
+    "joao-daily-greeting": "6f87f6de97f1",
+    "send-push": "0d28132ff495",
+    "signature-dispatch": "0984cf81baf1",
+    "signature-operations": "6d6a2b33ede9",
     "whatsapp-webhook": "02dbb9e1d501"
   }
 }
