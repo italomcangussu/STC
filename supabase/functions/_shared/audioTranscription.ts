@@ -104,7 +104,7 @@ export function groqTranscriber(deps: { apiKey: string; models?: string[]; fetch
     // Modelo principal (mais preciso em português); se o provedor recusar por limite/instabilidade, o turbo.
     for (const model of models) {
       const form = new FormData();
-      form.append('file', new Blob([input.bytes], { type: input.mime.split(';')[0] || 'audio/ogg' }), input.fileName);
+      form.append('file', new Blob([new Uint8Array(input.bytes)], { type: input.mime.split(';')[0] || 'audio/ogg' }), input.fileName);
       form.append('model', model);
       form.append('language', 'pt');
       form.append('response_format', 'verbose_json');
