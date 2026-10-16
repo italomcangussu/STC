@@ -4099,7 +4099,7 @@
    "invocadaPor": [
     "components/AdminPanel.tsx:1227"
    ],
-   "deploy": "em dia"
+   "deploy": "alterada desde o último deploy"
   },
   {
    "nome": "conversation-operations",
@@ -4130,7 +4130,7 @@
     "whatsappInstance.ts"
    ],
    "invocadaPor": [],
-   "deploy": "em dia"
+   "deploy": "alterada desde o último deploy"
   },
   {
    "nome": "conversations-dispatch",
@@ -4152,7 +4152,7 @@
     "uazChat.ts"
    ],
    "invocadaPor": [],
-   "deploy": "em dia"
+   "deploy": "alterada desde o último deploy"
   },
   {
    "nome": "finance-receipt-whatsapp",
@@ -4177,7 +4177,7 @@
     "financeReceiptOcr.ts"
    ],
    "invocadaPor": [],
-   "deploy": "em dia"
+   "deploy": "alterada desde o último deploy"
   },
   {
    "nome": "joao-admin-alerts",
@@ -4201,7 +4201,7 @@
     "uazChat.ts"
    ],
    "invocadaPor": [],
-   "deploy": "em dia"
+   "deploy": "alterada desde o último deploy"
   },
   {
    "nome": "joao-admin-briefing",
@@ -4224,7 +4224,7 @@
     "uazChat.ts"
    ],
    "invocadaPor": [],
-   "deploy": "em dia"
+   "deploy": "alterada desde o último deploy"
   },
   {
    "nome": "joao-birthdays",
@@ -4254,7 +4254,7 @@
    "hosts": [],
    "shared": [],
    "invocadaPor": [],
-   "deploy": "em dia"
+   "deploy": "alterada desde o último deploy"
   },
   {
    "nome": "joao-daily-greeting",
@@ -4284,7 +4284,7 @@
    "hosts": [],
    "shared": [],
    "invocadaPor": [],
-   "deploy": "em dia"
+   "deploy": "alterada desde o último deploy"
   },
   {
    "nome": "send-push",
@@ -4310,7 +4310,7 @@
    "invocadaPor": [
     "lib/notificationService.ts:17"
    ],
-   "deploy": "em dia"
+   "deploy": "alterada desde o último deploy"
   },
   {
    "nome": "signature-dispatch",
@@ -4335,7 +4335,7 @@
     "uazChat.ts"
    ],
    "invocadaPor": [],
-   "deploy": "em dia"
+   "deploy": "alterada desde o último deploy"
   },
   {
    "nome": "signature-operations",
@@ -4375,7 +4375,7 @@
    "invocadaPor": [
     "lib/signatures/api.ts:25"
    ],
-   "deploy": "em dia"
+   "deploy": "alterada desde o último deploy"
   },
   {
    "nome": "whatsapp-webhook",
@@ -4426,6 +4426,7 @@
     "aiAgent/topicState.ts",
     "aiAgent/turn.ts",
     "aiAgent/welcome.ts",
+    "aiAgent/whatsappFormat.ts",
     "athleteProvision.ts",
     "audioTranscription.ts",
     "groupMention.ts",
@@ -4433,7 +4434,7 @@
     "uazWebhook.ts"
    ],
    "invocadaPor": [],
-   "deploy": "em dia"
+   "deploy": "alterada desde o último deploy"
   }
  ],
  "alertas": [

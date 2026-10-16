@@ -1,5 +1,5 @@
 # Mapa do banco — postgres
-> Gerado por `fabuloso.mjs db` em 2026-10-14 16:14 UTC · fonte: api supabase (smztsayzldjmkzmufqcz) · Postgres 17.6 · hash 6eddfb3a46ea
+> Gerado por `fabuloso.mjs db` em 2026-10-16 11:00 UTC · fonte: api supabase (smztsayzldjmkzmufqcz) · Postgres 17.6 · hash 0fb4153f4658
 > Última migração aplicada no remoto: 20261014131036 · última local no mapa: 20261014131036
 > Detalhe: `tabelas/<schema>.<tabela>.md` (colunas, FKs, índices, políticas, gatilhos) · `funcoes.md` · `relacoes.mmd`. Não introspecte o banco para o que está aqui.
 
@@ -109,7 +109,7 @@ Views: charge_payments_effective ⚠definer
 | conv_automation_settings | 0 | id | profiles | on | S1 | — | ·/s |
 | conv_automation_versions | 0 | automation_id, version | conv_automations, profiles | on | S1 | 1 | ·/s |
 | conv_automations | 0 | id | profiles | on | S1 | 1 | ·/s |
-| conv_booking_proposals | 0 | id | conv_contacts, conv_messages, conv_conversations, profiles, reservations, conv_ai_sessions | on | S1 | — | ·/s |
+| conv_booking_proposals | <100 | id | conv_contacts, conv_messages, conv_conversations, profiles, reservations, conv_ai_sessions | on | S1 | — | ·/s |
 | conv_channel | 0 | id | profiles | on | S1 | — | ·/· |
 | conv_contacts | <100 | id | conv_contacts, non_socio_students, profiles | on | S1 | 1 | ·/s |
 | conv_conversations | <100 | id | profiles, conv_contacts, conv_groups, conv_conversations | on | S1 | 1 | ·/s |

@@ -9631,7 +9631,7 @@
       "tipo": "r",
       "rls": true,
       "rls_forcado": false,
-      "linhas_est": "0",
+      "linhas_est": "<100",
       "opcoes": null,
       "comentario": null,
       "acesso": {
