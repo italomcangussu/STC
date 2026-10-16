@@ -57,6 +57,7 @@ describe('retornos agendados', () => {
     expect(sent).toEqual(['Oi Maria, tudo bem?']);
     expect(f.calls.find((c) => c.name === 'conv_svc_queue_message')!.args).toMatchObject({ p_key: 'F1', p_origin: 'system' });
     expect(fillTemplate('Oi {nome}!', '+5585988880002')).toBe('Oi !');
+    expect(fillTemplate('Oi {nome},\n\n*Hoje*\n19h  — jogo', 'Ana Lima')).toBe('Oi Ana,\n\n*Hoje*\n19h — jogo');
   });
 });
 

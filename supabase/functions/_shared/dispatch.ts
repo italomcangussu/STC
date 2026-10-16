@@ -20,7 +20,7 @@ export type DispatchSummary = { claimed: number; sent: number; failed: number };
 export function fillTemplate(body: string, fullName: string): string {
   const nome = fullName.trim().split(/\s+/)[0] ?? '';
   const valido = nome && !/^\+?\d/.test(nome) ? nome : '';
-  return body.replace(/\{nome\}/gi, valido).replace(/ ,/g, ',').replace(/\s{2,}/g, ' ').trim();
+  return body.replace(/\{nome\}/gi, valido).replace(/ ,/g, ',').replace(/[ \t]{2,}/g, ' ').trim();
 }
 
 export async function dispatchAutomations(db: Db, uaz: UazCaller | null, limit = 20): Promise<DispatchSummary> {
