@@ -1,7 +1,7 @@
 {
   "versao": 3,
-  "geradoEm": "2026-10-14T16:14:30.041Z",
-  "commit": "4ea5639e",
+  "geradoEm": "2026-10-16T11:07:03.852Z",
+  "commit": "19d2a405",
   "pastas": [
     "__tests__",
     "__tests__/admin",
@@ -46,8 +46,8 @@
     "tasks"
   ],
   "agentmap": {
-    "arquivos": 603,
-    "sha": "4ea5639",
+    "arquivos": 604,
+    "sha": "19d2a40",
     "hubs": [
       "lib/supabase.ts",
       "dist/assets/react-vendor-CcCdIb5n.js",

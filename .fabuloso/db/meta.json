@@ -1,7 +1,7 @@
 {
-  "geradoEm": "2026-10-16T11:00:30.265Z",
+  "geradoEm": "2026-10-16T11:06:47.012Z",
   "fonte": "api supabase (smztsayzldjmkzmufqcz)",
-  "hash": "0fb4153f4658",
+  "hash": "585df91feed3",
   "banco": "postgres",
   "schemas": [
     "conv_private",

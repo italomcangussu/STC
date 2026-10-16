@@ -11547,7 +11547,7 @@
       "tipo": "r",
       "rls": true,
       "rls_forcado": false,
-      "linhas_est": "<1k",
+      "linhas_est": "<10k",
       "opcoes": null,
       "comentario": null,
       "acesso": {

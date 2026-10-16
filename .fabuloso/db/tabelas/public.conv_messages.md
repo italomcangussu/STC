@@ -1,5 +1,5 @@
 # public.conv_messages
-> tabela · RLS on · ~<1k linhas
+> tabela · RLS on · ~<10k linhas
 
 ## Colunas
 | Coluna | Tipo | Nulo | Padrão | Nota |
