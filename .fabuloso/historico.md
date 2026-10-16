@@ -165,3 +165,11 @@ Orquestrador Sonnet 5.5 (sem subagentes, a pedido). Criados `20261007260000_conv
 - Contexto: `arquitetura.md` ganhou a convenção do tsconfig/`deno check`. Mapas regenerados (só `conv_messages` com estimativa de linhas ~<10k).
 - Entrega: `whatsapp-webhook` deployada em 2026-10-16. Sem migration. Testes: 53 arquivos/680 testes de Conversas + `joaoReceiptIntent` passam.
 - Pendências encerradas: teste `aiAdminFinance` ("a foto de comprovante...") e erros de `deno check` do `whatsapp-webhook` registrados na entrada anterior de hoje.
+
+## 2026-10-16 — João reconhece o assessor do Prof. Diego Memória (orquestrador Opus 5.5)
+- Tarefa: o João reconhece o assessor (outro agente de IA no WhatsApp) do professor e age em nome dele. Commits `691a813..df37e0b` (último `df37e0b`).
+- Banco: tabela `conv_contact_delegates` (cadastro só por SQL; RLS só leitura admin) e `conv_private.acting_profile_id`/`contact_delegation`, usadas por `ai_context` e `ai_propose` (professor nunca admin). O telefone do assessor não é vinculado ao cadastro do professor para o robô não receber avisos/cobranças. Cadastrado no remoto: contato 558893108230 "João (Assessor Memória)" → Diego Memória. Desligar com `update conv_contact_delegates set active=false`.
+- Código: `prompts.ts` (`actingFor`, `delegateText`; regra geral `professorStudents`: professor vê situação/validade/pagamento dos alunos dele), `turn.ts`, e `_shared/aiAgent/delegate.ts` (`delegateSilence`: sem resposta a cortesia pura, limite de 8 respostas em 10 min; decisões `delegate_courtesy`/`delegate_rate_limit`).
+- Contexto: `arquitetura.md` (fronteira Conversas e fluxo Conversas/João). Testes: `supabase/tests/pglite/joao_assessor_professor.sql`, `__tests__/conversations/aiDelegate.test.ts`.
+- Entrega: migration `20261016161000_conversations_professor_delegate` aplicada pela CLI (`supabase db push`), versão igual nos dois lados; `whatsapp-webhook` deployada (v81, verify_jwt false).
+- Pendências: `entregas.json` lista outras edge functions como alteradas desde o último deploy (admin-athlete-access, conversation-operations, conversations-dispatch, finance-receipt-whatsapp, joao-*, send-push, signature-*), fora desta tarefa e não deployadas; conferir em outra sessão. Teste de ponta a ponta com o assessor real fica com o usuário.

@@ -1,6 +1,6 @@
 -- base.sql — DDL do schema remoto. Gerado por `fabuloso.mjs db`; não edite.
 -- É a base do banco de teste em PGlite (`fabuloso.mjs pg`): schema real do remoto + migrations locais pendentes.
---@@ meta {"versao":1,"postgres":"17.6","schemas":["conv_private","fin_private","public","sig_private"],"extensoes":[{"nome":"pg_cron","schema":"pg_catalog"},{"nome":"pg_net","schema":"extensions"},{"nome":"pg_stat_statements","schema":"extensions"},{"nome":"pgcrypto","schema":"extensions"},{"nome":"supabase_vault","schema":"vault"},{"nome":"uuid-ossp","schema":"extensions"},{"nome":"vector","schema":"public"}],"papeis":["anon","authenticated","authenticator","cli_login_postgres","dashboard_user","pgbouncer","postgres","service_role","supabase_auth_admin","supabase_etl_admin","supabase_functions_admin","supabase_privileged_role","supabase_read_only_user","supabase_realtime_admin","supabase_replication_admin","supabase_storage_admin"],"migracoes":["20251228080214","20251228081253","20251228083254","20251228083507","20251228083944","20251228085506","20251228085656","20251228085817","20251228113842","20251228114731","20251228115147","20251228214931","20251228220119","20251228220952","20251230094628","20251230103441","20251230111220","20260101134906","20260101134940","20260101141731","20260101155936","20260103141626","20260103153236","20260103153329","20260103153404","20260103153757","20260115192527","20260119084237","20260119084321","20260119085322","20260119090000","20260119090225","20260119141114","20260123101818","20260123101853","20260123104620","20260123125031","20260124215137","20260125081739","20260125102639","20260125174723","20260127175350","20260127175608","20260128133915","20260129075257","20260129075631","20260129083027","20260129145632","20260131091223","20260203185748","20260205232352","20260205232412","20260212105246","20260212113107","20260212121128","20260213083000","20260215123000","20260216090000","20260216123000","20260323073000","20260421153000","20260421184125","20260422100000","20260422100100","20260422100200","20260422100300","20260422100400","20260422113000","20260422124000","20260422130000","20260422143000","20260422150000","20260427134500","20260427135800","20260427140500","20260502000001","20260502000002","20260519072400","20260519073500","20260519074500","20260519075000","20260519080000","20260519081000","20260519082000","20260805085500","20260805091000","20260807120000","20260807140000","20260807160000","20260807180000","20260807200000","20260808120000","20260824120000","20260824121000","20260824140000","20260912090000","20260912100000","20260930120000","20260930123000","20261005161200","20261006100000","20261006100100","20261006100200","20261006100300","20261006100400","20261006100500","20261007064837","20261007070656","20261007100000","20261007100100","20261007100200","20261007100300","20261007100400","20261007100500","20261007100600","20261007100700","20261007100800","20261007100900","20261007101000","20261007101100","20261007101200","20261007101210","20261007101300","20261007101400","20261007110000","20261007120000","20261007120100","20261007120200","20261007130000","20261007135553","20261007140000","20261007140144","20261007140427","20261007140831","20261007141000","20261007150000","20261007150010","20261007150100","20261007160000","20261007170000","20261007180000","20261007190000","20261007200000","20261007210000","20261007220000","20261007230000","20261007240000","20261007250000","20261007250100","20261007260000","20261007260100","20261007270000","20261007280000","20261007290000","20261007290100","20261007300000","20261007310000","20261007320000","20261007330000","20261007340000","20261007350000","20261007360000","20261007370000","20261007380000","20261007390000","20261007400000","20261008101944","20261008102600","20261008124729","20261008130005","20261008130203","20261008130745","20261008132237","20261008132335","20261008132419","20261008135821","20261008135824","20261008143837","20261008150000","20261009121500","20261010084210","20261010090024","20261010090914","20261010091225","20261010094921","20261010102037","20261010102042","20261010102047","20261010102051","20261010102254","20261010112046","20261014131036"]}
+--@@ meta {"versao":1,"postgres":"17.6","schemas":["conv_private","fin_private","public","sig_private"],"extensoes":[{"nome":"pg_cron","schema":"pg_catalog"},{"nome":"pg_net","schema":"extensions"},{"nome":"pg_stat_statements","schema":"extensions"},{"nome":"pgcrypto","schema":"extensions"},{"nome":"supabase_vault","schema":"vault"},{"nome":"uuid-ossp","schema":"extensions"},{"nome":"vector","schema":"public"}],"papeis":["anon","authenticated","authenticator","cli_login_postgres","dashboard_user","pgbouncer","postgres","service_role","supabase_auth_admin","supabase_etl_admin","supabase_functions_admin","supabase_privileged_role","supabase_read_only_user","supabase_realtime_admin","supabase_replication_admin","supabase_storage_admin"],"migracoes":["20251228080214","20251228081253","20251228083254","20251228083507","20251228083944","20251228085506","20251228085656","20251228085817","20251228113842","20251228114731","20251228115147","20251228214931","20251228220119","20251228220952","20251230094628","20251230103441","20251230111220","20260101134906","20260101134940","20260101141731","20260101155936","20260103141626","20260103153236","20260103153329","20260103153404","20260103153757","20260115192527","20260119084237","20260119084321","20260119085322","20260119090000","20260119090225","20260119141114","20260123101818","20260123101853","20260123104620","20260123125031","20260124215137","20260125081739","20260125102639","20260125174723","20260127175350","20260127175608","20260128133915","20260129075257","20260129075631","20260129083027","20260129145632","20260131091223","20260203185748","20260205232352","20260205232412","20260212105246","20260212113107","20260212121128","20260213083000","20260215123000","20260216090000","20260216123000","20260323073000","20260421153000","20260421184125","20260422100000","20260422100100","20260422100200","20260422100300","20260422100400","20260422113000","20260422124000","20260422130000","20260422143000","20260422150000","20260427134500","20260427135800","20260427140500","20260502000001","20260502000002","20260519072400","20260519073500","20260519074500","20260519075000","20260519080000","20260519081000","20260519082000","20260805085500","20260805091000","20260807120000","20260807140000","20260807160000","20260807180000","20260807200000","20260808120000","20260824120000","20260824121000","20260824140000","20260912090000","20260912100000","20260930120000","20260930123000","20261005161200","20261006100000","20261006100100","20261006100200","20261006100300","20261006100400","20261006100500","20261007064837","20261007070656","20261007100000","20261007100100","20261007100200","20261007100300","20261007100400","20261007100500","20261007100600","20261007100700","20261007100800","20261007100900","20261007101000","20261007101100","20261007101200","20261007101210","20261007101300","20261007101400","20261007110000","20261007120000","20261007120100","20261007120200","20261007130000","20261007135553","20261007140000","20261007140144","20261007140427","20261007140831","20261007141000","20261007150000","20261007150010","20261007150100","20261007160000","20261007170000","20261007180000","20261007190000","20261007200000","20261007210000","20261007220000","20261007230000","20261007240000","20261007250000","20261007250100","20261007260000","20261007260100","20261007270000","20261007280000","20261007290000","20261007290100","20261007300000","20261007310000","20261007320000","20261007330000","20261007340000","20261007350000","20261007360000","20261007370000","20261007380000","20261007390000","20261007400000","20261008101944","20261008102600","20261008124729","20261008130005","20261008130203","20261008130745","20261008132237","20261008132335","20261008132419","20261008135821","20261008135824","20261008143837","20261008150000","20261009121500","20261010084210","20261010090024","20261010090914","20261010091225","20261010094921","20261010102037","20261010102042","20261010102047","20261010102051","20261010102254","20261010112046","20261014131036","20261016161000"]}
 --@@ 10 schema conv_private
 create schema if not exists conv_private;
 --@@ 10 schema fin_private
@@ -669,6 +669,16 @@ create table public.conv_channel (
   version integer not null,
   updated_at timestamp with time zone not null,
   updated_by uuid
+);
+--@@ 40 tabela public.conv_contact_delegates
+create table public.conv_contact_delegates (
+  contact_id uuid not null,
+  principal_profile_id uuid not null,
+  kind text not null,
+  active boolean not null,
+  note text,
+  created_at timestamp with time zone not null,
+  updated_at timestamp with time zone not null
 );
 --@@ 40 tabela public.conv_contacts
 create table public.conv_contacts (
@@ -1723,6 +1733,17 @@ create table sig_private.challenges (
   user_agent text,
   evidence jsonb not null
 );
+--@@ 45 funcao conv_private.acting_profile_id(p_contact uuid)
+CREATE OR REPLACE FUNCTION conv_private.acting_profile_id(p_contact uuid)
+ RETURNS uuid
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+  select coalesce(
+    (select c.profile_id from public.conv_contacts c where c.id = p_contact and c.profile_id is not null and c.link_status in ('linked', 'manual')),
+    (conv_private.contact_delegation(p_contact)->>'principal_profile_id')::uuid)
+$function$;
 --@@ 45 funcao conv_private.admin_alert_data(p_profile uuid)
 CREATE OR REPLACE FUNCTION conv_private.admin_alert_data(p_profile uuid)
  RETURNS jsonb
@@ -4686,6 +4707,7 @@ declare
   sess public.conv_ai_sessions%rowtype; cv public.conv_conversations%rowtype; c public.conv_contacts%rowtype;
   pr public.profiles%rowtype; s public.conv_ai_settings%rowtype; ch public.conv_channel%rowtype; v_transcript jsonb;
   v_prof_json jsonb := null; v_prof_id uuid; v_since timestamptz; v_cutoff timestamptz; v_older integer; v_prior text;
+  v_acting jsonb; v_req_id uuid;
 begin
   select * into sess from public.conv_ai_sessions where id = p_session;
   if not found then raise exception 'SESSION_NOT_FOUND'; end if;
@@ -4695,9 +4717,12 @@ begin
   select * into ch from public.conv_channel where id;
   v_since := coalesce(cv.handoff_at, '-infinity'::timestamptz);
 
-  if c.profile_id is not null and c.link_status in ('linked', 'manual') then
-    select * into pr from public.profiles where id = c.profile_id;
-    v_prof_json := jsonb_build_object('id', pr.id, 'name', pr.name, 'is_admin', pr.role::text = 'admin',
+  -- Quem fala: o cadastro do próprio telefone ou, no assessor de um professor, o professor (nunca com poder de administrador).
+  v_acting := conv_private.contact_delegation(c.id);
+  v_req_id := conv_private.acting_profile_id(c.id);
+  if v_req_id is not null then
+    select * into pr from public.profiles where id = v_req_id;
+    v_prof_json := jsonb_build_object('id', pr.id, 'name', pr.name, 'is_admin', pr.role::text = 'admin' and v_acting is null,
       'is_member', pr.role::text in ('socio', 'admin') and coalesce(pr.is_active, true),
       'professor_id', (select p2.id from public.professors p2 where p2.user_id = pr.id and coalesce(p2.is_active, true) limit 1));
     v_prof_id := pr.id;
@@ -4743,7 +4768,7 @@ begin
     'is_group', cv.kind = 'group',
     'group_name', (select g.name from public.conv_groups g where g.id = cv.group_id),
     'session', jsonb_build_object('id', sess.id, 'turns', sess.turns, 'memory', sess.memory, 'status', sess.status, 'expires_at', sess.expires_at),
-    'requester', jsonb_build_object('contact_name', c.name, 'link_status', c.link_status, 'profile', v_prof_json),
+    'requester', jsonb_build_object('contact_name', c.name, 'link_status', c.link_status, 'profile', v_prof_json, 'acting_for', v_acting),
     'courts', (select coalesce(jsonb_agg(jsonb_build_object('id', x.id, 'name', x.name, 'type', x.type::text) order by x.name), '[]'::jsonb)
                from public.courts x where coalesce(x.is_active, true)),
     'my_reservations', case when v_prof_id is null then '[]'::jsonb else conv_private.ai_my_reservations(v_prof_id) end,
@@ -5303,12 +5328,13 @@ begin
   select * into sess from public.conv_ai_sessions where id = p_session and status = 'open' for update;
   if not found then return conv_private.vfail('SESSION_CLOSED', 'Atendimento encerrado.'); end if;
   select * into c from public.conv_contacts where id = sess.requester_contact_id;
-  if c.profile_id is null or c.link_status not in ('linked', 'manual') then
+  v_req := conv_private.acting_profile_id(c.id);
+  if v_req is null then
     return conv_private.vfail('REQUESTER_NOT_IDENTIFIED', 'Não consegui identificar seu cadastro de sócio por este telefone.');
   end if;
-  v_req := c.profile_id;
   select * into s from public.conv_ai_settings where active order by version desc limit 1;
-  select p2.role::text = 'admin' into v_is_admin from public.profiles p2 where p2.id = v_req;
+  -- O assessor age como o professor, mas nunca herda poder de administrador.
+  select p2.role::text = 'admin' and conv_private.contact_delegation(c.id) is null into v_is_admin from public.profiles p2 where p2.id = v_req;
   if v_action not in ('create', 'cancel', 'reschedule', 'join', 'participants') then return conv_private.vfail('INVALID_ACTION', 'Ação inválida.'); end if;
 
   -- Entrar num jogo que já ocupa o horário (mesma regra do botão "Entrar no Jogo" do app). Só o solicitante entra.
@@ -6859,6 +6885,21 @@ AS $function$
     select id from public.conv_followups where status = 'pending' and send_body is not null and due_at <= now()
     order by due_at limit greatest(least(coalesce(p_limit, 20), 50), 1) for update skip locked)
   returning f.id, f.conversation_id, f.send_body;
+$function$;
+--@@ 45 funcao conv_private.contact_delegation(p_contact uuid)
+CREATE OR REPLACE FUNCTION conv_private.contact_delegation(p_contact uuid)
+ RETURNS jsonb
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+  select jsonb_build_object('kind', d.kind, 'principal_profile_id', p.id, 'principal_name', p.name, 'professor_id', pf.id)
+  from public.conv_contact_delegates d
+  join public.conv_contacts c on c.id = d.contact_id
+  join public.profiles p on p.id = d.principal_profile_id
+  join lateral (select x.id from public.professors x where x.user_id = p.id and coalesce(x.is_active, true) limit 1) pf on true
+  where d.contact_id = p_contact and d.active and coalesce(p.is_active, true)
+    and not (c.profile_id is not null and c.link_status in ('linked', 'manual'))
 $function$;
 --@@ 45 funcao conv_private.conversation_contact(p_conversation uuid)
 CREATE OR REPLACE FUNCTION conv_private.conversation_contact(p_conversation uuid)
@@ -17293,6 +17334,14 @@ alter table public.conv_channel alter column provider set default 'uazapi'::text
 alter table public.conv_channel alter column updated_at set default now();
 --@@ 50 default public.conv_channel.version
 alter table public.conv_channel alter column version set default 1;
+--@@ 50 default public.conv_contact_delegates.active
+alter table public.conv_contact_delegates alter column active set default true;
+--@@ 50 default public.conv_contact_delegates.created_at
+alter table public.conv_contact_delegates alter column created_at set default now();
+--@@ 50 default public.conv_contact_delegates.kind
+alter table public.conv_contact_delegates alter column kind set default 'professor_assistant'::text;
+--@@ 50 default public.conv_contact_delegates.updated_at
+alter table public.conv_contact_delegates alter column updated_at set default now();
 --@@ 50 default public.conv_contacts.created_at
 alter table public.conv_contacts alter column created_at set default now();
 --@@ 50 default public.conv_contacts.id
@@ -18159,6 +18208,12 @@ alter table public.conv_channel add constraint conv_channel_institutional_name_c
 alter table public.conv_channel add constraint conv_channel_pkey PRIMARY KEY (id);
 --@@ 55 restricao public.conv_channel.conv_channel_provider_check
 alter table public.conv_channel add constraint conv_channel_provider_check CHECK ((provider = 'uazapi'::text));
+--@@ 55 restricao public.conv_contact_delegates.conv_contact_delegates_kind_check
+alter table public.conv_contact_delegates add constraint conv_contact_delegates_kind_check CHECK ((kind = 'professor_assistant'::text));
+--@@ 55 restricao public.conv_contact_delegates.conv_contact_delegates_note_check
+alter table public.conv_contact_delegates add constraint conv_contact_delegates_note_check CHECK (((note IS NULL) OR (length(note) <= 300)));
+--@@ 55 restricao public.conv_contact_delegates.conv_contact_delegates_pkey
+alter table public.conv_contact_delegates add constraint conv_contact_delegates_pkey PRIMARY KEY (contact_id);
 --@@ 55 restricao public.conv_contacts.conv_contacts_check1
 alter table public.conv_contacts add constraint conv_contacts_check1 CHECK ((NOT ((profile_id IS NOT NULL) AND (non_socio_student_id IS NOT NULL))));
 --@@ 55 restricao public.conv_contacts.conv_contacts_has_identity
@@ -18905,6 +18960,8 @@ CREATE INDEX conv_automation_recipients_due_idx ON public.conv_automation_recipi
 CREATE INDEX conv_automation_recipients_run_idx ON public.conv_automation_recipients USING btree (run_id, status);
 --@@ 65 indice public.conv_automation_runs_automation_idx
 CREATE INDEX conv_automation_runs_automation_idx ON public.conv_automation_runs USING btree (automation_id, created_at DESC);
+--@@ 65 indice public.conv_contact_delegates_principal_idx
+CREATE INDEX conv_contact_delegates_principal_idx ON public.conv_contact_delegates USING btree (principal_profile_id);
 --@@ 65 indice public.conv_contacts_lid_uidx
 CREATE UNIQUE INDEX conv_contacts_lid_uidx ON public.conv_contacts USING btree (lid) WHERE (lid IS NOT NULL);
 --@@ 65 indice public.conv_contacts_merged_idx
@@ -19349,6 +19406,10 @@ alter table public.conv_booking_proposals add constraint conv_booking_proposals_
 alter table public.conv_channel add constraint conv_channel_mention_verified_by_fkey FOREIGN KEY (mention_verified_by) REFERENCES profiles(id);
 --@@ 70 fk public.conv_channel.conv_channel_updated_by_fkey
 alter table public.conv_channel add constraint conv_channel_updated_by_fkey FOREIGN KEY (updated_by) REFERENCES profiles(id);
+--@@ 70 fk public.conv_contact_delegates.conv_contact_delegates_contact_id
+alter table public.conv_contact_delegates add constraint conv_contact_delegates_contact_id_fkey FOREIGN KEY (contact_id) REFERENCES conv_contacts(id);
+--@@ 70 fk public.conv_contact_delegates.conv_contact_delegates_principal_
+alter table public.conv_contact_delegates add constraint conv_contact_delegates_principal_profile_id_fkey FOREIGN KEY (principal_profile_id) REFERENCES profiles(id) ON DELETE CASCADE;
 --@@ 70 fk public.conv_contacts.conv_contacts_merged_into_fkey
 alter table public.conv_contacts add constraint conv_contacts_merged_into_fkey FOREIGN KEY (merged_into) REFERENCES conv_contacts(id);
 --@@ 70 fk public.conv_contacts.conv_contacts_non_socio_student_id_fkey
@@ -19907,6 +19968,8 @@ alter table public.conv_automations enable row level security;
 alter table public.conv_booking_proposals enable row level security;
 --@@ 80 rls public.conv_channel
 alter table public.conv_channel enable row level security;
+--@@ 80 rls public.conv_contact_delegates
+alter table public.conv_contact_delegates enable row level security;
 --@@ 80 rls public.conv_contacts
 alter table public.conv_contacts enable row level security;
 --@@ 80 rls public.conv_conversations
@@ -20206,6 +20269,8 @@ create policy conv_automations_admin_read on public.conv_automations as permissi
 create policy conv_booking_proposals_admin_read on public.conv_booking_proposals as permissive for select to authenticated using (is_admin());
 --@@ 82 politica public.conv_channel.conv_channel_admin_read
 create policy conv_channel_admin_read on public.conv_channel as permissive for select to authenticated using (is_admin());
+--@@ 82 politica public.conv_contact_delegates.conv_contact_delegates_admin_read
+create policy conv_contact_delegates_admin_read on public.conv_contact_delegates as permissive for select to authenticated using (is_admin());
 --@@ 82 politica public.conv_contacts.conv_contacts_admin_read
 create policy conv_contacts_admin_read on public.conv_contacts as permissive for select to authenticated using (is_admin());
 --@@ 82 politica public.conv_conversations.conv_conversations_admin_read
@@ -20633,6 +20698,8 @@ revoke all on routine conv_link_contact(uuid,uuid,uuid) from public, anon, authe
 revoke all on routine conv_list_ai_memory_candidates(text) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao conv_open_conversation(text,text)
 revoke all on routine conv_open_conversation(text,text) from public, anon, authenticated, service_role;
+--@@ 89 revoke-funcao conv_private.acting_profile_id(uuid)
+revoke all on routine conv_private.acting_profile_id(uuid) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao conv_private.admin_alert_data(uuid)
 revoke all on routine conv_private.admin_alert_data(uuid) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao conv_private.admin_alert_targets()
@@ -20815,6 +20882,8 @@ revoke all on routine conv_private.can_merge(uuid,uuid) from public, anon, authe
 revoke all on routine conv_private.channel_delivery() from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao conv_private.claim_due_followups(integer)
 revoke all on routine conv_private.claim_due_followups(integer) from public, anon, authenticated, service_role;
+--@@ 89 revoke-funcao conv_private.contact_delegation(uuid)
+revoke all on routine conv_private.contact_delegation(uuid) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao conv_private.conversation_contact(uuid)
 revoke all on routine conv_private.conversation_contact(uuid) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao conv_private.court_busy(uuid,date,integer,integer,uuid)
@@ -21377,6 +21446,8 @@ revoke all on table public.conv_automations from anon, authenticated, service_ro
 revoke all on table public.conv_booking_proposals from anon, authenticated, service_role;
 --@@ 89 revoke public.conv_channel
 revoke all on table public.conv_channel from anon, authenticated, service_role;
+--@@ 89 revoke public.conv_contact_delegates
+revoke all on table public.conv_contact_delegates from anon, authenticated, service_role;
 --@@ 89 revoke public.conv_contacts
 revoke all on table public.conv_contacts from anon, authenticated, service_role;
 --@@ 89 revoke public.conv_conversations
@@ -22709,6 +22780,10 @@ grant select on table public.conv_booking_proposals to authenticated;
 grant delete, insert, maintain, references, select, trigger, truncate, update on table public.conv_booking_proposals to service_role;
 --@@ 90 grant public.conv_channel→service_role
 grant delete, insert, maintain, references, select, trigger, truncate, update on table public.conv_channel to service_role;
+--@@ 90 grant public.conv_contact_delegates→authenticated
+grant select on table public.conv_contact_delegates to authenticated;
+--@@ 90 grant public.conv_contact_delegates→service_role
+grant delete, insert, maintain, references, select, trigger, truncate, update on table public.conv_contact_delegates to service_role;
 --@@ 90 grant public.conv_contacts→authenticated
 grant select on table public.conv_contacts to authenticated;
 --@@ 90 grant public.conv_contacts→service_role

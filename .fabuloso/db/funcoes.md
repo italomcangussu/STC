@@ -1,8 +1,9 @@
 # Funções
-> 506 funções nos schemas conv_private, fin_private, public, sig_private. Corpo completo sob demanda: `select pg_get_functiondef('<schema.nome>(<args>)'::regprocedure)`.
+> 508 funções nos schemas conv_private, fin_private, public, sig_private. Corpo completo sob demanda: `select pg_get_functiondef('<schema.nome>(<args>)'::regprocedure)`.
 
 | Função | Argumentos | Retorno | Ling. | Segurança | anon | Nota |
 |---|---|---|---|---|---|---|
+| conv_private.acting_profile_id | `p_contact uuid` | `uuid` | sql | DEFINER | não |  |
 | conv_private.admin_alert_data | `p_profile uuid` | `jsonb` | plpgsql | DEFINER | não |  |
 | conv_private.admin_alert_targets | — | `TABLE(profile_id uuid, name text, conversation_id uuid)` | sql | DEFINER | não |  |
 | conv_private.admin_briefing_data | `p_profile uuid` | `jsonb` | plpgsql | DEFINER | não |  |
@@ -118,6 +119,7 @@
 | conv_private.can_merge | `a uuid, b uuid` | `boolean` | plpgsql | DEFINER | não |  |
 | conv_private.channel_delivery | — | `TABLE(inbound_token_hash text, bot_phone text, bot_lids tex…` | sql | DEFINER | não |  |
 | conv_private.claim_due_followups | `p_limit integer` | `TABLE(followup_id uuid, conversation_id uuid, send_body tex…` | sql | DEFINER | não |  |
+| conv_private.contact_delegation | `p_contact uuid` | `jsonb` | sql | DEFINER | não |  |
 | conv_private.conversation_contact | `p_conversation uuid` | `TABLE(contact_id uuid, destination text, name text, avatar_…` | sql | DEFINER | não |  |
 | conv_private.court_busy | `p_court uuid, p_date date, p_start_min integer, p_end_min integer, p_exclude uuid` | `boolean` | sql | DEFINER | não |  |
 | conv_private.date_br | `p_date date` | `text` | sql | invoker | sim |  |

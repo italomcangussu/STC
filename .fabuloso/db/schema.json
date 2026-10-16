@@ -8,7 +8,7 @@
     "public",
     "sig_private"
   ],
-  "ultima_migracao": "20261014131036",
+  "ultima_migracao": "20261016161000",
   "extensoes": [
     "pg_cron 1.6.4",
     "pg_net 0.19.5",
@@ -10289,6 +10289,180 @@
       "politicas": [
         {
           "nome": "conv_channel_admin_read",
+          "comando": "SELECT",
+          "permissiva": true,
+          "papeis": [
+            "authenticated"
+          ],
+          "using": "is_admin()",
+          "check": null
+        }
+      ],
+      "gatilhos": []
+    },
+    {
+      "schema": "public",
+      "nome": "conv_contact_delegates",
+      "tipo": "r",
+      "rls": true,
+      "rls_forcado": false,
+      "linhas_est": "0",
+      "opcoes": null,
+      "comentario": null,
+      "acesso": {
+        "anon": "",
+        "authenticated": "s"
+      },
+      "definicao": null,
+      "colunas": [
+        {
+          "nome": "contact_id",
+          "tipo": "uuid",
+          "nulo": false,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "principal_profile_id",
+          "tipo": "uuid",
+          "nulo": false,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "kind",
+          "tipo": "text",
+          "nulo": false,
+          "padrao": "'professor_assistant'::text",
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "active",
+          "tipo": "boolean",
+          "nulo": false,
+          "padrao": "true",
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "note",
+          "tipo": "text",
+          "nulo": true,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "created_at",
+          "tipo": "timestamp with time zone",
+          "nulo": false,
+          "padrao": "now()",
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "updated_at",
+          "tipo": "timestamp with time zone",
+          "nulo": false,
+          "padrao": "now()",
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        }
+      ],
+      "restricoes": [
+        {
+          "nome": "conv_contact_delegates_kind_check",
+          "tipo": "c",
+          "def": "CHECK ((kind = 'professor_assistant'::text))",
+          "colunas": [
+            "kind"
+          ],
+          "ref": null,
+          "ref_colunas": null,
+          "ao_apagar": null
+        },
+        {
+          "nome": "conv_contact_delegates_note_check",
+          "tipo": "c",
+          "def": "CHECK (((note IS NULL) OR (length(note) <= 300)))",
+          "colunas": [
+            "note"
+          ],
+          "ref": null,
+          "ref_colunas": null,
+          "ao_apagar": null
+        },
+        {
+          "nome": "conv_contact_delegates_contact_id_fkey",
+          "tipo": "f",
+          "def": "FOREIGN KEY (contact_id) REFERENCES conv_contacts(id)",
+          "colunas": [
+            "contact_id"
+          ],
+          "ref": "public.conv_contacts",
+          "ref_colunas": [
+            "id"
+          ],
+          "ao_apagar": "a"
+        },
+        {
+          "nome": "conv_contact_delegates_principal_profile_id_fkey",
+          "tipo": "f",
+          "def": "FOREIGN KEY (principal_profile_id) REFERENCES profiles(id) ON DELETE CASCADE",
+          "colunas": [
+            "principal_profile_id"
+          ],
+          "ref": "public.profiles",
+          "ref_colunas": [
+            "id"
+          ],
+          "ao_apagar": "c"
+        },
+        {
+          "nome": "conv_contact_delegates_pkey",
+          "tipo": "p",
+          "def": "PRIMARY KEY (contact_id)",
+          "colunas": [
+            "contact_id"
+          ],
+          "ref": null,
+          "ref_colunas": null,
+          "ao_apagar": null
+        }
+      ],
+      "indices": [
+        {
+          "nome": "conv_contact_delegates_pkey",
+          "def": "CREATE UNIQUE INDEX conv_contact_delegates_pkey ON public.conv_contact_delegates USING btree (contact_id)",
+          "unico": true,
+          "pk": true,
+          "colunas": [
+            "contact_id"
+          ]
+        },
+        {
+          "nome": "conv_contact_delegates_principal_idx",
+          "def": "CREATE INDEX conv_contact_delegates_principal_idx ON public.conv_contact_delegates USING btree (principal_profile_id)",
+          "unico": false,
+          "pk": false,
+          "colunas": [
+            "principal_profile_id"
+          ]
+        }
+      ],
+      "politicas": [
+        {
+          "nome": "conv_contact_delegates_admin_read",
           "comando": "SELECT",
           "permissiva": true,
           "papeis": [
@@ -29309,6 +29483,19 @@
   ],
   "funcoes": [
     {
+      "nome": "conv_private.acting_profile_id",
+      "args": "p_contact uuid",
+      "retorno": "uuid",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
       "nome": "conv_private.admin_alert_data",
       "args": "p_profile uuid",
       "retorno": "jsonb",
@@ -30799,6 +30986,19 @@
       "security_definer": true,
       "search_path": "search_path=\"\"",
       "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.contact_delegation",
+      "args": "p_contact uuid",
+      "retorno": "jsonb",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
       "exec_anon": false,
       "exec_authenticated": false,
       "comentario": null
