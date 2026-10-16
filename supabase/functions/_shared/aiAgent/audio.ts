@@ -5,7 +5,7 @@
 // começar antes de o áudio estar pronto: aqui ele espera um pouco pelos áudios recentes ainda sem texto,
 // em vez de responder sem saber o que foi dito.
 
-import type { Ctx } from './prompts.ts';
+import type { Ctx } from './promptTypes.ts';
 
 type Rpc = (name: string, args: Record<string, unknown>) => PromiseLike<{ data: unknown; error?: unknown }>;
 type Heard = { status?: string; text?: string; low_confidence?: boolean };
