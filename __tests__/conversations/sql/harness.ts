@@ -90,6 +90,14 @@ export async function newDb(): Promise<PGlite> {
   return db;
 }
 
+/** Comprovante pelo WhatsApp como em produção desde 10/10: vira só intenção (fin_private.whatsapp_receipt_intents).
+ * Fora do `newDb` porque `receiptAutoMembership` ainda testa a baixa automática anterior. */
+export async function withReceiptIntents(db: PGlite): Promise<void> {
+  for (const f of ['20261010090024_whatsapp_receipts_purpose_consent.sql', '20261019150000_whatsapp_receipts_admin_intent.sql']) {
+    await db.exec(await readFile(resolve(MIGRATIONS, f), 'utf8'));
+  }
+}
+
 /** Chama uma função como `service_role` (webhook, IA, dispatch). */
 export async function svc<T = Record<string, any>>(db: PGlite, call: string): Promise<T> {
   await db.exec(`set role service_role`);
@@ -143,7 +151,8 @@ const lit = (v: unknown): string => {
 export function pgDb(db: PGlite) {
   return async (name: string, args: Record<string, unknown> = {}): Promise<{ data: unknown; error: { message: string } | null }> => {
     const named = Object.entries(args).map(([k, v]) => `${k} => ${lit(v)}`).join(', ');
-    await db.exec('set role service_role');
+    // Como a chave service_role da borda: o papel E a claim que auth.role() lê.
+    await db.exec(`set role service_role; set request.jwt.claim.role = 'service_role';`);
     try {
       const r = await db.query<Record<string, unknown>>(`select * from public.${name}(${named})`);
       if (r.fields.length === 1 && r.fields[0].name === name) {
@@ -154,7 +163,7 @@ export function pgDb(db: PGlite) {
     } catch (e) {
       return { data: null, error: { message: (e as Error).message } };
     } finally {
-      await db.exec('reset role');
+      await db.exec('reset role; reset request.jwt.claim.role;');
     }
   };
 }

@@ -275,7 +275,8 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
   }
   // Comprovante no privado: o OCR apenas prepara a leitura; finalidade e consentimento são obrigatórios.
   // Prioridade sobre o antigo fluxo de Card Mensal: evita classificação por valor e por cobrança aberta.
-  if (!isGroup) {
+  // Administrador não passa por aqui: o comprovante dele é despesa ou pagamento de terceiro, tratado pelo assessor.
+  if (!isGroup && !isAdminAssistant(ctx)) {
     let pendingReceipt: ReceiptStage | null = null;
     try {
       const qr = await db('conv_svc_receipt_stage', { p_conversation: conversation });

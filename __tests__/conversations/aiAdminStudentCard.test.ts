@@ -4,7 +4,7 @@
  * WhatsApp são simulados. O modelo é roteirizado para pedir ações financeiras mesmo quando não deveria.
  */
 import { describe, expect, it } from 'vitest';
-import { U, j, key, pgDb, q, rpc, svc, world } from './sql/harness';
+import { U, j, key, pgDb, q, rpc, svc, withReceiptIntents, world } from './sql/harness';
 import { runTurn } from '../../supabase/functions/_shared/aiAgent/turn';
 import type { Chat } from '../../supabase/functions/_shared/aiAgent/llm';
 import type { UazCaller } from '../../supabase/functions/_shared/uazChat';
@@ -72,6 +72,14 @@ const receipt = async (w: W, messageId: string, o: { amount?: number; paid_on?: 
   return r.id;
 };
 const renovar = { fin_action: 'renovar_card', student_names: ['Erick'] };
+/** Comprovante como o webhook grava hoje: só a intenção (sem submissão), com a leitura do servidor. */
+const intent = async (w: W, messageId: string, o: { amount: number; payee: string; daysAgo?: number }) => {
+  const ocr = { engine: 'pdfjs-server', amount_cents: o.amount, paid_on: '2026-10-19', payee: o.payee };
+  const data = { storage_path: `x/${++n}/c.pdf`, content_sha256: `${'b'.repeat(63)}${n % 10}`, size_bytes: 100, declared_amount_cents: o.amount, declared_paid_on: '2026-10-19', ocr_status: 'ok', ocr };
+  await q(w.db, `insert into fin_private.whatsapp_receipt_intents(id, source_message_id, conversation_id, profile_id, contact_id, original_data, created_at)
+    select gen_random_uuid(), m.id, m.conversation_id, '${U.admin}', cv.contact_id, '${JSON.stringify(data)}'::jsonb, now() - interval '${o.daysAgo ?? 0} days'
+      from public.conv_messages m join public.conv_conversations cv on cv.id = m.conversation_id where m.id = '${messageId}'`);
+};
 
 describe('renovar o Card Mensal de aluno pelo João (turno completo)', () => {
   it('lê o comprovante, propõe com o resumo e só grava no "sim"; o comprovante fecha', async () => {
@@ -164,5 +172,37 @@ describe('renovar o Card Mensal de aluno pelo João (turno completo)', () => {
     expect(calls.calls.length).toBe(0);
     expect(p.sent.at(-1)!.text).toBe('Recebi o comprovante (R$ 200,00, de 07/10/2026, para Sobral Tenis Clube). É para renovar o Card de qual aluno? Se for outra coisa, me diz o que é.');
     expect((await q<any>(w.db, `select handoff_kind from public.conv_conversations`))[0].handoff_kind).toBeNull();
+  }, 90000);
+
+  it('administrador com comprovante antigo sem finalidade: o novo é lido pelo que é e o texto seguinte vai ao assessor', async () => {
+    const w = await setup();
+    await withReceiptIntents(w.db);
+    const p = provider();
+    const velho = await direct(w, null, '5599900000001', 'document');
+    await intent(w, velho.message_id, { amount: 2250, payee: 'Fulano de Tal', daysAgo: 6 });
+    const pedido = await direct(w, 'Cadastrar Matheus e José como alunos, mensalidade todo dia 14');
+    const calls = script(answer({ messages: ['Cadastro de aluno novo ainda é pelo painel.'] }));
+    await turn(w, pedido.message_id, calls.chat, p.uaz);
+    expect(calls.calls.length).toBe(1);
+    expect(p.sent.at(-1)!.text).not.toContain('finalidade');
+
+    const novo = await direct(w, null, '5599900000001', 'image');
+    await intent(w, novo.message_id, { amount: 30000, payee: 'Sobral Tenis Clube' });
+    await q(w.db, `update public.fin_settings set payee_names = array['Sobral Tenis Clube'] where id`);
+    const r = await turn(w, novo.message_id, script().chat, p.uaz);
+    expect(r.action).toBe('admin_receipt_received');
+    expect(p.sent.at(-1)!.text).toContain('R$ 300,00');
+    expect(p.sent.at(-1)!.text).not.toContain('22,50');
+  }, 90000);
+
+  it('administrador manda comprovante pago a outra pessoa: pergunta se é despesa, sem acusar engano', async () => {
+    const w = await setup();
+    await withReceiptIntents(w.db);
+    const p = provider();
+    await q(w.db, `update public.fin_settings set payee_names = array['Sobral Tenis Clube'] where id`);
+    const mDoc = await direct(w, null, '5599900000001', 'document');
+    await intent(w, mDoc.message_id, { amount: 40000, payee: 'JOSE WELINGTON BENTO' });
+    await turn(w, mDoc.message_id, script().chat, p.uaz);
+    expect(p.sent.at(-1)!.text).toBe('Recebi o comprovante (R$ 400,00, de 19/10/2026, para JOSE WELINGTON BENTO). Foi uma despesa do clube? Me diz o que é que eu monto o resumo.');
   }, 90000);
 });

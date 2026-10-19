@@ -23,6 +23,12 @@ export function studentCardSuccessMessage(s: Ctx): string {
   return `Pronto: Card Mensal de ${s.student_name} renovado até ${dateBR(s.new_valid_until)} (${centsBR(s.amount_cents)}).${rc ? ' Comprovante arquivado.' : ''}`;
 }
 
+/** "R$ 300,00, de 19/10/2026, para Fulano": só o que o servidor conseguiu ler. */
+function receiptFacts(r: Ctx): string {
+  return [r.amount_cents != null ? centsBR(r.amount_cents) : null, r.paid_on ? `de ${dateBR(r.paid_on)}` : null, r.payee ? `para ${r.payee}` : null]
+    .filter(Boolean).join(', ');
+}
+
 /** Resposta ao comprovante recebido (imagem/PDF sem texto) de um administrador no privado. */
 export function receiptReceivedMessage(r: Ctx | null | undefined): string {
   if (!r || r.found !== true) {
@@ -33,10 +39,8 @@ export function receiptReceivedMessage(r: Ctx | null | undefined): string {
   if (r.ocr_status !== 'ok') {
     return 'Recebi o comprovante, mas não consegui ler os dados. Me diga o aluno, o valor e a data que eu monto o resumo.';
   }
-  if (r.payee_ok === false) {
-    return `Recebi o comprovante, mas ele é para "${r.payee}", que não é o clube. Confere se mandou o certo?`;
-  }
-  const dados = [r.amount_cents != null ? centsBR(r.amount_cents) : null, r.paid_on ? `de ${dateBR(r.paid_on)}` : null, r.payee ? `para ${r.payee}` : null]
-    .filter(Boolean).join(', ');
+  const dados = receiptFacts(r);
+  // Pago a outra pessoa: costuma ser despesa do clube que a diretoria pagou, não engano.
+  if (r.payee_ok === false) return `Recebi o comprovante (${dados}). Foi uma despesa do clube? Me diz o que é que eu monto o resumo.`;
   return `Recebi o comprovante${dados ? ` (${dados})` : ''}. É para renovar o Card de qual aluno? Se for outra coisa, me diz o que é.`;
 }
