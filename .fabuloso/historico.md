@@ -192,3 +192,8 @@ Orquestrador Sonnet 5.5 (sem subagentes, a pedido). Criados `20261007260000_conv
 
 ## 2026-10-16 — Busca de aluno tolerante a grafia (orquestrador Opus 5.5)
 - No lote real do assessor, 7 aulas voltaram "Não encontrei o aluno". Causa: a busca parcial exigia toda palavra pedida no nome cadastrado ("Matheus Martins" × "Matheus"; "Rezende" × "Resende"). Migration `20261016200000_conversations_student_loose_match` (nível aproximado só para aluno) + motivo "não está cadastrado como aluno no STC". Aplicada; `whatsapp-webhook` deployada. Conferido no remoto: Matheus, Ronaldo Resende e Vinícius Frota achados; José Martins e Guilherme não existem no STC.
+
+## 2026-10-19 — Nome de aluno com dúvida vira pergunta (orquestrador Opus 5.5)
+- Conversa real de 19/10: "Ítalo Canguço" (= Ítalo Cangussú) e "Lucas Martins" (só existe Lucas Rodrigues) voltavam "não cadastrado"; "Confirmo" 29 min depois achava a proposta vencida (20 min).
+- Feito: migration `20261019130000_conversations_student_suggest` (fold_loose ç/ss, ce/ci, vogal final; status `suggest`; lote 24 h) + `turnOutcome.ts::askFor`, seção "Confirme com o professor" no lote, regras de nome no `promptDelegate.ts`. Commit `e8cb842`; `whatsapp-webhook` deployada.
+- ATENÇÃO: o remoto tem 3 migrations de 17/10 fora do repositório (`20261017165532_joao_group_spontaneous_24h_guard`, `20261017170244_joao_competition_kickoff_origin_on_send`, `20261017181704_joao_competition_intervention_attribution`), aplicadas por outra sessão. Por isso `supabase db push` recusa; esta migration foi aplicada pela API de gestão (SQL + linha em `schema_migrations`, numa transação). Quem criou as de 17/10 precisa versioná-las no repo.
