@@ -46,7 +46,7 @@ export function groupLessons(lessons: Lesson[]): Lesson[] {
 export const lessonDuration = (l: Lesson) => (l.end ? toMin(l.end) - toMin(l.start) : 30);
 
 type Item = { label: string; date: string; start: string; duration: number; participant_ids: string[]; non_socio_student_ids: string[] };
-type Rejected = { label: string; date: string; start: string; code?: string; message?: string };
+type Rejected = { label: string; date: string; start: string; code?: string; message?: string; confirm?: boolean };
 
 /** Motivo dito em linguagem de quem marca aula, não em código do sistema. */
 const REASONS: Record<string, string> = {
@@ -63,18 +63,29 @@ type Slot = { date: unknown; start: unknown; end?: unknown; label: unknown };
 const line = (a: Slot, today: string) => `• ${dayLabel(String(a.date), today)} ${a.start}${a.end ? `–${a.end}` : ''} · ${a.label}`;
 const rejectedLines = (rs: Rejected[], today: string) => rs.map((r) => `${line(r, today)}: ${reason(r)}`).join('\n');
 
+/** Aulas que dependem de o professor confirmar o nome do aluno: perguntadas à parte, nunca recusadas. */
+const toConfirmSection = (rs: Rejected[], today: string) =>
+  `Confirme com o professor o nome do aluno:\n${rs.map((r) => `${line(r, today)}: ${r.message}`).join('\n')}`;
+
+function issuesSections(all: Rejected[], today: string): { parts: string[]; confirm: Rejected[]; nao: Rejected[] } {
+  const confirm = all.filter((r) => r.confirm);
+  const nao = all.filter((r) => !r.confirm);
+  const parts = [...(nao.length ? [`Não dá para marcar:\n${rejectedLines(nao, today)}`] : []), ...(confirm.length ? [toConfirmSection(confirm, today)] : [])];
+  return { parts, confirm, nao };
+}
+
 export function lessonsProposalMessage(summary: Ctx, extra: Rejected[], today: string): string {
   const ok = (summary.accepted ?? []) as Ctx[];
-  const nao = [...((summary.rejected ?? []) as Rejected[]), ...extra];
-  const partes = [`Conferi a Quadra Rápida. Posso marcar ${ok.length === 1 ? '1 aula' : `${ok.length} aulas`}:`,
-    ok.map((a) => line(a as Slot, today)).join('\n')];
-  if (nao.length) partes.push(`Não dá para marcar:\n${rejectedLines(nao, today)}`);
-  partes.push(nao.length ? `Confirma ${ok.length === 1 ? 'essa aula' : `essas ${ok.length}`}? As outras, me mande ajustadas que eu confiro.` : 'Confirma?');
-  return partes.join('\n\n');
+  const { parts, confirm, nao } = issuesSections([...((summary.rejected ?? []) as Rejected[]), ...extra], today);
+  const fecho = confirm.length ? ' Sobre os nomes, me diga quem é que eu confiro essas também.' : nao.length ? ' As outras, me mande ajustadas que eu confiro.' : '';
+  return [`Conferi a Quadra Rápida. Posso marcar ${ok.length === 1 ? '1 aula' : `${ok.length} aulas`}:`, ok.map((a) => line(a as Slot, today)).join('\n'),
+    ...parts, `Confirma ${ok.length === 1 ? 'essa aula' : `essas ${ok.length}`}?${fecho}`].join('\n\n');
 }
 
 export function lessonsRejectedMessage(rejected: Rejected[], today: string): string {
-  return `Conferi a Quadra Rápida e nenhuma dessas aulas pode ser marcada:\n${rejectedLines(rejected, today)}\n\nMe mande os horários ajustados que eu confiro de novo.`;
+  const { parts, confirm } = issuesSections(rejected, today);
+  const fecho = confirm.length ? 'Me diga quem são os alunos (e os horários ajustados, se for o caso) que eu confiro de novo.' : 'Me mande os horários ajustados que eu confiro de novo.';
+  return ['Conferi a Quadra Rápida e ainda não consigo marcar nenhuma dessas aulas.', ...parts, fecho].join('\n\n');
 }
 
 export function lessonsSuccessMessage(summary: Ctx, today: string): string {
@@ -92,6 +103,7 @@ async function toItems(i: DecideInput, groups: Lesson[]): Promise<{ items: Item[
     const label = listaNomes(g.student_names) || 'sem aluno';
     if (!g.student_names.length) { rejected.push({ label, date: g.date, start: g.start, message: 'faltou o nome do aluno' }); continue; }
     const r = await resolve(i.deps.db, g.student_names, 'student');
+    if (r.suggest) { rejected.push({ label, date: g.date, start: g.start, confirm: true, message: suggestIssue(r.suggest) }); continue; }
     if (r.ask) { rejected.push({ label, date: g.date, start: g.start, message: studentIssue(r.ask) }); continue; }
     items.push({ label: listaNomes(r.names), date: g.date, start: g.start, duration: lessonDuration(g),
       participant_ids: r.matches.filter((m) => m.kind === 'socio').map((m) => m.id),
@@ -101,6 +113,10 @@ async function toItems(i: DecideInput, groups: Lesson[]): Promise<{ items: Item[
 }
 
 /** Aluno não achado ou ambíguo, dito como algo que o professor resolve (cadastro no STC ou nome certo). */
+export function suggestIssue(s: { query: string; names: string[] }): string {
+  return `no STC tem ${listaNomes(s.names)}; é ${s.names.length > 1 ? 'algum deles' : 'essa pessoa'}?`;
+}
+
 export function studentIssue(ask: string): string {
   const ausente = ask.match(/^Não encontrei o aluno "(.+)"/);
   if (ausente) return `${ausente[1]} não está cadastrado como aluno no STC (cadastre pelo app ou peça à diretoria)`;
@@ -117,7 +133,9 @@ export async function aulasEmLote(i: DecideInput, memory: Memory): Promise<Decis
   const res = (await i.deps.db('conv_svc_ai_propose', { p_session: i.session, p: { action: 'lessons_batch', items } })).data as
     { ok: boolean; code?: string; message?: string; summary?: Ctx; rejected?: Rejected[] } | null;
   if (res?.ok && res.summary) {
-    return { bubbles: [lessonsProposalMessage(res.summary, rejected, i.today)], awaiting: true, close: false, action: 'proposed_lessons', memory, verbatim: true };
+    const pendentes = rejected.filter((r) => r.confirm);
+    return { bubbles: [lessonsProposalMessage(res.summary, rejected, i.today)], awaiting: true, close: false, action: 'proposed_lessons',
+      memory: { ...memory, lessons_to_confirm: pendentes }, verbatim: true };
   }
   if (res?.code === 'NOTHING_TO_BOOK') return { ...ask(lessonsRejectedMessage([...(res.rejected ?? []), ...rejected], i.today), memory), verbatim: true };
   return ask(res?.message ?? 'Não consegui conferir as aulas agora. Pode mandar de novo daqui a pouco?', memory);
@@ -134,8 +152,11 @@ type ConfirmResult = { ok: boolean; code?: string; message?: string; summary?: C
 /** Resultado do aceite de um lote de aulas: o que entrou e o que mudou desde a conferência. */
 export function lessonsConfirmed(res: ConfirmResult, i: DecideInput, memory: Memory): Decision {
   if (res?.ok && res.summary) {
-    return { bubbles: [lessonsSuccessMessage(res.summary, i.today)], awaiting: false, close: true, action: 'confirmed_lessons',
-      memory: { intent: i.answer.intent, slots: {} }, verbatim: true };
+    // Aulas que esperavam o nome confirmado continuam no assunto: o "Pronto" lembra delas, e a conversa não se perde.
+    const pendentes = (Array.isArray(memory.lessons_to_confirm) ? memory.lessons_to_confirm : []) as Rejected[];
+    const pronto = lessonsSuccessMessage(res.summary, i.today);
+    return { bubbles: [pendentes.length ? `${pronto}\n\n${toConfirmSection(pendentes, i.today)}` : pronto], awaiting: pendentes.length > 0, close: !pendentes.length,
+      action: 'confirmed_lessons', memory: { intent: i.answer.intent, slots: {}, ...(pendentes.length ? { lessons_to_confirm: pendentes } : {}) }, verbatim: true };
   }
   const texto = res?.failed?.length ? lessonsRejectedMessage(res.failed, i.today) : res?.message ?? 'Não consegui marcar as aulas. Quer que eu confira de novo?';
   return { bubbles: [texto], awaiting: true, close: false, action: `failed:${res?.code ?? 'UNKNOWN'}`, memory, verbatim: true };

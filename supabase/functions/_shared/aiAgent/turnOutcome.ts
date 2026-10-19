@@ -7,25 +7,31 @@ import type { Db, Decision, Memory } from './turnTypes.ts';
 import type { DecideInput } from './decide.ts';
 import { TRANSFER_DIRECT, TRANSFER_GROUP } from './serverRules.ts';
 
-export async function resolve(db: Db, names: string[], scope: 'member' | 'student' | 'professor') {
-  const out = { ids: [] as string[], names: [] as string[], matches: [] as { id: string; name: string; kind: string }[], ask: null as string | null };
+type Found = { query: string; status: 'unique' | 'ambiguous' | 'suggest' | 'none'; matches: { id: string; name: string; kind: string }[] };
+type Scope = 'member' | 'student' | 'professor';
+
+/** Pergunta para quem pediu quando o nome não deu um único cadastro (nunca escolha por aproximação). */
+function askFor(r: Found, scope: Scope): string {
+  const nomes = r.matches.map((m) => m.name);
+  if (r.status === 'suggest') return `Não achei "${r.query}" com esse nome. No cadastro tem ${listaNomes(nomes)}: é ${nomes.length > 1 ? 'algum deles' : 'essa pessoa'}?`;
+  if (r.status === 'ambiguous') return `Tenho mais de um "${r.query}": ${listaNomes(nomes)}. Qual deles?`;
+  if (scope === 'member') return `Não encontrei "${r.query}" entre os sócios. Essa pessoa é convidada sua? Se for, me diga o nome completo.`;
+  return scope === 'professor' ? `Não encontrei o professor "${r.query}". Qual o nome completo?` : `Não encontrei o aluno "${r.query}". Qual o nome completo?`;
+}
+
+export async function resolve(db: Db, names: string[], scope: Scope) {
+  const out = { ids: [] as string[], names: [] as string[], matches: [] as Found['matches'], ask: null as string | null,
+    /** Nome com dúvida (primeiro nome bate, sobrenome não): quem pediu confirma; o servidor nunca escolhe. */ suggest: null as { query: string; names: string[] } | null };
   if (names.length === 0) return out;
-  const list = ((await db('conv_svc_ai_resolve_people', { p_names: names, p_scope: scope })).data ?? []) as
-    { query: string; status: 'unique' | 'ambiguous' | 'none'; matches: { id: string; name: string; kind: string }[] }[];
+  const list = ((await db('conv_svc_ai_resolve_people', { p_names: names, p_scope: scope })).data ?? []) as Found[];
   for (const r of list) {
-    if (r.status === 'unique') {
-      const m = r.matches[0];
-      if (!out.ids.includes(m.id)) { out.ids.push(m.id); out.names.push(m.name); out.matches.push(m); }
-    } else if (r.status === 'ambiguous') {
-      out.ask = `Tenho mais de um "${r.query}": ${listaNomes(r.matches.map((m) => m.name))}. Qual deles?`;
-      return out;
-    } else {
-      out.ask = scope === 'member'
-        ? `Não encontrei "${r.query}" entre os sócios. Essa pessoa é convidada sua? Se for, me diga o nome completo.`
-        : scope === 'professor' ? `Não encontrei o professor "${r.query}". Qual o nome completo?`
-        : `Não encontrei o aluno "${r.query}". Qual o nome completo?`;
+    if (r.status !== 'unique') {
+      out.ask = askFor(r, scope);
+      if (r.status === 'suggest') out.suggest = { query: r.query, names: r.matches.map((m) => m.name) };
       return out;
     }
+    const m = r.matches[0];
+    if (!out.ids.includes(m.id)) { out.ids.push(m.id); out.names.push(m.name); out.matches.push(m); }
   }
   return out;
 }

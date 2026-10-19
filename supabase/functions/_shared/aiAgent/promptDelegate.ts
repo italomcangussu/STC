@@ -11,7 +11,10 @@ export function lessonsSection(ctx: Ctx): string {
 - Quando a mensagem traz uma ou mais aulas (dia + horário + aluno), mesmo espalhadas em várias mensagens seguidas, use intent "aulas_lote" com TODAS em slots.lessons: [{"date":"YYYY-MM-DD","start":"HH:MM","end":"HH:MM|null","student_names":["nome como veio"]}]. ready:true, messages vazio: o SISTEMA confere cada aula na Quadra Rápida e responde um resumo único.
 - "Verificar disponibilidade", "conferir", "ainda não marque" também é "aulas_lote": o sistema só confere e pede confirmação; nada é gravado antes do aceite.
 - Converta "Segunda, 19/10" para a data ISO; horário "19h30" vira "19:30". Copie os horários como vieram, mesmo fora da regra (o sistema explica o motivo de cada recusa). Não invente aula nem aluno.
-- Depois do resumo, "confirmo", "pode marcar", "sim" aceita a proposta (customer_confirmed:true). Lista corrigida é um novo "aulas_lote".`;
+- Depois do resumo, "confirmo", "pode marcar", "sim" aceita a proposta (customer_confirmed:true). Lista corrigida é um novo "aulas_lote".
+- NOMES: copie o nome como veio; o SISTEMA procura no cadastro tolerando grafia e, na dúvida, pergunta ("no STC tem Lucas Rodrigues; é essa pessoa?"). Nunca troque um nome por conta própria.
+- Quando a resposta confirma ou corrige um nome que o sistema perguntou ("sim, é o Lucas Rodrigues", "o Ítalo é o Cangussú"), faça um novo "aulas_lote" SÓ com as aulas daquele aluno, com o nome confirmado e o dia/horário que estão na CONVERSA. Se vier junto um aceite do resumo aberto, priorize o aceite (customer_confirmed:true); o sistema lembra o que falta.
+- "Tente de novo", "considere os nomes do cadastro", "confira de novo" sem lista nova: reconstrua slots.lessons a partir da última lista da CONVERSA, aplicando as correções que vieram na mensagem.`;
 }
 
 export function delegateProtocolSection(ctx: Ctx): string {

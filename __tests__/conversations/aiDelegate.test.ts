@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { delegateOverLimit, isCourtesyOnly } from '../../supabase/functions/_shared/aiAgent/delegate';
 import { actingFor, financialContextText, requesterText } from '../../supabase/functions/_shared/aiAgent/prompts';
-import { groupLessons, lessonDuration, lessonsProposalMessage, parseLessons, studentIssue } from '../../supabase/functions/_shared/aiAgent/lessonsBatch';
+import { groupLessons, lessonDuration, lessonsProposalMessage, parseLessons, studentIssue, suggestIssue } from '../../supabase/functions/_shared/aiAgent/lessonsBatch';
 
 const professor = { id: 'P1', name: 'Diego Memória', is_admin: false, is_member: true, professor_id: 'PR1' };
 const acting_for = { kind: 'professor_assistant', principal_profile_id: 'P1', principal_name: 'Diego Memória', professor_id: 'PR1' };
@@ -101,5 +101,16 @@ describe('aulas em lote: aluno não achado', () => {
   it('diz que não está cadastrado no STC e como resolver; ambíguo pede qual', () => {
     expect(studentIssue('Não encontrei o aluno "Guilherme". Qual o nome completo?')).toBe('Guilherme não está cadastrado como aluno no STC (cadastre pelo app ou peça à diretoria)');
     expect(studentIssue('Tenho mais de um "Vinícius": Vinícius A e Vinícius B. Qual deles?')).toBe('há mais de um "Vinícius": Vinícius A e Vinícius B; diga qual');
+  });
+});
+
+describe('aulas em lote: nome com dúvida', () => {
+  it('sugestão vira pergunta à parte, separada das recusas', () => {
+    const t = lessonsProposalMessage({ accepted: [{ date: '2026-10-21', start: '19:00', end: '19:30', label: 'William Yoshida' }], rejected: [] },
+      [{ date: '2026-10-21', start: '18:30', label: 'Lucas Martins', confirm: true, message: suggestIssue({ query: 'Lucas Martins', names: ['Lucas Rodrigues'] }) }], '2026-10-19');
+    expect(t).toContain('Confirme com o professor o nome do aluno:');
+    expect(t).toContain('Lucas Martins: no STC tem Lucas Rodrigues; é essa pessoa?');
+    expect(t).not.toContain('Não dá para marcar');
+    expect(t).toContain('Sobre os nomes, me diga quem é');
   });
 });

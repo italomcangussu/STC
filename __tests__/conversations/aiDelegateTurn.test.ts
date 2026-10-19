@@ -81,6 +81,36 @@ describe('assessor do professor: aulas em lote', () => {
     expect(gravadas.every((r) => r.creator_id === U.prof && r.professor_id === ID(900))).toBe(true);
   }, 60000);
 
+  it('nome com dúvida vira pergunta ao assessor; o "Confirmo" grava o resto e o "Pronto" lembra o que falta; a resposta ao nome monta a aula', async () => {
+    const { w, seg } = await setup();
+    const [{ futuro }] = await q<{ futuro: string }>(w.db, `select (conv_private.today() + 60)::text futuro`);
+    await w.db.exec(`insert into public.non_socio_students(id, name, plan_type, plan_status, master_expiration_date, student_type) values
+      ('${ID(722)}', 'Lucas Rodrigues', 'Card Mensal', 'active', '${futuro}', 'regular')`);
+    const p = provider();
+    const lista = await fromAssessor(w, `Seg 20:00–20:30 · José Martins\nSeg 20:30–21:00 · Lucas Martins`);
+    const m1 = script(answer({ intent: 'aulas_lote', ready: true, slots: { lessons: [
+      { date: seg, start: '20:00', end: '20:30', student_names: ['José Martins'] },
+      { date: seg, start: '20:30', end: '21:00', student_names: ['Lucas Martins'] },
+    ] } }));
+    await turn(w, lista.message_id, m1.chat, p.uaz);
+    expect(p.sent[0]).toContain('Posso marcar 1 aula');
+    expect(p.sent[0]).toContain('Confirme com o professor o nome do aluno');
+    expect(p.sent[0]).toContain('Lucas Martins: no STC tem Lucas Rodrigues; é essa pessoa?');
+    expect(p.sent[0]).not.toContain('não está cadastrado');
+
+    const ok = await fromAssessor(w, 'Confirmo');
+    await turn(w, ok.message_id, script(answer({ intent: 'aulas_lote', customer_confirmed: true })).chat, p.uaz);
+    expect(p.sent[1]).toContain('Pronto: 1 aula marcada');
+    expect(p.sent[1]).toContain('Lucas Rodrigues; é essa pessoa?');
+    expect(await aulas(w)).toHaveLength(1);
+
+    const nome = await fromAssessor(w, 'Sim, é o Lucas Rodrigues');
+    await turn(w, nome.message_id, script(answer({ intent: 'aulas_lote', ready: true, slots: { lessons: [
+      { date: seg, start: '20:30', end: '21:00', student_names: ['Lucas Rodrigues'] }] } })).chat, p.uaz);
+    expect(p.sent[2]).toContain('Posso marcar 1 aula');
+    expect(p.sent[2]).toContain('Lucas Rodrigues');
+  }, 60000);
+
   it('aviso sem pedido ("vou confirmar com o professor e te mando") não recebe resposta', async () => {
     const { w } = await setup();
     const aviso = await fromAssessor(w, 'Certo! Vou confirmar com o Prof. os horários e te mando a lista em seguida.');

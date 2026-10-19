@@ -85,5 +85,28 @@ begin
   assert r->2->>'status' = 'none', 'Guilherme não existe';
   assert r->3->>'status' = 'unique' and r->3->'matches'->0->>'name' = 'José Martins', 'nome exato continua exato';
   assert conv_private.ai_resolve_people(array['Carlos Rezende'], 'member')->0->>'status' = 'none', 'busca de sócio não usa a grafia aproximada';
-  assert conv_private.fold_loose('Rezende Matthews') = 'resende matews', 'normalização: ' || conv_private.fold_loose('Rezende Matthews');
+  assert conv_private.fold_loose('Rezende Matthews') = 'resendi matews', 'normalização: ' || conv_private.fold_loose('Rezende Matthews');
+end $$;
+
+-- 6) ç/ss soam igual; nome com dúvida (primeiro nome bate, sobrenome não) vira SUGESTÃO, nunca escolha
+insert into public.non_socio_students (id, name, plan_type, plan_status, master_expiration_date) values
+  ('00000000-0000-0000-0000-000000000b06', 'Ítalo Cangussú', 'Card Mensal', 'active', current_date + 60),
+  ('00000000-0000-0000-0000-000000000b07', 'Lucas Rodrigues', 'Card Mensal', 'active', current_date + 60);
+do $$
+declare r jsonb := conv_private.ai_resolve_people(array['Ítalo Canguço', 'Lucas Martins', 'Guilherme'], 'student');
+begin
+  assert r->0->>'status' = 'unique' and r->0->'matches'->0->>'name' = 'Ítalo Cangussú', 'Canguço = Cangussú: ' || (r->0)::text;
+  assert r->1->>'status' = 'suggest' and r->1->'matches'->0->>'name' = 'Lucas Rodrigues', 'Lucas Martins vira pergunta sobre Lucas Rodrigues: ' || (r->1)::text;
+  assert r->2->>'status' = 'none', 'sem nenhum Guilherme continua sem resultado';
+  assert conv_private.ai_resolve_people(array['Lucas Martins'], 'member')->0->>'status' = 'none', 'sócio não recebe sugestão';
+end $$;
+
+-- 7) o resumo do lote espera o professor: vale 24 h
+do $$
+declare r jsonb; v_seg date := (select seg from d);
+begin
+  r := conv_private.ai_propose('00000000-0000-0000-0000-00000000e001', jsonb_build_object('action', 'lessons_batch', 'items', jsonb_build_array(
+    jsonb_build_object('label', 'Ronaldo Resende', 'date', v_seg, 'start', '06:00', 'non_socio_student_ids', jsonb_build_array('00000000-0000-0000-0000-000000000b04')))));
+  assert (r->>'ok')::boolean, 'lote novo: ' || r::text;
+  assert (select expires_at from public.conv_booking_proposals where id = (r->>'proposal_id')::uuid) > now() + interval '23 hours', 'proposta de lote vale 24 h';
 end $$;
