@@ -32,5 +32,8 @@
 ## Políticas RLS
 - "conv_followups_admin_read" — SELECT para authenticated · using `is_admin()`
 
+## Gatilhos
+- tr_identify_joao_kickoff — AFTER UPDATE OF status → conv_private.identify_joao_kickoff()
+
 ## Grants
 - anon: — · authenticated: s (s=select i=insert u=update d=delete)

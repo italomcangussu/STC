@@ -8,7 +8,7 @@
     "public",
     "sig_private"
   ],
-  "ultima_migracao": "20261016161000",
+  "ultima_migracao": "20261019150000",
   "extensoes": [
     "pg_cron 1.6.4",
     "pg_net 0.19.5",
@@ -20,6 +20,158 @@
     "vector 0.8.0"
   ],
   "tabelas": [
+    {
+      "schema": "conv_private",
+      "nome": "joao_spontaneous_window",
+      "tipo": "r",
+      "rls": false,
+      "rls_forcado": false,
+      "linhas_est": "0",
+      "opcoes": null,
+      "comentario": null,
+      "acesso": {
+        "anon": "",
+        "authenticated": ""
+      },
+      "definicao": null,
+      "colunas": [
+        {
+          "nome": "group_id",
+          "tipo": "uuid",
+          "nulo": false,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "active_until",
+          "tipo": "timestamp with time zone",
+          "nulo": false,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "started_at",
+          "tipo": "timestamp with time zone",
+          "nulo": false,
+          "padrao": "now()",
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "last_trigger_at",
+          "tipo": "timestamp with time zone",
+          "nulo": true,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "trigger_count",
+          "tipo": "integer",
+          "nulo": false,
+          "padrao": "0",
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "max_triggers",
+          "tipo": "integer",
+          "nulo": false,
+          "padrao": "24",
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "cooldown_minutes",
+          "tipo": "integer",
+          "nulo": false,
+          "padrao": "15",
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        }
+      ],
+      "restricoes": [
+        {
+          "nome": "joao_spontaneous_window_cooldown_minutes_check",
+          "tipo": "c",
+          "def": "CHECK (((cooldown_minutes >= 5) AND (cooldown_minutes <= 120)))",
+          "colunas": [
+            "cooldown_minutes"
+          ],
+          "ref": null,
+          "ref_colunas": null,
+          "ao_apagar": null
+        },
+        {
+          "nome": "joao_spontaneous_window_max_triggers_check",
+          "tipo": "c",
+          "def": "CHECK (((max_triggers >= 1) AND (max_triggers <= 100)))",
+          "colunas": [
+            "max_triggers"
+          ],
+          "ref": null,
+          "ref_colunas": null,
+          "ao_apagar": null
+        },
+        {
+          "nome": "joao_spontaneous_window_trigger_count_check",
+          "tipo": "c",
+          "def": "CHECK ((trigger_count >= 0))",
+          "colunas": [
+            "trigger_count"
+          ],
+          "ref": null,
+          "ref_colunas": null,
+          "ao_apagar": null
+        },
+        {
+          "nome": "joao_spontaneous_window_group_id_fkey",
+          "tipo": "f",
+          "def": "FOREIGN KEY (group_id) REFERENCES conv_groups(id) ON DELETE CASCADE",
+          "colunas": [
+            "group_id"
+          ],
+          "ref": "public.conv_groups",
+          "ref_colunas": [
+            "id"
+          ],
+          "ao_apagar": "c"
+        },
+        {
+          "nome": "joao_spontaneous_window_pkey",
+          "tipo": "p",
+          "def": "PRIMARY KEY (group_id)",
+          "colunas": [
+            "group_id"
+          ],
+          "ref": null,
+          "ref_colunas": null,
+          "ao_apagar": null
+        }
+      ],
+      "indices": [
+        {
+          "nome": "joao_spontaneous_window_pkey",
+          "def": "CREATE UNIQUE INDEX joao_spontaneous_window_pkey ON conv_private.joao_spontaneous_window USING btree (group_id)",
+          "unico": true,
+          "pk": true,
+          "colunas": [
+            "group_id"
+          ]
+        }
+      ],
+      "politicas": [],
+      "gatilhos": []
+    },
     {
       "schema": "fin_private",
       "nome": "cash_removed",
@@ -7401,7 +7553,7 @@
       "tipo": "r",
       "rls": true,
       "rls_forcado": false,
-      "linhas_est": "<100",
+      "linhas_est": "<1k",
       "opcoes": null,
       "comentario": null,
       "acesso": {
@@ -7927,7 +8079,7 @@
       "tipo": "r",
       "rls": true,
       "rls_forcado": false,
-      "linhas_est": "0",
+      "linhas_est": "<100",
       "opcoes": null,
       "comentario": null,
       "acesso": {
@@ -9789,7 +9941,7 @@
         {
           "nome": "conv_booking_proposals_action_check",
           "tipo": "c",
-          "def": "CHECK ((action = ANY (ARRAY['adm_student_status'::text, 'adm_followup_done'::text, 'adm_briefing_recipient'::text, 'adm_court_block'::text, 'adm_dependent_create'::text, 'adm_message_send'::text, 'join'::text, 'fin_charge_adjust'::text, 'fin_payment_reverse'::text, 'fin_pendency_send'::text, 'create'::text, 'fin_access_approve'::text, 'fin_charge_cancel'::text, 'adm_pref_set'::text, 'adm_memory_forget'::text, 'fin_member_create'::text, 'adm_form_toggle'::text, 'fin_payment'::text, 'cancel'::text, 'adm_group_post'::text, 'adm_form_nudge'::text, 'adm_followup_create'::text, 'adm_signature_resend'::text, 'adm_reservation_cancel'::text, 'adm_access_reject'::text, 'student_card_renew'::text, 'fin_receipt_approve'::text, 'fin_entry_create'::text, 'adm_form_create'::text, 'adm_announcement_deactivate'::text, 'adm_member_status'::text, 'fin_pendency_collection'::text, 'fin_receipt_reject'::text, 'adm_announcement_create'::text, 'reschedule'::text, 'fin_charges_generate'::text, 'fin_pendency_create'::text, 'participants'::text, 'adm_broadcast_send'::text])))",
+          "def": "CHECK ((action = ANY (ARRAY['adm_student_status'::text, 'adm_followup_done'::text, 'adm_briefing_recipient'::text, 'adm_court_block'::text, 'adm_dependent_create'::text, 'adm_message_send'::text, 'join'::text, 'fin_charge_adjust'::text, 'fin_payment_reverse'::text, 'fin_pendency_send'::text, 'create'::text, 'fin_access_approve'::text, 'fin_charge_cancel'::text, 'adm_pref_set'::text, 'adm_memory_forget'::text, 'fin_member_create'::text, 'adm_form_toggle'::text, 'fin_payment'::text, 'cancel'::text, 'adm_group_post'::text, 'adm_form_nudge'::text, 'adm_followup_create'::text, 'adm_signature_resend'::text, 'adm_reservation_cancel'::text, 'adm_access_reject'::text, 'student_card_renew'::text, 'fin_receipt_approve'::text, 'fin_entry_create'::text, 'adm_form_create'::text, 'adm_announcement_deactivate'::text, 'adm_member_status'::text, 'fin_pendency_collection'::text, 'fin_receipt_reject'::text, 'adm_announcement_create'::text, 'reschedule'::text, 'fin_charges_generate'::text, 'fin_pendency_create'::text, 'participants'::text, 'adm_broadcast_send'::text, 'lessons_batch'::text])))",
           "colunas": [
             "action"
           ],
@@ -11482,7 +11634,15 @@
           "check": null
         }
       ],
-      "gatilhos": []
+      "gatilhos": [
+        {
+          "nome": "tr_identify_joao_kickoff",
+          "def": "CREATE TRIGGER tr_identify_joao_kickoff AFTER UPDATE OF status ON public.conv_followups FOR EACH ROW WHEN (((new.id = ANY (ARRAY['9f4a3e12-2026-4017-8c55-abb41167ffff'::uuid, 'a76c302e-721b-49e2-b515-202610171815'::uuid])) AND (new.status = 'sent'::text))) EXECUTE FUNCTION conv_private.identify_joao_kickoff()",
+          "funcao": "conv_private.identify_joao_kickoff",
+          "ativo": true,
+          "externo": false
+        }
+      ]
     },
     {
       "schema": "public",
@@ -30094,6 +30254,19 @@
       "comentario": null
     },
     {
+      "nome": "conv_private.ai_confirm_pre_lessons",
+      "args": "p_proposal uuid, p_message uuid",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
       "nome": "conv_private.ai_confirm_pre_memory_step",
       "args": "p_proposal uuid, p_message uuid",
       "retorno": "jsonb",
@@ -30354,6 +30527,19 @@
       "comentario": null
     },
     {
+      "nome": "conv_private.ai_insert_lesson",
+      "args": "n jsonb, p_requester uuid, p_proposal uuid, p_conversation uuid",
+      "retorno": "uuid",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
       "nome": "conv_private.ai_is_latest",
       "args": "p_message uuid",
       "retorno": "boolean",
@@ -30371,6 +30557,19 @@
       "args": "p_session uuid",
       "retorno": "jsonb",
       "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.ai_lessons_check",
+      "args": "p_requester uuid, p_items jsonb",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
       "tipo": "f",
       "security_definer": true,
       "search_path": "search_path=\"\"",
@@ -30420,6 +30619,19 @@
     },
     {
       "nome": "conv_private.ai_propose",
+      "args": "p_session uuid, p jsonb",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.ai_propose_pre_lessons",
       "args": "p_session uuid, p jsonb",
       "retorno": "jsonb",
       "linguagem": "plpgsql",
@@ -31147,6 +31359,19 @@
       "comentario": null
     },
     {
+      "nome": "conv_private.fold_loose",
+      "args": "p text",
+      "retorno": "text",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": false,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "i",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
       "nome": "conv_private.game_people",
       "args": "p_reservation uuid",
       "retorno": "jsonb",
@@ -31181,6 +31406,19 @@
       "security_definer": false,
       "search_path": "search_path=\"\"",
       "volatilidade": "i",
+      "exec_anon": true,
+      "exec_authenticated": true,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.identify_joao_kickoff",
+      "args": "",
+      "retorno": "trigger",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": false,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
       "exec_anon": true,
       "exec_authenticated": true,
       "comentario": null

@@ -1,5 +1,5 @@
 # Funções
-> 508 funções nos schemas conv_private, fin_private, public, sig_private. Corpo completo sob demanda: `select pg_get_functiondef('<schema.nome>(<args>)'::regprocedure)`.
+> 514 funções nos schemas conv_private, fin_private, public, sig_private. Corpo completo sob demanda: `select pg_get_functiondef('<schema.nome>(<args>)'::regprocedure)`.
 
 | Função | Argumentos | Retorno | Ling. | Segurança | anon | Nota |
 |---|---|---|---|---|---|---|
@@ -50,6 +50,7 @@
 | conv_private.ai_confirm_pre_dependent_step | `p_proposal uuid, p_message uuid` | `jsonb` | plpgsql | DEFINER | não |  |
 | conv_private.ai_confirm_pre_forms_step | `p_proposal uuid, p_message uuid` | `jsonb` | plpgsql | DEFINER | não |  |
 | conv_private.ai_confirm_pre_group_post_step | `p_proposal uuid, p_message uuid` | `jsonb` | plpgsql | DEFINER | não |  |
+| conv_private.ai_confirm_pre_lessons | `p_proposal uuid, p_message uuid` | `jsonb` | plpgsql | DEFINER | não |  |
 | conv_private.ai_confirm_pre_memory_step | `p_proposal uuid, p_message uuid` | `jsonb` | plpgsql | DEFINER | não |  |
 | conv_private.ai_confirm_pre_message_step | `p_proposal uuid, p_message uuid` | `jsonb` | plpgsql | DEFINER | não |  |
 | conv_private.ai_confirm_single_step | `p_proposal uuid, p_message uuid` | `jsonb` | plpgsql | DEFINER | não |  |
@@ -70,12 +71,15 @@
 | conv_private.ai_forms_gate | `bp conv_booking_proposals, p_message uuid` | `jsonb` | plpgsql | DEFINER | não |  |
 | conv_private.ai_group_context | `p_session uuid` | `jsonb` | plpgsql | DEFINER | não |  |
 | conv_private.ai_handoff | `p_session uuid, p_kind text, p_note text` | `void` | plpgsql | DEFINER | não |  |
+| conv_private.ai_insert_lesson | `n jsonb, p_requester uuid, p_proposal uuid, p_conversation uuid` | `uuid` | plpgsql | DEFINER | não |  |
 | conv_private.ai_is_latest | `p_message uuid` | `boolean` | sql | DEFINER | não |  |
 | conv_private.ai_joao_pack | `p_session uuid` | `jsonb` | sql | DEFINER | não |  |
+| conv_private.ai_lessons_check | `p_requester uuid, p_items jsonb` | `jsonb` | plpgsql | DEFINER | não |  |
 | conv_private.ai_member_onboard | `p_proposal uuid, p_profile uuid, p_message uuid` | `jsonb` | plpgsql | DEFINER | não |  |
 | conv_private.ai_my_reservations | `p_profile uuid` | `jsonb` | sql | DEFINER | não |  |
 | conv_private.ai_own_lines | `p_session uuid` | `jsonb` | sql | DEFINER | não |  |
 | conv_private.ai_propose | `p_session uuid, p jsonb` | `jsonb` | plpgsql | DEFINER | não |  |
+| conv_private.ai_propose_pre_lessons | `p_session uuid, p jsonb` | `jsonb` | plpgsql | DEFINER | não |  |
 | conv_private.ai_recent_results | `p_days integer` | `jsonb` | sql | DEFINER | não |  |
 | conv_private.ai_requester_title | `p_session uuid` | `text` | sql | DEFINER | não |  |
 | conv_private.ai_resolve_mentions | `p_items jsonb` | `jsonb` | plpgsql | DEFINER | não |  |
@@ -131,9 +135,11 @@
 | conv_private.first_name | `p text` | `text` | sql | invoker | sim |  |
 | conv_private.fold | `p text` | `text` | sql | invoker | sim |  |
 | conv_private.fold_conversation | `p_keep uuid, p_drop uuid` | `void` | plpgsql | DEFINER | não |  |
+| conv_private.fold_loose | `p text` | `text` | sql | invoker | não |  |
 | conv_private.game_people | `p_reservation uuid` | `jsonb` | plpgsql | DEFINER | não |  |
 | conv_private.game_summary | `p_reservation uuid` | `jsonb` | plpgsql | DEFINER | não |  |
 | conv_private.hhmm_to_min | `p text` | `integer` | plpgsql | invoker | sim |  |
+| conv_private.identify_joao_kickoff | — | `trigger` | plpgsql | invoker | sim |  |
 | conv_private.immutable_row | — | `trigger` | plpgsql | invoker | sim |  |
 | conv_private.ingest_message | `p jsonb` | `jsonb` | plpgsql | DEFINER | não |  |
 | conv_private.is_confirmation | `p text` | `boolean` | plpgsql | invoker | não |  |
