@@ -233,3 +233,9 @@ Orquestrador Sonnet 5.5 (sem subagentes, a pedido). Criados `20261007260000_conv
 - Contexto: arquitetura (fluxo Conversas/João) ganhou a descrição da sequência do turno. Testes: novo `adminText.test.ts`; Conversas 705/705. Typecheck da edge: `deno check --no-lock --node-modules-dir=none supabase/functions/whatsapp-webhook/index.ts` (o `deno.lock` não rastreado na raiz quebra sem as flags).
 - Entrega: sem migration; `whatsapp-webhook` v92.
 - Pendências: régua ainda crítica em `adminArquivo` (28), `adminConsulta` (16), `prefText` (18), `parseAnswer` (17), `mergeSlots` (11) e em novas entre 11 e 22 (`beforeModel` 22, `decideTurn` 18), que são listas de guardas.
+
+## 2026-10-22 — Consulta e arquivo do assessor do João divididos (orquestrador Sonnet 5.5)
+- Tarefa: refatoração sem mudança de comportamento em `supabase/functions/_shared/aiAgent/`. Commit fec9a6e.
+- Feito: `adminArquivo` saiu de `adminAssistant.ts` para `adminFileReply.ts` (`reportPdf` + `storedFiles` com `STORED_FILTER` por tipo); novo `adminReadRpc.ts` (`readAdmin` com `route()` por domínio, `askWith`, `periodArgs`, `memberId`); `adminConsulta` usa `domainArgs()` + `readAdmin`; `adminActionPayloads.ts` usa `memberId` no lugar da busca de sócio local.
+- Contexto: arquitetura (estrutura de `_shared/aiAgent/`) ganhou os dois módulos. Não há CLAUDE.md no projeto; nada a patchar lá.
+- Entrega: sem migration; `whatsapp-webhook` v93.
