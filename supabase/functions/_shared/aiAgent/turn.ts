@@ -13,7 +13,7 @@
 //   * pessoas são resolvidas pelo cadastro (único/ambíguo/nenhum): nunca por aproximação;
 //   * uma chamada ao modelo por turno (a memória volta no mesmo JSON).
 
-import { ADMIN_READS, n3Reply } from './capabilities.ts';
+import { n3Reply } from './capabilities.ts';
 import { isAdminAssistant } from './promptAdmin.ts';
 import { actingFor } from './promptContext.ts';
 import { systemPrompt } from './promptSystem.ts';
@@ -21,20 +21,20 @@ import type { AiSettings, Ctx } from './promptTypes.ts';
 import { userPrompt } from './prompts.ts';
 import { type ReceiptStage, handleReceiptIntent, loadReceiptStage } from './receiptIntent.ts';
 import { deliverForward } from './receiptForward.ts';
-import { UNCLEAR_AUDIO_REPLY, hearAudios, unheardOnly } from './audio.ts';
+import { turnDelivery } from './turnDelivery.ts';
+import { loadTurnContext, pendingInbound } from './turnContext.ts';
+import { keepMemberInChat, refreshGroupHumor, serverOverrides } from './turnAnswerGuards.ts';
+import { UNCLEAR_AUDIO_REPLY, unheardOnly } from './audio.ts';
 import { activeTopic, bringsNewData, openTopics, recordTopicTurn, restoreTopics, selectTopic, topicIdFromRef } from './topicState.ts';
-import { buildChatRequest, providerIdFrom, uazError } from '../uazChat.ts';
 import { delegateSilence } from './delegate.ts';
-import { humorTopic, looksHumorous, noveltyHint, repeatedHumor } from './humor.ts';
 import { receiptReceivedMessage } from './studentCard.ts';
 import { resolve } from './turnOutcome.ts';
 import { mergeSlots, parseAnswer, turnTemperature } from './answerParse.ts';
 import { cadence } from './cadence.ts';
 import { type DecideInput, baseSlotsFor, continuePlan, decide, proposalBelongsElsewhere, startsFresh } from './decide.ts';
-import { conciliarMencoes, membrosAtuaisDoGrupo, substituirMencoes } from './mentions.ts';
 import { looksLikeProTennisQuestion, proTennisContext, proTennisDirectMessages } from './proTennis.ts';
-import { ADMIN_LIMIT_RULE, MEMBER_FAIL, MEMBER_HANDOFF_TALK, NO_TRANSFER_RULE, TRANSFER_DIRECT, availabilityFallbackSlots, claimsSuccess, looksLikeAvailabilityQuery, memberKeep, wantsHuman } from './serverRules.ts';
-import { type Answer, type Intent, type Memory, type OutFile, type TurnDeps, type TurnResult, answerBudget, first } from './turnTypes.ts';
+import { MEMBER_FAIL, TRANSFER_DIRECT, memberKeep, wantsHuman } from './serverRules.ts';
+import { type Answer, type Intent, type Memory, type TurnDeps, type TurnResult, answerBudget } from './turnTypes.ts';
 
 export { ADM_ACTIONS } from './turnTypes.ts';
 export type { AdmAction, Answer, Db, FinAction, FormQuestionSlot, Intent, Slots, TurnDeps, TurnResult } from './turnTypes.ts';
@@ -72,79 +72,8 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
   const ctx = ((await db('conv_svc_ai_context', { p_session: session })).data ?? ctx0) as Ctx;
   if (deps.mediaOnly && isGroup) return { status: 'skip', reason: 'media_only_group' };
 
-  // Cargo da pessoa que fala com o João (memória aprovada): ele passa a tratá-la por ele.
-  try {
-    const t = await db('conv_svc_ai_requester_title', { p_session: session });
-    if (typeof t.data === 'string' && t.data && ctx.requester && typeof ctx.requester === 'object') (ctx.requester as Ctx).title = t.data;
-  } catch { /* sem cargo: segue normalmente */ }
-
-  // Contexto extra continua barato: SQL compacto + uma única chamada ao modelo por turno.
-  try {
-    const roster = await db('conv_svc_ai_club_roster', {});
-    ctx.club_roster = Array.isArray(roster.data) ? roster.data : [];
-  } catch { ctx.club_roster = []; }
-  // Financeiro é carregado via service role. No privado o prompt filtra rigorosamente
-  // para o próprio solicitante; no grupo fechado aplica as permissões da casa.
-  try {
-    const fin = await db('conv_svc_ai_financial_context', {});
-    ctx.financial_context = fin.data && typeof fin.data === 'object'
-      ? fin.data
-      : { students: [], day_cards: [], member_pendencies: [] };
-  } catch {
-    ctx.financial_context = { students: [], day_cards: [], member_pendencies: [] };
-  }
-  // Leituras do assessor (registro de capacidades): só para o administrador no privado.
-  if (isAdminAssistant(ctx)) {
-    for (const cap of ADMIN_READS) {
-      try {
-        const r = await db(cap.read!.rpc, {});
-        ctx[cap.read!.ctxKey] = r.data && typeof r.data === 'object' ? r.data : null;
-      } catch { ctx[cap.read!.ctxKey] = null; }
-    }
-  }
-
-  if (isGroup) {
-    try {
-      const gc = await db('conv_svc_ai_group_context', { p_session: session });
-      ctx.group_context = Array.isArray(gc.data) ? gc.data : [];
-    } catch { ctx.group_context = []; }
-    const membros = await membrosAtuaisDoGrupo(deps, conversation);
-    const requesterName = String((ctx.requester?.profile as Ctx | undefined)?.name ?? '').trim();
-    if (requesterName && !membros.includes(requesterName)) membros.push(requesterName);
-    ctx.group_members = membros;
-  }
-
-  // Pacote do João (um RPC): memórias APROVADAS pela diretoria, resultados recentes e as últimas falas dele.
-  // Falhou ou a função ainda não existe no banco → o João segue sem esse contexto, nunca para.
-  ctx.joao_memories = []; ctx.joao_results = []; ctx.joao_own_lines = [];
-  try {
-    const pack = (await db('conv_svc_ai_joao_pack', { p_session: session })).data as Ctx | null;
-    if (pack && typeof pack === 'object') {
-      ctx.joao_memories = Array.isArray(pack.memories) ? pack.memories : [];
-      ctx.joao_results = Array.isArray(pack.results) ? pack.results : [];
-      ctx.joao_own_lines = Array.isArray(pack.own_lines) ? pack.own_lines : [];
-    }
-  } catch { /* contexto extra é opcional */ }
-
-  // "@61809058967781" vira nome ANTES de o modelo ler tanto a solicitação quanto o papo recente do grupo.
-  const textosComMencoes = [
-    ...((ctx.transcript ?? []) as Ctx[]).map((t) => String(t.body ?? '')),
-    ...((ctx.group_context ?? []) as Ctx[]).map((t) => String(t.body ?? '')),
-  ];
-  const mencoes = await conciliarMencoes(deps, conversation, isGroup, textosComMencoes);
-  if (mencoes.size) {
-    const conta = String(ctx.institutional_name ?? 'STC');
-    ctx.transcript = ((ctx.transcript ?? []) as Ctx[]).map((t) => ({ ...t, body: substituirMencoes(String(t.body ?? ''), mencoes, conta) }));
-    if (isGroup) ctx.group_context = ((ctx.group_context ?? []) as Ctx[]).map((t) => ({ ...t, body: substituirMencoes(String(t.body ?? ''), mencoes, conta) }));
-  }
-  // Áudio: o João lê o que foi dito (transcrição do webhook), esperando um pouco pelo que ainda está chegando.
-  ctx.transcript = await hearAudios((ctx.transcript ?? []) as Ctx[], deps);
-  const trail = ((ctx.transcript ?? []) as Ctx[]).slice().reverse();
-  const ultimaDaIa = trail.findIndex((t) => t.direction === 'outbound');
-  const pendentes = (ultimaDaIa < 0 ? trail : trail.slice(0, ultimaDaIa)).filter((t) => t.direction === 'inbound').reverse();
-  const buffered = pendentes.map((t) => t.body || (t.kind !== 'text' ? `[${t.kind}]` : '')).filter(Boolean).join('\n');
-  const soMidia = pendentes.length > 0 && pendentes.every((t) => t.kind && t.kind !== 'text' && !t.body);
-  const ultima = pendentes[pendentes.length - 1] as Ctx | undefined;
+  await loadTurnContext(ctx, deps, { session, conversation, isGroup });
+  const { pendentes, buffered, soMidia, ultima } = pendingInbound(ctx);
   const today = String(ctx.now_local).slice(0, 10);
 
   // Perguntas sobre o circuito profissional usam a MESMA fonte da rotina diária do João (ESPN).
@@ -161,70 +90,7 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
     }
   }
 
-  const entregar = async (bolhas: { text: string; delayMs: number }[]) => {
-    let enviadas = 0;
-    for (const [i, b] of bolhas.entries()) {
-      if (b.delayMs) {
-        if (deps.uaz) {
-          const dest = first<{ destination: string }>(await db('conv_svc_conversation_contact', { p_conversation: conversation }));
-          const p = dest ? buildChatRequest({ action: 'presence', number: dest.destination, state: 'composing' }) : null;
-          if (p) await deps.uaz(p).catch(() => undefined);
-        }
-        await deps.sleep(b.delayMs);
-      }
-      // Guarda de takeover: chegou mensagem nova do solicitante ou a equipe assumiu → para de falar.
-      if (!(await latest())) break;
-      const q = first<{ message_id: string; destination: string; reply_provider_id: string | null }>(await db('conv_svc_queue_message', {
-        p_conversation: conversation,
-        p: { kind: 'text', body: b.text, reply_to_message_id: isGroup && i === 0 && ultima?.id ? ultima.id : null },
-        p_author: null, p_key: crypto.randomUUID(), p_origin: 'ai', p_session: session,
-      }));
-      if (!q) break;
-      const pedido = buildChatRequest({ action: 'send', number: q.destination, kind: 'text', text: b.text, replyId: q.reply_provider_id });
-      const res = deps.uaz && pedido ? await deps.uaz(pedido) : { ok: false as const, error: 'WHATSAPP_NOT_CONFIGURED' };
-      await db('conv_svc_finish_message', { p_message: q.message_id, p_sent: res.ok, p_provider_id: res.ok ? providerIdFrom((res as { body: Record<string, unknown> }).body) : null, p_error: uazError(res) });
-      if (!res.ok) break;
-      enviadas += 1;
-    }
-    return enviadas;
-  };
-
-  // Arquivos como documento (comprovante, PDF): enfileira na conversa, assina o link da mídia e manda pela UazAPI.
-  const entregarArquivos = async (arquivos: OutFile[]) => {
-    let enviados = 0;
-    for (const f of arquivos) {
-      if (!(await latest())) break;
-      const q = first<{ message_id: string; destination: string }>(await db('conv_svc_queue_message', {
-        p_conversation: conversation,
-        p: { kind: 'document', body: f.caption, media_path: f.path, mime: f.mime, file_name: f.name },
-        p_author: null, p_key: crypto.randomUUID(), p_origin: 'ai', p_session: session,
-      }));
-      if (!q) break;
-      const url = deps.files ? await deps.files.signedUrl(f.path) : null;
-      const pedido = url ? buildChatRequest({ action: 'send', number: q.destination, kind: 'document', text: f.caption, fileUrl: url, mime: f.mime, fileName: f.name }) : null;
-      const res = deps.uaz && pedido ? await deps.uaz(pedido) : { ok: false as const, error: 'WHATSAPP_NOT_CONFIGURED' };
-      await db('conv_svc_finish_message', { p_message: q.message_id, p_sent: res.ok, p_provider_id: res.ok ? providerIdFrom((res as { body: Record<string, unknown> }).body) : null, p_error: uazError(res) });
-      if (!res.ok) break;
-      enviados += 1;
-    }
-    return enviados;
-  };
-
-  // Reação com emoji na mensagem da pessoa: o WhatsApp é a fonte da verdade (recusou → nada muda no banco).
-  // Melhor esforço: falhar em reagir nunca derruba o turno.
-  const reagir = async (emoji: string): Promise<boolean> => {
-    if (!deps.uaz || !ultima?.id) return false;
-    try {
-      const alvo = first<{ provider_message_id: string | null; destination: string | null }>(await db('conv_svc_message_target', { p_message: ultima.id as string }));
-      if (!alvo?.provider_message_id || !alvo.destination) return false;
-      if (!(await latest())) return false;
-      const pedido = buildChatRequest({ action: 'react', number: alvo.destination, messageId: alvo.provider_message_id, emoji });
-      const res = pedido ? await deps.uaz(pedido) : null;
-      if (!res?.ok) return false;
-      await db('conv_svc_staff_react', { p_message: ultima.id as string, p_emoji: emoji });
-      return true;
-    } catch { return false; }
-  };
+  const { entregar, entregarArquivos, reagir } = turnDelivery({ deps, conversation, session, isGroup, replyTo: ultima?.id as string | undefined, latest });
 
   const save = (memory: Memory | null, decision: string, payload: Record<string, unknown>, awaiting: boolean, close: boolean) =>
     db('conv_svc_ai_save_turn', { p_session: session, p_memory: memory, p_decision: decision, p_payload: payload, p_awaiting: awaiting, p_close: close });
@@ -351,114 +217,12 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
     return transferir('hard', 'Falha ao chamar o modelo de IA.', memory);
   }
 
-  // Defesa em profundidade: disponibilidade de quadra é núcleo do João.
-  // Mesmo se o modelo classificar como fora do escopo, o servidor assume a consulta e nunca faz handoff genérico.
-  if (looksLikeAvailabilityQuery(buffered)) {
-    answer = {
-      ...answer,
-      intent: 'consultar_disponibilidade',
-      slots: availabilityFallbackSlots(buffered, String(ctx.now_local), answer.slots),
-      transfer: false,
-      handoff_kind: null,
-      handoff_note: null,
-      close: false,
-      messages: [],
-      awaiting: false,
-    };
-  }
-  if (isGroup) {
-    const falaDeHandoff = /\b(equipe|atendente|humano|transfer|transferir|encaminh|passar a conversa|passar sua conversa|pedir para algu[eé]m)\b/i;
-    const seguras = answer.messages.filter((m) => !falaDeHandoff.test(m));
-    if (answer.transfer) {
-      answer = {
-        ...answer,
-        intent: 'outro',
-        ready: false,
-        customer_confirmed: false,
-        awaiting: false,
-        transfer: false,
-        handoff_kind: null,
-        handoff_note: null,
-        close: false,
-        messages: seguras.length ? seguras : ['Não tenho essa informação confirmada.'],
-      };
-    } else if (seguras.length !== answer.messages.length) {
-      answer = { ...answer, messages: seguras };
-    }
-  }
-
+  // Travas do servidor sobre a resposta: disponibilidade é núcleo; grupo e sócio no privado não vão para humano; piada repetida é trocada.
+  const guard = { deps, ctx, settings, memory, buffered, isGroup, messageId };
+  answer = serverOverrides(answer, guard);
   let fallback: 'reformulada' | 'pronta' | null = null;
-  if (socioNoPrivado) {
-    const seguras = answer.messages.filter((m) => !MEMBER_HANDOFF_TALK.test(m));
-    if (answer.transfer || seguras.length !== answer.messages.length) {
-      let falas = seguras;
-      if (!falas.length) {
-        // Quem atende é o João: em vez de uma frase pronta, pede uma resposta de verdade ao modelo, sem a opção de transferir.
-        try {
-          const r2 = await deps.chat([
-            { role: 'system', content: `${systemPrompt(settings, ctx)}\n\n${NO_TRANSFER_RULE}${isAdminAssistant(ctx) ? ` ${ADMIN_LIMIT_RULE}` : ''}` },
-            { role: 'user', content: userPrompt(ctx, memory, buffered) },
-          ], { model: settings.model, temperature: 0.6, maxTokens: answerBudget(ctx), json: true });
-          falas = parseAnswer(r2.output).messages.filter((m) => !MEMBER_HANDOFF_TALK.test(m));
-        } catch { falas = []; }
-        fallback = falas.length ? 'reformulada' : 'pronta';
-      }
-      answer = { ...answer, ...(answer.transfer ? { intent: 'outro' as Intent, ready: false, customer_confirmed: false, awaiting: true, transfer: false, handoff_kind: null, handoff_note: null, close: false } : {}),
-        messages: falas.length ? falas : [memberKeep(messageId)] };
-    }
-  }
-
-  // Filtro semântico APENAS para a conversa social no grupo. Não toca em reservas,
-  // confirmações, consultas financeiras, tópicos pendentes ou ações administrativas.
-  let humorSource: 'normal' | 'regenerated' | 'neutral' | null = null;
-  let humorReason: string | null = null;
-  if (isGroup && !ctx.open_proposal && !answer.ready && !answer.awaiting
-      && !answer.customer_confirmed && !answer.declined && !answer.transfer
-      && !answer.close && (answer.intent === 'outro' || answer.intent === 'informar')
-      && answer.messages.length) {
-    const older = Array.isArray(ctx.joao_own_lines) ? ctx.joao_own_lines.map(String).filter(Boolean) : [];
-    const initial = answer.messages.join(' ');
-    if (looksHumorous(initial)) {
-      humorSource = 'normal';
-      humorReason = repeatedHumor(initial, older);
-      if (humorReason && deps.chat) {
-        // Segunda chance de criação: só reaproveita o texto, nunca troca intenção nem executa ações.
-        try {
-          const second = await deps.chat([
-            { role: 'system', content: systemPrompt(settings, ctx) + '\n\n' + noveltyHint(older) },
-            { role: 'user', content: userPrompt(ctx, memory, buffered) },
-          ], { model: settings.model, temperature: 0.74, maxTokens: answerBudget(ctx), json: true });
-          const alternative = parseAnswer(second.output);
-          const text = alternative.messages.join(' ');
-          if (alternative.messages.length > 0 && alternative.messages.length <= 3
-              && !alternative.ready && !alternative.awaiting && !alternative.customer_confirmed
-              && !alternative.transfer && !alternative.declined && !alternative.close
-              && !repeatedHumor(text, older) && !claimsSuccess(text)) {
-            answer = { ...answer, messages: alternative.messages };
-            humorSource = 'regenerated';
-          }
-        } catch (e) {
-          console.warn('JOAO_HUMOR_RETRY_ERROR', e instanceof Error ? e.name : 'unknown');
-        }
-        if (humorSource !== 'regenerated') {
-          // Evita reciclar a piada no cumprimento, mesmo que o modelo falhe de novo.
-          // Para uma pergunta real, mantém a resposta original: conteúdo > humor.
-          const said = buffered.toLowerCase();
-          if (/\b(bom dia|bom sabado|boa tarde|boa noite|otimo sabado)\b/i.test(said.normalize('NFD').replace(/[\u0300-\u036f]/g, ''))) {
-            const greeting = /boa noite/i.test(said) ? 'Boa noite!' : /boa tarde/i.test(said) ? 'Boa tarde!' : 'Bom dia!';
-            answer = { ...answer, messages: [greeting + ' Tudo de bom para a turma do STC.'] };
-            humorSource = 'neutral';
-          } else if (!said.includes('?')) {
-            answer = { ...answer, messages: ['Boa! A turma está animada hoje.'] };
-            humorSource = 'neutral';
-          }
-        }
-        console.info('JOAO_HUMOR_REPETITION', JSON.stringify({
-          reason: humorReason, result: humorSource, theme: humorTopic(initial), history: older.length,
-        }));
-      }
-    }
-  }
+  if (socioNoPrivado) ({ answer, fallback } = await keepMemberInChat(answer, guard));
+  answer = await refreshGroupHumor(answer, guard);
 
   // Cargo informado ou corrigido por um administrador no privado já entra aprovado; o servidor confirma ("Anotei"), o modelo não.
   const anotados: string[] = [];
