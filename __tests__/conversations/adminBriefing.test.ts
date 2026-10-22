@@ -4,7 +4,7 @@ import { briefingKey, composeBriefing, fortalezaDay, fortalezaHour, runAdminBrie
 
 const dados = {
   today: '2026-10-08', total_cents: 1560733, accounts: [{ name: 'Cora', balance_cents: 1560733 }],
-  yesterday: { inflow_cents: 12000, outflow_cents: 5000 }, month: { inflow_cents: 829000, outflow_cents: 614305, net_cents: 214695 },
+  yesterday: { inflow_cents: 12000, outflow_cents: 5000 }, month_dre: { revenue_cents: 829000, expenses_cents: 614305, result_cents: 214695 },
   receivables: { open_cents: 784000, overdue_cents: 20000, overdue_count: 2, overdue_members: 2 },
   payables: { payable_open_cents: 524500, payable_overdue_cents: 0, payable_due_7d_cents: 80000 },
   receipts: { total: 2, oldest_at: '2026-10-07T16:20:00-03:00' }, access: { total: 1 },
@@ -17,7 +17,8 @@ describe('resumo da manhã do João', () => {
     const t = composeBriefing('Hermeson Veras', dados);
     expect(t.startsWith('Bom dia, Hermeson! Resumo do clube de 08/10.')).toBe(true);
     expect(t).toContain('💰 Caixa: R$ 15.607,33');
-    expect(t).toContain('Ontem entrou R$ 120,00 e saiu R$ 50,00. No mês: entrou R$ 8.290,00, saiu R$ 6.143,05 (R$ 2.146,95).');
+    expect(t).toContain('Ontem entrou R$ 120,00 e saiu R$ 50,00 do caixa.');
+    expect(t).toContain('📊 Mês (competência, igual ao painel): receita R$ 8.290,00, despesas R$ 6.143,05, resultado R$ 2.146,95.');
     expect(t).toContain('📥 A receber: R$ 7.840,00 em aberto; vencido R$ 200,00 (2 cobranças, 2 sócios).');
     expect(t).toContain('📤 A pagar: R$ 5.245,00 em aberto; nada vencido, R$ 800,00 vencem em 7 dias.');
     expect(t).toContain('🧾 2 comprovantes aguardando análise (o mais antigo de 07/10).');
@@ -29,14 +30,14 @@ describe('resumo da manhã do João', () => {
 
   it('omite o que está zerado e não inventa nome', () => {
     const t = composeBriefing('+5588999265229', { ...dados, receipts: { total: 0 }, access: { total: 0 }, signatures: [], reservations: { total: 0, by_type: {} },
-      accounts: [{ name: 'A', balance_cents: 100 }, { name: 'B', balance_cents: 200 }], month: { net_cents: -5000 } });
+      accounts: [{ name: 'A', balance_cents: 100 }, { name: 'B', balance_cents: 200 }], month_dre: { result_cents: -5000 } });
     expect(t.startsWith('Bom dia! Resumo')).toBe(true);
     expect(t).not.toMatch(/comprovante|acesso pendente|assinaram/);
     expect(t).toContain('🎾 Hoje: sem reservas.');
     expect(t).toContain('(A R$ 1,00 · B R$ 2,00)');
-    expect(t).toContain('(-R$ 50,00)');
+    expect(t).toContain('resultado -R$ 50,00.');
     expect(t).toContain('"comparativo com o mês passado"');
-    expect(composeBriefing('Ana', { ...dados, receivables: { open_cents: 0 }, receipts: { total: 0 }, month: { net_cents: 100 } }).endsWith('Quer detalhar algo? É só pedir aqui.')).toBe(true);
+    expect(composeBriefing('Ana', { ...dados, receivables: { open_cents: 0 }, receipts: { total: 0 }, month_dre: { result_cents: 100 } }).endsWith('Quer detalhar algo? É só pedir aqui.')).toBe(true);
   });
 
   it('chave estável por dia e administrador (UUID), diferente entre dias e pessoas', async () => {

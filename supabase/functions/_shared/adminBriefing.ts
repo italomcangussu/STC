@@ -11,6 +11,7 @@ type Row = Record<string, unknown>;
 const n = (v: unknown) => Number(v ?? 0);
 const brl = (v: unknown) => `R$ ${(n(v) / 100).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`;
 const dm = (v: unknown) => String(v ?? '').slice(0, 10).split('-').reverse().slice(0, 2).join('/');
+const comSinal = (v: unknown) => `${n(v) < 0 ? '-' : ''}${brl(Math.abs(n(v)))}`;
 const plural = (q: number, um: string, varios: string) => `${q} ${q === 1 ? um : varios}`;
 
 /** Primeiro nome, ou nada se o cadastro não tiver um nome utilizável. */
@@ -23,8 +24,9 @@ export function composeBriefing(name: string, d: Row): string {
   const contas = (Array.isArray(d.accounts) ? d.accounts as Row[] : []);
   const detalhe = contas.length > 1 ? ` (${contas.map((c) => `${c.name} ${brl(c.balance_cents)}`).join(' · ')})` : '';
   linhas.push(`💰 Caixa: ${brl(d.total_cents)}${detalhe}`);
-  const ont = (d.yesterday ?? {}) as Row; const mes = (d.month ?? {}) as Row;
-  linhas.push(`Ontem entrou ${brl(ont.inflow_cents)} e saiu ${brl(ont.outflow_cents)}. No mês: entrou ${brl(mes.inflow_cents)}, saiu ${brl(mes.outflow_cents)} (${n(mes.net_cents) < 0 ? '-' : ''}${brl(Math.abs(n(mes.net_cents)))}).`);
+  const ont = (d.yesterday ?? {}) as Row; const mes = (d.month_dre ?? {}) as Row;
+  linhas.push(`Ontem entrou ${brl(ont.inflow_cents)} e saiu ${brl(ont.outflow_cents)} do caixa.`);
+  linhas.push(`📊 Mês (competência, igual ao painel): receita ${brl(mes.revenue_cents)}, despesas ${brl(mes.expenses_cents)}, resultado ${comSinal(mes.result_cents)}.`);
 
   const r = (d.receivables ?? {}) as Row; const p = (d.payables ?? {}) as Row;
   linhas.push('');
@@ -51,7 +53,7 @@ export function composeBriefing(name: string, d: Row): string {
   const dicas: string[] = [];
   if (n(r.overdue_cents) > 0) dicas.push('"a receber e a pagar"');
   if (n(rec.total) > 0) dicas.push('"ver comprovantes"');
-  if (n(mes.net_cents) < 0) dicas.push('"comparativo com o mês passado"');
+  if (n(mes.result_cents) < 0) dicas.push('"comparativo com o mês passado"');
   linhas.push('', dicas.length ? `💡 Posso detalhar: ${dicas.join(', ')}. É só pedir aqui.` : 'Quer detalhar algo? É só pedir aqui.');
   return linhas.join('\n');
 }

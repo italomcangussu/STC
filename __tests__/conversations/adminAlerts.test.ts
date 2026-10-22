@@ -73,7 +73,7 @@ describe('alertas por regra do João', () => {
   });
 
   it('resumo da manhã curto: só caixa, a receber/pagar e comprovantes', () => {
-    const base = { today: '2026-10-08', total_cents: 100000, accounts: [], yesterday: {}, month: {}, receivables: { open_cents: 0 }, payables: { payable_open_cents: 0 },
+    const base = { today: '2026-10-08', total_cents: 100000, accounts: [], yesterday: {}, month_dre: {}, receivables: { open_cents: 0 }, payables: { payable_open_cents: 0 },
       receipts: { total: 0 }, access: { total: 2 }, signatures: [{ title: 'Regimento', recipients: 10, signed: 5 }], reservations: { total: 3, by_type: { Play: 3 } } };
     const completo = composeBriefing('Ana', base); const curto = composeBriefing('Ana', { ...base, style: 'curto' });
     expect(completo).toMatch(/Regimento/); expect(completo).toMatch(/Hoje: 3 reservas/); expect(completo).toMatch(/2 pedidos de acesso/);
