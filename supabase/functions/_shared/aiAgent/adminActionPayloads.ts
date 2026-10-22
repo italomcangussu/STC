@@ -3,19 +3,13 @@
 
 import type { DecideInput } from './decide.ts';
 import { toCents } from './adminMessages.ts';
-import { resolve } from './turnOutcome.ts';
+import { memberId as member } from './adminReadRpc.ts';
 import type { AdmAction } from './turnTypes.ts';
 
 export type Step = { ask: string; awaiting?: boolean } | { p: Record<string, unknown> };
 type Builder = { rpc: string; build: (i: DecideInput) => Step | Promise<Step> };
 
 const ask = (text: string, awaiting = true): Step => ({ ask: text, awaiting });
-
-/** Sócio pelo nome, do cadastro (único/ambíguo/nenhum). */
-async function member(i: DecideInput, name: string): Promise<{ id: string } | { ask: string }> {
-  const r = await resolve(i.deps.db, [name], 'member');
-  return r.ask ? { ask: r.ask } : { id: r.ids[0] };
-}
 
 /** Envio agendado no fuso do clube: sem hora, vai agora (null). */
 function sendAt(date: string | null | undefined, start: string | null | undefined): string | null {
