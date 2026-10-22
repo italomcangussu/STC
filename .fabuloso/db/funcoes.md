@@ -1,5 +1,5 @@
 # Funções
-> 531 funções nos schemas conv_private, fin_private, public, sig_private. Corpo completo sob demanda: `select pg_get_functiondef('<schema.nome>(<args>)'::regprocedure)`.
+> 535 funções nos schemas conv_private, fin_private, public, sig_private. Corpo completo sob demanda: `select pg_get_functiondef('<schema.nome>(<args>)'::regprocedure)`.
 
 | Função | Argumentos | Retorno | Ling. | Segurança | anon | Nota |
 |---|---|---|---|---|---|---|
@@ -138,6 +138,9 @@
 | conv_private.date_br | `p_date date` | `text` | sql | invoker | sim |  |
 | conv_private.dedupe_contact | `p_id uuid` | `uuid` | plpgsql | DEFINER | não |  |
 | conv_private.digits | `p text` | `text` | sql | invoker | sim |  |
+| conv_private.entry_categories | `p_kind text` | `SETOF fin_categories` | sql | DEFINER | não |  |
+| conv_private.entry_category_group | `p_kind text, p_hint uuid` | `TABLE(id uuid, name text)` | sql | DEFINER | não |  |
+| conv_private.entry_category_pick | `p_kind text, p_name text, p_desc text` | `TABLE(id uuid, name text, how text)` | plpgsql | DEFINER | não |  |
 | conv_private.finish_followup | `p_followup uuid, p_message uuid, p_error text` | `void` | sql | DEFINER | não |  |
 | conv_private.finish_message | `p_message uuid, p_sent boolean, p_provider_id text, p_error text` | `void` | plpgsql | DEFINER | não |  |
 | conv_private.finish_op | `p_key uuid, p_result jsonb` | `jsonb` | plpgsql | DEFINER | sim |  |
@@ -247,6 +250,7 @@
 | fin_private.statement_json | `p_charge uuid, p_as_of date` | `jsonb` | sql | DEFINER | sim |  |
 | fin_private.today | — | `date` | sql | invoker | sim |  |
 | fin_private.waive_fees | `p_charge uuid, p_amount bigint, p_reason text, p_as_of date, p_request uuid` | `void` | plpgsql | DEFINER | sim |  |
+| fin_private.word_stems | `p_text text` | `text[]` | sql | invoker | não |  |
 | public.access_requests_set_updated_at | — | `trigger` | plpgsql | invoker | sim |  |
 | public.admin_audit_changed_fields | `p_old jsonb, p_new jsonb` | `text[]` | sql | invoker | sim |  |
 | public.admin_audit_insert_log | `p_action text, p_table_name text, p_record_id text, p_target_user_id uuid, p_related_user…` | `uuid` | plpgsql | DEFINER | sim |  |
@@ -319,7 +323,7 @@
 | public.conv_svc_ai_admin_prefs | `p_session uuid` | `jsonb` | sql | DEFINER | não |  |
 | public.conv_svc_ai_admin_read | `p_session uuid, p_domain text, p_args jsonb` | `jsonb` | sql | DEFINER | não |  |
 | public.conv_svc_ai_admin_read_more | `p_session uuid, p_domain text, p_args jsonb` | `jsonb` | sql | DEFINER | não |  |
-| public.conv_svc_ai_admin_receipt | `p_session uuid, p_message uuid` | `jsonb` | sql | DEFINER | não |  |
+| public.conv_svc_ai_admin_receipt | `p_session uuid, p_message uuid` | `jsonb` | plpgsql | DEFINER | não |  |
 | public.conv_svc_ai_admin_student_propose | `p_session uuid, p jsonb` | `jsonb` | sql | DEFINER | sim |  |
 | public.conv_svc_ai_admin_wave8_propose | `p_session uuid, p jsonb` | `jsonb` | sql | DEFINER | não |  |
 | public.conv_svc_ai_audio_transcripts | `p_ids text[]` | `jsonb` | sql | DEFINER | não |  |

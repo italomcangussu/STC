@@ -8,7 +8,7 @@
     "public",
     "sig_private"
   ],
-  "ultima_migracao": "20261022040000",
+  "ultima_migracao": "20261022060000",
   "extensoes": [
     "pg_cron 1.6.4",
     "pg_net 0.19.5",
@@ -19522,7 +19522,7 @@
       "tipo": "r",
       "rls": true,
       "rls_forcado": false,
-      "linhas_est": "<100",
+      "linhas_est": "<1k",
       "opcoes": null,
       "comentario": null,
       "acesso": {
@@ -31554,6 +31554,45 @@
       "comentario": null
     },
     {
+      "nome": "conv_private.entry_categories",
+      "args": "p_kind text",
+      "retorno": "SETOF fin_categories",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.entry_category_group",
+      "args": "p_kind text, p_hint uuid",
+      "retorno": "TABLE(id uuid, name text)",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.entry_category_pick",
+      "args": "p_kind text, p_name text, p_desc text",
+      "retorno": "TABLE(id uuid, name text, how text)",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
       "nome": "conv_private.finish_followup",
       "args": "p_followup uuid, p_message uuid, p_error text",
       "retorno": "void",
@@ -32971,6 +33010,19 @@
       "comentario": null
     },
     {
+      "nome": "fin_private.word_stems",
+      "args": "p_text text",
+      "retorno": "text[]",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": false,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "i",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
       "nome": "public.access_requests_set_updated_at",
       "args": "",
       "retorno": "trigger",
@@ -33910,7 +33962,7 @@
       "nome": "public.conv_svc_ai_admin_receipt",
       "args": "p_session uuid, p_message uuid",
       "retorno": "jsonb",
-      "linguagem": "sql",
+      "linguagem": "plpgsql",
       "tipo": "f",
       "security_definer": true,
       "search_path": "search_path=\"\"",

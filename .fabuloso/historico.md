@@ -239,3 +239,10 @@ Orquestrador Sonnet 5.5 (sem subagentes, a pedido). Criados `20261007260000_conv
 - Feito: `adminArquivo` saiu de `adminAssistant.ts` para `adminFileReply.ts` (`reportPdf` + `storedFiles` com `STORED_FILTER` por tipo); novo `adminReadRpc.ts` (`readAdmin` com `route()` por domínio, `askWith`, `periodArgs`, `memberId`); `adminConsulta` usa `domainArgs()` + `readAdmin`; `adminActionPayloads.ts` usa `memberId` no lugar da busca de sócio local.
 - Contexto: arquitetura (estrutura de `_shared/aiAgent/`) ganhou os dois módulos. Não há CLAUDE.md no projeto; nada a patchar lá.
 - Entrega: sem migration; `whatsapp-webhook` v93.
+
+## 2026-10-22 — Auditoria do caixa de outubro/2026 e evolução do João (orquestrador Opus 5.5)
+- Tarefa: bater o saldo do sistema com o banco (R$ 15.696,64) e fazer o João não repetir os erros. Commits 61325e9, 0e5875f, df80f22, ca8cde7.
+- Contexto: arquitetura (fluxos de lançamento com categoria/comprovante, sócio com 1º mês proporcional, comprovante de sócio). Correções de dados em `docs/auditorias/2026-10-22-caixa-outubro.sql` (registro, não rodar de novo).
+- Entrega: migrations 20261022050000 e 20261022060000 aplicadas; `whatsapp-webhook` deployada. Testes: `supabase/tests/pglite/joao_caixa_categoria_comprovante.sql`, `__tests__/conversations/adminCaixaAuditoria.test.ts`.
+- Pendência: Day Cards de reserva sem pagamento no caixa (`day_card_in_cash`): Glória 14/10 e Thiago 03/10, decisão do clube.
+- Observação: deriva no remoto em `public.fin_requests`.

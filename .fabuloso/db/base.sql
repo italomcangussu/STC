@@ -1,6 +1,6 @@
 -- base.sql — DDL do schema remoto. Gerado por `fabuloso.mjs db`; não edite.
 -- É a base do banco de teste em PGlite (`fabuloso.mjs pg`): schema real do remoto + migrations locais pendentes.
---@@ meta {"versao":1,"postgres":"17.6","schemas":["conv_private","fin_private","public","sig_private"],"extensoes":[{"nome":"pg_cron","schema":"pg_catalog"},{"nome":"pg_net","schema":"extensions"},{"nome":"pg_stat_statements","schema":"extensions"},{"nome":"pgcrypto","schema":"extensions"},{"nome":"supabase_vault","schema":"vault"},{"nome":"uuid-ossp","schema":"extensions"},{"nome":"vector","schema":"public"}],"papeis":["anon","authenticated","authenticator","cli_login_postgres","dashboard_user","pgbouncer","postgres","service_role","supabase_auth_admin","supabase_etl_admin","supabase_functions_admin","supabase_privileged_role","supabase_read_only_user","supabase_realtime_admin","supabase_replication_admin","supabase_storage_admin"],"migracoes":["20251228080214","20251228081253","20251228083254","20251228083507","20251228083944","20251228085506","20251228085656","20251228085817","20251228113842","20251228114731","20251228115147","20251228214931","20251228220119","20251228220952","20251230094628","20251230103441","20251230111220","20260101134906","20260101134940","20260101141731","20260101155936","20260103141626","20260103153236","20260103153329","20260103153404","20260103153757","20260115192527","20260119084237","20260119084321","20260119085322","20260119090000","20260119090225","20260119141114","20260123101818","20260123101853","20260123104620","20260123125031","20260124215137","20260125081739","20260125102639","20260125174723","20260127175350","20260127175608","20260128133915","20260129075257","20260129075631","20260129083027","20260129145632","20260131091223","20260203185748","20260205232352","20260205232412","20260212105246","20260212113107","20260212121128","20260213083000","20260215123000","20260216090000","20260216123000","20260323073000","20260421153000","20260421184125","20260422100000","20260422100100","20260422100200","20260422100300","20260422100400","20260422113000","20260422124000","20260422130000","20260422143000","20260422150000","20260427134500","20260427135800","20260427140500","20260502000001","20260502000002","20260519072400","20260519073500","20260519074500","20260519075000","20260519080000","20260519081000","20260519082000","20260805085500","20260805091000","20260807120000","20260807140000","20260807160000","20260807180000","20260807200000","20260808120000","20260824120000","20260824121000","20260824140000","20260912090000","20260912100000","20260930120000","20260930123000","20261005161200","20261006100000","20261006100100","20261006100200","20261006100300","20261006100400","20261006100500","20261007064837","20261007070656","20261007100000","20261007100100","20261007100200","20261007100300","20261007100400","20261007100500","20261007100600","20261007100700","20261007100800","20261007100900","20261007101000","20261007101100","20261007101200","20261007101210","20261007101300","20261007101400","20261007110000","20261007120000","20261007120100","20261007120200","20261007130000","20261007135553","20261007140000","20261007140144","20261007140427","20261007140831","20261007141000","20261007150000","20261007150010","20261007150100","20261007160000","20261007170000","20261007180000","20261007190000","20261007200000","20261007210000","20261007220000","20261007230000","20261007240000","20261007250000","20261007250100","20261007260000","20261007260100","20261007270000","20261007280000","20261007290000","20261007290100","20261007300000","20261007310000","20261007320000","20261007330000","20261007340000","20261007350000","20261007360000","20261007370000","20261007380000","20261007390000","20261007400000","20261008101944","20261008102600","20261008124729","20261008130005","20261008130203","20261008130745","20261008132237","20261008132335","20261008132419","20261008135821","20261008135824","20261008143837","20261008150000","20261009121500","20261010084210","20261010090024","20261010090914","20261010091225","20261010094921","20261010102037","20261010102042","20261010102047","20261010102051","20261010102254","20261010112046","20261014131036","20261016161000","20261016180000","20261016190000","20261016200000","20261017165532","20261017170244","20261017181704","20261019130000","20261019150000","20261021120000","20261021130000","20261022003000","20261022010000","20261022020000","20261022030000","20261022040000"]}
+--@@ meta {"versao":1,"postgres":"17.6","schemas":["conv_private","fin_private","public","sig_private"],"extensoes":[{"nome":"pg_cron","schema":"pg_catalog"},{"nome":"pg_net","schema":"extensions"},{"nome":"pg_stat_statements","schema":"extensions"},{"nome":"pgcrypto","schema":"extensions"},{"nome":"supabase_vault","schema":"vault"},{"nome":"uuid-ossp","schema":"extensions"},{"nome":"vector","schema":"public"}],"papeis":["anon","authenticated","authenticator","cli_login_postgres","dashboard_user","pgbouncer","postgres","service_role","supabase_auth_admin","supabase_etl_admin","supabase_functions_admin","supabase_privileged_role","supabase_read_only_user","supabase_realtime_admin","supabase_replication_admin","supabase_storage_admin"],"migracoes":["20251228080214","20251228081253","20251228083254","20251228083507","20251228083944","20251228085506","20251228085656","20251228085817","20251228113842","20251228114731","20251228115147","20251228214931","20251228220119","20251228220952","20251230094628","20251230103441","20251230111220","20260101134906","20260101134940","20260101141731","20260101155936","20260103141626","20260103153236","20260103153329","20260103153404","20260103153757","20260115192527","20260119084237","20260119084321","20260119085322","20260119090000","20260119090225","20260119141114","20260123101818","20260123101853","20260123104620","20260123125031","20260124215137","20260125081739","20260125102639","20260125174723","20260127175350","20260127175608","20260128133915","20260129075257","20260129075631","20260129083027","20260129145632","20260131091223","20260203185748","20260205232352","20260205232412","20260212105246","20260212113107","20260212121128","20260213083000","20260215123000","20260216090000","20260216123000","20260323073000","20260421153000","20260421184125","20260422100000","20260422100100","20260422100200","20260422100300","20260422100400","20260422113000","20260422124000","20260422130000","20260422143000","20260422150000","20260427134500","20260427135800","20260427140500","20260502000001","20260502000002","20260519072400","20260519073500","20260519074500","20260519075000","20260519080000","20260519081000","20260519082000","20260805085500","20260805091000","20260807120000","20260807140000","20260807160000","20260807180000","20260807200000","20260808120000","20260824120000","20260824121000","20260824140000","20260912090000","20260912100000","20260930120000","20260930123000","20261005161200","20261006100000","20261006100100","20261006100200","20261006100300","20261006100400","20261006100500","20261007064837","20261007070656","20261007100000","20261007100100","20261007100200","20261007100300","20261007100400","20261007100500","20261007100600","20261007100700","20261007100800","20261007100900","20261007101000","20261007101100","20261007101200","20261007101210","20261007101300","20261007101400","20261007110000","20261007120000","20261007120100","20261007120200","20261007130000","20261007135553","20261007140000","20261007140144","20261007140427","20261007140831","20261007141000","20261007150000","20261007150010","20261007150100","20261007160000","20261007170000","20261007180000","20261007190000","20261007200000","20261007210000","20261007220000","20261007230000","20261007240000","20261007250000","20261007250100","20261007260000","20261007260100","20261007270000","20261007280000","20261007290000","20261007290100","20261007300000","20261007310000","20261007320000","20261007330000","20261007340000","20261007350000","20261007360000","20261007370000","20261007380000","20261007390000","20261007400000","20261008101944","20261008102600","20261008124729","20261008130005","20261008130203","20261008130745","20261008132237","20261008132335","20261008132419","20261008135821","20261008135824","20261008143837","20261008150000","20261009121500","20261010084210","20261010090024","20261010090914","20261010091225","20261010094921","20261010102037","20261010102042","20261010102047","20261010102051","20261010102254","20261010112046","20261014131036","20261016161000","20261016180000","20261016190000","20261016200000","20261017165532","20261017170244","20261017181704","20261019130000","20261019150000","20261021120000","20261021130000","20261022003000","20261022010000","20261022020000","20261022030000","20261022040000","20261022050000","20261022060000"]}
 --@@ 10 schema conv_private
 create schema if not exists conv_private;
 --@@ 10 schema fin_private
@@ -2022,7 +2022,7 @@ CREATE OR REPLACE FUNCTION conv_private.ai_admin_access_propose(p_session uuid, 
 AS $function$
 declare
   sess public.conv_ai_sessions%rowtype; s public.conv_ai_settings%rowtype; fs public.fin_settings%rowtype;
-  v_admin uuid; v_action text := p->>'action'; v_id uuid; v_payload jsonb; v_today date := conv_private.today();
+  v_admin uuid; v_action text := p->>'action'; v_id uuid; v_payload jsonb; v_today date := conv_private.today(); v_first bigint;
   v_req_id uuid; v_n int; v_list text; v_name text; v_phone text; v_email text; v_amount bigint; v_reason text := nullif(trim(coalesce(p->>'reason', '')), '');
   v_prof record; v_sub record; v_payee text; v_paid_on date; v_acc_id uuid; v_acc_name text; v_acc_n int; v_acc_list text; v_reactivate boolean := false;
 begin
@@ -2088,9 +2088,17 @@ begin
     if v_sub.id is null then
       return conv_private.vfail('RECEIPT_REQUIRED', 'Para cadastrar o sócio preciso do comprovante de pagamento da mensalidade deste mês. Mande a imagem ou o PDF aqui e me diga para continuar.');
     end if;
-    if v_sub.declared_amount_cents is not null and v_sub.declared_amount_cents <> v_amount then
+    -- 1º mês proporcional (entrou no meio do mês): paga first_amount agora, a mensalidade cheia vale do mês seguinte.
+    v_first := nullif(p->>'first_amount_cents', '')::bigint;
+    if v_first is not null and (v_first <= 0 or v_first >= v_amount) then v_first := null; end if;
+    if v_first is null and v_sub.declared_amount_cents is not null and v_sub.declared_amount_cents < v_amount then
+      return conv_private.vfail('RECEIPT_PRORATED', 'O comprovante mostra R$ ' || replace(trim(to_char(v_sub.declared_amount_cents::numeric / 100, 'FM999999990D00')), '.', ',')
+        || ' e a mensalidade é R$ ' || replace(trim(to_char(v_amount::numeric / 100, 'FM999999990D00')), '.', ',')
+        || '. O primeiro mês foi proporcional (o resto vira desconto e a mensalidade cheia vale a partir do mês que vem)?');
+    end if;
+    if v_sub.declared_amount_cents is not null and v_sub.declared_amount_cents <> coalesce(v_first, v_amount) then
       return conv_private.vfail('RECEIPT_AMOUNT_MISMATCH', 'O comprovante mostra R$ ' || replace(trim(to_char(v_sub.declared_amount_cents::numeric / 100, 'FM999999990D00')), '.', ',')
-        || ', mas a mensalidade informada é R$ ' || replace(trim(to_char(v_amount::numeric / 100, 'FM999999990D00')), '.', ',') || '. Qual vale?');
+        || ', mas o valor informado é R$ ' || replace(trim(to_char(coalesce(v_first, v_amount)::numeric / 100, 'FM999999990D00')), '.', ',') || '. Qual vale?');
     end if;
     select * into fs from public.fin_settings where id;
     v_payee := nullif(trim(coalesce(v_sub.ocr->>'payee', '')), '');
@@ -2114,7 +2122,7 @@ begin
 
     v_payload := jsonb_strip_nulls(jsonb_build_object('request_id', v_req_id, 'name', v_name, 'phone', v_phone, 'email', v_email,
       'amount_cents', v_amount, 'submission_id', v_sub.id, 'paid_on', v_paid_on, 'account_id', v_acc_id, 'account_name', v_acc_name,
-      'month', date_trunc('month', v_today::timestamp)::date, 'amount_read', v_sub.declared_amount_cents is not null, 'reactivate', v_reactivate));
+      'month', date_trunc('month', v_today::timestamp)::date, 'amount_read', v_sub.declared_amount_cents is not null, 'reactivate', v_reactivate, 'first_amount_cents', v_first));
   end if;
 
   select * into s from public.conv_ai_settings where active order by version desc limit 1;
@@ -2484,6 +2492,7 @@ declare
   v_name text; v_reason text := trim(coalesce(p->>'reason', '')); v_amount bigint; v_total bigint; v_fees bigint; v_rem bigint;
   v_kind text; v_profile uuid; v_pay_id uuid; v_pay_charge uuid; v_pay_amount bigint; v_pay_on date; v_sub record; v_n int; v_date date; v_desc text; v_status text; v_due date; v_paid_on date;
   v_acc_id uuid; v_acc_name text; v_acc_n int; v_acc_list text; v_cat_id uuid; v_cat_name text; v_cat_n int; v_cat_list text; v_entry text;
+  v_pick record; v_cat_how text; v_cat_given text; v_cat_new boolean := false; v_parent_id uuid; v_parent_name text;
 begin
   select * into sess from public.conv_ai_sessions where id = p_session and status = 'open' for update;
   if not found then return conv_private.vfail('SESSION_CLOSED', 'Atendimento encerrado.'); end if;
@@ -2579,16 +2588,28 @@ begin
     if v_status = 'pending' and v_due is null then return conv_private.vfail('DUE_DATE_REQUIRED', 'Qual o vencimento?'); end if;
     v_paid_on := case when v_status = 'paid' then coalesce(nullif(p->>'paid_on', '')::date, v_today) end;
     if v_paid_on > v_today then return conv_private.vfail('INVALID_DATE', 'A data do pagamento não pode ser no futuro.'); end if;
-    -- Categoria pelo nome (só categorias ativas do tipo certo; nome ambíguo ou ausente pergunta).
-    select count(*), min(c.id::text)::uuid, min(c.name) into v_cat_n, v_cat_id, v_cat_name from public.fin_categories c
-    where c.active and c.kind = v_entry and c.parent_id is not null and c.system_key is null
-      and nullif(trim(coalesce(p->>'category_name', '')), '') is not null
-      and fin_private.fold_text(c.name) like '%' || fin_private.fold_text(p->>'category_name') || '%';
-    if v_cat_n <> 1 then
-      select string_agg(c.name, ', ' order by c.position, c.name) into v_cat_list from (
-        select * from public.fin_categories c0 where c0.active and c0.kind = v_entry and c0.parent_id is not null and c0.system_key is null
-        order by c0.position, c0.name limit 14) c;
-      return conv_private.vfail('CATEGORY_REQUIRED', 'Em qual categoria? ' || coalesce(v_cat_list, '(nenhuma ativa)') || '.');
+    -- Categoria: o nome dito (mesmo aproximado: "material de limpeza", "outros") ou, sem nome, a sugestão pelo
+    -- histórico e pelas palavras da descrição. Nome que não existe só vira categoria nova se o administrador pedir.
+    v_cat_given := nullif(trim(coalesce(p->>'category_name', '')), '');
+    select k.id, k.name, k.how into v_pick from conv_private.entry_category_pick(v_entry, v_cat_given, v_desc) k;
+    select string_agg(c.name, ', ' order by c.position, c.name) into v_cat_list from (
+      select * from public.fin_categories c0 where c0.active and c0.kind = v_entry and c0.parent_id is not null and c0.system_key is null
+      order by c0.position, c0.name limit 14) c;
+    if v_pick.id is not null and (v_pick.how = 'nome' or v_cat_given is null) then
+      v_cat_id := v_pick.id; v_cat_name := v_pick.name; v_cat_how := v_pick.how;
+    elsif v_cat_given is not null and coalesce((p->>'category_new')::boolean, false) then
+      if length(v_cat_given) not between 2 and 60 then return conv_private.vfail('INVALID_CATEGORY', 'Qual o nome da categoria nova? (até 60 letras)'); end if;
+      select g.id, g.name into v_parent_id, v_parent_name from conv_private.entry_category_group(v_entry, v_pick.id) g;
+      if v_parent_id is null then return conv_private.vfail('CATEGORY_REQUIRED', 'Em qual categoria? ' || coalesce(v_cat_list, '(nenhuma ativa)') || '.'); end if;
+      v_cat_new := true; v_cat_name := upper(left(v_cat_given, 1)) || substr(v_cat_given, 2); v_cat_how := 'nova';
+    elsif v_cat_given is not null then
+      return conv_private.vfail('CATEGORY_UNKNOWN', 'Não tenho a categoria "' || v_cat_given || '".'
+        || case when v_pick.id is not null then ' Pela descrição, sugiro "' || v_pick.name || '".' else '' end
+        || ' Uso ' || case when v_pick.id is not null then 'essa, ' else '' end || 'uma destas (' || coalesce(v_cat_list, 'nenhuma ativa')
+        || ') ou crio "' || v_cat_given || '" como categoria nova?');
+    else
+      return conv_private.vfail('CATEGORY_REQUIRED', 'Em qual categoria? ' || coalesce(v_cat_list, '(nenhuma ativa)')
+        || '. Se nenhuma servir, me diga o nome que eu crio uma nova.');
     end if;
     -- Conta pelo nome; sem nome vale a conta única/padrão.
     select string_agg(a.name, ', ' order by a.position, a.name) into v_acc_list from public.fin_accounts a where a.active;
@@ -2604,7 +2625,8 @@ begin
     end if;
     select name into v_acc_name from public.fin_accounts where id = v_acc_id;
     v_payload := jsonb_strip_nulls(jsonb_build_object('entry_kind', v_entry, 'description', v_desc, 'amount_cents', v_amount,
-      'entry_status', v_status, 'due_date', v_due, 'paid_on', v_paid_on, 'category_id', v_cat_id, 'category_name', v_cat_name,
+      'entry_status', v_status, 'due_date', v_due, 'paid_on', v_paid_on, 'category_id', v_cat_id, 'category_name', v_cat_name, 'category_how', v_cat_how,
+      'category_new', case when v_cat_new then true end, 'category_parent_id', v_parent_id, 'category_parent_name', v_parent_name,
       'account_id', v_acc_id, 'account_name', v_acc_name, 'supplier', nullif(trim(coalesce(p->>'supplier', '')), '')));
   else
     return conv_private.vfail('INVALID_ACTION', 'Ação inválida.');
@@ -4731,7 +4753,7 @@ CREATE OR REPLACE FUNCTION conv_private.ai_confirm_wave2_step(p_proposal uuid, p
 AS $function$
 declare
   bp public.conv_booking_proposals%rowtype; m public.conv_messages%rowtype; v_admin uuid;
-  v_prev_claims text; v_prev_sub text; v_res jsonb; v_err text; v_code text;
+  v_prev_claims text; v_prev_sub text; v_res jsonb; v_err text; v_code text; v_cat text;
 begin
   select * into bp from public.conv_booking_proposals where id = p_proposal for update;
   if not found or bp.action not in ('fin_charge_cancel', 'fin_charge_adjust', 'fin_payment_reverse', 'fin_receipt_reject', 'fin_entry_create') then
@@ -4774,10 +4796,17 @@ begin
     elsif bp.action = 'fin_receipt_reject' then
       v_res := public.fin_reject_receipt(bp.request_key, (bp.payload->>'submission_id')::uuid, bp.payload->>'reason');
     else
+      v_cat := nullif(bp.payload->>'category_id', '');
+      if v_cat is null and coalesce((bp.payload->>'category_new')::boolean, false) then
+        v_res := public.fin_save_category(md5(bp.id::text || 'category')::uuid, null, null, jsonb_build_object(
+          'kind', bp.payload->>'entry_kind', 'parent_id', bp.payload->>'category_parent_id', 'name', bp.payload->>'category_name'));
+        v_cat := v_res->>'id';
+        bp.payload := bp.payload || jsonb_build_object('category_id', v_cat);
+      end if;
       v_res := public.fin_create_entry(bp.request_key, jsonb_strip_nulls(jsonb_build_object(
         'kind', bp.payload->>'entry_kind', 'description', bp.payload->>'description', 'amount_cents', (bp.payload->>'amount_cents')::bigint,
         'status', bp.payload->>'entry_status', 'due_date', bp.payload->>'due_date', 'paid_on', bp.payload->>'paid_on',
-        'account_id', bp.payload->>'account_id', 'category_id', bp.payload->>'category_id', 'supplier', bp.payload->>'supplier')));
+        'account_id', bp.payload->>'account_id', 'category_id', v_cat, 'supplier', bp.payload->>'supplier')));
     end if;
   exception when others then
     v_err := sqlerrm;
@@ -5597,7 +5626,7 @@ declare
   bp public.conv_booking_proposals%rowtype; m public.conv_messages%rowtype; v_admin uuid; pr public.profiles%rowtype;
   v_prev_claims text; v_prev_sub text; v_err text; v_code text; v_today date := conv_private.today();
   v_month date; v_amount bigint; v_plan uuid; v_charge uuid; v_remaining bigint; v_fees bigint; v_status text; v_sub_status text;
-  v_sub uuid; v_paid_on date; v_alloc jsonb; v_waivers jsonb := '[]'::jsonb; v_res jsonb := '{}'::jsonb;
+  v_sub uuid; v_paid_on date; v_alloc jsonb; v_waivers jsonb := '[]'::jsonb; v_res jsonb := '{}'::jsonb; v_first bigint;
 begin
   select * into bp from public.conv_booking_proposals where id = p_proposal for update;
   if not found or bp.action not in ('fin_member_create', 'fin_access_approve') then
@@ -5642,19 +5671,25 @@ begin
     select c.id, c.status into v_charge, v_status from public.fin_member_charges c
     where c.plan_id = v_plan and c.competence_month = v_month and c.status <> 'canceled';
     if v_charge is null then raise exception 'CHARGE_NOT_GENERATED'; end if;
+    -- 1º mês proporcional: o que não foi pago agora vira desconto só nesta cobrança (o plano segue com o valor cheio).
+    v_first := coalesce(nullif(bp.payload->>'first_amount_cents', '')::bigint, v_amount);
+    if v_first < v_amount then
+      perform public.fin_adjust_charge(md5(bp.id::text || 'prorate')::uuid, v_charge, 'discount', v_amount - v_first,
+        'Primeiro mês proporcional: sócio entrou no meio do mês');
+    end if;
     -- 3) comprovante para o novo sócio e aprovação com baixa total do mês (juros do mês de entrada dispensados)
     v_sub := conv_private.admin_receipt_materialize(v_sub, v_admin);
     select status into v_sub_status from public.fin_receipt_submissions where id = v_sub;
     if v_sub_status is null then raise exception 'RECEIPT_NOT_FOUND'; end if;
     if v_sub_status in ('submitted', 'in_review') then
       select st.principal_remaining, st.fees_due into v_remaining, v_fees from fin_private.charge_statement(v_charge, v_paid_on) st;
-      if v_remaining <> v_amount then raise exception 'AMOUNT_MISMATCH'; end if;
+      if v_remaining <> v_first then raise exception 'AMOUNT_MISMATCH'; end if;
       update public.fin_receipt_submissions set profile_id = p_profile, updated_at = now() where id = v_sub;
       if coalesce(v_fees, 0) > 0 then
         v_waivers := jsonb_build_array(jsonb_build_object('charge_id', v_charge, 'amount_cents', v_fees,
           'reason', 'Sócio novo: mensalidade do mês de entrada'));
       end if;
-      v_alloc := jsonb_build_array(jsonb_build_object('charge_id', v_charge, 'amount_cents', v_amount));
+      v_alloc := jsonb_build_array(jsonb_build_object('charge_id', v_charge, 'amount_cents', v_first));
       v_res := public.fin_approve_receipt(md5(bp.id::text || 'approve')::uuid, v_sub, jsonb_build_object(
         'paid_on', v_paid_on, 'method', 'pix', 'account_id', bp.payload->>'account_id', 'allocations', v_alloc, 'waivers', v_waivers,
         'note', 'Sócio novo cadastrado pelo João (WhatsApp)'));
@@ -7520,6 +7555,80 @@ CREATE OR REPLACE FUNCTION conv_private.digits(p text)
  SET search_path TO ''
 AS $function$
   select regexp_replace(coalesce(p, ''), '[^0-9]', '', 'g') $function$;
+--@@ 45 funcao conv_private.entry_categories(p_kind text)
+CREATE OR REPLACE FUNCTION conv_private.entry_categories(p_kind text)
+ RETURNS SETOF fin_categories
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+  select c.* from public.fin_categories c
+  where c.active and c.kind = p_kind and c.parent_id is not null and c.system_key is null
+$function$;
+--@@ 45 funcao conv_private.entry_category_group(p_kind text, p_hint uuid)
+CREATE OR REPLACE FUNCTION conv_private.entry_category_group(p_kind text, p_hint uuid)
+ RETURNS TABLE(id uuid, name text)
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+  select g.id, g.name from public.fin_categories g
+  where g.active and g.kind = p_kind and g.parent_id is null
+    and (g.id = (select c.parent_id from public.fin_categories c where c.id = p_hint)
+         or g.system_key = case p_kind when 'expense' then 'group.other' else 'group.revenue' end)
+  order by (g.id = (select c.parent_id from public.fin_categories c where c.id = p_hint)) desc nulls last
+  limit 1
+$function$;
+--@@ 45 funcao conv_private.entry_category_pick(p_kind text, p_name text, p_de
+CREATE OR REPLACE FUNCTION conv_private.entry_category_pick(p_kind text, p_name text, p_desc text)
+ RETURNS TABLE(id uuid, name text, how text)
+ LANGUAGE plpgsql
+ STABLE SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare v_name text := nullif(trim(coalesce(p_name, '')), ''); v_n int;
+begin
+  if v_name is not null then
+    return query select c.id, c.name, 'nome'::text from conv_private.entry_categories(p_kind) c
+      where fin_private.fold_text(c.name) = fin_private.fold_text(v_name) order by c.position limit 1;
+    if found then return; end if;
+    select count(*) into v_n from conv_private.entry_categories(p_kind) c
+      where fin_private.fold_text(c.name) like '%' || fin_private.fold_text(v_name) || '%'
+         or fin_private.fold_text(v_name) like '%' || fin_private.fold_text(c.name) || '%';
+    if v_n = 1 then
+      return query select c.id, c.name, 'nome'::text from conv_private.entry_categories(p_kind) c
+        where fin_private.fold_text(c.name) like '%' || fin_private.fold_text(v_name) || '%'
+           or fin_private.fold_text(v_name) like '%' || fin_private.fold_text(c.name) || '%';
+      return;
+    end if;
+    return query with s as (
+      -- todas as palavras ditas estão no nome da categoria ("material esportivo" não vira "Material de limpeza")
+      select c.id, c.name, cardinality(array(select unnest(fin_private.word_stems(c.name)) intersect select unnest(fin_private.word_stems(v_name)))) sc
+      from conv_private.entry_categories(p_kind) c)
+      select s.id, s.name, 'nome'::text from s
+      where s.sc > 0 and s.sc = cardinality(fin_private.word_stems(v_name))
+        and (select count(*) from s s2 where s2.sc = s.sc) = 1;
+    if found then return; end if;
+  end if;
+  -- Lançamentos parecidos (palavras em comum) dos últimos 18 meses: a categoria mais usada; "Outras" só se não houver outra.
+  -- Vence quem tem mais palavras em comum (no lançamento antigo ou no nome da categoria); depois, o mais usado.
+  return query with h as (
+    select e.category_id cid, count(*) n,
+      max(cardinality(array(select unnest(fin_private.word_stems(e.description)) intersect select unnest(fin_private.word_stems(p_desc))))) sc
+    from public.fin_entries e
+    where e.kind = p_kind and e.status <> 'canceled' and e.category_id is not null and e.created_at > now() - interval '18 months'
+      and fin_private.word_stems(e.description) && fin_private.word_stems(p_desc)
+    group by e.category_id)
+    select c.id, c.name, 'historico'::text from h join conv_private.entry_categories(p_kind) c on c.id = h.cid
+    order by h.sc + cardinality(array(select unnest(fin_private.word_stems(c.name)) intersect select unnest(fin_private.word_stems(p_desc)))) desc,
+      (fin_private.fold_text(c.name) like 'outr%'), h.n desc, c.name limit 1;
+  if found then return; end if;
+  return query with s as (
+    select c.id, c.name, cardinality(array(select unnest(fin_private.word_stems(c.name)) intersect select unnest(fin_private.word_stems(p_desc)))) sc
+    from conv_private.entry_categories(p_kind) c)
+    select s.id, s.name, 'palavra'::text from s
+    where s.sc > 0 and s.sc = (select max(sc) from s) and (select count(*) from s s2 where s2.sc = s.sc) = 1;
+end $function$;
 --@@ 45 funcao conv_private.finish_followup(p_followup uuid, p_message uuid, p
 CREATE OR REPLACE FUNCTION conv_private.finish_followup(p_followup uuid, p_message uuid, p_error text)
  RETURNS void
@@ -10158,6 +10267,19 @@ begin
   values (p_charge, 'fee_waiver', p_amount, trim(p_reason), v_before, auth.uid(), p_request) returning id into v_id;
   update public.fin_charge_adjustments set after_data = fin_private.statement_json(p_charge, p_as_of) where id = v_id;
 end $function$;
+--@@ 45 funcao fin_private.word_stems(p_text text)
+CREATE OR REPLACE FUNCTION fin_private.word_stems(p_text text)
+ RETURNS text[]
+ LANGUAGE sql
+ IMMUTABLE
+ SET search_path TO ''
+AS $function$
+  select coalesce(array_agg(distinct left(w, 4)), '{}'::text[])
+  from regexp_split_to_table(fin_private.fold_text(p_text), '[^a-z0-9]+') w
+  where length(w) >= 4 and w not in ('para', 'pelo', 'pela', 'como', 'mais', 'esse', 'essa', 'este', 'esta', 'valor',
+    'despesa', 'despesas', 'gasto', 'gastos', 'compra', 'compras', 'pagamento', 'pago', 'paga', 'referente', 'clube', 'lancar', 'favor',
+    'conta', 'contas', 'servico', 'servicos', 'taxa', 'mensal', 'nota')
+$function$;
 --@@ 45 funcao public.access_requests_set_updated_at()
 CREATE OR REPLACE FUNCTION public.access_requests_set_updated_at()
  RETURNS trigger
@@ -11817,10 +11939,36 @@ AS $function$ select conv_private.ai_admin_read_more(p_session, p_domain, coales
 --@@ 45 funcao public.conv_svc_ai_admin_receipt(p_session uuid, p_message uuid
 CREATE OR REPLACE FUNCTION public.conv_svc_ai_admin_receipt(p_session uuid, p_message uuid)
  RETURNS jsonb
- LANGUAGE sql
+ LANGUAGE plpgsql
  SECURITY DEFINER
  SET search_path TO ''
-AS $function$ select conv_private.ai_admin_receipt(p_session, p_message) $function$;
+AS $function$
+declare r jsonb; v_admin uuid; v_intent uuid; v_amount bigint; v_paid_on date; v_n int; v_entry uuid; v_desc text; v_on date;
+begin
+  r := conv_private.ai_admin_receipt(p_session, p_message);
+  if not coalesce((r->>'found')::boolean, false) or r->>'status' <> 'staged' or coalesce((r->>'duplicate')::boolean, false)
+     or (r->>'payee_ok')::boolean is distinct from false then
+    return r;
+  end if;
+  v_amount := nullif(r->>'amount_cents', '')::bigint;
+  v_paid_on := nullif(r->>'paid_on', '')::date;
+  v_admin := conv_private.ai_admin_requester(p_session);
+  if v_amount is null or v_paid_on is null or v_admin is null then return r; end if;
+  select i.id into v_intent from fin_private.whatsapp_receipt_intents i
+   where i.source_message_id = p_message and i.profile_id = v_admin and i.status = 'awaiting_purpose' and i.finance_entry_id is null;
+  if v_intent is null then return r; end if;
+  select count(*), min(e.id::text)::uuid into v_n, v_entry
+  from public.fin_entries e join public.fin_entry_payments x on x.entry_id = e.id and x.kind = 'payment'
+  where e.kind = 'expense' and e.status = 'paid' and e.amount_cents = v_amount
+    and x.paid_on between v_paid_on - 3 and v_paid_on + 3
+    and not exists (select 1 from public.fin_attachments f where f.entry_id = e.id)
+    and not exists (select 1 from fin_private.cash_removed d where d.source_type = 'entry_payment' and d.source_id = x.id::text);
+  if v_n <> 1 then return r; end if;
+  if not conv_private.attach_receipt_to_entry(v_intent, v_entry, v_admin) then return r; end if;
+  select e.description, max(x.paid_on) into v_desc, v_on from public.fin_entries e join public.fin_entry_payments x on x.entry_id = e.id
+   where e.id = v_entry group by e.description;
+  return r || jsonb_build_object('attached_entry', jsonb_build_object('id', v_entry, 'description', v_desc, 'paid_on', v_on));
+end $function$;
 --@@ 45 funcao public.conv_svc_ai_admin_student_propose(p_session uuid, p json
 CREATE OR REPLACE FUNCTION public.conv_svc_ai_admin_student_propose(p_session uuid, p jsonb)
  RETURNS jsonb
@@ -12355,7 +12503,7 @@ declare
   s fin_private.whatsapp_receipt_intents%rowtype; fs public.fin_settings%rowtype; d jsonb; pr public.profiles%rowtype;
   v_admin uuid; v_admin_name text; v_contact uuid; v_conv uuid; v_today date := (now() at time zone 'America/Fortaleza')::date;
   v_month date := date_trunc('month', (now() at time zone 'America/Fortaleza'))::date; v_amount bigint; v_paid_on date; v_payee text;
-  v_hash text; v_charge uuid; v_due bigint; v_account uuid; v_prev_claims text; v_prev_sub text; v_err text; v_res jsonb;
+  v_hash text; v_charge uuid; v_due bigint; v_type text; v_desc text; v_n int; v_account uuid; v_prev_claims text; v_prev_sub text; v_err text; v_res jsonb;
 begin
   if coalesce(auth.role(), '') <> 'service_role' then raise exception 'FORBIDDEN'; end if;
   select * into s from fin_private.whatsapp_receipt_intents where id = p_stage for update;
@@ -12378,13 +12526,27 @@ begin
     return jsonb_build_object('applied', false, 'reason', 'DUPLICATE');
   end if;
 
-  -- Cobrança de mensalidade do mês ainda aberta, com o total devido igual ao comprovante.
-  select c.id, st.total_due into v_charge, v_due
+  -- Cobrança em aberto com o total devido igual ao comprovante: a mensalidade do mês primeiro; senão a ÚNICA
+  -- cobrança com esse valor (pendência, como o Day Card do convidado, ou mensalidade atrasada). Mês futuro nunca.
+  select count(*) into v_n from public.fin_member_charges c cross join lateral fin_private.charge_statement(c.id, v_paid_on) st
+  where c.profile_id = s.profile_id and c.status in ('open', 'partial') and st.total_due = v_amount
+    and (c.charge_type <> 'membership' or c.competence_month <= v_month);
+  select c.id, st.total_due, c.charge_type, c.description into v_charge, v_due, v_type, v_desc
   from public.fin_member_charges c cross join lateral fin_private.charge_statement(c.id, v_paid_on) st
-  where c.profile_id = s.profile_id and c.charge_type = 'membership' and c.competence_month = v_month and c.status in ('open', 'partial')
-  order by c.due_date limit 1;
-  if v_charge is null then return jsonb_build_object('applied', false, 'reason', 'NO_OPEN_CHARGE'); end if;
-  if v_due <> v_amount then return jsonb_build_object('applied', false, 'reason', 'AMOUNT_MISMATCH', 'due_cents', v_due); end if;
+  where c.profile_id = s.profile_id and c.status in ('open', 'partial') and st.total_due = v_amount
+    and (c.charge_type <> 'membership' or c.competence_month <= v_month)
+  order by (c.charge_type = 'membership' and c.competence_month = v_month) desc, c.due_date limit 1;
+  if v_charge is not null and v_n > 1 and not (v_type = 'membership' and exists (select 1 from public.fin_member_charges c
+      where c.id = v_charge and c.competence_month = v_month)) then
+    return jsonb_build_object('applied', false, 'reason', 'AMBIGUOUS');
+  end if;
+  if v_charge is null then
+    select st.total_due into v_due from public.fin_member_charges c cross join lateral fin_private.charge_statement(c.id, v_paid_on) st
+    where c.profile_id = s.profile_id and c.charge_type = 'membership' and c.competence_month = v_month and c.status in ('open', 'partial')
+    order by c.due_date limit 1;
+    if v_due is null then return jsonb_build_object('applied', false, 'reason', 'NO_OPEN_CHARGE'); end if;
+    return jsonb_build_object('applied', false, 'reason', 'AMOUNT_MISMATCH', 'due_cents', v_due);
+  end if;
 
   select p.id, p.name into v_admin, v_admin_name from public.profiles p
    where p.id = fs.finance_admin_profile_id and p.role::text = 'admin' and coalesce(p.is_active, true);
@@ -12396,7 +12558,7 @@ begin
   insert into public.fin_receipt_submissions(id, profile_id, status, storage_path, file_name, content_type, size_bytes, content_sha256,
     declared_amount_cents, declared_paid_on, declared_reference, member_note, ocr_status, ocr, possible_duplicate, request_id, source, source_message_id)
   values (s.id, s.profile_id, 'submitted', d->>'storage_path', d->>'file_name', d->>'content_type', (d->>'size_bytes')::integer, v_hash,
-    v_amount, v_paid_on, d->>'declared_reference', 'Mensalidade do mês pelo WhatsApp (baixa automática do João)',
+    v_amount, v_paid_on, d->>'declared_reference', case when v_type = 'membership' then 'Mensalidade pelo WhatsApp (baixa automática do João)' else 'Pendência pelo WhatsApp (baixa automática do João)' end,
     coalesce(d->>'ocr_status', 'not_run'), d->'ocr', false, s.id, 'whatsapp', s.source_message_id);
 
   v_prev_claims := current_setting('request.jwt.claims', true);
@@ -12407,7 +12569,7 @@ begin
     v_res := public.fin_approve_receipt(md5(s.id::text || 'auto-membership')::uuid, s.id, jsonb_build_object(
       'paid_on', v_paid_on, 'method', 'pix', 'account_id', v_account,
       'allocations', jsonb_build_array(jsonb_build_object('charge_id', v_charge, 'amount_cents', v_amount)),
-      'note', 'Mensalidade do mês: comprovante do WhatsApp com valor e favorecido conferidos pelo João'));
+      'note', 'Comprovante do WhatsApp com valor e favorecido conferidos pelo João'));
   exception when others then
     v_err := sqlerrm;
   end;
@@ -12418,14 +12580,16 @@ begin
     return jsonb_build_object('applied', false, 'reason', 'APPROVE_FAILED', 'error', left(v_err, 120));
   end if;
 
-  update fin_private.whatsapp_receipt_intents set status = 'confirmed', purpose_kind = 'membership',
-    purpose_detail = 'Mensalidade de ' || to_char(v_month, 'MM/YYYY') || ' (baixa automática)', finance_submission_id = s.id, updated_at = now()
+  update fin_private.whatsapp_receipt_intents set status = 'confirmed',
+    purpose_kind = case when v_type = 'membership' then 'membership' else 'member_pendency' end,
+    purpose_detail = left(case when v_type = 'membership' then 'Mensalidade de ' || to_char(v_month, 'MM/YYYY')
+      else coalesce(v_desc, 'Pendência') end || ' (baixa automática)', 200), finance_submission_id = s.id, updated_at = now()
   where id = s.id;
 
   select c.id into v_contact from public.conv_contacts c where c.profile_id = v_admin and not coalesce(c.opt_out, false)
    order by c.updated_at desc nulls last limit 1;
   if v_contact is not null then v_conv := conv_private.open_direct(v_contact); end if;
-  return jsonb_build_object('applied', true, 'month', v_month, 'amount_cents', v_amount, 'charge_id', v_charge,
+  return jsonb_build_object('applied', true, 'month', v_month, 'charge_type', v_type, 'description', v_desc, 'amount_cents', v_amount, 'charge_id', v_charge,
     'admin_conversation_id', v_conv, 'admin_name', split_part(v_admin_name, ' ', 1), 'sender_name', pr.name);
 end $function$;
 --@@ 45 funcao public.conv_svc_receipt_purpose(p_stage uuid, p_message uuid, p
@@ -21739,6 +21903,12 @@ revoke all on routine conv_private.conversation_contact(uuid) from public, anon,
 revoke all on routine conv_private.court_busy(uuid,date,integer,integer,uuid) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao conv_private.dedupe_contact(uuid)
 revoke all on routine conv_private.dedupe_contact(uuid) from public, anon, authenticated, service_role;
+--@@ 89 revoke-funcao conv_private.entry_categories(text)
+revoke all on routine conv_private.entry_categories(text) from public, anon, authenticated, service_role;
+--@@ 89 revoke-funcao conv_private.entry_category_group(text,uuid)
+revoke all on routine conv_private.entry_category_group(text,uuid) from public, anon, authenticated, service_role;
+--@@ 89 revoke-funcao conv_private.entry_category_pick(text,text,text)
+revoke all on routine conv_private.entry_category_pick(text,text,text) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao conv_private.finish_followup(uuid,uuid,text)
 revoke all on routine conv_private.finish_followup(uuid,uuid,text) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao conv_private.finish_message(uuid,boolean,text,text)
@@ -22115,6 +22285,8 @@ revoke all on routine fin_private.payee_matches(text,text[]) from public, anon, 
 revoke all on routine fin_private.require_member_reader() from public, anon, authenticated, service_role;
 --@@ 89 revoke fin_private.whatsapp_receipt_intents
 revoke all on table fin_private.whatsapp_receipt_intents from anon, authenticated, service_role;
+--@@ 89 revoke-funcao fin_private.word_stems(text)
+revoke all on routine fin_private.word_stems(text) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao fin_public_settings()
 revoke all on routine fin_public_settings() from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao fin_receipt_queue(text,integer,integer)
