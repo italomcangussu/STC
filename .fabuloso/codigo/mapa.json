@@ -4427,12 +4427,16 @@
    ],
    "hosts": [],
    "shared": [
+    "aiAgent/adminActionPayloads.ts",
     "aiAgent/adminAssistant.ts",
     "aiAgent/adminFiles.ts",
     "aiAgent/adminFinance.ts",
     "aiAgent/adminMessages.ts",
+    "aiAgent/adminMessagesAdm.ts",
+    "aiAgent/adminMessagesFin.ts",
     "aiAgent/adminPlan.ts",
     "aiAgent/adminReads.ts",
+    "aiAgent/adminText.ts",
     "aiAgent/agendaLookup.ts",
     "aiAgent/answerParse.ts",
     "aiAgent/audio.ts",
@@ -4460,7 +4464,12 @@
     "aiAgent/studentCard.ts",
     "aiAgent/topicState.ts",
     "aiAgent/turn.ts",
+    "aiAgent/turnAnswerGuards.ts",
+    "aiAgent/turnContext.ts",
+    "aiAgent/turnDelivery.ts",
+    "aiAgent/turnKit.ts",
     "aiAgent/turnOutcome.ts",
+    "aiAgent/turnShortcuts.ts",
     "aiAgent/turnTypes.ts",
     "aiAgent/welcome.ts",
     "aiAgent/whatsappFormat.ts",
@@ -4471,7 +4480,7 @@
     "uazWebhook.ts"
    ],
    "invocadaPor": [],
-   "deploy": "em dia"
+   "deploy": "alterada desde o último deploy"
   }
  ],
  "alertas": [
