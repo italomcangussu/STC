@@ -1,7 +1,7 @@
 {
   "versao": 3,
-  "geradoEm": "2026-10-16T16:33:33.117Z",
-  "commit": "df37e0b9",
+  "geradoEm": "2026-10-22T00:19:24.556Z",
+  "commit": "04672e40",
   "pastas": [
     "__tests__",
     "__tests__/admin",
@@ -46,8 +46,8 @@
     "tasks"
   ],
   "agentmap": {
-    "arquivos": 606,
-    "sha": "df37e0b",
+    "arquivos": 628,
+    "sha": "04672e4",
     "hubs": [
       "lib/supabase.ts",
       "dist/assets/react-vendor-CcCdIb5n.js",
@@ -56,9 +56,9 @@
       "__tests__/finance/sql/harness.ts",
       "dist/assets/icons-vendor-Bd_-vDZl.js",
       "components/finance/ui.tsx",
+      "supabase/functions/_shared/aiAgent/promptAdmin.ts",
       "__tests__/conversations/sql/harness.ts",
-      "lib/finance/money.ts",
-      "lib/logger.ts"
+      "supabase/functions/_shared/aiAgent/promptContext.ts"
     ]
   },
   "skillsPorPerfil": {
@@ -533,7 +533,7 @@
       {
         "name": "imagegen",
         "origem": "global",
-        "hash": "f549d16f276a"
+        "hash": "a947514072cf"
       },
       {
         "name": "imagegen-frontend-mobile",
@@ -608,7 +608,7 @@
       {
         "name": "openai-docs",
         "origem": "global",
-        "hash": "2a860a157e27"
+        "hash": "cc539af365c7"
       },
       {
         "name": "performance-profiler",
@@ -629,6 +629,11 @@
         "name": "Plugin Structure",
         "origem": "plugin",
         "hash": "c269e921160e"
+      },
+      {
+        "name": "plugin-creator",
+        "origem": "global",
+        "hash": "329d2e945e2e"
       },
       {
         "name": "push-validator",
@@ -661,11 +666,6 @@
         "hash": "d3795655c9b3"
       },
       {
-        "name": "review-agent",
-        "origem": "global",
-        "hash": "f53558561e05"
-      },
-      {
         "name": "simulador-ios",
         "origem": "global",
         "hash": "ea7006f7bdfb"
@@ -678,7 +678,7 @@
       {
         "name": "skill-creator",
         "origem": "global",
-        "hash": "26851dd4ef55"
+        "hash": "e6b443a863e3"
       },
       {
         "name": "skill-installer",

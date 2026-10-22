@@ -4201,7 +4201,7 @@
     "uazChat.ts"
    ],
    "invocadaPor": [],
-   "deploy": "em dia"
+   "deploy": "alterada desde o último deploy"
   },
   {
    "nome": "joao-admin-briefing",
@@ -4224,7 +4224,7 @@
     "uazChat.ts"
    ],
    "invocadaPor": [],
-   "deploy": "em dia"
+   "deploy": "alterada desde o último deploy"
   },
   {
    "nome": "joao-birthdays",
@@ -4455,7 +4455,7 @@
     "uazWebhook.ts"
    ],
    "invocadaPor": [],
-   "deploy": "alterada desde o último deploy"
+   "deploy": "em dia"
   }
  ],
  "alertas": [

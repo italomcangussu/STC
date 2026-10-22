@@ -1,5 +1,5 @@
 # Funções
-> 514 funções nos schemas conv_private, fin_private, public, sig_private. Corpo completo sob demanda: `select pg_get_functiondef('<schema.nome>(<args>)'::regprocedure)`.
+> 516 funções nos schemas conv_private, fin_private, public, sig_private. Corpo completo sob demanda: `select pg_get_functiondef('<schema.nome>(<args>)'::regprocedure)`.
 
 | Função | Argumentos | Retorno | Ling. | Segurança | anon | Nota |
 |---|---|---|---|---|---|---|
@@ -9,7 +9,9 @@
 | conv_private.admin_briefing_data | `p_profile uuid` | `jsonb` | plpgsql | DEFINER | não |  |
 | conv_private.admin_briefing_data_base | `p_profile uuid` | `jsonb` | plpgsql | DEFINER | não |  |
 | conv_private.admin_briefing_targets | — | `TABLE(profile_id uuid, name text, conversation_id uuid)` | sql | DEFINER | não |  |
+| conv_private.admin_pending_receipt | `p_conversation uuid, p_admin uuid` | `TABLE(id uuid, declared_amount_cents bigint, declared_paid_…` | sql | DEFINER | não |  |
 | conv_private.admin_prefs_json | `p_profile uuid` | `jsonb` | sql | DEFINER | não |  |
+| conv_private.admin_receipt_materialize | `p_receipt uuid, p_admin uuid` | `uuid` | plpgsql | DEFINER | não |  |
 | conv_private.ai_active_settings | — | `conv_ai_settings` | sql | DEFINER | não |  |
 | conv_private.ai_admin_access_propose | `p_session uuid, p jsonb` | `jsonb` | plpgsql | DEFINER | não |  |
 | conv_private.ai_admin_adm_propose | `p_session uuid, p jsonb` | `jsonb` | plpgsql | DEFINER | não |  |

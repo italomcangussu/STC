@@ -135,3 +135,7 @@ Entregue: retornos/lembretes (criar e concluir/cancelar, mais leitura dos penden
 - Fallback: quando o modelo tenta transferir e a trava de sócio no privado impede, o João faz uma segunda chamada (sem opção de transferir) para responder de verdade; só depois usa uma frase pronta (3 variações). O turno grava `fallback: reformulada|pronta` + o que foi pedido em `conv_ai_decisions.tool_result`: é a fila do que ensinar a seguir.
 - Consultas novas (N0, `conv_svc_ai_admin_read_more` / `_members`): `socios`, `inadimplentes`, `pagamentos`, `socio_ficha`, `vencimentos`, `alunos`, `movimentos`.
 - Ações novas: `comunicado_enviar` (WhatsApp de todos os sócios, agendável), `resumo_destinatario` (lista do resumo das 8h), arquivos (`file_kind`: PDF de relatório, comprovante, anexo de despesa, documento).
+
+## Auditoria das conversas do Henrique (21/10) — lacunas abertas
+- Corrigido: cadastro de sócio com comprovante só como intenção (`admin_pending_receipt`/`admin_receipt_materialize`); passos manuais do plano usam o `ADMIN_PANEL_MAP` real.
+- Abertas: comprovante usado em despesa/receita não anexa ao lançamento (`fin_entry_create` aceitar id da intenção); João não cadastra aluno nem registra primeiro pagamento/mensalidade recorrente de aluno; não corrige/exclui movimento ou pagamento de aluno pelo chat (só indica o painel); falta categoria para limpeza/manutenção (decisão do clube). Detalhes no histórico de 2026-10-21.

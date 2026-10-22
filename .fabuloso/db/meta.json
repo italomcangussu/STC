@@ -1,7 +1,7 @@
 {
-  "geradoEm": "2026-10-22T00:10:26.590Z",
+  "geradoEm": "2026-10-22T00:18:53.267Z",
   "fonte": "api supabase (smztsayzldjmkzmufqcz)",
-  "hash": "88029333df54",
+  "hash": "a117ffb0254b",
   "banco": "postgres",
   "schemas": [
     "conv_private",
@@ -10,7 +10,7 @@
     "sig_private"
   ],
   "tabelas": 129,
-  "funcoes": 514,
+  "funcoes": 516,
   "alertas": {
     "alta": 25,
     "media": 13,

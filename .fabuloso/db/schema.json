@@ -29721,6 +29721,19 @@
       "comentario": null
     },
     {
+      "nome": "conv_private.admin_pending_receipt",
+      "args": "p_conversation uuid, p_admin uuid",
+      "retorno": "TABLE(id uuid, declared_amount_cents bigint, declared_paid_on date, ocr jsonb, created_at timestamp with time zone)",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
       "nome": "conv_private.admin_prefs_json",
       "args": "p_profile uuid",
       "retorno": "jsonb",
@@ -29729,6 +29742,19 @@
       "security_definer": true,
       "search_path": "search_path=\"\"",
       "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.admin_receipt_materialize",
+      "args": "p_receipt uuid, p_admin uuid",
+      "retorno": "uuid",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
       "exec_anon": false,
       "exec_authenticated": false,
       "comentario": null
