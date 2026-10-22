@@ -58,6 +58,9 @@ function formNudgeProposal(s: Ctx): string {
   return `Vou lembrar por WhatsApp ${s.count} ${Number(s.count) === 1 ? 'sócio' : 'sócios'} que ainda não responderam o «${s.form_title}», ${quando}: ${lista}${fora ? ` (${fora})` : ''}.\nTexto:\n«${s.body}»\nConfirma?`;
 }
 
+// O banco só liga o comprovante ao lançamento quando o valor lido bate (conv_private.admin_entry_receipt).
+const receiptNote = (s: Ctx, text: string) => (s.receipt_id ? `, ${text}` : '');
+
 export function adminProposalMessage(action: AdminAction, s: Ctx): string {
   if (action === 'student_card_renew') return studentCardProposalMessage(s);
   if (action === 'fin_member_create' || action === 'fin_access_approve') {
@@ -115,7 +118,7 @@ export function adminProposalMessage(action: AdminAction, s: Ctx): string {
   if (action === 'fin_entry_create') {
     const tipo = s.entry_kind === 'expense' ? 'despesa' : 'receita';
     const quando = s.entry_status === 'pending' ? `a pagar até ${dateBR(s.due_date)}` : `paga em ${dateBR(s.paid_on)}`;
-    return `Vou lançar a ${tipo}: ${s.description}, ${centsBR(s.amount_cents)}, categoria ${s.category_name}, conta ${s.account_name}, ${quando}. Confirma?`;
+    return `Vou lançar a ${tipo}: ${s.description}, ${centsBR(s.amount_cents)}, categoria ${s.category_name}, conta ${s.account_name}, ${quando}${receiptNote(s, 'com o comprovante que você mandou anexado')}. Confirma?`;
   }
   if (action === 'fin_pendency_create') {
     const guest = s.guest_name ? ` (convidado ${s.guest_name}${s.guest_date ? ` em ${dateBR(s.guest_date)}` : ''})` : '';
@@ -164,7 +167,7 @@ export function adminSuccessMessage(action: AdminAction, s: Ctx): string {
     return `Pronto: ${Number(r.created ?? 0)} cobrança(s) nova(s) gerada(s); ${Number(r.existing ?? 0)} já existiam${Number(r.missing_price ?? 0) ? `; ${Number(r.missing_price)} mês(es) sem preço ficaram de fora` : ''}.`;
   }
   if (action === 'fin_receipt_reject') return `Pronto: comprovante de ${s.member_name} recusado.`;
-  if (action === 'fin_entry_create') return `Pronto: ${s.entry_kind === 'expense' ? 'despesa' : 'receita'} lançada: ${s.description}, ${centsBR(s.amount_cents)}.`;
+  if (action === 'fin_entry_create') return `Pronto: ${s.entry_kind === 'expense' ? 'despesa' : 'receita'} lançada: ${s.description}, ${centsBR(s.amount_cents)}${receiptNote(s, 'comprovante anexado')}.`;
   const r = (s.result ?? {}) as Ctx;
   if (action === 'fin_pendency_create') {
     const envio = r.automation_recipient_id ? ' A cobrança já está na fila de envio.' : '';

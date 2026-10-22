@@ -188,7 +188,8 @@ export const deleteRecurrence = (id: string, version: number, requestId = newReq
   call<{ id: string; canceled: number; kept: number }>('fin_delete_recurrence', { p_request_id: requestId, p_id: id, p_expected_version: version, p_data: {} });
 export const generateRecurrences = (requestId = newRequestId()) => call<{ created: number }>('fin_generate_recurrences', { p_request_id: requestId, p_until: null });
 
-export interface AttachmentRow { id: string; entry_id: string; storage_path: string; file_name: string; content_type: string; size_bytes: number; uploaded_at: string; removed_at: string | null }
+/** `bucket`: fin-docs (enviado pelo painel) ou fin-receipts (comprovante do WhatsApp anexado pelo João). */
+export interface AttachmentRow { id: string; entry_id: string; storage_path: string; bucket?: string | null; file_name: string; content_type: string; size_bytes: number; uploaded_at: string; removed_at: string | null }
 export async function listAttachments(entryId: string): Promise<AttachmentRow[]> {
   const { data, error } = await supabase.from('fin_attachments').select('*').eq('entry_id', entryId).is('removed_at', null).order('uploaded_at');
   if (error) throw error;

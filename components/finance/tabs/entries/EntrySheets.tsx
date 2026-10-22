@@ -156,8 +156,8 @@ export const EntrySheet: React.FC<{ entry: FinEntry | null; onClose: () => void;
     catch (err) { notifyFinanceError(err, 'Não foi possível enviar o anexo.', 'finance_attachment_failed'); }
     finally { setBusy(false); if (fileRef.current) fileRef.current.value = ''; }
   };
-  const openAttachment = async (path: string) => {
-    try { window.open(await signedUrl(DOCS_BUCKET, path, 120), '_blank', 'noopener,noreferrer'); }
+  const openAttachment = async (path: string, bucket?: string | null) => {
+    try { window.open(await signedUrl(bucket || DOCS_BUCKET, path, 120), '_blank', 'noopener,noreferrer'); }
     catch (err) { notifyFinanceError(err, 'Não foi possível abrir o anexo.', 'finance_attachment_open_failed'); }
   };
 
@@ -282,7 +282,7 @@ export const EntrySheet: React.FC<{ entry: FinEntry | null; onClose: () => void;
           <ul className="space-y-1.5">
             {attachments.data!.map((a) => (
               <li key={a.id} className="flex items-center justify-between gap-2 text-xs">
-                <button className="min-h-11 truncate text-left font-bold text-saibro-700 underline" onClick={() => openAttachment(a.storage_path)}>{a.file_name}</button>
+                <button className="min-h-11 truncate text-left font-bold text-saibro-700 underline" onClick={() => openAttachment(a.storage_path, a.bucket)}>{a.file_name}</button>
                 <button className="min-h-11 px-2 font-bold text-red-600" onClick={async () => {
                   if (!reasonOk) { notify.error('Escreva o motivo da remoção no campo de motivo (mínimo de 5 caracteres).'); return; }
                   if (await confirm({ tone: 'warning', title: 'Remover este anexo?', description: 'O arquivo deixa de aparecer; a remoção fica registrada.', confirmLabel: 'Remover' })) await run(() => removeAttachment(a.id, reason.trim(), key), 'Anexo removido.');
