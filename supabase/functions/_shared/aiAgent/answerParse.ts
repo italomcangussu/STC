@@ -8,7 +8,7 @@ import { parsePlan } from './adminPlan.ts';
 import { parseBirthday } from './adminAssistant.ts';
 import { participantes } from './decide.ts';
 import { parseLessons } from './lessonsBatch.ts';
-import { ADJUST_KINDS, ADM_ACTIONS, type AdmAction, type Answer, FIN_ACTIONS, type FinAction, type FormQuestionSlot, type Intent, PAY_METHODS, PENDENCY_KINDS, type PayMethod, type PendencyKind, QUESTION_TYPES, type Slots } from './turnTypes.ts';
+import { ADJUST_KINDS, ADM_ACTIONS, type Answer, FIN_ACTIONS, type FormQuestionSlot, type Intent, PAY_METHODS, PENDENCY_KINDS, QUESTION_TYPES, type Slots } from './turnTypes.ts';
 
 export const REACTIONS = ['👍', '😂', '🎾', '🔥', '👏', '❤️', '🙌', '💪', '😅', '🤝'] as const;
 const stripVs = (e: string) => e.replace(/️/g, '');
@@ -48,79 +48,58 @@ const strList = (v: unknown): string[] => (Array.isArray(v) ? v.map((x) => Strin
 const INTENTS: Intent[] = ['reservar', 'cancelar', 'remarcar', 'consultar', 'consultar_disponibilidade', 'informar', 'entrar', 'participantes', 'aulas_lote', 'admin_financeiro', 'admin_consulta', 'admin_acao', 'outro'];
 export const ACTIONABLE: Intent[] = ['reservar', 'cancelar', 'remarcar'];
 
+/* Uma regra por campo: valor válido passa, inválido vira null (o modelo disse algo, mas não serve). */
+type Rule = (v: unknown) => unknown;
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const HHMM_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
+const match = (re: RegExp): Rule => (v) => (typeof v === 'string' && re.test(v) ? v : null);
+const oneOf = (list: readonly unknown[]): Rule => (v) => (list.includes(v) ? v : null);
+const text = (max?: number): Rule => (v) => (max ? str(v)?.slice(0, max) ?? null : str(v));
+const bool: Rule = (v) => (typeof v === 'boolean' ? v : null);
+const onlyTrue: Rule = (v) => v === true;
+const isoDate = match(DATE_RE);
+const hhmm = match(HHMM_RE);
+/** "1.250,50" ou 1250.5 → 1250.5; zero, negativo ou ilegível → null. */
+const amount: Rule = (raw) => {
+  const v = typeof raw === 'string' ? Number(raw.replace(/\./g, '').replace(',', '.')) : raw;
+  return typeof v === 'number' && Number.isFinite(v) && v > 0 ? v : null;
+};
+
+const SLOT_RULES: { [K in keyof Slots]?: Rule } = {
+  type: oneOf(['Play', 'Aula']),
+  date: isoDate, start: hhmm, availability_from: hhmm, availability_to: hhmm,
+  duration: oneOf([30, 60, 90, 120]),
+  court_label: text(), participant_names: strList, participants_known: onlyTrue,
+  guest_name: text(), professor_name: text(), student_names: strList,
+  lessons: (v) => parseLessons(v) ?? [],
+  reservation_ref: text(), add_names: strList, remove_names: strList, remove_guest: onlyTrue,
+  fin_action: oneOf(FIN_ACTIONS), member_name: text(), description: text(300), amount,
+  due_date: isoDate, pendency_kind: oneOf(PENDENCY_KINDS), guest_date: isoDate, send_now: onlyTrue,
+  pendency_ref: (v) => str(v)?.toLowerCase() ?? null,
+  paid_on: isoDate, method: oneOf(PAY_METHODS), account_name: text(), reason: text(200),
+  adjust_kind: oneOf(ADJUST_KINDS), category_name: text(), receipt_date: isoDate,
+  entry_status: oneOf(['paid', 'pending']),
+  adm_action: oneOf(ADM_ACTIONS), ann_title: text(80), ann_message: text(600), active: bool,
+  doc_title: text(), by_name: text(), phone: text(), email: text(), note: text(), send_body: text(),
+  dependent_name: text(120), student_name: text(120), student_plan: oneOf(['mensalista', 'kids', 'day_card']), paid: bool,
+  relationship: oneOf(['esposa', 'esposo', 'filho', 'filha', 'outro']),
+  pref: oneOf(['resumo', 'estilo', 'alertas', 'saldo_minimo', 'dias_atraso', 'conta_padrao']), pref_value: text(),
+  birthday: parseBirthday,
+  file_kind: (v) => (isFileKind(v) ? v : null),
+  read_domain: (v) => (isAdminReadDomain(v) ? v : null), read_from: isoDate, read_to: isoDate,
+  form_ref: text(120), form_title: text(120), form_questions: (v) => parseFormQuestions(v),
+  form_secret: bool, form_multiple: bool,
+};
+
 /**
  * Só o que o modelo realmente escreveu: chave ausente fica `undefined` (não apaga o que já se sabia);
  * lista presente — mesmo vazia — substitui (o modelo reescreve o estado inteiro a cada turno).
  */
 export function parseSlots(raw: unknown): Slots {
   const o = raw && typeof raw === 'object' && !Array.isArray(raw) ? raw as Record<string, unknown> : {};
-  const out: Slots = {};
-  if (o.type === 'Play' || o.type === 'Aula') out.type = o.type; else if ('type' in o) out.type = null;
-  if (typeof o.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(o.date)) out.date = o.date; else if ('date' in o) out.date = null;
-  if (typeof o.start === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(o.start)) out.start = o.start; else if ('start' in o) out.start = null;
-  if (typeof o.availability_from === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(o.availability_from)) out.availability_from = o.availability_from; else if ('availability_from' in o) out.availability_from = null;
-  if (typeof o.availability_to === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(o.availability_to)) out.availability_to = o.availability_to; else if ('availability_to' in o) out.availability_to = null;
-  if (typeof o.duration === 'number' && [30, 60, 90, 120].includes(o.duration)) out.duration = o.duration; else if ('duration' in o) out.duration = null;
-  if ('court_label' in o) out.court_label = str(o.court_label);
-  if ('participant_names' in o) out.participant_names = strList(o.participant_names);
-  if ('participants_known' in o) out.participants_known = o.participants_known === true;
-  if ('guest_name' in o) out.guest_name = str(o.guest_name);
-  if ('professor_name' in o) out.professor_name = str(o.professor_name);
-  if ('student_names' in o) out.student_names = strList(o.student_names);
-  if ('lessons' in o) out.lessons = parseLessons(o.lessons) ?? [];
-  if ('reservation_ref' in o) out.reservation_ref = str(o.reservation_ref);
-  if ('add_names' in o) out.add_names = strList(o.add_names);
-  if ('remove_names' in o) out.remove_names = strList(o.remove_names);
-  if ('remove_guest' in o) out.remove_guest = o.remove_guest === true;
-  const isoDate = (v: unknown) => (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null);
-  if ('fin_action' in o) out.fin_action = FIN_ACTIONS.includes(o.fin_action as FinAction) ? o.fin_action as FinAction : null;
-  if ('member_name' in o) out.member_name = str(o.member_name);
-  if ('description' in o) out.description = str(o.description)?.slice(0, 300) ?? null;
-  if ('amount' in o) {
-    const v = typeof o.amount === 'string' ? Number(o.amount.replace(/\./g, '').replace(',', '.')) : o.amount;
-    out.amount = typeof v === 'number' && Number.isFinite(v) && v > 0 ? v : null;
-  }
-  if ('due_date' in o) out.due_date = isoDate(o.due_date);
-  if ('pendency_kind' in o) out.pendency_kind = PENDENCY_KINDS.includes(o.pendency_kind as PendencyKind) ? o.pendency_kind as PendencyKind : null;
-  if ('guest_date' in o) out.guest_date = isoDate(o.guest_date);
-  if ('send_now' in o) out.send_now = o.send_now === true;
-  if ('pendency_ref' in o) out.pendency_ref = str(o.pendency_ref)?.toLowerCase() ?? null;
-  if ('paid_on' in o) out.paid_on = isoDate(o.paid_on);
-  if ('method' in o) out.method = PAY_METHODS.includes(o.method as PayMethod) ? o.method as PayMethod : null;
-  if ('account_name' in o) out.account_name = str(o.account_name);
-  if ('reason' in o) out.reason = str(o.reason)?.slice(0, 200) ?? null;
-  if ('adjust_kind' in o) out.adjust_kind = (ADJUST_KINDS as readonly unknown[]).includes(o.adjust_kind) ? o.adjust_kind as typeof ADJUST_KINDS[number] : null;
-  if ('category_name' in o) out.category_name = str(o.category_name);
-  if ('receipt_date' in o) out.receipt_date = isoDate(o.receipt_date);
-  if ('entry_status' in o) out.entry_status = o.entry_status === 'paid' || o.entry_status === 'pending' ? o.entry_status : null;
-  if ('adm_action' in o) out.adm_action = (ADM_ACTIONS as readonly unknown[]).includes(o.adm_action) ? o.adm_action as AdmAction : null;
-  if ('ann_title' in o) out.ann_title = str(o.ann_title)?.slice(0, 80) ?? null;
-  if ('ann_message' in o) out.ann_message = str(o.ann_message)?.slice(0, 600) ?? null;
-  if ('active' in o) out.active = typeof o.active === 'boolean' ? o.active : null;
-  if ('doc_title' in o) out.doc_title = str(o.doc_title);
-  if ('by_name' in o) out.by_name = str(o.by_name);
-  if ('phone' in o) out.phone = str(o.phone);
-  if ('email' in o) out.email = str(o.email);
-  if ('note' in o) out.note = str(o.note);
-  if ('send_body' in o) out.send_body = str(o.send_body);
-  if ('dependent_name' in o) out.dependent_name = str(o.dependent_name)?.slice(0, 120) ?? null;
-  if ('student_name' in o) out.student_name = str(o.student_name)?.slice(0, 120) ?? null;
-  if ('student_plan' in o) out.student_plan = ['mensalista', 'kids', 'day_card'].includes(o.student_plan as string) ? o.student_plan as Slots['student_plan'] : null;
-  if ('paid' in o) out.paid = typeof o.paid === 'boolean' ? o.paid : null;
-  if ('relationship' in o) out.relationship = ['esposa', 'esposo', 'filho', 'filha', 'outro'].includes(o.relationship as string) ? o.relationship as Slots['relationship'] : null;
-  if ('pref' in o) out.pref = ['resumo', 'estilo', 'alertas', 'saldo_minimo', 'dias_atraso', 'conta_padrao'].includes(o.pref as string) ? o.pref as Slots['pref'] : null;
-  if ('pref_value' in o) out.pref_value = str(o.pref_value);
-  if ('birthday' in o) out.birthday = parseBirthday(o.birthday);
-  if ('file_kind' in o) out.file_kind = isFileKind(o.file_kind) ? o.file_kind : null;
-  if ('read_domain' in o) out.read_domain = isAdminReadDomain(o.read_domain) ? o.read_domain : null;
-  if ('read_from' in o) out.read_from = isoDate(o.read_from);
-  if ('read_to' in o) out.read_to = isoDate(o.read_to);
-  if ('form_ref' in o) out.form_ref = str(o.form_ref)?.slice(0, 120) ?? null;
-  if ('form_title' in o) out.form_title = str(o.form_title)?.slice(0, 120) ?? null;
-  if ('form_questions' in o) out.form_questions = parseFormQuestions(o.form_questions);
-  if ('form_secret' in o) out.form_secret = typeof o.form_secret === 'boolean' ? o.form_secret : null;
-  if ('form_multiple' in o) out.form_multiple = typeof o.form_multiple === 'boolean' ? o.form_multiple : null;
-  return out;
+  const out: Record<string, unknown> = {};
+  for (const [k, rule] of Object.entries(SLOT_RULES) as [string, Rule][]) if (k in o) out[k] = rule(o[k]);
+  return out as Slots;
 }
 
 /** Perguntas ditadas pelo administrador; o que não tem texto ou tipo reconhecido é descartado (o banco valida o resto). */
