@@ -11,7 +11,7 @@ export type AdminAction = 'fin_pendency_create' | 'fin_pendency_collection' | 'f
   | 'fin_charge_cancel' | 'fin_charge_adjust' | 'fin_payment_reverse' | 'fin_receipt_reject' | 'fin_entry_create' | 'fin_receipt_approve' | 'fin_charges_generate'
   | 'adm_announcement_create' | 'adm_announcement_deactivate' | 'adm_student_status' | 'adm_member_status' | 'adm_signature_resend' | 'adm_reservation_cancel'
   | 'fin_member_create' | 'fin_access_approve' | 'adm_access_reject'
-  | 'adm_followup_create' | 'adm_followup_done' | 'adm_court_block' | 'adm_pref_set' | 'adm_dependent_create' | 'adm_message_send' | 'adm_broadcast_send' | 'adm_briefing_recipient' | 'adm_memory_forget'
+  | 'adm_followup_create' | 'adm_followup_done' | 'adm_court_block' | 'adm_pref_set' | 'adm_dependent_create' | 'adm_student_create' | 'adm_message_send' | 'adm_broadcast_send' | 'adm_briefing_recipient' | 'adm_memory_forget'
   | 'adm_form_create' | 'adm_form_toggle' | 'adm_form_nudge' | 'adm_group_post';
 
 const centsBR = (v: unknown) => `R$ ${(Number(v ?? 0) / 100).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`;
@@ -58,6 +58,15 @@ function formNudgeProposal(s: Ctx): string {
   return `Vou lembrar por WhatsApp ${s.count} ${Number(s.count) === 1 ? 'sócio' : 'sócios'} que ainda não responderam o «${s.form_title}», ${quando}: ${lista}${fora ? ` (${fora})` : ''}.\nTexto:\n«${s.body}»\nConfirma?`;
 }
 
+const studentPlanLabel = (s: Ctx) => s.plan === 'Day Card' ? 'aluno de Day Card' : s.card_tier === 'kids' ? 'Mensalista Kids' : 'mensalista';
+function studentCreateProposal(s: Ctx): string {
+  const plano = s.plan === 'Day Card' ? 'aluno de Day Card (aula avulsa)' : `${studentPlanLabel(s)} (${centsBR(s.price_cents)}/mês)`;
+  if (!s.paid) return `Vou cadastrar ${s.name} como ${plano}${s.phone ? `, telefone ${s.phone}` : ''}. O Card fica inativo até o pagamento. Confirma?`;
+  const r = (s.receipt ?? null) as Ctx | null;
+  const comprovante = r ? `, usando o comprovante de ${centsBR(r.amount_cents)}${Number(r.remaining_cents) > Number(s.amount_cents) ? ` (sobram ${centsBR(Number(r.remaining_cents) - Number(s.amount_cents))} para outro aluno)` : ''}` : ', sem comprovante';
+  return `Vou cadastrar ${s.name} como ${plano} e registrar o pagamento de ${centsBR(s.amount_cents)} em ${dateBR(s.paid_on)}${comprovante}. Card válido até ${dateBR(s.new_valid_until)}. Confirma?`;
+}
+
 // O banco só liga o comprovante ao lançamento quando o valor lido bate (conv_private.admin_entry_receipt).
 const receiptNote = (s: Ctx, text: string) => (s.receipt_id ? `, ${text}` : '');
 
@@ -88,6 +97,7 @@ export function adminProposalMessage(action: AdminAction, s: Ctx): string {
   if (action === 'adm_form_create') return formCreateProposal(s);
   if (action === 'adm_form_toggle') return `Vou ${s.active ? 'reabrir' : 'encerrar'} o formulário «${s.title}»${s.active ? (s.expires_at ? ` com prazo até ${dateBR(s.expires_at)}` : '') : ' (ninguém mais consegue responder)'}. Confirma?`;
   if (action === 'adm_form_nudge') return formNudgeProposal(s);
+  if (action === 'adm_student_create') return studentCreateProposal(s);
   if (action === 'adm_dependent_create') return `Vou cadastrar ${s.dependent_name} como ${s.relationship} de ${s.member_name} (dependente, sem cobrança${s.phone ? `, telefone ${s.phone}` : ''}). Confirma?`;
   if (action === 'adm_followup_create') {
     const quando = hhmm(s.due_at);
@@ -147,6 +157,7 @@ export function adminSuccessMessage(action: AdminAction, s: Ctx): string {
   if (action === 'adm_broadcast_send') return `Pronto: o comunicado está agendado para ${s.queued} sócios. Sai no horário combinado (a fila anda a cada 5 minutos, então pode chegar até 5 minutos depois). Quando alguém responder, eu atendo.`;
   if (action === 'adm_group_post') return 'Pronto: a resenha sai no grupo em instantes (até 5 minutos). Quando a turma responder, eu entro na brincadeira. 😂';
   if (action === 'adm_message_send') return `Pronto: a mensagem para ${s.member_name} está na fila e sai em instantes. Se ele responder, eu atendo.`;
+  if (action === 'adm_student_create') return `Pronto: ${s.name} cadastrado(a) como ${studentPlanLabel(s)}${s.paid ? `, pagamento de ${centsBR(s.amount_cents)} registrado (Card válido até ${dateBR(s.new_valid_until)})` : ''}.`;
   if (action === 'adm_dependent_create') return `Pronto: ${s.dependent_name} cadastrado(a) como ${s.relationship} de ${s.member_name}.`;
   if (action === 'adm_followup_create') return s.self ? `Pronto: te lembro em ${hhmm(s.due_at)}.` : `Pronto: retorno com ${s.member_name} criado para ${hhmm(s.due_at)}.`;
   if (action === 'adm_followup_done') return `Pronto: retorno ${s.new_status === 'canceled' ? 'cancelado' : 'concluído'}.`;

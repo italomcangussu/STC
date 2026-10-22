@@ -72,6 +72,7 @@ export const CAPABILITIES: readonly Capability[] = [
   { id: 'adm.prefs.set', domain: 'clube', risk: 'N1', label: 'Ajustar preferências, alertas e resumo da manhã', panel: 'João', write: { admAction: 'preferencia' } },
   { id: 'adm.member.birthday', domain: 'pessoas', risk: 'N1', label: 'Anotar o aniversário de um sócio (parabéns automático no grupo e no privado)', panel: 'João', write: { admAction: 'aniversario' } },
   { id: 'adm.member.status', domain: 'pessoas', risk: 'N1', label: 'Inativar/reativar sócio', panel: 'Sócios', write: { admAction: 'socio_status' } },
+  { id: 'adm.student.create', domain: 'pessoas', risk: 'N1', label: 'Cadastrar aluno (mensalista, Mensalista Kids ou Day Card) e registrar o pagamento com o comprovante', panel: 'Alunos', write: { admAction: 'aluno_criar' } },
   { id: 'adm.dependent.create', domain: 'pessoas', risk: 'N1', label: 'Cadastrar dependente de sócio', panel: 'Alunos', write: { admAction: 'dependente_criar' } },
   { id: 'adm.message.send', domain: 'pessoas', risk: 'N1', label: 'Chamar sócio no privado e mandar mensagem', panel: 'Conversas', write: { admAction: 'mensagem_enviar' } },
   { id: 'adm.broadcast.send', domain: 'pessoas', risk: 'N1', label: 'Disparar comunicado no WhatsApp de todos os sócios (agora ou agendado)', panel: 'Conversas', write: { admAction: 'comunicado_enviar' } },

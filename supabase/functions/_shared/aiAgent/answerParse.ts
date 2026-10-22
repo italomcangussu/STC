@@ -104,6 +104,9 @@ export function parseSlots(raw: unknown): Slots {
   if ('note' in o) out.note = str(o.note);
   if ('send_body' in o) out.send_body = str(o.send_body);
   if ('dependent_name' in o) out.dependent_name = str(o.dependent_name)?.slice(0, 120) ?? null;
+  if ('student_name' in o) out.student_name = str(o.student_name)?.slice(0, 120) ?? null;
+  if ('student_plan' in o) out.student_plan = ['mensalista', 'kids', 'day_card'].includes(o.student_plan as string) ? o.student_plan as Slots['student_plan'] : null;
+  if ('paid' in o) out.paid = typeof o.paid === 'boolean' ? o.paid : null;
   if ('relationship' in o) out.relationship = ['esposa', 'esposo', 'filho', 'filha', 'outro'].includes(o.relationship as string) ? o.relationship as Slots['relationship'] : null;
   if ('pref' in o) out.pref = ['resumo', 'estilo', 'alertas', 'saldo_minimo', 'dias_atraso', 'conta_padrao'].includes(o.pref as string) ? o.pref as Slots['pref'] : null;
   if ('pref_value' in o) out.pref_value = str(o.pref_value);

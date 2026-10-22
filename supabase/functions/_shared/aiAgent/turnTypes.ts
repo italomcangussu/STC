@@ -84,6 +84,10 @@ export type Slots = {
   /** Dependente de sócio: nome do dependente e parentesco (member_name = sócio responsável). */
   dependent_name?: string | null;
   relationship?: 'esposa' | 'esposo' | 'filho' | 'filha' | 'outro' | null;
+  /** Aluno novo (aluno_criar): nome, plano (mensalista, Mensalista Kids = metade, Day Card) e se já pagou. */
+  student_name?: string | null;
+  student_plan?: 'mensalista' | 'kids' | 'day_card' | null;
+  paid?: boolean | null;
   /** Onda 8 (retornos, bloqueio de quadra, preferências). */
   note?: string | null;
   send_body?: string | null;
@@ -117,7 +121,7 @@ export const FIN_ACTIONS: FinAction[] = ['lancar', 'cobrar', 'pausar', 'retomar'
   'cancelar_pendencia', 'ajustar', 'estornar', 'rejeitar_comprovante', 'despesa', 'receita', 'aprovar_comprovante', 'gerar_cobrancas'];
 export const ADM_ACTIONS = ['aviso', 'aviso_desativar', 'aluno_status', 'socio_status', 'assinatura_reenviar', 'reserva_cancelar', 'acesso_aprovar', 'acesso_recusar', 'socio_criar',
   'followup_criar', 'followup_concluir', 'quadra_bloquear', 'preferencia', 'dependente_criar', 'mensagem_enviar', 'comunicado_enviar', 'resumo_destinatario', 'memoria_esquecer',
-  'formulario_criar', 'formulario_status', 'formulario_cobrar', 'aniversario', 'resenha_grupo'] as const;
+  'formulario_criar', 'formulario_status', 'formulario_cobrar', 'aniversario', 'resenha_grupo', 'aluno_criar'] as const;
 export type AdmAction = typeof ADM_ACTIONS[number];
 export const ADJUST_KINDS = ['discount', 'increase', 'fee_waiver'] as const;
 export const PENDENCY_KINDS: PendencyKind[] = ['day_card', 'consumo', 'evento', 'multa', 'dano_reposicao', 'outros'];

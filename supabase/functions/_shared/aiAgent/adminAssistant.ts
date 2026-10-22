@@ -108,6 +108,12 @@ export async function adminAcao(i: DecideInput, memory: Memory): Promise<Decisio
     const hoje = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Fortaleza' });
     const sendAt = slots.start ? `${slots.date ?? hoje}T${slots.start.slice(0, 5)}:00-03:00` : null;
     p = { action: 'adm_form_nudge', form_ref: slots.form_ref ?? null, body: slots.send_body?.replace(/https?:\/\/www\.stcplay\.com\.br/gi, 'https://stcplay.com.br') ?? null, send_at: sendAt };
+  } else if (a === 'aluno_criar') {
+    if (!slots.student_name) return ask('Claro, cadastro sim. Qual o nome do aluno e o plano: mensalista, Mensalista Kids (criança, metade do valor) ou Day Card?');
+    if (!slots.student_plan) return ask(`${slots.student_name} vai ser mensalista, Mensalista Kids (criança, metade do valor) ou Day Card?`);
+    p = { action: 'adm_student_create', name: slots.student_name, plan: slots.student_plan === 'day_card' ? 'Day Card' : 'Card Mensal',
+      card_tier: slots.student_plan === 'kids' ? 'kids' : 'regular', phone: slots.phone ?? null, paid: slots.paid === true,
+      amount_cents: toCents(slots.amount), paid_on: slots.paid_on ?? null };
   } else if (a === 'dependente_criar') {
     if (!slots.member_name) return ask('Claro, posso cadastrar o dependente. De qual sócio ele(a) é dependente?');
     if (!slots.dependent_name) return ask(`Posso cadastrar sim. Me passa o nome completo do dependente e o telefone, se tiver (o telefone é opcional; CPF não é necessário no cadastro).`);
@@ -152,6 +158,7 @@ export async function adminAcao(i: DecideInput, memory: Memory): Promise<Decisio
     : a === 'formulario_criar' || a === 'formulario_status' || a === 'formulario_cobrar' ? 'conv_svc_ai_admin_forms_propose'
     : a === 'mensagem_enviar' ? 'conv_svc_ai_admin_message_propose'
     : a === 'dependente_criar' ? 'conv_svc_ai_admin_dependent_propose'
+    : a === 'aluno_criar' ? 'conv_svc_ai_admin_student_propose'
     : a === 'acesso_aprovar' || a === 'acesso_recusar' || a === 'socio_criar' ? 'conv_svc_ai_admin_access_propose'
     : a === 'followup_criar' || a === 'followup_concluir' || a === 'quadra_bloquear' || a === 'preferencia' ? 'conv_svc_ai_admin_wave8_propose' : 'conv_svc_ai_admin_adm_propose';
   const res = (await deps.db(rpc, { p_session: session, p })).data as
