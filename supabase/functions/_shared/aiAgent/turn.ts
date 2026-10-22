@@ -20,6 +20,7 @@ import { systemPrompt } from './promptSystem.ts';
 import type { AiSettings, Ctx } from './promptTypes.ts';
 import { userPrompt } from './prompts.ts';
 import { type ReceiptStage, handleReceiptIntent, loadReceiptStage } from './receiptIntent.ts';
+import { deliverForward } from './receiptForward.ts';
 import { UNCLEAR_AUDIO_REPLY, hearAudios, unheardOnly } from './audio.ts';
 import { activeTopic, bringsNewData, openTopics, recordTopicTurn, restoreTopics, selectTopic, topicIdFromRef } from './topicState.ts';
 import { buildChatRequest, providerIdFrom, uazError } from '../uazChat.ts';
@@ -291,7 +292,8 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
       });
       if (handled) {
         const sent = await entregar(cadence(handled.messages));
-        await save((ctx.session?.memory ?? {}) as Memory, handled.action, { receipt_stage_id: pendingReceipt.id, bubbles: sent }, true, false);
+        const repassadas = handled.forward ? await deliverForward(handled.forward, { db, uaz: deps.uaz, signedUrl: deps.files?.signedUrl }) : 0;
+        await save((ctx.session?.memory ?? {}) as Memory, handled.action, { receipt_stage_id: pendingReceipt.id, bubbles: sent, forwarded: repassadas }, true, false);
         return { status: 'replied', bubbles: sent, handoff: null, action: handled.action } as TurnResult;
       }
     }

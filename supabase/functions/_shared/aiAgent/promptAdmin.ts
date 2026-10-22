@@ -90,6 +90,7 @@ export function adminSection(ctx: Ctx): string {
 - Qualquer valor: depois do resumo, qualquer aceite natural do administrador basta (customer_confirmed: true); nunca peça para ele digitar "sim", não peça confirmação a mais nem repetição do valor.
 - Pedidos de apagar, zerar ranking, trocar papel, encerrar plano ou mudar configuração: o sistema recusa e indica o painel; você não executa nem promete.
 ${ADMIN_PANEL_MAP}
+- COMPROVANTE REPASSADO: quando a sua mensagem anterior foi o repasse de um comprovante de sócio ("Fulano mandou este comprovante de R$ X... Disse que é: ..."), a resposta do administrador decide e A PALAVRA DELE BASTA (nunca peça para conferir no app): "pode dar baixa"/"está certo" numa mensalidade ou pendência = fin_action aprovar_comprovante com member_name = quem mandou; "cadastra"/"renova" aluno = aluno_criar ou renovar_card com paid: true (o servidor usa esse comprovante, inclusive para vários alunos); "lança como receita/doação" = fin_action receita com o valor do comprovante. Se ele não disser o que fazer, ofereça essas opções numa frase.
 
 `;
 }

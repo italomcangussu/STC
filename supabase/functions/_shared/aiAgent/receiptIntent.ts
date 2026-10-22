@@ -1,10 +1,11 @@
 // João: intenção do comprovante -> finalidade -> confirmação do remetente -> fila financeira.
 // OCR nunca define finalidade; "sim" apenas confirma proposta ainda aberta.
+import type { ReceiptForward } from './receiptForward.ts';
 type Rpc=(name:string,args:Record<string,unknown>)=>PromiseLike<{data:unknown;error?:{message:string}|null}>;
 type Chat=(messages:{role:'system'|'user'|'assistant';content:string}[],config:{model:string;temperature?:number;maxTokens?:number;json?:boolean})=>Promise<{output:string}>;
 export type ReceiptStage={id:string;source_message_id:string;status:'awaiting_purpose'|'awaiting_confirmation';purpose_kind?:string|null;purpose_detail?:string|null;amount_cents?:string|null;paid_on?:string|null;payee?:string|null;created_at?:string|null};
 type Turn={stage:ReceiptStage;messageId?:string;mediaOnly:boolean;text:string;transcript:Record<string,unknown>[];db:Rpc;chat:Chat|null;model:string};
-type Response={messages:string[];action:string}|null;
+type Response={messages:string[];action:string;forward?:ReceiptForward}|null;
 const normal=(s:string)=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 const br=(c:unknown)=>{const n=Number(c);return Number.isFinite(n)&&n>0?'R$ '+(n/100).toFixed(2).replace('.',','):'valor não identificado';};
 const names:Record<string,string>={donation:'doação/campanha',membership:'mensalidade de sócio',member_pendency:'pendência de sócio',student_card:'Card Mensal de aluno',day_card:'Day Card',other:'outra finalidade'};
@@ -69,6 +70,11 @@ export async function handleReceiptIntent(t:Turn):Promise<Response>{
  const kind=String(parsed.purpose_kind||'');
  const detail=String(parsed.purpose_detail||'').trim();
  if(parsed.action!=='purpose'||!valid.has(kind)||detail.length<3)return {action:'receipt_purpose_unclear',messages:['Para não classificar errado, me diz: esse comprovante é referente a qual pagamento? Não registrei nada.']};
+ // Com a finalidade dita, o comprovante vai ao financeiro, que decide; quem não é administrador não gera pagamento.
+ const esc=await t.db('conv_svc_receipt_escalate',{p_stage:s.id,p_message:t.messageId,p_kind:kind,p_detail:detail});
+ const fwd=esc.data as (ReceiptForward&{ok?:boolean})|null;
+ if(fwd?.ok&&fwd.admin_conversation_id)return {action:'receipt_escalated',forward:fwd,messages:['Obrigado! Passei o comprovante ('+amount+') para '+fwd.admin_name+', do financeiro, conferir: '+detail+'. Se precisar de mais alguma coisa, eu te aviso por aqui.']};
+ // Sem responsável financeiro configurado: o fluxo antigo de confirmação e fila de conferência.
  const r=await t.db('conv_svc_receipt_purpose',{p_stage:s.id,p_message:t.messageId,p_kind:kind,p_detail:detail});
  if(!(r.data as {ok?:boolean}|null)?.ok)return {action:'receipt_purpose_not_saved',messages:['Não consegui preparar a classificação. Pode repetir a finalidade? Não fiz nenhum lançamento.']};
  return {action:'receipt_confirmation_requested',messages:['Vou classificar o comprovante de '+amount+' como '+names[kind]+' ('+detail+'). Confirma que essa é a finalidade e autoriza registrar para conferência? Responda "confirmo" ou "não". Ainda não dei baixa nem alterei o caixa.']};
