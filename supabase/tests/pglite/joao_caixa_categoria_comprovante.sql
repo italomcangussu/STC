@@ -173,3 +173,15 @@ do $$ begin
           where e.description = 'Limpeza do espaço' and f.storage_path = 'adm/limpeza.pdf') = 1, 'anexo gravado';
   assert (select status from fin_private.whatsapp_receipt_intents where id = '00000000-0000-0000-0000-0000000009a1') = 'confirmed', 'intenção encerrada';
 end $$;
+
+-- 5) Sugestão: palavra genérica ("conta") não decide; "energia" casa com o lançamento e com o nome da categoria
+insert into public.fin_categories (id, name, kind, dre_line, active, parent_id) values
+  ('00000000-0000-0000-0000-0000000000c1', 'Contabilidade', 'expense', 'administrative', true, '00000000-0000-0000-0000-0000000000b2'),
+  ('00000000-0000-0000-0000-0000000000c2', 'Energia', 'expense', 'operational', true, '00000000-0000-0000-0000-0000000000b1');
+insert into public.fin_entries (kind, status, description, category_id, amount_cents, competence_date, due_date, request_id) values
+  ('expense', 'pending', 'Contador', '00000000-0000-0000-0000-0000000000c1', 18000, '2026-10-05', '2026-10-05', gen_random_uuid()),
+  ('expense', 'pending', 'ENEL', '00000000-0000-0000-0000-0000000000c2', 51547, '2026-10-05', '2026-10-05', gen_random_uuid());
+do $$ begin
+  assert (select name from conv_private.entry_category_pick('expense', null, 'Conta de energia ENEL')) = 'Energia', 'conta de energia é Energia';
+  assert (select name from conv_private.entry_category_pick('expense', null, 'Pagamento do contador')) = 'Contabilidade', 'contador segue Contabilidade';
+end $$;
