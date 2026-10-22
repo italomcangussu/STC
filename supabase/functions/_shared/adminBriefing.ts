@@ -17,45 +17,72 @@ const plural = (q: number, um: string, varios: string) => `${q} ${q === 1 ? um :
 /** Primeiro nome, ou nada se o cadastro não tiver um nome utilizável. */
 const primeiroNome = (nome: string) => { const p = nome.trim().split(/\s+/)[0] ?? ''; return /^\+?\d/.test(p) ? '' : p; };
 
-export function composeBriefing(name: string, d: Row): string {
-  const hoje = String(d.today ?? '');
-  const linhas: string[] = [`Bom dia${primeiroNome(name) ? `, ${primeiroNome(name)}` : ''}! Resumo do clube de ${dm(hoje)}.`, ''];
+const obj = (v: unknown) => (v ?? {}) as Row;
+const lista = (v: unknown) => (Array.isArray(v) ? v as Row[] : []);
+const seVencido = (cents: unknown, texto: string) => (n(cents) > 0 ? texto : 'nada vencido');
 
-  const contas = (Array.isArray(d.accounts) ? d.accounts as Row[] : []);
+function linhasDoCaixa(d: Row): string[] {
+  const contas = lista(d.accounts);
   const detalhe = contas.length > 1 ? ` (${contas.map((c) => `${c.name} ${brl(c.balance_cents)}`).join(' · ')})` : '';
-  linhas.push(`💰 Caixa: ${brl(d.total_cents)}${detalhe}`);
-  const ont = (d.yesterday ?? {}) as Row; const mes = (d.month_dre ?? {}) as Row;
-  linhas.push(`Ontem entrou ${brl(ont.inflow_cents)} e saiu ${brl(ont.outflow_cents)} do caixa.`);
-  linhas.push(`📊 Mês (competência, igual ao painel): receita ${brl(mes.revenue_cents)}, despesas ${brl(mes.expenses_cents)}, resultado ${comSinal(mes.result_cents)}.`);
+  const ont = obj(d.yesterday); const mes = obj(d.month_dre);
+  return [
+    `💰 Caixa: ${brl(d.total_cents)}${detalhe}`,
+    `Ontem entrou ${brl(ont.inflow_cents)} e saiu ${brl(ont.outflow_cents)} do caixa.`,
+    `📊 Mês (competência, igual ao painel): receita ${brl(mes.revenue_cents)}, despesas ${brl(mes.expenses_cents)}, resultado ${comSinal(mes.result_cents)}.`,
+  ];
+}
 
-  const r = (d.receivables ?? {}) as Row; const p = (d.payables ?? {}) as Row;
-  linhas.push('');
-  linhas.push(`📥 A receber: ${brl(r.open_cents)} em aberto; ${n(r.overdue_cents) > 0 ? `vencido ${brl(r.overdue_cents)} (${plural(n(r.overdue_count), 'cobrança', 'cobranças')}, ${plural(n(r.overdue_members), 'sócio', 'sócios')})` : 'nada vencido'}.`);
-  linhas.push(`📤 A pagar: ${brl(p.payable_open_cents)} em aberto; ${n(p.payable_overdue_cents) > 0 ? `vencido ${brl(p.payable_overdue_cents)}` : 'nada vencido'}${n(p.payable_due_7d_cents) > 0 ? `, ${brl(p.payable_due_7d_cents)} vencem em 7 dias` : ''}.`);
+function linhasReceberPagar(d: Row): string[] {
+  const r = obj(d.receivables); const p = obj(d.payables);
+  const vencidoReceber = seVencido(r.overdue_cents, `vencido ${brl(r.overdue_cents)} (${plural(n(r.overdue_count), 'cobrança', 'cobranças')}, ${plural(n(r.overdue_members), 'sócio', 'sócios')})`);
+  const em7dias = n(p.payable_due_7d_cents) > 0 ? `, ${brl(p.payable_due_7d_cents)} vencem em 7 dias` : '';
+  return [
+    `📥 A receber: ${brl(r.open_cents)} em aberto; ${vencidoReceber}.`,
+    `📤 A pagar: ${brl(p.payable_open_cents)} em aberto; ${seVencido(p.payable_overdue_cents, `vencido ${brl(p.payable_overdue_cents)}`)}${em7dias}.`,
+  ];
+}
 
-  const curto = d.style === 'curto';
-  const extras: string[] = [];
-  const rec = (d.receipts ?? {}) as Row;
-  if (n(rec.total) > 0) extras.push(`🧾 ${plural(n(rec.total), 'comprovante aguardando análise', 'comprovantes aguardando análise')}${rec.oldest_at ? ` (o mais antigo de ${dm(rec.oldest_at)})` : ''}.`);
-  for (const s of curto ? [] : (Array.isArray(d.signatures) ? d.signatures as Row[] : []).slice(0, 3))
-    extras.push(`✍️ «${s.title}»: ${n(s.signed)} de ${n(s.recipients)} assinaram${s.due_at ? `, prazo ${dm(s.due_at)}` : ''}.`);
-  const acc = (d.access ?? {}) as Row;
-  if (!curto && n(acc.total) > 0) extras.push(`🔑 ${plural(n(acc.total), 'pedido de acesso pendente', 'pedidos de acesso pendentes')}.`);
-  const res = (d.reservations ?? {}) as Row;
-  if (curto) { /* resumo curto: sem reservas, assinaturas e acessos */ }
-  else if (n(res.total) > 0) {
-    const tipos = Object.entries((res.by_type ?? {}) as Record<string, number>).map(([t, q]) => `${q} ${t.toLowerCase()}`).join(', ');
-    extras.push(`🎾 Hoje: ${plural(n(res.total), 'reserva', 'reservas')}${tipos ? ` (${tipos})` : ''}.`);
-  } else extras.push('🎾 Hoje: sem reservas.');
-  if (extras.length) { linhas.push(''); linhas.push(...extras); }
+function linhaComprovantes(d: Row): string[] {
+  const rec = obj(d.receipts);
+  if (n(rec.total) <= 0) return [];
+  return [`🧾 ${plural(n(rec.total), 'comprovante aguardando análise', 'comprovantes aguardando análise')}${rec.oldest_at ? ` (o mais antigo de ${dm(rec.oldest_at)})` : ''}.`];
+}
 
-  // Sugestões: só apontam para consultas que o João já faz (nada é executado sem pedido do administrador).
+function linhaReservas(d: Row): string {
+  const res = obj(d.reservations);
+  if (n(res.total) <= 0) return '🎾 Hoje: sem reservas.';
+  const tipos = Object.entries((res.by_type ?? {}) as Record<string, number>).map(([t, q]) => `${q} ${t.toLowerCase()}`).join(', ');
+  return `🎾 Hoje: ${plural(n(res.total), 'reserva', 'reservas')}${tipos ? ` (${tipos})` : ''}.`;
+}
+
+/** Assinaturas, acessos e reservas: só no resumo completo. */
+function linhasDoDia(d: Row): string[] {
+  const assinaturas = lista(d.signatures).slice(0, 3)
+    .map((s) => `✍️ «${s.title}»: ${n(s.signed)} de ${n(s.recipients)} assinaram${s.due_at ? `, prazo ${dm(s.due_at)}` : ''}.`);
+  const acessos = n(obj(d.access).total);
+  const acesso = acessos > 0 ? [`🔑 ${plural(acessos, 'pedido de acesso pendente', 'pedidos de acesso pendentes')}.`] : [];
+  return [...assinaturas, ...acesso, linhaReservas(d)];
+}
+
+/** Sugestões: só apontam para consultas que o João já faz (nada é executado sem pedido do administrador). */
+function linhaDicas(d: Row): string {
   const dicas: string[] = [];
-  if (n(r.overdue_cents) > 0) dicas.push('"a receber e a pagar"');
-  if (n(rec.total) > 0) dicas.push('"ver comprovantes"');
-  if (n(mes.result_cents) < 0) dicas.push('"comparativo com o mês passado"');
-  linhas.push('', dicas.length ? `💡 Posso detalhar: ${dicas.join(', ')}. É só pedir aqui.` : 'Quer detalhar algo? É só pedir aqui.');
-  return linhas.join('\n');
+  if (n(obj(d.receivables).overdue_cents) > 0) dicas.push('"a receber e a pagar"');
+  if (n(obj(d.receipts).total) > 0) dicas.push('"ver comprovantes"');
+  if (n(obj(d.month_dre).result_cents) < 0) dicas.push('"comparativo com o mês passado"');
+  return dicas.length ? `💡 Posso detalhar: ${dicas.join(', ')}. É só pedir aqui.` : 'Quer detalhar algo? É só pedir aqui.';
+}
+
+export function composeBriefing(name: string, d: Row): string {
+  const nome = primeiroNome(name);
+  const extras = [...linhaComprovantes(d), ...(d.style === 'curto' ? [] : linhasDoDia(d))];
+  return [
+    `Bom dia${nome ? `, ${nome}` : ''}! Resumo do clube de ${dm(d.today)}.`, '',
+    ...linhasDoCaixa(d), '',
+    ...linhasReceberPagar(d),
+    ...(extras.length ? ['', ...extras] : []),
+    '', linhaDicas(d),
+  ].join('\n');
 }
 
 const sha256 = async (s: string) => new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)));
