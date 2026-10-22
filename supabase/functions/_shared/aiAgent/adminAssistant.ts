@@ -115,7 +115,7 @@ export async function adminAcao(i: DecideInput, memory: Memory): Promise<Decisio
       card_tier: slots.student_plan === 'kids' ? 'kids' : 'regular', phone: slots.phone ?? null, paid: slots.paid === true,
       amount_cents: toCents(slots.amount), paid_on: slots.paid_on ?? null };
   } else if (a === 'dependente_criar') {
-    if (!slots.member_name) return ask('Claro, posso cadastrar o dependente. De qual sócio ele(a) é dependente?');
+    if (!slots.member_name) return ask('Claro, posso cadastrar o dependente. De qual sócio?');
     if (!slots.dependent_name) return ask(`Posso cadastrar sim. Me passa o nome completo do dependente e o telefone, se tiver (o telefone é opcional; CPF não é necessário no cadastro).`);
     if (!slots.relationship) return ask(`Qual o parentesco de ${slots.dependent_name} com ${slots.member_name}: esposa, esposo, filho, filha ou outro?`);
     const r = await resolve(deps.db, [slots.member_name], 'member');

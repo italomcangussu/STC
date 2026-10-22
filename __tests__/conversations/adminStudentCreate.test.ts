@@ -12,7 +12,7 @@ describe('João: cadastrar aluno mensalista', () => {
   });
   it('Mensalista Kids sem pagamento fica inativo até pagar', () => {
     expect(adminProposalMessage('adm_student_create', base)).toBe('Vou cadastrar José como Mensalista Kids (R$ 100,00/mês). O Card fica inativo até o pagamento. Confirma?');
-    expect(adminSuccessMessage('adm_student_create', base)).toBe('Pronto: José cadastrado(a) como Mensalista Kids.');
+    expect(adminSuccessMessage('adm_student_create', base)).toBe('Pronto: cadastro de José feito como Mensalista Kids.');
   });
   it('o parser aceita os campos do aluno novo', () => {
     const slots = parseSlots({ adm_action: 'aluno_criar', student_name: 'José', student_plan: 'kids', paid: true, amount: 100 });

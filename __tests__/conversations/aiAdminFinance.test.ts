@@ -318,7 +318,7 @@ describe('assessor administrativo do João (turno completo)', () => {
       await dizer(w, p, 'cancela a das 19h', acao('reserva_cancelar', { date, start: '19:00' }));
       expect(p.sent.at(-1)!.text).toMatch(/Há 2 reservas nesse horário/);
       await dizer(w, p, 'cancela a das 19h do saibro', acao('reserva_cancelar', { date, start: '19:00', court_label: 'quadra 1', reason: 'chuva' }));
-      expect(p.sent.at(-1)!.text).toMatch(/^Vou cancelar a reserva .*20\/10\/2026 19:00-20:00 \(Play, de Beto Sócio\)\. Motivo: chuva\. Confirma/);
+      expect(p.sent.at(-1)!.text).toMatch(/^Vou cancelar a reserva .*20\/10\/2026, das 19:00 às 20:00 \(Play, de Beto Sócio\)\. Motivo: chuva\. Confirma/);
       expect((await sim(w, p)).action).toBe('admin_confirmed');
       expect((await q<any>(w.db, `select count(*)::int c from public.reservations where status = 'cancelled'`))[0].c).toBe(1);
       expect((await q<any>(w.db, `select count(*)::int c from public.reservations where status = 'active'`))[0].c).toBe(1);
@@ -417,11 +417,11 @@ describe('onda 6: aprovar comprovante e gerar cobranças (N2)', () => {
     expect(p.sent.at(-1)!.text).toMatch(/Não há plano de sócio ativo/);
     await rpc(w.db, U.admin, `public.fin_create_member_plan('${key()}', ${j({ profile_id: U.socioB, start_on: '2026-10-01', amount_cents: 20000 })})`);
     await dizer(w, p, 'gera as cobranças do mês', { ready: true, slots: { fin_action: 'gerar_cobrancas' } });
-    expect(p.sent.at(-1)!.text).toMatch(/^Vou gerar as cobranças que faltam dos 1 planos de sócios ativos/);
+    expect(p.sent.at(-1)!.text).toMatch(/^Vou gerar as cobranças que faltam para 1 plano ativo de sócio \(/);
     expect(await q(w.db, `select 1 from public.fin_member_charges where plan_id is not null`)).toHaveLength(0);
     expect((await confirmar(w, p)).action).toBe('admin_confirmed');
     expect((await q(w.db, `select 1 from public.fin_member_charges where plan_id is not null`)).length).toBeGreaterThan(0);
-    expect(p.sent.at(-1)!.text).toMatch(/Pronto: \d+ cobrança\(s\) nova\(s\) gerada\(s\)/);
+    expect(p.sent.at(-1)!.text).toMatch(/Pronto: \d+ cobranças? novas? geradas?/);
   }, 90000);
 });
 
@@ -468,7 +468,7 @@ describe('onda 7: pedidos de acesso e sócio novo com mensalidade paga', () => {
     await comprovante(w, 15000);
     const r = await dizer(w, p, 'cadastra a Carla', criar());
     expect(r.action).toBe('proposed_admin');
-    expect(p.sent.at(-1)!.text).toMatch(/^Vou cadastrar o sócio Carla Souza \(telefone \(88\) 99999-1234, e-mail gerado pelo sistema\), com mensalidade de R\$ 150,00\. A mensalidade de \d\d\/\d{4} fica paga com o comprovante/);
+    expect(p.sent.at(-1)!.text).toMatch(/^Vou cadastrar o sócio Carla Souza \(telefone \(88\) 99999-1234, e-mail gerado pelo sistema\), com mensalidade de R\$ 150,00\.\nA mensalidade de \d\d\/\d{4} fica paga com o comprovante/);
     expect(calls).toHaveLength(0);
     expect((await confirmar(w, p)).action).toBe('admin_confirmed');
     expect(calls).toEqual(['Carla Souza']);
@@ -548,7 +548,7 @@ describe('onda 8: retornos, bloqueio de quadra e preferências', () => {
     expect(p.sent.at(-1)!.text).toMatch(/O que é para lembrar/);
     const r = await dizer(w, p, 'de cobrar o Beto', { ready: true, slots: { adm_action: 'followup_criar', date: amanha(), start: '09:00', note: 'cobrar o Beto' } });
     expect(r.action).toBe('proposed_admin');
-    expect(p.sent.at(-1)!.text).toMatch(/^Vou te lembrar em \d\d\/\d\d,? \d\d:\d\d: «cobrar o Beto»\. Confirma/);
+    expect(p.sent.at(-1)!.text).toMatch(/^Vou te lembrar em \d\d\/\d\d às \d\d:\d\d: «cobrar o Beto»\. Confirma/);
     expect(await q(w.db, `select 1 from public.conv_followups`)).toHaveLength(0);
     expect((await confirmar(w, p)).action).toBe('admin_confirmed');
     expect((await q<any>(w.db, `select status, note, send_body, created_by from public.conv_followups`))[0]).toMatchObject({ status: 'pending', note: 'cobrar o Beto', send_body: 'Lembrete: cobrar o Beto', created_by: U.admin });
@@ -652,7 +652,7 @@ describe('dependente de sócio pelo WhatsApp (N1)', () => {
     expect(await q(w.db, `select 1 from public.non_socio_students where student_type = 'dependent'`)).toHaveLength(0);
     const c = await dizer(w, p, 'sim', { customer_confirmed: true });
     expect(c.action).toBe('admin_confirmed');
-    expect(p.sent.at(-1)!.text).toBe('Pronto: Jessica Lorraine Gomes de Morais cadastrado(a) como esposa de Beto Sócio.');
+    expect(p.sent.at(-1)!.text).toBe('Pronto: cadastro de Jessica Lorraine Gomes de Morais feito como esposa de Beto Sócio.');
     const [d] = await q<any>(w.db, `select name, student_type, relationship_type, plan_type, plan_status, responsible_socio_id from public.non_socio_students where student_type = 'dependent'`);
     expect(d).toMatchObject({ name: 'Jessica Lorraine Gomes de Morais', relationship_type: 'esposa', plan_type: 'Dependente', plan_status: 'active', responsible_socio_id: U.socioB });
     expect(await q(w.db, `select 1 from public.student_profiles sp join public.non_socio_students n on n.id = sp.non_socio_student_id where n.student_type = 'dependent'`)).toHaveLength(1);
