@@ -69,6 +69,10 @@ export type Slots = {
   reason?: string | null;
   adjust_kind?: typeof ADJUST_KINDS[number] | null;
   category_name?: string | null;
+  /** O administrador pediu (ou aceitou) criar category_name como categoria nova. */
+  category_new?: boolean;
+  /** Sócio novo que entrou no meio do mês: o que pagou agora, em reais (amount segue sendo a mensalidade cheia). */
+  first_amount?: number | null;
   receipt_date?: string | null;
   entry_status?: 'paid' | 'pending' | null;
   /** Onda 3 (administrativo N1). */

@@ -18,8 +18,12 @@ function memberCreateProposal(s: Ctx): string {
   const quem = s.action === 'fin_access_approve' ? `Vou aprovar o pedido de acesso de ${s.name}` : `Vou cadastrar o sócio ${s.name}`;
   const email = s.email ? `e-mail ${s.email}` : 'e-mail gerado pelo sistema';
   const leitura = s.amount_read ? '' : '\nNão consegui ler o valor do comprovante; vale o que você informou.';
+  const pago = s.first_amount_cents ?? s.amount_cents;
+  const proporcional = s.first_amount_cents
+    ? ` Como entrou no meio do mês, ${monthBR(s.month)} é proporcional (${centsBR(s.first_amount_cents)}; o resto vira desconto) e a partir do mês que vem a cobrança é de ${centsBR(s.amount_cents)}.`
+    : '';
   return `${quem} (telefone ${phoneBR(s.phone)}, ${email})${s.reactivate ? ', reativando o cadastro antigo' : ''}, com mensalidade de ${centsBR(s.amount_cents)}.`
-    + `\nA mensalidade de ${monthBR(s.month)} fica paga com o comprovante que você mandou (${centsBR(s.amount_cents)}, pago em ${dateBR(s.paid_on)}, conta ${s.account_name}): ele entra sem pendência e os juros do mês de entrada são dispensados.${leitura}`;
+    + `\nA mensalidade de ${monthBR(s.month)} fica paga com o comprovante que você mandou (${centsBR(pago)}, pago em ${dateBR(s.paid_on)}, conta ${s.account_name}): ele entra sem pendência e os juros do mês de entrada são dispensados.${proporcional}${leitura}`;
 }
 
 function chargeAdjustProposal(s: Ctx): string {
@@ -32,9 +36,17 @@ function receiptApproveProposal(s: Ctx): string {
   return `Vou aprovar o comprovante de ${s.member_name}, enviado em ${dateBR(s.sent_on)}: ${centsBR(s.amount_cents)}, pago em ${dateBR(s.paid_on)} via ${methodBR(s.method)}, conta ${s.account_name}. Baixa nas cobranças, da mais antiga para a mais nova:\n${itens}`;
 }
 
+/** Como a categoria foi escolhida: dita por ele, sugerida por mim (pode trocar) ou criada agora. */
+function categoryNote(s: Ctx): string {
+  if (s.category_new) return `categoria ${s.category_name} (nova, no grupo ${s.category_parent_name})`;
+  if (s.category_how === 'historico') return `categoria ${s.category_name} (sugestão minha, é a que usamos em lançamentos parecidos; se for outra, é só dizer)`;
+  if (s.category_how === 'palavra') return `categoria ${s.category_name} (sugestão minha pela descrição; se for outra, é só dizer)`;
+  return `categoria ${s.category_name}`;
+}
+
 function entryCreateProposal(s: Ctx): string {
   const quando = s.entry_status === 'pending' ? `a pagar até ${dateBR(s.due_date)}` : `paga em ${dateBR(s.paid_on)}`;
-  return `Vou lançar a ${entryKind(s)}: ${s.description}, ${centsBR(s.amount_cents)}, categoria ${s.category_name}, conta ${s.account_name}, ${quando}${receiptNote(s, 'com o comprovante que você mandou anexado')}.`;
+  return `Vou lançar a ${entryKind(s)}: ${s.description}, ${centsBR(s.amount_cents)}, ${categoryNote(s)}, conta ${s.account_name}, ${quando}${receiptNote(s, 'com o comprovante que você mandou anexado')}.`;
 }
 
 function pendencyCreateProposal(s: Ctx): string {

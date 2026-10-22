@@ -77,7 +77,7 @@ const SLOT_RULES: { [K in keyof Slots]?: Rule } = {
   due_date: isoDate, pendency_kind: oneOf(PENDENCY_KINDS), guest_date: isoDate, send_now: onlyTrue,
   pendency_ref: (v) => str(v)?.toLowerCase() ?? null,
   paid_on: isoDate, method: oneOf(PAY_METHODS), account_name: text(), reason: text(200),
-  adjust_kind: oneOf(ADJUST_KINDS), category_name: text(), receipt_date: isoDate,
+  adjust_kind: oneOf(ADJUST_KINDS), category_name: text(), category_new: onlyTrue, first_amount: amount, receipt_date: isoDate,
   entry_status: oneOf(['paid', 'pending']),
   adm_action: oneOf(ADM_ACTIONS), ann_title: text(80), ann_message: text(600), active: bool,
   doc_title: text(), by_name: text(), phone: text(), email: text(), note: text(), send_body: text(),

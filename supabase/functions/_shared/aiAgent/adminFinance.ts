@@ -93,7 +93,7 @@ export async function adminFinanceiro(i: DecideInput, memory: Memory): Promise<D
     if (!cents) return ask('Qual o valor?');
     p = { action: 'fin_entry_create', entry_kind: slots.fin_action === 'despesa' ? 'expense' : 'revenue', description: slots.description, amount_cents: cents,
       entry_status: slots.entry_status ?? null, due_date: slots.due_date ?? null, paid_on: slots.paid_on ?? null,
-      category_name: slots.category_name ?? null, account_name: slots.account_name ?? null };
+      category_name: slots.category_name ?? null, category_new: slots.category_new === true || null, account_name: slots.account_name ?? null };
   } else {
     return ask('O que você quer fazer: lançar pendência, cobrar agora, pausar/retomar a cobrança, dar baixa, cancelar ou ajustar uma pendência, estornar um pagamento, aprovar ou recusar um comprovante, gerar as cobranças do mês ou lançar uma despesa/receita?');
   }

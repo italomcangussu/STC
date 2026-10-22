@@ -40,6 +40,8 @@ export function receiptReceivedMessage(r: Ctx | null | undefined): string {
     return 'Recebi o comprovante, mas não consegui ler os dados. Me diga o aluno, o valor e a data que eu monto o resumo.';
   }
   const dados = receiptFacts(r);
+  const anexo = r.attached_entry as Ctx | undefined;
+  if (anexo) return `Recebi o comprovante (${dados}) e anexei à despesa "${anexo.description}" de ${dateBR(anexo.paid_on)}, que estava sem comprovante. Se era de outra coisa, me avisa.`;
   // Pago a outra pessoa: costuma ser despesa do clube que a diretoria pagou, não engano.
   if (r.payee_ok === false) return `Recebi o comprovante (${dados}). Foi uma despesa do clube? Me diz o que é que eu monto o resumo.`;
   return `Recebi o comprovante${dados ? ` (${dados})` : ''}. É para renovar o Card de qual aluno? Se for outra coisa, me diz o que é.`;

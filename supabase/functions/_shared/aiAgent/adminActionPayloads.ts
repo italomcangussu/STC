@@ -32,7 +32,7 @@ async function memberCreate(i: DecideInput, novo: boolean): Promise<Step> {
   const cents = toCents(slots.amount);
   if (!cents) return ask('Qual o valor da mensalidade dele? Preciso também do comprovante de pagamento do mês: mande a imagem ou o PDF aqui.');
   return { p: { action: novo ? 'fin_member_create' : 'fin_access_approve', name: slots.member_name ?? null, phone: slots.phone ?? null,
-    email: slots.email ?? null, amount_cents: cents, account_name: slots.account_name ?? null } };
+    email: slots.email ?? null, amount_cents: cents, first_amount_cents: toCents(slots.first_amount), account_name: slots.account_name ?? null } };
 }
 
 export const ADM_BUILDERS: Record<Exclude<AdmAction, 'aniversario'>, Builder> = {

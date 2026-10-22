@@ -50,8 +50,12 @@ export async function deliverForward(f: ReceiptForward, deps: ForwardDeps): Prom
   return ok ? 2 : 1;
 }
 
-type MembershipAuto = { applied?: boolean; month?: string; amount_cents?: number; admin_conversation_id?: string | null; admin_name?: string; sender_name?: string };
+type MembershipAuto = { applied?: boolean; month?: string; amount_cents?: number; admin_conversation_id?: string | null; admin_name?: string; sender_name?: string;
+  charge_type?: string; description?: string | null };
 const monthBR = (iso?: string) => (iso ? iso.slice(0, 7).split('-').reverse().join('/') : 'do mês');
+/** O que foi pago: a pendência pelo nome dela, ou a mensalidade do mês. */
+const paidCharge = (a: MembershipAuto) => (a.charge_type === 'member_pendency'
+  ? `a pendência "${a.description ?? 'em aberto'}"` : `a mensalidade de ${monthBR(a.month)}`);
 
 /** Época da mensalidade: o servidor tenta a baixa (valor = devido, favorecido = clube). Aplicada: resposta ao sócio e aviso ao financeiro. */
 type Call = (name: string, args: Record<string, unknown>) => PromiseLike<{ data: unknown }>;
@@ -59,9 +63,10 @@ export async function tryMembershipAutoPay(db: Call, stageId: string): Promise<{
   let a: MembershipAuto | null = null;
   try { a = (await db('conv_svc_receipt_membership_auto', { p_stage: stageId })).data as MembershipAuto | null; } catch { return null; }
   if (!a?.applied) return null;
-  const mes = monthBR(a.month);
+  const oQue = paidCharge(a);
   const forward = a.admin_conversation_id ? { admin_conversation_id: a.admin_conversation_id, admin_name: a.admin_name ?? '', sender_name: a.sender_name ?? '',
     kind: 'membership_auto', detail: null,
-    text: `${a.admin_name}, para você saber: a mensalidade de ${mes} de ${a.sender_name} (${brl(a.amount_cents)}) chegou pelo WhatsApp e já dei baixa (valor igual ao devido e Pix para o clube).` } : undefined;
-  return { action: 'receipt_membership_paid', forward, messages: [`Recebi! Sua mensalidade de ${mes} (${brl(a.amount_cents)}) está registrada como paga. Obrigado!`] };
+    text: `${a.admin_name}, para você saber: ${oQue} de ${a.sender_name} (${brl(a.amount_cents)}) chegou pelo WhatsApp e já dei baixa (valor igual ao devido e Pix para o clube).` } : undefined;
+  const sua = oQue.replace(/^a /, 'Sua ');
+  return { action: 'receipt_membership_paid', forward, messages: [`Recebi! ${sua} (${brl(a.amount_cents)}) está registrada como paga. Obrigado!`] };
 }
