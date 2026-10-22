@@ -14,6 +14,7 @@
 | uploaded_at | timestamp with time zone | não | `now()` |  |
 | removed_at | timestamp with time zone | sim |  |  |
 | removed_by | uuid | sim |  |  |
+| bucket | text | não | `'fin-docs'::text` |  |
 
 ## Chaves e restrições
 - PK (id)
@@ -21,6 +22,7 @@
 - FK (removed_by) → public.profiles(id)
 - FK (uploaded_by) → public.profiles(id)
 - UNIQUE (storage_path)
+- CHECK fin_attachments_bucket_check: `CHECK ((bucket = ANY (ARRAY['fin-docs'::text, 'fin-receipts'::text])))`
 - CHECK fin_attachments_content_type_check: `CHECK ((content_type = ANY (ARRAY['application/pdf'::text, 'image/jpeg'::text, 'image/png'::text, 'image/webp'::text, 'image/heic'::text])))`
 - CHECK fin_attachments_file_name_check: `CHECK (((length(file_name) >= 1) AND (length(file_name) <= 200)))`
 - CHECK fin_attachments_size_bytes_check: `CHECK (((size_bytes > 0) AND (size_bytes <= 10485760)))`

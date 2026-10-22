@@ -31,7 +31,7 @@
 - FK (reservation_id) → public.reservations(id) on delete set null
 - FK (session_id) → public.conv_ai_sessions(id)
 - UNIQUE (request_key)
-- CHECK conv_booking_proposals_action_check: `CHECK ((action = ANY (ARRAY['adm_student_status'::text, 'adm_followup_done'::text, 'adm_briefing_recipient'::text, 'adm_court_block'::text, 'adm_dependent_create'::text, 'adm_message_send'::text, 'jo…`
+- CHECK conv_booking_proposals_action_check: `CHECK ((action = ANY (ARRAY['adm_student_status'::text, 'adm_followup_done'::text, 'adm_briefing_recipient'::text, 'lessons_batch'::text, 'adm_court_block'::text, 'adm_dependent_create'::text, 'adm_m…`
 - CHECK conv_booking_proposals_status_check: `CHECK ((status = ANY (ARRAY['open'::text, 'confirmed'::text, 'failed'::text, 'expired'::text, 'canceled'::text])))`
 - CHECK conv_proposal_confirmed_consistent: `CHECK (((status <> 'confirmed'::text) OR (confirmed_at IS NOT NULL)))`
 
@@ -46,6 +46,10 @@ public.conv_ai_topics.proposal_id
 
 ## Políticas RLS
 - "conv_booking_proposals_admin_read" — SELECT para authenticated · using `is_admin()`
+
+## Gatilhos
+- trg_card_renew_receipt — AFTER UPDATE OF status → conv_private.trg_card_renew_receipt()
+- trg_entry_proposal_receipt — AFTER UPDATE OF status → conv_private.trg_entry_proposal_receipt()
 
 ## Grants
 - anon: — · authenticated: s (s=select i=insert u=update d=delete)

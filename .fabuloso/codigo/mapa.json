@@ -101,6 +101,12 @@
    "dados": "—"
   },
   {
+   "nome": "useCardPrices",
+   "arquivo": "hooks/useCardPrices.ts",
+   "usos": 2,
+   "dados": "rpc student_card_prices"
+  },
+  {
    "nome": "useAdminPending",
    "arquivo": "components/admin/useAdminPending.ts",
    "usos": 1,
@@ -3133,10 +3139,10 @@
    "tipo": "rpc",
    "nome": "set_student_level",
    "front": [
-    "components/AdminStudents.tsx:169",
-    "components/AdminStudents.tsx:238",
-    "components/ProfessorProfile.tsx:392",
-    "components/ProfessorProfile.tsx:536"
+    "components/AdminStudents.tsx:175",
+    "components/AdminStudents.tsx:244",
+    "components/ProfessorProfile.tsx:395",
+    "components/ProfessorProfile.tsx:539"
    ],
    "edge": [],
    "telas": []
@@ -3170,6 +3176,15 @@
   },
   {
    "tipo": "rpc",
+   "nome": "student_card_prices",
+   "front": [
+    "lib/students/cardPrice.ts:16"
+   ],
+   "edge": [],
+   "telas": []
+  },
+  {
+   "tipo": "rpc",
    "nome": "submit_club_form",
    "front": [
     "lib/formsService.ts:285"
@@ -3198,7 +3213,7 @@
    "nome": "admin_audit_logs",
    "front": [
     "components/AdminPanel.tsx:1191",
-    "lib/finance/financeApi.ts:473"
+    "lib/finance/financeApi.ts:474"
    ],
    "edge": [],
    "telas": []
@@ -3570,7 +3585,7 @@
     "components/Championships.tsx:187",
     "components/Dashboard.tsx:41",
     "components/Klanches.tsx:169",
-    "components/ProfessorProfile.tsx:265",
+    "components/ProfessorProfile.tsx:268",
     "hooks/useReservations.ts:63"
    ],
    "edge": [],
@@ -3589,7 +3604,7 @@
    "tipo": "tabela",
    "nome": "fin_attachments",
    "front": [
-    "lib/finance/financeApi.ts:193"
+    "lib/finance/financeApi.ts:194"
    ],
    "edge": [],
    "telas": []
@@ -3607,7 +3622,7 @@
    "tipo": "tabela",
    "nome": "fin_charge_adjustments",
    "front": [
-    "lib/finance/financeApi.ts:310"
+    "lib/finance/financeApi.ts:311"
    ],
    "edge": [],
    "telas": []
@@ -3616,7 +3631,7 @@
    "tipo": "tabela",
    "nome": "fin_charge_payments",
    "front": [
-    "lib/finance/financeApi.ts:309"
+    "lib/finance/financeApi.ts:310"
    ],
    "edge": [],
    "telas": []
@@ -3654,7 +3669,7 @@
    "tipo": "tabela",
    "nome": "fin_member_charges",
    "front": [
-    "lib/finance/financeApi.ts:256"
+    "lib/finance/financeApi.ts:257"
    ],
    "edge": [],
    "telas": []
@@ -3663,7 +3678,7 @@
    "tipo": "tabela",
    "nome": "fin_member_credits",
    "front": [
-    "lib/finance/financeApi.ts:327"
+    "lib/finance/financeApi.ts:328"
    ],
    "edge": [],
    "telas": []
@@ -3672,7 +3687,7 @@
    "tipo": "tabela",
    "nome": "fin_member_plan_prices",
    "front": [
-    "lib/finance/financeApi.ts:224"
+    "lib/finance/financeApi.ts:225"
    ],
    "edge": [],
    "telas": []
@@ -3681,8 +3696,8 @@
    "tipo": "tabela",
    "nome": "fin_member_plans",
    "front": [
-    "lib/finance/financeApi.ts:219",
-    "lib/finance/financeApi.ts:348"
+    "lib/finance/financeApi.ts:220",
+    "lib/finance/financeApi.ts:349"
    ],
    "edge": [],
    "telas": []
@@ -3691,8 +3706,8 @@
    "tipo": "tabela",
    "nome": "fin_receipt_charges",
    "front": [
-    "lib/finance/financeApi.ts:396",
-    "lib/finance/financeApi.ts:410"
+    "lib/finance/financeApi.ts:397",
+    "lib/finance/financeApi.ts:411"
    ],
    "edge": [],
    "telas": []
@@ -3701,8 +3716,8 @@
    "tipo": "tabela",
    "nome": "fin_receipt_submissions",
    "front": [
-    "lib/finance/financeApi.ts:396",
-    "lib/finance/financeApi.ts:410"
+    "lib/finance/financeApi.ts:397",
+    "lib/finance/financeApi.ts:411"
    ],
    "edge": [],
    "telas": []
@@ -3785,20 +3800,20 @@
    "nome": "non_socio_students",
    "front": [
     "components/AdminProfessors.tsx:126",
-    "components/AdminStudents.tsx:161",
-    "components/AdminStudents.tsx:173",
-    "components/AdminStudents.tsx:209",
-    "components/AdminStudents.tsx:225",
-    "components/AdminStudents.tsx:296",
-    "components/AdminStudents.tsx:365",
-    "components/AdminStudents.tsx:79",
+    "components/AdminStudents.tsx:167",
+    "components/AdminStudents.tsx:179",
+    "components/AdminStudents.tsx:215",
+    "components/AdminStudents.tsx:231",
+    "components/AdminStudents.tsx:302",
+    "components/AdminStudents.tsx:371",
+    "components/AdminStudents.tsx:83",
     "components/Agenda.tsx:1300",
     "components/Agenda.tsx:1539",
     "components/Agenda.tsx:2355",
-    "components/ProfessorProfile.tsx:197",
-    "components/ProfessorProfile.tsx:379",
-    "components/ProfessorProfile.tsx:412",
-    "components/ProfessorProfile.tsx:615",
+    "components/ProfessorProfile.tsx:199",
+    "components/ProfessorProfile.tsx:382",
+    "components/ProfessorProfile.tsx:415",
+    "components/ProfessorProfile.tsx:618",
     "lib/championship/registration.ts:36",
     "lib/championship/registration.ts:9",
     "lib/conversations/api.ts:557",
@@ -3848,9 +3863,9 @@
     "components/AdminProfessors.tsx:175",
     "components/AdminProfessors.tsx:176",
     "components/AdminProfessors.tsx:197",
-    "components/AdminStudents.tsx:84",
+    "components/AdminStudents.tsx:88",
     "components/Agenda.tsx:1272",
-    "components/ProfessorProfile.tsx:182"
+    "components/ProfessorProfile.tsx:184"
    ],
    "edge": [],
    "telas": []
@@ -3869,7 +3884,7 @@
     "components/AdminPanel.tsx:434",
     "components/AdminProtect.tsx:23",
     "components/AdminReports.tsx:90",
-    "components/AdminStudents.tsx:85",
+    "components/AdminStudents.tsx:89",
     "components/AdminUserEditor.tsx:125",
     "components/Agenda.tsx:1229",
     "components/Agenda.tsx:1272",
@@ -3888,9 +3903,9 @@
     "components/GroupDrawPage.tsx:105",
     "components/Klanches.tsx:129",
     "components/OnboardingModal.tsx:63",
-    "components/ProfessorProfile.tsx:182",
-    "components/ProfessorProfile.tsx:272",
-    "components/ProfessorProfile.tsx:288",
+    "components/ProfessorProfile.tsx:184",
+    "components/ProfessorProfile.tsx:275",
+    "components/ProfessorProfile.tsx:291",
     "components/PublicChampionshipPage.tsx:91",
     "components/SuperSet.tsx:39",
     "components/creator/CreatorRegistration.tsx:121",
@@ -3905,8 +3920,8 @@
     "lib/championship/knockoutFromGroups.ts:164",
     "lib/championship/registration.ts:36",
     "lib/conversations/api.ts:556",
-    "lib/finance/financeApi.ts:339",
-    "lib/finance/financeApi.ts:347",
+    "lib/finance/financeApi.ts:340",
+    "lib/finance/financeApi.ts:348",
     "lib/formsService.ts:318",
     "lib/rankingService.ts:112",
     "lib/resenhaOpenService.ts:245",
@@ -3973,8 +3988,8 @@
     "components/Challenges.tsx:96",
     "components/Dashboard.tsx:59",
     "components/Klanches.tsx:148",
-    "components/ProfessorProfile.tsx:237",
-    "components/ProfessorProfile.tsx:661",
+    "components/ProfessorProfile.tsx:240",
+    "components/ProfessorProfile.tsx:664",
     "components/SuperSet.tsx:58",
     "hooks/useReservations.ts:113",
     "hooks/useReservations.ts:180",
@@ -4027,8 +4042,8 @@
    "tipo": "tabela",
    "nome": "student_level_history",
    "front": [
-    "components/AdminStudents.tsx:256",
-    "components/ProfessorProfile.tsx:543"
+    "components/AdminStudents.tsx:262",
+    "components/ProfessorProfile.tsx:546"
    ],
    "edge": [],
    "telas": []
@@ -4037,13 +4052,13 @@
    "tipo": "tabela",
    "nome": "student_payments",
    "front": [
-    "components/AdminStudents.tsx:277",
-    "components/AdminStudents.tsx:336",
-    "components/AdminStudents.tsx:344",
-    "components/AdminStudents.tsx:354",
-    "components/ProfessorProfile.tsx:586",
-    "components/ProfessorProfile.tsx:594",
-    "components/ProfessorProfile.tsx:604",
+    "components/AdminStudents.tsx:283",
+    "components/AdminStudents.tsx:342",
+    "components/AdminStudents.tsx:350",
+    "components/AdminStudents.tsx:360",
+    "components/ProfessorProfile.tsx:589",
+    "components/ProfessorProfile.tsx:597",
+    "components/ProfessorProfile.tsx:607",
     "lib/finance/studentFees.ts:54",
     "lib/finance/studentFees.ts:66"
    ],
@@ -4054,24 +4069,24 @@
    "tipo": "tabela",
    "nome": "student_profiles",
    "front": [
-    "components/AdminStudents.tsx:164",
-    "components/AdminStudents.tsx:176",
-    "components/AdminStudents.tsx:208",
-    "components/AdminStudents.tsx:224",
-    "components/AdminStudents.tsx:232",
-    "components/AdminStudents.tsx:244",
+    "components/AdminStudents.tsx:170",
+    "components/AdminStudents.tsx:182",
+    "components/AdminStudents.tsx:214",
+    "components/AdminStudents.tsx:230",
+    "components/AdminStudents.tsx:238",
     "components/AdminStudents.tsx:250",
-    "components/AdminStudents.tsx:83",
+    "components/AdminStudents.tsx:256",
+    "components/AdminStudents.tsx:87",
     "components/Agenda.tsx:1284",
     "components/Agenda.tsx:1505",
     "components/Agenda.tsx:2333",
     "components/Agenda.tsx:2371",
-    "components/ProfessorProfile.tsx:202",
-    "components/ProfessorProfile.tsx:426",
-    "components/ProfessorProfile.tsx:499",
-    "components/ProfessorProfile.tsx:517",
-    "components/ProfessorProfile.tsx:530",
-    "components/ProfessorProfile.tsx:554"
+    "components/ProfessorProfile.tsx:204",
+    "components/ProfessorProfile.tsx:429",
+    "components/ProfessorProfile.tsx:502",
+    "components/ProfessorProfile.tsx:520",
+    "components/ProfessorProfile.tsx:533",
+    "components/ProfessorProfile.tsx:557"
    ],
    "edge": [],
    "telas": []
@@ -4438,6 +4453,7 @@
     "aiAgent/promptSocial.ts",
     "aiAgent/promptSystem.ts",
     "aiAgent/prompts.ts",
+    "aiAgent/receiptForward.ts",
     "aiAgent/receiptIntent.ts",
     "aiAgent/serverRules.ts",
     "aiAgent/serverTexts.ts",
@@ -4474,7 +4490,7 @@
   "Acesso a dados direto no componente: `AdminProtect` (components/AdminProtect.tsx:23) chama profiles; o padrão do projeto é passar por hook/serviço",
   "Acesso a dados direto no componente: `AdminReports` (components/AdminReports.tsx:78) chama reservations, profiles, consumptions, challenges, matches, courts; o padrão do projeto é passar por hook/serviço",
   "Acesso a dados direto no componente: `AdminRules` (components/AdminRules.tsx:112) chama point_rules; o padrão do projeto é passar por hook/serviço",
-  "Acesso a dados direto no componente: `AdminStudents` (components/AdminStudents.tsx:79) chama non_socio_students, student_profiles, professors, profiles, set_student_level, student_level_history, student_payments; o padrão do projeto é passar por hook/serviço",
+  "Acesso a dados direto no componente: `AdminStudents` (components/AdminStudents.tsx:83) chama non_socio_students, student_profiles, professors, profiles, set_student_level, student_level_history, student_payments; o padrão do projeto é passar por hook/serviço",
   "Acesso a dados direto no componente: `AdminUserEditor` (components/AdminUserEditor.tsx:125) chama profiles, point_history; o padrão do projeto é passar por hook/serviço",
   "Acesso a dados direto no componente: `Agenda` (components/Agenda.tsx:1229) chama profiles, courts, professors, student_profiles, non_socio_students, challenges, reservations, matches; o padrão do projeto é passar por hook/serviço",
   "Acesso a dados direto no componente: `AddReservationModal` (components/Agenda.tsx:2333) chama student_profiles, non_socio_students; o padrão do projeto é passar por hook/serviço",
@@ -4496,7 +4512,7 @@
   "Acesso a dados direto no componente: `LiveScoreboard` (components/LiveScoreboard.tsx:157) chama matches; o padrão do projeto é passar por hook/serviço",
   "Acesso a dados direto no componente: `MatchGenerationModal` (components/MatchGenerationModal.tsx:108) chama matches; o padrão do projeto é passar por hook/serviço",
   "Acesso a dados direto no componente: `OnboardingModal` (components/OnboardingModal.tsx:63) chama profiles; o padrão do projeto é passar por hook/serviço",
-  "Acesso a dados direto no componente: `ProfessorProfile` (components/ProfessorProfile.tsx:182) chama professors, profiles, non_socio_students, student_profiles, reservations, courts, set_student_level, student_level_history, student_payments; o padrão do projeto é passar por hook/serviço",
+  "Acesso a dados direto no componente: `ProfessorProfile` (components/ProfessorProfile.tsx:184) chama professors, profiles, non_socio_students, student_profiles, reservations, courts, set_student_level, student_level_history, student_payments; o padrão do projeto é passar por hook/serviço",
   "Acesso a dados direto no componente: `PublicChampionshipPage` (components/PublicChampionshipPage.tsx:57) chama championships, championship_rounds, championship_groups, championship_group_members, championship_registrations, profiles, matches; o padrão do projeto é passar por hook/serviço",
   "Acesso a dados direto no componente: `ResenhaOpenBracketView` (components/ResenhaOpenBracketView.tsx:26) chama championships; o padrão do projeto é passar por hook/serviço",
   "Acesso a dados direto no componente: `SuperSet` (components/SuperSet.tsx:39) chama profiles, reservations, matches; o padrão do projeto é passar por hook/serviço",

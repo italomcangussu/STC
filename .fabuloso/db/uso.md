@@ -72,7 +72,7 @@
 - update [edge]: supabase/functions/admin-athlete-access/index.ts:120, supabase/functions/admin-athlete-access/index.ts:150, supabase/functions/admin-athlete-access/index.ts:185
 
 ### admin_audit_logs
-- select: components/AdminPanel.tsx:1191, lib/finance/financeApi.ts:473
+- select: components/AdminPanel.tsx:1191, lib/finance/financeApi.ts:474
 
 ### announcements
 - select: App.tsx:114, components/AdminPanel.tsx:766
@@ -177,16 +177,16 @@
 - select: lib/finance/financeApi.ts:78
 
 ### fin_attachments
-- select: lib/finance/financeApi.ts:193
+- select: lib/finance/financeApi.ts:194
 
 ### fin_categories
 - select: lib/finance/financeApi.ts:87
 
 ### fin_charge_adjustments
-- select: lib/finance/financeApi.ts:310
+- select: lib/finance/financeApi.ts:311
 
 ### fin_charge_payments
-- select: lib/finance/financeApi.ts:309
+- select: lib/finance/financeApi.ts:310
 
 ### fin_entries_v
 - select: lib/finance/financeApi.ts:109, lib/finance/financeApi.ts:172
@@ -198,22 +198,22 @@
 - select: lib/finance/financeApi.ts:69
 
 ### fin_member_charges
-- select: lib/finance/financeApi.ts:256
+- select: lib/finance/financeApi.ts:257
 
 ### fin_member_credits
-- select: lib/finance/financeApi.ts:327
+- select: lib/finance/financeApi.ts:328
 
 ### fin_member_plan_prices
-- select: lib/finance/financeApi.ts:224
+- select: lib/finance/financeApi.ts:225
 
 ### fin_member_plans
-- select: lib/finance/financeApi.ts:219, lib/finance/financeApi.ts:348
+- select: lib/finance/financeApi.ts:220, lib/finance/financeApi.ts:349
 
 ### fin_receipt_charges
-- select: lib/finance/financeApi.ts:396, lib/finance/financeApi.ts:410
+- select: lib/finance/financeApi.ts:397, lib/finance/financeApi.ts:411
 
 ### fin_receipt_submissions
-- select: lib/finance/financeApi.ts:396, lib/finance/financeApi.ts:410
+- select: lib/finance/financeApi.ts:397, lib/finance/financeApi.ts:411
 
 ### fin_recurrences
 - select: lib/finance/financeApi.ts:180
@@ -232,9 +232,9 @@
 - delete: components/MatchGenerationModal.tsx:108, lib/resenhaOpenService.ts:466
 
 ### non_socio_students
-- select: components/AdminProfessors.tsx:126, components/AdminStudents.tsx:79, components/Agenda.tsx:1300, components/ProfessorProfile.tsx:197, lib/championship/registration.ts:36, lib/championship/registration.ts:9, lib/conversations/api.ts:557, lib/finance/studentFees.ts:54
-- insert: components/AdminStudents.tsx:173, components/Agenda.tsx:2355, components/ProfessorProfile.tsx:412
-- update: components/AdminStudents.tsx:161, components/AdminStudents.tsx:209, components/AdminStudents.tsx:225, components/AdminStudents.tsx:296, components/AdminStudents.tsx:365, components/Agenda.tsx:1539, components/ProfessorProfile.tsx:379, components/ProfessorProfile.tsx:615
+- select: components/AdminProfessors.tsx:126, components/AdminStudents.tsx:83, components/Agenda.tsx:1300, components/ProfessorProfile.tsx:199, lib/championship/registration.ts:36, lib/championship/registration.ts:9, lib/conversations/api.ts:557, lib/finance/studentFees.ts:54
+- insert: components/AdminStudents.tsx:179, components/Agenda.tsx:2355, components/ProfessorProfile.tsx:415
+- update: components/AdminStudents.tsx:167, components/AdminStudents.tsx:215, components/AdminStudents.tsx:231, components/AdminStudents.tsx:302, components/AdminStudents.tsx:371, components/Agenda.tsx:1539, components/ProfessorProfile.tsx:382, components/ProfessorProfile.tsx:618
 
 ### point_history
 - select: components/AdminPanel.tsx:1550, components/Athletes.tsx:106
@@ -250,13 +250,13 @@
 - update: components/Klanches.tsx:364, components/Klanches.tsx:403
 
 ### professors
-- select: components/AdminProfessors.tsx:118, components/AdminStudents.tsx:84, components/Agenda.tsx:1272, components/ProfessorProfile.tsx:182
+- select: components/AdminProfessors.tsx:118, components/AdminStudents.tsx:88, components/Agenda.tsx:1272, components/ProfessorProfile.tsx:184
 - insert: components/AdminProfessors.tsx:176
 - update: components/AdminProfessors.tsx:175
 - delete: components/AdminProfessors.tsx:197
 
 ### profiles
-- select: components/AdminLogin.tsx:32, components/AdminPanel.tsx:1004, components/AdminPanel.tsx:1166, components/AdminPanel.tsx:1550, components/AdminPanel.tsx:1574, components/AdminPanel.tsx:1603, components/AdminPanel.tsx:272, components/AdminPanel.tsx:434, components/AdminProtect.tsx:23, components/AdminReports.tsx:90, components/AdminStudents.tsx:85, components/Agenda.tsx:1229 +36
+- select: components/AdminLogin.tsx:32, components/AdminPanel.tsx:1004, components/AdminPanel.tsx:1166, components/AdminPanel.tsx:1550, components/AdminPanel.tsx:1574, components/AdminPanel.tsx:1603, components/AdminPanel.tsx:272, components/AdminPanel.tsx:434, components/AdminProtect.tsx:23, components/AdminReports.tsx:90, components/AdminStudents.tsx:89, components/Agenda.tsx:1229 +36
 - select [edge]: supabase/functions/_shared/athleteProvision.ts:54, supabase/functions/_shared/serveAdmin.ts:29, supabase/functions/admin-athlete-access/index.ts:48, supabase/functions/send-push/index.ts:59
 - insert: contexts/AuthContext.tsx:429
 - update: components/AdminUserEditor.tsx:125, components/EditProfileModal.tsx:79, components/OnboardingModal.tsx:63, contexts/AuthContext.tsx:330
@@ -274,9 +274,9 @@
 - select: components/AdminPanel.tsx:1559
 
 ### reservations
-- select: components/AdminPanel.tsx:270, components/AdminPanel.tsx:79, components/AdminReports.tsx:78, components/Agenda.tsx:1524, components/Athletes.tsx:79, components/Challenges.tsx:96, components/Dashboard.tsx:59, components/Klanches.tsx:148, components/ProfessorProfile.tsx:237, components/SuperSet.tsx:58, hooks/useReservations.ts:113, lib/agenda/loadAgendaReservations.ts:33
+- select: components/AdminPanel.tsx:270, components/AdminPanel.tsx:79, components/AdminReports.tsx:78, components/Agenda.tsx:1524, components/Athletes.tsx:79, components/Challenges.tsx:96, components/Dashboard.tsx:59, components/Klanches.tsx:148, components/ProfessorProfile.tsx:240, components/SuperSet.tsx:58, hooks/useReservations.ts:113, lib/agenda/loadAgendaReservations.ts:33
 - insert: components/AdminMatchCreator.tsx:131, components/AdminPanel.tsx:574, components/Agenda.tsx:1605, components/Challenges.tsx:594, hooks/useReservations.ts:180
-- update: components/AdminPanel.tsx:328, components/Agenda.tsx:1383, components/Agenda.tsx:1421, components/Agenda.tsx:1441, components/Agenda.tsx:1470, components/Agenda.tsx:1597, components/Agenda.tsx:1715, components/ChallengeNotificationPopup.tsx:104, components/ProfessorProfile.tsx:661, hooks/useReservations.ts:253, hooks/useReservations.ts:279, lib/finance/studentFees.ts:71
+- update: components/AdminPanel.tsx:328, components/Agenda.tsx:1383, components/Agenda.tsx:1421, components/Agenda.tsx:1441, components/Agenda.tsx:1470, components/Agenda.tsx:1597, components/Agenda.tsx:1715, components/ChallengeNotificationPopup.tsx:104, components/ProfessorProfile.tsx:664, hooks/useReservations.ts:253, hooks/useReservations.ts:279, lib/finance/studentFees.ts:71
 
 ### sig_documents
 - select: components/signatures/admin/DocumentDetail.tsx:137, lib/signatures/admin.ts:87
@@ -291,21 +291,21 @@
 - select: lib/signatures/receipt.ts:215
 
 ### student_level_history
-- select: components/AdminStudents.tsx:256, components/ProfessorProfile.tsx:543
+- select: components/AdminStudents.tsx:262, components/ProfessorProfile.tsx:546
 
 ### student_payments
-- select: components/AdminStudents.tsx:336, components/ProfessorProfile.tsx:586, lib/finance/studentFees.ts:54
-- insert: components/AdminStudents.tsx:277, components/AdminStudents.tsx:354, components/ProfessorProfile.tsx:604
-- update: components/AdminStudents.tsx:344, components/ProfessorProfile.tsx:594
+- select: components/AdminStudents.tsx:342, components/ProfessorProfile.tsx:589, lib/finance/studentFees.ts:54
+- insert: components/AdminStudents.tsx:283, components/AdminStudents.tsx:360, components/ProfessorProfile.tsx:607
+- update: components/AdminStudents.tsx:350, components/ProfessorProfile.tsx:597
 - delete: lib/finance/studentFees.ts:66
 
 ### student_profiles
-- select: components/AdminStudents.tsx:83, components/Agenda.tsx:1284, components/ProfessorProfile.tsx:202
-- insert: components/AdminStudents.tsx:176, components/AdminStudents.tsx:232, components/Agenda.tsx:2333, components/Agenda.tsx:2371, components/ProfessorProfile.tsx:426
-- update: components/AdminStudents.tsx:164, components/AdminStudents.tsx:208, components/AdminStudents.tsx:224, components/AdminStudents.tsx:244, components/AdminStudents.tsx:250, components/ProfessorProfile.tsx:499, components/ProfessorProfile.tsx:517, components/ProfessorProfile.tsx:530, components/ProfessorProfile.tsx:554
+- select: components/AdminStudents.tsx:87, components/Agenda.tsx:1284, components/ProfessorProfile.tsx:204
+- insert: components/AdminStudents.tsx:182, components/AdminStudents.tsx:238, components/Agenda.tsx:2333, components/Agenda.tsx:2371, components/ProfessorProfile.tsx:429
+- update: components/AdminStudents.tsx:170, components/AdminStudents.tsx:214, components/AdminStudents.tsx:230, components/AdminStudents.tsx:250, components/AdminStudents.tsx:256, components/ProfessorProfile.tsx:502, components/ProfessorProfile.tsx:520, components/ProfessorProfile.tsx:533, components/ProfessorProfile.tsx:557
 - upsert: components/Agenda.tsx:1505
 
-## RPC (30)
+## RPC (31)
 - `admin_record_user_access`: contexts/AuthContext.tsx:129
 - `admin_reset_ranking_full`: components/AdminPanel.tsx:1634
 - `apply_championship_edition_points`: components/ChampionshipAdmin.tsx:537
@@ -331,10 +331,11 @@
 - `joao_daily_secret_ok`: — · [edge] supabase/functions/joao-birthdays/index.ts:24, supabase/functions/joao-daily-greeting/index.ts:26
 - `resolve_resenha_open_final_phases`: lib/resenhaOpenService.ts:424
 - `revert_championship_edition_points`: components/ChampionshipAdmin.tsx:569
-- `set_student_level`: components/AdminStudents.tsx:169, components/AdminStudents.tsx:238, components/ProfessorProfile.tsx:392, components/ProfessorProfile.tsx:536
+- `set_student_level`: components/AdminStudents.tsx:175, components/AdminStudents.tsx:244, components/ProfessorProfile.tsx:395, components/ProfessorProfile.tsx:539
 - `sig_svc_issue_challenge`: — · [edge] supabase/functions/_shared/signatureRequest.ts:116
 - `sig_svc_mark_code_sent`: — · [edge] supabase/functions/_shared/signatureRequest.ts:131
 - `sig_svc_verify_code`: — · [edge] supabase/functions/_shared/signatureRequest.ts:145
+- `student_card_prices`: lib/students/cardPrice.ts:16
 - `submit_club_form`: lib/formsService.ts:285
 
 ## Edge functions invocadas (4)

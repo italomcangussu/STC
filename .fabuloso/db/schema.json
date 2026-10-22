@@ -8,7 +8,7 @@
     "public",
     "sig_private"
   ],
-  "ultima_migracao": "20261021130000",
+  "ultima_migracao": "20261022040000",
   "extensoes": [
     "pg_cron 1.6.4",
     "pg_net 0.19.5",
@@ -504,7 +504,7 @@
       "tipo": "r",
       "rls": false,
       "rls_forcado": false,
-      "linhas_est": "0",
+      "linhas_est": "<100",
       "opcoes": null,
       "comentario": null,
       "acesso": {
@@ -647,6 +647,24 @@
           "gerada": null,
           "identidade": null,
           "comentario": null
+        },
+        {
+          "nome": "escalated_to",
+          "tipo": "uuid",
+          "nulo": true,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "escalated_at",
+          "tipo": "timestamp with time zone",
+          "nulo": true,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
         }
       ],
       "restricoes": [
@@ -664,7 +682,7 @@
         {
           "nome": "whatsapp_receipt_intents_status_check",
           "tipo": "c",
-          "def": "CHECK ((status = ANY (ARRAY['awaiting_purpose'::text, 'awaiting_confirmation'::text, 'confirmed'::text, 'needs_review'::text, 'canceled'::text])))",
+          "def": "CHECK ((status = ANY (ARRAY['awaiting_purpose'::text, 'awaiting_confirmation'::text, 'escalated'::text, 'confirmed'::text, 'needs_review'::text, 'canceled'::text])))",
           "colunas": [
             "status"
           ],
@@ -706,6 +724,19 @@
             "conversation_id"
           ],
           "ref": "public.conv_conversations",
+          "ref_colunas": [
+            "id"
+          ],
+          "ao_apagar": "a"
+        },
+        {
+          "nome": "whatsapp_receipt_intents_escalated_to_fkey",
+          "tipo": "f",
+          "def": "FOREIGN KEY (escalated_to) REFERENCES profiles(id)",
+          "colunas": [
+            "escalated_to"
+          ],
+          "ref": "public.profiles",
           "ref_colunas": [
             "id"
           ],
@@ -800,6 +831,16 @@
         }
       ],
       "indices": [
+        {
+          "nome": "whatsapp_receipt_intents_escalated_idx",
+          "def": "CREATE INDEX whatsapp_receipt_intents_escalated_idx ON fin_private.whatsapp_receipt_intents USING btree (escalated_to, escalated_at) WHERE (status = 'escalated'::text)",
+          "unico": false,
+          "pk": false,
+          "colunas": [
+            "escalated_to",
+            "escalated_at"
+          ]
+        },
         {
           "nome": "whatsapp_receipt_intents_pending_idx",
           "def": "CREATE INDEX whatsapp_receipt_intents_pending_idx ON fin_private.whatsapp_receipt_intents USING btree (conversation_id, created_at) WHERE (status = ANY (ARRAY['awaiting_purpose'::text, 'awaiting_confirmation'::text]))",
@@ -9941,7 +9982,7 @@
         {
           "nome": "conv_booking_proposals_action_check",
           "tipo": "c",
-          "def": "CHECK ((action = ANY (ARRAY['adm_student_status'::text, 'adm_followup_done'::text, 'adm_briefing_recipient'::text, 'adm_court_block'::text, 'adm_dependent_create'::text, 'adm_message_send'::text, 'join'::text, 'fin_charge_adjust'::text, 'fin_payment_reverse'::text, 'fin_pendency_send'::text, 'create'::text, 'fin_access_approve'::text, 'fin_charge_cancel'::text, 'adm_pref_set'::text, 'adm_memory_forget'::text, 'fin_member_create'::text, 'adm_form_toggle'::text, 'fin_payment'::text, 'cancel'::text, 'adm_group_post'::text, 'adm_form_nudge'::text, 'adm_followup_create'::text, 'adm_signature_resend'::text, 'adm_reservation_cancel'::text, 'adm_access_reject'::text, 'student_card_renew'::text, 'fin_receipt_approve'::text, 'fin_entry_create'::text, 'adm_form_create'::text, 'adm_announcement_deactivate'::text, 'adm_member_status'::text, 'fin_pendency_collection'::text, 'fin_receipt_reject'::text, 'adm_announcement_create'::text, 'reschedule'::text, 'fin_charges_generate'::text, 'fin_pendency_create'::text, 'participants'::text, 'adm_broadcast_send'::text, 'lessons_batch'::text])))",
+          "def": "CHECK ((action = ANY (ARRAY['adm_student_status'::text, 'adm_followup_done'::text, 'adm_briefing_recipient'::text, 'lessons_batch'::text, 'adm_court_block'::text, 'adm_dependent_create'::text, 'adm_message_send'::text, 'join'::text, 'fin_charge_adjust'::text, 'fin_payment_reverse'::text, 'fin_pendency_send'::text, 'create'::text, 'fin_access_approve'::text, 'fin_charge_cancel'::text, 'adm_pref_set'::text, 'adm_memory_forget'::text, 'fin_member_create'::text, 'adm_form_toggle'::text, 'fin_payment'::text, 'cancel'::text, 'adm_group_post'::text, 'adm_form_nudge'::text, 'adm_followup_create'::text, 'adm_student_create'::text, 'adm_signature_resend'::text, 'adm_reservation_cancel'::text, 'adm_access_reject'::text, 'student_card_renew'::text, 'fin_receipt_approve'::text, 'fin_entry_create'::text, 'adm_form_create'::text, 'adm_announcement_deactivate'::text, 'adm_member_status'::text, 'fin_pendency_collection'::text, 'fin_receipt_reject'::text, 'adm_announcement_create'::text, 'reschedule'::text, 'fin_charges_generate'::text, 'fin_pendency_create'::text, 'participants'::text, 'adm_broadcast_send'::text])))",
           "colunas": [
             "action"
           ],
@@ -10146,7 +10187,22 @@
           "check": null
         }
       ],
-      "gatilhos": []
+      "gatilhos": [
+        {
+          "nome": "trg_card_renew_receipt",
+          "def": "CREATE TRIGGER trg_card_renew_receipt AFTER UPDATE OF status ON public.conv_booking_proposals FOR EACH ROW WHEN (((new.status = 'confirmed'::text) AND (old.status IS DISTINCT FROM 'confirmed'::text) AND (new.action = 'student_card_renew'::text) AND ((new.payload #>> '{receipt,intent_id}'::text[]) IS NOT NULL))) EXECUTE FUNCTION conv_private.trg_card_renew_receipt()",
+          "funcao": "conv_private.trg_card_renew_receipt",
+          "ativo": true,
+          "externo": false
+        },
+        {
+          "nome": "trg_entry_proposal_receipt",
+          "def": "CREATE TRIGGER trg_entry_proposal_receipt AFTER UPDATE OF status ON public.conv_booking_proposals FOR EACH ROW WHEN (((new.status = 'confirmed'::text) AND (old.status IS DISTINCT FROM 'confirmed'::text) AND (new.action = 'fin_entry_create'::text) AND (new.payload ? 'receipt_id'::text))) EXECUTE FUNCTION conv_private.trg_entry_proposal_receipt()",
+          "funcao": "conv_private.trg_entry_proposal_receipt",
+          "ativo": true,
+          "externo": false
+        }
+      ]
     },
     {
       "schema": "public",
@@ -13750,9 +13806,29 @@
           "gerada": null,
           "identidade": null,
           "comentario": null
+        },
+        {
+          "nome": "bucket",
+          "tipo": "text",
+          "nulo": false,
+          "padrao": "'fin-docs'::text",
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
         }
       ],
       "restricoes": [
+        {
+          "nome": "fin_attachments_bucket_check",
+          "tipo": "c",
+          "def": "CHECK ((bucket = ANY (ARRAY['fin-docs'::text, 'fin-receipts'::text])))",
+          "colunas": [
+            "bucket"
+          ],
+          "ref": null,
+          "ref_colunas": null,
+          "ao_apagar": null
+        },
         {
           "nome": "fin_attachments_content_type_check",
           "tipo": "c",
@@ -19849,9 +19925,38 @@
           "gerada": null,
           "identidade": null,
           "comentario": null
+        },
+        {
+          "nome": "card_mensal_price_cents",
+          "tipo": "bigint",
+          "nulo": false,
+          "padrao": "20000",
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "finance_admin_profile_id",
+          "tipo": "uuid",
+          "nulo": true,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": "Administrador que recebe do João os comprovantes de sócios para decidir."
         }
       ],
       "restricoes": [
+        {
+          "nome": "fin_settings_card_mensal_price_check",
+          "tipo": "c",
+          "def": "CHECK (((card_mensal_price_cents >= 100) AND (card_mensal_price_cents <= 10000000)))",
+          "colunas": [
+            "card_mensal_price_cents"
+          ],
+          "ref": null,
+          "ref_colunas": null,
+          "ao_apagar": null
+        },
         {
           "nome": "fin_settings_day_card_price_cents_check",
           "tipo": "c",
@@ -20038,6 +20143,19 @@
           "ref": null,
           "ref_colunas": null,
           "ao_apagar": null
+        },
+        {
+          "nome": "fin_settings_finance_admin_profile_id_fkey",
+          "tipo": "f",
+          "def": "FOREIGN KEY (finance_admin_profile_id) REFERENCES profiles(id)",
+          "colunas": [
+            "finance_admin_profile_id"
+          ],
+          "ref": "public.profiles",
+          "ref_colunas": [
+            "id"
+          ],
+          "ao_apagar": "a"
         },
         {
           "nome": "fin_settings_late_fee_confirmed_by_fkey",
@@ -22206,9 +22324,29 @@
           "gerada": null,
           "identidade": null,
           "comentario": "Soft delete flag. When false, student is archived but payment history is preserved."
+        },
+        {
+          "nome": "card_tier",
+          "tipo": "text",
+          "nulo": false,
+          "padrao": "'regular'::text",
+          "gerada": null,
+          "identidade": null,
+          "comentario": "Faixa do Card Mensal: regular ou kids (metade do preço)."
         }
       ],
       "restricoes": [
+        {
+          "nome": "non_socio_students_card_tier_check",
+          "tipo": "c",
+          "def": "CHECK ((card_tier = ANY (ARRAY['regular'::text, 'kids'::text])))",
+          "colunas": [
+            "card_tier"
+          ],
+          "ref": null,
+          "ref_colunas": null,
+          "ao_apagar": null
+        },
         {
           "nome": "non_socio_students_plan_type_check",
           "tipo": "c",
@@ -27768,6 +27906,15 @@
           "gerada": null,
           "identidade": null,
           "comentario": "Links to the replacement payment when a Day Card Experimental is converted to Card Mensal"
+        },
+        {
+          "nome": "receipt_intent_id",
+          "tipo": "uuid",
+          "nulo": true,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": "Comprovante do WhatsApp (fin_private.whatsapp_receipt_intents) que pagou este Card."
         }
       ],
       "restricoes": [
@@ -27850,6 +27997,15 @@
           "pk": true,
           "colunas": [
             "id"
+          ]
+        },
+        {
+          "nome": "student_payments_receipt_intent_idx",
+          "def": "CREATE INDEX student_payments_receipt_intent_idx ON public.student_payments USING btree (receipt_intent_id) WHERE (receipt_intent_id IS NOT NULL)",
+          "unico": false,
+          "pk": false,
+          "colunas": [
+            "receipt_intent_id"
           ]
         }
       ],
@@ -29721,6 +29877,19 @@
       "comentario": null
     },
     {
+      "nome": "conv_private.admin_entry_receipt",
+      "args": "p_conversation uuid, p_admin uuid, p_amount bigint",
+      "retorno": "TABLE(id uuid, file_name text)",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
       "nome": "conv_private.admin_pending_receipt",
       "args": "p_conversation uuid, p_admin uuid",
       "retorno": "TABLE(id uuid, declared_amount_cents bigint, declared_paid_on date, ocr jsonb, created_at timestamp with time zone)",
@@ -29757,6 +29926,32 @@
       "volatilidade": "v",
       "exec_anon": false,
       "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.admin_student_receipt",
+      "args": "p_conversation uuid, p_admin uuid, p_amount bigint",
+      "retorno": "TABLE(id uuid, amount_cents bigint, remaining_cents bigint, paid_on date, payee text, from_name text)",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
+      "exec_anon": true,
+      "exec_authenticated": true,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.admin_usable_receipts",
+      "args": "p_conversation uuid, p_admin uuid",
+      "retorno": "SETOF fin_private.whatsapp_receipt_intents",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
+      "exec_anon": true,
+      "exec_authenticated": true,
       "comentario": null
     },
     {
@@ -29867,7 +30062,7 @@
       "nome": "conv_private.ai_admin_finance_propose",
       "args": "p_session uuid, p jsonb",
       "retorno": "jsonb",
-      "linguagem": "sql",
+      "linguagem": "plpgsql",
       "tipo": "f",
       "security_definer": true,
       "search_path": "search_path=\"\"",
@@ -30082,6 +30277,19 @@
       "volatilidade": "s",
       "exec_anon": false,
       "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.ai_admin_student_propose",
+      "args": "p_session uuid, p jsonb",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": true,
+      "exec_authenticated": true,
       "comentario": null
     },
     {
@@ -30319,7 +30527,7 @@
       "comentario": null
     },
     {
-      "nome": "conv_private.ai_confirm_single_step",
+      "nome": "conv_private.ai_confirm_pre_student_create_step",
       "args": "p_proposal uuid, p_message uuid",
       "retorno": "jsonb",
       "linguagem": "plpgsql",
@@ -30329,6 +30537,19 @@
       "volatilidade": "v",
       "exec_anon": false,
       "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.ai_confirm_single_step",
+      "args": "p_proposal uuid, p_message uuid",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": true,
+      "exec_authenticated": true,
       "comentario": null
     },
     {
@@ -30839,6 +31060,19 @@
       "comentario": null
     },
     {
+      "nome": "conv_private.attach_receipt_to_entry",
+      "args": "p_receipt uuid, p_entry uuid, p_admin uuid",
+      "retorno": "boolean",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
       "nome": "conv_private.aud_advance",
       "args": "a conv_automations, p_as_of date",
       "retorno": "SETOF conv_private.audience_row",
@@ -31226,6 +31460,19 @@
       "volatilidade": "v",
       "exec_anon": false,
       "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.close_receipt_if_used",
+      "args": "p_intent uuid",
+      "retorno": "void",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": true,
+      "exec_authenticated": true,
       "comentario": null
     },
     {
@@ -31879,6 +32126,19 @@
       "comentario": null
     },
     {
+      "nome": "conv_private.receipt_used_cents",
+      "args": "p_intent uuid",
+      "retorno": "bigint",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
+      "exec_anon": true,
+      "exec_authenticated": true,
+      "comentario": null
+    },
+    {
       "nome": "conv_private.render_template",
       "args": "p_body text, p_ctx jsonb",
       "retorno": "text",
@@ -32032,6 +32292,32 @@
       "volatilidade": "s",
       "exec_anon": true,
       "exec_authenticated": true,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.trg_card_renew_receipt",
+      "args": "",
+      "retorno": "trigger",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": true,
+      "exec_authenticated": true,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.trg_entry_proposal_receipt",
+      "args": "",
+      "retorno": "trigger",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
       "comentario": null
     },
     {
@@ -32201,6 +32487,19 @@
       "volatilidade": "v",
       "exec_anon": true,
       "exec_authenticated": true,
+      "comentario": null
+    },
+    {
+      "nome": "fin_private.card_price_cents",
+      "args": "p_tier text",
+      "retorno": "bigint",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": false,
       "comentario": null
     },
     {
@@ -33621,6 +33920,19 @@
       "comentario": null
     },
     {
+      "nome": "public.conv_svc_ai_admin_student_propose",
+      "args": "p_session uuid, p jsonb",
+      "retorno": "jsonb",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": true,
+      "exec_authenticated": true,
+      "comentario": null
+    },
+    {
       "nome": "public.conv_svc_ai_admin_wave8_propose",
       "args": "p_session uuid, p jsonb",
       "retorno": "jsonb",
@@ -34221,6 +34533,32 @@
     {
       "nome": "public.conv_svc_receipt_confirm",
       "args": "p_stage uuid, p_message uuid",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "public.conv_svc_receipt_escalate",
+      "args": "p_stage uuid, p_message uuid, p_kind text, p_detail text",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "public.conv_svc_receipt_membership_auto",
+      "args": "p_stage uuid",
       "retorno": "jsonb",
       "linguagem": "plpgsql",
       "tipo": "f",
@@ -35991,6 +36329,19 @@
       "args": "p_id uuid",
       "retorno": "jsonb",
       "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": true,
+      "comentario": null
+    },
+    {
+      "nome": "public.student_card_prices",
+      "args": "",
+      "retorno": "jsonb",
+      "linguagem": "sql",
       "tipo": "f",
       "security_definer": true,
       "search_path": "search_path=\"\"",

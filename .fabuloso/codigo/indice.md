@@ -19,7 +19,7 @@ _nenhum_
 ## Stores (0)
 _nenhum_
 
-## Hooks próprios (33)
+## Hooks próprios (34)
 | Hook | Arquivo | Dados | Usado por |
 |---|---|---|---|
 | useAsync | components/finance/hooks.ts | — | 28 |
@@ -31,6 +31,7 @@ _nenhum_
 | useAdminEmbedded | components/admin/AdminEmbedContext.tsx | — | 7 |
 | useAuth | contexts/AuthContext.tsx | — | 6 |
 | useLiveRefresh | hooks/useLiveRefresh.ts | — | 4 |
+| useCardPrices | hooks/useCardPrices.ts | rpc student_card_prices | 2 |
 | useAdminPending | components/admin/useAdminPending.ts | — | 1 |
 | useAgendaRealtime | hooks/useAgendaRealtime.ts | — | 1 |
 | useAI | components/TenisProPlayer/engine/useAI.ts | — | 1 |
@@ -101,7 +102,7 @@ _nenhum_
 - Acesso a dados direto no componente: `AdminProtect` (components/AdminProtect.tsx:23) chama profiles; o padrão do projeto é passar por hook/serviço
 - Acesso a dados direto no componente: `AdminReports` (components/AdminReports.tsx:78) chama reservations, profiles, consumptions, challenges, matches, courts; o padrão do projeto é passar por hook/serviço
 - Acesso a dados direto no componente: `AdminRules` (components/AdminRules.tsx:112) chama point_rules; o padrão do projeto é passar por hook/serviço
-- Acesso a dados direto no componente: `AdminStudents` (components/AdminStudents.tsx:79) chama non_socio_students, student_profiles, professors, profiles, set_student_level, student_level_history, student_payments; o padrão do projeto é passar por hook/serviço
+- Acesso a dados direto no componente: `AdminStudents` (components/AdminStudents.tsx:83) chama non_socio_students, student_profiles, professors, profiles, set_student_level, student_level_history, student_payments; o padrão do projeto é passar por hook/serviço
 - Acesso a dados direto no componente: `AdminUserEditor` (components/AdminUserEditor.tsx:125) chama profiles, point_history; o padrão do projeto é passar por hook/serviço
 - Acesso a dados direto no componente: `Agenda` (components/Agenda.tsx:1229) chama profiles, courts, professors, student_profiles, non_socio_students, challenges, reservations, matches; o padrão do projeto é passar por hook/serviço
 - Acesso a dados direto no componente: `AddReservationModal` (components/Agenda.tsx:2333) chama student_profiles, non_socio_students; o padrão do projeto é passar por hook/serviço
@@ -123,7 +124,7 @@ _nenhum_
 - Acesso a dados direto no componente: `LiveScoreboard` (components/LiveScoreboard.tsx:157) chama matches; o padrão do projeto é passar por hook/serviço
 - Acesso a dados direto no componente: `MatchGenerationModal` (components/MatchGenerationModal.tsx:108) chama matches; o padrão do projeto é passar por hook/serviço
 - Acesso a dados direto no componente: `OnboardingModal` (components/OnboardingModal.tsx:63) chama profiles; o padrão do projeto é passar por hook/serviço
-- Acesso a dados direto no componente: `ProfessorProfile` (components/ProfessorProfile.tsx:182) chama professors, profiles, non_socio_students, student_profiles, reservations, courts, set_student_level, student_level_history, student_payments; o padrão do projeto é passar por hook/serviço
+- Acesso a dados direto no componente: `ProfessorProfile` (components/ProfessorProfile.tsx:184) chama professors, profiles, non_socio_students, student_profiles, reservations, courts, set_student_level, student_level_history, student_payments; o padrão do projeto é passar por hook/serviço
 - Acesso a dados direto no componente: `PublicChampionshipPage` (components/PublicChampionshipPage.tsx:57) chama championships, championship_rounds, championship_groups, championship_group_members, championship_registrations, profiles, matches; o padrão do projeto é passar por hook/serviço
 - Acesso a dados direto no componente: `ResenhaOpenBracketView` (components/ResenhaOpenBracketView.tsx:26) chama championships; o padrão do projeto é passar por hook/serviço
 - Acesso a dados direto no componente: `SuperSet` (components/SuperSet.tsx:39) chama profiles, reservations, matches; o padrão do projeto é passar por hook/serviço

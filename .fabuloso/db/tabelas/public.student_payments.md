@@ -15,6 +15,7 @@
 | status | character varying(20) | sim | `'active'::character varying` | Payment status: active (valid) or cancelled (refunded/converted) |
 | cancelled_reason | text | sim |  | Reason for cancellation, e.g. Convertido para Card Mensal |
 | related_payment_id | uuid | sim |  | Links to the replacement payment when a Day Card Experimental is converted to Card Mensal |
+| receipt_intent_id | uuid | sim |  | Comprovante do WhatsApp (fin_private.whatsapp_receipt_intents) que pagou este Card. |
 
 ## Chaves e restrições
 - PK (id)
@@ -28,6 +29,7 @@ public.student_payments.related_payment_id
 
 ## Índices
 - idx_student_payments_status: `btree (status)`
+- student_payments_receipt_intent_idx: `btree (receipt_intent_id) WHERE (receipt_intent_id IS NOT NULL)`
 
 ## Políticas RLS
 - "Admins can manage payments" — ALL para public · using `(EXISTS ( SELECT 1 FROM profiles WHERE ((profiles.id = auth.uid()) AND ((profiles.role)::text = 'admin'::text))))`

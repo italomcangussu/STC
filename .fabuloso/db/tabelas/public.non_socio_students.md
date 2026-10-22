@@ -17,11 +17,13 @@
 | relationship_type | character varying(20) | sim |  | Relationship to responsible socio: filho, filha, esposo, esposa, outro |
 | phone | character varying(20) | sim |  |  |
 | is_active | boolean | sim | `true` | Soft delete flag. When false, student is archived but payment history is preserved. |
+| card_tier | text | não | `'regular'::text` | Faixa do Card Mensal: regular ou kids (metade do preço). |
 
 ## Chaves e restrições
 - PK (id)
 - FK (professor_id) → public.professors(id)
 - FK (responsible_socio_id) → public.profiles(id) on delete set null
+- CHECK non_socio_students_card_tier_check: `CHECK ((card_tier = ANY (ARRAY['regular'::text, 'kids'::text])))`
 - CHECK non_socio_students_plan_type_check: `CHECK ((plan_type = ANY (ARRAY['Day Card'::text, 'Card Mensal'::text, 'Dependente'::text, 'Day Card Experimental'::text])))`
 - CHECK non_socio_students_relationship_type_check: `CHECK (((relationship_type)::text = ANY ((ARRAY['filho'::character varying, 'filha'::character varying, 'esposo'::character varying, 'esposa'::character varying, 'outro'::character varying])::text[])…`
 - CHECK non_socio_students_student_type_check: `CHECK (((student_type)::text = ANY ((ARRAY['regular'::character varying, 'dependent'::character varying])::text[])))`

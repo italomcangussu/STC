@@ -31,11 +31,15 @@
 | pendency_fine_percent_bps | integer | não | `0` |  |
 | pendency_interest_daily_fixed_cents | bigint | não | `0` |  |
 | pendency_interest_daily_percent_bps | integer | não | `0` |  |
+| card_mensal_price_cents | bigint | não | `20000` |  |
+| finance_admin_profile_id | uuid | sim |  | Administrador que recebe do João os comprovantes de sócios para decidir. |
 
 ## Chaves e restrições
 - PK (id)
+- FK (finance_admin_profile_id) → public.profiles(id)
 - FK (late_fee_confirmed_by) → public.profiles(id)
 - FK (updated_by) → public.profiles(id)
+- CHECK fin_settings_card_mensal_price_check: `CHECK (((card_mensal_price_cents >= 100) AND (card_mensal_price_cents <= 10000000)))`
 - CHECK fin_settings_day_card_price_cents_check: `CHECK (((day_card_price_cents >= 0) AND (day_card_price_cents <= 100000000)))`
 - CHECK fin_settings_due_day_check: `CHECK (((due_day >= 1) AND (due_day <= 31)))`
 - CHECK fin_settings_due_month_offset_check: `CHECK (((due_month_offset >= 0) AND (due_month_offset <= 2)))`

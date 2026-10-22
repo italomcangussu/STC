@@ -1,5 +1,5 @@
 # fin_private.whatsapp_receipt_intents
-> tabela · RLS OFF · ~0 linhas
+> tabela · RLS OFF · ~<100 linhas
 
 ## Colunas
 | Coluna | Tipo | Nulo | Padrão | Nota |
@@ -19,12 +19,15 @@
 | finance_submission_id | uuid | sim |  |  |
 | created_at | timestamp with time zone | não | `now()` |  |
 | updated_at | timestamp with time zone | não | `now()` |  |
+| escalated_to | uuid | sim |  |  |
+| escalated_at | timestamp with time zone | sim |  |  |
 
 ## Chaves e restrições
 - PK (id)
 - FK (confirmation_message_id) → public.conv_messages(id)
 - FK (contact_id) → public.conv_contacts(id)
 - FK (conversation_id) → public.conv_conversations(id)
+- FK (escalated_to) → public.profiles(id)
 - FK (finance_entry_id) → public.fin_entries(id)
 - FK (finance_submission_id) → public.fin_receipt_submissions(id)
 - FK (profile_id) → public.profiles(id)
@@ -32,9 +35,10 @@
 - FK (source_message_id) → public.conv_messages(id)
 - UNIQUE (source_message_id)
 - CHECK whatsapp_receipt_intents_purpose_kind_check: `CHECK ((purpose_kind = ANY (ARRAY['donation'::text, 'membership'::text, 'member_pendency'::text, 'student_card'::text, 'day_card'::text, 'other'::text])))`
-- CHECK whatsapp_receipt_intents_status_check: `CHECK ((status = ANY (ARRAY['awaiting_purpose'::text, 'awaiting_confirmation'::text, 'confirmed'::text, 'needs_review'::text, 'canceled'::text])))`
+- CHECK whatsapp_receipt_intents_status_check: `CHECK ((status = ANY (ARRAY['awaiting_purpose'::text, 'awaiting_confirmation'::text, 'escalated'::text, 'confirmed'::text, 'needs_review'::text, 'canceled'::text])))`
 
 ## Índices
+- whatsapp_receipt_intents_escalated_idx: `btree (escalated_to, escalated_at) WHERE (status = 'escalated'::text)`
 - whatsapp_receipt_intents_pending_idx: `btree (conversation_id, created_at) WHERE (status = ANY (ARRAY['awaiting_purpose'::text, 'awaiting_confirmation'::text]))`
 - whatsapp_receipt_intents_source_message_id_key: `btree (source_message_id)` único
 

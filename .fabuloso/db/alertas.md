@@ -37,7 +37,7 @@
 - [média] public.rollback_bootstrap_3_circuito — SECURITY DEFINER sem search_path fixo
 - [média] public.upsert_crm_lead — SECURITY DEFINER sem search_path fixo
 - [média] public.vw_familia_modelos_expandidos — view sem security_invoker legível por anon — ignora o RLS das tabelas de origem
-- [info] 95 funções — SECURITY DEFINER executáveis por anon (coluna anon em funcoes.md) — confirme quais RPCs devem ser públicas
+- [info] 103 funções — SECURITY DEFINER executáveis por anon (coluna anon em funcoes.md) — confirme quais RPCs devem ser públicas
 - [info] fin_private.cash_removed — RLS ligado sem políticas — ninguém acessa pela API (ok se for só service_role)
 - [info] fin_private.cash_removed — FK (actor_id) → public.profiles sem índice
 - [info] fin_private.whatsapp_receipt_intents — FK (confirmation_message_id) → public.conv_messages sem índice
@@ -143,6 +143,7 @@
 - [info] public.fin_receipt_submissions — FK (superseded_by) → public.fin_receipt_submissions sem índice
 - [info] public.fin_recurrences — FK (created_by) → public.profiles sem índice
 - [info] public.fin_recurrences — FK (updated_by) → public.profiles sem índice
+- [info] public.fin_settings — FK (finance_admin_profile_id) → public.profiles sem índice
 - [info] public.fin_settings — FK (late_fee_confirmed_by) → public.profiles sem índice
 - [info] public.fin_settings — FK (updated_by) → public.profiles sem índice
 - [info] public.head_to_head_points — FK (invalidated_by_match_id) → public.matches sem índice

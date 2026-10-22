@@ -136,6 +136,7 @@ Entregue: retornos/lembretes (criar e concluir/cancelar, mais leitura dos penden
 - Consultas novas (N0, `conv_svc_ai_admin_read_more` / `_members`): `socios`, `inadimplentes`, `pagamentos`, `socio_ficha`, `vencimentos`, `alunos`, `movimentos`.
 - Ações novas: `comunicado_enviar` (WhatsApp de todos os sócios, agendável), `resumo_destinatario` (lista do resumo das 8h), arquivos (`file_kind`: PDF de relatório, comprovante, anexo de despesa, documento).
 
-## Auditoria das conversas do Henrique (21/10) — lacunas abertas
+## Auditoria das conversas do Henrique (21/10)
 - Corrigido: cadastro de sócio com comprovante só como intenção (`admin_pending_receipt`/`admin_receipt_materialize`); passos manuais do plano usam o `ADMIN_PANEL_MAP` real.
-- Abertas: comprovante usado em despesa/receita não anexa ao lançamento (`fin_entry_create` aceitar id da intenção); João não cadastra aluno nem registra primeiro pagamento/mensalidade recorrente de aluno; não corrige/exclui movimento ou pagamento de aluno pelo chat (só indica o painel); falta categoria para limpeza/manutenção (decisão do clube). Detalhes no histórico de 2026-10-21.
+- Corrigido depois (21/10): comprovante vira anexo do lançamento (`fin_entry_create`, mesmo valor); João cadastra aluno mensalista/Mensalista Kids/Day Card e registra o pagamento com o comprovante (um comprovante paga vários alunos); comprovante de sócio comum é repassado ao financeiro (Henrique) com texto e imagem e ele decide no chat; mensalidade do mês com valor e favorecido certos tem baixa automática.
+- Abertas: João não corrige/exclui movimento ou pagamento de aluno pelo chat (só indica o painel); não avisa o sócio quando o financeiro decide o comprovante repassado; falta categoria para limpeza/manutenção (decisão do clube). Detalhes no histórico de 2026-10-21.
