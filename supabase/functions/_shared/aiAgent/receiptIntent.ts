@@ -73,3 +73,18 @@ export async function handleReceiptIntent(t:Turn):Promise<Response>{
  if(!(r.data as {ok?:boolean}|null)?.ok)return {action:'receipt_purpose_not_saved',messages:['Não consegui preparar a classificação. Pode repetir a finalidade? Não fiz nenhum lançamento.']};
  return {action:'receipt_confirmation_requested',messages:['Vou classificar o comprovante de '+amount+' como '+names[kind]+' ('+detail+'). Confirma que essa é a finalidade e autoriza registrar para conferência? Responda "confirmo" ou "não". Ainda não dei baixa nem alterei o caixa.']};
 }
+
+// Comprovante que acabou de chegar: a intenção em análise precisa ser a DELE. O OCR grava a intenção segundos depois da
+// mensagem; lida antes disso, a "mais recente" era a de um comprovante anterior e o João citava o valor errado
+// (13 a 19/10, sempre R$ 22,50). Sem mídia na vez, vale a mais recente; mídia sem intenção própria não usa outra.
+type StageQuery={db:Rpc;conversation:string;mediaMessageId?:string;sleep:(ms:number)=>Promise<void>;tries?:number};
+export async function loadReceiptStage({db,conversation,mediaMessageId,sleep,tries=6}:StageQuery):Promise<ReceiptStage|null>{
+ const read=async()=>{const r=await db('conv_svc_receipt_stage',{p_conversation:conversation});return r.data&&typeof r.data==='object'?r.data as ReceiptStage:null;};
+ if(!mediaMessageId)return read();
+ for(let i=0;i<tries;i++){
+   if(i)await sleep(2000);
+   const s=await read();
+   if(s?.source_message_id===mediaMessageId)return s;
+ }
+ return null;
+}

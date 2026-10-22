@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { handleReceiptIntent, type ReceiptStage } from '../supabase/functions/_shared/aiAgent/receiptIntent';
+import { handleReceiptIntent, loadReceiptStage, type ReceiptStage } from '../supabase/functions/_shared/aiAgent/receiptIntent';
 
 const stage=(patch:Partial<ReceiptStage>={}):ReceiptStage=>({
   id:'11111111-1111-4111-8111-111111111111',
@@ -60,5 +60,27 @@ describe('João: comprovantes sem classificação presumida',()=>{
     await handleReceiptIntent(d.turn);
     expect(d.db).toHaveBeenCalledWith('conv_svc_receipt_revise',expect.anything());
     expect(d.db).not.toHaveBeenCalledWith('conv_svc_receipt_confirm',expect.anything());
+  });
+});
+
+describe('João: o comprovante da vez é o que acabou de chegar',()=>{
+  const antigo={id:'a',source_message_id:'msg-antiga',status:'awaiting_purpose',amount_cents:'2250'};
+  const novo={id:'b',source_message_id:'msg-nova',status:'awaiting_purpose',amount_cents:'40000'};
+  const sleep=vi.fn().mockResolvedValue(undefined);
+  it('espera o OCR gravar a intenção da imagem nova em vez de citar a anterior',async()=>{
+    const db=vi.fn().mockResolvedValueOnce({data:antigo}).mockResolvedValueOnce({data:antigo}).mockResolvedValue({data:novo});
+    const s=await loadReceiptStage({db,conversation:'conv',mediaMessageId:'msg-nova',sleep});
+    expect(s?.amount_cents).toBe('40000');
+    expect(db).toHaveBeenCalledTimes(3);
+  });
+  it('imagem sem intenção própria não usa a de outro comprovante',async()=>{
+    const db=vi.fn().mockResolvedValue({data:antigo});
+    expect(await loadReceiptStage({db,conversation:'conv',mediaMessageId:'msg-nova',sleep,tries:3})).toBeNull();
+    expect(db).toHaveBeenCalledTimes(3);
+  });
+  it('texto sem mídia segue a intenção mais recente',async()=>{
+    const db=vi.fn().mockResolvedValue({data:antigo});
+    expect((await loadReceiptStage({db,conversation:'conv',sleep}))?.id).toBe('a');
+    expect(db).toHaveBeenCalledTimes(1);
   });
 });

@@ -19,7 +19,7 @@ import { actingFor } from './promptContext.ts';
 import { systemPrompt } from './promptSystem.ts';
 import type { AiSettings, Ctx } from './promptTypes.ts';
 import { userPrompt } from './prompts.ts';
-import { type ReceiptStage, handleReceiptIntent } from './receiptIntent.ts';
+import { type ReceiptStage, handleReceiptIntent, loadReceiptStage } from './receiptIntent.ts';
 import { UNCLEAR_AUDIO_REPLY, hearAudios, unheardOnly } from './audio.ts';
 import { activeTopic, bringsNewData, openTopics, recordTopicTurn, restoreTopics, selectTopic, topicIdFromRef } from './topicState.ts';
 import { buildChatRequest, providerIdFrom, uazError } from '../uazChat.ts';
@@ -278,9 +278,10 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
   // Administrador não passa por aqui: o comprovante dele é despesa ou pagamento de terceiro, tratado pelo assessor.
   if (!isGroup && !isAdminAssistant(ctx)) {
     let pendingReceipt: ReceiptStage | null = null;
+    const comprovanteDaVez = (deps.mediaOnly === true || soMidia) && (ultima?.kind === 'image' || ultima?.kind === 'document');
+    const midiaDaVez = comprovanteDaVez ? ultima?.id as string | undefined : undefined;
     try {
-      const qr = await db('conv_svc_receipt_stage', { p_conversation: conversation });
-      pendingReceipt = qr.data && typeof qr.data === 'object' ? qr.data as ReceiptStage : null;
+      pendingReceipt = await loadReceiptStage({ db, conversation, mediaMessageId: midiaDaVez, sleep: deps.sleep });
     } catch { /* implantação parcial: fluxo geral continua; jamais força baixa */ }
     if (pendingReceipt) {
       const handled = await handleReceiptIntent({
