@@ -7,7 +7,8 @@ import type { DecideInput } from './decide.ts';
 import type { Decision, Memory, OutFile, RpcResult, TurnDeps } from './turnTypes.ts';
 import { type FileKind, reportDoc, safeName } from './adminFiles.ts';
 import { renderCapabilities } from './capabilities.ts';
-import { type AdminAction, adminProposalMessage, toCents } from './adminMessages.ts';
+import { type AdminAction, adminProposalMessage } from './adminMessages.ts';
+import { ADM_BUILDERS } from './adminActionPayloads.ts';
 import { resolve } from './turnOutcome.ts';
 
 
@@ -41,127 +42,15 @@ async function adminAniversario(i: DecideInput, memory: Memory): Promise<Decisio
 
 /** Ações administrativas reversíveis (N1): o servidor valida e propõe; só grava depois do "sim" do administrador. */
 export async function adminAcao(i: DecideInput, memory: Memory): Promise<Decision> {
-  const { deps, ctx, slots, session } = i;
   const ask = (text: string, awaiting = true): Decision => ({ bubbles: [text], awaiting, close: false, action: 'ask', memory });
-  if (!isAdminAssistant(ctx)) return ask('Essa parte é só com a diretoria, pela conversa privada. Posso te ajudar com outra coisa?', false);
-  const a = slots.adm_action;
+  if (!isAdminAssistant(i.ctx)) return ask('Essa parte é só com a diretoria, pela conversa privada. Posso te ajudar com outra coisa?', false);
+  const a = i.slots.adm_action;
   if (a === 'aniversario') return adminAniversario(i, memory);
-  let p: Record<string, unknown>;
-  if (a === 'aviso') {
-    if (!slots.ann_title) return ask('Qual o título do aviso?');
-    if (!slots.ann_message) return ask('E o texto do aviso?');
-    p = { action: 'adm_announcement_create', title: slots.ann_title, message: slots.ann_message, expires_on: slots.due_date ?? null };
-  } else if (a === 'aviso_desativar') {
-    if (!slots.ann_title) return ask('Qual aviso tirar do ar? Me diga o título.');
-    p = { action: 'adm_announcement_deactivate', title: slots.ann_title };
-  } else if (a === 'aluno_status') {
-    const nome = slots.student_names?.[0];
-    if (!nome) return ask('Qual aluno?');
-    if (typeof slots.active !== 'boolean') return ask('É para pausar ou reativar?');
-    p = { action: 'adm_student_status', student_name: nome, status: slots.active ? 'active' : 'paused' };
-  } else if (a === 'socio_status') {
-    if (!slots.member_name) return ask('Qual sócio?');
-    if (typeof slots.active !== 'boolean') return ask('É para inativar ou reativar?');
-    p = { action: 'adm_member_status', member_name: slots.member_name, active: slots.active };
-  } else if (a === 'assinatura_reenviar') {
-    p = { action: 'adm_signature_resend', title: slots.doc_title ?? '' };
-  } else if (a === 'reserva_cancelar') {
-    if (!slots.date || !slots.start) return ask('Qual o dia e o horário de início da reserva?');
-    p = { action: 'adm_reservation_cancel', date: slots.date, start: slots.start, court_label: slots.court_label ?? null, by_name: slots.by_name ?? null, reason: slots.reason ?? null };
-  } else if (a === 'mensagem_enviar') {
-    if (!slots.member_name) return ask('Para qual sócio eu mando a mensagem?');
-    if (!slots.send_body) return ask(`O que eu digo para ${slots.member_name}? Me passe o recado (ou o que quer que eu pergunte).`);
-    const r = await resolve(deps.db, [slots.member_name], 'member');
-    if (r.ask) return ask(r.ask);
-    p = { action: 'adm_message_send', profile_id: r.ids[0], body: slots.send_body };
-  } else if (a === 'resenha_grupo') {
-    if (!slots.send_body) return ask('Bora! Sobre quem é a resenha e qual a pegada? Se quiser, eu escolho a vítima. 😂');
-    let alvo: string | null = null;
-    if (slots.member_name) {
-      const r = await resolve(deps.db, [slots.member_name], 'member');
-      if (r.ask) return ask(r.ask);
-      alvo = r.ids[0];
-    }
-    p = { body: slots.send_body, profile_id: alvo };
-  } else if (a === 'memoria_esquecer') {
-    if (!slots.member_name) return ask('Sobre quem é a memória que devo esquecer? Se quiser só uma delas, me diga um trecho do que ela diz.');
-    p = { action: 'adm_memory_forget', subject: slots.member_name, text: slots.note ?? null };
-  } else if (a === 'resumo_destinatario') {
-    if (!slots.member_name) return ask('Quem da diretoria entra (ou sai) do resumo das 8h? Me diz o nome.');
-    const r = await resolve(deps.db, [slots.member_name], 'member');
-    if (r.ask) return ask(r.ask);
-    p = { action: 'adm_briefing_recipient', profile_id: r.ids[0], enabled: slots.active !== false };
-  } else if (a === 'comunicado_enviar') {
-    if (!slots.send_body) return ask('Consigo sim: disparo o comunicado direto no WhatsApp pessoal de cada sócio, na hora que você quiser (agora ou num horário, como às 8h00). Me passa o texto exato e o horário do disparo?');
-    const hoje = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Fortaleza' });
-    const sendAt = slots.start ? `${slots.date ?? hoje}T${slots.start.slice(0, 5)}:00-03:00` : null;
-    p = { action: 'adm_broadcast_send', body: slots.send_body, send_at: sendAt };
-  } else if (a === 'formulario_criar') {
-    if (!slots.form_title) return ask('Qual o título do novo formulário?');
-    if (!slots.form_questions?.length) return ask('Quais são as perguntas? Para as de escolha, me diga as alternativas (uma por pergunta); para as de resposta escrita, só o texto da pergunta.');
-    p = { action: 'adm_form_create', title: slots.form_title, description: slots.description ?? null, questions: slots.form_questions,
-      secret: slots.form_secret === true, multiple: slots.form_multiple === true, expires_on: slots.due_date ?? null };
-  } else if (a === 'formulario_status') {
-    if (typeof slots.active !== 'boolean') return ask('É para encerrar ou reabrir o formulário?');
-    p = { action: 'adm_form_toggle', form_ref: slots.form_ref ?? null, active: slots.active, expires_on: slots.due_date ?? null };
-  } else if (a === 'formulario_cobrar') {
-    const hoje = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Fortaleza' });
-    const sendAt = slots.start ? `${slots.date ?? hoje}T${slots.start.slice(0, 5)}:00-03:00` : null;
-    p = { action: 'adm_form_nudge', form_ref: slots.form_ref ?? null, body: slots.send_body?.replace(/https?:\/\/www\.stcplay\.com\.br/gi, 'https://stcplay.com.br') ?? null, send_at: sendAt };
-  } else if (a === 'aluno_criar') {
-    if (!slots.student_name) return ask('Claro, cadastro sim. Qual o nome do aluno e o plano: mensalista, Mensalista Kids (criança, metade do valor) ou Day Card?');
-    if (!slots.student_plan) return ask(`${slots.student_name} vai ser mensalista, Mensalista Kids (criança, metade do valor) ou Day Card?`);
-    p = { action: 'adm_student_create', name: slots.student_name, plan: slots.student_plan === 'day_card' ? 'Day Card' : 'Card Mensal',
-      card_tier: slots.student_plan === 'kids' ? 'kids' : 'regular', phone: slots.phone ?? null, paid: slots.paid === true,
-      amount_cents: toCents(slots.amount), paid_on: slots.paid_on ?? null };
-  } else if (a === 'dependente_criar') {
-    if (!slots.member_name) return ask('Claro, posso cadastrar o dependente. De qual sócio?');
-    if (!slots.dependent_name) return ask(`Posso cadastrar sim. Me passa o nome completo do dependente e o telefone, se tiver (o telefone é opcional; CPF não é necessário no cadastro).`);
-    if (!slots.relationship) return ask(`Qual o parentesco de ${slots.dependent_name} com ${slots.member_name}: esposa, esposo, filho, filha ou outro?`);
-    const r = await resolve(deps.db, [slots.member_name], 'member');
-    if (r.ask) return ask(r.ask);
-    p = { action: 'adm_dependent_create', profile_id: r.ids[0], dependent_name: slots.dependent_name, relationship: slots.relationship, phone: slots.phone ?? null };
-  } else if (a === 'followup_criar') {
-    if (!slots.date) return ask('Para qual dia? (e a hora, se quiser; senão uso 09h)');
-    if (!slots.note && !slots.send_body) return ask('O que é para lembrar nesse retorno?');
-    p = { action: 'adm_followup_create', member_name: slots.member_name ?? null, date: slots.date, start: slots.start ?? null, note: slots.note ?? null, send_body: slots.send_body ?? null };
-  } else if (a === 'followup_concluir') {
-    p = { action: 'adm_followup_done', member_name: slots.member_name ?? null, date: slots.date ?? null, active: slots.active ?? null };
-  } else if (a === 'quadra_bloquear') {
-    if (!slots.court_label) return ask('Qual quadra?');
-    if (!slots.date || !slots.start) return ask('Qual o dia e a hora de início do bloqueio?');
-    if (!slots.duration) return ask('Por quanto tempo (em minutos ou horas)?');
-    p = { action: 'adm_court_block', court_label: slots.court_label, date: slots.date, start: slots.start, duration: slots.duration, reason: slots.reason ?? null };
-  } else if (a === 'preferencia') {
-    if (!slots.pref) return ask('O que você quer ajustar: resumo da manhã (ligar/desligar), estilo do resumo (curto ou completo), alertas, aviso de caixa baixo, dias de atraso para cobrança vencida ou conta padrão?');
-    const cents = toCents(slots.amount);
-    p = { action: 'adm_pref_set', pref: slots.pref, active: slots.active ?? null, value: slots.pref_value ?? null, amount_cents: cents, account_name: slots.account_name ?? null };
-  } else if (a === 'acesso_recusar') {
-    p = { action: 'adm_access_reject', name: slots.member_name ?? null, reason: slots.reason ?? null };
-  } else if (a === 'acesso_aprovar' || a === 'socio_criar') {
-    if (!deps.provision) return ask('Não consigo cadastrar sócio por aqui agora. Use o painel (Acessos).', false);
-    if (a === 'socio_criar') {
-      if (!slots.member_name) return ask('Qual o nome completo do novo sócio?');
-      if (!slots.phone) return ask('Qual o telefone dele, com DDD?');
-    }
-    const cents = toCents(slots.amount);
-    if (!cents) return ask('Qual o valor da mensalidade dele? Preciso também do comprovante de pagamento do mês: mande a imagem ou o PDF aqui.');
-    p = { action: a === 'socio_criar' ? 'fin_member_create' : 'fin_access_approve', name: slots.member_name ?? null, phone: slots.phone ?? null,
-      email: slots.email ?? null, amount_cents: cents, account_name: slots.account_name ?? null };
-  } else {
-    return ask('O que você quer fazer: publicar ou tirar um aviso, pausar/reativar aluno, inativar/reativar sócio, reenviar avisos de assinatura, cancelar uma reserva, aprovar ou recusar pedido de acesso ou cadastrar um sócio novo?');
-  }
-  const rpc = a === 'resenha_grupo' ? 'conv_svc_ai_admin_group_post_propose'
-    : a === 'memoria_esquecer' ? 'conv_svc_ai_admin_memory_forget_propose'
-    : a === 'resumo_destinatario' ? 'conv_svc_ai_admin_briefing_propose'
-    : a === 'comunicado_enviar' ? 'conv_svc_ai_admin_broadcast_propose'
-    : a === 'formulario_criar' || a === 'formulario_status' || a === 'formulario_cobrar' ? 'conv_svc_ai_admin_forms_propose'
-    : a === 'mensagem_enviar' ? 'conv_svc_ai_admin_message_propose'
-    : a === 'dependente_criar' ? 'conv_svc_ai_admin_dependent_propose'
-    : a === 'aluno_criar' ? 'conv_svc_ai_admin_student_propose'
-    : a === 'acesso_aprovar' || a === 'acesso_recusar' || a === 'socio_criar' ? 'conv_svc_ai_admin_access_propose'
-    : a === 'followup_criar' || a === 'followup_concluir' || a === 'quadra_bloquear' || a === 'preferencia' ? 'conv_svc_ai_admin_wave8_propose' : 'conv_svc_ai_admin_adm_propose';
-  const res = (await deps.db(rpc, { p_session: session, p })).data as
+  const builder = a ? ADM_BUILDERS[a] : undefined;
+  if (!builder) return ask('O que você quer fazer: publicar ou tirar um aviso, pausar/reativar aluno, inativar/reativar sócio, reenviar avisos de assinatura, cancelar uma reserva, aprovar ou recusar pedido de acesso ou cadastrar um sócio novo?');
+  const step = await builder.build(i);
+  if ('ask' in step) return ask(step.ask, step.awaiting ?? true);
+  const res = (await i.deps.db(builder.rpc, { p_session: i.session, p: step.p })).data as
     { ok: boolean; message?: string; action?: AdminAction; summary?: Ctx } | null;
   if (!res?.ok || !res.summary || !res.action) return ask(res?.message ?? 'Não consegui montar isso. Pode repetir os dados?');
   return { bubbles: [adminProposalMessage(res.action, res.summary)], awaiting: true, close: false, action: 'proposed_admin', memory, verbatim: true };
@@ -189,7 +78,6 @@ export async function adminConsulta(i: DecideInput, memory: Memory): Promise<Dec
   return { bubbles: [renderAdminRead(slots.read_domain, res.data)], awaiting: false, close: false, action: `admin_read:${slots.read_domain}`, memory, verbatim: true };
 }
 
-/** Renovar o Card Mensal de um aluno: o servidor acha o aluno, junta o comprovante lido e monta o resumo; grava só no "sim". */
 /** Arquivo para o administrador no privado (somente leitura, vai para ele mesmo): PDF de relatório ou documento que o sistema guarda. */
 async function adminArquivo(i: DecideInput, memory: Memory): Promise<Decision> {
   const { deps, slots, session } = i;
