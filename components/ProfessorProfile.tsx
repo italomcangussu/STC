@@ -9,11 +9,12 @@ import { validateStudentForm } from '../lib/students/validateStudentForm';
 import { getNowInFortaleza, formatDate, formatDateBr, MEMBER_ROLES } from '../utils';
 import { StandardModal } from './StandardModal';
 import { STUDENT_LEVELS, StudentLevel, getCardStatus } from '../lib/students/studentRules';
+import { cardPriceReais, cardTierOf } from '../lib/students/cardPrice';
+import { useCardPrices } from '../hooks/useCardPrices';
 
 type RegularPlanType = 'Day Card' | 'Day Card Experimental' | 'Card Mensal';
 
 const _DAY_CARD_PRICE = 50;
-const CARD_MENSAL_PRICE = 200;
 
 /** Calcula data de expiração: mesmo dia do mês seguinte, limitando ao último dia do mês */
 function addOneMonth(dateStr: string): string {
@@ -166,6 +167,7 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
     // --- CONVERT TO MENSAL MODAL ---
     const [showConvertModal, setShowConvertModal] = useState(false);
     const [convertStudent, setConvertStudent] = useState<NonSocioStudent | null>(null);
+    const cardPrices = useCardPrices();
     const [convertDate, setConvertDate] = useState(formatDate(getNowInFortaleza()));
     const [processing, setProcessing] = useState(false);
     const [showExpiredCardModal, setShowExpiredCardModal] = useState(false);
@@ -222,6 +224,7 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                     planType: s.plan_type,
                     planStatus: s.plan_status,
                     masterExpirationDate: s.master_expiration_date,
+                    cardTier: cardTierOf(s.card_tier),
                     professorId: s.professor_id,
                     studentType: s.student_type || 'regular',
                     responsibleSocioId: s.responsible_socio_id,
@@ -603,7 +606,7 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
             // 2. Criar pagamento Card Mensal (R$ 200)
             const { error: payError } = await supabase.from('student_payments').insert({
                 student_id: convertStudent.id,
-                amount: CARD_MENSAL_PRICE,
+                amount: cardPriceReais(convertStudent.cardTier, cardPrices),
                 payment_date: new Date(convertDate + 'T12:00:00').toISOString(),
                 valid_until: new Date(isoExp + 'T23:59:59').toISOString(),
                 approved_by: (await supabase.auth.getUser()).data.user?.id,
@@ -1083,7 +1086,7 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                         <div className="bg-stone-50 p-4 rounded-xl mb-4">
                             <div className="flex justify-between items-center">
                                 <span className="text-stone-500 text-sm">Novo valor</span>
-                                <span className="font-bold text-xl text-green-600">R$ {CARD_MENSAL_PRICE},00</span>
+                                <span className="font-bold text-xl text-green-600">R$ {cardPriceReais(convertStudent?.cardTier, cardPrices).toFixed(2).replace('.', ',')}</span>
                             </div>
                         </div>
 

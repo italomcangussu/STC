@@ -6,6 +6,8 @@ import { useConfirm } from '../hooks/useConfirm';
 import { validateStudentForm } from '../lib/students/validateStudentForm';
 import { NonSocioStudent, Professor, User, RelationshipType, StudentProfile } from '../types';
 import { STUDENT_LEVELS, StudentLevel } from '../lib/students/studentRules';
+import { CARD_TIER_LABEL, type CardTier, cardPriceReais, cardTierOf } from '../lib/students/cardPrice';
+import { useCardPrices } from '../hooks/useCardPrices';
 import {
     Users, Plus, Edit, Trash2, CheckCircle, Loader2, DollarSign, X, UserPlus, ArrowUpCircle
 } from 'lucide-react';
@@ -15,7 +17,6 @@ import { AdminPageHeader, AdminSearch, ChipGroup, adminBtnPrimary } from './admi
 import { useAdminEmbedded } from './admin/AdminEmbedContext';
 
 const DAY_CARD_PRICE = 50;
-const CARD_MENSAL_PRICE = 200;
 
 type RegularPlanType = 'Day Card' | 'Day Card Experimental' | 'Card Mensal';
 
@@ -57,8 +58,11 @@ export const AdminStudents: React.FC = () => {
         responsibleSocioId: '',
         relationshipType: '' as RelationshipType | '',
         planType: 'Day Card' as RegularPlanType,
+        cardTier: 'regular' as CardTier,
         technicalLevel: '' as StudentLevel | ''
     });
+    const cardPrices = useCardPrices();
+    const brl = (reais: number) => `R$ ${reais.toFixed(2).replace('.', ',')}`;
 
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [paymentStudent, setPaymentStudent] = useState<NonSocioStudent | null>(null);
@@ -102,6 +106,7 @@ export const AdminStudents: React.FC = () => {
                 planType: s.plan_type,
                 planStatus: s.plan_status,
                 masterExpirationDate: s.master_expiration_date,
+                cardTier: cardTierOf(s.card_tier),
                 professorId: s.professor_id,
                 studentType: s.student_type || 'regular',
                 responsibleSocioId: s.responsible_socio_id,
@@ -154,6 +159,7 @@ export const AdminStudents: React.FC = () => {
                 responsible_socio_id: studentForm.studentType === 'dependent' ? studentForm.responsibleSocioId : null,
                 relationship_type: studentForm.studentType === 'dependent' ? studentForm.relationshipType : null,
                 plan_type: studentForm.studentType === 'dependent' ? 'Dependente' : studentForm.planType,
+                card_tier: studentForm.studentType === 'regular' && studentForm.planType === 'Card Mensal' ? studentForm.cardTier : 'regular',
                 plan_status: editingStudent ? editingStudent.planStatus : studentForm.studentType === 'dependent' ? 'active' : 'inactive'
             };
 
@@ -182,7 +188,7 @@ export const AdminStudents: React.FC = () => {
             await fetchData();
             setShowStudentModal(false);
             setEditingStudent(null);
-            setStudentForm({ name: '', phone: '', professorId: '', studentType: 'regular', responsibleSocioId: '', relationshipType: '', planType: 'Day Card', technicalLevel: '' });
+            setStudentForm({ name: '', phone: '', professorId: '', studentType: 'regular', responsibleSocioId: '', relationshipType: '', planType: 'Day Card', cardTier: 'regular', technicalLevel: '' });
             notify.success(editingStudent ? 'Aluno atualizado.' : 'Aluno cadastrado.');
         } catch (error) {
             notify.failure(error, 'Não foi possível salvar o aluno.', {
@@ -270,7 +276,7 @@ export const AdminStudents: React.FC = () => {
         setProcessing(true);
 
         try {
-            const price = paymentStudent.planType === 'Card Mensal' ? CARD_MENSAL_PRICE : DAY_CARD_PRICE;
+            const price = paymentStudent.planType === 'Card Mensal' ? cardPriceReais(paymentStudent.cardTier, cardPrices) : DAY_CARD_PRICE;
             const isCardMensal = paymentStudent.planType === 'Card Mensal';
             const isoExp = isCardMensal ? addOneMonth(paymentDate) : null;
 
@@ -353,7 +359,7 @@ export const AdminStudents: React.FC = () => {
             // 2. Criar pagamento Card Mensal (R$ 200)
             const { error: payError } = await supabase.from('student_payments').insert({
                 student_id: convertStudent.id,
-                amount: CARD_MENSAL_PRICE,
+                amount: cardPriceReais(convertStudent.cardTier, cardPrices),
                 payment_date: new Date(convertDate + 'T12:00:00').toISOString(),
                 valid_until: new Date(isoExp + 'T23:59:59').toISOString(),
                 approved_by: (await supabase.auth.getUser()).data.user?.id,
@@ -398,7 +404,7 @@ export const AdminStudents: React.FC = () => {
     });
 
     const getPaymentPrice = (student: NonSocioStudent) => {
-        if (student.planType === 'Card Mensal') return CARD_MENSAL_PRICE;
+        if (student.planType === 'Card Mensal') return cardPriceReais(student.cardTier, cardPrices);
         return DAY_CARD_PRICE;
     };
 
@@ -439,7 +445,7 @@ export const AdminStudents: React.FC = () => {
                     <button
                         onClick={() => {
                             setEditingStudent(null);
-                            setStudentForm({ name: '', phone: '', professorId: '', studentType: 'regular', responsibleSocioId: '', relationshipType: '', planType: 'Day Card', technicalLevel: '' });
+                            setStudentForm({ name: '', phone: '', professorId: '', studentType: 'regular', responsibleSocioId: '', relationshipType: '', planType: 'Day Card', cardTier: 'regular', technicalLevel: '' });
                             setShowStudentModal(true);
                         }}
                         className={adminBtnPrimary}
@@ -520,6 +526,7 @@ export const AdminStudents: React.FC = () => {
                                                     planType: (['Day Card', 'Day Card Experimental', 'Card Mensal'].includes(student.planType)
                                                         ? student.planType as RegularPlanType
                                                         : 'Day Card'),
+                                                    cardTier: cardTierOf(student.cardTier),
                                                     technicalLevel: student.technicalLevel || ''
                                                 });
                                                 setShowStudentModal(true);
@@ -558,8 +565,13 @@ export const AdminStudents: React.FC = () => {
 
                                 <div className="pt-4 border-t border-stone-100">
                                     <div className="flex justify-between items-center mb-3">
-                                        <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded ${getStatusColor(student, isActive)}`}>
-                                            {getStatusLabel(student, isActive, isExpired)}
+                                        <span className="flex items-center gap-1.5">
+                                            <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded ${getStatusColor(student, isActive)}`}>
+                                                {getStatusLabel(student, isActive, isExpired)}
+                                            </span>
+                                            {isCardMensal && student.cardTier === 'kids' && (
+                                                <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-saibro-100 text-saibro-700">Kids</span>
+                                            )}
                                         </span>
                                         {student.masterExpirationDate && isCardMensal && (
                                             <span className={`text-xs font-mono font-bold ${isActive ? 'text-green-600' : 'text-red-400'}`}>
@@ -581,7 +593,7 @@ export const AdminStudents: React.FC = () => {
                                                 >
                                                     <DollarSign size={16} />
                                                     {isCardMensal
-                                                        ? (isActive ? 'Renovar Card Mensal' : 'Ativar Card Mensal')
+                                                        ? `${isActive ? 'Renovar' : 'Ativar'} ${CARD_TIER_LABEL[cardTierOf(student.cardTier)]} · ${brl(cardPriceReais(student.cardTier, cardPrices))}`
                                                         : (isActive ? `Registrar Pagamento R$ ${DAY_CARD_PRICE}` : `Pagar R$ ${DAY_CARD_PRICE} (${student.planType})`)
                                                     }
                                                 </button>
@@ -741,9 +753,30 @@ export const AdminStudents: React.FC = () => {
                                         </p>
                                     )}
                                     {studentForm.planType === 'Card Mensal' && (
-                                        <p className="text-xs text-stone-500 mt-2 font-medium">
-                                            R$ 200/mês. Aluno será marcado como inativo até o pagamento ser confirmado.
-                                        </p>
+                                        <div className="mt-3">
+                                            <span className="block text-xs font-bold text-stone-500 uppercase mb-1">Faixa do mensalista</span>
+                                            <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Faixa do mensalista">
+                                                {(['regular', 'kids'] as CardTier[]).map((tier) => (
+                                                    <button
+                                                        key={tier}
+                                                        type="button"
+                                                        role="radio"
+                                                        aria-checked={studentForm.cardTier === tier}
+                                                        onClick={() => setStudentForm({ ...studentForm, cardTier: tier })}
+                                                        className={`min-h-11 py-2 px-2 rounded-xl font-bold text-xs transition-all ${studentForm.cardTier === tier
+                                                            ? 'bg-saibro-600 text-white shadow-lg'
+                                                            : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                                                        }`}
+                                                    >
+                                                        {CARD_TIER_LABEL[tier]}
+                                                        <span className="block font-medium opacity-80">{brl(cardPriceReais(tier, cardPrices))}/mês</span>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                            <p className="text-xs text-stone-500 mt-2 font-medium">
+                                                {studentForm.cardTier === 'kids' ? 'Criança paga metade do mensalista. ' : ''}O aluno fica inativo até o pagamento ser confirmado.
+                                            </p>
+                                        </div>
                                     )}
                                 </div>
                             </>
@@ -898,7 +931,7 @@ export const AdminStudents: React.FC = () => {
                     <div className="bg-stone-50 p-4 rounded-xl mb-4">
                         <div className="flex justify-between items-center">
                             <span className="text-stone-500 text-sm">Novo valor</span>
-                            <span className="font-bold text-xl text-green-600">R$ {CARD_MENSAL_PRICE},00</span>
+                            <span className="font-bold text-xl text-green-600">{brl(cardPriceReais(convertStudent?.cardTier, cardPrices))}</span>
                         </div>
                     </div>
 

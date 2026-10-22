@@ -70,6 +70,7 @@ export interface NonSocioStudent {
   planType: PlanType;
   planStatus: 'active' | 'inactive';
   masterExpirationDate?: string; // YYYY-MM-DD, required if Master Card
+  cardTier?: import('./lib/students/cardPrice').CardTier; // Card Mensal: 'regular' ou 'kids' (metade do preço)
   professorId: string | null; // The professor who manages this student (null for dependents)
   isActive?: boolean; // Soft delete flag (default: true)
   studentProfileId?: string;
