@@ -8,6 +8,8 @@ export type ReceiptForward = {
   admin_conversation_id: string; admin_name: string; sender_name: string; kind: string; detail: string | null;
   submission_id?: string | null; amount_cents?: number | null; paid_on?: string | null; payee?: string | null;
   media_path?: string | null; media_mime?: string | null; media_name?: string | null; media_kind?: string | null;
+  /** Texto pronto (aviso de baixa automática); sem ele, o repasse monta o texto do comprovante. */
+  text?: string;
 };
 type ForwardDeps = { db: Db; uaz: UazCaller | null; signedUrl?: (path: string) => Promise<string | null> };
 
@@ -38,7 +40,7 @@ export async function deliverForward(f: ReceiptForward, deps: ForwardDeps): Prom
       p_provider_id: res.ok ? providerIdFrom((res as { body: Record<string, unknown> }).body) : null, p_error: uazError(res) });
     return res.ok;
   };
-  const texto = forwardText(f);
+  const texto = f.text ?? forwardText(f);
   if (!(await enviar({ kind: 'text', body: texto }, (number) => buildChatRequest({ action: 'send', number, kind: 'text', text: texto })))) return 0;
   if (!f.media_path || !deps.signedUrl) return 1;
   const url = await deps.signedUrl(f.media_path);
@@ -46,4 +48,20 @@ export async function deliverForward(f: ReceiptForward, deps: ForwardDeps): Prom
   const ok = url ? await enviar({ kind, body: '', media_path: f.media_path, mime: f.media_mime, file_name: f.media_name },
     (number) => buildChatRequest({ action: 'send', number, kind, fileUrl: url, mime: f.media_mime ?? undefined, fileName: f.media_name ?? undefined })) : false;
   return ok ? 2 : 1;
+}
+
+type MembershipAuto = { applied?: boolean; month?: string; amount_cents?: number; admin_conversation_id?: string | null; admin_name?: string; sender_name?: string };
+const monthBR = (iso?: string) => (iso ? iso.slice(0, 7).split('-').reverse().join('/') : 'do mês');
+
+/** Época da mensalidade: o servidor tenta a baixa (valor = devido, favorecido = clube). Aplicada: resposta ao sócio e aviso ao financeiro. */
+type Call = (name: string, args: Record<string, unknown>) => PromiseLike<{ data: unknown }>;
+export async function tryMembershipAutoPay(db: Call, stageId: string): Promise<{ messages: string[]; action: string; forward?: ReceiptForward } | null> {
+  let a: MembershipAuto | null = null;
+  try { a = (await db('conv_svc_receipt_membership_auto', { p_stage: stageId })).data as MembershipAuto | null; } catch { return null; }
+  if (!a?.applied) return null;
+  const mes = monthBR(a.month);
+  const forward = a.admin_conversation_id ? { admin_conversation_id: a.admin_conversation_id, admin_name: a.admin_name ?? '', sender_name: a.sender_name ?? '',
+    kind: 'membership_auto', detail: null,
+    text: `${a.admin_name}, para você saber: a mensalidade de ${mes} de ${a.sender_name} (${brl(a.amount_cents)}) chegou pelo WhatsApp e já dei baixa (valor igual ao devido e Pix para o clube).` } : undefined;
+  return { action: 'receipt_membership_paid', forward, messages: [`Recebi! Sua mensalidade de ${mes} (${brl(a.amount_cents)}) está registrada como paga. Obrigado!`] };
 }

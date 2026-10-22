@@ -31,3 +31,23 @@ describe('João: repasse do comprovante ao financeiro', () => {
     expect(db).not.toHaveBeenCalledWith('conv_svc_receipt_purpose', expect.anything());
   });
 });
+
+describe('João: época da mensalidade', () => {
+  it('comprovante que bate tem baixa: responde ao sócio e avisa o financeiro só por texto', async () => {
+    const db = vi.fn(async (name: string) => (name === 'conv_svc_receipt_membership_auto'
+      ? { data: { applied: true, month: '2026-11-01', amount_cents: 15000, admin_conversation_id: 'conv-h', admin_name: 'Henrique', sender_name: 'Tiago' } }
+      : { data: null }));
+    const r = await handleReceiptIntent({ stage: { id: 's', source_message_id: 'img', status: 'awaiting_purpose', amount_cents: '15000' },
+      messageId: 'img', mediaOnly: true, text: '', transcript: [], db, chat: null, model: 'm' });
+    expect(r?.messages[0]).toBe('Recebi! Sua mensalidade de 11/2026 (R$ 150,00) está registrada como paga. Obrigado!');
+    expect(r?.forward?.text).toBe('Henrique, para você saber: a mensalidade de 11/2026 de Tiago (R$ 150,00) chegou pelo WhatsApp e já dei baixa (valor igual ao devido e Pix para o clube).');
+    expect(r?.forward?.media_path).toBeUndefined();
+  });
+  it('não bate: pergunta a que se refere, sem baixa', async () => {
+    const db = vi.fn(async () => ({ data: { applied: false, reason: 'AMOUNT_MISMATCH' } }));
+    const r = await handleReceiptIntent({ stage: { id: 's', source_message_id: 'img', status: 'awaiting_purpose', amount_cents: '9900' },
+      messageId: 'img', mediaOnly: true, text: '', transcript: [], db, chat: null, model: 'm' });
+    expect(r?.action).toBe('receipt_purpose_requested');
+    expect(r?.messages[0]).toMatch(/referente a quê/);
+  });
+});

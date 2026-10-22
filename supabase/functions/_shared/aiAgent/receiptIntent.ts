@@ -1,6 +1,6 @@
 // João: intenção do comprovante -> finalidade -> confirmação do remetente -> fila financeira.
 // OCR nunca define finalidade; "sim" apenas confirma proposta ainda aberta.
-import type { ReceiptForward } from './receiptForward.ts';
+import { type ReceiptForward, tryMembershipAutoPay } from './receiptForward.ts';
 type Rpc=(name:string,args:Record<string,unknown>)=>PromiseLike<{data:unknown;error?:{message:string}|null}>;
 type Chat=(messages:{role:'system'|'user'|'assistant';content:string}[],config:{model:string;temperature?:number;maxTokens?:number;json?:boolean})=>Promise<{output:string}>;
 export type ReceiptStage={id:string;source_message_id:string;status:'awaiting_purpose'|'awaiting_confirmation';purpose_kind?:string|null;purpose_detail?:string|null;amount_cents?:string|null;paid_on?:string|null;payee?:string|null;created_at?:string|null};
@@ -19,6 +19,8 @@ export async function handleReceiptIntent(t:Turn):Promise<Response>{
  const prev=t.transcript.filter(x=>x.direction==='inbound'&&x.kind==='text').slice(-8).map(x=>String(x.body||'')).join('\n');
  const amount=br(s.amount_cents);
  if(t.mediaOnly){
+   // Época da mensalidade: comprovante que bate com a cobrança do mês tem baixa automática; o resto segue perguntando.
+   if(s.status==='awaiting_purpose'){const pago=await tryMembershipAutoPay(t.db,s.id);if(pago)return pago;}
    if(campaign.test(normal(prev))) return {action:'receipt_purpose_requested',messages:['Recebi o comprovante ('+amount+'). Pelo que conversamos, pode ser uma contribuição para a campanha do Dia das Crianças. Confirma que é dessa campanha ou me diz a finalidade correta? Ainda não lancei nada no caixa.']};
    return {action:'receipt_purpose_requested',messages:['Recebi o comprovante ('+amount+'), mas ainda não vou lançar. Esse pagamento é referente a quê: mensalidade, Card, pendência, doação ou outra coisa? Me explica para eu classificar corretamente.']};
  }
