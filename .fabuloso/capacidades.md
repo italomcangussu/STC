@@ -18,6 +18,8 @@
 - `supabase`, `supabase-postgres-best-practices`, MCP Supabase (o conector `mcp__supabase__*` pode pedir token; o do claude.ai `mcp__6a0fd75e…` funcionou em 2026-10-07)
 ### Qualidade de código
 - `uncle-bob`, `code-review`, `simplify`, `security-review`, `performance-profiler`, `test-driven-development`
+### Segurança
+- `fabuloso-security` — auditoria de segurança (código, banco pelos mapas, edge functions, dependências, VPS, Easypanel), segredos no projeto e no histórico, rotação de segredo
 ### Processo
 - `brainstorming`, `writing-plans`, `executing-plans`, `subagent-driven-development`, `using-git-worktrees`, `finishing-a-development-branch`, `requesting-code-review`, `receiving-code-review`
 ### Engenharia (plugin `engineering`)

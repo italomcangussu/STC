@@ -246,3 +246,6 @@ Orquestrador Sonnet 5.5 (sem subagentes, a pedido). Criados `20261007260000_conv
 - Entrega: migrations 20261022050000 e 20261022060000 aplicadas; `whatsapp-webhook` deployada. Testes: `supabase/tests/pglite/joao_caixa_categoria_comprovante.sql`, `__tests__/conversations/adminCaixaAuditoria.test.ts`.
 - Pendência: Day Cards de reserva sem pagamento no caixa (`day_card_in_cash`): Glória 14/10 e Thiago 03/10, decisão do clube.
 - Observação: deriva no remoto em `public.fin_requests`.
+
+## 2026-10-24 — bootstrap parcial
+- Depois do pull de 331 commits (repositório local reparado com `git fetch --refetch`): `docs/auditorias/` registrado na arquitetura; `fabuloso-security` nas capacidades.

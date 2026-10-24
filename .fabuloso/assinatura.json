@@ -1,7 +1,7 @@
 {
   "versao": 3,
-  "geradoEm": "2026-10-22T00:19:24.556Z",
-  "commit": "04672e40",
+  "geradoEm": "2026-10-24T12:49:40.036Z",
+  "commit": "c5b30866",
   "pastas": [
     "__tests__",
     "__tests__/admin",
@@ -24,6 +24,7 @@
     "design/tabela-confrontos",
     "docs",
     "docs/assinaturas",
+    "docs/auditorias",
     "docs/conversas",
     "docs/financeiro",
     "docs/joao-assessor",
@@ -46,19 +47,19 @@
     "tasks"
   ],
   "agentmap": {
-    "arquivos": 628,
-    "sha": "04672e4",
+    "arquivos": 609,
+    "sha": "c5b3086",
     "hubs": [
       "lib/supabase.ts",
-      "dist/assets/react-vendor-CcCdIb5n.js",
       "lib/finance/dates.ts",
       "types.ts",
       "__tests__/finance/sql/harness.ts",
-      "dist/assets/icons-vendor-Bd_-vDZl.js",
-      "components/finance/ui.tsx",
       "supabase/functions/_shared/aiAgent/promptAdmin.ts",
+      "supabase/functions/_shared/aiAgent/promptContext.ts",
+      "components/finance/ui.tsx",
       "__tests__/conversations/sql/harness.ts",
-      "supabase/functions/_shared/aiAgent/promptContext.ts"
+      "supabase/functions/_shared/uazChat.ts",
+      "lib/finance/money.ts"
     ]
   },
   "skillsPorPerfil": {
@@ -473,12 +474,17 @@
       {
         "name": "fabuloso",
         "origem": "global",
-        "hash": "74a84975bae8"
+        "hash": "2ace01d0d403"
       },
       {
         "name": "fabuloso-codex",
         "origem": "global",
         "hash": "d28238a7ab33"
+      },
+      {
+        "name": "fabuloso-security",
+        "origem": "global",
+        "hash": "3592bd648f70"
       },
       {
         "name": "finishing-a-development-branch",
