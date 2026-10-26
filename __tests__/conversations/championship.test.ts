@@ -379,3 +379,13 @@ describe('inscrição paga pode ser dita como confirmada', () => {
     expect(semPago.bubbles[0]).toContain('Ainda não registrei nada');
   });
 });
+
+describe('visual limpo para listas e informações', () => {
+  it('o prompt pede o formato de cartão só para listas, inscrições e informações', async () => {
+    const { systemPrompt } = await import('../../supabase/functions/_shared/aiAgent/promptSystem');
+    const p = systemPrompt({ persona_name: 'João', instructions: '', handoff_keywords: [] } as never, { is_group: false, requester: admin, championship: pack() });
+    expect(p).toContain('VISUAL LIMPO');
+    expect(p).toContain('"emoji *Rótulo:* valor"');
+    expect(p).toContain('Conversa, resenha, cumprimento e resposta de uma frase ficam como texto normal');
+  });
+});

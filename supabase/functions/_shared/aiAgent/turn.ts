@@ -124,7 +124,7 @@ async function noteMemories(t: Turn, answer: Answer): Promise<string[]> {
   for (const candidate of answer.memory_candidates ?? []) {
     const aprova = candidate.kind !== 'inside_joke' && !t.isGroup && isAdminAssistant(t.ctx);
     const r = await Promise.resolve(t.deps.db('conv_svc_ai_memory_candidate', { p: { ...candidate, source_message_id: t.messageId, approve: aprova } })).catch(() => null);
-    if (aprova && r?.data) anotados.push(candidate.kind === 'role_title' ? `${candidate.subject_name} é ${candidate.content.replace(/^(o|a)\s+/i, '')}` : `${candidate.subject_name}: ${candidate.content}`);
+    if (aprova && r?.data) anotados.push(candidate.kind === 'role_title' ? `${candidate.subject_name} é ${candidate.content.replace(/^(o|a)\s+/i, '')}` : `${candidate.subject_name}: ${candidate.content.replace(/[.\s]+$/, '')}`);
   }
   if (t.isGroup && answer.ask_curator) {
     await Promise.resolve(t.deps.db('conv_svc_ai_curator_ask', { p_session: t.session, p: answer.ask_curator })).catch(() => null);
