@@ -8,7 +8,7 @@ import { parsePlan } from './adminPlan.ts';
 import { parseBirthday } from './adminAssistant.ts';
 import { participantes } from './decide.ts';
 import { parseLessons } from './lessonsBatch.ts';
-import { ADJUST_KINDS, ADM_ACTIONS, type Answer, FIN_ACTIONS, type FormQuestionSlot, type Intent, PAY_METHODS, PENDENCY_KINDS, QUESTION_TYPES, type Slots } from './turnTypes.ts';
+import { ADJUST_KINDS, ADM_ACTIONS, type Answer, CHAMP_ACTIONS, FIN_ACTIONS, type FormQuestionSlot, type Intent, PAY_METHODS, PENDENCY_KINDS, QUESTION_TYPES, type Slots } from './turnTypes.ts';
 
 export const REACTIONS = ['👍', '😂', '🎾', '🔥', '👏', '❤️', '🙌', '💪', '😅', '🤝'] as const;
 const stripVs = (e: string) => e.replace(/️/g, '');
@@ -45,7 +45,7 @@ function lerJson(output: string): Record<string, unknown> | null {
 
 const str = (v: unknown): string | null => (typeof v === 'string' && v.trim() ? v.trim() : null);
 const strList = (v: unknown): string[] => (Array.isArray(v) ? v.map((x) => String(x ?? '').trim()).filter(Boolean).slice(0, 8) : []);
-const INTENTS: Intent[] = ['reservar', 'cancelar', 'remarcar', 'consultar', 'consultar_disponibilidade', 'informar', 'entrar', 'participantes', 'aulas_lote', 'admin_financeiro', 'admin_consulta', 'admin_acao', 'outro'];
+const INTENTS: Intent[] = ['reservar', 'cancelar', 'remarcar', 'consultar', 'consultar_disponibilidade', 'informar', 'entrar', 'participantes', 'aulas_lote', 'admin_financeiro', 'admin_consulta', 'admin_acao', 'campeonato', 'outro'];
 export const ACTIONABLE: Intent[] = ['reservar', 'cancelar', 'remarcar'];
 
 /* Uma regra por campo: valor válido passa, inválido vira null (o modelo disse algo, mas não serve). */
@@ -89,6 +89,8 @@ const SLOT_RULES: { [K in keyof Slots]?: Rule } = {
   read_domain: (v) => (isAdminReadDomain(v) ? v : null), read_from: isoDate, read_to: isoDate,
   form_ref: text(120), form_title: text(120), form_questions: (v) => parseFormQuestions(v),
   form_secret: bool, form_multiple: bool,
+  champ_action: oneOf(CHAMP_ACTIONS), athlete_name: text(120), athlete_self: onlyTrue, athlete_phone: text(30), athlete_city: text(60),
+  champ_class: text(30), shirt_size: (v) => str(v)?.toUpperCase().slice(0, 4) ?? null, seed_names: strList,
 };
 
 /**

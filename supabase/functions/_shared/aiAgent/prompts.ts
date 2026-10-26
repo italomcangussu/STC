@@ -10,6 +10,7 @@
 // mensagens de proposta, confirmação e erro de reserva são escritas pelo SERVIDOR, com o que o
 // sistema retornou — o modelo nunca "anuncia" sucesso.
 
+import { championshipText } from './championshipPrompt.ts';
 import { topicsPromptText } from './topicState.ts';
 import { financialContextText } from './promptAdmin.ts';
 import { agendaText, courtsText, proposalText, requesterText, reservationsText, transcript } from './promptContext.ts';
@@ -49,7 +50,7 @@ A ESPN é a fonte principal para confronto, horário local, status/placar, torne
 Se nenhuma das fontes trouxer transmissão confirmada, diga isso claramente; nunca chute canal ou plataforma.
 ${proTennisText(ctx)}
 
-# RESULTADOS RECENTES DO CLUBE (partidas encerradas; use só o que está aqui, nunca para humilhar)
+${championshipText(ctx)}# RESULTADOS RECENTES DO CLUBE (partidas encerradas; use só o que está aqui, nunca para humilhar)
 ${resultsText(ctx)}
 
 ${ctx.is_group ? `# PESSOAS PRESENTES NO GRUPO (confirmadas agora)

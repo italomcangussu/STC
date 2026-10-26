@@ -73,6 +73,8 @@ export async function loadTurnContext(ctx: Ctx, deps: TurnDeps, where: Where): P
   await adminReads(ctx, db);
   if (where.isGroup) await groupContext(ctx, deps, where);
   await joaoPack(ctx, db, where.session);
+  // Campeonato com inscrição pelo João: informações, vagas e as inscrições de quem fala (tudo, para o administrador).
+  ctx.championship = await read(db, 'conv_svc_ai_championship_context', { p_session: where.session }, asObject, null);
   await resolveMentions(ctx, deps, where);
   // Áudio: o João lê o que foi dito (transcrição do webhook), esperando um pouco pelo que ainda está chegando.
   ctx.transcript = await hearAudios((ctx.transcript ?? []) as Ctx[], deps);

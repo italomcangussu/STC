@@ -110,7 +110,21 @@ export type Slots = {
   file_kind?: FileKind | null;
   read_from?: string | null;
   read_to?: string | null;
+  /** Campeonato com inscrição pelo João: o que a pessoa quer e os dados do atleta. */
+  champ_action?: ChampAction | null;
+  athlete_name?: string | null;
+  /** O atleta é a própria pessoa que fala (telefone = o dela, já confirmado na conversa). */
+  athlete_self?: boolean;
+  athlete_phone?: string | null;
+  athlete_city?: string | null;
+  champ_class?: string | null;
+  shirt_size?: string | null;
+  /** Administrador: cabeças de chave na ordem (o primeiro é o cabeça 1). */
+  seed_names?: string[];
 };
+
+export const CHAMP_ACTIONS = ['info', 'inscrever', 'camisa', 'cabecas', 'sortear'] as const;
+export type ChampAction = typeof CHAMP_ACTIONS[number];
 
 /** Pergunta de formulário como o servidor a entende: o modelo só transcreve o que o administrador ditou. */
 export type FormQuestionSlot = { title: string; type: 'single_choice' | 'multiple_choice' | 'open_text'; required: boolean; options: string[] };
@@ -131,7 +145,7 @@ export const ADJUST_KINDS = ['discount', 'increase', 'fee_waiver'] as const;
 export const PENDENCY_KINDS: PendencyKind[] = ['day_card', 'consumo', 'evento', 'multa', 'dano_reposicao', 'outros'];
 export const PAY_METHODS: PayMethod[] = ['pix', 'transfer', 'cash', 'card', 'other'];
 
-export type Intent = 'reservar' | 'cancelar' | 'remarcar' | 'consultar' | 'consultar_disponibilidade' | 'informar' | 'entrar' | 'participantes' | 'aulas_lote' | 'admin_financeiro' | 'admin_consulta' | 'admin_acao' | 'outro';
+export type Intent = 'reservar' | 'cancelar' | 'remarcar' | 'consultar' | 'consultar_disponibilidade' | 'informar' | 'entrar' | 'participantes' | 'aulas_lote' | 'admin_financeiro' | 'admin_consulta' | 'admin_acao' | 'campeonato' | 'outro';
 
 export type Lesson = { date: string; start: string; end: string | null; student_names: string[] };
 
@@ -182,4 +196,5 @@ export type Decision = { bubbles: string[]; awaiting: boolean; close: boolean; a
   /** Relatório do servidor: vai numa mensagem só, com as quebras de linha (sem picotar em microbolhas). */ verbatim?: boolean;
   /** Arquivos para o administrador (já copiados para a mídia da conversa): saem como documento depois da fala. */ files?: OutFile[] };
 
-export type OutFile = { path: string; name: string; mime: string; caption: string };
+/** `kind` image sai como foto (a camisa do campeonato); sem ele, como documento. */
+export type OutFile = { path: string; name: string; mime: string; caption: string; kind?: 'image' | 'document' };

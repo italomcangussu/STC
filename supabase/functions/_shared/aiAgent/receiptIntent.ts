@@ -1,6 +1,7 @@
 // João: intenção do comprovante -> finalidade -> confirmação do remetente -> fila financeira.
 // OCR nunca define finalidade; "sim" apenas confirma proposta ainda aberta.
 import { type ReceiptForward, tryMembershipAutoPay } from './receiptForward.ts';
+import { tryChampionshipPay } from './championshipReceipt.ts';
 type Rpc=(name:string,args:Record<string,unknown>)=>PromiseLike<{data:unknown;error?:{message:string}|null}>;
 type Chat=(messages:{role:'system'|'user'|'assistant';content:string}[],config:{model:string;temperature?:number;maxTokens?:number;json?:boolean})=>Promise<{output:string}>;
 export type ReceiptStage={id:string;source_message_id:string;status:'awaiting_purpose'|'awaiting_confirmation';purpose_kind?:string|null;purpose_detail?:string|null;amount_cents?:string|null;paid_on?:string|null;payee?:string|null;created_at?:string|null};
@@ -14,13 +15,20 @@ const yes=/^(sim|confirmo|confirmado|pode registrar|pode lancar|pode lançar|iss
 const no=/^(n[aã]o|nao|errado|n[aã]o,? (?:[eé] isso|[eé] esse|[eé] assim)|quero corrigir|corrigir)[\s.!]*$/i;
 const campaign=/\b(campanha|criancas|dia das criancas|doacao|contribuicao|brinquedos)\b/;
 
+// Pagamento que o servidor reconhece sozinho: a mensalidade do mês, ou o Pix das inscrições pendentes no campeonato.
+async function autoPay(t:Turn):Promise<Response>{
+ const pago=await tryMembershipAutoPay(t.db,t.stage.id);if(pago)return pago;
+ const lastBot=t.transcript.filter(x=>x.direction==='outbound').slice(-2).map(x=>String(x.body||'')).join('\n');
+ return tryChampionshipPay(t.db,t.stage.id,lastBot);
+}
+
 export async function handleReceiptIntent(t:Turn):Promise<Response>{
  const s=t.stage;
  const prev=t.transcript.filter(x=>x.direction==='inbound'&&x.kind==='text').slice(-8).map(x=>String(x.body||'')).join('\n');
  const amount=br(s.amount_cents);
  if(t.mediaOnly){
    // Época da mensalidade: comprovante que bate com a cobrança do mês tem baixa automática; o resto segue perguntando.
-   if(s.status==='awaiting_purpose'){const pago=await tryMembershipAutoPay(t.db,s.id);if(pago)return pago;}
+   const auto=s.status==='awaiting_purpose'?await autoPay(t):null;if(auto)return auto;
    if(campaign.test(normal(prev))) return {action:'receipt_purpose_requested',messages:['Recebi o comprovante ('+amount+'). Pelo que conversamos, pode ser uma contribuição para a campanha do Dia das Crianças. Confirma que é dessa campanha ou me diz a finalidade correta? Ainda não lancei nada no caixa.']};
    return {action:'receipt_purpose_requested',messages:['Recebi o comprovante ('+amount+'), mas ainda não vou lançar. Esse pagamento é referente a quê: mensalidade, Card, pendência, doação ou outra coisa? Me explica para eu classificar corretamente.']};
  }

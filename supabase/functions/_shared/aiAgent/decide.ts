@@ -17,6 +17,7 @@ import { isAdminAssistant } from './promptAdmin.ts';
 import { sendWelcome } from './welcome.ts';
 import { consultarDisponibilidade } from './availability.ts';
 import { aulasEmLote, canBatchLessons, lessonsConfirmed } from './lessonsBatch.ts';
+import { campeonato, isChampionshipServerAction } from './championship.ts';
 
 /* ------------------------------- Plano composto do assessor ------------------------------- */
 
@@ -146,6 +147,9 @@ export async function decide(i: DecideInput): Promise<Decision> {
 
   // 2b') Professor ou assessor manda a lista de aulas: confere tudo e propõe numa mensagem só.
   if (answer.intent === 'aulas_lote' && canBatchLessons(ctx) && !answer.transfer) return aulasEmLote(i, memory);
+
+  // 2b'') Campeonato: inscrever, mandar a camisa, cabeças de chave e sorteio são do servidor; dúvida é texto do modelo.
+  if (answer.intent === 'campeonato' && answer.ready && isChampionshipServerAction(i.slots.champ_action) && !answer.transfer) return campeonato(i, memory);
 
   // 2c) "Tem quadra livre?", "quais horários livres?" — consulta real ao motor, sem exigir participantes e sem handoff.
   if (answer.intent === 'consultar_disponibilidade' && !answer.transfer) return consultarDisponibilidade(i, memory);

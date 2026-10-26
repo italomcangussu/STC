@@ -94,7 +94,7 @@ begin
       'id', c.id, 'name', c.name, 'start_date', c.start_date, 'end_date', c.end_date, 'status', c.status,
       'info', c.joao_info->>'info', 'price_cents', (c.joao_info->>'price_cents')::bigint, 'shirt_sizes', c.joao_info->'shirt_sizes',
       'max_per_class', coalesce((c.joao_info->>'max_per_class')::int, 16), 'deadline', c.joao_info->>'deadline',
-      'registration_open', conv_private.champ_open(c.id), 'shirt_image', (c.joao_info->'shirt_image'->>'path') is not null,
+      'registration_open', conv_private.champ_open(c.id), 'shirt_image', case when c.joao_info->'shirt_image'->>'path' is not null then c.joao_info->'shirt_image' end,
       'classes', conv_private.champ_classes(c.id),
       'mine', (select coalesce(jsonb_agg(conv_private.champ_signup_json(s) order by s.created_at), '[]'::jsonb)
                from public.championship_signups s

@@ -25,6 +25,7 @@ import { beforeModel } from './turnShortcuts.ts';
 import { activeTopic, bringsNewData, openTopics, recordTopicTurn, restoreTopics, selectTopic, topicIdFromRef } from './topicState.ts';
 import { mergeSlots, parseAnswer, turnTemperature } from './answerParse.ts';
 import { cadence } from './cadence.ts';
+import { keepChampionshipInChat } from './championship.ts';
 import { type DecideInput, baseSlotsFor, continuePlan, decide, proposalBelongsElsewhere, startsFresh } from './decide.ts';
 import { looksLikeProTennisQuestion, proTennisContext, proTennisDirectMessages } from './proTennis.ts';
 import { type Answer, type Decision, type Intent, type Memory, type TurnDeps, type TurnResult, answerBudget } from './turnTypes.ts';
@@ -228,7 +229,7 @@ export async function runTurn(messageId: string, deps: TurnDeps): Promise<TurnRe
   if (!raw) return t.transferir('hard', 'Falha ao chamar o modelo de IA.', memory);
   // Travas do servidor sobre a resposta: disponibilidade é núcleo; grupo e sócio no privado não vão para humano; piada repetida é trocada.
   const guard = { deps, ctx: t.ctx, settings: t.settings, memory, buffered: t.buffered, isGroup: t.isGroup, messageId };
-  let answer = serverOverrides(raw, guard);
+  let answer = keepChampionshipInChat(serverOverrides(raw, guard));
   let fallback: 'reformulada' | 'pronta' | null = null;
   if (t.socioNoPrivado) ({ answer, fallback } = await keepMemberInChat(answer, guard));
   answer = await refreshGroupHumor(answer, guard);

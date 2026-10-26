@@ -60,9 +60,10 @@ export function turnDelivery({ deps, conversation, session, isGroup, replyTo, la
     let enviados = 0;
     for (const f of arquivos) {
       if (!(await latest())) break;
-      const ok = await send({ kind: 'document', body: f.caption, media_path: f.path, mime: f.mime, file_name: f.name }, async (q) => {
+      const kind = f.kind ?? 'document';
+      const ok = await send({ kind, body: f.caption, media_path: f.path, mime: f.mime, file_name: f.name }, async (q) => {
         const url = deps.files ? await deps.files.signedUrl(f.path) : null;
-        return url ? buildChatRequest({ action: 'send', number: q.destination, kind: 'document', text: f.caption, fileUrl: url, mime: f.mime, fileName: f.name }) : null;
+        return url ? buildChatRequest({ action: 'send', number: q.destination, kind, text: f.caption, fileUrl: url, mime: f.mime, fileName: f.name }) : null;
       });
       if (!ok) break;
       enviados += 1;
