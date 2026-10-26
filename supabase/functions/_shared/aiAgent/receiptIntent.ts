@@ -2,6 +2,7 @@
 // OCR nunca define finalidade; "sim" apenas confirma proposta ainda aberta.
 import { type ReceiptForward, tryMembershipAutoPay } from './receiptForward.ts';
 import { tryChampionshipPay } from './championshipReceipt.ts';
+import { receiptTopic } from './receiptContext.ts';
 type Rpc=(name:string,args:Record<string,unknown>)=>PromiseLike<{data:unknown;error?:{message:string}|null}>;
 type Chat=(messages:{role:'system'|'user'|'assistant';content:string}[],config:{model:string;temperature?:number;maxTokens?:number;json?:boolean})=>Promise<{output:string}>;
 export type ReceiptStage={id:string;source_message_id:string;status:'awaiting_purpose'|'awaiting_confirmation';purpose_kind?:string|null;purpose_detail?:string|null;amount_cents?:string|null;paid_on?:string|null;payee?:string|null;created_at?:string|null};
@@ -15,11 +16,14 @@ const yes=/^(sim|confirmo|confirmado|pode registrar|pode lancar|pode lançar|iss
 const no=/^(n[aã]o|nao|errado|n[aã]o,? (?:[eé] isso|[eé] esse|[eé] assim)|quero corrigir|corrigir)[\s.!]*$/i;
 const campaign=/\b(campanha|criancas|dia das criancas|doacao|contribuicao|brinquedos)\b/;
 
-// Pagamento que o servidor reconhece sozinho: a mensalidade do mês, ou o Pix das inscrições pendentes no campeonato.
+// Pagamento que o servidor reconhece sozinho (mensalidade do mês, Pix das inscrições no campeonato). O assunto da
+// conversa decide qual conferir primeiro; cada conferência só baixa quando o valor bate exatamente.
 async function autoPay(t:Turn):Promise<Response>{
- const pago=await tryMembershipAutoPay(t.db,t.stage.id);if(pago)return pago;
- const lastBot=t.transcript.filter(x=>x.direction==='outbound').slice(-2).map(x=>String(x.body||'')).join('\n');
- return tryChampionshipPay(t.db,t.stage.id,lastBot);
+ const topic=receiptTopic(t.transcript);
+ const inscricao=()=>tryChampionshipPay(t.db,t.stage.id,topic);
+ const mensalidade=()=>tryMembershipAutoPay(t.db,t.stage.id);
+ for(const conferir of topic==='campeonato'?[inscricao,mensalidade]:[mensalidade,inscricao]){const r=await conferir();if(r)return r;}
+ return null;
 }
 
 export async function handleReceiptIntent(t:Turn):Promise<Response>{

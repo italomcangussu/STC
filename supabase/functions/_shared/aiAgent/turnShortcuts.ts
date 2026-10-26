@@ -7,6 +7,8 @@ import { actingFor } from './promptContext.ts';
 import type { Ctx } from './promptTypes.ts';
 import { type ReceiptStage, handleReceiptIntent, loadReceiptStage } from './receiptIntent.ts';
 import { deliverForward } from './receiptForward.ts';
+import { tryChampionshipPay } from './championshipReceipt.ts';
+import { receiptTopic } from './receiptContext.ts';
 import { UNCLEAR_AUDIO_REPLY, unheardOnly } from './audio.ts';
 import { cadence } from './cadence.ts';
 import { delegateSilence } from './delegate.ts';
@@ -53,9 +55,31 @@ async function memberReceipt(t: Turn): Promise<TurnResult | null> {
   return { status: 'replied', bubbles: sent, handoff: null, action: handled.action } as TurnResult;
 }
 
+/**
+ * Pix de inscrição no campeonato mandado por um administrador (ele também se inscreve e inscreve atletas): antes de tratar
+ * como despesa ou Card, confere se é o pagamento das inscrições que ele deixou esperando o Pix (o valor tem que bater; o
+ * assunto da conversa decide se o João explica a diferença ou segue o caminho de despesa/Card).
+ */
+async function adminChampionshipReceipt(t: Turn): Promise<TurnResult | null> {
+  const { db } = t.deps;
+  let stage: ReceiptStage | null = null;
+  try { stage = await loadReceiptStage({ db, conversation: t.conversation, mediaMessageId: t.ultima?.id as string, sleep: t.deps.sleep }); } catch { return null; }
+  if (!stage || stage.status !== 'awaiting_purpose') return null;
+  const pago = await tryChampionshipPay(db, stage.id, receiptTopic((t.ctx.transcript ?? []) as Ctx[]));
+  if (!pago) return null;
+  const sent = await t.entregar(cadence(pago.messages));
+  // Quem cuida do financeiro já está nesta conversa: não manda aviso para ele mesmo.
+  const repassadas = pago.forward && pago.forward.admin_conversation_id !== t.conversation
+    ? await deliverForward(pago.forward, { db, uaz: t.deps.uaz, signedUrl: t.deps.files?.signedUrl }) : 0;
+  await t.save(t.sessionMemory, pago.action, { receipt_stage_id: stage.id, bubbles: sent, forwarded: repassadas }, { awaiting: false, close: false });
+  return { status: 'replied', bubbles: sent, handoff: null, action: pago.action } as TurnResult;
+}
+
 /** Administrador manda o comprovante: o servidor já leu (valor, data, favorecido); o João responde com o que leu, sem equipe. */
 async function adminReceipt(t: Turn): Promise<TurnResult | null> {
   if (!t.soMidia || t.isGroup || !isAdminAssistant(t.ctx) || !t.ultima?.id || !onlyKinds(t, ['image', 'document'])) return null;
+  const inscricao = await adminChampionshipReceipt(t);
+  if (inscricao) return inscricao;
   let lido: Ctx | null = null;
   for (let tentativa = 0; tentativa < 6 && !lido?.found; tentativa++) {
     if (tentativa) await t.deps.sleep(2000);

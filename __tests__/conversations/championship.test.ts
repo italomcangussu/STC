@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { campeonato, duplicateMessage, drawMessage, isChampionshipServerAction, keepChampionshipInChat, signupMessage, waitlistMessage } from '../../supabase/functions/_shared/aiAgent/championship';
 import { championshipRules, championshipText, phoneBR } from '../../supabase/functions/_shared/aiAgent/championshipPrompt';
 import { tryChampionshipPay } from '../../supabase/functions/_shared/aiAgent/championshipReceipt';
+import { receiptTopic } from '../../supabase/functions/_shared/aiAgent/receiptContext';
 import { parseAnswer } from '../../supabase/functions/_shared/aiAgent/answerParse';
 import type { DecideInput } from '../../supabase/functions/_shared/aiAgent/decide';
 import type { Answer, Slots } from '../../supabase/functions/_shared/aiAgent/turnTypes';
@@ -211,42 +212,88 @@ describe('comprovante do Pix da inscrição', () => {
 
   it('confirmado: responde ao atleta e avisa o financeiro', async () => {
     const r = await tryChampionshipPay(dbOf({ applied: true, championship: 'Serra e Sertão 2026', amount_cents: 26000, confirmed: ['Caio Albuquerque', 'Davi Torres'], waitlist: [],
-      admin_conversation_id: 'CV', admin_name: 'Henrique', sender_name: 'Caio' }), 'ST', '');
+      admin_conversation_id: 'CV', admin_name: 'Henrique', sender_name: 'Caio' }), 'ST', null);
     expect(r?.action).toBe('receipt_championship_paid');
     expect(r?.messages.join(' ')).toContain('Inscrições confirmadas no Serra e Sertão 2026: Caio Albuquerque e Davi Torres');
     expect(r?.forward?.text).toContain('já lancei a receita com o comprovante');
   });
 
   it('pago com a classe já cheia: avisa a lista de espera', async () => {
-    const r = await tryChampionshipPay(dbOf({ applied: true, championship: 'S', amount_cents: 13000, confirmed: [], waitlist: ['Enzo Lima'] }), 'ST', '');
+    const r = await tryChampionshipPay(dbOf({ applied: true, championship: 'S', amount_cents: 13000, confirmed: [], waitlist: ['Enzo Lima'] }), 'ST', null);
     expect(r?.messages.join(' ')).toContain('Enzo Lima ficou na lista de espera');
   });
 
   it('valor que não fecha, com cara de inscrição: explica o total esperado', async () => {
     const r = await tryChampionshipPay(dbOf({ applied: false, reason: 'AMBIGUOUS', amount_cents: 13000, total_cents: 26000,
-      pending: [{ name: 'Caio Albuquerque', class: '4ª Classe' }, { name: 'Davi Torres', class: '5ª Classe' }] }), 'ST', '');
+      pending: [{ name: 'Caio Albuquerque', class: '4ª Classe' }, { name: 'Davi Torres', class: '5ª Classe' }] }), 'ST', null);
     expect(r?.action).toBe('receipt_championship_amount');
     expect(r?.messages[0]).toContain('somam R$ 260,00');
   });
 
-  it('valor de outra coisa, sem conversa de inscrição: segue o fluxo comum do comprovante', async () => {
+  it('conversa sobre mensalidade e valor que não é da inscrição: segue o fluxo comum do comprovante', async () => {
     const r = await tryChampionshipPay(dbOf({ applied: false, reason: 'AMOUNT_MISMATCH', amount_cents: 15000, total_cents: 13000,
-      pending: [{ name: 'Caio Albuquerque', class: '4ª Classe' }] }), 'ST', 'Bom dia!');
+      pending: [{ name: 'Caio Albuquerque', class: '4ª Classe' }] }), 'ST', 'mensalidade');
     expect(r).toBeNull();
   });
 
-  it('logo depois do pedido de Pix, qualquer valor errado é explicado', async () => {
+  it('conversa sobre a inscrição: valor errado é explicado', async () => {
     const r = await tryChampionshipPay(dbOf({ applied: false, reason: 'AMOUNT_MISMATCH', amount_cents: 15000, total_cents: 13000,
-      pending: [{ name: 'Caio Albuquerque', class: '4ª Classe' }] }), 'ST', 'Pré-inscrição feita no Serra e Sertão 2026 ✅');
+      pending: [{ name: 'Caio Albuquerque', class: '4ª Classe' }] }), 'ST', 'campeonato');
     expect(r?.action).toBe('receipt_championship_amount');
   });
 
   it('sem pré-inscrição: não é com ele', async () => {
-    expect(await tryChampionshipPay(dbOf({ applied: false, reason: 'NO_SIGNUP' }), 'ST', 'inscrição')).toBeNull();
+    expect(await tryChampionshipPay(dbOf({ applied: false, reason: 'NO_SIGNUP' }), 'ST', 'campeonato')).toBeNull();
   });
 
   it('comprovante repetido: não confirma', async () => {
-    const r = await tryChampionshipPay(dbOf({ applied: false, reason: 'DUPLICATE' }), 'ST', '');
+    const r = await tryChampionshipPay(dbOf({ applied: false, reason: 'DUPLICATE' }), 'ST', null);
     expect(r?.action).toBe('receipt_championship_duplicate');
+  });
+});
+
+describe('comprovante do administrador que também se inscreveu', () => {
+  it('Pix da inscrição pendente confirma na hora, em vez de perguntar se é despesa ou Card', async () => {
+    const { beforeModel } = await import('../../supabase/functions/_shared/aiAgent/turnShortcuts');
+    const calls: string[] = [];
+    const falas: string[] = [];
+    const db = (name: string) => {
+      calls.push(name);
+      if (name === 'conv_svc_receipt_stage') return Promise.resolve({ data: { id: 'ST', source_message_id: 'M1', status: 'awaiting_purpose' }, error: null });
+      if (name === 'conv_svc_receipt_championship_auto') return Promise.resolve({ data: { applied: true, championship: 'Serra e Sertão 2026', amount_cents: 13000,
+        confirmed: ['Hermeson Veras'], waitlist: [], admin_conversation_id: 'CONV', admin_name: 'Hermeson', sender_name: 'Hermeson' }, error: null });
+      return Promise.resolve({ data: null, error: null });
+    };
+    const t = {
+      deps: { db, chat: async () => ({ output: '{}' }), uaz: null, sleep: async () => undefined }, isGroup: false, soMidia: true, buffered: '',
+      settings: { model: 'm', handoff_keywords: [] }, conversation: 'CONV', session: 'S', sessionMemory: {},
+      ultima: { id: 'M1', kind: 'image' }, pendentes: [{ id: 'M1', kind: 'image' }],
+      ctx: { is_group: false, requester: admin, transcript: [{ direction: 'outbound', body: 'Depois é só me mandar o comprovante aqui que eu confiro e confirmo a inscrição na hora.' }] },
+      entregar: async (b: { text: string }[]) => { falas.push(...b.map((x) => x.text)); return b.length; },
+      save: async () => undefined,
+    } as never;
+    const r = await beforeModel(t);
+    expect(r?.action).toBe('receipt_championship_paid');
+    expect(falas.join(' ')).toContain('Inscrição confirmada no Serra e Sertão 2026: Hermeson Veras');
+    expect(calls).not.toContain('conv_svc_ai_admin_receipt');
+    expect(calls).not.toContain('conv_svc_queue_message');
+  });
+});
+
+describe('de que é o comprovante: o assunto da conversa', () => {
+  const msg = (direction: string, body: string) => ({ direction, body });
+  it('o assunto mais recente vence', () => {
+    expect(receiptTopic([msg('inbound', 'quanto tá minha mensalidade?'), msg('outbound', 'R$ 150'), msg('inbound', 'quero me inscrever no Serra e Sertão')])).toBe('campeonato');
+    expect(receiptTopic([msg('inbound', 'me inscreve na 5ª classe'), msg('outbound', 'feito'), msg('inbound', 'agora vou pagar a mensalidade de outubro')])).toBe('mensalidade');
+  });
+  it('a fala do João também conta (o pedido de Pix da inscrição)', () => {
+    expect(receiptTopic([msg('outbound', 'Depois é só me mandar o comprovante aqui que eu confiro e confirmo a inscrição na hora.')])).toBe('campeonato');
+  });
+  it('renovar Card de aluno', () => {
+    expect(receiptTopic([msg('inbound', 'vou renovar o card do Pedro')])).toBe('card');
+  });
+  it('sem assunto: null (o valor decide)', () => {
+    expect(receiptTopic([msg('inbound', 'bom dia'), msg('outbound', 'Bom dia!')])).toBeNull();
+    expect(receiptTopic([])).toBeNull();
   });
 });

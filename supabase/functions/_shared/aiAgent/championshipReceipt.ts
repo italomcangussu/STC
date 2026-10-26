@@ -1,9 +1,10 @@
 // Comprovante do Pix de quem tem pré-inscrição no campeonato: o servidor confere valor, favorecido e arquivo e,
 // batendo, lança a receita com o comprovante e inscreve na hora (sem confirmação em duas etapas).
-// Não bateu: explica o que esperava quando dá para ver que o Pix é da inscrição; senão segue o fluxo comum do comprovante.
+// Não bateu: explica o que esperava quando a conversa é sobre a inscrição; senão segue o fluxo comum do comprovante.
 
 import { brl } from './championshipPrompt.ts';
 import type { ReceiptForward } from './receiptForward.ts';
+import type { ReceiptTopic } from './receiptContext.ts';
 
 type Call = (name: string, args: Record<string, unknown>) => PromiseLike<{ data: unknown }>;
 type Pending = { name: string; class: string };
@@ -35,9 +36,10 @@ function financeNotice(a: Auto): ReceiptForward | undefined {
     text: `${a.admin_name}, para você saber: ${a.sender_name} pagou ${brl(a.amount_cents)} de inscrição no ${a.championship} pelo WhatsApp e eu já lancei a receita com o comprovante.${confirmados}${naEspera}` };
 }
 
-/** O Pix parece da inscrição: valor múltiplo do preço de uma inscrição, ou a última fala do João foi sobre a inscrição. */
-function looksLikeSignup(a: Auto, lastBot: string): boolean {
-  if (/inscri[cç][aã]o/i.test(lastBot)) return true;
+/** O Pix é da inscrição: a conversa é sobre o campeonato, ou o valor é múltiplo do preço de uma inscrição. */
+function looksLikeSignup(a: Auto, topic: ReceiptTopic | null): boolean {
+  if (topic === 'campeonato') return true;
+  if (topic) return false;
   const preco = Number(a.total_cents) / Math.max(1, a.pending?.length ?? 1);
   return preco > 0 && Number(a.amount_cents) > 0 && Number(a.amount_cents) % preco === 0;
 }
@@ -61,12 +63,12 @@ function mismatchReply(a: Auto): ChampReceipt | null {
 }
 
 /** Tenta confirmar a inscrição pelo comprovante. null = não é (ou não dá para saber se é) da inscrição: segue o fluxo comum. */
-export async function tryChampionshipPay(db: Call, stageId: string, lastBot: string): Promise<ChampReceipt | null> {
+export async function tryChampionshipPay(db: Call, stageId: string, topic: ReceiptTopic | null): Promise<ChampReceipt | null> {
   let a: Auto | null = null;
   try { a = (await db('conv_svc_receipt_championship_auto', { p_stage: stageId })).data as Auto | null; } catch { return null; }
   if (!a) return null;
   if (a.applied) return { action: 'receipt_championship_paid', messages: paidMessages(a), forward: financeNotice(a) };
   if (a.reason === 'DUPLICATE') return { action: 'receipt_championship_duplicate', messages: ['Esse comprovante já foi usado antes, então não confirmei nada com ele. Se fez um Pix novo, me manda o comprovante dele.'] };
-  if (!a.pending?.length || !looksLikeSignup(a, lastBot)) return null;
+  if (!a.pending?.length || !looksLikeSignup(a, topic)) return null;
   return mismatchReply(a);
 }
