@@ -1,6 +1,6 @@
 # Mapa do banco — postgres
-> Gerado por `fabuloso.mjs db` em 2026-10-26 15:19 UTC · fonte: api supabase (smztsayzldjmkzmufqcz) · Postgres 17.6 · hash e0d1a2714733
-> Última migração aplicada no remoto: 20261026120100 · última local no mapa: 20261026120100
+> Gerado por `fabuloso.mjs db` em 2026-10-26 15:24 UTC · fonte: api supabase (smztsayzldjmkzmufqcz) · Postgres 17.6 · hash ec663971b4a2
+> Última migração aplicada no remoto: 20261026150000 · última local no mapa: 20261026150000
 > Detalhe: `tabelas/<schema>.<tabela>.md` (colunas, FKs, índices, políticas, gatilhos) · `funcoes.md` · `relacoes.mmd`. Não introspecte o banco para o que está aqui.
 
 ## Alertas (193)

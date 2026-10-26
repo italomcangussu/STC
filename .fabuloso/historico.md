@@ -256,3 +256,4 @@ Orquestrador Sonnet 5.5 (sem subagentes, a pedido). Criados `20261007260000_conv
 - Entrega: migrations 20261026120000 e 20261026120100 aplicadas; `whatsapp-webhook` deployada. Testes: `supabase/tests/pglite/serra_sertao_inscricoes.sql`, `__tests__/conversations/championship.test.ts`.
 - Pendências: foto da camisa (`joao_info.shirt_image`), teste com modelo real, pré-inscrições fora do painel, classe com menos de 9 confirmados vai pelo Criador.
 - Observação: deriva no remoto em `public.conv_followups`.
+- 2026-10-26: foto da camisa do atleta (branca) em conv-media `championships/serra-e-sertao-2026/camisa-atleta.jpg`, ligada por 20261026150000 (joao_info.shirt_image + descrição no info). A vermelha é da organização.
