@@ -249,3 +249,10 @@ Orquestrador Sonnet 5.5 (sem subagentes, a pedido). Criados `20261007260000_conv
 
 ## 2026-10-24 — bootstrap parcial
 - Depois do pull de 331 commits (repositório local reparado com `git fetch --refetch`): `docs/auditorias/` registrado na arquitetura; `fabuloso-security` nas capacidades.
+
+## 2026-10-26 — João do campeonato Serra e Sertão 2026 (orquestrador Opus 5.5)
+- Tarefa: inscrição pelo WhatsApp, dúvidas, foto da camisa, Pix que confirma sozinho, cabeças de chave e sorteio. Commits 3943b94, d234fba.
+- Contexto: arquitetura ganhou os fluxos de inscrição, Pix da inscrição e sorteio. Não há CLAUDE.md; sem pasta de conhecimento criada.
+- Entrega: migrations 20261026120000 e 20261026120100 aplicadas; `whatsapp-webhook` deployada. Testes: `supabase/tests/pglite/serra_sertao_inscricoes.sql`, `__tests__/conversations/championship.test.ts`.
+- Pendências: foto da camisa (`joao_info.shirt_image`), teste com modelo real, pré-inscrições fora do painel, classe com menos de 9 confirmados vai pelo Criador.
+- Observação: deriva no remoto em `public.conv_followups`.

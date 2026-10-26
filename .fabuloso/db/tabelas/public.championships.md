@@ -32,6 +32,7 @@
 | format_config | jsonb | sim |  | Configuração do formato escolhida no Criador. Formato do objeto em lib/championship/formatConfig.ts. |
 | allow_guests | boolean | não | `false` | Se o Criador oferece a aba "Convidado" ao inscrever. Não restringe o que já foi inscrito. |
 | allow_students | boolean | não | `false` | Se o Criador oferece a aba "Aluno" ao inscrever. Não restringe o que já foi inscrito. |
+| joao_info | jsonb | sim |  | Inscrição pelo João (WhatsApp): enabled, price_cents, shirt_sizes, max_per_class, deadline (YYYY-MM-DD, inclusive), category_name, shirt_image {path,mime,name} no bucket conv-media e info (texto que o João usa para tirar dúvidas). |
 
 ## Chaves e restrições
 - PK (id)
@@ -39,8 +40,8 @@
 - UNIQUE (slug)
 - CHECK championships_format_check: `CHECK ((format = ANY (ARRAY['mata-mata'::text, 'pontos-corridos'::text, 'grupo-mata-mata'::text])))`
 
-## Referenciada por (7)
-public.championship_admin_audit_logs.championship_id, public.championship_groups.championship_id, public.championship_participants.championship_id, public.championship_registrations.championship_id, public.championship_rounds.championship_id, public.championship_winners.championship_id, public.matches.championship_id
+## Referenciada por (8)
+public.championship_admin_audit_logs.championship_id, public.championship_groups.championship_id, public.championship_participants.championship_id, public.championship_registrations.championship_id, public.championship_rounds.championship_id, public.championship_signups.championship_id, public.championship_winners.championship_id, public.matches.championship_id
 
 ## Índices
 - championships_slug_key: `btree (slug)` único

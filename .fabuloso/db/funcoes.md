@@ -1,5 +1,5 @@
 # Funções
-> 535 funções nos schemas conv_private, fin_private, public, sig_private. Corpo completo sob demanda: `select pg_get_functiondef('<schema.nome>(<args>)'::regprocedure)`.
+> 549 funções nos schemas conv_private, fin_private, public, sig_private. Corpo completo sob demanda: `select pg_get_functiondef('<schema.nome>(<args>)'::regprocedure)`.
 
 | Função | Argumentos | Retorno | Ling. | Segurança | anon | Nota |
 |---|---|---|---|---|---|---|
@@ -129,6 +129,15 @@
 | conv_private.briefing_list_names | `p_extra uuid, p_enabled boolean` | `text` | sql | DEFINER | não |  |
 | conv_private.brl | `p_cents bigint` | `text` | sql | invoker | sim |  |
 | conv_private.can_merge | `a uuid, b uuid` | `boolean` | plpgsql | DEFINER | não |  |
+| conv_private.champ_class | `p_champ uuid, p_input text` | `text` | plpgsql | DEFINER | não |  |
+| conv_private.champ_classes | `p_champ uuid` | `jsonb` | sql | DEFINER | não |  |
+| conv_private.champ_confirmed | `p_champ uuid, p_class text` | `integer` | sql | DEFINER | não |  |
+| conv_private.champ_drawn | `p_champ uuid, p_class text` | `boolean` | sql | DEFINER | não |  |
+| conv_private.champ_find_registration | `p_champ uuid, p_class text, p_name text` | `jsonb` | plpgsql | DEFINER | não |  |
+| conv_private.champ_name_key | `p text` | `text` | sql | invoker | sim |  |
+| conv_private.champ_open | `p_champ uuid` | `boolean` | sql | DEFINER | não |  |
+| conv_private.champ_pick | `p_id uuid` | `uuid` | sql | DEFINER | não |  |
+| conv_private.champ_signup_json | `s championship_signups` | `jsonb` | sql | invoker | sim |  |
 | conv_private.channel_delivery | — | `TABLE(inbound_token_hash text, bot_phone text, bot_lids tex…` | sql | DEFINER | não |  |
 | conv_private.claim_due_followups | `p_limit integer` | `TABLE(followup_id uuid, conversation_id uuid, send_body tex…` | sql | DEFINER | não |  |
 | conv_private.close_receipt_if_used | `p_intent uuid` | `void` | plpgsql | DEFINER | sim |  |
@@ -328,6 +337,10 @@
 | public.conv_svc_ai_admin_wave8_propose | `p_session uuid, p jsonb` | `jsonb` | sql | DEFINER | não |  |
 | public.conv_svc_ai_audio_transcripts | `p_ids text[]` | `jsonb` | sql | DEFINER | não |  |
 | public.conv_svc_ai_cancel_proposal | `p_session uuid` | `void` | sql | DEFINER | não |  |
+| public.conv_svc_ai_championship_context | `p_session uuid` | `jsonb` | plpgsql | DEFINER | não |  |
+| public.conv_svc_ai_championship_draw | `p_session uuid, p jsonb` | `jsonb` | plpgsql | DEFINER | não |  |
+| public.conv_svc_ai_championship_seeds | `p_session uuid, p jsonb` | `jsonb` | plpgsql | DEFINER | não |  |
+| public.conv_svc_ai_championship_signup | `p_session uuid, p jsonb` | `jsonb` | plpgsql | DEFINER | não |  |
 | public.conv_svc_ai_club_balances | — | `jsonb` | sql | DEFINER | não |  |
 | public.conv_svc_ai_club_roster | — | `jsonb` | sql | DEFINER | não |  |
 | public.conv_svc_ai_confirm | `p_proposal uuid, p_message uuid` | `jsonb` | sql | DEFINER | não |  |
@@ -371,6 +384,7 @@
 | public.conv_svc_mark_unread | `p_conversation uuid` | `void` | sql | DEFINER | não |  |
 | public.conv_svc_message_target | `p_message uuid` | `TABLE(provider_message_id text, destination text, direction…` | sql | DEFINER | não |  |
 | public.conv_svc_queue_message | `p_conversation uuid, p jsonb, p_author uuid, p_key uuid, p_origin text, p_session uuid, p…` | `TABLE(message_id uuid, destination text, already_sent boole…` | sql | DEFINER | não |  |
+| public.conv_svc_receipt_championship_auto | `p_stage uuid` | `jsonb` | plpgsql | DEFINER | não |  |
 | public.conv_svc_receipt_confirm | `p_stage uuid, p_message uuid` | `jsonb` | plpgsql | DEFINER | não |  |
 | public.conv_svc_receipt_escalate | `p_stage uuid, p_message uuid, p_kind text, p_detail text` | `jsonb` | plpgsql | DEFINER | não |  |
 | public.conv_svc_receipt_membership_auto | `p_stage uuid` | `jsonb` | plpgsql | DEFINER | não |  |

@@ -8,7 +8,7 @@
     "public",
     "sig_private"
   ],
-  "ultima_migracao": "20261022060000",
+  "ultima_migracao": "20261026120100",
   "extensoes": [
     "pg_cron 1.6.4",
     "pg_net 0.19.5",
@@ -4245,6 +4245,15 @@
           "gerada": null,
           "identidade": null,
           "comentario": null
+        },
+        {
+          "nome": "seed_number",
+          "tipo": "integer",
+          "nulo": true,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
         }
       ],
       "restricoes": [
@@ -4265,6 +4274,17 @@
           "def": "CHECK ((participant_type = ANY (ARRAY['socio'::text, 'guest'::text, 'aluno'::text])))",
           "colunas": [
             "participant_type"
+          ],
+          "ref": null,
+          "ref_colunas": null,
+          "ao_apagar": null
+        },
+        {
+          "nome": "championship_registrations_seed_number_check",
+          "tipo": "c",
+          "def": "CHECK (((seed_number >= 1) AND (seed_number <= 16)))",
+          "colunas": [
+            "seed_number"
           ],
           "ref": null,
           "ref_colunas": null,
@@ -4779,6 +4799,458 @@
     },
     {
       "schema": "public",
+      "nome": "championship_signups",
+      "tipo": "r",
+      "rls": true,
+      "rls_forcado": false,
+      "linhas_est": "0",
+      "opcoes": null,
+      "comentario": "Pré-inscrições de campeonato feitas pelo João. pre = aguardando Pix; confirmed = pago e inscrito (registration_id); waitlist = classe cheia. Escrita só pelas funções conv_svc_*.",
+      "acesso": {
+        "anon": "",
+        "authenticated": "s"
+      },
+      "definicao": null,
+      "colunas": [
+        {
+          "nome": "id",
+          "tipo": "uuid",
+          "nulo": false,
+          "padrao": "gen_random_uuid()",
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "championship_id",
+          "tipo": "uuid",
+          "nulo": false,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "class",
+          "tipo": "text",
+          "nulo": false,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "full_name",
+          "tipo": "text",
+          "nulo": false,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "name_key",
+          "tipo": "text",
+          "nulo": false,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "phone",
+          "tipo": "text",
+          "nulo": false,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "phone_key",
+          "tipo": "text",
+          "nulo": false,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "city",
+          "tipo": "text",
+          "nulo": true,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "shirt_size",
+          "tipo": "text",
+          "nulo": false,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "profile_id",
+          "tipo": "uuid",
+          "nulo": true,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "status",
+          "tipo": "text",
+          "nulo": false,
+          "padrao": "'pre'::text",
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "registered_by_contact_id",
+          "tipo": "uuid",
+          "nulo": true,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "conversation_id",
+          "tipo": "uuid",
+          "nulo": true,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "amount_cents",
+          "tipo": "bigint",
+          "nulo": false,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "paid_at",
+          "tipo": "timestamp with time zone",
+          "nulo": true,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "receipt_intent_id",
+          "tipo": "uuid",
+          "nulo": true,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "fin_entry_id",
+          "tipo": "uuid",
+          "nulo": true,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "registration_id",
+          "tipo": "uuid",
+          "nulo": true,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "created_at",
+          "tipo": "timestamp with time zone",
+          "nulo": false,
+          "padrao": "now()",
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "updated_at",
+          "tipo": "timestamp with time zone",
+          "nulo": false,
+          "padrao": "now()",
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        }
+      ],
+      "restricoes": [
+        {
+          "nome": "championship_signups_amount_cents_check",
+          "tipo": "c",
+          "def": "CHECK ((amount_cents > 0))",
+          "colunas": [
+            "amount_cents"
+          ],
+          "ref": null,
+          "ref_colunas": null,
+          "ao_apagar": null
+        },
+        {
+          "nome": "championship_signups_city_check",
+          "tipo": "c",
+          "def": "CHECK (((city IS NULL) OR ((length(TRIM(BOTH FROM city)) >= 2) AND (length(TRIM(BOTH FROM city)) <= 60))))",
+          "colunas": [
+            "city"
+          ],
+          "ref": null,
+          "ref_colunas": null,
+          "ao_apagar": null
+        },
+        {
+          "nome": "championship_signups_full_name_check",
+          "tipo": "c",
+          "def": "CHECK (((length(TRIM(BOTH FROM full_name)) >= 5) AND (length(TRIM(BOTH FROM full_name)) <= 120)))",
+          "colunas": [
+            "full_name"
+          ],
+          "ref": null,
+          "ref_colunas": null,
+          "ao_apagar": null
+        },
+        {
+          "nome": "championship_signups_phone_check",
+          "tipo": "c",
+          "def": "CHECK ((phone ~ '^[1-9][0-9]{9,14}$'::text))",
+          "colunas": [
+            "phone"
+          ],
+          "ref": null,
+          "ref_colunas": null,
+          "ao_apagar": null
+        },
+        {
+          "nome": "championship_signups_status_check",
+          "tipo": "c",
+          "def": "CHECK ((status = ANY (ARRAY['pre'::text, 'confirmed'::text, 'waitlist'::text, 'canceled'::text])))",
+          "colunas": [
+            "status"
+          ],
+          "ref": null,
+          "ref_colunas": null,
+          "ao_apagar": null
+        },
+        {
+          "nome": "championship_signups_championship_id_fkey",
+          "tipo": "f",
+          "def": "FOREIGN KEY (championship_id) REFERENCES championships(id) ON DELETE CASCADE",
+          "colunas": [
+            "championship_id"
+          ],
+          "ref": "public.championships",
+          "ref_colunas": [
+            "id"
+          ],
+          "ao_apagar": "c"
+        },
+        {
+          "nome": "championship_signups_conversation_id_fkey",
+          "tipo": "f",
+          "def": "FOREIGN KEY (conversation_id) REFERENCES conv_conversations(id)",
+          "colunas": [
+            "conversation_id"
+          ],
+          "ref": "public.conv_conversations",
+          "ref_colunas": [
+            "id"
+          ],
+          "ao_apagar": "a"
+        },
+        {
+          "nome": "championship_signups_fin_entry_id_fkey",
+          "tipo": "f",
+          "def": "FOREIGN KEY (fin_entry_id) REFERENCES fin_entries(id)",
+          "colunas": [
+            "fin_entry_id"
+          ],
+          "ref": "public.fin_entries",
+          "ref_colunas": [
+            "id"
+          ],
+          "ao_apagar": "a"
+        },
+        {
+          "nome": "championship_signups_profile_id_fkey",
+          "tipo": "f",
+          "def": "FOREIGN KEY (profile_id) REFERENCES profiles(id)",
+          "colunas": [
+            "profile_id"
+          ],
+          "ref": "public.profiles",
+          "ref_colunas": [
+            "id"
+          ],
+          "ao_apagar": "a"
+        },
+        {
+          "nome": "championship_signups_registered_by_contact_id_fkey",
+          "tipo": "f",
+          "def": "FOREIGN KEY (registered_by_contact_id) REFERENCES conv_contacts(id)",
+          "colunas": [
+            "registered_by_contact_id"
+          ],
+          "ref": "public.conv_contacts",
+          "ref_colunas": [
+            "id"
+          ],
+          "ao_apagar": "a"
+        },
+        {
+          "nome": "championship_signups_registration_id_fkey",
+          "tipo": "f",
+          "def": "FOREIGN KEY (registration_id) REFERENCES championship_registrations(id) ON DELETE SET NULL",
+          "colunas": [
+            "registration_id"
+          ],
+          "ref": "public.championship_registrations",
+          "ref_colunas": [
+            "id"
+          ],
+          "ao_apagar": "n"
+        },
+        {
+          "nome": "championship_signups_pkey",
+          "tipo": "p",
+          "def": "PRIMARY KEY (id)",
+          "colunas": [
+            "id"
+          ],
+          "ref": null,
+          "ref_colunas": null,
+          "ao_apagar": null
+        }
+      ],
+      "indices": [
+        {
+          "nome": "championship_signups_class_idx",
+          "def": "CREATE INDEX championship_signups_class_idx ON public.championship_signups USING btree (championship_id, class, status)",
+          "unico": false,
+          "pk": false,
+          "colunas": [
+            "championship_id",
+            "class",
+            "status"
+          ]
+        },
+        {
+          "nome": "championship_signups_contact_idx",
+          "def": "CREATE INDEX championship_signups_contact_idx ON public.championship_signups USING btree (registered_by_contact_id, status)",
+          "unico": false,
+          "pk": false,
+          "colunas": [
+            "registered_by_contact_id",
+            "status"
+          ]
+        },
+        {
+          "nome": "championship_signups_conversation_idx",
+          "def": "CREATE INDEX championship_signups_conversation_idx ON public.championship_signups USING btree (conversation_id) WHERE (conversation_id IS NOT NULL)",
+          "unico": false,
+          "pk": false,
+          "colunas": [
+            "conversation_id"
+          ]
+        },
+        {
+          "nome": "championship_signups_entry_idx",
+          "def": "CREATE INDEX championship_signups_entry_idx ON public.championship_signups USING btree (fin_entry_id) WHERE (fin_entry_id IS NOT NULL)",
+          "unico": false,
+          "pk": false,
+          "colunas": [
+            "fin_entry_id"
+          ]
+        },
+        {
+          "nome": "championship_signups_name_uidx",
+          "def": "CREATE UNIQUE INDEX championship_signups_name_uidx ON public.championship_signups USING btree (championship_id, name_key) WHERE (status <> 'canceled'::text)",
+          "unico": true,
+          "pk": false,
+          "colunas": [
+            "championship_id",
+            "name_key"
+          ]
+        },
+        {
+          "nome": "championship_signups_phone_uidx",
+          "def": "CREATE UNIQUE INDEX championship_signups_phone_uidx ON public.championship_signups USING btree (championship_id, phone_key) WHERE (status <> 'canceled'::text)",
+          "unico": true,
+          "pk": false,
+          "colunas": [
+            "championship_id",
+            "phone_key"
+          ]
+        },
+        {
+          "nome": "championship_signups_pkey",
+          "def": "CREATE UNIQUE INDEX championship_signups_pkey ON public.championship_signups USING btree (id)",
+          "unico": true,
+          "pk": true,
+          "colunas": [
+            "id"
+          ]
+        },
+        {
+          "nome": "championship_signups_profile_idx",
+          "def": "CREATE INDEX championship_signups_profile_idx ON public.championship_signups USING btree (profile_id) WHERE (profile_id IS NOT NULL)",
+          "unico": false,
+          "pk": false,
+          "colunas": [
+            "profile_id"
+          ]
+        },
+        {
+          "nome": "championship_signups_registration_idx",
+          "def": "CREATE INDEX championship_signups_registration_idx ON public.championship_signups USING btree (registration_id) WHERE (registration_id IS NOT NULL)",
+          "unico": false,
+          "pk": false,
+          "colunas": [
+            "registration_id"
+          ]
+        }
+      ],
+      "politicas": [
+        {
+          "nome": "Admins read championship signups",
+          "comando": "SELECT",
+          "permissiva": true,
+          "papeis": [
+            "authenticated"
+          ],
+          "using": "is_admin()",
+          "check": null
+        }
+      ],
+      "gatilhos": [
+        {
+          "nome": "championship_signups_updated_at",
+          "def": "CREATE TRIGGER championship_signups_updated_at BEFORE UPDATE ON public.championship_signups FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()",
+          "funcao": "public.update_updated_at_column",
+          "ativo": true,
+          "externo": false
+        }
+      ]
+    },
+    {
+      "schema": "public",
       "nome": "championship_winners",
       "tipo": "r",
       "rls": true,
@@ -5238,6 +5710,15 @@
           "gerada": null,
           "identidade": null,
           "comentario": "Se o Criador oferece a aba \"Aluno\" ao inscrever. Não restringe o que já foi inscrito."
+        },
+        {
+          "nome": "joao_info",
+          "tipo": "jsonb",
+          "nulo": true,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": "Inscrição pelo João (WhatsApp): enabled, price_cents, shirt_sizes, max_per_class, deadline (YYYY-MM-DD, inclusive), category_name, shirt_image {path,mime,name} no bucket conv-media e info (texto que o João usa para tirar dúvidas)."
         }
       ],
       "restricoes": [
@@ -11454,7 +11935,7 @@
       "tipo": "r",
       "rls": true,
       "rls_forcado": false,
-      "linhas_est": "<100",
+      "linhas_est": "<1k",
       "opcoes": null,
       "comentario": null,
       "acesso": {
@@ -31437,6 +31918,123 @@
       "comentario": null
     },
     {
+      "nome": "conv_private.champ_class",
+      "args": "p_champ uuid, p_input text",
+      "retorno": "text",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.champ_classes",
+      "args": "p_champ uuid",
+      "retorno": "jsonb",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.champ_confirmed",
+      "args": "p_champ uuid, p_class text",
+      "retorno": "integer",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.champ_drawn",
+      "args": "p_champ uuid, p_class text",
+      "retorno": "boolean",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.champ_find_registration",
+      "args": "p_champ uuid, p_class text, p_name text",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.champ_name_key",
+      "args": "p text",
+      "retorno": "text",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": false,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "i",
+      "exec_anon": true,
+      "exec_authenticated": true,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.champ_open",
+      "args": "p_champ uuid",
+      "retorno": "boolean",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.champ_pick",
+      "args": "p_id uuid",
+      "retorno": "uuid",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.champ_signup_json",
+      "args": "s championship_signups",
+      "retorno": "jsonb",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": false,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
+      "exec_anon": true,
+      "exec_authenticated": true,
+      "comentario": null
+    },
+    {
       "nome": "conv_private.channel_delivery",
       "args": "",
       "retorno": "TABLE(inbound_token_hash text, bot_phone text, bot_lids text[], ai_direct_enabled boolean, ai_group_enabled boolean, mention_verified_at timestamp with time zone, group_session_minutes smallint, institutional_name text)",
@@ -34024,6 +34622,58 @@
       "comentario": null
     },
     {
+      "nome": "public.conv_svc_ai_championship_context",
+      "args": "p_session uuid",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "public.conv_svc_ai_championship_draw",
+      "args": "p_session uuid, p jsonb",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "public.conv_svc_ai_championship_seeds",
+      "args": "p_session uuid, p jsonb",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "public.conv_svc_ai_championship_signup",
+      "args": "p_session uuid, p jsonb",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
       "nome": "public.conv_svc_ai_club_balances",
       "args": "",
       "retorno": "jsonb",
@@ -34574,6 +35224,19 @@
       "args": "p_conversation uuid, p jsonb, p_author uuid, p_key uuid, p_origin text, p_session uuid, p_recipient uuid",
       "retorno": "TABLE(message_id uuid, destination text, already_sent boolean, reply_provider_id text, is_group boolean)",
       "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "public.conv_svc_receipt_championship_auto",
+      "args": "p_stage uuid",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
       "tipo": "f",
       "security_definer": true,
       "search_path": "search_path=\"\"",

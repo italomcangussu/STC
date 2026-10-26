@@ -59,6 +59,9 @@ Rota = aba/view em `App.tsx` (sem router). Dados exatos → `.fabuloso/db/uso.md
 - Cadastrar aluno pelo modal de aula: `Agenda.createStudentFromClass` → INSERT `non_socio_students` (`professor_id` = professor) → INSERT `student_profiles` → gatilhos `*_default_professor` garantem o professor → o aluno entra na aula atual.
 - Acesso de atleta: `AdminPanel` → edge `admin-athlete-access` → `access_requests` + `profiles`.
 - Push: `lib/notificationService.ts` / `whatsapp-webhook` → edge `send-push` → `push_subscriptions` (RPC `get_admin_push_subscriptions`).
+- Inscrição no campeonato pelo João (Serra e Sertão): WhatsApp → turno (`turnContext` carrega `conv_svc_ai_championship_context`) → intent `campeonato`/`inscrever` (`_shared/aiAgent/championship.ts`) → RPC `conv_svc_ai_championship_signup` → `championship_signups` (`pre`; sem duplicar `phone_key`/`name_key`) → mensagem com Pix. Só vira `championship_registrations` quando o Pix é confirmado (telas antigas não mudam). `championships.joao_info` guarda preço, tamanhos, vagas, prazo e foto da camisa; o Serra e Sertão não tem `series_id` de propósito (evita pontos no ranking interno do STC).
+- Pix da inscrição: imagem → `finance-receipt-whatsapp` → intenção → `memberReceipt` → `receiptIntent.autoPay` (mensalidade primeiro, depois `tryChampionshipPay`/`championshipReceipt.ts`) → `conv_svc_receipt_championship_auto` → `fin_entries` + `fin_attachments` + `championship_registrations` → aviso ao financeiro (`deliverForward`). Acima de 16 confirmados vai para lista de espera.
+- Sorteio pelo João: admin no privado → `champ_action` `cabecas`/`sortear` → `conv_svc_ai_championship_seeds` / `_draw` (exige 9–16 confirmados) → `matches` (15 jogos por classe; vaga vazia = WO) → oitavas publicadas e campeonato `ongoing`.
 
 ## Fora do alcance do agentmap
 - `migrations/*.sql` e SQLs soltos na raiz (`check_*.sql`) — schema/RLS; muitos "fix_*" históricos
