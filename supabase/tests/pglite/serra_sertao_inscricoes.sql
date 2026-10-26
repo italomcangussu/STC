@@ -1,5 +1,29 @@
 -- Serra e Sertão 2026: o João inscreve sem duplicar, confirma pelo Pix, respeita vagas e prazo, e o admin sorteia a chave.
--- O campeonato, as rodadas e a categoria vêm da própria migration.
+-- O campeonato, as rodadas e a categoria como as migrations deixaram no remoto (a base de teste só tem a estrutura).
+insert into public.fin_categories (name, kind, dre_line, system_key) select 'Inscrição Serra e Sertão', 'revenue', 'revenue', 'championship_serra_sertao'
+where not exists (select 1 from public.fin_categories where system_key = 'championship_serra_sertao');
+insert into public.championships (name, status, format, start_date, end_date, slug, edition_year, allow_guests, registration_open, format_config, joao_info)
+select 'Serra e Sertão 2026', 'draft', 'mata-mata', '2026-11-27', '2026-11-29', 'serra-e-sertao-2026', 2026, true, true,
+  '{"4ª Classe":{"format":"mata-mata","seeded":true,"qualifying":null,"mainDrawStartPhase":"round_of_16"},"5ª Classe":{"format":"mata-mata","seeded":true,"qualifying":null,"mainDrawStartPhase":"round_of_16"}}',
+  jsonb_build_object('enabled', true, 'price_cents', 13000, 'shirt_sizes', jsonb_build_array('P', 'M', 'G', 'GG'), 'max_per_class', 16,
+    'deadline', '2099-12-31', 'category_name', 'Inscrição Serra e Sertão', 'shirt_image', null,
+    'info', 'Jogos em melhor de 3 sets. Se houver 3º set, ele é decidido num tie-break de 7 pontos.')
+where not exists (select 1 from public.championships where slug = 'serra-e-sertao-2026');
+insert into public.championship_rounds (championship_id, class, round_number, name, phase, start_date, end_date, status)
+select c.id, k.classe, r.n, r.nome, r.fase, r.dia, r.dia, 'pending' from public.championships c
+cross join (values ('4ª Classe'), ('5ª Classe')) as k(classe)
+cross join (values (1, 'Oitavas de Final', 'oitavas', date '2026-11-27'), (2, 'Quartas de Final', 'quartas', date '2026-11-28'),
+                   (3, 'Semifinais', 'semifinal', date '2026-11-29'), (4, 'Final', 'final', date '2026-11-29')) as r(n, nome, fase, dia)
+where c.slug = 'serra-e-sertao-2026' on conflict (championship_id, class, round_number) do nothing;
+-- A foto da camisa: o mesmo update da migration 20261026150000.
+update public.championships
+set joao_info = joao_info
+  || jsonb_build_object('shirt_image', jsonb_build_object(
+       'path', 'championships/serra-e-sertao-2026/camisa-atleta.jpg', 'mime', 'image/jpeg', 'name', 'camisa-atleta-serra-e-sertao.jpg'))
+  || jsonb_build_object('info', (joao_info->>'info') || E'\n' ||
+       'Camisa do atleta: branca com detalhes em vermelho, "Auge Open" na frente, "Circuito de Tênis Serra Sertão - 3ª etapa" na manga e "ATLETA" nas costas. A camisa vermelha é da organização, não do atleta.')
+where slug = 'serra-e-sertao-2026' and joao_info->'shirt_image' is distinct from jsonb_build_object(
+  'path', 'championships/serra-e-sertao-2026/camisa-atleta.jpg', 'mime', 'image/jpeg', 'name', 'camisa-atleta-serra-e-sertao.jpg');
 create temp table u as select fab.usuario('henrique@x.com') as adm, fab.usuario('socio@x.com') as soc;
 grant select on u to service_role, authenticated;
 insert into public.profiles (id, name, role) select adm, 'Henrique Coelho', 'admin' from u on conflict (id) do update set name = excluded.name, role = excluded.role;
@@ -33,6 +57,7 @@ do $$ declare r jsonb := public.conv_svc_ai_championship_context('00000000-0000-
   assert jsonb_array_length(c->'mine') = 0 and not (r->>'is_admin')::boolean and c->'admin' = 'null'::jsonb, 'atleta não vê a lista do admin';
   assert r->>'requester_phone' = '88999991001' and r->>'pix_key' = '52.393.541/0001-20', 'telefone de quem fala e a chave Pix';
   assert c->>'info' like '%tie-break de 7 pontos%', 'informações do campeonato';
+  assert c->'shirt_image'->>'path' = 'championships/serra-e-sertao-2026/camisa-atleta.jpg' and c->>'info' like '%Camisa do atleta: branca%', 'foto da camisa do atleta';
 end $$;
 
 -- Pré-inscrição do próprio atleta: classe "4", camisa em minúscula, telefone com máscara.
