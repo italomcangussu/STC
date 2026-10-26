@@ -50,34 +50,68 @@ export async function dispatchAutomations(db: Db, uaz: UazCaller | null, limit =
   return resumo;
 }
 
-/** Retornos agendados na caixa que carregam uma mensagem: quando vencem, a mensagem sai sozinha. */
-export async function dispatchFollowups(db: Db, uaz: UazCaller | null, limit = 20): Promise<DispatchSummary> {
+type DueFollowup = { followup_id: string; conversation_id: string; send_body: string | null;
+  media_path?: string | null; media_mime?: string | null; media_name?: string | null; media_kind?: string | null };
+type Sent = { messageId: string | null; error: string | null };
+type FollowupDeps = { db: Db; uaz: UazCaller; signedUrl?: (path: string) => Promise<string | null> };
+
+/** Chave de idempotência do arquivo, derivada do id do retorno: repetir a varredura nunca manda o arquivo duas vezes. */
+async function derivedKey(id: string, suffix: string): Promise<string> {
+  const h = [...await sha256(`${id}:${suffix}`)].map((b) => b.toString(16).padStart(2, '0')).join('');
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-4${h.slice(13, 16)}-a${h.slice(17, 20)}-${h.slice(20, 32)}`;
+}
+
+/** Enfileira na conversa e envia pela UazAPI; o banco registra o resultado. */
+type Outgoing = { p: Record<string, unknown>; key: string; request: (destination: string) => Promise<ReturnType<typeof buildChatRequest>> };
+
+async function queueAndSend(d: FollowupDeps, f: DueFollowup, { p, key, request }: Outgoing): Promise<Sent> {
+  const q = await d.db('conv_svc_queue_message', { p_conversation: f.conversation_id, p, p_author: null, p_key: key, p_origin: 'system' });
+  const row = first<{ message_id: string; destination: string; already_sent: boolean }>(q);
+  if (!row) return { messageId: null, error: q.error?.message?.slice(0, 120) ?? 'QUEUE_FAILED' };
+  if (row.already_sent) return { messageId: row.message_id, error: null };
+  const pedido = await request(row.destination);
+  const res = pedido ? await d.uaz(pedido) : { ok: false as const, error: 'INVALID_REQUEST' };
+  await d.db('conv_svc_finish_message', { p_message: row.message_id, p_sent: res.ok,
+    p_provider_id: res.ok ? providerIdFrom((res as { body: Record<string, unknown> }).body) : null, p_error: uazError(res) });
+  return { messageId: row.message_id, error: uazError(res) };
+}
+
+async function sendText(d: FollowupDeps, f: DueFollowup): Promise<Sent> {
+  const c = first<{ name: string | null }>(await d.db('conv_svc_conversation_contact', { p_conversation: f.conversation_id }));
+  const corpo = fillTemplate(f.send_body ?? '', c?.name ?? '');
+  return queueAndSend(d, f, { p: { kind: 'text', body: corpo }, key: f.followup_id,
+    request: async (number) => buildChatRequest({ action: 'send', number, kind: 'text', text: corpo }) });
+}
+
+/** O arquivo do retorno (já no bucket conv-media) sai depois do texto, como imagem, documento, áudio ou vídeo. */
+async function sendMedia(d: FollowupDeps, f: DueFollowup): Promise<Sent> {
+  const kind = (f.media_kind ?? 'document') as 'image' | 'document' | 'audio' | 'video';
+  const key = f.send_body ? await derivedKey(f.followup_id, 'media') : f.followup_id;
+  return queueAndSend(d, f, { p: { kind, body: '', media_path: f.media_path, mime: f.media_mime, file_name: f.media_name }, key, request: async (number) => {
+    const url = d.signedUrl && f.media_path ? await d.signedUrl(f.media_path) : null;
+    return url ? buildChatRequest({ action: 'send', number, kind, fileUrl: url, mime: f.media_mime ?? undefined, fileName: f.media_name ?? undefined }) : null;
+  } });
+}
+
+/** Um retorno: o texto (se houver) e depois o arquivo (se houver). O retorno guarda a última mensagem enviada. */
+async function sendFollowup(d: FollowupDeps, f: DueFollowup): Promise<Sent> {
+  let sent: Sent = { messageId: null, error: null };
+  if (f.send_body) sent = await sendText(d, f);
+  if (!sent.error && f.media_path) sent = await sendMedia(d, f);
+  return sent;
+}
+
+/** Retornos agendados na caixa que carregam uma mensagem (texto e/ou arquivo): quando vencem, saem sozinhos. */
+export async function dispatchFollowups(db: Db, uaz: UazCaller | null, opts: { limit?: number; signedUrl?: (path: string) => Promise<string | null> } = {}): Promise<DispatchSummary> {
   const resumo: DispatchSummary = { claimed: 0, sent: 0, failed: 0 };
   if (!uaz) return resumo;
-  const r = await db('conv_svc_claim_due_followups', { p_limit: limit });
+  const r = await db('conv_svc_claim_due_followups', { p_limit: opts.limit ?? 20 });
   if (r.error || !Array.isArray(r.data)) return resumo;
-  for (const f of r.data as { followup_id: string; conversation_id: string; send_body: string }[]) {
+  for (const f of r.data as DueFollowup[]) {
     resumo.claimed += 1;
-    const c = first<{ name: string | null }>(await db('conv_svc_conversation_contact', { p_conversation: f.conversation_id }));
-    const corpo = fillTemplate(f.send_body, c?.name ?? '');
-    const q = await db('conv_svc_queue_message', { p_conversation: f.conversation_id, p: { kind: 'text', body: corpo },
-      p_author: null, p_key: f.followup_id, p_origin: 'system' });
-    const row = first<{ message_id: string; destination: string; already_sent: boolean }>(q);
-    if (!row) {
-      await db('conv_svc_finish_followup', { p_followup: f.followup_id, p_message: null, p_error: q.error?.message?.slice(0, 120) ?? 'QUEUE_FAILED' });
-      resumo.failed += 1;
-      continue;
-    }
-    let erro: string | null = null;
-    if (!row.already_sent) {
-      const pedido = buildChatRequest({ action: 'send', number: row.destination, kind: 'text', text: corpo });
-      const res = pedido ? await uaz(pedido) : { ok: false as const, error: 'INVALID_REQUEST' };
-      await db('conv_svc_finish_message', { p_message: row.message_id, p_sent: res.ok,
-        p_provider_id: res.ok ? providerIdFrom((res as { body: Record<string, unknown> }).body) : null, p_error: uazError(res) });
-      erro = uazError(res);
-    }
-    await db('conv_svc_finish_followup', { p_followup: f.followup_id, p_message: row.message_id, p_error: erro });
-    if (erro) resumo.failed += 1; else resumo.sent += 1;
+    const { messageId, error } = await sendFollowup({ db, uaz, signedUrl: opts.signedUrl }, f);
+    await db('conv_svc_finish_followup', { p_followup: f.followup_id, p_message: messageId, p_error: error });
+    if (error) resumo.failed += 1; else resumo.sent += 1;
   }
   return resumo;
 }
@@ -85,12 +119,12 @@ export async function dispatchFollowups(db: Db, uaz: UazCaller | null, limit = 2
 export type DispatchResult = { tick: unknown; expiredSessions: number; automations: DispatchSummary; followups: DispatchSummary };
 
 /** Uma volta completa. Cada etapa é independente: falha em uma não impede as outras. */
-export async function runDispatch(db: Db, uaz: UazCaller | null): Promise<DispatchResult> {
+export async function runDispatch(db: Db, uaz: UazCaller | null, signedUrl?: (path: string) => Promise<string | null>): Promise<DispatchResult> {
   const safe = async <T,>(fn: () => Promise<T>, vazio: T): Promise<T> => { try { return await fn(); } catch { return vazio; } };
   const tick = await safe(async () => (await db('conv_svc_automation_tick', {})).data, null);
   const expired = await safe(async () => Number((await db('conv_svc_ai_expire_sessions', {})).data ?? 0), 0);
   const automations = await safe(() => dispatchAutomations(db, uaz), { claimed: 0, sent: 0, failed: 0 });
-  const followups = await safe(() => dispatchFollowups(db, uaz), { claimed: 0, sent: 0, failed: 0 });
+  const followups = await safe(() => dispatchFollowups(db, uaz, { signedUrl }), { claimed: 0, sent: 0, failed: 0 });
   return { tick, expiredSessions: expired, automations, followups };
 }
 

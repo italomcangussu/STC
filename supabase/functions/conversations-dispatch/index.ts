@@ -14,7 +14,13 @@ const serverUrl = Deno.env.get('UAZAPI_SERVER_URL');
 const instanceToken = Deno.env.get('STC_UAZAPI_INSTANCE_TOKEN');
 const uaz = serverUrl && instanceToken ? uazCaller({ serverUrl, instanceToken }) : null;
 
+// Arquivo de retorno agendado (bucket conv-media): link assinado curto, só para a UazAPI buscar o arquivo.
+const signedUrl = async (path) => {
+  const r = await service.storage.from('conv-media').createSignedUrl(path, 600);
+  return r.error ? null : r.data.signedUrl;
+};
+
 Deno.serve((request) => handleDispatchRequest(request, {
   secret: Deno.env.get('STC_DISPATCH_SECRET'),
-  run: () => runDispatch((name, args) => service.rpc(name, args), uaz),
+  run: () => runDispatch((name, args) => service.rpc(name, args), uaz, signedUrl),
 }));
