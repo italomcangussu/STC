@@ -14,6 +14,8 @@ type Auto = {
   confirmed?: string[]; waitlist?: string[]; admin_conversation_id?: string | null; admin_name?: string; sender_name?: string;
   /** Na confirmação: título do evento, cartão de cada atleta pago e o que o comprovante mostrou. */
   title?: string[]; athletes?: Ctx[]; paid_on?: string | null;
+  /** Mídia original do comprovante (conv-media), que vai junto no aviso ao financeiro. */
+  media_path?: string | null; media_mime?: string | null; media_name?: string | null; media_kind?: string | null;
 };
 export type ChampReceipt = { messages: string[]; action: string; forward?: ReceiptForward };
 
@@ -41,15 +43,27 @@ function namesOnly(a: Auto): string[] {
     ...(espera.length ? [`⏳ Na lista de espera (pago; a classe lotou antes do pagamento): ${lista(espera)}. A organização vai falar com você.`] : [])];
 }
 
-/** Aviso ao responsável pelo financeiro: a receita já está lançada, com quem entrou e quem ficou na espera. */
+/** Quem entrou (com a classe) e quem ficou na espera, para o aviso ao financeiro. */
+function athleteLines(a: Auto): string[] {
+  const linha = (x: Ctx) => `${x.full_name} (${x.class})`;
+  const atletas = a.athletes ?? [];
+  const ok = atletas.length ? atletas.filter((x) => x.status === 'confirmed').map(linha) : a.confirmed ?? [];
+  const espera = atletas.length ? atletas.filter((x) => x.status === 'waitlist').map(linha) : a.waitlist ?? [];
+  return [...(ok.length ? [`✅ *Confirmados:* ${lista(ok)}`] : []), ...(espera.length ? [`⏳ *Pagos, na lista de espera:* ${lista(espera)}`] : [])];
+}
+
+/**
+ * Aviso ao responsável pelo financeiro (pedido do Hermeson, 26/10): o que entrou no caixa, em cartão, e o próprio
+ * comprovante logo depois, para ele conferir sem abrir o painel.
+ */
 function financeNotice(a: Auto): ReceiptForward | undefined {
   if (!a.admin_conversation_id) return undefined;
-  const ok = a.confirmed ?? [];
-  const espera = a.waitlist ?? [];
-  const confirmados = ok.length ? ` Confirmados: ${lista(ok)}.` : '';
-  const naEspera = espera.length ? ` Pagos, mas na lista de espera (classe lotada): ${lista(espera)}.` : '';
+  const titulo = championshipTitle({ title: a.title }, a.championship)[0];
+  const cartao = [`💰 *Inscrição paga · ${titulo}*`, '', `👤 *Pagou:* ${a.sender_name}`, ...athleteLines(a), `💵 *Valor:* ${brl(a.amount_cents)}`,
+    ...(a.paid_on ? [`📅 *Data do Pix:* ${dateBR(a.paid_on)}`] : []), '🧾 *Caixa:* receita lançada em Inscrição Serra e Sertão, com o comprovante anexado'];
   return { admin_conversation_id: a.admin_conversation_id, admin_name: a.admin_name ?? '', sender_name: a.sender_name ?? '', kind: 'championship_auto', detail: null,
-    text: `${a.admin_name}, para você saber: ${a.sender_name} pagou ${brl(a.amount_cents)} de inscrição no ${a.championship} pelo WhatsApp e eu já lancei a receita com o comprovante.${confirmados}${naEspera}` };
+    media_path: a.media_path ?? null, media_mime: a.media_mime ?? null, media_name: a.media_name ?? null, media_kind: a.media_kind ?? null,
+    text: `${a.admin_name}, para você saber, entrou no caixa:\n\n${cartao.join('\n')}` };
 }
 
 /** O Pix é da inscrição: a conversa é sobre o campeonato, ou o valor é múltiplo do preço de uma inscrição. */

@@ -216,7 +216,9 @@ describe('comprovante do Pix da inscrição', () => {
       admin_conversation_id: 'CV', admin_name: 'Henrique', sender_name: 'Caio' }), 'ST', null);
     expect(r?.action).toBe('receipt_championship_paid');
     expect(r?.messages.join(' ')).toContain('✅ Inscrições confirmadas no Serra e Sertão 2026: Caio Albuquerque e Davi Torres');
-    expect(r?.forward?.text).toContain('já lancei a receita com o comprovante');
+    expect(r?.forward?.text).toContain('Henrique, para você saber, entrou no caixa:');
+    expect(r?.forward?.text).toContain('✅ *Confirmados:* Caio Albuquerque e Davi Torres');
+    expect(r?.forward?.text).toContain('💵 *Valor:* R$ 260,00');
   });
 
   it('pago com a classe já cheia: avisa a lista de espera', async () => {
@@ -387,5 +389,19 @@ describe('visual limpo para listas e informações', () => {
     expect(p).toContain('VISUAL LIMPO');
     expect(p).toContain('"emoji *Rótulo:* valor"');
     expect(p).toContain('Conversa, resenha, cumprimento e resposta de uma frase ficam como texto normal');
+  });
+});
+
+describe('aviso ao financeiro a cada inscrição confirmada', () => {
+  it('leva o cartão do que entrou no caixa e o comprovante anexado', async () => {
+    const r = await tryChampionshipPay((name: string) => Promise.resolve({ data: name === 'conv_svc_receipt_championship_auto' ? { applied: true, championship: 'Serra e Sertão 2026',
+      title: ['AUGE OPEN', '3ª Etapa'], amount_cents: 13000, paid_on: '2026-10-26', confirmed: ['Hermeson Veras'], waitlist: [],
+      athletes: [{ full_name: 'Hermeson Veras', class: '5ª Classe', shirt_size: 'GG', phone: '88999265229', status: 'confirmed' }],
+      admin_conversation_id: 'CONV-HENRIQUE', admin_name: 'Henrique', sender_name: 'Hermeson Veras',
+      media_path: 'conv/abc.jpg', media_mime: 'image/jpeg', media_name: 'pix.jpg', media_kind: 'image' } : null }), 'ST', 'campeonato');
+    expect(r?.forward).toMatchObject({ admin_conversation_id: 'CONV-HENRIQUE', media_path: 'conv/abc.jpg', media_kind: 'image', media_mime: 'image/jpeg' });
+    expect(r?.forward?.text).toContain('💰 *Inscrição paga · AUGE OPEN*');
+    expect(r?.forward?.text).toContain('✅ *Confirmados:* Hermeson Veras (5ª Classe)');
+    expect(r?.forward?.text).toContain('📅 *Data do Pix:* 26/10/2026');
   });
 });

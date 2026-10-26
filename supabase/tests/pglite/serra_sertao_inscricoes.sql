@@ -109,8 +109,8 @@ end $$;
 -- Comprovante do Pix.
 select fab.dono();
 create function pg_temp.comprovante(p_id uuid, p_amount bigint, p_payee text, p_hash text) returns void language sql as $$
-  insert into public.conv_messages (id, conversation_id, direction, kind, status, origin, sender_contact_id)
-  values (p_id, '00000000-0000-0000-0000-00000000d602', 'inbound', 'image', 'received', 'customer', '00000000-0000-0000-0000-00000000c602');
+  insert into public.conv_messages (id, conversation_id, direction, kind, status, origin, sender_contact_id, media_path, media_mime)
+  values (p_id, '00000000-0000-0000-0000-00000000d602', 'inbound', 'image', 'received', 'customer', '00000000-0000-0000-0000-00000000c602', 'conv/' || p_id || '.jpg', 'image/jpeg');
   insert into fin_private.whatsapp_receipt_intents (id, source_message_id, conversation_id, profile_id, contact_id, original_data)
   values (p_id, p_id, '00000000-0000-0000-0000-00000000d602', null, '00000000-0000-0000-0000-00000000c602',
     jsonb_build_object('storage_path', 'whatsapp/' || p_id || '.jpg', 'file_name', 'pix.jpg', 'content_type', 'image/jpeg', 'size_bytes', 700,
@@ -144,6 +144,7 @@ do $$ declare r jsonb := public.conv_svc_receipt_championship_auto('00000000-000
   assert jsonb_array_length(r->'athletes') = 2 and r->'athletes'->0->>'class' = '4ª Classe' and r->'athletes'->0->>'shirt_size' = 'M'
      and r->'athletes'->0->>'status' = 'confirmed' and r->'athletes'->0->>'phone' = '88999991001', 'cartão de cada atleta: ' || r::text;
   assert r->>'payee' = 'SOBRAL TENIS CLUBE' and r->>'paid_on' is not null and r->'title'->>0 = 'AUGE OPEN', 'o que o comprovante mostrou e o título';
+  assert r->>'media_kind' = 'image' and r->>'media_path' = 'conv/' || '00000000-0000-0000-0000-00000000f003' || '.jpg', 'a mídia do comprovante para o financeiro: ' || r::text;
   assert r->>'admin_name' = 'Henrique' and r->>'admin_conversation_id' is not null, 'avisa o financeiro';
 end $$;
 select fab.dono();
