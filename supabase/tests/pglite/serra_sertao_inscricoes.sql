@@ -24,6 +24,14 @@ set joao_info = joao_info
        'Camisa do atleta: branca com detalhes em vermelho, "Auge Open" na frente, "Circuito de Tênis Serra Sertão - 3ª etapa" na manga e "ATLETA" nas costas. A camisa vermelha é da organização, não do atleta.')
 where slug = 'serra-e-sertao-2026' and joao_info->'shirt_image' is distinct from jsonb_build_object(
   'path', 'championships/serra-e-sertao-2026/camisa-atleta.jpg', 'mime', 'image/jpeg', 'name', 'camisa-atleta-serra-e-sertao.jpg');
+-- O título do evento: o mesmo update da migration 20261026170000.
+update public.championships
+set joao_info = joao_info
+  || jsonb_build_object('title', jsonb_build_array('AUGE OPEN', '3ª Etapa do Circuito Serra e Sertão de Tênis'))
+  || jsonb_build_object('info', (joao_info->>'info') || E'\n' ||
+       'Nome do evento: AUGE OPEN, a 3ª Etapa do Circuito Serra e Sertão de Tênis (Serra e Sertão 2026 é o mesmo campeonato).')
+where slug = 'serra-e-sertao-2026' and joao_info->'title' is null;
+
 create temp table u as select fab.usuario('henrique@x.com') as adm, fab.usuario('socio@x.com') as soc;
 grant select on u to service_role, authenticated;
 insert into public.profiles (id, name, role) select adm, 'Henrique Coelho', 'admin' from u on conflict (id) do update set name = excluded.name, role = excluded.role;
@@ -67,6 +75,7 @@ do $$ declare r jsonb := pg_temp.inscrever('00000000-0000-0000-0000-00000000e602
   assert r->'signup'->>'full_name' = 'Caio Albuquerque' and r->'signup'->>'class' = '4ª Classe' and r->'signup'->>'shirt_size' = 'M', 'dados normalizados';
   assert r->'signup'->>'status' = 'pre' and not (r->>'waitlist')::boolean and not (r->>'is_member')::boolean, 'pré-inscrito, convidado';
   assert (r->>'my_pending_total_cents')::int = 13000, 'falta pagar uma inscrição';
+  assert r->'title'->>0 = 'AUGE OPEN' and r->'title'->>1 like '3ª Etapa%', 'título do evento: ' || r::text;
 end $$;
 
 -- Sem duplicar: mesmo telefone com outro nome, e o mesmo nome sem acento e com outro telefone.
@@ -132,6 +141,9 @@ select fab.como('service_role');
 do $$ declare r jsonb := public.conv_svc_receipt_championship_auto('00000000-0000-0000-0000-00000000f003'); begin
   assert (r->>'applied')::boolean, 'confirma: ' || r::text;
   assert jsonb_array_length(r->'confirmed') = 2 and jsonb_array_length(r->'waitlist') = 0, 'dois inscritos';
+  assert jsonb_array_length(r->'athletes') = 2 and r->'athletes'->0->>'class' = '4ª Classe' and r->'athletes'->0->>'shirt_size' = 'M'
+     and r->'athletes'->0->>'status' = 'confirmed' and r->'athletes'->0->>'phone' = '88999991001', 'cartão de cada atleta: ' || r::text;
+  assert r->>'payee' = 'SOBRAL TENIS CLUBE' and r->>'paid_on' is not null and r->'title'->>0 = 'AUGE OPEN', 'o que o comprovante mostrou e o título';
   assert r->>'admin_name' = 'Henrique' and r->>'admin_conversation_id' is not null, 'avisa o financeiro';
 end $$;
 select fab.dono();

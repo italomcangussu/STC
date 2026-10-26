@@ -2,7 +2,8 @@
 // batendo, lança a receita com o comprovante e inscreve na hora (sem confirmação em duas etapas).
 // Não bateu: explica o que esperava quando a conversa é sobre a inscrição; senão segue o fluxo comum do comprovante.
 
-import { brl } from './championshipPrompt.ts';
+import { athleteCard, brl, championshipTitle, dateBR } from './championshipPrompt.ts';
+import type { Ctx } from './promptTypes.ts';
 import type { ReceiptForward } from './receiptForward.ts';
 import type { ReceiptTopic } from './receiptContext.ts';
 
@@ -11,18 +12,33 @@ type Pending = { name: string; class: string };
 type Auto = {
   applied?: boolean; reason?: string; championship?: string; amount_cents?: number; total_cents?: number; pending?: Pending[];
   confirmed?: string[]; waitlist?: string[]; admin_conversation_id?: string | null; admin_name?: string; sender_name?: string;
+  /** Na confirmação: título do evento, cartão de cada atleta pago e o que o comprovante mostrou. */
+  title?: string[]; athletes?: Ctx[]; paid_on?: string | null;
 };
 export type ChampReceipt = { messages: string[]; action: string; forward?: ReceiptForward };
 
 const lista = (nomes: string[]) => nomes.join(', ').replace(/, ([^,]*)$/, ' e $1');
 
+const STATUS_PAGO: Record<string, string> = {
+  confirmed: '✅ Confirmada',
+  waitlist: '⏳ Lista de espera (pago; a classe lotou antes do pagamento, a organização vai falar com você)',
+};
+
+/** Confirmação: o comprovante já foi conferido, então vai o cartão de cada atleta, sem dados bancários. */
 function paidMessages(a: Auto): string[] {
+  const titulo = championshipTitle({ title: a.title }, a.championship);
+  const cartoes = (a.athletes ?? []).map((x) => athleteCard(titulo, x, STATUS_PAGO[String(x.status)] ?? '✅ Confirmada'));
+  const quando = a.paid_on ? ` em ${dateBR(a.paid_on)}` : '';
+  const conferido = `🧾 Comprovante recebido e conferido: Pix de ${brl(a.amount_cents)}${quando}. Tudo certo no sistema. Bom campeonato! 🎾`;
+  return [...(cartoes.length ? cartoes : namesOnly(a)), conferido];
+}
+
+/** Sem o cartão (função antiga no banco): os nomes de quem entrou e de quem ficou na espera. */
+function namesOnly(a: Auto): string[] {
   const ok = a.confirmed ?? [];
   const espera = a.waitlist ?? [];
-  const messages = [`Recebi o Pix de ${brl(a.amount_cents)} ✅`];
-  if (ok.length) messages.push(`${ok.length > 1 ? 'Inscrições confirmadas' : 'Inscrição confirmada'} no ${a.championship}: ${lista(ok)}. Bom campeonato! 🎾`);
-  if (espera.length) messages.push(`${lista(espera)} ${espera.length > 1 ? 'ficaram' : 'ficou'} na lista de espera porque a classe lotou antes do pagamento. O pagamento está registrado e a organização vai falar com você.`);
-  return messages;
+  return [...(ok.length ? [`✅ ${ok.length > 1 ? 'Inscrições confirmadas' : 'Inscrição confirmada'} no ${a.championship}: ${lista(ok)}.`] : []),
+    ...(espera.length ? [`⏳ Na lista de espera (pago; a classe lotou antes do pagamento): ${lista(espera)}. A organização vai falar com você.`] : [])];
 }
 
 /** Aviso ao responsável pelo financeiro: a receita já está lançada, com quem entrou e quem ficou na espera. */

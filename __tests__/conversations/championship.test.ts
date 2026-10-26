@@ -85,8 +85,9 @@ describe('inscrição pelo servidor', () => {
     const d = await campeonato(i, {});
     expect(calls[0]).toMatchObject({ name: 'conv_svc_ai_championship_signup', args: { p_session: 'S1', p: { phone: '88999991001', class: '4', full_name: 'Caio Albuquerque' } } });
     expect(d.action).toBe('champ_signup');
-    expect(d.bubbles[0]).toContain('Classe: 4ª Classe (saibro)');
-    expect(d.bubbles[0]).toContain('Pix de R$ 130,00');
+    expect(d.bubbles[0]).toContain('🏅 *Classe:* 4ª Classe (saibro)');
+    expect(d.bubbles[0]).toContain('📋 *Status da inscrição:* ⏳ Aguardando o Pix');
+    expect(d.bubbles[0]).toContain('💰 *Inscrição:* R$ 130,00');
     expect(d.bubbles[0]).toContain('52.393.541/0001-20');
     expect(d.memory.slots).toEqual({});
   });
@@ -121,16 +122,16 @@ describe('inscrição pelo servidor', () => {
   });
 
   it('classe cheia: lista de espera, sem pedir Pix', () => {
-    const t = waitlistMessage({ championship: 'Serra e Sertão 2026', signup: { full_name: 'Enzo Lima', class: '5ª Classe' } });
-    expect(t).toContain('lista de espera');
+    const t = waitlistMessage({ championship: 'Serra e Sertão 2026', signup: { full_name: 'Enzo Lima', class: '5ª Classe' } }, ['AUGE OPEN']);
+    expect(t).toContain('⏳ Lista de espera');
+    expect(t).not.toContain('Chave Pix');
     expect(t).toContain('Não precisa pagar agora');
   });
 
   it('várias pendentes: pede um Pix só com o total', () => {
     const t = signupMessage({ championship: 'Serra e Sertão 2026', price_cents: 13000, pix_key: 'K', payee: 'Clube',
-      signup: { full_name: 'Davi Torres', class: '5ª Classe', shirt_size: 'GG', phone: '88988880001' }, my_pending: ['Caio Albuquerque', 'Davi Torres'], my_pending_total_cents: 26000 });
-    expect(t).toContain('2 inscrições esperando o Pix (Caio Albuquerque, Davi Torres)');
-    expect(t).toContain('R$ 260,00');
+      signup: { full_name: 'Davi Torres', class: '5ª Classe', shirt_size: 'GG', phone: '88988880001' }, my_pending: ['Caio Albuquerque', 'Davi Torres'], my_pending_total_cents: 26000 }, ['AUGE OPEN']);
+    expect(t).toContain('💰 *Total a pagar:* R$ 260,00 (2 inscrições: Caio Albuquerque, Davi Torres');
   });
 
   it('duplicado pelo telefone avisa', () => {
@@ -214,13 +215,13 @@ describe('comprovante do Pix da inscrição', () => {
     const r = await tryChampionshipPay(dbOf({ applied: true, championship: 'Serra e Sertão 2026', amount_cents: 26000, confirmed: ['Caio Albuquerque', 'Davi Torres'], waitlist: [],
       admin_conversation_id: 'CV', admin_name: 'Henrique', sender_name: 'Caio' }), 'ST', null);
     expect(r?.action).toBe('receipt_championship_paid');
-    expect(r?.messages.join(' ')).toContain('Inscrições confirmadas no Serra e Sertão 2026: Caio Albuquerque e Davi Torres');
+    expect(r?.messages.join(' ')).toContain('✅ Inscrições confirmadas no Serra e Sertão 2026: Caio Albuquerque e Davi Torres');
     expect(r?.forward?.text).toContain('já lancei a receita com o comprovante');
   });
 
   it('pago com a classe já cheia: avisa a lista de espera', async () => {
     const r = await tryChampionshipPay(dbOf({ applied: true, championship: 'S', amount_cents: 13000, confirmed: [], waitlist: ['Enzo Lima'] }), 'ST', null);
-    expect(r?.messages.join(' ')).toContain('Enzo Lima ficou na lista de espera');
+    expect(r?.messages.join(' ')).toContain('⏳ Na lista de espera (pago; a classe lotou antes do pagamento): Enzo Lima');
   });
 
   it('valor que não fecha, com cara de inscrição: explica o total esperado', async () => {
@@ -274,7 +275,7 @@ describe('comprovante do administrador que também se inscreveu', () => {
     } as never;
     const r = await beforeModel(t);
     expect(r?.action).toBe('receipt_championship_paid');
-    expect(falas.join(' ')).toContain('Inscrição confirmada no Serra e Sertão 2026: Hermeson Veras');
+    expect(falas.join(' ')).toContain('✅ Inscrição confirmada no Serra e Sertão 2026: Hermeson Veras');
     expect(calls).not.toContain('conv_svc_ai_admin_receipt');
     expect(calls).not.toContain('conv_svc_queue_message');
   });
@@ -324,7 +325,7 @@ describe('falar da inscrição depois de mandar o comprovante', () => {
       { direction: 'inbound', body: 'É a confirmação da inscrição no torneio Auge Open' }], pago);
     const r = await beforeModel(t);
     expect(r?.action).toBe('receipt_championship_paid');
-    expect(falas.join(' ')).toContain('Inscrição confirmada no Serra e Sertão 2026: Hermeson Veras');
+    expect(falas.join(' ')).toContain('✅ Inscrição confirmada no Serra e Sertão 2026: Hermeson Veras');
   });
 
   it('conversa sobre outra coisa: não mexe no comprovante e segue para o modelo', async () => {
@@ -340,5 +341,41 @@ describe('falar da inscrição depois de mandar o comprovante', () => {
       { applied: false, reason: 'AMOUNT_MISMATCH', amount_cents: 10000, total_cents: 13000, pending: [{ name: 'Hermeson Veras', class: '5ª Classe' }] });
     expect(await beforeModel(t)).toBeNull();
     expect(falas).toHaveLength(0);
+  });
+});
+
+describe('cartão da inscrição no modelo da organização', () => {
+  const titulo = ['AUGE OPEN', '3ª Etapa do Circuito Serra e Sertão de Tênis'];
+  const atleta = { full_name: 'Hermeson Veras', class: '5ª Classe', shirt_size: 'GG', phone: '88999265229', status: 'confirmed' };
+
+  it('confirmação pelo comprovante: o cartão com ✅ e o Pix conferido, sem dados bancários', async () => {
+    const r = await tryChampionshipPay((name: string) => Promise.resolve({ data: name === 'conv_svc_receipt_championship_auto' ? { applied: true, championship: 'Serra e Sertão 2026',
+      title: titulo, amount_cents: 13000, paid_on: '2026-10-26', confirmed: ['Hermeson Veras'], waitlist: [], athletes: [atleta] } : null }), 'ST', 'campeonato');
+    expect(r?.messages[0]).toBe('🎾 *AUGE OPEN*\n🏆 3ª Etapa do Circuito Serra e Sertão de Tênis\n\n👤 *Atleta:* Hermeson Veras\n👕 *Tamanho da camisa:* GG\n'
+      + '🏅 *Classe:* 5ª Classe (quadra rápida)\n📱 *Telefone:* (88) 99926-5229\n📋 *Status da inscrição:* ✅ Confirmada');
+    expect(r?.messages[1]).toContain('🧾 Comprovante recebido e conferido: Pix de R$ 130,00 em 26/10/2026');
+    expect(r?.messages.join(' ')).not.toMatch(/Chave Pix|Favorecido|52\.393/);
+  });
+
+  it('pré-inscrição: o mesmo cartão, aguardando o Pix, com a chave para pagar', () => {
+    const t = signupMessage({ championship: 'Serra e Sertão 2026', price_cents: 13000, pix_key: '52.393.541/0001-20', payee: 'Sobral Tênis Clube',
+      signup: { ...atleta, status: 'pre' }, my_pending: ['Hermeson Veras'], my_pending_total_cents: 13000 }, titulo);
+    expect(t.startsWith('🎾 *AUGE OPEN*\n🏆 3ª Etapa do Circuito Serra e Sertão de Tênis')).toBe(true);
+    expect(t).toContain('📋 *Status da inscrição:* ⏳ Aguardando o Pix');
+    expect(t).toContain('🔑 *Chave Pix:* 52.393.541/0001-20');
+  });
+});
+
+describe('inscrição paga pode ser dita como confirmada', () => {
+  it('o cartão "Confirmada" do modelo não é trocado por "Ainda não registrei nada", mesmo com intenção "informar"', async () => {
+    const { decide } = await import('../../supabase/functions/_shared/aiAgent/decide');
+    const cartao = '🎾 *AUGE OPEN*\n\n👤 *Atleta:* Hermeson Veras\n📋 *Status da inscrição:* ✅ Inscrição confirmada';
+    const base = { deps: { db: async () => ({ data: null, error: null }), chat: null, uaz: null, sleep: async () => undefined }, session: 'S', today: '2026-10-26', memory: {}, slots: {},
+      answer: { messages: [cartao], intent: 'informar', slots: {}, ready: false, customer_confirmed: false, declined: false, awaiting: false, transfer: false, handoff_kind: null, handoff_note: null, close: false } };
+    const pago = pack({ mine: [{ full_name: 'Hermeson Veras', class: '5ª Classe', shirt_size: 'GG', status: 'confirmed', phone: '88999265229' }] });
+    const comPago = await decide({ ...base, ctx: { requester: admin, championship: pago } } as never);
+    expect(comPago.bubbles).toEqual([cartao]);
+    const semPago = await decide({ ...base, ctx: { requester: admin, championship: pack() } } as never);
+    expect(semPago.bubbles[0]).toContain('Ainda não registrei nada');
   });
 });

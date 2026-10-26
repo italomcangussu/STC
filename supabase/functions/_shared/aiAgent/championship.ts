@@ -1,7 +1,7 @@
 // Campeonato com inscrição pelo João: o modelo colhe os dados; o SERVIDOR inscreve, manda a camisa, define cabeças e sorteia.
 // Todo texto de resultado sai daqui, a partir do que o banco devolveu (o modelo nunca anuncia inscrição feita).
 
-import { brl, championships, phoneBR } from './championshipPrompt.ts';
+import { athleteCard, brl, championshipTitle, championships } from './championshipPrompt.ts';
 import type { DecideInput } from './decide.ts';
 import { isAdminAssistant } from './promptAdmin.ts';
 import type { Ctx } from './promptTypes.ts';
@@ -12,8 +12,6 @@ type Res = { ok?: boolean; code?: string; message?: string } & Ctx;
 const SERVER_ACTIONS: ChampAction[] = ['inscrever', 'camisa', 'cabecas', 'sortear'];
 export const isChampionshipServerAction = (a: unknown): a is ChampAction => SERVER_ACTIONS.includes(a as ChampAction);
 
-const QUADRA: Record<string, string> = { '4ª Classe': 'saibro', '5ª Classe': 'quadra rápida' };
-const comQuadra = (classe: string) => (QUADRA[classe] ? `${classe} (${QUADRA[classe]})` : classe);
 
 type Out = { bubbles: string[]; action: string } & Partial<Decision>;
 const reply = (memory: Memory, out: Out): Decision => ({ awaiting: false, close: false, memory, ...out });
@@ -23,24 +21,22 @@ const nextAthlete = (memory: Memory): Memory => ({ ...memory, slots: {} });
 
 /* ------------------------------- Textos ------------------------------- */
 
-export function signupMessage(r: Ctx): string {
-  const s = r.signup as Ctx;
+/** Quanto pagar: uma inscrição, ou o total das que a pessoa deixou esperando o Pix. */
+function paymentLine(r: Ctx): string {
   const pend = (r.my_pending ?? []) as string[];
-  const total = Number(r.my_pending_total_cents ?? 0);
-  const pagar = pend.length > 1
-    ? `Você tem ${pend.length} inscrições esperando o Pix (${pend.join(', ')}). Pode mandar um Pix só com o total: ${brl(total)}.`
-    : `Para garantir a vaga, faz o Pix de ${brl(r.price_cents)}.`;
-  return [
-    `Pré-inscrição feita no ${r.championship} ✅`,
-    `Atleta: ${s.full_name}\nClasse: ${comQuadra(String(s.class))}\nCamisa: ${s.shirt_size}${s.city ? `\nCidade: ${s.city}` : ''}\nTelefone: ${phoneBR(s.phone)}`,
-    `${pagar}\nChave Pix: ${r.pix_key} (${r.payee})`,
-    'Depois é só me mandar o comprovante aqui que eu confiro e confirmo a inscrição na hora.',
-  ].join('\n\n');
+  if (pend.length <= 1) return `💰 *Inscrição:* ${brl(r.price_cents)}`;
+  return `💰 *Total a pagar:* ${brl(r.my_pending_total_cents)} (${pend.length} inscrições: ${pend.join(', ')}; pode ser num Pix só)`;
 }
 
-export function waitlistMessage(r: Ctx): string {
-  const s = r.signup as Ctx;
-  return `A ${s.class} já está com todas as vagas preenchidas. Coloquei ${s.full_name} na lista de espera do ${r.championship}: se abrir vaga, a organização avisa. Não precisa pagar agora.`;
+/** Pré-inscrição: o cartão do atleta com "aguardando o Pix" e, como ainda falta pagar, a chave Pix. */
+export function signupMessage(r: Ctx, title: string[]): string {
+  const pix = [paymentLine(r), `🔑 *Chave Pix:* ${r.pix_key}`, `🏦 *Favorecido:* ${r.payee}`].join('\n');
+  return [athleteCard(title, r.signup as Ctx, '⏳ Aguardando o Pix'), pix,
+    '📎 Me manda o comprovante aqui que eu confiro e confirmo a inscrição na hora.'].join('\n\n');
+}
+
+export function waitlistMessage(r: Ctx, title: string[]): string {
+  return [athleteCard(title, r.signup as Ctx, '⏳ Lista de espera (classe lotada)'), 'Se abrir vaga, a organização avisa. Não precisa pagar agora.'].join('\n\n');
 }
 
 const STATUS_TXT: Record<string, string> = { pre: 'está pré-inscrito, esperando o Pix', confirmed: 'já está com a inscrição confirmada', waitlist: 'está na lista de espera' };
@@ -75,9 +71,9 @@ function athletePhone({ slots, ctx }: DecideInput): string | null {
 }
 
 /** O que o banco devolveu vira a fala: Pix, lista de espera, duplicado, encerrado ou o dado a corrigir. */
-function signupOutcome(r: Res | null, memory: Memory): Decision {
-  if (r?.ok && r.waitlist) return reply(nextAthlete(memory), { bubbles: [waitlistMessage(r)], action: 'champ_waitlist' });
-  if (r?.ok) return reply(nextAthlete(memory), { bubbles: [signupMessage(r)], action: 'champ_signup', verbatim: true });
+function signupOutcome(r: Res | null, memory: Memory, title: string[]): Decision {
+  if (r?.ok && r.waitlist) return reply(nextAthlete(memory), { bubbles: [waitlistMessage(r, title)], action: 'champ_waitlist', verbatim: true });
+  if (r?.ok) return reply(nextAthlete(memory), { bubbles: [signupMessage(r, title)], action: 'champ_signup', verbatim: true });
   if (r?.code === 'DUPLICATE') return reply(nextAthlete(memory), { bubbles: [duplicateMessage(r)], action: 'champ_duplicate' });
   if (r?.code === 'CLOSED' || r?.code === 'NO_CHAMPIONSHIP') return reply(nextAthlete(memory), { bubbles: [String(r.message)], action: 'champ_closed' });
   return ask(memory, r?.message ?? 'Não consegui registrar a inscrição agora. Pode me mandar os dados de novo?', `champ_failed:${r?.code ?? 'UNKNOWN'}`);
@@ -92,7 +88,7 @@ async function inscrever(i: DecideInput, memory: Memory): Promise<Decision> {
   const r = (await i.deps.db('conv_svc_ai_championship_signup', { p_session: i.session, p: {
     full_name: slots.athlete_name, phone, class: slots.champ_class, shirt_size: slots.shirt_size, city: slots.athlete_city ?? null,
   } })).data as Res | null;
-  return signupOutcome(r, memory);
+  return signupOutcome(r, memory, championshipTitle({ title: r?.title }, r?.championship));
 }
 
 function camisa(i: DecideInput, memory: Memory): Decision {

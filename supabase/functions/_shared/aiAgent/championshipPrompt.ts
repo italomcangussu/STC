@@ -9,12 +9,33 @@ export const phoneBR = (local: unknown) => {
   const d = String(local ?? '').replace(/\D/g, '');
   return d.length === 11 ? `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}` : d.length === 10 ? `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}` : d;
 };
-const dateBR = (iso: unknown) => String(iso ?? '').slice(0, 10).split('-').reverse().join('/');
+export const dateBR = (iso: unknown) => String(iso ?? '').slice(0, 10).split('-').reverse().join('/');
+const QUADRA: Record<string, string> = { '4ª Classe': 'saibro', '5ª Classe': 'quadra rápida' };
+export const comQuadra = (classe: unknown) => (QUADRA[String(classe)] ? `${classe} (${QUADRA[String(classe)]})` : String(classe));
 
 const STATUS: Record<string, string> = { pre: 'pré-inscrito, esperando o Pix', confirmed: 'inscrição confirmada (pago)', waitlist: 'lista de espera' };
 
 export const championships = (ctx: Ctx): Ctx[] => ((ctx.championship as Ctx | null)?.championships ?? []) as Ctx[];
 export const hasChampionship = (ctx: Ctx) => championships(ctx).length > 0;
+/** Título das mensagens de inscrição (ex.: "AUGE OPEN" + "3ª Etapa do Circuito…"); sem título cadastrado, o nome do campeonato. */
+export function championshipTitle(c: Ctx | undefined, fallbackName?: unknown): string[] {
+  const linhas = ((c?.title ?? []) as string[]).filter(Boolean);
+  return linhas.length ? linhas : [String(c?.name ?? fallbackName ?? 'Campeonato')];
+}
+
+/** Cartão da inscrição no modelo pedido pela organização (Hermeson, 26/10): título, atleta e situação. */
+export function athleteCard(title: string[], s: Ctx, status: string): string {
+  const [primeira, ...resto] = title;
+  const cabecalho = [`🎾 *${primeira}*`, ...resto.map((l) => `🏆 ${l}`)].join('\n');
+  const atleta = [`👤 *Atleta:* ${s.full_name}`, `👕 *Tamanho da camisa:* ${s.shirt_size}`, `🏅 *Classe:* ${comQuadra(s.class)}`,
+    `📱 *Telefone:* ${phoneBR(s.phone)}`, `📋 *Status da inscrição:* ${status}`].join('\n');
+  return `${cabecalho}\n\n${atleta}`;
+}
+
+/** Inscrições desta pessoa (feitas por ela ou com o telefone dela), de todos os campeonatos abertos. */
+export const mySignups = (ctx: Ctx): Ctx[] => championships(ctx).flatMap((c) => (c.mine ?? []) as Ctx[]);
+/** O sistema já mostra inscrição paga desta pessoa: o João pode dizer isso com todas as letras. */
+export const hasConfirmedSignup = (ctx: Ctx) => mySignups(ctx).some((s) => s.status === 'confirmed');
 
 const signupLine = (s: Ctx) => `- ${s.full_name} | ${s.class} | camisa ${s.shirt_size}${s.city ? ` | ${s.city}` : ''} | tel ${phoneBR(s.phone)} | ${STATUS[String(s.status)] ?? s.status}`;
 
@@ -33,6 +54,7 @@ function adminLines(admin: Ctx | null): string {
 function championshipBlock(c: Ctx, requesterPhone: string): string {
   const mine = ((c.mine ?? []) as Ctx[]).map(signupLine);
   return `## ${c.name} (${dateBR(c.start_date)} a ${dateBR(c.end_date)})
+Título do evento nas mensagens: ${championshipTitle(c).join(' · ')}
 Inscrição: ${c.registration_open ? `ABERTA até ${dateBR(c.deadline)}` : 'ENCERRADA'} · ${brl(c.price_cents)} por atleta · camisas: ${((c.shirt_sizes ?? []) as string[]).join(', ')} · foto da camisa: ${c.shirt_image ? 'disponível' : 'ainda não disponível'}
 Vagas por classe (máximo ${c.max_per_class}):
 ${((c.classes ?? []) as Ctx[]).map(classLine).join('\n')}
@@ -70,7 +92,7 @@ export function championshipRules(ctx: Ctx): string {
 - Valor e pagamento: o valor da inscrição está nos dados e inclui a camisa. A vaga só fica garantida depois do Pix. A pessoa manda o comprovante aqui mesmo: o sistema lê, confere e confirma na hora, sem outra etapa. Nunca diga que a inscrição foi feita ou confirmada: quem anuncia é o sistema.
 - Classe lotada: a inscrição vai para a lista de espera (o sistema avisa); não peça Pix nesse caso.
 - Camisa: se a pessoa quiser ver a camisa, champ_action "camisa", ready true, messages vazio (o sistema manda a foto).
-- Inscrição já feita: veja INSCRIÇÕES FEITAS POR ESTA PESSOA e responda a situação de cada uma.
+- Inscrição já feita: veja INSCRIÇÕES FEITAS POR ESTA PESSOA e responda a situação de cada uma. "inscrição confirmada (pago)" você PODE dizer que está confirmada, com todas as letras. Para mostrar uma inscrição, use o cartão da organização, um item de messages com as linhas separadas por "\\n": "🎾 *<1ª linha do título>*", "🏆 <2ª linha do título>", linha em branco, "👤 *Atleta:* …", "👕 *Tamanho da camisa:* …", "🏅 *Classe:* …", "📱 *Telefone:* …", "📋 *Status da inscrição:* ✅ Confirmada" (ou "⏳ Aguardando o Pix" / "⏳ Lista de espera"). Inscrição paga não leva chave Pix nem dados bancários.
 ${admin ? `- ADMINISTRADOR: cabeças de chave → champ_action "cabecas", champ_class e seed_names NA ORDEM (o 1º é o cabeça 1), ready true. Sorteio da chave → champ_action "sortear" e champ_class, ready true, SÓ quando o administrador pedir o sorteio com todas as letras (uma classe por vez; pergunte qual se não disse). Antes de sortear, lembre que os cabeças de chave precisam estar definidos.
 ` : ''}- No grupo: responda dúvidas; para inscrever, peça para a pessoa chamar você no privado.
 

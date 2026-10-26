@@ -18,6 +18,7 @@ import { sendWelcome } from './welcome.ts';
 import { consultarDisponibilidade } from './availability.ts';
 import { aulasEmLote, canBatchLessons, lessonsConfirmed } from './lessonsBatch.ts';
 import { campeonato, isChampionshipServerAction } from './championship.ts';
+import { hasConfirmedSignup } from './championshipPrompt.ts';
 
 /* ------------------------------- Plano composto do assessor ------------------------------- */
 
@@ -82,7 +83,11 @@ export async function decide(i: DecideInput): Promise<Decision> {
   const plain = (extra: Partial<Decision> = {}): Decision => {
     // Nenhuma frase do modelo pode afirmar que algo foi reservado/confirmado/cancelado.
     // Só a bolha que anuncia sucesso sai; o resto da resposta (piada, contexto) continua.
-    const semAnuncio = answer.messages.filter((m) => !claimsSuccess(m));
+    // Exceção: inscrição no campeonato que o SISTEMA já mostra como paga pode ser dita como confirmada, seja qual for a
+    // intenção que o modelo marcou ("informar" também: caso do Hermeson, 26/10, "Assim como?" depois do cartão).
+    const falaDaInscricao = answer.intent === 'campeonato' || answer.messages.some((m) => /inscri[cç][aã]o|inscrit/i.test(m));
+    const podeAfirmar = falaDaInscricao && hasConfirmedSignup(ctx);
+    const semAnuncio = podeAfirmar ? answer.messages : answer.messages.filter((m) => !claimsSuccess(m));
     const seguro = semAnuncio.length < answer.messages.length && !semAnuncio.length
       ? ['Ainda não registrei nada. Me diga o que falta e eu monto o resumo para você confirmar.']
       : semAnuncio;
