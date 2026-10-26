@@ -79,6 +79,8 @@ export async function newDb(): Promise<PGlite> {
     ...all.filter((f) => /^2026100[67]\d{6}_finance_.*\.sql$/.test(f) && PENDENCY_MIGRATION.test(f)).sort(),
     // Conversas que dependem das pendências (assessor administrativo do João).
     ...all.filter((f) => /^(?:2026100(?:71[5-9]\d{2}|7[2-9]\d{3})\d{2}|2026100[89]\d{6}|2026101\d{7})_conversations_.*\.sql$/.test(f)).sort(),
+    // Busca de pessoas com erro de digitação ("Hermerson" → pergunta se é o Hermeson).
+    '20261026200000_joao_nome_com_erro_de_digitacao.sql',
   ];
   for (const f of files) {
     try {

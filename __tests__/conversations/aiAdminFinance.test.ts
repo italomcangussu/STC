@@ -799,6 +799,23 @@ describe('memória de cargos (role_title)', () => {
     expect(s2.calls.at(-1)!.user + s2.calls.at(-1)!.system).toContain('Cargo no clube: Vice-presidente do clube');
   }, 120000);
 
+  it('nome com erro de digitação: o pedido vira pergunta pela pessoa certa e a memória não aprova nem anuncia o nome errado', async () => {
+    const w = await setup(); const p = provider();
+    const cargo = (nome: string) => [{ subject_name: nome, kind: 'role_title', content: 'Presidente do clube', confidence: 1 }];
+    const m = await direct(w, 'avise ao Betto, o presidente, que não vou à reunião');
+    await turn(w, m.message_id, script(answer({ intent: 'admin_acao', ready: true, memory_candidates: cargo('Betto Sócio'),
+      slots: { adm_action: 'mensagem_enviar', member_name: 'Betto Sócio', send_body: 'Não vou à reunião.' } })).chat, p.uaz);
+    expect(p.sent.map((x) => x.text).join('\n')).toMatch(/No cadastro tem Beto Sócio: é essa pessoa\?/);
+    expect(p.sent.map((x) => x.text).join('\n')).not.toMatch(/Anotei/);
+    expect((await q<any>(w.db, `select status from public.conv_ai_memory_candidates where subject_name = 'Betto Sócio'`))[0].status).toBe('pending');
+    // com o nome do cadastro entra e anuncia uma vez; repetir no turno seguinte não anuncia de novo
+    for (const texto of ['isso, o Beto', 'isso']) {
+      const mi = await direct(w, texto);
+      await turn(w, mi.message_id, script(answer({ messages: ['Certo.'], memory_candidates: cargo('Beto Sócio') })).chat, p.uaz);
+    }
+    expect(p.sent.map((x) => x.text).join('\n').match(/📝 Anotei: Beto Sócio é Presidente do clube\./g)).toHaveLength(1);
+  }, 150000);
+
   it('cargo novo substitui o anterior da mesma pessoa; sócio comum só sugere (fica pendente)', async () => {
     const w = await setup();
     await svc(w.db, `public.conv_svc_ai_memory_candidate(${j({ subject_name: 'Beto Sócio', kind: 'role_title', content: 'Tesoureiro', approve: true })})`);

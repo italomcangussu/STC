@@ -84,7 +84,7 @@ begin
   assert r->1->>'status' = 'unique' and r->1->'matches'->0->>'name' = 'Ronaldo Resende', 'Rezende deveria achar Resende: ' || (r->1)::text;
   assert r->2->>'status' = 'none', 'Guilherme não existe';
   assert r->3->>'status' = 'unique' and r->3->'matches'->0->>'name' = 'José Martins', 'nome exato continua exato';
-  assert conv_private.ai_resolve_people(array['Carlos Rezende'], 'member')->0->>'status' = 'none', 'busca de sócio não usa a grafia aproximada';
+  assert conv_private.ai_resolve_people(array['Carlos Rezende'], 'member')->0->>'status' = 'suggest', 'sócio com grafia aproximada vira pergunta, nunca escolha';
   assert conv_private.fold_loose('Rezende Matthews') = 'resendi matews', 'normalização: ' || conv_private.fold_loose('Rezende Matthews');
 end $$;
 

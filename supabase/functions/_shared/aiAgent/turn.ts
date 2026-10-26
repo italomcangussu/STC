@@ -25,6 +25,7 @@ import { beforeModel } from './turnShortcuts.ts';
 import { activeTopic, bringsNewData, openTopics, recordTopicTurn, restoreTopics, selectTopic, topicIdFromRef } from './topicState.ts';
 import { mergeSlots, parseAnswer, turnTemperature } from './answerParse.ts';
 import { cadence } from './cadence.ts';
+import { noteMemories } from './memoryNotes.ts';
 import { keepChampionshipInChat } from './championship.ts';
 import { type DecideInput, baseSlotsFor, continuePlan, decide, proposalBelongsElsewhere, startsFresh } from './decide.ts';
 import { looksLikeProTennisQuestion, proTennisContext, proTennisDirectMessages } from './proTennis.ts';
@@ -113,23 +114,6 @@ async function askModel(t: Turn, memory: Memory): Promise<Answer | null> {
   } catch {
     return null;
   }
-}
-
-/**
- * Memórias sugeridas pelo modelo vão para a curadoria. Cargo informado ou corrigido por um administrador no privado
- * já entra aprovado; o servidor confirma ("Anotei"), o modelo não. Devolve o que foi anotado.
- */
-async function noteMemories(t: Turn, answer: Answer): Promise<string[]> {
-  const anotados: string[] = [];
-  for (const candidate of answer.memory_candidates ?? []) {
-    const aprova = candidate.kind !== 'inside_joke' && !t.isGroup && isAdminAssistant(t.ctx);
-    const r = await Promise.resolve(t.deps.db('conv_svc_ai_memory_candidate', { p: { ...candidate, source_message_id: t.messageId, approve: aprova } })).catch(() => null);
-    if (aprova && r?.data) anotados.push(candidate.kind === 'role_title' ? `${candidate.subject_name} é ${candidate.content.replace(/^(o|a)\s+/i, '')}` : `${candidate.subject_name}: ${candidate.content.replace(/[.\s]+$/, '')}`);
-  }
-  if (t.isGroup && answer.ask_curator) {
-    await Promise.resolve(t.deps.db('conv_svc_ai_curator_ask', { p_session: t.session, p: answer.ask_curator })).catch(() => null);
-  }
-  return anotados;
 }
 
 /** Reação sozinha só vale para conversa solta: nada operacional, sem proposta aberta e sem pergunta pendente. */
