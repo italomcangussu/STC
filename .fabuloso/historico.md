@@ -257,3 +257,4 @@ Orquestrador Sonnet 5.5 (sem subagentes, a pedido). Criados `20261007260000_conv
 - Pendências: foto da camisa (`joao_info.shirt_image`), teste com modelo real, pré-inscrições fora do painel, classe com menos de 9 confirmados vai pelo Criador.
 - Observação: deriva no remoto em `public.conv_followups`.
 - 2026-10-26: foto da camisa do atleta (branca) em conv-media `championships/serra-e-sertao-2026/camisa-atleta.jpg`, ligada por 20261026150000 (joao_info.shirt_image + descrição no info). A vermelha é da organização.
+- 2026-10-26: cron `conversations-dispatch` passou de 5 para 1 minuto (20261026160000, cron.alter_job pelo nome; o job em si foi criado fora das migrations, com o segredo no comando). O segredo `x-dispatch-secret` apareceu em parte no terminal ao consultar cron.job: rotacionar.
