@@ -7,7 +7,7 @@ import { actingFor } from './promptContext.ts';
 import type { Ctx } from './promptTypes.ts';
 import { type ReceiptStage, handleReceiptIntent, loadReceiptStage } from './receiptIntent.ts';
 import { deliverForward } from './receiptForward.ts';
-import { tryChampionshipPay } from './championshipReceipt.ts';
+import { type ChampReceipt, tryChampionshipPay } from './championshipReceipt.ts';
 import { receiptTopic } from './receiptContext.ts';
 import { UNCLEAR_AUDIO_REPLY, unheardOnly } from './audio.ts';
 import { cadence } from './cadence.ts';
@@ -77,11 +77,15 @@ async function championshipReceipt(t: Turn): Promise<TurnResult | null> {
   if (stage?.status !== 'awaiting_purpose') return null;
   const pago = await tryChampionshipPay(t.deps.db, stage.id, topic);
   if (!pago || (!comMidia && pago.action !== 'receipt_championship_paid')) return null;
+  return deliverChampionshipReceipt(t, pago, stage.id);
+}
+
+/** Fala com a pessoa e avisa o financeiro (menos quando o financeiro é quem está na conversa). */
+async function deliverChampionshipReceipt(t: Turn, pago: ChampReceipt, stageId: string): Promise<TurnResult> {
   const sent = await t.entregar(cadence(pago.messages));
-  // Quem cuida do financeiro já está nesta conversa: não manda aviso para ele mesmo.
-  const repassadas = pago.forward && pago.forward.admin_conversation_id !== t.conversation
-    ? await deliverForward(pago.forward, { db: t.deps.db, uaz: t.deps.uaz, signedUrl: t.deps.files?.signedUrl }) : 0;
-  await t.save(t.sessionMemory, pago.action, { receipt_stage_id: stage.id, bubbles: sent, forwarded: repassadas }, { awaiting: false, close: false });
+  const avisar = pago.forward && pago.forward.admin_conversation_id !== t.conversation;
+  const repassadas = avisar ? await deliverForward(pago.forward!, { db: t.deps.db, uaz: t.deps.uaz, signedUrl: t.deps.files?.signedUrl }) : 0;
+  await t.save(t.sessionMemory, pago.action, { receipt_stage_id: stageId, bubbles: sent, forwarded: repassadas }, { awaiting: false, close: false });
   return { status: 'replied', bubbles: sent, handoff: null, action: pago.action } as TurnResult;
 }
 
