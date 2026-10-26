@@ -2,13 +2,14 @@
   "aplicadas": [
     "20261026160000",
     "20261026170000",
-    "20261026180000"
+    "20261026180000",
+    "20261026190000"
   ],
   "jaNoRemoto": [],
   "edge": {
     "admin-athlete-access": "8943e49b9df0",
     "conversation-operations": "f3d35229bc90",
-    "conversations-dispatch": "a4b8e75d81dd",
+    "conversations-dispatch": "474767e8194a",
     "finance-receipt-whatsapp": "ac42eb39df81",
     "joao-admin-alerts": "b62d55c74b63",
     "joao-admin-briefing": "c699de3b8712",
