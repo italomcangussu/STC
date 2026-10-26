@@ -297,3 +297,48 @@ describe('de que é o comprovante: o assunto da conversa', () => {
     expect(receiptTopic([])).toBeNull();
   });
 });
+
+describe('falar da inscrição depois de mandar o comprovante', () => {
+  const montar = (transcript: { direction: string; body: string }[], auto: unknown) => {
+    const calls: string[] = [];
+    const falas: string[] = [];
+    const db = (name: string) => {
+      calls.push(name);
+      if (name === 'conv_svc_receipt_stage') return Promise.resolve({ data: { id: 'ST', source_message_id: 'IMG', status: 'awaiting_purpose' }, error: null });
+      if (name === 'conv_svc_receipt_championship_auto') return Promise.resolve({ data: auto, error: null });
+      return Promise.resolve({ data: null, error: null });
+    };
+    const t = {
+      deps: { db, chat: async () => ({ output: '{}' }), uaz: null, sleep: async () => undefined }, isGroup: false, soMidia: false,
+      buffered: transcript.at(-1)?.body ?? '', settings: { model: 'm', handoff_keywords: [] }, conversation: 'CONV', session: 'S', sessionMemory: {},
+      ultima: { id: 'T1', kind: 'text' }, pendentes: [{ id: 'T1', kind: 'text' }], ctx: { is_group: false, requester: admin, transcript },
+      entregar: async (b: { text: string }[]) => { falas.push(...b.map((x) => x.text)); return b.length; }, save: async () => undefined,
+    } as never;
+    return { t, calls, falas };
+  };
+  const pago = { applied: true, championship: 'Serra e Sertão 2026', amount_cents: 13000, confirmed: ['Hermeson Veras'], waitlist: [], admin_conversation_id: 'CONV', admin_name: 'Hermeson', sender_name: 'Hermeson' };
+
+  it('"É a confirmação da inscrição" confirma com o comprovante que ficou esperando (caso do Hermeson, 26/10)', async () => {
+    const { beforeModel } = await import('../../supabase/functions/_shared/aiAgent/turnShortcuts');
+    const { t, falas } = montar([{ direction: 'outbound', body: 'Recebi o comprovante (R$ 130,00). É para renovar o Card de qual aluno?' },
+      { direction: 'inbound', body: 'É a confirmação da inscrição no torneio Auge Open' }], pago);
+    const r = await beforeModel(t);
+    expect(r?.action).toBe('receipt_championship_paid');
+    expect(falas.join(' ')).toContain('Inscrição confirmada no Serra e Sertão 2026: Hermeson Veras');
+  });
+
+  it('conversa sobre outra coisa: não mexe no comprovante e segue para o modelo', async () => {
+    const { beforeModel } = await import('../../supabase/functions/_shared/aiAgent/turnShortcuts');
+    const { t, calls } = montar([{ direction: 'inbound', body: 'tem quadra livre amanhã às 18h?' }], pago);
+    expect(await beforeModel(t)).toBeNull();
+    expect(calls).not.toContain('conv_svc_receipt_championship_auto');
+  });
+
+  it('valor que não fecha: na conversa de texto não repete a explicação', async () => {
+    const { beforeModel } = await import('../../supabase/functions/_shared/aiAgent/turnShortcuts');
+    const { t, falas } = montar([{ direction: 'inbound', body: 'é da inscrição' }],
+      { applied: false, reason: 'AMOUNT_MISMATCH', amount_cents: 10000, total_cents: 13000, pending: [{ name: 'Hermeson Veras', class: '5ª Classe' }] });
+    expect(await beforeModel(t)).toBeNull();
+    expect(falas).toHaveLength(0);
+  });
+});
