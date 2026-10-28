@@ -126,24 +126,29 @@ do $$ declare r jsonb := public.conv_svc_receipt_championship_auto('00000000-000
   assert jsonb_array_length(r->'pending') = 2, 'devolve quem está pendente';
 end $$;
 
--- Pix para outra pessoa: não confirma.
+-- Pix para outra pessoa (outro nome e outro CNPJ): não confirma.
 select fab.dono();
 select pg_temp.comprovante('00000000-0000-0000-0000-00000000f002', 26000, 'Fulano de Tal', repeat('2', 64));
+update fin_private.whatsapp_receipt_intents set original_data = jsonb_set(original_data, '{ocr,payee_document}', '"11222333000181"')
+ where id = '00000000-0000-0000-0000-00000000f002';
 select fab.como('service_role');
 do $$ declare r jsonb := public.conv_svc_receipt_championship_auto('00000000-0000-0000-0000-00000000f002'); begin
   assert r->>'reason' = 'PAYEE', 'favorecido errado: ' || r::text;
 end $$;
 
 -- R$ 260 para o clube: as duas confirmadas, receita lançada com o comprovante, atletas na chave.
+-- O leitor pegou "Recebedor" como nome (PDF do Bruno, 28/10), mas o CNPJ é o da chave Pix do clube: vale.
 select fab.dono();
-select pg_temp.comprovante('00000000-0000-0000-0000-00000000f003', 26000, 'SOBRAL TENIS CLUBE', repeat('3', 64));
+select pg_temp.comprovante('00000000-0000-0000-0000-00000000f003', 26000, 'Recebedor', repeat('3', 64));
+update fin_private.whatsapp_receipt_intents set original_data = jsonb_set(original_data, '{ocr,payee_document}', '"52393541000120"')
+ where id = '00000000-0000-0000-0000-00000000f003';
 select fab.como('service_role');
 do $$ declare r jsonb := public.conv_svc_receipt_championship_auto('00000000-0000-0000-0000-00000000f003'); begin
   assert (r->>'applied')::boolean, 'confirma: ' || r::text;
   assert jsonb_array_length(r->'confirmed') = 2 and jsonb_array_length(r->'waitlist') = 0, 'dois inscritos';
   assert jsonb_array_length(r->'athletes') = 2 and r->'athletes'->0->>'class' = '4ª Classe' and r->'athletes'->0->>'shirt_size' = 'M'
      and r->'athletes'->0->>'status' = 'confirmed' and r->'athletes'->0->>'phone' = '88999991001', 'cartão de cada atleta: ' || r::text;
-  assert r->>'payee' = 'SOBRAL TENIS CLUBE' and r->>'paid_on' is not null and r->'title'->>0 = 'AUGE OPEN', 'o que o comprovante mostrou e o título';
+  assert r->>'payee' = 'Recebedor' and r->>'paid_on' is not null and r->'title'->>0 = 'AUGE OPEN', 'o que o comprovante mostrou e o título';
   assert r->>'media_kind' = 'image' and r->>'media_path' = 'conv/' || '00000000-0000-0000-0000-00000000f003' || '.jpg', 'a mídia do comprovante para o financeiro: ' || r::text;
   assert r->>'admin_name' = 'Henrique' and r->>'admin_conversation_id' is not null, 'avisa o financeiro';
 end $$;
