@@ -9,6 +9,7 @@ import type { FileKind, FileKit } from './adminFiles.ts';
 import type { Provision } from '../athleteProvision.ts';
 import type { TopicMode, TopicSnapshot } from './topicState.ts';
 import type { UazCaller } from '../uazChat.ts';
+import type { ReceiptForward } from './receiptForward.ts';
 import { participantes } from './decide.ts';
 
 export type RpcResult = { data: unknown; error: { message: string } | null };
@@ -194,7 +195,8 @@ export type Memory = { intent?: Intent; slots?: Slots; proposal_names?: string[]
 export type Decision = { bubbles: string[]; awaiting: boolean; close: boolean; action: string | null; memory: Memory; handoff?: { kind: 'soft' | 'hard'; note: string };
   /** Dados do assunto depois do turno, quando o servidor os muda (passo do plano). */ slots?: Slots;
   /** Relatório do servidor: vai numa mensagem só, com as quebras de linha (sem picotar em microbolhas). */ verbatim?: boolean;
-  /** Arquivos para o administrador (já copiados para a mídia da conversa): saem como documento depois da fala. */ files?: OutFile[] };
+  /** Arquivos para o administrador (já copiados para a mídia da conversa): saem como documento depois da fala. */ files?: OutFile[];
+  /** Pix conferido no turno (inscrição com comprovante guardado): a fala sai firme e o financeiro recebe o aviso. */ forward?: ReceiptForward };
 
 /** `kind` image sai como foto (a camisa do campeonato); sem ele, como documento. */
 export type OutFile = { path: string; name: string; mime: string; caption: string; kind?: 'image' | 'document' };

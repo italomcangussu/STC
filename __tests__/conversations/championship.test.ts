@@ -245,8 +245,9 @@ describe('comprovante do Pix da inscrição', () => {
     expect(r?.action).toBe('receipt_championship_amount');
   });
 
-  it('sem pré-inscrição: não é com ele', async () => {
-    expect(await tryChampionshipPay(dbOf({ applied: false, reason: 'NO_SIGNUP' }), 'ST', 'campeonato')).toBeNull();
+  it('sem pré-inscrição: conversa do torneio guarda o comprovante; outro assunto não é com ele', async () => {
+    expect((await tryChampionshipPay(dbOf({ applied: false, reason: 'NO_SIGNUP' }), 'ST', 'campeonato'))?.action).toBe('receipt_championship_hold');
+    expect(await tryChampionshipPay(dbOf({ applied: false, reason: 'NO_SIGNUP' }), 'ST', 'mensalidade')).toBeNull();
   });
 
   it('comprovante repetido: não confirma', async () => {

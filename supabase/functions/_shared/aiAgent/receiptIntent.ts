@@ -1,7 +1,7 @@
 // João: intenção do comprovante -> finalidade -> confirmação do remetente -> fila financeira.
 // OCR nunca define finalidade; "sim" apenas confirma proposta ainda aberta.
 import { type ReceiptForward, tryMembershipAutoPay } from './receiptForward.ts';
-import { tryChampionshipPay } from './championshipReceipt.ts';
+import { HOLD, tryChampionshipPay } from './championshipReceipt.ts';
 import { receiptTopic } from './receiptContext.ts';
 type Rpc=(name:string,args:Record<string,unknown>)=>PromiseLike<{data:unknown;error?:{message:string}|null}>;
 type Chat=(messages:{role:'system'|'user'|'assistant';content:string}[],config:{model:string;temperature?:number;maxTokens?:number;json?:boolean})=>Promise<{output:string}>;
@@ -24,6 +24,14 @@ async function autoPay(t:Turn):Promise<Response>{
  const mensalidade=()=>tryMembershipAutoPay(t.db,t.stage.id);
  for(const conferir of topic==='campeonato'?[inscricao,mensalidade]:[mensalidade,inscricao]){const r=await conferir();if(r)return r;}
  return null;
+}
+
+// Conversa da inscrição (caso Bruno, 28/10): confere o Pix contra as inscrições; sem inscrição ainda, guarda o comprovante
+// (null: o modelo colhe os dados e a inscrição nova confere o Pix). undefined = não é da inscrição, segue o fluxo comum.
+async function signupFirst(t:Turn,stageId:string):Promise<Response|undefined>{
+ if(receiptTopic(t.transcript)!=='campeonato')return undefined;
+ const c=await tryChampionshipPay(t.db,stageId,'campeonato');
+ return c?.action===HOLD?null:c??undefined;
 }
 
 export async function handleReceiptIntent(t:Turn):Promise<Response>{
@@ -62,6 +70,7 @@ export async function handleReceiptIntent(t:Turn):Promise<Response>{
    return null;
  }
  if(s.status!=='awaiting_purpose')return null;
+ const inscricao=await signupFirst(t,s.id);if(inscricao!==undefined)return inscricao;
  const lastBot=t.transcript.filter(x=>x.direction==='outbound').slice(-2).map(x=>String(x.body||'')).join('\n');
  if(!t.chat||!t.model)return {action:'receipt_purpose_requested',messages:['Qual é a finalidade desse comprovante? Preciso que me diga antes de montar o resumo para confirmação.']};
  let parsed:{action?:string;purpose_kind?:string;purpose_detail?:string}={};

@@ -92,6 +92,11 @@ function mismatchReply(a: Auto): ChampReceipt | null {
   return null;
 }
 
+/** Pagou antes de se inscrever (caso Bruno, 28/10): o comprovante fica guardado, sem ir ao financeiro, até a inscrição existir. */
+export const HOLD = 'receipt_championship_hold';
+const holdReply: ChampReceipt = { action: HOLD, messages: [
+  'Recebi seu comprovante 🧾 Pra eu confirmar a inscrição, me passa o nome completo do atleta, a classe (4ª ou 5ª), o tamanho da camisa e a cidade.'] };
+
 /** Tenta confirmar a inscrição pelo comprovante. null = não é (ou não dá para saber se é) da inscrição: segue o fluxo comum. */
 export async function tryChampionshipPay(db: Call, stageId: string, topic: ReceiptTopic | null): Promise<ChampReceipt | null> {
   let a: Auto | null = null;
@@ -99,6 +104,16 @@ export async function tryChampionshipPay(db: Call, stageId: string, topic: Recei
   if (!a) return null;
   if (a.applied) return { action: 'receipt_championship_paid', messages: paidMessages(a), forward: financeNotice(a) };
   if (a.reason === 'DUPLICATE') return { action: 'receipt_championship_duplicate', messages: ['Esse comprovante já foi usado antes, então não confirmei nada com ele. Se fez um Pix novo, me manda o comprovante dele.'] };
+  if (a.reason === 'NO_SIGNUP' && topic === 'campeonato') return holdReply;
   if (!a.pending?.length || !looksLikeSignup(a, topic)) return null;
   return mismatchReply(a);
+}
+
+/** Inscrição acabou de ser criada: o comprovante que a pessoa mandou antes (guardado, esperando finalidade) é conferido na hora. */
+export async function payHeldReceipt(db: Call, conversation: string): Promise<ChampReceipt | null> {
+  let stage: { id?: string; status?: string } | null = null;
+  try { stage = (await db('conv_svc_receipt_stage', { p_conversation: conversation })).data as typeof stage; } catch { return null; }
+  if (!stage?.id || stage.status !== 'awaiting_purpose') return null;
+  const r = await tryChampionshipPay(db, stage.id, 'campeonato');
+  return r?.action === HOLD ? null : r;
 }

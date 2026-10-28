@@ -2,6 +2,7 @@
 // Todo texto de resultado sai daqui, a partir do que o banco devolveu (o modelo nunca anuncia inscrição feita).
 
 import { athleteCard, brl, championshipTitle, championships } from './championshipPrompt.ts';
+import { payHeldReceipt } from './championshipReceipt.ts';
 import type { DecideInput } from './decide.ts';
 import { isAdminAssistant } from './promptAdmin.ts';
 import type { Ctx } from './promptTypes.ts';
@@ -88,7 +89,16 @@ async function inscrever(i: DecideInput, memory: Memory): Promise<Decision> {
   const r = (await i.deps.db('conv_svc_ai_championship_signup', { p_session: i.session, p: {
     full_name: slots.athlete_name, phone, class: slots.champ_class, shirt_size: slots.shirt_size, city: slots.athlete_city ?? null,
   } })).data as Res | null;
-  return signupOutcome(r, memory, championshipTitle({ title: r?.title }, r?.championship));
+  const feito = signupOutcome(r, memory, championshipTitle({ title: r?.title }, r?.championship));
+  return feito.action === 'champ_signup' && i.conversation ? withHeldReceipt(i.deps.db, i.conversation, feito) : feito;
+}
+
+/** Pagou antes de se inscrever: o comprovante guardado confirma na hora (no lugar do pedido de Pix) e avisa o financeiro. */
+async function withHeldReceipt(db: DecideInput['deps']['db'], conversation: string, feito: Decision): Promise<Decision> {
+  const pago = await payHeldReceipt(db, conversation);
+  if (!pago) return feito;
+  if (pago.action === 'receipt_championship_paid') return { ...feito, bubbles: pago.messages, action: pago.action, forward: pago.forward, verbatim: false };
+  return { ...feito, bubbles: [...feito.bubbles, ...pago.messages] };
 }
 
 function camisa(i: DecideInput, memory: Memory): Decision {

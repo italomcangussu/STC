@@ -7,7 +7,7 @@ import { actingFor } from './promptContext.ts';
 import type { Ctx } from './promptTypes.ts';
 import { type ReceiptStage, handleReceiptIntent, loadReceiptStage } from './receiptIntent.ts';
 import { deliverForward } from './receiptForward.ts';
-import { type ChampReceipt, tryChampionshipPay } from './championshipReceipt.ts';
+import { type ChampReceipt, HOLD, tryChampionshipPay } from './championshipReceipt.ts';
 import { receiptTopic } from './receiptContext.ts';
 import { UNCLEAR_AUDIO_REPLY, unheardOnly } from './audio.ts';
 import { cadence } from './cadence.ts';
@@ -79,7 +79,8 @@ async function championshipReceipt(t: Turn): Promise<TurnResult | null> {
   const stage = await stageFor(t, comMidia);
   if (stage?.status !== 'awaiting_purpose') return null;
   const pago = await tryChampionshipPay(t.deps.db, stage.id, topic);
-  if (!pago || (!comMidia && pago.action !== 'receipt_championship_paid')) return null;
+  // Guardar o comprovante é para o atleta; o administrador sem inscrição pendente segue para o fluxo dele (despesa).
+  if (!pago || pago.action === HOLD || (!comMidia && pago.action !== 'receipt_championship_paid')) return null;
   return deliverChampionshipReceipt(t, pago, stage.id);
 }
 

@@ -22,6 +22,7 @@ import { loadTurnContext, pendingInbound } from './turnContext.ts';
 import { keepMemberInChat, refreshGroupHumor, serverOverrides } from './turnAnswerGuards.ts';
 import { type Turn, turnKit } from './turnKit.ts';
 import { beforeModel } from './turnShortcuts.ts';
+import { deliverForward } from './receiptForward.ts';
 import { activeTopic, bringsNewData, openTopics, recordTopicTurn, restoreTopics, selectTopic, topicIdFromRef } from './topicState.ts';
 import { mergeSlots, parseAnswer, turnTemperature } from './answerParse.ts';
 import { cadence } from './cadence.ts';
@@ -163,7 +164,7 @@ async function decideTurn(t: Turn, answer: Answer, memory: Memory, anotados: str
 
   // A proposta aberta pertence a um assunto: "pode"/"não" sobre OUTRO assunto não confirma nem cancela a dela.
   const ctxDoTurno = proposalBelongsElsewhere(t.ctx, topico) ? { ...t.ctx, open_proposal: null } : t.ctx;
-  const entrada: DecideInput = { deps: t.deps, ctx: ctxDoTurno, answer, slots, memory: nextMemory, session: t.session, ultimaId: t.ultima?.id as string | undefined, today: t.today };
+  const entrada: DecideInput = { deps: t.deps, ctx: ctxDoTurno, answer, slots, memory: nextMemory, session: t.session, ultimaId: t.ultima?.id as string | undefined, today: t.today, conversation: t.conversation };
   let d = await decide(entrada);
   // Plano composto: o passo aceito foi feito; o servidor já emenda o próximo (ou fecha com o que fica no painel).
   if (d.action === 'admin_confirmed' && slots.plan) d = await continuePlan(entrada, d, slots.plan);
@@ -187,8 +188,9 @@ function limitationNote(t: Turn, d: Decision, fallback: 'reformulada' | 'pronta'
 /** Fala o que foi decidido (texto e arquivos) e salva o turno. */
 async function finishTurn(t: Turn, answer: Answer, { d, closeSession }: { d: Decision; closeSession: boolean }, fallback: 'reformulada' | 'pronta' | null): Promise<TurnResult> {
   if (d.handoff) return t.handoff(d.bubbles, d.handoff, d.memory, d.action);
-  let enviadas = await t.entregar(d.verbatim ? [{ text: d.bubbles.join('\n\n'), delayMs: 900 }] : cadence(d.bubbles));
+  let enviadas = await t.entregar(d.verbatim ? [{ text: d.bubbles.join('\n\n'), delayMs: 900 }] : cadence(d.bubbles), { firme: Boolean(d.forward) });
   if (d.files?.length) enviadas += await t.entregarArquivos(d.files);
+  if (d.forward && d.forward.admin_conversation_id !== t.conversation) await deliverForward(d.forward, { db: t.deps.db, uaz: t.deps.uaz, signedUrl: t.deps.files?.signedUrl });
   if (answer.transfer && !t.isGroup) {
     await t.deps.db('conv_svc_ai_handoff', { p_session: t.session, p_kind: answer.handoff_kind ?? 'hard', p_note: answer.handoff_note || 'Transferida pela IA' });
   }

@@ -73,7 +73,8 @@ export function proposalBelongsElsewhere(ctx: Ctx, topico: TopicSnapshot | null)
 
 /* ------------------------------- Decisão: o que o servidor executa ------------------------------- */
 
-export type DecideInput = { deps: TurnDeps; ctx: Ctx; answer: Answer; slots: Slots; memory: Memory; session: string; ultimaId?: string; today: string };
+export type DecideInput = { deps: TurnDeps; ctx: Ctx; answer: Answer; slots: Slots; memory: Memory; session: string; ultimaId?: string; today: string;
+  /** Conversa do turno: a inscrição nova confere o comprovante que ficou guardado nela. */ conversation?: string };
 
 export async function decide(i: DecideInput): Promise<Decision> {
   const { deps, ctx, answer, session, today } = i;
