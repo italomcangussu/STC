@@ -5,7 +5,8 @@
     "20261026180000",
     "20261026190000",
     "20261026200000",
-    "20261028090000_joao_confirmacao_nao_se_perde.sql"
+    "20261028090000_joao_confirmacao_nao_se_perde.sql",
+    "20261028100000_joao_recado_contato_e_comprovantes_whatsapp.sql"
   ],
   "jaNoRemoto": [],
   "edge": {
@@ -20,6 +21,6 @@
     "send-push": "0d28132ff495",
     "signature-dispatch": "0984cf81baf1",
     "signature-operations": "6d6a2b33ede9",
-    "whatsapp-webhook": "2dd487485c35"
+    "whatsapp-webhook": "c6976de5bdcb"
   }
 }
