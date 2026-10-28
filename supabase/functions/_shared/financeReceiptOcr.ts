@@ -29,6 +29,9 @@ const CNPJ_RE=/(?<![\w*])[\d*•xX#]{2}\.?[\d*•xX#]{3}\.?[\d*•xX#]{3}(\/)?[\
 const E2E_RE=/\bE\d{8}\d{8}\d{4}[A-Za-z0-9]{11}\b/;
 const ID_LABEL_RE=/(?:autentica[cç][aã]o|id da transa[cç][aã]o|id transa[cç][aã]o|c[oó]digo de transa[cç][aã]o|c[oó]digo da transa[cç][aã]o|protocolo|n[uú]mero da transa[cç][aã]o|nsu)\s*[:-]?\s*([A-Za-z0-9.-]{6,64})/i;
 
+/** Linha que é só o rótulo do favorecido ("Recebedor"), sem nome depois. */
+const isPayeeLabelOnly=(line:string)=>{const m=PAYEE_LABEL.exec(line);return Boolean(m)&&!clean(m![1]);};
+
 function moneyCents(s:string):number|null{
   const n=Number(s.replace(/\./g,'').replace(',','.'));
   return Number.isFinite(n)?Math.round(n*100):null;
@@ -39,9 +42,13 @@ function iso(y:number,m:number,d:number):string|null{
   return `${String(y).padStart(4,'0')}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
 }
 
+/** Linhas com texto. PDF com título em negrito repete a linha ("Recebedor" 4×, caso Bruno 28/10): repetida seguida vale uma vez. */
+const receiptLines=(text:string)=>text.replace(/\u00a0/g,' ').split(/\r?\n/).map(x=>x.trimEnd()).filter(x=>x.trim())
+  .filter((x,i,a)=>!i||x.trim()!==a[i-1].trim());
+
 /** Exportado só para teste: o texto bruto nunca sai daqui, só os campos estruturados. */
 export function parseReceiptText(text:string):Record<string,unknown>{
-  const lines=text.replace(/\u00a0/g,' ').split(/\r?\n/).map(x=>x.trimEnd()).filter(x=>x.trim());
+  const lines=receiptLines(text);
   const amounts:{value:number;priority:number}[]=[];
   lines.forEach((raw,idx)=>{
     const line=strip(raw),prev=idx?strip(lines[idx-1]):'';
@@ -92,7 +99,7 @@ export function parseReceiptText(text:string):Record<string,unknown>{
     const rotulo=(c:string)=>clean(c.replace(/^nome(?:\s+(?:do|da)\s+\w+)?\s*[:-]?\s+(?=\S)/i,''));
     if(!candidate){
       for(let j=i+1;j<Math.min(i+4,lines.length);j++){
-        const next=clean(lines[j]); if(!next||/^nome$/i.test(next))continue; candidate=next; break;
+        const next=clean(lines[j]); if(!next||/^nome$/i.test(next)||isPayeeLabelOnly(next))continue; candidate=next; break;
       }
     }
     candidate=rotulo(candidate);
@@ -136,6 +143,32 @@ async function pdfText(bytes:Uint8Array):Promise<string>{
 
 const LANG_PATH = 'https://tessdata.projectnaptha.com/4.0.0';
 
+type OcrWord={text:string;confidence:number};
+export type OcrLine={text:string;words:OcrWord[];bbox:{x0:number;y0:number;x1:number;y1:number}};
+type Rect={left:number;top:number;width:number;height:number};
+const MONEY_WORD=/\d,\d{2}/;
+const MAX_REREADS=4;
+const moneyWord=(ls:OcrLine[])=>ls.flatMap(l=>l.words).find(w=>MONEY_WORD.test(w.text));
+
+/**
+ * Valor relido só na linha dele (caso Bruno, 28/10): na página inteira o Tesseract leu "R$ 180,00" (confiança 67) num
+ * Pix de R$ 130; o recorte da linha leu "130,00" (94). Fica a leitura mais confiável. Até 4 linhas; falha não muda nada.
+ */
+export async function refineMoneyLines(text:string,lines:OcrLine[],reread:(r:Rect)=>Promise<OcrLine[]>):Promise<string>{
+  let out=text;
+  for(const l of lines.filter(x=>moneyWord([x])).slice(0,MAX_REREADS)){
+    const antes=moneyWord([l])!;
+    const pad=Math.max(6,Math.round((l.bbox.y1-l.bbox.y0)/2));
+    let de_novo:OcrLine[]=[];
+    try{de_novo=await reread({left:Math.max(0,l.bbox.x0-pad),top:Math.max(0,l.bbox.y0-pad),width:l.bbox.x1-l.bbox.x0+2*pad,height:l.bbox.y1-l.bbox.y0+2*pad});}catch{continue;}
+    const depois=moneyWord(de_novo);
+    if(depois&&depois.confidence>antes.confidence&&depois.text!==antes.text)out=out.replace(l.text.trim(),de_novo.map(x=>x.text.trim()).join(' '));
+  }
+  return out;
+}
+
+const linesOf=(data:any):OcrLine[]=>(data?.blocks??[]).flatMap((b:any)=>b.paragraphs??[]).flatMap((p:any)=>p.lines??[]);
+
 /**
  * Tesseract SEM `worker_threads`: o runtime das Edge Functions do Supabase não implementa `Worker`
  * (`ERR_NOT_IMPLEMENTED: Worker.prototype.constructor`), então `createWorker` do tesseract.js falha sempre.
@@ -164,8 +197,9 @@ async function imageText(bytes:Uint8Array):Promise<string>{
   await call('load',{options:{lstmOnly:true,logging:false}});
   await call('loadLanguage',{langs:['por'],options:{langPath,cacheMethod:'none',gzip:true,lstmOnly:true}});
   await call('initialize',{langs:'por',oem:1,config:{}});
-  const out=await call('recognize',{image:bytes,options:{},output:{text:true}});
-  return String(out?.text??'');
+  const out=await call('recognize',{image:bytes,options:{},output:{text:true,blocks:true}});
+  const reread=async(rectangle:Rect)=>linesOf(await call('recognize',{image:bytes,options:{rectangle},output:{text:true,blocks:true}}));
+  return refineMoneyLines(String(out?.text??''),linesOf(out),reread);
 }
 
 export async function readReceiptServer(bytes:Uint8Array,mime:string):Promise<ServerReceiptOcr>{
