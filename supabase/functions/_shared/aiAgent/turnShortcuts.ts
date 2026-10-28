@@ -17,6 +17,9 @@ import { wantsHuman } from './serverRules.ts';
 import type { Turn } from './turnKit.ts';
 import type { TurnResult } from './turnTypes.ts';
 
+/** Avisos de algo que o servidor já fez com o comprovante: saem mesmo se a pessoa escreveu de novo no meio. */
+const DONE = new Set(['receipt_championship_paid', 'receipt_escalated', 'receipt_registered', 'receipt_donation_registered', 'receipt_pending_review']);
+
 const onlyKinds = (t: Turn, kinds: string[]) => t.pendentes.every((m) => kinds.includes(String(m.kind)));
 
 /** Áudio que não deu para ouvir: transcrição falhou → equipe ouve; ruído ou fala inaudível → pede de novo. */
@@ -49,7 +52,7 @@ async function memberReceipt(t: Turn): Promise<TurnResult | null> {
     db, chat: t.deps.chat, model: t.settings.model,
   });
   if (!handled) return null;
-  const sent = await t.entregar(cadence(handled.messages));
+  const sent = await t.entregar(cadence(handled.messages), { firme: DONE.has(handled.action) });
   const repassadas = handled.forward ? await deliverForward(handled.forward, { db, uaz: t.deps.uaz, signedUrl: t.deps.files?.signedUrl }) : 0;
   await t.save(t.sessionMemory, handled.action, { receipt_stage_id: stage.id, bubbles: sent, forwarded: repassadas }, { awaiting: true, close: false });
   return { status: 'replied', bubbles: sent, handoff: null, action: handled.action } as TurnResult;
@@ -82,7 +85,7 @@ async function championshipReceipt(t: Turn): Promise<TurnResult | null> {
 
 /** Fala com a pessoa e avisa o financeiro (menos quando o financeiro é quem está na conversa). */
 async function deliverChampionshipReceipt(t: Turn, pago: ChampReceipt, stageId: string): Promise<TurnResult> {
-  const sent = await t.entregar(cadence(pago.messages));
+  const sent = await t.entregar(cadence(pago.messages), { firme: DONE.has(pago.action) });
   const avisar = pago.forward && pago.forward.admin_conversation_id !== t.conversation;
   const repassadas = avisar ? await deliverForward(pago.forward!, { db: t.deps.db, uaz: t.deps.uaz, signedUrl: t.deps.files?.signedUrl }) : 0;
   await t.save(t.sessionMemory, pago.action, { receipt_stage_id: stageId, bubbles: sent, forwarded: repassadas }, { awaiting: false, close: false });

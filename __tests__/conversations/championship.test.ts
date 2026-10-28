@@ -272,12 +272,14 @@ describe('comprovante do administrador que também se inscreveu', () => {
       settings: { model: 'm', handoff_keywords: [] }, conversation: 'CONV', session: 'S', sessionMemory: {},
       ultima: { id: 'M1', kind: 'image' }, pendentes: [{ id: 'M1', kind: 'image' }],
       ctx: { is_group: false, requester: admin, transcript: [{ direction: 'outbound', body: 'Depois é só me mandar o comprovante aqui que eu confiro e confirmo a inscrição na hora.' }] },
-      entregar: async (b: { text: string }[]) => { falas.push(...b.map((x) => x.text)); return b.length; },
+      entregar: async (b: { text: string }[], o?: { firme?: boolean }) => { falas.push(...b.map((x) => x.text)); firme = o?.firme === true; return b.length; },
       save: async () => undefined,
     } as never;
+    let firme = false;
     const r = await beforeModel(t);
     expect(r?.action).toBe('receipt_championship_paid');
     expect(falas.join(' ')).toContain('✅ Inscrição confirmada no Serra e Sertão 2026: Hermeson Veras');
+    expect(firme).toBe(true);
     expect(calls).not.toContain('conv_svc_ai_admin_receipt');
     expect(calls).not.toContain('conv_svc_queue_message');
   });

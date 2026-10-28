@@ -12,12 +12,18 @@ type DeliveryInput = {
   replyTo: string | undefined;
   /** Esta ainda é a última mensagem do solicitante? Chegou outra ou a equipe assumiu → para de falar. */
   latest: () => Promise<boolean>;
+  /** A conversa segue com a IA (a equipe não assumiu)? Guarda dos avisos firmes. */
+  stillActive: () => Promise<boolean>;
 };
+
+/** firme: aviso de algo que o servidor JÁ fez (Pix conferido, inscrição confirmada). Sai mesmo se a pessoa mandou outra
+ * mensagem no meio; só a equipe assumir interrompe. Sem isso a confirmação se perde (caso Romário, 28/10). */
+export type DeliverOpts = { firme?: boolean };
 
 type Queued = { message_id: string; destination: string; reply_provider_id?: string | null };
 const NOT_CONFIGURED = { ok: false as const, error: 'WHATSAPP_NOT_CONFIGURED' };
 
-export function turnDelivery({ deps, conversation, session, isGroup, replyTo, latest }: DeliveryInput) {
+export function turnDelivery({ deps, conversation, session, isGroup, replyTo, latest, stillActive }: DeliveryInput) {
   const { db } = deps;
 
   /** "digitando..." enquanto espera a cadência da bolha. Melhor esforço. */
@@ -41,12 +47,12 @@ export function turnDelivery({ deps, conversation, session, isGroup, replyTo, la
   };
 
   /** Bolhas de texto na cadência; no grupo, a primeira cita a mensagem da pessoa. Para na primeira falha ou takeover. */
-  const entregar = async (bolhas: Bubble[]) => {
+  const entregar = async (bolhas: Bubble[], { firme = false }: DeliverOpts = {}) => {
     let enviadas = 0;
     for (const [i, b] of bolhas.entries()) {
       if (b.delayMs) { await typing(); await deps.sleep(b.delayMs); }
-      // Guarda de takeover: chegou mensagem nova do solicitante ou a equipe assumiu → para de falar.
-      if (!(await latest())) break;
+      // Guarda de takeover: chegou mensagem nova do solicitante (exceto aviso firme) ou a equipe assumiu → para de falar.
+      if (!(await (firme ? stillActive : latest)())) break;
       const ok = await send({ kind: 'text', body: b.text, reply_to_message_id: isGroup && i === 0 && replyTo ? replyTo : null },
         async (q) => buildChatRequest({ action: 'send', number: q.destination, kind: 'text', text: b.text, replyId: q.reply_provider_id ?? null }));
       if (!ok) break;

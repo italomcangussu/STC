@@ -56,6 +56,7 @@ async function startTurn(messageId: string, deps: TurnDeps): Promise<Turn | Turn
   const conversation = trig.conversation_id;
   const isGroup = trig.is_group === true;
   const latest = async () => (await db('conv_svc_ai_is_latest', { p_message: messageId })).data === true;
+  const stillActive = async () => (await db('conv_svc_ai_still_active', { p_message: messageId })).data === true;
 
   const ctx0 = (await db('conv_svc_ai_context', { p_session: session })).data as Ctx | null;
   const settings = ctx0?.settings as AiSettings | undefined;
@@ -72,7 +73,7 @@ async function startTurn(messageId: string, deps: TurnDeps): Promise<Turn | Turn
   const { pendentes, buffered, soMidia, ultima } = pendingInbound(ctx);
   const today = String(ctx.now_local).slice(0, 10);
   await loadProTennis(ctx, buffered, today);
-  return turnKit({ deps, messageId, session, conversation, isGroup, ctx, settings, latest, pendentes, buffered, soMidia, ultima, today });
+  return turnKit({ deps, messageId, session, conversation, isGroup, ctx, settings, latest, stillActive, pendentes, buffered, soMidia, ultima, today });
 }
 
 const isTurn = (x: Turn | TurnResult): x is Turn => 'ctx' in x;

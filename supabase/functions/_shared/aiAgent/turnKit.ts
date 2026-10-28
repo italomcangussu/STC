@@ -10,7 +10,7 @@ import type { Memory, TurnDeps, TurnResult } from './turnTypes.ts';
 
 export type TurnBase = {
   deps: TurnDeps; messageId: string; session: string; conversation: string; isGroup: boolean;
-  ctx: Ctx; settings: AiSettings; latest: () => Promise<boolean>;
+  ctx: Ctx; settings: AiSettings; latest: () => Promise<boolean>; stillActive: () => Promise<boolean>;
   pendentes: Ctx[]; buffered: string; soMidia: boolean; ultima: Ctx | undefined; today: string;
 };
 
@@ -34,7 +34,7 @@ export type Turn = TurnBase & ReturnType<typeof turnDelivery> & {
 export function turnKit(b: TurnBase): Turn {
   const { deps, session, isGroup, ctx, messageId } = b;
   const db = deps.db;
-  const delivery = turnDelivery({ deps, conversation: b.conversation, session, isGroup, replyTo: b.ultima?.id as string | undefined, latest: b.latest });
+  const delivery = turnDelivery({ deps, conversation: b.conversation, session, isGroup, replyTo: b.ultima?.id as string | undefined, latest: b.latest, stillActive: b.stillActive });
   const { entregar } = delivery;
   const socioNoPrivado = !isGroup && (((ctx.requester as Ctx | undefined)?.profile as Ctx | undefined)?.is_member === true || actingFor(ctx) !== null);
   const sessionMemory = (ctx.session?.memory ?? {}) as Memory;
