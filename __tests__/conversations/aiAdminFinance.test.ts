@@ -4,7 +4,7 @@
  * WhatsApp são simulados. O modelo é roteirizado para pedir ações financeiras mesmo quando não deveria.
  */
 import { describe, expect, it } from 'vitest';
-import { U, j, key, pgDb, q, rpc, svc, world } from './sql/harness';
+import { U, j, key, pgDb, q, rpc, svc, withReceiptIntents, world } from './sql/harness';
 import { adminProposalMessage, parseSlots, runTurn, toCents } from '../../supabase/functions/_shared/aiAgent/turn';
 import { adminPendencyRefs, financialContextText, isAdminAssistant } from '../../supabase/functions/_shared/aiAgent/prompts';
 import { dispatchFollowups } from '../../supabase/functions/_shared/dispatch';
@@ -688,6 +688,27 @@ describe('chamar sócio no privado e mandar mensagem (N1)', () => {
     await dispatchFollowups(pgDb(w.db), uaz);
     expect(enviados).toEqual([`5588993412944|${texto}`]);
   }, 120000);
+
+  it('caso Romário: atleta que não é sócio mas conversa com o João recebe o recado, e o comprovante dele aparece para o administrador', async () => {
+    const w = await setup(); const p = provider();
+    await withReceiptIntents(w.db);
+    const atleta = await svc<any>(w.db, `public.conv_svc_ingest_message(${j({ provider_id: `R${++n}`, chat_kind: 'direct', phone: '5588900000777', name: 'Romário Soares', kind: 'text', body: 'quero me inscrever' })})`);
+    await q(w.db, `update public.conv_contacts set name = 'Romário Soares' where id = '${atleta.contact_id}'`);
+    await q(w.db, `insert into fin_private.whatsapp_receipt_intents (id, source_message_id, conversation_id, contact_id, original_data, status, purpose_kind, purpose_detail)
+      values (gen_random_uuid(), '${atleta.message_id}', '${atleta.conversation_id}', '${atleta.contact_id}',
+        '{"file_name":"Comprovante.pdf","content_type":"application/pdf","declared_amount_cents":13000,"declared_paid_on":"2026-10-28"}', 'confirmed', 'other',
+        'Inscrição Serra e Sertão 2026: Romário Pontes Soares')`);
+    // "ele enviou o comprovante para você": o João consulta, em vez de dizer que não chegou
+    await dizer(w, p, 'o Romário enviou o comprovante em PDF pra você', { ready: true, intent: 'admin_consulta', slots: { read_domain: 'comprovantes_whatsapp', member_name: 'Romário Pontes Soares' } });
+    expect(p.sent.at(-1)!.text).toMatch(/- Romário Soares: R\$ 130,00, pago em 28\/10\/2026, PDF recebido em .* · conferido \(Inscrição Serra e Sertão 2026: Romário Pontes Soares\)/);
+    // "diga isso a ele": vira recado, sem perguntar se é convidado
+    const texto = 'Romário, sua inscrição no AUGE OPEN está confirmada!';
+    await dizer(w, p, 'diga isso a ele', msg({ member_name: 'Romário Pontes Soares', send_body: texto }));
+    expect(p.sent.at(-1)!.text).toMatch(/^Vou chamar Romário Soares no WhatsApp \(\d+\) e mandar esta mensagem:/);
+    expect((await dizer(w, p, 'sim', { customer_confirmed: true })).action).toBe('admin_confirmed');
+    const [f] = await q<any>(w.db, `select f.conversation_id, f.send_body from public.conv_followups f where f.send_body is not null`);
+    expect(f).toEqual({ conversation_id: atleta.conversation_id, send_body: texto });
+  }, 150000);
 
   it('sócio sem telefone válido: não propõe', async () => {
     const w = await setup(); const p = provider();

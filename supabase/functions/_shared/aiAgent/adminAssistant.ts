@@ -59,6 +59,7 @@ export async function adminAcao(i: DecideInput, memory: Memory): Promise<Decisio
 async function domainArgs(i: DecideInput, domain: AdminReadDomain): Promise<Args | { ask: string }> {
   const { slots } = i;
   if (domain === 'memoria') return { subject: slots.member_name ?? null };
+  if (domain === 'comprovantes_whatsapp') return { name: slots.member_name ?? null };
   if (FORMS_DOMAINS.includes(domain)) return { form_ref: slots.form_ref ?? null };
   if (domain !== 'socio_ficha') return {};
   if (!slots.member_name) return { ask: 'De qual sócio você quer a ficha?' };

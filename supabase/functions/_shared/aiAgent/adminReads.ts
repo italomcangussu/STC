@@ -1,7 +1,7 @@
 // Consultas do assessor (Onda 1): o servidor busca (RPC `conv_svc_ai_admin_read`, como o administrador) e escreve o texto.
 // O modelo só escolhe o domínio e o período; nenhum número passa pela cabeça dele.
 
-export const ADMIN_READ_DOMAINS = ['caixa', 'receber_pagar', 'dre', 'receita_alunos', 'comprovantes', 'acessos', 'assinaturas', 'ocupacao', 'comparativo', 'followups', 'preferencias', 'socios', 'inadimplentes', 'pagamentos', 'socio_ficha', 'vencimentos', 'alunos', 'movimentos', 'capacidades', 'memoria', 'formularios', 'formulario', 'formulario_resultado'] as const;
+export const ADMIN_READ_DOMAINS = ['caixa', 'receber_pagar', 'dre', 'receita_alunos', 'comprovantes', 'comprovantes_whatsapp', 'acessos', 'assinaturas', 'ocupacao', 'comparativo', 'followups', 'preferencias', 'socios', 'inadimplentes', 'pagamentos', 'socio_ficha', 'vencimentos', 'alunos', 'movimentos', 'capacidades', 'memoria', 'formularios', 'formulario', 'formulario_resultado'] as const;
 /** Domínios de formulários do clube: buscados por `conv_svc_ai_admin_forms_read`. */
 export const FORMS_DOMAINS: readonly string[] = ['formularios', 'formulario', 'formulario_resultado'];
 /** Domínios que o servidor busca por `conv_svc_ai_admin_read_more` (o resto vai por `conv_svc_ai_admin_read`; `socios` por `conv_svc_ai_admin_members`). */
@@ -59,6 +59,27 @@ function renderComprovantes(d: Row): string {
   if (!total) return 'Nenhum comprovante aguardando análise.';
   const itens = arr(d.items).map((i) => `- ${i.member}: ${i.declared_amount_cents != null ? brl(i.declared_amount_cents) : 'valor não lido'}${i.declared_paid_on ? `, pago em ${dia(i.declared_paid_on)}` : ''}, enviado em ${dh(i.created_at)}${i.status === 'in_review' ? ' (em análise)' : ''}${i.possible_duplicate ? ' ⚠ possível duplicado' : ''}`).join('\n');
   return `${total} comprovante${total > 1 ? 's' : ''} aguardando análise:\n${itens}${total > arr(d.items).length ? `\n…e mais ${total - arr(d.items).length}.` : ''}`;
+}
+
+const RECEIPT_STATUS: Record<string, string> = {
+  awaiting_purpose: 'esperando a pessoa dizer do que é', awaiting_confirmation: 'esperando a pessoa confirmar', escalated: 'repassado ao financeiro',
+  confirmed: 'conferido', needs_review: 'separado para conferência', canceled: 'descartado',
+};
+
+/** Comprovantes que chegaram pelo WhatsApp em qualquer conversa (caso Romário: o PDF chegou na conversa do atleta). */
+/** "28/10 às 07:53", no fuso do clube. */
+const diaHora = (v: unknown) => new Date(String(v)).toLocaleString('pt-BR', { timeZone: 'America/Fortaleza', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }).replace(', ', ' às ');
+
+function renderComprovantesWhatsapp(d: Row): string {
+  const itens = arr(d.items);
+  const quando = `entre ${dia(d.from)} e ${dia(d.to)}`;
+  if (!itens.length) return `Nenhum comprovante${d.name ? ` de ${d.name}` : ''} chegou pelo WhatsApp ${quando}.`;
+  const linhas = itens.map((i) => {
+    const valor = i.amount_cents != null ? brl(i.amount_cents) : 'valor não lido';
+    const situacao = i.launched ? 'conferido e lançado no caixa' : RECEIPT_STATUS[String(i.status)] ?? String(i.status);
+    return `- ${i.sender}: ${valor}${i.paid_on ? `, pago em ${dia(i.paid_on)}` : ''}, ${i.pdf ? 'PDF' : 'imagem'} recebido em ${diaHora(i.created_at)} · ${situacao}${i.detail ? ` (${i.detail})` : ''}`;
+  });
+  return `Comprovantes recebidos pelo WhatsApp ${quando}:\n${linhas.join('\n')}`;
 }
 
 function renderAcessos(d: Row): string {
@@ -213,7 +234,7 @@ function renderFormularioResultado(d: Row): string {
 
 const RENDER: Record<AdminReadDomain, (d: Row) => string> = {
   caixa: renderCaixa, receber_pagar: renderReceberPagar, dre: renderDre, receita_alunos: renderReceitaAlunos,
-  comprovantes: renderComprovantes, acessos: renderAcessos, assinaturas: renderAssinaturas, ocupacao: renderOcupacao, comparativo: renderComparativo, followups: renderFollowups, preferencias: renderPreferencias, socios: renderSocios, inadimplentes: renderInadimplentes, pagamentos: renderPagamentos,
+  comprovantes: renderComprovantes, comprovantes_whatsapp: renderComprovantesWhatsapp, acessos: renderAcessos, assinaturas: renderAssinaturas, ocupacao: renderOcupacao, comparativo: renderComparativo, followups: renderFollowups, preferencias: renderPreferencias, socios: renderSocios, inadimplentes: renderInadimplentes, pagamentos: renderPagamentos,
   socio_ficha: renderSocioFicha, vencimentos: renderVencimentos, alunos: renderAlunos, movimentos: renderMovimentos, capacidades: renderCapacidades, memoria: renderMemoria,
   formularios: renderFormularios, formulario: renderFormulario, formulario_resultado: renderFormularioResultado,
 };

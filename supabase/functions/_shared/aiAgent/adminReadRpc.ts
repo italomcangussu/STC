@@ -27,6 +27,9 @@ export async function memberId(i: DecideInput, name: string): Promise<{ id: stri
 /** Função do banco e parâmetros de cada domínio de leitura. */
 function route(session: string, domain: AdminReadDomain, args: Args): { fn: string; params: Args } {
   if (domain === 'memoria') return { fn: 'conv_svc_ai_admin_memories', params: { p_session: session, p_subject: typeof args.subject === 'string' ? args.subject : null } };
+  if (domain === 'comprovantes_whatsapp') {
+    return { fn: 'conv_svc_ai_admin_whatsapp_receipts', params: { p_session: session, p_name: args.name ?? null, p_from: args.from ?? null, p_to: args.to ?? null } };
+  }
   if (domain === 'socios') return { fn: 'conv_svc_ai_admin_members', params: { p_session: session } };
   const fn = FORMS_DOMAINS.includes(domain) ? 'conv_svc_ai_admin_forms_read' : READ_MORE_DOMAINS.includes(domain) ? 'conv_svc_ai_admin_read_more' : 'conv_svc_ai_admin_read';
   return { fn, params: { p_session: session, p_domain: domain, p_args: args } };

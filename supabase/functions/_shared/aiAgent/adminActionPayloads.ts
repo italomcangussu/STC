@@ -4,6 +4,7 @@
 import type { DecideInput } from './decide.ts';
 import { toCents } from './adminMessages.ts';
 import { memberId as member } from './adminReadRpc.ts';
+import { messageRecipient } from './adminRecipient.ts';
 import type { AdmAction } from './turnTypes.ts';
 
 export type Step = { ask: string; awaiting?: boolean } | { p: Record<string, unknown> };
@@ -60,10 +61,10 @@ export const ADM_BUILDERS: Record<Exclude<AdmAction, 'aniversario'>, Builder> = 
     : { p: { action: 'adm_reservation_cancel', date: slots.date, start: slots.start, court_label: slots.court_label ?? null, by_name: slots.by_name ?? null, reason: slots.reason ?? null } } },
   mensagem_enviar: { rpc: 'conv_svc_ai_admin_message_propose', build: async (i) => {
     const { slots } = i;
-    if (!slots.member_name) return ask('Para qual sócio eu mando a mensagem?');
+    if (!slots.member_name) return ask('Para quem eu mando a mensagem?');
     if (!slots.send_body) return ask(`O que eu digo para ${slots.member_name}? Me passe o recado (ou o que quer que eu pergunte).`);
-    const m = await member(i, slots.member_name);
-    return 'ask' in m ? ask(m.ask) : { p: { action: 'adm_message_send', profile_id: m.id, body: slots.send_body } };
+    const quem = await messageRecipient(i, slots.member_name);
+    return 'ask' in quem ? ask(quem.ask) : { p: { action: 'adm_message_send', ...quem, body: slots.send_body } };
   } },
   resenha_grupo: { rpc: 'conv_svc_ai_admin_group_post_propose', build: async (i) => {
     const { slots } = i;

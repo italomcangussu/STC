@@ -81,6 +81,9 @@ export async function newDb(): Promise<PGlite> {
     ...all.filter((f) => /^(?:2026100(?:71[5-9]\d{2}|7[2-9]\d{3})\d{2}|2026100[89]\d{6}|2026101\d{7})_conversations_.*\.sql$/.test(f)).sort(),
     // Busca de pessoas com erro de digitação ("Hermerson" → pergunta se é o Hermeson).
     '20261026200000_joao_nome_com_erro_de_digitacao.sql',
+    // Confirmação firme do comprovante; recado a quem conversa com o João e comprovantes do WhatsApp para o administrador.
+    '20261028090000_joao_confirmacao_nao_se_perde.sql',
+    '20261028100000_joao_recado_contato_e_comprovantes_whatsapp.sql',
   ];
   for (const f of files) {
     try {

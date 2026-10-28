@@ -4,8 +4,9 @@ import { ADMIN_READ_DOMAINS, isAdminReadDomain, renderAdminRead } from '../../su
 
 describe('consultas do assessor: texto escrito pelo servidor', () => {
   it('só aceita os domínios do registro', () => {
-    expect(ADMIN_READ_DOMAINS).toHaveLength(23);
+    expect(ADMIN_READ_DOMAINS).toHaveLength(24);
     expect(isAdminReadDomain('caixa')).toBe(true);
+    expect(isAdminReadDomain('comprovantes_whatsapp')).toBe(true);
     expect(isAdminReadDomain('apagar_tudo')).toBe(false);
     expect(isAdminReadDomain(null)).toBe(false);
   });
