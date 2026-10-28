@@ -20,9 +20,11 @@ const MONTHS: Record<string, number> = {
 const strip=(s:string)=>s.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
 const clean=(s:string)=>s.replace(/[ \t\r]+/g,' ').trim();
 const MONEY_RE=/(?:R\$\s*)?(\d{1,3}(?:\.\d{3})*,\d{2}|\d+,\d{2})(?!\d)/g;
+/** "R$ 130" sem centavos (Mercado Pago): só a linha que é o valor sozinho, nunca "R$50 para Ana" de um anúncio. */
+const WHOLE_RE=/^\s*R\$\s*(\d{1,3}(?:\.\d{3})+|\d+)\s*$/g;
 const NOISE=/tarifa|taxa|juros|multa|desconto|saldo|limite|iof|encargo|abatimento|cashback|parcela/;
 const MONEY_BEFORE=/tarifa|taxa|juros|multa|desconto|saldo|limite/;
-const PAYEE_LABEL=/^(?:favorecido|recebedor|destinat[aá]rio|benefici[aá]rio|quem recebeu|nome do recebedor|destino|para)\s*[:-]?\s*(.*)$/i;
+const PAYEE_LABEL=/^(?:pago para|enviado para|transferido para|favorecido|recebedor|destinat[aá]rio|benefici[aá]rio|quem recebeu|nome do recebedor|destino|para)\s*[:-]?\s*(.*)$/i;
 const NOT_NAME=/\d{3}\.?\d{3}\.?\d{3}-?\d{2}|\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}|r\$|ag[eê]ncia|conta|chave|cpf|cnpj|banco|institui/i;
 const PAYER_LABEL=/^(?:origem|pagador|remetente|quem pagou|nome do pagador|dados de quem pagou)\b/i;
 const CNPJ_RE=/(?<![\w*])[\d*•xX#]{2}\.?[\d*•xX#]{3}\.?[\d*•xX#]{3}(\/)?[\d*•xX#]{4}-?[\d*•xX#]{2}(?![\w*])/;
@@ -36,6 +38,8 @@ function moneyCents(s:string):number|null{
   const n=Number(s.replace(/\./g,'').replace(',','.'));
   return Number.isFinite(n)?Math.round(n*100):null;
 }
+/** Valores da linha: com centavos ou "R$ 130". */
+const moneyIn=(raw:string)=>[...raw.matchAll(MONEY_RE),...raw.matchAll(WHOLE_RE)];
 function iso(y:number,m:number,d:number):string|null{
   const dt=new Date(Date.UTC(y,m-1,d));
   if(dt.getUTCFullYear()!==y||dt.getUTCMonth()!==m-1||dt.getUTCDate()!==d||y<2000||y>2100)return null;
@@ -46,6 +50,12 @@ function iso(y:number,m:number,d:number):string|null{
 const receiptLines=(text:string)=>text.replace(/\u00a0/g,' ').split(/\r?\n/).map(x=>x.trimEnd()).filter(x=>x.trim())
   .filter((x,i,a)=>!i||x.trim()!==a[i-1].trim());
 
+/** Sem rótulo de favorecido (Mercado Pago: "Origem e destino"), vale o CNPJ quando o comprovante tem um só, completo. */
+function soleCnpj(lines:string[]):string|null{
+  const docs=new Set(lines.filter(l=>/cnpj/i.test(l)).map(l=>CNPJ_RE.exec(l)?.[0].replace(/\D/g,'')).filter(d=>d?.length===14));
+  return docs.size===1?[...docs][0]!:null;
+}
+
 /** Exportado só para teste: o texto bruto nunca sai daqui, só os campos estruturados. */
 export function parseReceiptText(text:string):Record<string,unknown>{
   const lines=receiptLines(text);
@@ -53,7 +63,7 @@ export function parseReceiptText(text:string):Record<string,unknown>{
   lines.forEach((raw,idx)=>{
     const line=strip(raw),prev=idx?strip(lines[idx-1]):'';
     if(NOISE.test(line))return;
-    for(const m of raw.matchAll(MONEY_RE)){
+    for(const m of moneyIn(raw)){
       const cents=moneyCents(m[1]); if(!cents||cents<=0)continue;
       const label=`${line} ${/valor|total|pago|transfer|pix/.test(prev)&&!MONEY_BEFORE.test(prev)?prev:''}`;
       let priority=/r\$/i.test(m[0])?1:0;
@@ -80,7 +90,7 @@ export function parseReceiptText(text:string):Record<string,unknown>{
     };
     for(const m of raw.matchAll(/\b(\d{2})[/.](\d{2})[/.](\d{4})\b/g))push(iso(Number(m[3]),Number(m[2]),Number(m[1])));
     for(const m of raw.matchAll(/\b(\d{4})-(\d{2})-(\d{2})\b/g))push(iso(Number(m[1]),Number(m[2]),Number(m[3])));
-    for(const m of strip(raw).matchAll(/\b(\d{1,2}) (?:de )?([a-z]{3,9})\.? (?:de )?(\d{4})\b/g)){const mo=MONTHS[m[2]];if(mo)push(iso(Number(m[3]),mo,Number(m[1])));}
+    for(const m of strip(raw).matchAll(/\b(\d{1,2})[ /.](?:de )?([a-z]{3,9})\.?[ /.](?:de )?(\d{4})\b/g)){const mo=MONTHS[m[2]];if(mo)push(iso(Number(m[3]),mo,Number(m[1])));}
   });
   const topD=Math.max(-1,...dates.map(x=>x.priority));
   const bestD=dates.filter(x=>x.priority===topD&&x.priority>0);
@@ -120,6 +130,7 @@ export function parseReceiptText(text:string):Record<string,unknown>{
     }
   }
 
+  payeeDocument??=soleCnpj(lines);
   return {
     amount_cents:amount, paid_on:paidOn, identifier, payee, payee_document:payeeDocument,
     confidence:{amount:amountConf,date:dateConf,identifier:idConf,payee:payee?'high':'none'},
@@ -167,6 +178,15 @@ export async function refineMoneyLines(text:string,lines:OcrLine[],reread:(r:Rec
   return out;
 }
 
+/**
+ * Valor em fonte grande que a leitura automática pula (Mercado Pago, 28/10: "R$ 130" não saía no texto).
+ * Sem valor, relê a página como uma coluna só (PSM 4) e junta o texto; falha não muda nada.
+ */
+export async function columnFallback(text:string,readColumn:()=>Promise<string>):Promise<string>{
+  if(parseReceiptText(text).amount_cents!=null)return text;
+  try{return `${text}\n${await readColumn()}`;}catch{return text;}
+}
+
 const linesOf=(data:any):OcrLine[]=>(data?.blocks??[]).flatMap((b:any)=>b.paragraphs??[]).flatMap((p:any)=>p.lines??[]);
 
 /**
@@ -199,7 +219,11 @@ async function imageText(bytes:Uint8Array):Promise<string>{
   await call('initialize',{langs:'por',oem:1,config:{}});
   const out=await call('recognize',{image:bytes,options:{},output:{text:true,blocks:true}});
   const reread=async(rectangle:Rect)=>linesOf(await call('recognize',{image:bytes,options:{rectangle},output:{text:true,blocks:true}}));
-  return refineMoneyLines(String(out?.text??''),linesOf(out),reread);
+  const texto=await refineMoneyLines(String(out?.text??''),linesOf(out),reread);
+  return columnFallback(texto,async()=>{
+    await call('setParameters',{params:{tessedit_pageseg_mode:'4'}});
+    return String((await call('recognize',{image:bytes,options:{},output:{text:true}}))?.text??'');
+  });
 }
 
 export async function readReceiptServer(bytes:Uint8Array,mime:string):Promise<ServerReceiptOcr>{
