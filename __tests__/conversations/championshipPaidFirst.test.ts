@@ -95,3 +95,17 @@ describe('pagou antes de se inscrever', () => {
     expect(falas.join(' ')).not.toContain('nome completo do atleta');
   });
 });
+
+// Caso Gustavo (28/10): o PDF não foi lido; a equipe confirmou na mão, mas a cada "Obrigado"/"Ok" o João repetia
+// "Recebi o comprovante, mas não consegui ler o valor". Em mensagem de texto, a conferência só fala quando confirma.
+describe('comprovante pendente que não confirmou', () => {
+  const gustavo = [...conversa, { direction: 'outbound', kind: 'text', body: 'Recebi o comprovante, mas não consegui ler o valor.' }];
+  for (const reason of ['AMOUNT_NOT_READ', 'PAYEE', 'AMOUNT_MISMATCH']) {
+    it(`${reason}: "Obrigado" não repete o aviso do comprovante`, async () => {
+      const { db } = fakeDb({ conv_svc_receipt_championship_auto: { applied: false, reason, pending: [{ name: 'Gustavo Morais' }], total_cents: 13000 } });
+      const r = await handleReceiptIntent({ stage: { id: 'ST', source_message_id: 'PDF', status: 'awaiting_purpose', amount_cents: null }, messageId: 'M3',
+        mediaOnly: false, text: 'Obrigado', transcript: gustavo, db, chat: async () => ({ output: '{"action":"unrelated"}' }), model: 'm' }) as { action?: string } | null;
+      expect(r?.action ?? '').not.toMatch(/^receipt_championship_/);
+    });
+  }
+});

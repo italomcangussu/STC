@@ -31,7 +31,9 @@ async function autoPay(t:Turn):Promise<Response>{
 async function signupFirst(t:Turn,stageId:string):Promise<Response|undefined>{
  if(receiptTopic(t.transcript)!=='campeonato')return undefined;
  const c=await tryChampionshipPay(t.db,stageId,'campeonato');
- return c?.action===HOLD?null:c??undefined;
+ // Só fala se confirmou: aviso de comprovante ilegível ou com outro valor já saiu com a mídia (caso Gustavo, 28/10: repetia a cada "Ok").
+ if(c?.action===HOLD)return null;
+ return c?.action==='receipt_championship_paid'?c:undefined;
 }
 
 export async function handleReceiptIntent(t:Turn):Promise<Response>{
