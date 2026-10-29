@@ -23,8 +23,8 @@ describe('João: comprovantes sem classificação presumida',()=>{
     const d=call({mediaOnly:true});
     const r=await handleReceiptIntent(d.turn);
     expect(r?.messages.join(' ')).toMatch(/ainda não lancei/i);
-    // Só a checagem da época da mensalidade (o servidor decide e aqui não aplica); nenhuma outra escrita.
-    expect(d.db.mock.calls.map((c:unknown[])=>c[0])).toEqual(['conv_svc_receipt_membership_auto']);
+    // Só as checagens automáticas (mensalidade e inscrição do campeonato; o servidor decide e aqui não aplica); nenhuma outra escrita.
+    expect(d.db.mock.calls.map((c:unknown[])=>c[0])).toEqual(['conv_svc_receipt_membership_auto','conv_svc_receipt_championship_auto']);
     expect(d.chat).not.toHaveBeenCalled();
   });
   it('usa campanha explicitamente informada e pede confirmação SEM gravar caixa',async()=>{

@@ -2,6 +2,7 @@
 // Ordem importa: silêncio de assessor, configuração, pedido de humano, áudio, figurinha, comprovante, mídia, N3.
 
 import { n3Reply } from './capabilities.ts';
+import { mySignups } from './championshipPrompt.ts';
 import { isAdminAssistant } from './promptAdmin.ts';
 import { actingFor } from './promptContext.ts';
 import type { Ctx } from './promptTypes.ts';
@@ -108,6 +109,16 @@ async function adminReceipt(t: Turn): Promise<TurnResult | null> {
 const unreadableMedia = (t: Turn) => t.transferir('hard', `Chegou ${[...new Set(t.pendentes.map((m) => m.kind))].join(', ')} sem texto; a IA não lê mídia.`, null,
   { texto: 'Recebi, mas não consigo ver imagem ou documento por aqui. Pode me dizer em texto o que você precisa?' });
 
+/**
+ * Foto de quem tem inscrição esperando o Pix, mas que não virou comprovante (a leitura falhou: Emanuel, 28/10, ficou sem
+ * resposta). O João avisa que recebeu e que a equipe confere, em vez de ficar mudo.
+ */
+const UNCHECKED = 'Recebi seu comprovante 🧾 Não consegui conferir pelo sistema agora; a equipe vai conferir e eu te confirmo a inscrição por aqui.';
+function uncheckedSignupReceipt(t: Turn): Promise<TurnResult> | null {
+  if (!mySignups(t.ctx).some((s) => s.status === 'pre')) return null;
+  return t.say([UNCHECKED], 'receipt_championship_unchecked', (sent) => ({ bubbles: sent }), { action: 'receipt_championship_unchecked' });
+}
+
 /** Resposta do servidor quando o turno não precisa do modelo; null segue para o modelo. */
 export async function beforeModel(t: Turn): Promise<TurnResult | null> {
   const { ctx, deps, isGroup, buffered, settings } = t;
@@ -129,7 +140,7 @@ export async function beforeModel(t: Turn): Promise<TurnResult | null> {
   const receipt = await memberReceipt(t);
   if (receipt) return receipt;
   // Mídia solta de quem não é administrador, sem comprovante em análise: segue só pelo financeiro, o João não pergunta nada.
-  if (deps.mediaOnly && !isAdminAssistant(ctx)) return { status: 'skip', reason: 'media_only' };
+  if (deps.mediaOnly && !isAdminAssistant(ctx)) return uncheckedSignupReceipt(t) ?? { status: 'skip', reason: 'media_only' };
   const admin = await adminReceipt(t);
   if (admin) return admin;
   if (t.soMidia && !isGroup) return unreadableMedia(t);
