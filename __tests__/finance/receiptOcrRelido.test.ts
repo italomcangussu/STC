@@ -38,11 +38,11 @@ describe('valor relido só na linha dele', () => {
     expect((parseReceiptText(texto) as any).amount_cents).toBe(18000);
   });
 
-  it('linha sem dinheiro não é relida, e no máximo 4 linhas são', async () => {
+  it('linha sem dinheiro não é relida, e no máximo 2 linhas são', async () => {
     let n = 0;
     const linhas = [linha('Recebedor', 90, 600), ...Array.from({ length: 6 }, (_, i) => linha(`Valor R$ ${i}0,00`, 50, 100 + i * 40))];
     await refineMoneyLines(PAGINA, linhas, async () => { n += 1; return []; });
-    expect(n).toBe(4);
+    expect(n).toBe(2);
   });
 
   it('releitura que falha deixa a leitura original', async () => {

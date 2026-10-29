@@ -22,9 +22,9 @@ const clean=(s:string)=>s.replace(/[ \t\r]+/g,' ').trim();
 const MONEY_RE=/(?:R\$\s*)?(\d{1,3}(?:\.\d{3})*,\d{2}|\d+,\d{2})(?!\d)/g;
 /** "R$ 130" sem centavos (Mercado Pago): só a linha que é o valor sozinho, nunca "R$50 para Ana" de um anúncio. */
 const WHOLE_RE=/^\s*R\$\s*(\d{1,3}(?:\.\d{3})+|\d+)\s*$/g;
-const NOISE=/tarifa|taxa|juros|multa|desconto|saldo|limite|iof|encargo|abatimento|cashback|parcela/;
+const NOISE=/tarifa|maximo de|taxa|juros|multa|desconto|saldo|limite|iof|encargo|abatimento|cashback|parcela/;
 const MONEY_BEFORE=/tarifa|taxa|juros|multa|desconto|saldo|limite/;
-const PAYEE_LABEL=/^(?:pago para|enviado para|transferido para|favorecido|recebedor|destinat[aá]rio|benefici[aá]rio|quem recebeu|nome do recebedor|destino|para)\s*[:-]?\s*(.*)$/i;
+const PAYEE_LABEL=/^(?:\S{1,4}\s+)?(?:pago para|enviado para|transferido para|favorecido|recebedor|destinat[aá]rio|benefici[aá]rio|quem recebeu|nome do recebedor|destino|para)\s*[:-]?\s*(.*)$/i;
 const NOT_NAME=/\d{3}\.?\d{3}\.?\d{3}-?\d{2}|\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}|r\$|ag[eê]ncia|conta|chave|cpf|cnpj|banco|institui/i;
 const PAYER_LABEL=/^(?:origem|pagador|remetente|quem pagou|nome do pagador|dados de quem pagou)\b/i;
 const CNPJ_RE=/(?<![\w*])[\d*•xX#]{2}\.?[\d*•xX#]{3}\.?[\d*•xX#]{3}(\/)?[\d*•xX#]{4}-?[\d*•xX#]{2}(?![\w*])/;
@@ -158,16 +158,16 @@ type OcrWord={text:string;confidence:number};
 export type OcrLine={text:string;words:OcrWord[];bbox:{x0:number;y0:number;x1:number;y1:number}};
 type Rect={left:number;top:number;width:number;height:number};
 const MONEY_WORD=/\d,\d{2}/;
-const MAX_REREADS=4;
+const MAX_REREADS=2;
 const moneyWord=(ls:OcrLine[])=>ls.flatMap(l=>l.words).find(w=>MONEY_WORD.test(w.text));
 
 /**
  * Valor relido só na linha dele (caso Bruno, 28/10): na página inteira o Tesseract leu "R$ 180,00" (confiança 67) num
- * Pix de R$ 130; o recorte da linha leu "130,00" (94). Fica a leitura mais confiável. Até 4 linhas; falha não muda nada.
+ * Pix de R$ 130; o recorte da linha leu "130,00" (94). Fica a leitura mais confiável. Até 2 linhas, sem as de tarifa (CPU da função, Emanuel 28/10); falha não muda nada.
  */
 export async function refineMoneyLines(text:string,lines:OcrLine[],reread:(r:Rect)=>Promise<OcrLine[]>):Promise<string>{
   let out=text;
-  for(const l of lines.filter(x=>moneyWord([x])).slice(0,MAX_REREADS)){
+  for(const l of lines.filter(x=>moneyWord([x])&&!NOISE.test(strip(x.text))).slice(0,MAX_REREADS)){
     const antes=moneyWord([l])!;
     const pad=Math.max(6,Math.round((l.bbox.y1-l.bbox.y0)/2));
     let de_novo:OcrLine[]=[];
