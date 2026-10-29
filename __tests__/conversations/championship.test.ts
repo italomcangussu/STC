@@ -42,12 +42,12 @@ describe('prompt do campeonato', () => {
     expect(t).toContain('Serra e Sertão 2026 (27/11/2026 a 29/11/2026)');
     expect(t).toContain('ABERTA até 24/11/2026');
     expect(t).toContain('R$ 130,00 por atleta');
-    expect(t).toContain('5ª Classe: 16 confirmados');
+    expect(t).toContain('5ª Classe: 16 vagas ocupadas no painel');
     expect(t).toContain('LOTADA');
     expect(t).toContain('tie-break de 7 pontos');
     expect(t).toContain('TELEFONE DE QUEM FALA COM VOCÊ: (88) 99999-1001');
     expect(t).toContain('Caio Albuquerque | 4ª Classe | camisa M | Tianguá');
-    expect(t).not.toContain('INSCRITOS CONFIRMADOS');
+    expect(t).not.toContain('PAGAMENTO CONFERIDO');
   });
 
   it('sem campeonato aberto não acrescenta nada', () => {

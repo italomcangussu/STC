@@ -41,14 +41,25 @@ const signupLine = (s: Ctx) => `- ${s.full_name} | ${s.class} | camisa ${s.shirt
 
 function classLine(c: Ctx): string {
   const vagas = Number(c.spots_left) > 0 ? `${c.spots_left} vagas` : 'LOTADA (novas inscrições vão para a lista de espera)';
-  return `- ${c.class}: ${c.confirmed} confirmados, ${c.pre} esperando Pix, ${c.waitlist} na lista de espera; ${vagas}${c.drawn ? '; chave JÁ SORTEADA (inscrição fechada)' : ''}`;
+  return `- ${c.class}: ${c.confirmed} vagas ocupadas no painel, ${c.pre} esperando Pix, ${c.waitlist} na lista de espera; ${vagas}${c.drawn ? '; chave JÁ SORTEADA (inscrição fechada)' : ''}`;
 }
 
+/**
+ * Inscritos do painel pelo pagamento (Hermeson, 28/10: quem ele pôs no painel sem pagar saía como "pago" na lista).
+ * Sem `pay` (versão antiga do banco), conta como pago, como antes.
+ */
+const PAY_GROUPS: [string, string][] = [
+  ['paid', 'INSCRITOS COM PAGAMENTO CONFERIDO (Pix lançado no caixa)'],
+  ['exempt', 'INSCRITOS SEM PIX POR DECISÃO DA ORGANIZAÇÃO (patrocinador/isento): contam como confirmados'],
+  ['panel', 'INSCRITOS SÓ PELO PAINEL, SEM PAGAMENTO REGISTRADO: estão na chave, mas NUNCA diga que pagaram; na lista, ponha em "aguardando Pix"'],
+];
 function adminLines(admin: Ctx | null): string {
   if (!admin) return '';
-  const inscritos = ((admin.registered ?? []) as Ctx[]).map((r) => `- ${r.class}: ${r.name}${r.seed ? ` (cabeça ${r.seed})` : ''}`);
+  const linha = (r: Ctx) => `- ${r.class}: ${r.name}${r.seed ? ` (cabeça ${r.seed})` : ''}`;
+  const regs = (admin.registered ?? []) as Ctx[];
+  const grupos = PAY_GROUPS.map(([k, titulo]) => `${titulo}:\n${regs.filter((r) => (r.pay ?? 'paid') === k).map(linha).join('\n') || '(nenhum)'}`);
   const fila = ((admin.signups ?? []) as Ctx[]).filter((s) => s.status !== 'confirmed').map(signupLine);
-  return `\nINSCRITOS CONFIRMADOS (só o administrador vê):\n${inscritos.join('\n') || '(nenhum)'}\nPRÉ-INSCRIÇÕES E LISTA DE ESPERA:\n${fila.join('\n') || '(nenhuma)'}`;
+  return `\n(Só o administrador vê o que segue.)\n${grupos.join('\n')}\nPRÉ-INSCRIÇÕES PELO WHATSAPP E LISTA DE ESPERA:\n${fila.join('\n') || '(nenhuma)'}`;
 }
 
 function championshipBlock(c: Ctx, requesterPhone: string): string {

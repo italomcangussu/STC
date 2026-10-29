@@ -180,6 +180,29 @@ do $$ declare r jsonb := pg_temp.inscrever('00000000-0000-0000-0000-00000000e602
   assert (r->>'ok')::boolean and (r->>'waitlist')::boolean and r->'signup'->>'status' = 'waitlist' and (r->>'spots_left')::int = 0, 'lista de espera: ' || r::text;
 end $$;
 
+-- Lista do administrador pelo pagamento (Hermeson, 28/10): quem foi posto no painel sem pagar não sai como pago.
+select fab.dono();
+with c as (select id from public.championships where slug = 'serra-e-sertao-2026'),
+reg as (insert into public.championship_registrations (championship_id, participant_type, guest_name, class)
+        select c.id, 'guest', 'Patrocinador Teste', '4ª Classe' from c returning id, championship_id)
+insert into public.championship_signups (championship_id, class, full_name, name_key, phone, phone_key, shirt_size, status, amount_cents, registration_id)
+select reg.championship_id, '4ª Classe', 'Patrocinador Teste', 'patrocinador teste', '5588977770001', '88977770001', 'P', 'confirmed', 13000, reg.id from reg;
+select fab.como('service_role');
+do $$ declare r jsonb := public.conv_svc_ai_championship_context('00000000-0000-0000-0000-00000000e601'); regs jsonb;
+  pay text; begin
+  regs := r->'championships'->0->'admin'->'registered';
+  select x->>'pay' into pay from jsonb_array_elements(regs) x where x->>'name' = 'Caio Albuquerque';
+  assert pay = 'paid', 'Pix conferido: pago (' || coalesce(pay, 'null') || ')';
+  select x->>'pay' into pay from jsonb_array_elements(regs) x where x->>'name' = 'Patrocinador Teste';
+  assert pay = 'exempt', 'confirmado sem Pix: isento (' || coalesce(pay, 'null') || ')';
+  select x->>'pay' into pay from jsonb_array_elements(regs) x where x->>'name' = 'Atleta Cinco 1';
+  assert pay = 'panel', 'só no painel: sem pagamento registrado (' || coalesce(pay, 'null') || ')';
+end $$;
+-- O patrocinador de teste sai: o sorteio abaixo conta 12 atletas na 4ª.
+select fab.dono();
+delete from public.championship_signups where full_name = 'Patrocinador Teste';
+delete from public.championship_registrations where guest_name = 'Patrocinador Teste';
+
 -- Cabeças de chave e sorteio: só o administrador.
 select fab.dono();
 insert into public.championship_registrations (championship_id, participant_type, guest_name, class)
