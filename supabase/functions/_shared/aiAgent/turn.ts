@@ -24,7 +24,7 @@ import { type Turn, turnKit } from './turnKit.ts';
 import { beforeModel } from './turnShortcuts.ts';
 import { deliverForward } from './receiptForward.ts';
 import { activeTopic, bringsNewData, openTopics, recordTopicTurn, restoreTopics, selectTopic, topicIdFromRef } from './topicState.ts';
-import { mergeSlots, parseAnswer, turnTemperature } from './answerParse.ts';
+import { askParsed, mergeSlots, turnTemperature } from './answerParse.ts';
 import { cadence } from './cadence.ts';
 import { noteMemories } from './memoryNotes.ts';
 import { keepChampionshipInChat } from './championship.ts';
@@ -108,11 +108,12 @@ function proTennisReply(t: Turn, memory: Memory): Promise<TurnResult> | null {
 /** Uma chamada ao modelo por turno; falhou → null (o turno transfere, nunca inventa). */
 async function askModel(t: Turn, memory: Memory): Promise<Answer | null> {
   try {
-    const r = await t.deps.chat!([
+    const msgs = [
       { role: 'system', content: systemPrompt(t.settings, t.ctx) },
       { role: 'user', content: userPrompt(t.ctx, memory, t.buffered) },
-    ], { model: t.settings.model, temperature: turnTemperature(t.isGroup, t.ctx, memory), maxTokens: answerBudget(t.ctx), json: true });
-    return parseAnswer(r.output);
+    ];
+    const opts = { model: t.settings.model, temperature: turnTemperature(t.isGroup, t.ctx, memory), maxTokens: answerBudget(t.ctx), json: true };
+    return await askParsed(async () => (await t.deps.chat!(msgs, opts)).output);
   } catch {
     return null;
   }

@@ -135,11 +135,13 @@ export function parseCuratorAsk(v: unknown): Answer['ask_curator'] {
   return subject.length >= 2 && question.length >= 10 ? { subject_name: subject, question } : null;
 }
 
+const PARSE_FAILED = 'Falha ao interpretar a resposta da IA.';
+
 export function parseAnswer(output: string): Answer {
   const obj = lerJson(output);
   if (!obj) {
     return { messages: [], intent: 'outro', slots: {}, ready: false, customer_confirmed: false, declined: false, awaiting: false,
-      transfer: true, handoff_kind: 'hard', handoff_note: 'Falha ao interpretar a resposta da IA.', close: false, summary: null };
+      transfer: true, handoff_kind: 'hard', handoff_note: PARSE_FAILED, close: false, summary: null };
   }
   const msgs = Array.isArray(obj.messages) ? obj.messages : obj.message ? [obj.message] : [];
   const transfer = obj.transfer === true;
@@ -185,4 +187,13 @@ export function mergeSlots(prev: Slots | undefined, next: Slots, reset = false):
     else if (v !== null && v !== '') (base as Record<string, unknown>)[k] = v;
   }
   return base;
+}
+
+/**
+ * Resposta ilegível do modelo acontece de vez em quando (Joaquim e Helder, 28/10: foram direto para a equipe).
+ * Tenta mais uma vez; só a segunda falha vira transferência.
+ */
+export async function askParsed(call: () => Promise<string>): Promise<Answer> {
+  const primeira = parseAnswer(await call());
+  return primeira.handoff_note === PARSE_FAILED ? parseAnswer(await call()) : primeira;
 }
