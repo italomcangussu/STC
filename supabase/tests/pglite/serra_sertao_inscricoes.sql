@@ -263,6 +263,14 @@ do $$ declare r jsonb; begin
   assert r->>'code' = 'CLOSED', '4ª fechada depois do sorteio: ' || r::text;
 end $$;
 
+-- Chave definida pela organização (4ª com quali, 30/10): o João não sorteia por cima.
+select fab.dono();
+update public.championships set joao_info = joao_info || '{"class_formats":{"5ª Classe":{"inscritos":20}}}' where slug = 'serra-e-sertao-2026';
+select fab.como('service_role');
+do $$ declare r jsonb := public.conv_svc_ai_championship_draw('00000000-0000-0000-0000-00000000e601', '{"class":"5"}'); begin
+  assert r->>'code' = 'OFFICIAL_FORMAT', 'classe com formato oficial não é sorteada: ' || r::text;
+end $$;
+
 -- Prazo vencido: inscrição encerrada.
 select fab.dono();
 update public.championships set joao_info = joao_info || '{"deadline":"2020-01-01"}' where slug = 'serra-e-sertao-2026';
