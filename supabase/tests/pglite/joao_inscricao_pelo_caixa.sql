@@ -84,3 +84,32 @@ do $$ declare r jsonb; begin
   r := pg_temp.lancar_e_confirmar('Philippe Ramos de Aguiar', 13000, 'Inscrição Serra e Sertão', '00000000-0000-0000-0000-0000000009a5');
   assert r->'summary'->'championship'->'confirmed' = '["Philippe Ramos de Aguiar"]'::jsonb, 'pela categoria: ' || r::text;
 end $$;
+
+-- 6) Inscritos pelo painel, sem pré-inscrição do João (Mario Rego e Davi Arcelino, 30/10): o Pix no caixa marca os dois como pagos.
+do $$ declare r jsonb; v_mario uuid := fab.usuario('mario@x.com'); v_davi uuid := fab.usuario('davi@x.com'); begin
+  perform fab.dono();
+  insert into public.profiles (id, name, role, phone) values
+    (v_mario, 'Mario Rego', 'socio', '85985330001'),
+    (v_davi, 'Davi Arcelino', 'socio', '88994120002')
+  on conflict (id) do update set name = excluded.name, role = excluded.role, phone = excluded.phone;
+  insert into public.championship_registrations (championship_id, participant_type, user_id, class, shirt_size) values
+    ('00000000-0000-0000-0000-00000000f001', 'socio', v_mario, '4ª Classe', 'G'),
+    ('00000000-0000-0000-0000-00000000f001', 'socio', v_davi, '5ª Classe', 'G');
+  r := pg_temp.lancar_e_confirmar('Inscrições AUGE OPEN de Mario Rego e Davi Arcelino', 26000, 'AUGE OPEN', '00000000-0000-0000-0000-0000000009a6');
+  assert r->'summary'->'championship'->'confirmed' = '["Mario Rego", "Davi Arcelino"]'::jsonb, 'do painel: ' || r::text;
+end $$;
+select fab.dono();
+do $$ begin
+  assert (select count(*) from public.championship_registrations r join public.profiles p on p.id = r.user_id where p.name in ('Mario Rego', 'Davi Arcelino')) = 2, 'sem inscrição duplicada na chave';
+  assert (select count(*) from public.championship_signups where full_name in ('Mario Rego', 'Davi Arcelino') and status = 'confirmed'
+          and fin_entry_id is not null and registration_id is not null) = 2, 'pagos e ligados à inscrição do painel';
+  -- A mesma regra da lista do João (20261030140000): pago = pré-inscrição confirmada, ligada à inscrição, com lançamento.
+  assert (select count(*) from public.championship_registrations r join public.profiles p on p.id = r.user_id
+          where p.name in ('Mario Rego', 'Davi Arcelino') and exists (select 1 from public.championship_signups s
+            where s.registration_id = r.id and s.status = 'confirmed' and s.fin_entry_id is not null)) = 2, 'lista mostra pago';
+end $$;
+
+-- 7) O mesmo Pix de novo não paga duas vezes nem quebra.
+do $$ declare r jsonb := pg_temp.lancar_e_confirmar('Inscrições AUGE OPEN de Mario Rego e Davi Arcelino (2)', 26000, 'AUGE OPEN', '00000000-0000-0000-0000-0000000009a7'); begin
+  assert (r->>'ok')::boolean and r->'summary'->'championship'->>'reason' = 'NO_MATCH', 'já pagos: ' || r::text;
+end $$;
