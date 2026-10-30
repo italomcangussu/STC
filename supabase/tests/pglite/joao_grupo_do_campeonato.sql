@@ -61,6 +61,8 @@ select fab.como('service_role');
 do $$ begin
   assert public.conv_svc_ai_group_championship('00000000-0000-0000-0000-0000000063a1') #>> '{circuit_ranking,classes,0,rows,0,name}' = 'Bruno',
     'ranking do circuito chega ao grupo do campeonato';
+  assert jsonb_typeof(public.conv_svc_ai_group_championship('00000000-0000-0000-0000-0000000063a1')->'banter') = 'null',
+    'campeonato sem resenha não traz nada';
 end $$;
 
 do $$ declare r jsonb := public.conv_svc_group_intro_context('00000000-0000-0000-0000-0000000060a2'); begin

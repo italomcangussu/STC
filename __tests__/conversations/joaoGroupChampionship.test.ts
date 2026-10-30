@@ -107,3 +107,35 @@ describe('ranking do circuito no grupo do campeonato (Hermeson, 30/10: "quem é 
     expect(sys).toContain('qual Bruno');
   });
 });
+
+describe('resenha da turma (golpe do Pix e fiscal das vagas) no grupo do campeonato', () => {
+  const comPix: Ctx = { ...serra, banter: [
+    { name: 'Gustavo Morais', kind: 'golpe_do_pix', story: 'pediu foto mais nítida umas cinco vezes' },
+    { name: 'Bruno Farias', kind: 'fiscal_das_vagas', story: 'perguntou quantas vagas tinha à 1h15' },
+    { name: 'Fulano', kind: 'desconhecido', story: 'não entra' }] };
+  const base = (gc: Ctx | null): Ctx => ({ is_group: true, group_championship: gc, settings: {}, now_local: '2026-10-30T15:00', weekday_today: 5, requester: { profile: { name: 'Gustavo Morais' } } });
+
+  it('o turno leva as histórias, com a piada contra o João', () => {
+    const t = userPrompt(base(comPix), {}, 'kkkk');
+    expect(t).toContain('# RESENHA DA TURMA');
+    expect(t).toContain('GOLPE DO PIX (a piada é contra VOCÊ');
+    expect(t).toContain('- Gustavo Morais: pediu foto mais nítida umas cinco vezes');
+    expect(t).toContain('todos pagaram certo e estão confirmados');
+    expect(t).toContain('FISCAL DAS VAGAS');
+    expect(t).toContain('- Bruno Farias: perguntou quantas vagas tinha à 1h15');
+    expect(t).not.toContain('Fulano');
+  });
+
+  it('a regra abre só essa exceção e proíbe valor, banco e insinuação', () => {
+    const sys = systemPrompt({ persona_name: 'João Fonseca' } as AiSettings, base(comPix));
+    expect(sys).toContain('pensei que era o golpe do Pix');
+    expect(sys).toContain('nunca insinue que a pessoa fez algo errado');
+    expect(sys).toContain('Nunca cite valor, banco, CNPJ, chave nem documento');
+    expect(sys).toContain('Nunca diga que ele perguntou sobre pagamento de ninguém');
+  });
+
+  it('sem histórias, nada muda; fora do grupo do campeonato, nada aparece', () => {
+    expect(userPrompt(base(serra), {}, 'oi')).not.toContain('RESENHA DA TURMA');
+    expect(userPrompt(base(null), {}, 'oi')).not.toContain('RESENHA DA TURMA');
+  });
+});
