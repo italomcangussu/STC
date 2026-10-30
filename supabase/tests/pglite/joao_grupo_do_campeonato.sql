@@ -54,6 +54,15 @@ do $$ declare p jsonb := public.conv_svc_ai_group_championship('00000000-0000-00
   assert public.conv_svc_ai_group_championship('00000000-0000-0000-0000-0000000063a2') is null, 'grupo de sócios não é de campeonato';
 end $$;
 
+select fab.dono();
+update public.championships set joao_info = joao_info || '{"circuit_ranking": {"classes": [{"class": "4ª Classe", "rows": [{"pos": 8, "name": "Bruno", "total": 400}]}]}}'::jsonb
+where id = '00000000-0000-0000-0000-00000000f101';
+select fab.como('service_role');
+do $$ begin
+  assert public.conv_svc_ai_group_championship('00000000-0000-0000-0000-0000000063a1') #>> '{circuit_ranking,classes,0,rows,0,name}' = 'Bruno',
+    'ranking do circuito chega ao grupo do campeonato';
+end $$;
+
 do $$ declare r jsonb := public.conv_svc_group_intro_context('00000000-0000-0000-0000-0000000060a2'); begin
   assert (r->>'ok')::boolean and r->>'conversation_id' = '00000000-0000-0000-0000-0000000061a2', 'contexto da apresentação: ' || r::text;
   assert r->'intro_sent_at' = 'null'::jsonb, 'apresentação ainda não saiu';

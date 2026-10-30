@@ -58,7 +58,10 @@ export function socialContextText(ctx: Ctx, buffered = ''): string {
     if (!r.social_context) return false;
     const nome = fold(String(r.name ?? ''));
     const aliases = ((r.aliases ?? []) as string[]).map((x) => fold(String(x)));
-    if (nome && (presentes.has(nome) || nome === solicitante || conversa.includes(nome))) return true;
+    if (nome && (presentes.has(nome) || nome === solicitante)) return true;
+    // No grupo do campeonato, nome citado no papo é da turma do circuito, não o sócio do STC com o mesmo nome.
+    if (ctx.group_championship) return false;
+    if (nome && conversa.includes(nome)) return true;
     return aliases.some((a) => a.length >= 3 && conversa.includes(a));
   });
   return relevantes.length

@@ -69,3 +69,41 @@ describe('João no grupo do campeonato', () => {
     expect(athleteFirstNames(null)).toEqual([]);
   });
 });
+
+describe('ranking do circuito no grupo do campeonato (Hermeson, 30/10: "quem é melhor, Bruno ou Tiago?")', () => {
+  const circuito: Ctx = { ...serra, circuit_ranking: {
+    title: 'Ranking oficial', stages: ['Sobral', 'Finals', 'Nova Russas', 'Tianguá'], clubs: ['Sobral (STC)', 'Tianguá', 'Nova Russas', 'Crateús', 'Boa Viagem'],
+    classes: [{ class: '4ª Classe', rows: [
+      { pos: 8, name: 'Bruno', total: 400, stages: { Sobral: 100, Finals: 200, 'Nova Russas': 100 } },
+      { pos: 14, name: 'Tiago', total: 200, stages: { Sobral: 200 } }] }] } };
+  const stcBruno = { name: 'Bruno Sócio do STC', aliases: ['bruno'], global_position: 9, category_position: 9, category: '4ª', points: 50, social_context: 'o do saque torto' };
+  const ctx = (): Ctx => ({ is_group: true, group_championship: circuito, group_members: ['Hermeson Veras'], club_roster: [stcBruno],
+    requester: { profile: { name: 'Hermeson Veras' } }, settings: {}, now_local: '2026-10-30T14:11', weekday_today: 5 });
+
+  it('o turno leva o ranking do circuito com os pontos por etapa e os clubes', () => {
+    const t = userPrompt(ctx(), {}, 'Quem é melhor Bruno ou Tiago?');
+    expect(t).toContain('# RANKING DO CIRCUITO SERRA & SERTÃO');
+    expect(t).toContain('8. Bruno — 400 pts (Sobral 100, Finals 200, Nova Russas 100)');
+    expect(t).toContain('14. Tiago — 200 pts (Sobral 200)');
+    expect(t).toContain('Crateús');
+  });
+
+  it('o ranking interno do STC e o sócio homônimo citado no papo ficam de fora', () => {
+    const t = userPrompt(ctx(), {}, 'Quem é melhor Bruno ou Tiago?');
+    expect(t).not.toContain('# RANKING DO CLUBE');
+    expect(t).not.toContain('Bruno Sócio do STC');
+  });
+
+  it('no grupo de sócios continua tudo como antes', () => {
+    const socios = { ...ctx(), group_championship: null };
+    const t = userPrompt(socios, {}, 'Quem é melhor Bruno ou Tiago?');
+    expect(t).toContain('# RANKING DO CLUBE');
+    expect(t).toContain('Bruno Sócio do STC');
+  });
+
+  it('a regra ensina a perguntar "qual Bruno?" em vez de chutar', () => {
+    const sys = systemPrompt({ persona_name: 'João Fonseca' } as AiSettings, ctx());
+    expect(sys).toContain('nunca o sócio do STC com o mesmo nome');
+    expect(sys).toContain('qual Bruno');
+  });
+});

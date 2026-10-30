@@ -11,7 +11,7 @@
 // sistema retornou — o modelo nunca "anuncia" sucesso.
 
 import { championshipText } from './championshipPrompt.ts';
-import { groupChampionshipText } from './groupChampionship.ts';
+import { groupChampionship, groupChampionshipText } from './groupChampionship.ts';
 import { topicsPromptText } from './topicState.ts';
 import { financialContextText } from './promptAdmin.ts';
 import { agendaText, courtsText, proposalText, requesterText, reservationsText, transcript } from './promptContext.ts';
@@ -43,10 +43,10 @@ ${s.business_context?.trim() || '(nenhum texto cadastrado — não invente nada 
 Use como fonte de verdade para consultas financeiras operacionais do grupo.
 ${financialContextText(ctx, buffered)}
 
-# RANKING DO CLUBE (ATUAL, DINÂMICO)
+${groupChampionship(ctx) ? '' : `# RANKING DO CLUBE (ATUAL, DINÂMICO)
 Formato: posição global/posição na classe, nome, classe, pontos. Use como fato atual; pode mudar depois.
 ${rankingText(ctx, buffered)}
-# TÊNIS PROFISSIONAL ATUAL (DINÂMICO)
+`}# TÊNIS PROFISSIONAL ATUAL (DINÂMICO)
 A ESPN é a fonte principal para confronto, horário local, status/placar, torneio, rodada e local/quadra. Para transmissão no Brasil, o sistema tenta também o 365Scores como fonte complementar.
 Se nenhuma das fontes trouxer transmissão confirmada, diga isso claramente; nunca chute canal ou plataforma.
 ${proTennisText(ctx)}

@@ -18,6 +18,25 @@ function athleteLine(a: Ctx): string {
   return `- ${a.name} (${quem})`;
 }
 
+function rankingLine(r: Ctx): string {
+  const etapas = Object.entries((r.stages ?? {}) as Record<string, number>).map(([e, p]) => `${e} ${p}`).join(', ');
+  return `${r.pos}. ${r.name} — ${r.total} pts${etapas ? ` (${etapas})` : ''}`;
+}
+
+/** Ranking oficial do circuito (pontos por etapa), por classe. */
+export function circuitRankingText(ctx: Ctx): string {
+  const cr = groupChampionship(ctx)?.circuit_ranking as Ctx | null | undefined;
+  const classes = (cr?.classes ?? []) as Ctx[];
+  if (!classes.length) return '';
+  return `# RANKING DO CIRCUITO SERRA & SERTÃO (oficial; é o ranking que vale neste grupo)
+${cr!.title ?? ''}
+Clubes do circuito: ${((cr!.clubs ?? []) as string[]).join(', ')}. Etapas que já contaram ponto: ${((cr!.stages ?? []) as string[]).join(', ')}.
+O ranking traz só o primeiro nome (às vezes o sobrenome). Um atleta pode aparecer nas duas classes (mudou de classe no circuito).
+${classes.map((k) => `${k.class}:\n${((k.rows ?? []) as Ctx[]).map(rankingLine).join('\n')}`).join('\n\n')}
+
+`;
+}
+
 /** Bloco do prompt do turno: a turma do campeonato, por classe. */
 export function groupChampionshipText(ctx: Ctx): string {
   const c = groupChampionship(ctx);
@@ -31,7 +50,7 @@ ${[c.name, ...((c.title ?? []) as string[])].join(' · ')}
 ${total} inscritos: ${socios} sócios do STC e ${total - socios} convidados.
 ${corpo || '(ainda sem inscritos)'}
 
-`;
+${circuitRankingText(ctx)}`;
 }
 
 /** Regras do grupo do campeonato (entra no lugar das regras do grupo de sócios no system prompt). */
@@ -43,7 +62,9 @@ export function championshipGroupRules(ctx: Ctx): string {
 - Resenha: com sócio (a turma de casa) vale a zoeira de sempre; com convidado, seja o anfitrião brincalhão — receba bem, brinque com a disputa, a viagem, a "visita que vem buscar o troféu", sem zoar a pessoa em si, porque ele ainda não te conhece. Rivalidade sadia entre classes e cidades é bem-vinda.
 - Clima de campeonato: chave, adversário, "quem leva a 4ª?", preparação, calor, bola, camisa. Puxe o assunto do campeonato quando couber, sem inventar data, horário, chave ou regra: o oficial está em CAMPEONATO COM INSCRIÇÃO PELO JOÃO (se não estiver lá, diga que a organização confirma).
 - NADA de financeiro aqui: nunca fale de pagamento, Pix pendente, mensalidade, card, Day Card ou pendência de ninguém, nem de quem pagou ou não a inscrição. Nunca mostre telefone. Se alguém perguntar a situação da própria inscrição, diga para te chamar no privado.
-- Não fale do ranking do clube nem de assunto interno de sócio (reserva de quadra, aula, diretoria) a não ser que perguntem.
+- O CIRCUITO reúne Sobral (STC), Tianguá, Nova Russas, Crateús e Boa Viagem. Aqui "ranking" é SEMPRE o RANKING DO CIRCUITO SERRA & SERTÃO: compare atletas, diga quem lidera, quem subiu e quantos pontos cada um fez por etapa só com ele. O ranking interno do STC não vale aqui e você não tem ele neste grupo.
+- NOMES: nome solto no grupo ("Bruno", "Tiago") é atleta do circuito, inscrito ou alguém do grupo — nunca o sócio do STC com o mesmo nome. Procure no RANKING DO CIRCUITO, nos INSCRITOS e em quem fala no grupo. Se houver mais de um com o nome, ou você não souber de quem falam, pergunte na resenha ("qual Bruno, o da 4ª?") em vez de chutar. Se a pessoa não está no ranking, diga que ela ainda não pontuou no circuito; não invente número.
+- Não fale de assunto interno de sócio do STC (reserva de quadra, aula, diretoria) a não ser que perguntem.
 - No grupo, NUNCA faça handoff, NUNCA diga que vai pedir para equipe/atendente ajudar e NUNCA anuncie transferência. Se não souber, não invente.`;
 }
 
