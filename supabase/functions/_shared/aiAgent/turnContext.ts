@@ -7,6 +7,7 @@ import { isAdminAssistant } from './promptAdmin.ts';
 import type { Ctx } from './promptTypes.ts';
 import { hearAudios } from './audio.ts';
 import { conciliarMencoes, membrosAtuaisDoGrupo, substituirMencoes } from './mentions.ts';
+import { scrubGroupContext } from './groupChampionship.ts';
 import type { Db, TurnDeps } from './turnTypes.ts';
 
 type Where = { session: string; conversation: string; isGroup: boolean };
@@ -39,6 +40,8 @@ async function groupContext(ctx: Ctx, deps: TurnDeps, { session, conversation }:
   const requesterName = String((ctx.requester?.profile as Ctx | undefined)?.name ?? '').trim();
   if (requesterName && !membros.includes(requesterName)) membros.push(requesterName);
   ctx.group_members = membros;
+  // Grupo ligado a um campeonato: a turma vem da lista de inscritos (sócio × convidado).
+  ctx.group_championship = await read(deps.db, 'conv_svc_ai_group_championship', { p_session: session }, asObject, null);
 }
 
 /** Pacote do João (um RPC): memórias APROVADAS pela diretoria, resultados recentes e as últimas falas dele. */
@@ -75,6 +78,8 @@ export async function loadTurnContext(ctx: Ctx, deps: TurnDeps, where: Where): P
   await joaoPack(ctx, db, where.session);
   // Campeonato com inscrição pelo João: informações, vagas e as inscrições de quem fala (tudo, para o administrador).
   ctx.championship = await read(db, 'conv_svc_ai_championship_context', { p_session: where.session }, asObject, null);
+  // No grupo, só o que é de todos: sem dados de administrador do campeonato, sem telefone e, no do campeonato, sem financeiro.
+  scrubGroupContext(ctx);
   await resolveMentions(ctx, deps, where);
   // Áudio: o João lê o que foi dito (transcrição do webhook), esperando um pouco pelo que ainda está chegando.
   ctx.transcript = await hearAudios((ctx.transcript ?? []) as Ctx[], deps);
