@@ -110,9 +110,12 @@ export function memoryText(ctx: Ctx, buffered = ''): string {
   // "Quem é o dermatologista?" acha o Jorge pelo assunto da memória, sem ninguém citar o nome dele.
   const assuntoCitado = (conteudo: string) => fold(conteudo).split(/[^a-z]+/)
     .some((w) => w.length >= 6 && !PALAVRAS_COMUNS.has(w) && conversa.includes(w));
+  // Grupo do campeonato: "Bruno" no papo é o inscrito, não o sócio do STC; memória só de quem está no grupo.
+  const soPresentes = Boolean(ctx.group_championship);
   const pontos = (m: Ctx) => {
     const nome = fold(String(m.subject_name ?? '').trim());
     if (!nome) return 0;
+    if (soPresentes) return nome === solicitante ? 2 : presentes.has(nome) ? 1 : 0;
     if (citado(nome)) return 3;
     if (nome === solicitante) return 2;
     if (assuntoCitado(String(m.content ?? ''))) return 1.5;

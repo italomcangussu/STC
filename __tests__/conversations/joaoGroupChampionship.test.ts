@@ -139,3 +139,30 @@ describe('resenha da turma (golpe do Pix e fiscal das vagas) no grupo do campeon
     expect(userPrompt(base(null), {}, 'oi')).not.toContain('RESENHA DA TURMA');
   });
 });
+
+describe('dois Brunos: o sócio do STC e o convidado inscrito (Italo, 30/10)', () => {
+  const stcBruno = { name: 'Bruno Sócio', aliases: [], global_position: 9, category_position: 9, category: '4ª', points: 50 };
+  const ctx = (gc: Ctx | null): Ctx => ({ is_group: true, group_championship: gc, group_members: ['Hermeson Veras'], club_roster: [stcBruno],
+    joao_memories: [{ subject_name: 'Bruno Sócio', kind: 'inside_joke', content: 'vive de férias' }],
+    joao_results: [{ played_on: '2026-10-20', winner: 'Bruno Sócio', loser: 'Fulano', score: '6/2 6/3' }],
+    requester: { profile: { name: 'Hermeson Veras' } }, settings: {}, now_local: '2026-10-30T15:00', weekday_today: 5 });
+
+  it('no grupo do campeonato o Bruno é o inscrito: avisa o homônimo e não traz memória nem resultado do sócio', () => {
+    const t = userPrompt(ctx(serra), {}, 'E o Bruno, vai longe?');
+    expect(t).toContain('- Bruno Farias (convidado, de Tianguá) NÃO é sócio do STC: o Bruno do clube é outra pessoa.');
+    expect(t).not.toContain('vive de férias');
+    expect(t).not.toContain('Bruno Sócio venceu');
+    expect(t).not.toContain('Bruno Sócio');
+  });
+
+  it('sócio inscrito não ganha o aviso (é a mesma pessoa)', () => {
+    expect(userPrompt(ctx(serra), {}, 'oi')).not.toContain('Carlos Carneiro (convidado');
+  });
+
+  it('no grupo de sócios o Bruno continua sendo o do clube', () => {
+    const t = userPrompt(ctx(null), {}, 'E o Bruno, vai longe?');
+    expect(t).toContain('vive de férias');
+    expect(t).toContain('Bruno Sócio venceu Fulano');
+    expect(t).not.toContain('NÃO é sócio do STC');
+  });
+});

@@ -53,6 +53,20 @@ export function banterText(ctx: Ctx): string {
   return `# RESENHA DA TURMA (histórias verdadeiras; use com leveza)\n${blocos.join('\n\n')}\n\n`;
 }
 
+const fold = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+
+/**
+ * Convidado com o mesmo primeiro nome de um sócio do STC (ex.: Bruno Farias, de Crateús × um Bruno do clube): o aviso
+ * sai explícito, sem dado do sócio, para o João não juntar os dois.
+ */
+export function homonymsText(ctx: Ctx): string {
+  const socios = new Set(((ctx.club_roster ?? []) as Ctx[]).map((r) => fold(String(r.name ?? '').split(/\s+/)[0] ?? '')).filter(Boolean));
+  const convidados = ((groupChampionship(ctx)?.classes ?? []) as Ctx[]).flatMap((k) => ((k.athletes ?? []) as Ctx[]).filter((a) => !a.socio));
+  const linhas = convidados.filter((a) => socios.has(fold(firstName(String(a.name ?? '')))))
+    .map((a) => `- ${a.name} (convidado${a.city ? `, de ${a.city}` : ''}) NÃO é sócio do STC: o ${firstName(String(a.name))} do clube é outra pessoa.`);
+  return linhas.length ? `MESMO NOME, PESSOAS DIFERENTES (neste grupo, o nome é sempre o do inscrito):\n${linhas.join('\n')}\n` : '';
+}
+
 /** Bloco do prompt do turno: a turma do campeonato, por classe. */
 export function groupChampionshipText(ctx: Ctx): string {
   const c = groupChampionship(ctx);
@@ -65,7 +79,7 @@ export function groupChampionshipText(ctx: Ctx): string {
 ${[c.name, ...((c.title ?? []) as string[])].join(' · ')}
 ${total} inscritos: ${socios} sócios do STC e ${total - socios} convidados.
 ${corpo || '(ainda sem inscritos)'}
-
+${homonymsText(ctx)}
 ${circuitRankingText(ctx)}${banterText(ctx)}`;
 }
 

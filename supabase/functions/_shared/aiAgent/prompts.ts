@@ -51,8 +51,8 @@ A ESPN é a fonte principal para confronto, horário local, status/placar, torne
 Se nenhuma das fontes trouxer transmissão confirmada, diga isso claramente; nunca chute canal ou plataforma.
 ${proTennisText(ctx)}
 
-${championshipText(ctx)}${groupChampionshipText(ctx)}# RESULTADOS RECENTES DO CLUBE (partidas encerradas; use só o que está aqui, nunca para humilhar)
-${resultsText(ctx)}
+${championshipText(ctx)}${groupChampionshipText(ctx)}${groupChampionship(ctx) ? '' : `# RESULTADOS RECENTES DO CLUBE (partidas encerradas; use só o que está aqui, nunca para humilhar)
+${resultsText(ctx)}`}
 
 ${ctx.is_group ? `# PESSOAS PRESENTES NO GRUPO (confirmadas agora)
 ${groupMembersText(ctx)}
