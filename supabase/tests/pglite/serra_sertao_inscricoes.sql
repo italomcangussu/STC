@@ -197,6 +197,9 @@ do $$ declare r jsonb := public.conv_svc_ai_championship_context('00000000-0000-
   assert pay = 'exempt', 'confirmado sem Pix: isento (' || coalesce(pay, 'null') || ')';
   select x->>'pay' into pay from jsonb_array_elements(regs) x where x->>'name' = 'Atleta Cinco 1';
   assert pay = 'panel', 'só no painel: sem pagamento registrado (' || coalesce(pay, 'null') || ')';
+  -- Camisa de quem está no painel (Hermeson, 30/10): a do WhatsApp ligado quando o painel não tem.
+  select x->>'shirt_size' into pay from jsonb_array_elements(regs) x where x->>'name' = 'Patrocinador Teste';
+  assert pay = 'P', 'camisa do inscrito do painel (' || coalesce(pay, 'null') || ')';
 end $$;
 -- O patrocinador de teste sai: o sorteio abaixo conta 12 atletas na 4ª.
 select fab.dono();

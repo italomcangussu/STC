@@ -1,7 +1,9 @@
-// Campeonato com inscrição pelo João: o modelo colhe os dados; o SERVIDOR inscreve, manda a camisa, define cabeças e sorteia.
+// Campeonato com inscrição pelo João: o modelo colhe os dados; o SERVIDOR inscreve, manda a camisa, lista os inscritos,
+// define cabeças e sorteia.
 // Todo texto de resultado sai daqui, a partir do que o banco devolveu (o modelo nunca anuncia inscrição feita).
 
 import { athleteCard, brl, championshipTitle, championships } from './championshipPrompt.ts';
+import { inscritosMessage, listChampionship } from './championshipList.ts';
 import { payHeldReceipt } from './championshipReceipt.ts';
 import type { DecideInput } from './decide.ts';
 import { isAdminAssistant } from './promptAdmin.ts';
@@ -10,7 +12,7 @@ import type { Answer, ChampAction, Decision, Memory, Slots } from './turnTypes.t
 
 type Res = { ok?: boolean; code?: string; message?: string } & Ctx;
 
-const SERVER_ACTIONS: ChampAction[] = ['inscrever', 'camisa', 'cabecas', 'sortear'];
+const SERVER_ACTIONS: ChampAction[] = ['inscrever', 'camisa', 'cabecas', 'sortear', 'lista'];
 export const isChampionshipServerAction = (a: unknown): a is ChampAction => SERVER_ACTIONS.includes(a as ChampAction);
 
 
@@ -128,12 +130,21 @@ async function sortear(i: DecideInput, memory: Memory): Promise<Decision> {
   return reply(nextAthlete(memory), { bubbles: [drawMessage(r)], action: 'champ_drawn', verbatim: true });
 }
 
+/** Administrador: lista de inscritos com camisa e situação, do banco (o modelo não reescreve nomes). */
+function lista(i: DecideInput, memory: Memory): Decision {
+  const c = listChampionship(i.ctx);
+  const texto = isAdminAssistant(i.ctx) && c ? inscritosMessage(c, i.slots.list_filter, i.slots.champ_class) : null;
+  if (!texto) return reply(memory, { bubbles: ['A lista de inscritos é só para a organização do campeonato.'], action: 'champ_forbidden' });
+  return reply(nextAthlete(memory), { bubbles: [texto], action: 'champ_list', verbatim: true });
+}
+
 /** Ação do campeonato que o servidor executa (o modelo marcou ready). */
 export function campeonato(i: DecideInput, memory: Memory): Promise<Decision> | Decision {
   switch (i.slots.champ_action) {
     case 'inscrever': return inscrever(i, memory);
     case 'camisa': return camisa(i, memory);
     case 'cabecas': return cabecas(i, memory);
+    case 'lista': return lista(i, memory);
     default: return sortear(i, memory);
   }
 }

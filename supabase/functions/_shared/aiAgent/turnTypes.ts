@@ -122,9 +122,13 @@ export type Slots = {
   shirt_size?: string | null;
   /** Administrador: cabeças de chave na ordem (o primeiro é o cabeça 1). */
   seed_names?: string[];
+  /** Administrador: lista de inscritos completa ou só quem falta pagar. */
+  list_filter?: ListFilter | null;
 };
 
-export const CHAMP_ACTIONS = ['info', 'inscrever', 'camisa', 'cabecas', 'sortear'] as const;
+export const CHAMP_ACTIONS = ['info', 'inscrever', 'camisa', 'cabecas', 'sortear', 'lista'] as const;
+export const LIST_FILTERS = ['todos', 'pendentes'] as const;
+export type ListFilter = typeof LIST_FILTERS[number];
 export type ChampAction = typeof CHAMP_ACTIONS[number];
 
 /** Pergunta de formulário como o servidor a entende: o modelo só transcreve o que o administrador ditou. */

@@ -55,7 +55,7 @@ const PAY_GROUPS: [string, string][] = [
 ];
 function adminLines(admin: Ctx | null): string {
   if (!admin) return '';
-  const linha = (r: Ctx) => `- ${r.class}: ${r.name}${r.seed ? ` (cabeça ${r.seed})` : ''}`;
+  const linha = (r: Ctx) => `- ${r.class}: ${r.name} | camisa ${r.shirt_size ?? 'sem tamanho'}${r.seed ? ` (cabeça ${r.seed})` : ''}`;
   const regs = (admin.registered ?? []) as Ctx[];
   const grupos = PAY_GROUPS.map(([k, titulo]) => `${titulo}:\n${regs.filter((r) => (r.pay ?? 'paid') === k).map(linha).join('\n') || '(nenhum)'}`);
   const fila = ((admin.signups ?? []) as Ctx[]).filter((s) => s.status !== 'confirmed').map(signupLine);
@@ -104,10 +104,11 @@ export function championshipRules(ctx: Ctx): string {
 - Classe lotada: a inscrição vai para a lista de espera (o sistema avisa); não peça Pix nesse caso.
 - Camisa: se a pessoa quiser ver a camisa, champ_action "camisa", ready true, messages vazio (o sistema manda a foto).
 - Inscrição já feita: veja INSCRIÇÕES FEITAS POR ESTA PESSOA e responda a situação de cada uma. "inscrição confirmada (pago)" você PODE dizer que está confirmada, com todas as letras. Para mostrar uma inscrição, use o cartão da organização, um item de messages com as linhas separadas por "\\n": "🎾 *<1ª linha do título>*", "🏆 <2ª linha do título>", linha em branco, "👤 *Atleta:* …", "👕 *Tamanho da camisa:* …", "🏅 *Classe:* …", "📱 *Telefone:* …", "📋 *Status da inscrição:* ✅ Confirmada" (ou "⏳ Aguardando o Pix" / "⏳ Lista de espera"). Inscrição paga não leva chave Pix nem dados bancários.
-${admin ? `- ADMINISTRADOR: cabeças de chave → champ_action "cabecas", champ_class e seed_names NA ORDEM (o 1º é o cabeça 1), ready true. Sorteio da chave → champ_action "sortear" e champ_class, ready true, SÓ quando o administrador pedir o sorteio com todas as letras (uma classe por vez; pergunte qual se não disse). Antes de sortear, lembre que os cabeças de chave precisam estar definidos.
+${admin ? `- ADMINISTRADOR, LISTA DE INSCRITOS: pediu a lista, os nomes, os tamanhos de camisa ou quem falta pagar → champ_action "lista", ready true, messages VAZIO. O SISTEMA monta a lista completa do banco (painel + WhatsApp, camisa e situação de cada um). list_filter "pendentes" quando ele quer só quem falta pagar, senão "todos"; champ_class só se ele citou uma classe. NUNCA escreva a lista você mesmo, nem diga que um tamanho não foi informado.
+- ADMINISTRADOR: cabeças de chave → champ_action "cabecas", champ_class e seed_names NA ORDEM (o 1º é o cabeça 1), ready true. Sorteio da chave → champ_action "sortear" e champ_class, ready true, SÓ quando o administrador pedir o sorteio com todas as letras (uma classe por vez; pergunte qual se não disse). Antes de sortear, lembre que os cabeças de chave precisam estar definidos.
 ` : ''}- No grupo: responda dúvidas; para inscrever, peça para a pessoa chamar você no privado.
 
 `;
 }
 
-export const CHAMPIONSHIP_SLOTS = ',"champ_action":"info|inscrever|camisa|cabecas|sortear|null","athlete_name":null,"athlete_self":false,"athlete_phone":null,"athlete_city":null,"champ_class":null,"shirt_size":null,"seed_names":[]';
+export const CHAMPIONSHIP_SLOTS = ',"champ_action":"info|inscrever|camisa|cabecas|sortear|lista|null","athlete_name":null,"athlete_self":false,"athlete_phone":null,"athlete_city":null,"champ_class":null,"shirt_size":null,"seed_names":[],"list_filter":"todos|pendentes|null"';

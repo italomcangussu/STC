@@ -188,7 +188,7 @@ describe('camisa, cabeças e sorteio', () => {
   });
 
   it('só estas ações são do servidor', () => {
-    expect(['inscrever', 'camisa', 'cabecas', 'sortear'].every(isChampionshipServerAction)).toBe(true);
+    expect(['inscrever', 'camisa', 'cabecas', 'sortear', 'lista'].every(isChampionshipServerAction)).toBe(true);
     expect(isChampionshipServerAction('info')).toBe(false);
   });
 
@@ -406,5 +406,75 @@ describe('aviso ao financeiro a cada inscrição confirmada', () => {
     expect(r?.forward?.text).toContain('💰 *Inscrição paga · AUGE OPEN*');
     expect(r?.forward?.text).toContain('✅ *Confirmados:* Hermeson Veras (5ª Classe)');
     expect(r?.forward?.text).toContain('📅 *Data do Pix:* 26/10/2026');
+  });
+});
+
+// Hermeson, 30/10: pediu "a lista nominal dos inscritos com os tamanhos das camisas" e o João reescreveu a lista de memória,
+// cortou nomes e marcou "não informado" em quem estava no painel (o contexto não levava a camisa dessas pessoas).
+// A lista agora é do servidor: nome, camisa e situação de todo mundo, a partir do banco.
+describe('lista de inscritos do administrador', () => {
+  const adminPack = (admin: unknown) => pack({ title: ['AUGE OPEN', '3ª Etapa do Circuito Serra e Sertão'], admin });
+  const dadosAdmin = {
+    registered: [
+      { class: '4ª Classe', name: 'Bruno Farias Cavalcante', shirt_size: 'G', pay: 'paid' },
+      { class: '4ª Classe', name: 'Thieslley Soares', shirt_size: 'P', pay: 'exempt' },
+      { class: '4ª Classe', name: 'Mario Rego', shirt_size: 'G', pay: 'panel' },
+      { class: '5ª Classe', name: 'Hermeson Veras', shirt_size: 'GG', pay: 'paid' },
+      { class: '5ª Classe', name: 'Davi Arcelino', shirt_size: null, pay: 'panel' },
+    ],
+    signups: [
+      { full_name: 'Bruno Farias Cavalcante', class: '4ª Classe', shirt_size: 'G', status: 'confirmed' },
+      { full_name: 'André Macedo', class: '4ª Classe', shirt_size: 'G', status: 'pre' },
+      { full_name: 'Derlan André', class: '5ª Classe', shirt_size: 'GG', status: 'pre' },
+      { full_name: 'Fulano Espera', class: '5ª Classe', shirt_size: 'M', status: 'waitlist' },
+    ],
+  };
+
+  it('é ação do servidor', () => {
+    expect(isChampionshipServerAction('lista')).toBe(true);
+    expect(parseAnswer(JSON.stringify({ intent: 'campeonato', ready: true, slots: { champ_action: 'lista', list_filter: 'pendentes' } })).slots)
+      .toMatchObject({ champ_action: 'lista', list_filter: 'pendentes' });
+  });
+
+  it('traz todo mundo, painel e WhatsApp, com camisa e situação, sem repetir quem está nos dois', async () => {
+    const { i, calls } = input({ champ_action: 'lista' }, { requester: admin, championship: adminPack(dadosAdmin) });
+    const d = await campeonato(i, {});
+    const t = d.bubbles.join('\n');
+    expect(calls).toHaveLength(0);
+    expect(d.action).toBe('champ_list');
+    expect(d.verbatim).toBe(true);
+    expect(t).toContain('AUGE OPEN');
+    expect(t).toContain('✅ Bruno Farias Cavalcante — G');
+    expect(t).toContain('🎟️ Thieslley Soares — P');
+    expect(t).toContain('⏳ Mario Rego — G');
+    expect(t).toContain('⏳ André Macedo — G');
+    expect(t).toContain('✅ Hermeson Veras — GG');
+    expect(t).toContain('⏳ Davi Arcelino — sem tamanho');
+    expect(t).toContain('🕓 Fulano Espera — M');
+    expect(t.match(/Bruno Farias/g)).toHaveLength(1);
+    expect(t).not.toContain('não informado');
+    // Total de camisas para o pedido (lista de espera fora): P 1 · M 0 · G 3 · GG 2, e 1 sem tamanho.
+    expect(t).toContain('P 1 · M 0 · G 3 · GG 2');
+    expect(t).toContain('1 sem tamanho');
+  });
+
+  it('filtra por classe e só pendentes', async () => {
+    const { i } = input({ champ_action: 'lista', champ_class: '5', list_filter: 'pendentes' }, { requester: admin, championship: adminPack(dadosAdmin) });
+    const t = (await campeonato(i, {})).bubbles.join('\n');
+    expect(t).toContain('Davi Arcelino');
+    expect(t).toContain('Derlan André');
+    expect(t).not.toContain('Hermeson Veras');
+    expect(t).not.toContain('Mario Rego');
+  });
+
+  it('atleta não vê a lista dos outros', async () => {
+    const { i } = input({ champ_action: 'lista' }, { championship: pack() });
+    const d = await campeonato(i, {});
+    expect(d.action).toBe('champ_forbidden');
+  });
+
+  it('o prompt manda pedir a lista ao servidor e mostra a camisa de quem está no painel', () => {
+    expect(championshipRules({ championship: adminPack(dadosAdmin), requester: admin })).toContain('"lista"');
+    expect(championshipText({ championship: adminPack(dadosAdmin) })).toContain('Mario Rego | camisa G');
   });
 });
