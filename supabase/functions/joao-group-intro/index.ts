@@ -2,7 +2,7 @@
 // Apresentação do João num grupo recém-liberado (30/10, grupo do AUGE OPEN). Lê o papo do grupo (banco e, se ainda
 // houver pouco, a UAZAPI) e a lista de inscritos, escreve como João Fonseca, o Fonsequinha, e posta UMA vez:
 // conv_groups.intro_sent_at marca o grupo e cada bolha tem chave de idempotência. Mesmo segredo do bom-dia (x-joao-secret).
-// Corpo: { "group_id": "<uuid>", "dry_run": true|false }.
+// Corpo: { "group_id": "<uuid>", "dry_run": true|false, "messages"?: [texto conferido no teste seco] }.
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.89.0";
 import { INTRO_SYSTEM, fallbackIntro, introUserPayload, linesFromUaz, pickIntro } from "./messages.ts";
@@ -97,8 +97,15 @@ Deno.serve(async (req) => {
     if (g.intro_sent_at && !dry) return js(200, { ok: true, status: "already_introduced", at: g.intro_sent_at });
     const recent = (g.recent?.length ?? 0) >= 5 ? g.recent : [...(await uazRecent(g.group_jid)), ...(g.recent ?? [])];
     const c = { group_name: g.group_name, persona: g.persona, championship: g.championship, recent };
-    const t = await write(c);
-    if (dry) return js(200, { ok: true, dry_run: true, source: t.source, recent: recent.length, messages: t.messages, usage: t.usage });
+    // Texto já conferido no teste seco: sai exatamente ele, se passar nas mesmas regras; senão, nada sai.
+    const approved = Array.isArray(body?.messages) ? body.messages : null;
+    if (approved) {
+      const ok = pickIntro(JSON.stringify({ mensagens: approved }), c);
+      if (JSON.stringify(ok) !== JSON.stringify(approved.map((m) => String(m).trim()))) return js(422, { error: "APPROVED_TEXT_REJECTED" });
+    }
+    const t = approved ? { messages: approved.map((m) => String(m).trim()), source: "approved", usage: null } : await write(c);
+    // Teste seco mostra o papo que ele leu, para conferir que a brincadeira saiu do grupo e não da cabeça do modelo.
+    if (dry) return js(200, { ok: true, dry_run: true, source: t.source, recent: recent.length, read: recent, messages: t.messages, usage: t.usage });
     const out = [];
     for (const [i, m] of t.messages.entries()) {
       if (i) await new Promise((ok) => setTimeout(ok, 2500));   // ritmo de gente digitando, não rajada de robô

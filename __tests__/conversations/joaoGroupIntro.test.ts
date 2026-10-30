@@ -57,3 +57,11 @@ describe('apresentação do João no grupo', () => {
     expect(linesFromUaz(null)).toEqual([]);
   });
 });
+
+describe('quem a apresentação pode citar', () => {
+  it('só quem falou no grupo e os inscritos, pelo primeiro nome', async () => {
+    const { citable } = await import('../../supabase/functions/joao-group-intro/messages');
+    expect(citable(c)).toEqual(['Mario', 'Carlos', 'Bruno']);
+    expect(JSON.parse(introUserPayload(c)).pode_citar).toEqual(['Mario', 'Carlos', 'Bruno']);
+  });
+});

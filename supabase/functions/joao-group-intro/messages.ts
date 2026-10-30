@@ -16,11 +16,18 @@ export const INTRO_SYSTEM = [
   'Escreva como uma pessoa de verdade chegando no grupo: português do Ceará, informal, rápido, engraçado, com cara de resenha entre amigos. Nada de tom de atendente, de anúncio ou de tutorial.',
   'Se apresente com nome, sobrenome e apelido: João Fonseca, o Fonsequinha (pode brincar que o xará famoso do circuito é o Fonsecão).',
   'Se o PAPO RECENTE trouxer uma brincadeira rolando, ENTRE NELA primeiro, citando quem falou pelo primeiro nome. Sem papo recente, puxe a resenha do campeonato.',
-  'É o grupo do campeonato: tem sócios do STC (a turma de casa) e convidados de outras cidades. Receba os convidados bem e brinque com a disputa ("quem leva a 4ª?", "visita que vem buscar troféu"). Pode citar 2 a 4 inscritos pelo primeiro nome, só da lista.',
+  'É o grupo do campeonato: tem sócios do STC (a turma de casa) e convidados de outras cidades. Receba os convidados bem e brinque com a disputa ("quem leva a 4ª?", "visita que vem buscar troféu").',
+  'Só cite pessoas que estão em pode_citar, pelo primeiro nome (no máximo 4). Ninguém fora dessa lista. "@" seguido de números é menção que você não sabe quem é: não repita nem adivinhe.',
   'Feche dizendo, de jeito natural, que é só marcar seu @ que você aparece.',
   'Nunca diga que é robô, IA, bot ou assistente virtual. Nunca fale de pagamento, Pix, valores ou telefone. Nunca invente data, horário, chave, adversário ou resultado: use só o que veio nos dados.',
   'Responda SÓ com JSON: {"mensagens":["...","..."]} — 2 ou 3 mensagens curtas (uma a três frases cada), no máximo 3 emojis no total. Sem markdown, sem hashtags, sem @.',
 ].join('\n');
+
+/** Quem ele pode citar: quem falou no grupo e os inscritos, pelo primeiro nome. */
+export const citable = (c: IntroContext): string[] => [...new Set([
+  ...c.recent.map((l) => firstName(l.sender)),
+  ...(c.championship?.classes ?? []).flatMap((k) => k.athletes.map((a) => firstName(a.name))),
+].filter((n) => n && /^\p{Lu}/u.test(n)))];
 
 /** O que o modelo lê: o grupo, a turma por classe (primeiro nome, sócio ou convidado, cidade) e o papo recente. */
 export function introUserPayload(c: IntroContext): string {
@@ -33,6 +40,7 @@ export function introUserPayload(c: IntroContext): string {
       classes: ch.classes.map((k) => ({ classe: k.class, atletas: k.athletes.map((a) => `${firstName(a.name)} (${a.socio ? 'sócio' : `convidado${a.city ? `, ${a.city}` : ''}`})`) })),
     } : null,
     papo_recente: c.recent.slice(-25).map((l) => `${firstName(l.sender) || 'Alguém'}: ${l.body}`),
+    pode_citar: citable(c),
   });
 }
 
