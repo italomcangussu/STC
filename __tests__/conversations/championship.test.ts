@@ -478,3 +478,27 @@ describe('lista de inscritos do administrador', () => {
     expect(championshipText({ championship: adminPack(dadosAdmin) })).toContain('Mario Rego | camisa G');
   });
 });
+
+// Henrique, 30/10: lançou o Pix da inscrição no caixa e o atleta seguia "aguardando Pix". O banco agora confirma;
+// o João diz o que aconteceu com a inscrição junto do "Pronto".
+describe('receita de inscrição lançada pelo administrador', () => {
+  const base = { entry_kind: 'revenue', description: 'Inscrição AUGE OPEN — Juarez Enderson e Heitor Freitas', amount_cents: 26000 };
+  it('confirmou: diz quem ficou confirmado e quem foi para a lista de espera', async () => {
+    const { adminSuccessMessage } = await import('../../supabase/functions/_shared/aiAgent/adminMessages');
+    const t = adminSuccessMessage('fin_entry_create', { ...base, championship: { championship: 'Serra e Sertão 2026',
+      confirmed: ['Juarez Enderson Magalhães Amaral', 'Heitor Freitas Portela'], waitlist: [] } });
+    expect(t).toContain('Pronto: receita lançada');
+    expect(t).toContain('✅ Inscrição confirmada: Juarez Enderson Magalhães Amaral e Heitor Freitas Portela');
+  });
+  it('não confirmou: avisa o motivo, sem dizer que a inscrição está paga', async () => {
+    const { adminSuccessMessage } = await import('../../supabase/functions/_shared/aiAgent/adminMessages');
+    const semNome = adminSuccessMessage('fin_entry_create', { ...base, championship: { championship: 'Serra e Sertão 2026', reason: 'NO_MATCH' } });
+    expect(semNome).toContain('não achei pré-inscrição');
+    const valor = adminSuccessMessage('fin_entry_create', { ...base, championship: { championship: 'Serra e Sertão 2026', reason: 'AMOUNT',
+      names: ['Philippe Ramos de Aguiar'], amount_cents: 26000, expected_cents: 13000 } });
+    expect(valor).toContain('Philippe Ramos de Aguiar');
+    expect(valor).toContain('R$ 130,00');
+    expect(valor).not.toContain('confirmada');
+    expect(adminSuccessMessage('fin_entry_create', base)).toBe('Pronto: receita lançada: Inscrição AUGE OPEN — Juarez Enderson e Heitor Freitas, R$ 260,00.');
+  });
+});

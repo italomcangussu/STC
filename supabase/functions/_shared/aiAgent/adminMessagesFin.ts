@@ -14,6 +14,20 @@ const receiptNote = (s: Ctx, text: string) => (s.receipt_id ? `, ${text}` : '');
 const entryKind = (s: Ctx) => (s.entry_kind === 'expense' ? 'despesa' : 'receita');
 const phoneBR = (v: unknown) => String(v ?? '').replace(/^(\d{2})(\d{4,5})(\d{4})$/, '($1) $2-$3');
 
+const nomes = (v: unknown) => ((v ?? []) as string[]).join(', ').replace(/, ([^,]*)$/, ' e $1');
+
+/** Receita de inscrição: o banco confirma a pré-inscrição pelo nome e pelo valor; aqui só se conta o que ele fez. */
+function championshipNote(c: Ctx | undefined): string {
+  if (!c) return '';
+  const linhas: string[] = [];
+  if (((c.confirmed ?? []) as string[]).length) linhas.push(`✅ Inscrição confirmada: ${nomes(c.confirmed)}.`);
+  if (((c.waitlist ?? []) as string[]).length) linhas.push(`⏳ Pago, mas na lista de espera (classe cheia): ${nomes(c.waitlist)}.`);
+  if (c.reason === 'NO_MATCH') linhas.push('⚠️ No campeonato, não achei pré-inscrição com esse nome, então ninguém foi confirmado. Se o atleta ainda não se inscreveu, me passe os dados que eu inscrevo.');
+  if (c.reason === 'AMOUNT') linhas.push(`⚠️ Achei a pré-inscrição de ${nomes(c.names)}, mas o valor (${centsBR(c.amount_cents)}) não fecha com o da inscrição (${centsBR(c.expected_cents)}). Não confirmei; me diga quem esse Pix pagou.`);
+  if (c.reason === 'FAILED') linhas.push('⚠️ Não consegui confirmar a inscrição do atleta agora; ela segue aguardando o Pix.');
+  return linhas.length ? `\n${linhas.join('\n')}` : '';
+}
+
 function memberCreateProposal(s: Ctx): string {
   const quem = s.action === 'fin_access_approve' ? `Vou aprovar o pedido de acesso de ${s.name}` : `Vou cadastrar o sócio ${s.name}`;
   const email = s.email ? `e-mail ${s.email}` : 'e-mail gerado pelo sistema';
@@ -112,7 +126,7 @@ export const FIN_SUCCESS: Record<FinTextAction, Render> = {
   fin_receipt_approve: (s) => `Pronto: comprovante de ${s.member_name} aprovado, ${centsBR(s.amount_cents)} baixados.`,
   fin_charges_generate: chargesGeneratedSuccess,
   fin_receipt_reject: (s) => `Pronto: comprovante de ${s.member_name} recusado.`,
-  fin_entry_create: (s) => `Pronto: ${entryKind(s)} lançada: ${s.description}, ${centsBR(s.amount_cents)}${receiptNote(s, 'comprovante anexado')}.`,
+  fin_entry_create: (s) => `Pronto: ${entryKind(s)} lançada: ${s.description}, ${centsBR(s.amount_cents)}${receiptNote(s, 'comprovante anexado')}.${championshipNote(s.championship as Ctx | undefined)}`,
   fin_pendency_create: (s) => `Pronto: pendência lançada para ${s.member_name}, ${s.description}, ${centsBR(s.amount_cents)}.${result(s).automation_recipient_id ? ' A cobrança já está na fila de envio.' : ''}`,
   fin_pendency_send: pendencySendSuccess,
   fin_pendency_collection: (s) => `Pronto: cobrança de ${s.member_name} (${s.description}) ${s.enabled ? 'retomada' : 'pausada'}.`,
