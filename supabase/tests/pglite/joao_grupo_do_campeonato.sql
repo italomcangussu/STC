@@ -82,4 +82,21 @@ do $$ begin
   assert conv_private.ai_trigger('00000000-0000-0000-0000-0000000064a2')->>'reason' = 'no_trigger', 'no grupo de sócios, só papo de jogo';
 end $$;
 
+-- A brincadeira do golpe de estado (30/10): 😆 e o nome do João sem @ também chamam, no grupo do campeonato; no de sócios, não.
+update conv_private.joao_spontaneous_window set last_trigger_at = null;
+update public.conv_ai_sessions set started_at = now() - interval '5 minutes';   -- sem "rajada" do mesmo solicitante
+insert into public.conv_messages (id, conversation_id, direction, origin, sender_contact_id, kind, body) values
+  ('00000000-0000-0000-0000-0000000064b1', '00000000-0000-0000-0000-0000000061a2', 'inbound', 'customer', '00000000-0000-0000-0000-0000000062a1', 'text', 'dei um golpe de estado e assumi o posto😆😆'),
+  ('00000000-0000-0000-0000-0000000064b2', '00000000-0000-0000-0000-0000000061a2', 'inbound', 'customer', '00000000-0000-0000-0000-0000000062a2', 'text', 'e o João, apoia a nova administração?'),
+  ('00000000-0000-0000-0000-0000000064b3', '00000000-0000-0000-0000-0000000061a1', 'inbound', 'customer', '00000000-0000-0000-0000-0000000062a2', 'text', 'golpe de estado 😆😆'),
+  ('00000000-0000-0000-0000-0000000064b4', '00000000-0000-0000-0000-0000000061a2', 'inbound', 'customer', '00000000-0000-0000-0000-0000000062a2', 'text', 'joaozinho de deus, vou dormir');
+do $$ begin
+  assert conv_private.ai_trigger('00000000-0000-0000-0000-0000000064b1')->>'reason' = 'spontaneous_tennis', '😆 no grupo do campeonato chama o João';
+  update conv_private.joao_spontaneous_window set last_trigger_at = null;
+  assert conv_private.ai_trigger('00000000-0000-0000-0000-0000000064b2')->>'reason' = 'spontaneous_tennis', 'o nome dele sem @ chama o João';
+  update conv_private.joao_spontaneous_window set last_trigger_at = null;
+  assert conv_private.ai_trigger('00000000-0000-0000-0000-0000000064b3')->>'reason' = 'no_trigger', 'no grupo de sócios, 😆 não é deixa';
+  assert conv_private.ai_trigger('00000000-0000-0000-0000-0000000064b4')->>'reason' = 'no_trigger', '"joaozinho" não é o nome dele';
+end $$;
+
 select fab.espera_erro($$select public.conv_svc_ai_group_championship(gen_random_uuid())$$, 'permission denied') from (select fab.como('authenticated', (select carlos from u))) x;

@@ -101,6 +101,13 @@ describe('ranking do circuito no grupo do campeonato (Hermeson, 30/10: "quem é 
     expect(t).toContain('Bruno Sócio do STC');
   });
 
+  it('na brincadeira da turma ele entra no tema com uma tirada, não só com reação', () => {
+    const sys = systemPrompt({ persona_name: 'João Fonseca' } as AiSettings, ctx());
+    expect(sys).toContain('ENTRE NA BRINCADEIRA');
+    expect(sys).toContain('só reagir com emoji é pouco');
+    expect(sys).toContain('Fique fora de duplo sentido sexual');
+  });
+
   it('a regra ensina a perguntar "qual Bruno?" em vez de chutar', () => {
     const sys = systemPrompt({ persona_name: 'João Fonseca' } as AiSettings, ctx());
     expect(sys).toContain('nunca o sócio do STC com o mesmo nome');
