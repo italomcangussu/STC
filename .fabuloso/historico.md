@@ -268,3 +268,7 @@ Orquestrador Sonnet 5.5 (sem subagentes, a pedido). Criados `20261007260000_conv
 - Contexto: fluxo de entrada espontânea em `arquitetura.md`. Não há CLAUDE.md.
 - Entrega: migrations 20261030210000 (reaplicada e registrada) e 20261030220000 aplicadas; `whatsapp-webhook` deployada. Teste: `supabase/tests/pglite/joao_grupo_do_campeonato.sql`.
 - Observação: deriva no remoto em `conv_ai_memory_candidates`, `conv_followups`, `fin_entry_payments`, `championship_signups`. Teste com modelo real segue sem chave local.
+- 2026-10-30 (Opus 5.5): João mais afiado na resenha do grupo do campeonato: lê a piada inteira (janela de 40 mensagens/3 h com hora, remetente, mídia e resposta) e não pode ser genérico; `RESENHA_RULES` substitui a regra que poupava convidado. Commits 0b79125..2b8fc76.
+- Contexto: fluxo de entrada espontânea em `arquitetura.md` (trecho "ENTRE NA BRINCADEIRA" substituído).
+- Entrega: migration 20261030230000_joao_le_a_piada aplicada e registrada; `whatsapp-webhook` deployada. Teste: `supabase/tests/pglite/joao_grupo_do_campeonato.sql`.
+- Observação: João não vê foto nem ouve áudio (só sabe que existem); teste com modelo real segue sem chave local.
