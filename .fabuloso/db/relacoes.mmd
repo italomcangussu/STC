@@ -108,6 +108,7 @@ erDiagram
   public_profiles ||--o{ public_conv_followups : "created_by"
   public_conv_messages ||--o{ public_conv_followups : "message_id"
   public_profiles ||--o{ public_conv_groups : "allowed_by"
+  public_championships ||--o{ public_conv_groups : "championship_id"
   public_conv_ai_sessions ||--o{ public_conv_messages : "ai_session_id"
   public_profiles ||--o{ public_conv_messages : "author_id"
   public_conv_conversations ||--o{ public_conv_messages : "conversation_id"

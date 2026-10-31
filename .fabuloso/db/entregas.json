@@ -1,15 +1,10 @@
 {
-  "aplicadas": [
-    "20261026160000",
-    "20261026170000",
-    "20261026180000",
-    "20261026190000",
-    "20261026200000",
+  "aplicadas": [],
+  "jaNoRemoto": [
     "20261028090000_joao_confirmacao_nao_se_perde.sql",
     "20261028100000_joao_recado_contato_e_comprovantes_whatsapp.sql",
     "20261028110000_serra_sertao_favorecido_por_cnpj.sql"
   ],
-  "jaNoRemoto": [],
   "edge": {
     "admin-athlete-access": "8943e49b9df0",
     "conversation-operations": "f3d35229bc90",
@@ -22,6 +17,6 @@
     "send-push": "0d28132ff495",
     "signature-dispatch": "0984cf81baf1",
     "signature-operations": "6d6a2b33ede9",
-    "whatsapp-webhook": "c6976de5bdcb"
+    "whatsapp-webhook": "b286a81c2804"
   }
 }

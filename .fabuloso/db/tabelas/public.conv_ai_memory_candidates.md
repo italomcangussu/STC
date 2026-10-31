@@ -1,5 +1,5 @@
 # public.conv_ai_memory_candidates
-> tabela · RLS on · ~0 linhas
+> tabela · RLS on · ~<100 linhas
 
 ## Colunas
 | Coluna | Tipo | Nulo | Padrão | Nota |

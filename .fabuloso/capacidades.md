@@ -7,7 +7,9 @@
 - Qualidade/testes/refatoração → `uncle-bob`; `test-driven-development` ao criar regra nova; `code-review` e `simplify` no diff.
 - Bug/teste quebrado → `systematic-debugging` antes de propor correção.
 - Banco → `supabase` + `supabase-postgres-best-practices`; MCP Supabase (`execute_sql`, `get_advisors`, `list_migrations`); regras em `references/regras-banco.md` da skill fabuloso. Migrations offline em PGlite (`__tests__/*/sql/`).
-- Chat/WhatsApp (Conversas, UazAPI, avisos de assinatura) → `chat-best-practices`, `uazapi`.
+- Chat/WhatsApp (Conversas, UazAPI, avisos de assinatura) → `chat-best-practices`, `uazapi`, `fabuloso-crm` (chat/UAZAPI/follow-up).
+- Agente de IA (João: prompt, memória, router, custo) → `fabuloso-agente`.
+- Design de tela → `fabuloso-design` (além de `refatorar-ui`).
 - Antes de afirmar "pronto" → `verification-before-completion`.
 - Localizar código → agentmap (CLI) ou `arquitetura.md`.
 
@@ -17,9 +19,11 @@
 ### Banco de dados
 - `supabase`, `supabase-postgres-best-practices`, MCP Supabase (o conector `mcp__supabase__*` pode pedir token; o do claude.ai `mcp__6a0fd75e…` funcionou em 2026-10-07)
 ### Qualidade de código
-- `uncle-bob`, `code-review`, `simplify`, `security-review`, `performance-profiler`, `test-driven-development`
+- `fabuloso-uncle-bob` (ex-`uncle-bob`), `code-review`, `simplify`, `security-review`, `performance-profiler`, `test-driven-development`
 ### Segurança
 - `fabuloso-security` — auditoria de segurança (código, banco pelos mapas, edge functions, dependências, VPS, Easypanel), segredos no projeto e no histórico, rotação de segredo
+### Agente e CRM
+- `fabuloso-agente` (agentes de IA, memória, prompt, evals), `fabuloso-crm` (mensageiro WhatsApp/UAZAPI), `uazapi`, `chat-best-practices`
 ### Processo
 - `brainstorming`, `writing-plans`, `executing-plans`, `subagent-driven-development`, `using-git-worktrees`, `finishing-a-development-branch`, `requesting-code-review`, `receiving-code-review`
 ### Engenharia (plugin `engineering`)

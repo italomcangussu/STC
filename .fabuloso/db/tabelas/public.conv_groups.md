@@ -15,10 +15,13 @@
 | last_payload_shape | jsonb | sim |  |  |
 | allowed_by | uuid | sim |  |  |
 | allowed_at | timestamp with time zone | sim |  |  |
+| championship_id | uuid | sim |  |  |
+| intro_sent_at | timestamp with time zone | sim |  |  |
 
 ## Chaves e restrições
 - PK (id)
 - FK (allowed_by) → public.profiles(id)
+- FK (championship_id) → public.championships(id) on delete set null
 - UNIQUE (group_jid)
 - CHECK conv_groups_ai_needs_allowed: `CHECK (((NOT ai_enabled) OR (status = 'allowed'::text)))`
 - CHECK conv_groups_group_jid_check: `CHECK ((group_jid ~ '^[0-9A-Za-z._-]{5,64}@g\.us$'::text))`

@@ -1,7 +1,7 @@
 {
   "versao": 3,
-  "geradoEm": "2026-10-24T12:49:40.036Z",
-  "commit": "c5b30866",
+  "geradoEm": "2026-10-31T00:45:00.387Z",
+  "commit": "c9aadbea",
   "pastas": [
     "__tests__",
     "__tests__/admin",
@@ -47,19 +47,19 @@
     "tasks"
   ],
   "agentmap": {
-    "arquivos": 609,
-    "sha": "c5b3086",
+    "arquivos": 666,
+    "sha": "c9aadbe",
     "hubs": [
       "lib/supabase.ts",
+      "supabase/functions/_shared/aiAgent/promptAdmin.ts",
+      "supabase/functions/_shared/aiAgent/promptContext.ts",
+      "dist/assets/react-vendor-CcCdIb5n.js",
       "lib/finance/dates.ts",
       "types.ts",
       "__tests__/finance/sql/harness.ts",
-      "supabase/functions/_shared/aiAgent/promptAdmin.ts",
-      "supabase/functions/_shared/aiAgent/promptContext.ts",
+      "dist/assets/icons-vendor-Bd_-vDZl.js",
       "components/finance/ui.tsx",
-      "__tests__/conversations/sql/harness.ts",
-      "supabase/functions/_shared/uazChat.ts",
-      "lib/finance/money.ts"
+      "__tests__/conversations/sql/harness.ts"
     ]
   },
   "skillsPorPerfil": {
@@ -412,9 +412,99 @@
     ],
     "local": [
       {
-        "name": "Agent Development",
+        "name": "accessibility-review",
         "origem": "plugin",
-        "hash": "24c8e83f9ebf"
+        "hash": "8b0d8a1e0200"
+      },
+      {
+        "name": "adobe",
+        "origem": "plugin",
+        "hash": "c03c91a0a396"
+      },
+      {
+        "name": "adobe-anydocx",
+        "origem": "plugin",
+        "hash": "3854e4df2b14"
+      },
+      {
+        "name": "adobe-anyexcel",
+        "origem": "plugin",
+        "hash": "59efb34209ce"
+      },
+      {
+        "name": "adobe-anypdf",
+        "origem": "plugin",
+        "hash": "d5eeb5c7becc"
+      },
+      {
+        "name": "adobe-anypptx",
+        "origem": "plugin",
+        "hash": "5b0956e0ad4d"
+      },
+      {
+        "name": "adobe-batch-edit-photos",
+        "origem": "plugin",
+        "hash": "c4ef249ab2a4"
+      },
+      {
+        "name": "adobe-create-pdfs-from-data",
+        "origem": "plugin",
+        "hash": "6bfb78160c05"
+      },
+      {
+        "name": "adobe-create-social-variations",
+        "origem": "plugin",
+        "hash": "0135fc800f8c"
+      },
+      {
+        "name": "adobe-design-from-template",
+        "origem": "plugin",
+        "hash": "091d6eec2a8e"
+      },
+      {
+        "name": "adobe-design-to-pdf",
+        "origem": "plugin",
+        "hash": "94d531f2a901"
+      },
+      {
+        "name": "adobe-document-review",
+        "origem": "plugin",
+        "hash": "6e32e544ff68"
+      },
+      {
+        "name": "adobe-edit-quick-cut",
+        "origem": "plugin",
+        "hash": "e0adada7f4d1"
+      },
+      {
+        "name": "adobe-fonts",
+        "origem": "plugin",
+        "hash": "145561b42bfb"
+      },
+      {
+        "name": "adobe-resize-photos-and-videos",
+        "origem": "plugin",
+        "hash": "9b2d116e9ae5"
+      },
+      {
+        "name": "adobe-retouch-portraits",
+        "origem": "plugin",
+        "hash": "fe959a8583ed"
+      },
+      {
+        "name": "architecture",
+        "origem": "plugin",
+        "hash": "dc1adc5cbe10"
+      },
+      {
+        "name": "audit-support",
+        "origem": "plugin",
+        "hash": "2f8810d6a06c"
+      },
+      {
+        "name": "auth0",
+        "origem": "plugin",
+        "hash": "6e8a8bf1fc20"
       },
       {
         "name": "brainstorming",
@@ -422,9 +512,44 @@
         "hash": "5e8776e26d81"
       },
       {
+        "name": "brand-guidelines",
+        "origem": "global",
+        "hash": "f7f3c8d35f22"
+      },
+      {
+        "name": "brand-review",
+        "origem": "plugin",
+        "hash": "b01afddf9232"
+      },
+      {
         "name": "brandkit",
         "origem": "global",
         "hash": "629f7041aeb5"
+      },
+      {
+        "name": "brief",
+        "origem": "plugin",
+        "hash": "a43de8c4c1a6"
+      },
+      {
+        "name": "built-in-browser",
+        "origem": "global",
+        "hash": "82cf0526b176"
+      },
+      {
+        "name": "campaign-plan",
+        "origem": "plugin",
+        "hash": "96836aca2eee"
+      },
+      {
+        "name": "capacity-plan",
+        "origem": "plugin",
+        "hash": "f0f2868c2d2b"
+      },
+      {
+        "name": "change-request",
+        "origem": "plugin",
+        "hash": "b4a4ce77c10c"
       },
       {
         "name": "chat-best-practices",
@@ -432,14 +557,49 @@
         "hash": "923b860713ae"
       },
       {
-        "name": "claude-opus-4-5-migration",
-        "origem": "plugin",
-        "hash": "ec58cf49eecf"
+        "name": "chrome-browser",
+        "origem": "global",
+        "hash": "eb21888039a8"
       },
       {
-        "name": "Command Development",
+        "name": "close-management",
         "origem": "plugin",
-        "hash": "daa4512e8a19"
+        "hash": "697d58e3195f"
+      },
+      {
+        "name": "code-review",
+        "origem": "plugin",
+        "hash": "e47663fb711e"
+      },
+      {
+        "name": "competitive-brief",
+        "origem": "plugin",
+        "hash": "05c291dbf042"
+      },
+      {
+        "name": "compliance-check",
+        "origem": "plugin",
+        "hash": "fac5f9a1726a"
+      },
+      {
+        "name": "compliance-tracking",
+        "origem": "plugin",
+        "hash": "65e4a7c7a1c5"
+      },
+      {
+        "name": "computer-use",
+        "origem": "global",
+        "hash": "6419991402ba"
+      },
+      {
+        "name": "configurar-orcamento",
+        "origem": "plugin",
+        "hash": "c1cdfa619791"
+      },
+      {
+        "name": "content-creation",
+        "origem": "plugin",
+        "hash": "393b186bbc34"
       },
       {
         "name": "dark-mode-design-expert",
@@ -447,9 +607,39 @@
         "hash": "1d409d06f865"
       },
       {
+        "name": "debug",
+        "origem": "plugin",
+        "hash": "5a663df718f1"
+      },
+      {
+        "name": "deep-research",
+        "origem": "global",
+        "hash": "8aec9bc788bf"
+      },
+      {
+        "name": "deploy-checklist",
+        "origem": "plugin",
+        "hash": "68a2bfc0ff16"
+      },
+      {
         "name": "design-critique",
         "origem": "global",
         "hash": "c01d729a7373"
+      },
+      {
+        "name": "design-handoff",
+        "origem": "plugin",
+        "hash": "a7eeade6bc86"
+      },
+      {
+        "name": "design-system",
+        "origem": "plugin",
+        "hash": "18ae243772a6"
+      },
+      {
+        "name": "design-system-extractor",
+        "origem": "global",
+        "hash": "f5b4389d61d2"
       },
       {
         "name": "design-taste-frontend",
@@ -467,6 +657,36 @@
         "hash": "0f55be8a3617"
       },
       {
+        "name": "doc-coauthoring",
+        "origem": "global",
+        "hash": "647d7873c1d6"
+      },
+      {
+        "name": "docs",
+        "origem": "global",
+        "hash": "4ca444740219"
+      },
+      {
+        "name": "documentation",
+        "origem": "plugin",
+        "hash": "5f5c4c45fa84"
+      },
+      {
+        "name": "docx",
+        "origem": "global",
+        "hash": "2c57cdc0688e"
+      },
+      {
+        "name": "draft-content",
+        "origem": "plugin",
+        "hash": "465042f053f5"
+      },
+      {
+        "name": "email-sequence",
+        "origem": "plugin",
+        "hash": "c18ebf4b3da4"
+      },
+      {
         "name": "executing-plans",
         "origem": "global",
         "hash": "a8cd575556bb"
@@ -474,7 +694,12 @@
       {
         "name": "fabuloso",
         "origem": "global",
-        "hash": "2ace01d0d403"
+        "hash": "eaf43621688a"
+      },
+      {
+        "name": "fabuloso-agente",
+        "origem": "global",
+        "hash": "58cfe1eefac7"
       },
       {
         "name": "fabuloso-codex",
@@ -482,9 +707,34 @@
         "hash": "d28238a7ab33"
       },
       {
+        "name": "fabuloso-crm",
+        "origem": "global",
+        "hash": "f3a9341108f8"
+      },
+      {
+        "name": "fabuloso-design",
+        "origem": "global",
+        "hash": "0b52dcddf569"
+      },
+      {
         "name": "fabuloso-security",
         "origem": "global",
         "hash": "3592bd648f70"
+      },
+      {
+        "name": "fabuloso-uncle-bob",
+        "origem": "global",
+        "hash": "6e5ab055d286"
+      },
+      {
+        "name": "fechar-mes",
+        "origem": "plugin",
+        "hash": "f95c31f2c813"
+      },
+      {
+        "name": "financial-statements",
+        "origem": "plugin",
+        "hash": "28691ffc98bc"
       },
       {
         "name": "finishing-a-development-branch",
@@ -507,6 +757,11 @@
         "hash": "c12a3654ef75"
       },
       {
+        "name": "google-workspace",
+        "origem": "global",
+        "hash": "d3af0e8fa65a"
+      },
+      {
         "name": "gpt-taste",
         "origem": "global",
         "hash": "484015bc0216"
@@ -520,11 +775,6 @@
         "name": "high-end-visual-design",
         "origem": "global",
         "hash": "7e45487fb52b"
-      },
-      {
-        "name": "Hook Development",
-        "origem": "plugin",
-        "hash": "ceb5948fc4c0"
       },
       {
         "name": "humanizer",
@@ -557,19 +807,74 @@
         "hash": "31c00df7082e"
       },
       {
+        "name": "import-memory",
+        "origem": "global",
+        "hash": "b158007fcb5a"
+      },
+      {
+        "name": "importar-extrato",
+        "origem": "plugin",
+        "hash": "66ea031f99ed"
+      },
+      {
+        "name": "incident-response",
+        "origem": "plugin",
+        "hash": "0229680093f3"
+      },
+      {
         "name": "industrial-brutalist-ui",
         "origem": "global",
         "hash": "07a17b920f9a"
       },
       {
-        "name": "MCP Integration",
+        "name": "journal-entry",
         "origem": "plugin",
-        "hash": "144d8525277c"
+        "hash": "2715e0db7cf8"
+      },
+      {
+        "name": "journal-entry-prep",
+        "origem": "plugin",
+        "hash": "3598ad7815a4"
+      },
+      {
+        "name": "karpathy-guidelines",
+        "origem": "plugin",
+        "hash": "ecea16804429"
+      },
+      {
+        "name": "lancar-gasto",
+        "origem": "plugin",
+        "hash": "574787040252"
+      },
+      {
+        "name": "legal-response",
+        "origem": "plugin",
+        "hash": "6c34cf66d1a4"
+      },
+      {
+        "name": "legal-risk-assessment",
+        "origem": "plugin",
+        "hash": "c2b34de685c6"
+      },
+      {
+        "name": "meeting-briefing",
+        "origem": "plugin",
+        "hash": "dc56fd5ba5c0"
+      },
+      {
+        "name": "metas-e-compras",
+        "origem": "plugin",
+        "hash": "002a0f8b04dc"
       },
       {
         "name": "minimalist-ui",
         "origem": "global",
         "hash": "1ae4d8676d5b"
+      },
+      {
+        "name": "morning",
+        "origem": "global",
+        "hash": "b8bbaa39e8d8"
       },
       {
         "name": "n8n-code-javascript",
@@ -617,9 +922,24 @@
         "hash": "cc539af365c7"
       },
       {
+        "name": "pdf",
+        "origem": "global",
+        "hash": "7489d5b400fe"
+      },
+      {
         "name": "performance-profiler",
         "origem": "global",
         "hash": "dcd86c4f6408"
+      },
+      {
+        "name": "performance-report",
+        "origem": "plugin",
+        "hash": "91ec7fecc265"
+      },
+      {
+        "name": "planejar-mes",
+        "origem": "plugin",
+        "hash": "ca368f099b98"
       },
       {
         "name": "playwright",
@@ -627,19 +947,24 @@
         "hash": "4ece24b77ba8"
       },
       {
-        "name": "Plugin Settings",
-        "origem": "plugin",
-        "hash": "e83d861322aa"
-      },
-      {
-        "name": "Plugin Structure",
-        "origem": "plugin",
-        "hash": "c269e921160e"
-      },
-      {
         "name": "plugin-creator",
         "origem": "global",
         "hash": "329d2e945e2e"
+      },
+      {
+        "name": "pptx",
+        "origem": "global",
+        "hash": "4c66c0218ea1"
+      },
+      {
+        "name": "process-doc",
+        "origem": "plugin",
+        "hash": "a0744d8d6505"
+      },
+      {
+        "name": "process-optimization",
+        "origem": "plugin",
+        "hash": "e75ed90d073f"
       },
       {
         "name": "push-validator",
@@ -657,6 +982,11 @@
         "hash": "d41b990ad753"
       },
       {
+        "name": "reconciliation",
+        "origem": "plugin",
+        "hash": "b1ddfe2a0aab"
+      },
+      {
         "name": "redesign-existing-projects",
         "origem": "global",
         "hash": "0713bbfa0337"
@@ -672,24 +1002,64 @@
         "hash": "d3795655c9b3"
       },
       {
+        "name": "research-synthesis",
+        "origem": "plugin",
+        "hash": "c2ce185aceb1"
+      },
+      {
+        "name": "review-contract",
+        "origem": "plugin",
+        "hash": "9035b341c97c"
+      },
+      {
+        "name": "risk-assessment",
+        "origem": "plugin",
+        "hash": "af09a37328ba"
+      },
+      {
+        "name": "runbook",
+        "origem": "plugin",
+        "hash": "d0d12c906259"
+      },
+      {
+        "name": "seo-audit",
+        "origem": "plugin",
+        "hash": "77766595638c"
+      },
+      {
+        "name": "signature-request",
+        "origem": "plugin",
+        "hash": "b8e39e1aa287"
+      },
+      {
         "name": "simulador-ios",
         "origem": "global",
         "hash": "ea7006f7bdfb"
       },
       {
-        "name": "Skill Development",
-        "origem": "plugin",
-        "hash": "4c74111b8049"
-      },
-      {
         "name": "skill-creator",
         "origem": "global",
-        "hash": "e6b443a863e3"
+        "hash": "23d3f559f29c"
       },
       {
         "name": "skill-installer",
         "origem": "global",
         "hash": "4224e29f4718"
+      },
+      {
+        "name": "sox-testing",
+        "origem": "plugin",
+        "hash": "0a556cb46614"
+      },
+      {
+        "name": "standup",
+        "origem": "plugin",
+        "hash": "5d15df316712"
+      },
+      {
+        "name": "status-report",
+        "origem": "plugin",
+        "hash": "1087b7ec4402"
       },
       {
         "name": "stitch-design-taste",
@@ -712,9 +1082,19 @@
         "hash": "3e015d0d931b"
       },
       {
+        "name": "system-design",
+        "origem": "plugin",
+        "hash": "27c137e87d78"
+      },
+      {
         "name": "systematic-debugging",
         "origem": "global",
         "hash": "3f62d80ed6a2"
+      },
+      {
+        "name": "tech-debt",
+        "origem": "plugin",
+        "hash": "79ab3e7bc697"
       },
       {
         "name": "test-driven-development",
@@ -722,9 +1102,29 @@
         "hash": "ddb28bf4e27c"
       },
       {
+        "name": "testing-strategy",
+        "origem": "plugin",
+        "hash": "ebfdb1c894cd"
+      },
+      {
+        "name": "triage-nda",
+        "origem": "plugin",
+        "hash": "b03c87f00a43"
+      },
+      {
+        "name": "uazapi",
+        "origem": "global",
+        "hash": "96a9a27bfe55"
+      },
+      {
         "name": "uncle-bob",
         "origem": "global",
         "hash": "22d582b74de4"
+      },
+      {
+        "name": "user-research",
+        "origem": "plugin",
+        "hash": "63c5b351bcb8"
       },
       {
         "name": "using-git-worktrees",
@@ -737,6 +1137,26 @@
         "hash": "9f00ca481600"
       },
       {
+        "name": "ux-copy",
+        "origem": "plugin",
+        "hash": "cad43b1f760b"
+      },
+      {
+        "name": "variance-analysis",
+        "origem": "plugin",
+        "hash": "6d57f4d41f92"
+      },
+      {
+        "name": "vendor-check",
+        "origem": "plugin",
+        "hash": "8685a9c43c70"
+      },
+      {
+        "name": "vendor-review",
+        "origem": "plugin",
+        "hash": "115f2a58b5c7"
+      },
+      {
         "name": "vercel-react-best-practices",
         "origem": "global",
         "hash": "848870574f33"
@@ -747,9 +1167,14 @@
         "hash": "4521d2476a17"
       },
       {
-        "name": "Writing Hookify Rules",
+        "name": "view-pdf",
         "origem": "plugin",
-        "hash": "258babaec7f8"
+        "hash": "bd553218eb3f"
+      },
+      {
+        "name": "web-artifacts-builder",
+        "origem": "global",
+        "hash": "fc5d078b8b85"
       },
       {
         "name": "writing-plans",
@@ -760,6 +1185,11 @@
         "name": "writing-skills",
         "origem": "global",
         "hash": "415af45c3baa"
+      },
+      {
+        "name": "xlsx",
+        "origem": "global",
+        "hash": "54069c5dd7f8"
       }
     ]
   }

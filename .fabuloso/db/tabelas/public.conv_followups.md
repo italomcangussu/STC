@@ -15,12 +15,18 @@
 | done_at | timestamp with time zone | sim |  |  |
 | message_id | uuid | sim |  |  |
 | last_error | text | sim |  |  |
+| media_path | text | sim |  |  |
+| media_mime | text | sim |  |  |
+| media_name | text | sim |  |  |
+| media_kind | text | sim |  |  |
 
 ## Chaves e restrições
 - PK (id)
 - FK (conversation_id) → public.conv_conversations(id)
 - FK (created_by) → public.profiles(id)
 - FK (message_id) → public.conv_messages(id)
+- CHECK conv_followups_media_check: `CHECK ((((media_path IS NULL) = (media_kind IS NULL)) AND ((media_path IS NULL) OR ((length(media_path) >= 3) AND (length(media_path) <= 500)))))`
+- CHECK conv_followups_media_kind_check: `CHECK (((media_kind IS NULL) OR (media_kind = ANY (ARRAY['image'::text, 'document'::text, 'audio'::text, 'video'::text]))))`
 - CHECK conv_followups_note_check: `CHECK (((note IS NULL) OR (length(note) <= 500)))`
 - CHECK conv_followups_send_body_check: `CHECK (((send_body IS NULL) OR ((length(TRIM(BOTH FROM send_body)) >= 1) AND (length(TRIM(BOTH FROM send_body)) <= 4096))))`
 - CHECK conv_followups_status_check: `CHECK ((status = ANY (ARRAY['pending'::text, 'sending'::text, 'sent'::text, 'done'::text, 'canceled'::text, 'failed'::text])))`

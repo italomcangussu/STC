@@ -8,7 +8,7 @@
     "public",
     "sig_private"
   ],
-  "ultima_migracao": "20261026150000",
+  "ultima_migracao": "20261030220000",
   "extensoes": [
     "pg_cron 1.6.4",
     "pg_net 0.19.5",
@@ -4803,7 +4803,7 @@
       "tipo": "r",
       "rls": true,
       "rls_forcado": false,
-      "linhas_est": "0",
+      "linhas_est": "<100",
       "opcoes": null,
       "comentario": "Pré-inscrições de campeonato feitas pelo João. pre = aguardando Pix; confirmed = pago e inscrito (registration_id); waitlist = classe cheia. Escrita só pelas funções conv_svc_*.",
       "acesso": {
@@ -7842,7 +7842,7 @@
       "tipo": "r",
       "rls": true,
       "rls_forcado": false,
-      "linhas_est": "0",
+      "linhas_est": "<100",
       "opcoes": null,
       "comentario": null,
       "acesso": {
@@ -12042,9 +12042,68 @@
           "gerada": null,
           "identidade": null,
           "comentario": null
+        },
+        {
+          "nome": "media_path",
+          "tipo": "text",
+          "nulo": true,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "media_mime",
+          "tipo": "text",
+          "nulo": true,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "media_name",
+          "tipo": "text",
+          "nulo": true,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "media_kind",
+          "tipo": "text",
+          "nulo": true,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
         }
       ],
       "restricoes": [
+        {
+          "nome": "conv_followups_media_check",
+          "tipo": "c",
+          "def": "CHECK ((((media_path IS NULL) = (media_kind IS NULL)) AND ((media_path IS NULL) OR ((length(media_path) >= 3) AND (length(media_path) <= 500)))))",
+          "colunas": [
+            "media_path",
+            "media_kind"
+          ],
+          "ref": null,
+          "ref_colunas": null,
+          "ao_apagar": null
+        },
+        {
+          "nome": "conv_followups_media_kind_check",
+          "tipo": "c",
+          "def": "CHECK (((media_kind IS NULL) OR (media_kind = ANY (ARRAY['image'::text, 'document'::text, 'audio'::text, 'video'::text]))))",
+          "colunas": [
+            "media_kind"
+          ],
+          "ref": null,
+          "ref_colunas": null,
+          "ao_apagar": null
+        },
         {
           "nome": "conv_followups_note_check",
           "tipo": "c",
@@ -12294,6 +12353,24 @@
           "gerada": null,
           "identidade": null,
           "comentario": null
+        },
+        {
+          "nome": "championship_id",
+          "tipo": "uuid",
+          "nulo": true,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
+        },
+        {
+          "nome": "intro_sent_at",
+          "tipo": "timestamp with time zone",
+          "nulo": true,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": null
         }
       ],
       "restricoes": [
@@ -12354,6 +12431,19 @@
             "id"
           ],
           "ao_apagar": "a"
+        },
+        {
+          "nome": "conv_groups_championship_id_fkey",
+          "tipo": "f",
+          "def": "FOREIGN KEY (championship_id) REFERENCES championships(id) ON DELETE SET NULL",
+          "colunas": [
+            "championship_id"
+          ],
+          "ref": "public.championships",
+          "ref_colunas": [
+            "id"
+          ],
+          "ao_apagar": "n"
         },
         {
           "nome": "conv_groups_pkey",
@@ -16583,7 +16673,7 @@
       "tipo": "r",
       "rls": true,
       "rls_forcado": false,
-      "linhas_est": "0",
+      "linhas_est": "<100",
       "opcoes": null,
       "comentario": null,
       "acesso": {
@@ -30605,6 +30695,19 @@
       "comentario": null
     },
     {
+      "nome": "conv_private.ai_admin_find_contact",
+      "args": "p_session uuid, p_name text",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
       "nome": "conv_private.ai_admin_forms_propose",
       "args": "p_session uuid, p jsonb",
       "retorno": "jsonb",
@@ -30782,6 +30885,19 @@
       "security_definer": true,
       "search_path": "search_path=\"\"",
       "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.ai_admin_whatsapp_receipts",
+      "args": "p_session uuid, p_name text, p_from date, p_to date",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
       "exec_anon": false,
       "exec_authenticated": false,
       "comentario": null
@@ -31450,6 +31566,19 @@
       "comentario": null
     },
     {
+      "nome": "conv_private.ai_still_active",
+      "args": "p_message uuid",
+      "retorno": "boolean",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
       "nome": "conv_private.ai_student_card_propose",
       "args": "p_session uuid, p jsonb",
       "retorno": "jsonb",
@@ -31944,6 +32073,19 @@
       "comentario": null
     },
     {
+      "nome": "conv_private.champ_confirm_from_entry",
+      "args": "p_entry uuid, p_admin uuid",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
       "nome": "conv_private.champ_confirmed",
       "args": "p_champ uuid, p_class text",
       "retorno": "integer",
@@ -31978,6 +32120,19 @@
       "security_definer": true,
       "search_path": "search_path=\"\"",
       "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.champ_name_in_text",
+      "args": "p_name text, p_text text",
+      "retorno": "boolean",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": false,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "i",
       "exec_anon": false,
       "exec_authenticated": false,
       "comentario": null
@@ -32050,7 +32205,7 @@
     {
       "nome": "conv_private.claim_due_followups",
       "args": "p_limit integer",
-      "retorno": "TABLE(followup_id uuid, conversation_id uuid, send_body text)",
+      "retorno": "TABLE(followup_id uuid, conversation_id uuid, send_body text, media_path text, media_mime text, media_name text, media_kind text)",
       "linguagem": "sql",
       "tipo": "f",
       "security_definer": true,
@@ -32082,6 +32237,19 @@
       "security_definer": true,
       "search_path": "search_path=\"\"",
       "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.contact_name_match",
+      "args": "p_query text, p_name text",
+      "retorno": "boolean",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": false,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "i",
       "exec_anon": false,
       "exec_authenticated": false,
       "comentario": null
@@ -32299,6 +32467,19 @@
       "args": "p_reservation uuid",
       "retorno": "jsonb",
       "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.group_championship_pack",
+      "args": "p_championship uuid",
+      "retorno": "jsonb",
+      "linguagem": "sql",
       "tipo": "f",
       "security_definer": true,
       "search_path": "search_path=\"\"",
@@ -32545,6 +32726,19 @@
       "nome": "conv_private.month_pt",
       "args": "p_date date",
       "retorno": "text",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": false,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "i",
+      "exec_anon": true,
+      "exec_authenticated": true,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.name_typo_match",
+      "args": "p_query text, p_name text, p_aliases text[]",
+      "retorno": "boolean",
       "linguagem": "sql",
       "tipo": "f",
       "security_definer": false,
@@ -33001,6 +33195,19 @@
       "args": "p_code text, p_message text",
       "retorno": "jsonb",
       "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": false,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "i",
+      "exec_anon": true,
+      "exec_authenticated": true,
+      "comentario": null
+    },
+    {
+      "nome": "conv_private.word_distance",
+      "args": "a text, b text",
+      "retorno": "integer",
+      "linguagem": "plpgsql",
       "tipo": "f",
       "security_definer": false,
       "search_path": "search_path=\"\"",
@@ -34414,6 +34621,19 @@
       "comentario": null
     },
     {
+      "nome": "public.conv_svc_ai_admin_find_contact",
+      "args": "p_session uuid, p_name text",
+      "retorno": "jsonb",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
       "nome": "public.conv_svc_ai_admin_forms_propose",
       "args": "p_session uuid, p jsonb",
       "retorno": "jsonb",
@@ -34585,6 +34805,19 @@
     {
       "nome": "public.conv_svc_ai_admin_wave8_propose",
       "args": "p_session uuid, p jsonb",
+      "retorno": "jsonb",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "public.conv_svc_ai_admin_whatsapp_receipts",
+      "args": "p_session uuid, p_name text, p_from date, p_to date",
       "retorno": "jsonb",
       "linguagem": "sql",
       "tipo": "f",
@@ -34778,6 +35011,19 @@
       "comentario": null
     },
     {
+      "nome": "public.conv_svc_ai_group_championship",
+      "args": "p_session uuid",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
       "nome": "public.conv_svc_ai_group_context",
       "args": "p_session uuid",
       "retorno": "jsonb",
@@ -34911,6 +35157,19 @@
       "nome": "public.conv_svc_ai_slot_games",
       "args": "p_court uuid, p_date date, p_start_min integer, p_end_min integer, p_requester uuid",
       "retorno": "jsonb",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "public.conv_svc_ai_still_active",
+      "args": "p_message uuid",
+      "retorno": "boolean",
       "linguagem": "sql",
       "tipo": "f",
       "security_definer": true,
@@ -35105,7 +35364,7 @@
     {
       "nome": "public.conv_svc_claim_due_followups",
       "args": "p_limit integer",
-      "retorno": "TABLE(followup_id uuid, conversation_id uuid, send_body text)",
+      "retorno": "TABLE(followup_id uuid, conversation_id uuid, send_body text, media_path text, media_mime text, media_name text, media_kind text)",
       "linguagem": "sql",
       "tipo": "f",
       "security_definer": true,
@@ -35146,6 +35405,32 @@
       "args": "p_message uuid, p_sent boolean, p_provider_id text, p_error text",
       "retorno": "void",
       "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "public.conv_svc_group_intro_context",
+      "args": "p_group uuid",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "public.conv_svc_group_intro_done",
+      "args": "p_group uuid",
+      "retorno": "void",
+      "linguagem": "plpgsql",
       "tipo": "f",
       "security_definer": true,
       "search_path": "search_path=\"\"",

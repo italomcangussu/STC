@@ -106,6 +106,7 @@
 - [info] public.conv_followups — FK (created_by) → public.profiles sem índice
 - [info] public.conv_followups — FK (message_id) → public.conv_messages sem índice
 - [info] public.conv_groups — FK (allowed_by) → public.profiles sem índice
+- [info] public.conv_groups — FK (championship_id) → public.championships sem índice
 - [info] public.conv_messages — FK (author_id) → public.profiles sem índice
 - [info] public.conv_messages — FK (automation_recipient_id) → public.conv_automation_recipients sem índice
 - [info] public.conv_notes — FK (author_id) → public.profiles sem índice

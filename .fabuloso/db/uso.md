@@ -23,11 +23,11 @@
 | club_forms | select, insert, update, delete | 1 | 0 | 0 |
 | consumptions | select, insert, update | 2 | 0 | 0 |
 | conv_ai_memory_candidates | select | 0 | 1 | 0 |
-| conv_ai_settings | select | 0 | 2 | 0 |
+| conv_ai_settings | select | 0 | 3 | 0 |
 | conv_contacts | select | 0 | 2 | 0 |
 | conv_conversations | select | 0 | 4 | 0 |
 | conv_groups | select | 0 | 2 | 0 |
-| conv_messages | select, update | 0 | 4 | 0 |
+| conv_messages | select, update | 0 | 5 | 0 |
 | courts | select | 12 | 0 | 0 |
 | fin_accounts | select | 1 | 0 | 0 |
 | fin_attachments | select | 1 | 0 | 0 |
@@ -155,7 +155,7 @@
 - select [edge]: supabase/functions/joao-daily-greeting/index.ts:114
 
 ### conv_ai_settings
-- select [edge]: supabase/functions/joao-birthdays/index.ts:36, supabase/functions/joao-daily-greeting/index.ts:128
+- select [edge]: supabase/functions/joao-birthdays/index.ts:36, supabase/functions/joao-daily-greeting/index.ts:128, supabase/functions/joao-group-intro/index.ts:29
 
 ### conv_contacts
 - select [edge]: supabase/functions/finance-receipt-whatsapp/index.ts:52, supabase/functions/whatsapp-webhook/index.ts:139, supabase/functions/whatsapp-webhook/index.ts:80
@@ -168,7 +168,7 @@
 
 ### conv_messages
 - select [edge]: supabase/functions/finance-receipt-whatsapp/index.ts:38, supabase/functions/joao-daily-greeting/index.ts:105, supabase/functions/joao-daily-greeting/index.ts:111, supabase/functions/whatsapp-webhook/index.ts:152, supabase/functions/whatsapp-webhook/index.ts:80
-- update [edge]: supabase/functions/joao-birthdays/index.ts:76, supabase/functions/joao-daily-greeting/index.ts:254
+- update [edge]: supabase/functions/joao-birthdays/index.ts:76, supabase/functions/joao-daily-greeting/index.ts:254, supabase/functions/joao-group-intro/index.ts:80
 
 ### courts
 - select: components/AdminPanel.tsx:1604, components/AdminPanel.tsx:271, components/AdminPanel.tsx:435, components/AdminReports.tsx:127, components/Agenda.tsx:1260, components/Athletes.tsx:99, components/ChallengeNotificationPopup.tsx:64, components/Challenges.tsx:72, components/ChampionshipInProgress.tsx:120, components/Championships.tsx:187, components/Dashboard.tsx:41, components/Klanches.tsx:169 +2
@@ -305,7 +305,7 @@
 - update: components/AdminStudents.tsx:170, components/AdminStudents.tsx:214, components/AdminStudents.tsx:230, components/AdminStudents.tsx:250, components/AdminStudents.tsx:256, components/ProfessorProfile.tsx:502, components/ProfessorProfile.tsx:520, components/ProfessorProfile.tsx:533, components/ProfessorProfile.tsx:557
 - upsert: components/Agenda.tsx:1505
 
-## RPC (31)
+## RPC (33)
 - `admin_record_user_access`: contexts/AuthContext.tsx:129
 - `admin_reset_ranking_full`: components/AdminPanel.tsx:1634
 - `apply_championship_edition_points`: components/ChampionshipAdmin.tsx:537
@@ -314,10 +314,12 @@
 - `conv_svc_apply_reaction`: — · [edge] supabase/functions/whatsapp-webhook/record.ts:98
 - `conv_svc_birthdays_today`: — · [edge] supabase/functions/joao-birthdays/index.ts:89
 - `conv_svc_channel_delivery`: — · [edge] supabase/functions/whatsapp-webhook/index.ts:167
-- `conv_svc_finish_message`: — · [edge] supabase/functions/joao-birthdays/index.ts:79, supabase/functions/joao-daily-greeting/index.ts:258
+- `conv_svc_finish_message`: — · [edge] supabase/functions/joao-birthdays/index.ts:79, supabase/functions/joao-daily-greeting/index.ts:258, supabase/functions/joao-group-intro/index.ts:83
+- `conv_svc_group_intro_context`: — · [edge] supabase/functions/joao-group-intro/index.ts:94
+- `conv_svc_group_intro_done`: — · [edge] supabase/functions/joao-group-intro/index.ts:114
 - `conv_svc_ingest_message`: — · [edge] supabase/functions/whatsapp-webhook/record.ts:48
 - `conv_svc_log_webhook`: — · [edge] supabase/functions/whatsapp-webhook/record.ts:177, supabase/functions/whatsapp-webhook/record.ts:42
-- `conv_svc_queue_message`: — · [edge] supabase/functions/joao-birthdays/index.ts:72, supabase/functions/joao-daily-greeting/index.ts:249
+- `conv_svc_queue_message`: — · [edge] supabase/functions/joao-birthdays/index.ts:72, supabase/functions/joao-daily-greeting/index.ts:249, supabase/functions/joao-group-intro/index.ts:76
 - `conv_svc_resolve_undecryptable`: — · [edge] supabase/functions/whatsapp-webhook/record.ts:90
 - `conv_svc_set_message_media`: — · [edge] supabase/functions/whatsapp-webhook/record.ts:152
 - `conv_svc_set_message_transcription`: — · [edge] supabase/functions/whatsapp-webhook/record.ts:174
@@ -328,7 +330,7 @@
 - `get_form_live_results`: lib/formsService.ts:302
 - `get_ranking_cycle_start`: lib/rankingService.ts:75
 - `get_user_h2h_points`: components/Athletes.tsx:123
-- `joao_daily_secret_ok`: — · [edge] supabase/functions/joao-birthdays/index.ts:24, supabase/functions/joao-daily-greeting/index.ts:26
+- `joao_daily_secret_ok`: — · [edge] supabase/functions/joao-birthdays/index.ts:24, supabase/functions/joao-daily-greeting/index.ts:26, supabase/functions/joao-group-intro/index.ts:25
 - `resolve_resenha_open_final_phases`: lib/resenhaOpenService.ts:424
 - `revert_championship_edition_points`: components/ChampionshipAdmin.tsx:569
 - `set_student_level`: components/AdminStudents.tsx:175, components/AdminStudents.tsx:244, components/ProfessorProfile.tsx:395, components/ProfessorProfile.tsx:539
@@ -345,7 +347,7 @@
 - `signature-operations`: lib/signatures/api.ts:25
 
 ## Storage (2)
-- bucket `conv-media` (uso): supabase/functions/conversation-operations/index.ts:10
+- bucket `conv-media` (createSignedUrl): supabase/functions/conversation-operations/index.ts:10, supabase/functions/conversations-dispatch/index.ts:19
 - bucket `klancheimages` (upload, getPublicUrl): components/Klanches.tsx:65, components/Klanches.tsx:71
 
 ## Realtime (8)
@@ -360,4 +362,4 @@
 
 ## Alertas (2)
 - Tabelas do mapa sem uso no código (front + edge): `Cliente_CRM`, `Memory Long`, `Memory Long_jp`, `Memory Test`, `alunos`, `aniversario_consulta`, `avaliacoes_semanais`, `championship_participants`, `championship_signups`, `championship_winners`, `class_change_events`, `conv_admin_alert_log`, `conv_admin_briefing_recipients`, `conv_admin_prefs`, `conv_ai_decisions`, `conv_ai_member_context`, `conv_ai_sessions`, `conv_ai_topics`, `conv_automation_recipients`, `conv_automation_runs`, `conv_automation_settings`, `conv_automation_versions`, `conv_automations`, `conv_booking_proposals`, `conv_channel`, `conv_contact_delegates`, `conv_followups`, `conv_notes`, `conv_private.joao_spontaneous_window`, `conv_quick_replies`, `conv_requests`, `conv_webhook_log`, `des`, `documentos_contexto`, `familia_compat_produto`, `fin_entries`, `fin_private.cash_removed`, `fin_private.charge_payments_effective`, `fin_private.whatsapp_receipt_intents`, `fin_requests`, `historico_conversas`, `historico_treino`, `iatende_conversas`, `members`, `n8n_chat_histories`, `n8n_chat_histories_duplicate`, `n8n_chat_histories_evento`, `n8n_vectors`, `n8n_vectors2`, `n8n_vectors_treinador`, `patients_ebm`, `planos_treino`, `reservas`, `reservas2`, `reservation_participants`, `servicos`, `sig_events`, `sig_notifications`, `sig_private.challenges`, `sig_recipients`, `stock_automator_config`, `stores`, `students`, `subcategorias`, `support_messages`, `tabela_familia_iphone_map`, `tabela_modelos`, `tabela_sinonimo_modelo`, `tbl_embedding`, `tbl_embedding_valid`, `vw_familia_modelos_expandidos`
-- Edge functions sem chamada no front (webhook, cron ou outra função?): `conversation-operations`, `conversations-dispatch`, `finance-receipt-whatsapp`, `joao-admin-alerts`, `joao-admin-briefing`, `joao-birthdays`, `joao-daily-greeting`, `signature-dispatch`, `whatsapp-webhook`
+- Edge functions sem chamada no front (webhook, cron ou outra função?): `conversation-operations`, `conversations-dispatch`, `finance-receipt-whatsapp`, `joao-admin-alerts`, `joao-admin-briefing`, `joao-birthdays`, `joao-daily-greeting`, `joao-group-intro`, `signature-dispatch`, `whatsapp-webhook`

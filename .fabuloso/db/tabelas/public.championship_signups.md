@@ -1,5 +1,5 @@
 # public.championship_signups
-> tabela · RLS on · ~0 linhas — Pré-inscrições de campeonato feitas pelo João. pre = aguardando Pix; confirmed = pago e inscrito (registration_id); waitlist = classe cheia. Escrita só pelas funções conv_svc_*.
+> tabela · RLS on · ~<100 linhas — Pré-inscrições de campeonato feitas pelo João. pre = aguardando Pix; confirmed = pago e inscrito (registration_id); waitlist = classe cheia. Escrita só pelas funções conv_svc_*.
 
 ## Colunas
 | Coluna | Tipo | Nulo | Padrão | Nota |
