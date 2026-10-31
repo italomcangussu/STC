@@ -99,4 +99,24 @@ do $$ begin
   assert conv_private.ai_trigger('00000000-0000-0000-0000-0000000064b4')->>'reason' = 'no_trigger', '"joaozinho" não é o nome dele';
 end $$;
 
+-- O papo da piada (30/10): hora, a quem respondeu e o tipo da mídia; no grupo do campeonato vai além das 12 mensagens.
+insert into public.conv_messages (conversation_id, direction, origin, sender_contact_id, kind, body, reply_preview, created_at)
+select '00000000-0000-0000-0000-0000000061a2', 'inbound', 'customer', '00000000-0000-0000-0000-0000000062a2', 'text', 'papo ' || i, null, now() - make_interval(mins => 100 - i)
+from generate_series(1, 20) i;
+insert into public.conv_messages (conversation_id, direction, origin, sender_contact_id, kind, body, reply_preview) values
+  ('00000000-0000-0000-0000-0000000061a2', 'inbound', 'customer', '00000000-0000-0000-0000-0000000062a1', 'image', 'Só rapazes', null),
+  ('00000000-0000-0000-0000-0000000061a2', 'inbound', 'customer', '00000000-0000-0000-0000-0000000062a1', 'sticker', null, null),
+  ('00000000-0000-0000-0000-0000000061a2', 'inbound', 'customer', '00000000-0000-0000-0000-0000000062a2', 'text', 'dei um golpe de estado', 'K-Sauna?');
+select fab.como('service_role');
+do $$ declare g jsonb := public.conv_svc_ai_group_context('00000000-0000-0000-0000-0000000063a1'); t text := g::text; begin
+  assert jsonb_array_length(g) > 12, 'grupo do campeonato lê mais que 12 mensagens: ' || jsonb_array_length(g);
+  assert t like '%"body": "[foto] Só rapazes"%', 'foto com legenda: ' || t;
+  assert t like '%"body": "[figurinha]"%', 'figurinha sem legenda não chega vazia';
+  assert t like '%"reply_to": "K-Sauna?"%', 'a quem respondeu';
+  assert (g->-1->>'at') ~ '^\d{2}:\d{2}$', 'hora da mensagem: ' || (g->-1)::text;
+  assert t not like '%created_at%', 'sem carimbo cru';
+  assert jsonb_array_length(public.conv_svc_ai_group_context('00000000-0000-0000-0000-0000000063a2')) <= 12, 'grupo de sócios segue com 12';
+end $$;
+select fab.dono();
+
 select fab.espera_erro($$select public.conv_svc_ai_group_championship(gen_random_uuid())$$, 'permission denied') from (select fab.como('authenticated', (select carlos from u))) x;

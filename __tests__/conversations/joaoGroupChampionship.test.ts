@@ -101,11 +101,22 @@ describe('ranking do circuito no grupo do campeonato (Hermeson, 30/10: "quem é 
     expect(t).toContain('Bruno Sócio do STC');
   });
 
-  it('na brincadeira da turma ele entra no tema com uma tirada, não só com reação', () => {
+  it('na brincadeira ele lê a piada, entra com detalhe de verdade e não fica genérico nem com pena', () => {
     const sys = systemPrompt({ persona_name: 'João Fonseca' } as AiSettings, ctx());
-    expect(sys).toContain('ENTRE NA BRINCADEIRA');
-    expect(sys).toContain('só reagir com emoji é pouco');
-    expect(sys).toContain('Fique fora de duplo sentido sexual');
+    expect(sys).toContain('LEIA A PIADA ANTES DE FALAR');
+    expect(sys).toContain('PROIBIDO SER GENÉRICO');
+    expect(sys).toContain('sócio ou convidado, é zoado do mesmo jeito');
+    expect(sys).toContain('nunca invente o que tem neles');
+    expect(sys).not.toContain('sem zoar a pessoa em si');
+  });
+
+  it('o papo recente mostra a hora e a quem a pessoa respondeu', () => {
+    const t = userPrompt({ ...ctx(), group_context: [
+      { at: '21:31', sender: 'Rafael', body: 'K-Sauna?' },
+      { at: '21:32', sender: 'Hermeson Veras', body: 'dei um golpe de estado e assumi o posto😆😆', reply_to: 'K-Sauna?' },
+      { at: '21:33', sender: 'Derlan andre', body: '[foto] Só rapazes' }] }, {}, 'kkkk');
+    expect(t).toContain('[21:32] Hermeson Veras (respondendo a "K-Sauna?"): dei um golpe de estado');
+    expect(t).toContain('[21:33] Derlan andre: [foto] Só rapazes');
   });
 
   it('a regra ensina a perguntar "qual Bruno?" em vez de chutar', () => {

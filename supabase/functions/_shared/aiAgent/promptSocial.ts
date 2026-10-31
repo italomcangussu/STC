@@ -40,7 +40,14 @@ export function groupMembersText(ctx: Ctx): string {
 export function groupContextText(ctx: Ctx): string {
   const msgs = (ctx.group_context ?? []) as Ctx[];
   if (!ctx.is_group || !msgs.length) return '(sem papo recente adicional)';
-  return msgs.map((m) => `${m.sender}: ${m.body}`).join('\n');
+  return msgs.map(groupLine).join('\n');
+}
+
+/** "[21:32] Hermeson (respondendo a "K-Sauna?"): dei um golpe de estado" — hora e citação mostram o fio da piada. */
+function groupLine(m: Ctx): string {
+  const hora = m.at ? `[${m.at}] ` : '';
+  const citou = m.reply_to ? ` (respondendo a "${m.reply_to}")` : '';
+  return `${hora}${m.sender}${citou}: ${m.body}`;
 }
 
 export function socialContextText(ctx: Ctx, buffered = ''): string {
