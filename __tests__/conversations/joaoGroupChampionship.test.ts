@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { athleteFirstNames, championshipGroupRules, groupChampionshipText, scrubGroupContext } from '../../supabase/functions/_shared/aiAgent/groupChampionship';
+import { isOpinionTalk } from '../../supabase/functions/_shared/aiAgent/decide';
+import { claimsOwnAction, claimsSuccess } from '../../supabase/functions/_shared/aiAgent/serverRules';
 import { systemPrompt, userPrompt, type AiSettings, type Ctx } from '../../supabase/functions/_shared/aiAgent/prompts';
 
 const serra: Ctx = {
@@ -182,5 +184,32 @@ describe('dois Brunos: o sócio do STC e o convidado inscrito (Italo, 30/10)', (
     expect(t).toContain('vive de férias');
     expect(t).toContain('Bruno Sócio venceu Fulano');
     expect(t).not.toContain('NÃO é sócio do STC');
+  });
+});
+
+describe('João opina sobre a fórmula no grupo do campeonato (AUGE OPEN, 02/11)', () => {
+  const opiniao = 'Com os 8 cabeças confirmados pela organização, metade da chave de 16 é protegida.';
+
+  it('relato de "cabeças confirmados" não é anúncio de sucesso no papo do grupo do campeonato', () => {
+    const answer = { intent: 'outro', messages: [opiniao] } as never;
+    expect(isOpinionTalk({ group_championship: serra }, answer, false)).toBe(true);
+    expect(claimsOwnAction(opiniao)).toBe(false);
+    expect(claimsSuccess(opiniao)).toBe(true);
+  });
+
+  it('a trava cheia continua fora do grupo do campeonato, com proposta aberta ou intenção de ação', () => {
+    expect(isOpinionTalk({}, { intent: 'outro' } as never, false)).toBe(false);
+    expect(isOpinionTalk({ group_championship: serra }, { intent: 'outro' } as never, true)).toBe(false);
+    expect(isOpinionTalk({ group_championship: serra }, { intent: 'reservar' } as never, false)).toBe(false);
+    expect(isOpinionTalk({ group_championship: serra }, { intent: 'campeonato' } as never, false)).toBe(false);
+    expect(claimsOwnAction('Pronto, confirmei os cabeças de chave.')).toBe(true);
+  });
+
+  it('pergunta séria sobre fórmula e cabeças de chave pede resposta de verdade, sem decidir no lugar da organização', () => {
+    const r = championshipGroupRules({ group_championship: serra });
+    expect(r).toContain('PERGUNTA SÉRIA SOBRE O CAMPEONATO');
+    expect(r).toContain('um cabeça para cada 4 vagas');
+    expect(r).toContain('a decisão é da organização');
+    expect(r).toContain('SE A ORGANIZAÇÃO JÁ DECIDIU');
   });
 });

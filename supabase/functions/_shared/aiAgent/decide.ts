@@ -11,7 +11,8 @@ import type { ProvisionResult } from '../athleteProvision.ts';
 import { type TopicSnapshot, domainOf } from './topicState.ts';
 import { adminAcao, adminConsulta } from './adminAssistant.ts';
 import { adminFinanceiro } from './adminFinance.ts';
-import { claimsSuccess, norm } from './serverRules.ts';
+import { claimsOwnAction, claimsSuccess, norm } from './serverRules.ts';
+import { groupChampionship } from './groupChampionship.ts';
 import { failure, resolve } from './turnOutcome.ts';
 import { isAdminAssistant } from './promptAdmin.ts';
 import { sendWelcome } from './welcome.ts';
@@ -71,6 +72,16 @@ export function proposalBelongsElsewhere(ctx: Ctx, topico: TopicSnapshot | null)
   return Boolean((ctx.open_proposal as Ctx | null)?.id && topico && topico.status !== 'awaiting_confirmation');
 }
 
+/**
+ * Papo no grupo do campeonato sem nada a executar (opinião sobre chave, cabeças, fórmula): ali "os cabeças confirmados
+ * pela organização" é relato. Caso do grupo do AUGE OPEN (02/11): a opinião pedida pelo Ítalo virou "Ainda não registrei nada".
+ */
+const TALK_ONLY: Answer['intent'][] = ['outro', 'informar', 'consultar'];
+
+export function isOpinionTalk(ctx: Ctx, answer: Answer, hasProposal: boolean): boolean {
+  return Boolean(groupChampionship(ctx)) && !hasProposal && TALK_ONLY.includes(answer.intent);
+}
+
 /* ------------------------------- Decisão: o que o servidor executa ------------------------------- */
 
 export type DecideInput = { deps: TurnDeps; ctx: Ctx; answer: Answer; slots: Slots; memory: Memory; session: string; ultimaId?: string; today: string;
@@ -88,7 +99,8 @@ export async function decide(i: DecideInput): Promise<Decision> {
     // intenção que o modelo marcou ("informar" também: caso do Hermeson, 26/10, "Assim como?" depois do cartão).
     const falaDaInscricao = answer.intent === 'campeonato' || answer.messages.some((m) => /inscri[cç][aã]o|inscrit/i.test(m));
     const podeAfirmar = falaDaInscricao && hasConfirmedSignup(ctx);
-    const semAnuncio = podeAfirmar ? answer.messages : answer.messages.filter((m) => !claimsSuccess(m));
+    const anuncia = isOpinionTalk(ctx, answer, hasProposal) ? claimsOwnAction : claimsSuccess;
+    const semAnuncio = podeAfirmar ? answer.messages : answer.messages.filter((m) => !anuncia(m));
     const seguro = semAnuncio.length < answer.messages.length && !semAnuncio.length
       ? ['Ainda não registrei nada. Me diga o que falta e eu monto o resumo para você confirmar.']
       : semAnuncio;

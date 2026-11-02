@@ -78,6 +78,9 @@ export function claimsSuccess(text: string): boolean {
   return SUCCESS_STATE.test(text) && !AGENDA_REPORT.test(text);
 }
 
+/** Só o "eu fiz" (confirmei, coloquei…). Em papo sem ação possível, "cabeças confirmados" é relato, não anúncio. */
+export const claimsOwnAction = (text: string): boolean => SUCCESS_BY_ME.test(text);
+
 export const TRANSFER_DIRECT = 'Vou passar a sua conversa para alguém da equipe, tá? Eles te respondem por aqui mesmo.';
 /** Sócio no privado nunca é transferido para a equipe: o João continua a conversa. */
 const MEMBER_KEEPS = ['Deixa eu entender direito: o que exatamente você quer que eu faça?', 'Não peguei bem o pedido. Me diz de novo com outras palavras que eu resolvo por aqui.', 'Quero te ajudar nisso, só preciso entender melhor. O que você tem em mente?'];

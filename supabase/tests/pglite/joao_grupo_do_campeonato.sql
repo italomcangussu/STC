@@ -120,3 +120,13 @@ end $$;
 select fab.dono();
 
 select fab.espera_erro($$select public.conv_svc_ai_group_championship(gen_random_uuid())$$, 'permission denied') from (select fab.como('authenticated', (select carlos from u))) x;
+
+-- Fórmula mantida pela organização (02/11): o texto oficial carrega a decisão uma vez só.
+do $$
+declare v text;
+begin
+  select joao_info->>'info' into v from public.championships where name = 'Serra e Sertão 2026';
+  if v is not null and (length(v) - length(replace(v, 'FÓRMULA E CABEÇAS DE CHAVE', ''))) / length('FÓRMULA E CABEÇAS DE CHAVE') <> 1 then
+    raise exception 'decisão da fórmula deveria aparecer uma vez no joao_info.info';
+  end if;
+end $$;
