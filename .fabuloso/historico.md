@@ -272,3 +272,7 @@ Orquestrador Sonnet 5.5 (sem subagentes, a pedido). Criados `20261007260000_conv
 - Contexto: fluxo de entrada espontânea em `arquitetura.md` (trecho "ENTRE NA BRINCADEIRA" substituído).
 - Entrega: migration 20261030230000_joao_le_a_piada aplicada e registrada; `whatsapp-webhook` deployada. Teste: `supabase/tests/pglite/joao_grupo_do_campeonato.sql`.
 - Observação: João não vê foto nem ouve áudio (só sabe que existem); teste com modelo real segue sem chave local.
+- 2026-11-02 (Sonnet 5.5): João opina de verdade sobre fórmula e cabeças de chave no grupo do campeonato (AUGE OPEN) e segue a decisão da organização. Bug: `claimsSuccess` filtrava a fala por citar "confirmados". Commit 69d4110.
+- Contexto: fluxo de entrada espontânea em `arquitetura.md` (regra "PERGUNTA SÉRIA" e `isOpinionTalk`).
+- Entrega: migration 20261102200000_serra_sertao_formula_mantida aplicada (dado em `championships.joao_info`); `whatsapp-webhook` v114 deployada; fala avulsa enviada no grupo. Operacional: sem token no conector MCP, escrita remota foi pela API de gerenciamento com o token do .env.local.
+- Observação: teste com modelo real segue sem JOAO_LIVE_KEY; `deno check` local falha por ambiente.

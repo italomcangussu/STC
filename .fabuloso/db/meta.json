@@ -1,7 +1,7 @@
 {
-  "geradoEm": "2026-10-31T00:54:37.870Z",
+  "geradoEm": "2026-11-02T19:53:34.731Z",
   "fonte": "api supabase (smztsayzldjmkzmufqcz)",
-  "hash": "1b7d3d60865f",
+  "hash": "18ade3147f71",
   "banco": "postgres",
   "schemas": [
     "conv_private",
@@ -16,7 +16,7 @@
     "media": 13,
     "info": 156
   },
-  "ultimaMigracaoRemota": "20261030230000",
-  "ultimaMigracaoLocal": "20261030230000",
+  "ultimaMigracaoRemota": "20261102200000",
+  "ultimaMigracaoLocal": "20261102200000",
   "projectRef": "smztsayzldjmkzmufqcz"
 }
