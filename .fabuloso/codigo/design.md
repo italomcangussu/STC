@@ -5,7 +5,7 @@ Bibliotecas: tailwindcss 4 · ícones: lucide-react · toast: sonner
 Estilos: index.css
 
 ## Tokens (variáveis CSS / @theme)
-**color** (12): color-court-dark=#14532d · color-court-green=#166534 · color-court-greenLight=#22c55e · color-court-line=#fafaf9 · color-green-{50…950} · color-orange-{50…950} · color-red-{50…950} · color-saibro-{50…950} · color-stone-{50…950} · color-sunset-end=#C2410C · color-sunset-mid=#EA580C · color-sunset-start=#F97316
+**color** (13): color-court-dark=#14532d · color-court-green=#166534 · color-court-greenLight=#22c55e · color-court-line=#fafaf9 · color-green-{50…950} · color-noite-{50…950} · color-orange-{50…950} · color-red-{50…950} · color-saibro-{50…950} · color-stone-{50…950} · color-sunset-end=#C2410C · color-sunset-mid=#EA580C · color-sunset-start=#F97316
 **font** (1): font-sans='Inter', sans-serif
 
 ## Classes e utilitárias próprias

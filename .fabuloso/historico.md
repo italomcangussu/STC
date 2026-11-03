@@ -288,3 +288,7 @@ Orquestrador Sonnet 5.5 (sem subagentes, a pedido). Criados `20261007260000_conv
 - 2026-11-03 (Sonnet 5.5, fabuloso-design): Campeonatos > Chave: faixa de fases, botão "Meu jogo"/"Meus jogos" e barra enxuta no celular; partidas trazem o `user_id` de cada lado. Commits 210dc2c, 43f7fff.
 - Contexto: `.fabuloso/conhecimento/campeonato.md` (seção Navegação e "Meu jogo") e linha de fluxo em `arquitetura.md`. Nota de design 85%. Não há CLAUDE.md.
 - Entrega: sem migration e sem edge function.
+- 2026-11-03 (Sonnet 5.5, fabuloso-design): sistema visual da chave: escala `noite` no `@theme` de `index.css` e regras em `.fabuloso/design/sistema.md`; canvas com 4 direções, ainda sem escolha. Commit c28bb83.
+- Contexto: `.fabuloso/conhecimento/campeonato.md` (seção Sistema visual da chave) e cardápio `.fabuloso/codigo/design.md`. Não há CLAUDE.md.
+- Entrega: sem migration e sem edge function; nenhum componente usa os tokens ainda.
+- Observação: mapa do banco sem mudança; alertas de RLS antigos seguem em `.fabuloso/db/alertas.md`.

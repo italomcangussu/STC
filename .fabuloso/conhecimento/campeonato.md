@@ -23,3 +23,9 @@ Leia antes de mexer em `components/TournamentBracketView.tsx`, `components/Resen
 - `ResenhaOpenTournamentBoard` recebe `currentUserId` (passado por `TournamentBracketView`, `ResenhaOpenBracketView` e `Championships` com `currentUser?.id`). Traz `PhaseStrip` (nav "Fases da chave", chips de 44 px com contagem, ponto laranja na fase em andamento, chip em foco segue o arrasto) e `MyMatchButton` ("Meu jogo"/"Meus jogos (n)") que troca a classe, centraliza e destaca o card; o card do usuário tem anel saibro e selo "Você".
 - Cor: o botão usa saibro-700 porque branco sobre saibro-600 não passa 4,5:1. No celular a barra do topo omite o título (continua na imagem exportada) e exportar vira só ícone.
 - Design (nota 85% em `.fabuloso/design/notas.json`). Pendente: textos de 11 px nos cabeçalhos dos cards, cores soltas (#061320, #0d2338) fora do cardápio, componente do quadro com ~800 linhas.
+
+## Sistema visual da chave (design)
+- As regras (papéis de cor, escala tipográfica 24/20/16/14/12, anatomia do card, conectores, movimento, alvos de 44 px) ficam em `.fabuloso/design/sistema.md`; leia antes de mexer no visual de `ResenhaOpenTournamentBoard.tsx` ou `TournamentBracketView.tsx`.
+- `index.css` (`@theme`) tem a escala `noite` (50, 200, 400, 500, 600, 800, 900, 950): fundo azul-noite da chave. O 600 é só para conectores (não é texto); o 500 é o texto mínimo.
+- Nenhum componente usa os tokens `noite` ainda: `ResenhaOpenTournamentBoard.tsx` segue com hex soltos (#061320, #0d2338) e `text-[11px]`.
+- Direção visual ainda não escolhida: canvas com 4 propostas (A Padrão, B Placar, C Rodada, D Saibro) em https://claude.ai/artifact/LUGMUkB1tUdgN4mfmY55JD. Ao escolher, registrar em `.fabuloso/design/direcoes/chave.md`.
