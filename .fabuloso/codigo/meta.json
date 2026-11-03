@@ -1,9 +1,9 @@
 {
   "versao": 1,
-  "entrada": "v1-00f45a91e965",
-  "fontes": 382,
+  "entrada": "v1-807a2367bdd8",
+  "fontes": 383,
   "rotas": 0,
-  "componentes": 420,
+  "componentes": 422,
   "hooks": 34,
   "contexts": 4,
   "stores": 0,

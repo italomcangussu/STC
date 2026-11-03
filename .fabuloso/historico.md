@@ -285,3 +285,6 @@ Orquestrador Sonnet 5.5 (sem subagentes, a pedido). Criados `20261007260000_conv
 - 2026-11-03 (Sonnet 5.5): chave oficial do Serra e Sertão 2026 (4ª com quali, 5ª) por migration, pré-inscritos na chave com Pix pendente, e correção do loading preso no StrictMode em `TournamentBracketView`. Commits e5d9858, af2e41a.
 - Contexto: `.fabuloso/conhecimento/campeonato.md` (novo) e linhas de Pix/chave em `arquitetura.md`. Não há CLAUDE.md.
 - Entrega: migration 20261103120000_serra_sertao_chave_oficial aplicada no remoto.
+- 2026-11-03 (Sonnet 5.5, fabuloso-design): Campeonatos > Chave: faixa de fases, botão "Meu jogo"/"Meus jogos" e barra enxuta no celular; partidas trazem o `user_id` de cada lado. Commits 210dc2c, 43f7fff.
+- Contexto: `.fabuloso/conhecimento/campeonato.md` (seção Navegação e "Meu jogo") e linha de fluxo em `arquitetura.md`. Nota de design 85%. Não há CLAUDE.md.
+- Entrega: sem migration e sem edge function.

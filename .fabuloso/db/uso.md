@@ -103,7 +103,7 @@
 - upsert: components/admin/PhasePointsEditor.tsx:60
 
 ### championship_registrations
-- select: components/ChampionshipAdmin.tsx:286, components/ChampionshipInProgress.tsx:147, components/Championships.tsx:211, components/Championships.tsx:308, components/GroupDrawPage.tsx:105, components/PublicChampionshipPage.tsx:91, lib/agenda/loadAgendaReservations.ts:79, lib/championship/knockoutFromGroups.ts:164, lib/championship/registration.ts:36, lib/resenhaOpenService.ts:245, lib/resenhaOpenService.ts:308, lib/resenhaOpenService.ts:445
+- select: components/ChampionshipAdmin.tsx:286, components/ChampionshipInProgress.tsx:147, components/Championships.tsx:211, components/Championships.tsx:308, components/GroupDrawPage.tsx:105, components/PublicChampionshipPage.tsx:91, lib/agenda/loadAgendaReservations.ts:79, lib/championship/knockoutFromGroups.ts:164, lib/championship/registration.ts:36, lib/resenhaOpenService.ts:245, lib/resenhaOpenService.ts:308, lib/resenhaOpenService.ts:449
 - insert: components/ChampionshipAdmin.tsx:394, components/creator/CreatorRegistration.tsx:143, components/creator/CreatorRegistration.tsx:169, lib/championship/registration.ts:72, lib/resenhaOpenService.ts:195, lib/resenhaOpenService.ts:212
 - update: lib/championship/seeding.ts:54, lib/championship/seeding.ts:63
 - delete: components/ChampionshipAdmin.tsx:423, components/creator/CreatorRegistration.tsx:216, lib/resenhaOpenService.ts:232
@@ -118,9 +118,9 @@
 - insert: lib/championship/creation.ts:55
 
 ### championships
-- select: App.tsx:66, components/ChampionshipAdmin.tsx:204, components/ChampionshipCreator.tsx:142, components/ChampionshipCreator.tsx:551, components/ChampionshipCreator.tsx:94, components/Championships.tsx:140, components/GroupDrawPage.tsx:84, components/Layout.tsx:76, components/PublicChampionshipPage.tsx:57, components/ResenhaOpenBracketView.tsx:26, lib/agenda/loadAgendaReservations.ts:47, lib/championship/creation.ts:81 +3
+- select: App.tsx:66, components/ChampionshipAdmin.tsx:204, components/ChampionshipCreator.tsx:142, components/ChampionshipCreator.tsx:551, components/ChampionshipCreator.tsx:94, components/Championships.tsx:140, components/GroupDrawPage.tsx:84, components/Layout.tsx:76, components/PublicChampionshipPage.tsx:57, components/ResenhaOpenBracketView.tsx:28, lib/agenda/loadAgendaReservations.ts:47, lib/championship/creation.ts:81 +3
 - insert: lib/championship/creation.ts:145, lib/resenhaOpenService.ts:112
-- update: components/ChampionshipAdmin.tsx:452, lib/championship/creation.ts:121, lib/championship/participantSources.ts:86, lib/championship/rounds.ts:189, lib/resenhaOpenService.ts:429, lib/resenhaOpenService.ts:457
+- update: components/ChampionshipAdmin.tsx:452, lib/championship/creation.ts:121, lib/championship/participantSources.ts:86, lib/championship/rounds.ts:189, lib/resenhaOpenService.ts:433, lib/resenhaOpenService.ts:461
 
 ### club_form_options
 - select: lib/formsService.ts:203, lib/formsService.ts:57, lib/formsService.ts:9
@@ -227,9 +227,9 @@
 ### matches
 - select: components/AdminReports.tsx:119, components/Athletes.tsx:67, components/Challenges.tsx:418, components/Challenges.tsx:536, components/ChampionshipAdmin.tsx:588, components/ChampionshipCreator.tsx:207, components/ChampionshipInProgress.tsx:156, components/Championships.tsx:263, components/Championships.tsx:331, components/PublicChampionshipPage.tsx:99, components/SuperSet.tsx:166, lib/agenda/loadAgendaReservations.ts:47 +5
 - insert: components/AdminMatchCreator.tsx:149, components/AdminPanel.tsx:515, components/Agenda.tsx:1688, components/ChampionshipInProgress.tsx:259, components/MatchGenerationModal.tsx:119, components/SuperSet.tsx:110, lib/championship/bracket.ts:223, lib/championship/groupPersistence.ts:190
-- update: components/ChampionshipInProgress.tsx:303, components/ChampionshipInProgress.tsx:364, components/Championships.tsx:561, components/Championships.tsx:621, components/Championships.tsx:701, components/Championships.tsx:747, components/Championships.tsx:835, lib/championship/bracket.ts:248, lib/resenhaOpenService.ts:390, lib/resenhaOpenService.ts:407
+- update: components/ChampionshipInProgress.tsx:303, components/ChampionshipInProgress.tsx:364, components/Championships.tsx:561, components/Championships.tsx:621, components/Championships.tsx:701, components/Championships.tsx:747, components/Championships.tsx:835, lib/championship/bracket.ts:248, lib/resenhaOpenService.ts:394, lib/resenhaOpenService.ts:411
 - upsert: components/LiveScoreboard.tsx:157
-- delete: components/MatchGenerationModal.tsx:108, lib/resenhaOpenService.ts:466
+- delete: components/MatchGenerationModal.tsx:108, lib/resenhaOpenService.ts:470
 
 ### non_socio_students
 - select: components/AdminProfessors.tsx:126, components/AdminStudents.tsx:83, components/Agenda.tsx:1300, components/ProfessorProfile.tsx:199, lib/championship/registration.ts:36, lib/championship/registration.ts:9, lib/conversations/api.ts:557, lib/finance/studentFees.ts:54
@@ -331,7 +331,7 @@
 - `get_ranking_cycle_start`: lib/rankingService.ts:75
 - `get_user_h2h_points`: components/Athletes.tsx:123
 - `joao_daily_secret_ok`: — · [edge] supabase/functions/joao-birthdays/index.ts:24, supabase/functions/joao-daily-greeting/index.ts:26, supabase/functions/joao-group-intro/index.ts:25
-- `resolve_resenha_open_final_phases`: lib/resenhaOpenService.ts:424
+- `resolve_resenha_open_final_phases`: lib/resenhaOpenService.ts:428
 - `revert_championship_edition_points`: components/ChampionshipAdmin.tsx:569
 - `set_student_level`: components/AdminStudents.tsx:175, components/AdminStudents.tsx:244, components/ProfessorProfile.tsx:395, components/ProfessorProfile.tsx:539
 - `sig_svc_issue_challenge`: — · [edge] supabase/functions/_shared/signatureRequest.ts:116
@@ -357,7 +357,7 @@
 - tabela `club_form_voter_receipts`: lib/formsService.ts:344
 - tabela `conv_conversations`: lib/conversations/api.ts:345
 - tabela `conv_messages`: lib/conversations/api.ts:345
-- tabela `matches`: components/Championships.tsx:380, components/ResenhaOpenBracketView.tsx:39, components/SuperSet.tsx:182, components/TournamentBracketView.tsx:68
+- tabela `matches`: components/Championships.tsx:380, components/ResenhaOpenBracketView.tsx:41, components/SuperSet.tsx:182, components/TournamentBracketView.tsx:70
 - tabela `reservations`: components/Dashboard.tsx:86
 
 ## Alertas (2)

@@ -126,7 +126,7 @@ _nenhum_
 - Acesso a dados direto no componente: `OnboardingModal` (components/OnboardingModal.tsx:63) chama profiles; o padrão do projeto é passar por hook/serviço
 - Acesso a dados direto no componente: `ProfessorProfile` (components/ProfessorProfile.tsx:184) chama professors, profiles, non_socio_students, student_profiles, reservations, courts, set_student_level, student_level_history, student_payments; o padrão do projeto é passar por hook/serviço
 - Acesso a dados direto no componente: `PublicChampionshipPage` (components/PublicChampionshipPage.tsx:57) chama championships, championship_rounds, championship_groups, championship_group_members, championship_registrations, profiles, matches; o padrão do projeto é passar por hook/serviço
-- Acesso a dados direto no componente: `ResenhaOpenBracketView` (components/ResenhaOpenBracketView.tsx:26) chama championships; o padrão do projeto é passar por hook/serviço
+- Acesso a dados direto no componente: `ResenhaOpenBracketView` (components/ResenhaOpenBracketView.tsx:28) chama championships; o padrão do projeto é passar por hook/serviço
 - Acesso a dados direto no componente: `SuperSet` (components/SuperSet.tsx:39) chama profiles, reservations, matches; o padrão do projeto é passar por hook/serviço
 - Acesso a dados direto no componente: `PhasePointsEditor` (components/admin/PhasePointsEditor.tsx:37) chama championship_phase_points; o padrão do projeto é passar por hook/serviço
 - Acesso a dados direto no componente: `CreatorRegistration` (components/creator/CreatorRegistration.tsx:121) chama profiles, championship_registrations; o padrão do projeto é passar por hook/serviço

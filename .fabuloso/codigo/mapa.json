@@ -2293,6 +2293,12 @@
    "ui": false
   },
   {
+   "nome": "MyMatchButton",
+   "arquivo": "components/ResenhaOpenTournamentBoard.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
    "nome": "NavBadge",
    "arquivo": "components/Layout.tsx",
    "usos": 0,
@@ -2384,6 +2390,12 @@
   },
   {
    "nome": "PhaseHeaders",
+   "arquivo": "components/ResenhaOpenTournamentBoard.tsx",
+   "usos": 0,
+   "ui": false
+  },
+  {
+   "nome": "PhaseStrip",
    "arquivo": "components/ResenhaOpenTournamentBoard.tsx",
    "usos": 0,
    "ui": false
@@ -2891,9 +2903,9 @@
    "nome": "matches",
    "front": [
     "components/Championships.tsx:380",
-    "components/ResenhaOpenBracketView.tsx:39",
+    "components/ResenhaOpenBracketView.tsx:41",
     "components/SuperSet.tsx:182",
-    "components/TournamentBracketView.tsx:68"
+    "components/TournamentBracketView.tsx:70"
    ],
    "edge": [],
    "telas": []
@@ -3143,7 +3155,7 @@
    "tipo": "rpc",
    "nome": "resolve_resenha_open_final_phases",
    "front": [
-    "lib/resenhaOpenService.ts:424"
+    "lib/resenhaOpenService.ts:428"
    ],
    "edge": [],
    "telas": []
@@ -3370,7 +3382,7 @@
     "lib/resenhaOpenService.ts:232",
     "lib/resenhaOpenService.ts:245",
     "lib/resenhaOpenService.ts:308",
-    "lib/resenhaOpenService.ts:445"
+    "lib/resenhaOpenService.ts:449"
    ],
    "edge": [],
    "telas": []
@@ -3431,7 +3443,7 @@
     "components/GroupDrawPage.tsx:84",
     "components/Layout.tsx:76",
     "components/PublicChampionshipPage.tsx:57",
-    "components/ResenhaOpenBracketView.tsx:26",
+    "components/ResenhaOpenBracketView.tsx:28",
     "lib/agenda/loadAgendaReservations.ts:47",
     "lib/championship/creation.ts:121",
     "lib/championship/creation.ts:145",
@@ -3441,8 +3453,8 @@
     "lib/championship/rounds.ts:189",
     "lib/conversations/api.ts:542",
     "lib/resenhaOpenService.ts:112",
-    "lib/resenhaOpenService.ts:429",
-    "lib/resenhaOpenService.ts:457",
+    "lib/resenhaOpenService.ts:433",
+    "lib/resenhaOpenService.ts:461",
     "lib/resenhaOpenService.ts:98"
    ],
    "edge": [],
@@ -3812,9 +3824,9 @@
     "lib/championship/matches.ts:19",
     "lib/rankingService.ts:136",
     "lib/resenhaOpenService.ts:303",
-    "lib/resenhaOpenService.ts:390",
-    "lib/resenhaOpenService.ts:407",
-    "lib/resenhaOpenService.ts:466"
+    "lib/resenhaOpenService.ts:394",
+    "lib/resenhaOpenService.ts:411",
+    "lib/resenhaOpenService.ts:470"
    ],
    "edge": [],
    "telas": []
@@ -4588,7 +4600,7 @@
   "Acesso a dados direto no componente: `OnboardingModal` (components/OnboardingModal.tsx:63) chama profiles; o padrão do projeto é passar por hook/serviço",
   "Acesso a dados direto no componente: `ProfessorProfile` (components/ProfessorProfile.tsx:184) chama professors, profiles, non_socio_students, student_profiles, reservations, courts, set_student_level, student_level_history, student_payments; o padrão do projeto é passar por hook/serviço",
   "Acesso a dados direto no componente: `PublicChampionshipPage` (components/PublicChampionshipPage.tsx:57) chama championships, championship_rounds, championship_groups, championship_group_members, championship_registrations, profiles, matches; o padrão do projeto é passar por hook/serviço",
-  "Acesso a dados direto no componente: `ResenhaOpenBracketView` (components/ResenhaOpenBracketView.tsx:26) chama championships; o padrão do projeto é passar por hook/serviço",
+  "Acesso a dados direto no componente: `ResenhaOpenBracketView` (components/ResenhaOpenBracketView.tsx:28) chama championships; o padrão do projeto é passar por hook/serviço",
   "Acesso a dados direto no componente: `SuperSet` (components/SuperSet.tsx:39) chama profiles, reservations, matches; o padrão do projeto é passar por hook/serviço",
   "Acesso a dados direto no componente: `PhasePointsEditor` (components/admin/PhasePointsEditor.tsx:37) chama championship_phase_points; o padrão do projeto é passar por hook/serviço",
   "Acesso a dados direto no componente: `CreatorRegistration` (components/creator/CreatorRegistration.tsx:121) chama profiles, championship_registrations; o padrão do projeto é passar por hook/serviço",
