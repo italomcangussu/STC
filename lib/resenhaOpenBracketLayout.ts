@@ -113,7 +113,8 @@ export function phaseOrderFor(
 }
 
 const CARD_WIDTH = 280;
-const CARD_HEIGHT = 88;
+/** Topo de 32 px e duas linhas de jogador de 44 px (sistema da chave). */
+const CARD_HEIGHT = 120;
 
 /**
  * Folga mínima entre uma coluna e a seguinte para a curva de ligação caber sem

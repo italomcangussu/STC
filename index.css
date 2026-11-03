@@ -1856,6 +1856,44 @@ input[type="datetime-local"] {
 }
 
 /**
+ * Temas da chave (contrato em .fabuloso/design/direcoes/chave.md). Só a cor
+ * muda entre eles; o quadro lê tudo por estas variáveis.
+ */
+.chave-noite {
+    --chave-fundo: var(--color-noite-950);
+    --chave-superficie: var(--color-noite-900);
+    --chave-borda: var(--color-noite-800);
+    --chave-texto: var(--color-noite-50);
+    --chave-texto-2: var(--color-noite-200);
+    --chave-apoio: var(--color-noite-400);
+    --chave-ativo: #ffffff;
+    --chave-ativo-texto: var(--color-noite-950);
+    --chave-foco: var(--color-noite-800);
+    --chave-conector: var(--color-noite-600);
+    --chave-conector-vivo: var(--color-saibro-400);
+    --chave-card-borda: #ffffff;
+    --chave-card-topo: #ffffff;
+    --chave-card-topo-texto: var(--color-stone-600);
+}
+
+.chave-saibro {
+    --chave-fundo: var(--color-saibro-50);
+    --chave-superficie: #ffffff;
+    --chave-borda: var(--color-saibro-200);
+    --chave-texto: var(--color-stone-900);
+    --chave-texto-2: var(--color-saibro-800);
+    --chave-apoio: var(--color-saibro-800);
+    --chave-ativo: var(--color-saibro-800);
+    --chave-ativo-texto: #ffffff;
+    --chave-foco: var(--color-saibro-100);
+    --chave-conector: var(--color-saibro-600);
+    --chave-conector-vivo: var(--color-saibro-800);
+    --chave-card-borda: var(--color-saibro-200);
+    --chave-card-topo: var(--color-saibro-100);
+    --chave-card-topo-texto: var(--color-saibro-800);
+}
+
+/**
  * A cópia montada para exportar é uma fotografia: nada nela pode depender do
  * tempo. Sem esta regra a captura pegava os cartões no `opacity: 0` inicial da
  * entrada escalonada — o PNG saía com moldura, fases e conectores, e nenhum

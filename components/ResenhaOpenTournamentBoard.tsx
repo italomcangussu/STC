@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Clock, Loader2, LocateFixed, Minus, Plus, RotateCcw, Share2 } from 'lucide-react';
+import { Check, Clock, Loader2, LocateFixed, Minus, Plus, RotateCcw, Share2 } from 'lucide-react';
 import {
     buildConnectorPath,
     buildResenhaBracketLayout,
@@ -306,19 +306,19 @@ export const ResenhaOpenTournamentBoard: React.FC<Props> = ({ bracket, champions
     return (
         // No celular o quadro sangra até as bordas: o padding do contêiner da
         // página custava mais largura útil do que a moldura valia.
-        <div className={exporting
+        <div className={`chave-noite ${exporting
             // Na cópia de exportação o quadro não sangra nem se limita: ele tem
             // o tamanho que tiver, que é o ponto de exportar.
-            ? 'w-max p-6 bg-[#061320]'
-            : 'w-auto -mx-4 px-0 py-3 sm:w-full sm:max-w-7xl sm:mx-auto sm:px-[max(0.75rem,env(safe-area-inset-left))]'}>
-            <section className="relative rounded-none border-x-0 sm:rounded-[1.75rem] sm:border-x bg-[#061320] text-white shadow-2xl shadow-slate-950/30 overflow-hidden border border-white/10">
+            ? 'w-max p-6 bg-(--chave-fundo)'
+            : 'w-auto -mx-4 px-0 py-3 sm:w-full sm:max-w-7xl sm:mx-auto sm:px-[max(0.75rem,env(safe-area-inset-left))]'}`}>
+            <section className="relative rounded-none border-x-0 sm:rounded-[1.75rem] sm:border-x bg-(--chave-fundo) text-(--chave-texto) shadow-2xl shadow-slate-950/30 overflow-hidden border border-(--chave-borda)">
                 {exporting ? (
                     // Na imagem não há página em volta: o título é o único
                     // lugar que diz de que campeonato e classe ela é.
                     <div className="px-6 pt-5 pb-4">
-                        <p className="text-xs font-black uppercase tracking-[0.22em] text-orange-300">Tabela de Confrontos</p>
-                        <h2 className="text-2xl font-black tracking-tight">{championshipName}</h2>
-                        <p className="mt-1 text-sm font-black uppercase tracking-[0.18em] text-sky-200/80">{selectedClass}</p>
+                        <p className="text-xs font-bold uppercase tracking-[0.08em] text-(--chave-apoio)">Tabela de Confrontos</p>
+                        <h2 className="text-2xl font-extrabold tracking-tight">{championshipName}</h2>
+                        <p className="mt-1 text-sm font-bold text-(--chave-texto-2)">{selectedClass}</p>
                     </div>
                 ) : (
                     // Na tela, o nome do campeonato já está no topo da página:
@@ -371,7 +371,7 @@ export const ResenhaOpenTournamentBoard: React.FC<Props> = ({ bracket, champions
                     style={exporting ? undefined : { WebkitOverflowScrolling: 'touch' }}
                 >
                     <div
-                        className="relative rounded-3xl border border-white/10 bg-linear-to-br from-[#071b2d] via-[#081827] to-[#050b16] shadow-inner"
+                        className="relative rounded-3xl border border-(--chave-borda) bg-(--chave-fundo)"
                         style={{
                             width: layout.width * zoom,
                             height: layout.height * zoom,
@@ -404,6 +404,8 @@ export const ResenhaOpenTournamentBoard: React.FC<Props> = ({ bracket, champions
                                         landingSlot={landingSlotFor(layoutMatch.match, advancingNumbers)}
                                         mySide={sideOfUser(layoutMatch.match, currentUserId)}
                                         enterDelayMs={Math.min(index * 45, 360)}
+                                        width={layout.cardWidth}
+                                        height={layout.cardHeight}
                                     />
                                 ))}
                             </React.Fragment>
@@ -418,7 +420,7 @@ export const ResenhaOpenTournamentBoard: React.FC<Props> = ({ bracket, champions
                  * aparecia como engasgo no celular.
                  */}
                 {!exporting && (
-                <div className="pointer-events-none absolute left-3 sm:left-8 bottom-3 inline-flex whitespace-nowrap rounded-full border border-white/10 bg-[#061320]/85 px-3 py-2 text-xs font-bold text-slate-300 backdrop-blur-md">
+                <div className="pointer-events-none absolute left-3 sm:left-8 bottom-3 inline-flex whitespace-nowrap rounded-full border border-(--chave-borda) bg-(--chave-superficie) px-3 py-2 text-xs font-bold text-(--chave-texto-2)">
                     {/* A frase inteira não cabe em 375 px: quebrava em duas linhas
                         e a segunda sumia atrás do `overflow-hidden` da moldura. */}
                     <span className="sm:hidden">Arraste • Zoom • Toque num jogo</span>
@@ -452,7 +454,7 @@ const ExportButton: React.FC<{
         onClick={onExport}
         disabled={busy}
         aria-label={classCount > 1 ? `Exportar ${classCount} imagens, uma por classe` : 'Exportar imagem da chave'}
-        className="inline-flex size-13 shrink-0 items-center justify-center gap-2 rounded-full border border-white/15 text-sm font-bold text-slate-200 transition-[transform,background-color] duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-white/10 active:scale-[0.97] disabled:opacity-60 sm:w-auto sm:px-5"
+        className="inline-flex size-13 shrink-0 items-center justify-center gap-2 rounded-full border border-(--chave-borda) text-sm font-bold text-(--chave-texto-2) transition-[transform,background-color] duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-(--chave-foco) active:scale-[0.97] disabled:opacity-60 sm:w-auto sm:px-5"
     >
         {busy ? <Loader2 size={18} className="animate-spin" aria-hidden="true" /> : <Share2 size={18} aria-hidden="true" />}
         {/* A contagem aparece antes do clique de propósito: se o quadro só
@@ -468,19 +470,19 @@ const BracketClassSwitch: React.FC<{
     selectedClass: string;
     onChange: (className: string) => void;
 }> = ({ availableClasses, selectedClass, onChange }) => (
-    // Selecionado em branco, não em laranja: o laranja fica para o que é da
-    // pessoa (Meu jogo) e para o caminho de quem já venceu.
-    <div className="flex min-w-0 flex-1 rounded-full border border-white/10 bg-[#0d2338] p-1 shadow-inner lg:flex-none" aria-label="Selecionar classe do chaveamento">
+    // Selecionado em destaque neutro, não em laranja: o laranja fica para o
+    // que é da pessoa (Meu jogo) e para o caminho de quem já venceu.
+    <div className="flex min-w-0 flex-1 rounded-full border border-(--chave-borda) bg-(--chave-superficie) p-1 lg:flex-none" aria-label="Selecionar classe do chaveamento">
         {availableClasses.map(className => (
             <button
                 key={className}
                 type="button"
                 aria-pressed={selectedClass === className}
                 onClick={() => onChange(className)}
-                className={`h-11 min-w-0 flex-1 truncate rounded-full px-4 text-sm font-black transition-[background-color,color] duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] lg:flex-none ${
+                className={`h-11 min-w-0 flex-1 truncate rounded-full px-4 text-sm font-bold transition-[background-color,color] duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] lg:flex-none ${
                     selectedClass === className
-                        ? 'bg-white text-slate-950 shadow-lg shadow-black/30'
-                        : 'text-slate-300 hover:text-white'
+                        ? 'bg-(--chave-ativo) text-(--chave-ativo-texto) shadow-sm'
+                        : 'text-(--chave-texto-2) hover:text-(--chave-texto)'
                 }`}
             >
                 {className}
@@ -495,15 +497,15 @@ const ZoomControls: React.FC<{
     onZoomOut: () => void;
     onReset: () => void;
 }> = ({ zoom, onZoomIn, onZoomOut, onReset }) => (
-    <div className="inline-flex items-center overflow-hidden rounded-full border border-white/10 bg-[#0d2338] text-sm font-black text-slate-200 shadow-inner">
-        <button type="button" aria-label="Reduzir zoom" onClick={onZoomOut} className="grid size-11 shrink-0 place-items-center hover:bg-white/10">
+    <div className="inline-flex items-center overflow-hidden rounded-full border border-(--chave-borda) bg-(--chave-superficie) text-sm font-bold text-(--chave-texto-2)">
+        <button type="button" aria-label="Reduzir zoom" onClick={onZoomOut} className="grid size-11 shrink-0 place-items-center hover:bg-(--chave-foco)">
             <Minus size={16} aria-hidden="true" />
         </button>
-        <span className="min-w-14 border-x border-white/10 px-2 text-center tabular-nums" aria-live="polite">{Math.round(zoom * 100)}%</span>
-        <button type="button" aria-label="Aumentar zoom" onClick={onZoomIn} className="grid size-11 shrink-0 place-items-center hover:bg-white/10">
+        <span className="min-w-14 border-x border-(--chave-borda) px-2 text-center tabular-nums text-(--chave-texto)" aria-live="polite">{Math.round(zoom * 100)}%</span>
+        <button type="button" aria-label="Aumentar zoom" onClick={onZoomIn} className="grid size-11 shrink-0 place-items-center hover:bg-(--chave-foco)">
             <Plus size={16} aria-hidden="true" />
         </button>
-        <button type="button" aria-label="Resetar zoom" onClick={onReset} className="grid size-11 shrink-0 place-items-center border-l border-white/10 hover:bg-white/10">
+        <button type="button" aria-label="Resetar zoom" onClick={onReset} className="grid size-11 shrink-0 place-items-center border-l border-(--chave-borda) hover:bg-(--chave-foco)">
             <RotateCcw size={16} aria-hidden="true" />
         </button>
     </div>
@@ -515,7 +517,7 @@ const MyMatchButton: React.FC<{ count: number; onClick: () => void }> = ({ count
         type="button"
         onClick={onClick}
         aria-label={count > 1 ? `Ir para os meus jogos, ${count} pela frente` : 'Ir para o meu jogo'}
-        className="inline-flex h-11 shrink-0 items-center gap-2 rounded-full bg-saibro-700 px-4 text-sm font-black text-white shadow-lg shadow-orange-950/30 transition-transform duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] hover:brightness-110 active:scale-[0.97]"
+        className="inline-flex h-11 shrink-0 items-center gap-2 rounded-full bg-saibro-700 px-4 text-sm font-bold text-white shadow-md transition-transform duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] hover:brightness-110 active:scale-[0.97]"
     >
         <LocateFixed size={16} aria-hidden="true" />
         {count > 1 ? `Meus jogos (${count})` : 'Meu jogo'}
@@ -559,13 +561,13 @@ const PhaseStrip: React.FC<{
                             type="button"
                             aria-current={focused ? 'true' : undefined}
                             onClick={() => onPick(phase.phase)}
-                            className={`inline-flex h-11 shrink-0 items-center gap-2 rounded-full px-4 text-sm font-bold transition-[background-color,color] duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] ${
-                                focused ? 'bg-white/12 text-white ring-1 ring-white/25' : 'text-slate-300 hover:text-white'
+                            className={`inline-flex h-11 shrink-0 items-center gap-2 rounded-full px-4 text-sm transition-[background-color,color] duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] ${
+                                focused ? 'bg-(--chave-foco) font-bold text-(--chave-texto)' : 'font-semibold text-(--chave-texto-2) hover:text-(--chave-texto)'
                             }`}
                         >
-                            {playing && <span className="size-2 rounded-full bg-orange-400" aria-hidden="true" />}
+                            {playing && <span className="size-2 rounded-full bg-(--chave-conector-vivo)" aria-hidden="true" />}
                             {phase.label}
-                            <span className="tabular-nums text-slate-400" aria-hidden="true">{phase.matches.length}</span>
+                            <span className="tabular-nums text-(--chave-apoio)" aria-hidden="true">{phase.matches.length}</span>
                             <span className="sr-only">, {phase.matches.length} {phase.matches.length === 1 ? 'jogo' : 'jogos'}</span>
                             {playing && <span className="sr-only">, em andamento</span>}
                         </button>
@@ -581,7 +583,7 @@ const PhaseHeaders: React.FC<{ layout: ReturnType<typeof buildResenhaBracketLayo
         {layout.phases.map(phase => (
             <div
                 key={phase.phase}
-                className="absolute text-xs font-black uppercase tracking-[0.18em] text-sky-200/80"
+                className="absolute text-xs font-bold uppercase tracking-[0.08em] text-(--chave-apoio)"
                 style={{ left: phase.x, top: 26, width: layout.cardWidth }}
             >
                 {phase.label}
@@ -601,6 +603,9 @@ const ConnectorLayer: React.FC<{
             // Folgado de propósito: o traçado real varia com a curva, e um
             // comprimento maior que o real só faz a linha começar invisível.
             const length = Math.abs(connector.endX - connector.startX) + Math.abs(connector.endY - connector.startY) + 120;
+            // A cor vem do tema por `style`: atributo de apresentação do SVG
+            // não resolve `var()` em todo navegador.
+            const stroke = connector.active ? 'var(--chave-conector-vivo)' : 'var(--chave-conector)';
 
             return (
                 <g key={connector.id}>
@@ -610,18 +615,18 @@ const ConnectorLayer: React.FC<{
                         // Hierarquia por peso, não por opacidade: a linha
                         // inativa é fina e sólida em vez de grossa e
                         // translúcida — some do caminho do olho sem sumir.
-                        stroke={connector.active ? '#ea580c' : '#2f5479'}
-                        strokeWidth={connector.active ? 4 : 3}
+                        strokeWidth={connector.active ? 3 : 2}
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         className={drawing ? 'bracket-line-draw' : undefined}
-                        style={drawing ? ({ strokeDasharray: length, ['--bracket-line-length' as string]: `${length}` } as React.CSSProperties) : undefined}
+                        style={drawing
+                            ? ({ stroke, strokeDasharray: length, ['--bracket-line-length' as string]: `${length}` } as React.CSSProperties)
+                            : { stroke }}
                     />
                     {/* Um ponto só, na chegada, e só quando alguém de fato
-                        avançou. Os dois pontos brancos de antes eram o mais
-                        claro do vão e disputavam atenção com os cartões. */}
+                        avançou. */}
                     {connector.active && (
-                        <circle cx={connector.endX} cy={connector.endY} r={3.5} fill="#ea580c" />
+                        <circle cx={connector.endX} cy={connector.endY} r={3.5} style={{ fill: 'var(--chave-conector-vivo)' }} />
                     )}
                 </g>
             );
@@ -629,13 +634,10 @@ const ConnectorLayer: React.FC<{
     </svg>
 );
 
-/** Cor e rótulo da faixa superior, que é onde o estado do jogo passa a morar. */
-const HEADER_BY_STATE: Record<MatchState, { bar: string; label: string; meta: string }> = {
-    finished: { bar: 'bg-saibro-600', label: 'text-white', meta: 'text-white/80' },
-    live: { bar: 'bg-saibro-800', label: 'text-orange-100', meta: 'text-orange-200' },
-    pending: { bar: 'bg-slate-300', label: 'text-slate-700', meta: 'text-slate-600' },
-};
-
+/**
+ * Card de jogo (sistema da chave): topo de 32 px com o jogo e o estado, duas
+ * linhas de 44 px por jogador. O topo é neutro; o estado fala pelo selo.
+ */
 const BracketMatchCard: React.FC<{
     layoutMatch: LayoutMatch;
     phaseLabel: string;
@@ -646,13 +648,14 @@ const BracketMatchCard: React.FC<{
     landingSlot: 'a' | 'b' | null;
     mySide: 'a' | 'b' | null;
     enterDelayMs: number;
-}> = ({ layoutMatch, phaseLabel, selected, onSelect, showOfficialTimes, advancing, landingSlot, mySide, enterDelayMs }) => {
+    width: number;
+    height: number;
+}> = ({ width, height, layoutMatch, phaseLabel, selected, onSelect, showOfficialTimes, advancing, landingSlot, mySide, enterDelayMs }) => {
     const { match, x, y } = layoutMatch;
     const state = getMatchState(match);
     const winnerSide = getMatchWinnerSide(match);
     const slots = playedScoreSlots(match.score_a, match.score_b);
     const accessibleName = `Jogo ${match.match_number}, ${match.player_a_label} contra ${match.player_b_label}`;
-    const chrome = HEADER_BY_STATE[state];
     const matchDay = formatMatchDay(match.scheduled_date);
 
     const officialTime = showOfficialTimes
@@ -668,37 +671,27 @@ const BracketMatchCard: React.FC<{
             aria-label={accessibleName}
             aria-pressed={selected}
             onClick={onSelect}
-            className={`bracket-card-in absolute overflow-visible rounded-2xl text-left outline-none transition-[transform,box-shadow] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] focus-visible:ring-4 focus-visible:ring-orange-300/70 ${
-                selected ? 'scale-[1.03] ring-4 ring-orange-300/60' : mySide ? 'ring-2 ring-saibro-500/80' : ''
+            className={`bracket-card-in absolute overflow-visible rounded-[14px] text-left outline-none transition-[transform,box-shadow] duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] focus-visible:ring-4 focus-visible:ring-saibro-300 ${
+                selected ? 'scale-[1.03] ring-4 ring-saibro-300' : mySide ? 'ring-2 ring-saibro-500' : ''
             }`}
-            style={{ left: x, top: y, width: 280, height: 88, animationDelay: `${enterDelayMs}ms` }}
+            style={{ left: x, top: y, width, height, animationDelay: `${enterDelayMs}ms` }}
         >
             {/* O pulso mora na casca interna, e não no botão: os dois animam a
                 mesma propriedade, e no mesmo elemento um apagaria o outro. */}
             <div
-                className={`h-full overflow-hidden rounded-2xl border bg-slate-50 text-slate-900 ${landingSlot ? 'bracket-slot-pulse' : ''} ${
-                    state === 'live'
-                        ? 'border-orange-300/60 shadow-xl shadow-black/25 ring-4 ring-saibro-600/15'
-                        : state === 'pending'
-                            ? 'border-white/35 bg-slate-100 shadow-lg shadow-black/20'
-                            : 'border-white/70 shadow-xl shadow-black/25'
-                }`}
+                className={`h-full overflow-hidden rounded-[14px] border border-(--chave-card-borda) bg-white text-stone-900 shadow-lg shadow-black/20 ${landingSlot ? 'bracket-slot-pulse' : ''}`}
             >
-                {/* Faixa de estado: o número do jogo e o horário deixam de ser
-                    selos pendurados fora da caixa, que colidiam entre si. */}
-                {/* 20 px de faixa em vez de 16: a 9 px o jogo, a data e o
-                    horário viravam um friso ilegível a 85% de zoom. */}
-                <div className={`flex h-5 items-center justify-between px-2.5 ${chrome.bar}`}>
-                    {/* Quando o jogo tem data, ela ocupa este lugar no lugar do
-                        nome da fase — que já está escrito como título da coluna,
-                        logo acima. A data é o que ninguém sabe de cor. */}
-                    <span className={`truncate text-[11px] font-black uppercase tracking-[0.1em] ${chrome.label}`}>
+                <div className="flex h-8 items-center justify-between gap-2 border-b border-stone-100 bg-(--chave-card-topo) px-3">
+                    {/* Quando o jogo tem data, ela ocupa o lugar do nome da
+                        fase — que já é o título da coluna. A data é o que
+                        ninguém sabe de cor. */}
+                    <span className="truncate text-xs font-bold uppercase tracking-[0.06em] text-(--chave-card-topo-texto)">
                         J{match.match_number} · {matchDay ?? phaseLabel}
                     </span>
-                    <MatchStateTag state={state} isWalkover={!!match.is_walkover} time={displayTime} tone={chrome.meta} />
+                    <MatchStateTag state={state} isWalkover={!!match.is_walkover} time={displayTime} />
                 </div>
 
-                <div className="grid h-[68px] grid-cols-[1fr_84px]">
+                <div className="grid grid-cols-[1fr_84px]">
                     <div className="min-w-0">
                         <PlayerRow
                             label={match.player_a_label}
@@ -706,7 +699,7 @@ const BracketMatchCard: React.FC<{
                             won={winnerSide === 'a'}
                             lost={winnerSide === 'b'}
                             divider
-                            railAnimated={advancing && winnerSide === 'a'}
+                            winAnimated={advancing && winnerSide === 'a'}
                             landing={landingSlot === 'a'}
                             mine={mySide === 'a'}
                         />
@@ -715,7 +708,7 @@ const BracketMatchCard: React.FC<{
                             pending={!match.registration_b_id}
                             won={winnerSide === 'b'}
                             lost={winnerSide === 'a'}
-                            railAnimated={advancing && winnerSide === 'b'}
+                            winAnimated={advancing && winnerSide === 'b'}
                             landing={landingSlot === 'b'}
                             mine={mySide === 'b'}
                         />
@@ -731,15 +724,14 @@ const MatchStateTag: React.FC<{
     state: MatchState;
     isWalkover: boolean;
     time: string | null;
-    tone: string;
-}> = ({ state, isWalkover, time, tone }) => {
+}> = ({ state, isWalkover, time }) => {
     if (isWalkover) {
-        return <span className={`text-[11px] font-black uppercase tracking-[0.1em] ${tone}`}>W.O.</span>;
+        return <span className="shrink-0 text-xs font-bold uppercase tracking-[0.06em] text-stone-600">W.O.</span>;
     }
     if (state === 'live') {
         return (
-            <span className={`bracket-breathe inline-flex items-center gap-1.5 text-[11px] font-black uppercase tracking-[0.1em] ${tone}`}>
-                <span className="h-2 w-2 rounded-full bg-orange-300" />
+            <span className="bracket-breathe inline-flex h-[22px] shrink-0 items-center gap-1.5 rounded-full bg-saibro-50 px-2 text-xs font-bold text-saibro-800 ring-1 ring-saibro-200">
+                <span className="size-1.5 rounded-full bg-saibro-600" aria-hidden="true" />
                 Ao vivo
             </span>
         );
@@ -747,9 +739,9 @@ const MatchStateTag: React.FC<{
     if (time) {
         // Sem `uppercase`: "19h30" é a grafia da hora em português, e "19H30"
         // parece defeito.
-        return <span className={`text-[11px] font-black tabular-nums tracking-[0.02em] ${tone}`}>{time}</span>;
+        return <span className="shrink-0 text-xs font-bold tabular-nums text-stone-600">{time}</span>;
     }
-    return <span className={`text-[11px] font-black uppercase tracking-[0.1em] ${tone}`}>{state === 'finished' ? 'Encerrado' : 'A definir'}</span>;
+    return <span className="shrink-0 text-xs font-semibold text-stone-500">{state === 'finished' ? 'Encerrado' : 'A definir'}</span>;
 };
 
 const PlayerRow: React.FC<{
@@ -758,31 +750,40 @@ const PlayerRow: React.FC<{
     won: boolean;
     lost: boolean;
     divider?: boolean;
-    railAnimated: boolean;
+    winAnimated: boolean;
     landing: boolean;
     mine?: boolean;
-}> = ({ label, pending, won, lost, divider, railAnimated, landing, mine }) => (
-    <div className={`flex h-[34px] min-w-0 items-center gap-2 ${divider ? 'border-b border-slate-200' : ''} ${lost ? 'bracket-loser-fade' : ''}`}>
-        {/* O trilho substitui o "V" e o troféu, que diziam a mesma coisa duas vezes. */}
+}> = ({ label, pending, won, lost, divider, winAnimated, landing, mine }) => (
+    <div className={`flex h-11 min-w-0 items-center gap-1 pl-2 ${divider ? 'border-b border-stone-100' : ''} ${lost ? 'bracket-loser-fade' : ''}`}>
+        {/* O check do vencedor: verde de quadra, e o nome não muda de cor. */}
+        <span className="grid size-5 shrink-0 place-items-center" aria-hidden={!won}>
+            {won && (
+                <Check
+                    size={14}
+                    strokeWidth={3}
+                    className={`text-court-green ${winAnimated ? 'bracket-land-in' : ''}`}
+                    role="img"
+                    aria-label="Vencedor"
+                />
+            )}
+        </span>
         <span
-            aria-hidden="true"
-            className={`h-[34px] w-[3px] shrink-0 ${won ? 'bg-saibro-600' : 'bg-transparent'} ${railAnimated ? 'bracket-rail-grow' : ''}`}
-        />
-        <span
-            className={`truncate pr-2 text-[13px] ${landing ? 'bracket-land-in' : ''} ${
+            className={`truncate pr-2 text-sm ${landing ? 'bracket-land-in' : ''} ${
                 pending
-                    ? 'font-semibold italic text-slate-400'
+                    ? 'font-medium italic text-stone-500'
                     : lost
-                        ? 'font-semibold text-slate-500'
+                        ? 'font-medium text-stone-500'
                         : mine
-                            ? 'font-black text-saibro-700'
-                            : 'font-black text-slate-950'
+                            ? 'font-bold text-saibro-800'
+                            : won
+                                ? 'font-bold text-stone-900'
+                                : 'font-semibold text-stone-900'
             }`}
         >
             {label}
         </span>
         {mine && (
-            <span className="mr-2 ml-auto shrink-0 rounded-full bg-saibro-100 px-1.5 text-xs font-black uppercase tracking-[0.06em] text-saibro-800">
+            <span className="mr-2 ml-auto inline-flex h-6 shrink-0 items-center rounded-full bg-saibro-100 px-2 text-xs font-bold text-saibro-800">
                 Você
             </span>
         )}
@@ -801,9 +802,9 @@ const ScorePanel: React.FC<{
         return (
             <div
                 data-testid="aguardando"
-                className="grid place-items-center border-l border-slate-200 bg-slate-200/60 text-slate-400"
+                className="grid place-items-center border-l border-stone-100 bg-stone-50 text-stone-500"
             >
-                <Clock size={17} strokeWidth={2} aria-hidden="true" />
+                <Clock size={16} strokeWidth={2} aria-hidden="true" />
             </div>
         );
     }
@@ -812,7 +813,7 @@ const ScorePanel: React.FC<{
 
     return (
         <div
-            className={`grid border-l ${live ? 'border-orange-200 bg-orange-50' : 'border-slate-200 bg-slate-100'}`}
+            className={`grid border-l ${live ? 'border-saibro-200 bg-saibro-50' : 'border-stone-100 bg-stone-50'}`}
             style={{ gridTemplateColumns: `repeat(${slots.length}, minmax(0, 1fr))`, gridTemplateRows: 'repeat(2, minmax(0, 1fr))' }}
         >
             {slots.map(slot => (
@@ -853,10 +854,10 @@ const ScoreCell: React.FC<{
     <span
         aria-hidden={hiddenLabel ? 'true' : undefined}
         aria-label={hiddenLabel ? undefined : ariaLabel}
-        className={`grid place-items-center border-l tabular-nums text-[15px] first:border-l-0 ${
-            live ? 'border-orange-200' : 'border-slate-200'
+        className={`grid place-items-center border-l tabular-nums text-sm first:border-l-0 ${
+            live ? 'border-saibro-200' : 'border-stone-100'
         } ${borderBottom ? 'border-b' : ''} ${
-            won ? 'font-black text-saibro-600' : 'font-bold text-slate-400'
+            won ? (live ? 'font-extrabold text-saibro-800' : 'font-extrabold text-stone-900') : 'font-semibold text-stone-500'
         } ${turning && won ? 'bracket-cell-turn' : ''}`}
     >
         {value ?? '-'}
