@@ -282,3 +282,6 @@ Orquestrador Sonnet 5.5 (sem subagentes, a pedido). Criados `20261007260000_conv
 - 2026-11-03 (Sonnet 5.5): admin que também é sócio (Hermeson) tem baixa automática da própria mensalidade; antes o João perguntava de qual aluno era o Card. Commit 2258093.
 - Contexto: fluxo de comprovante de sócio comum em `arquitetura.md` (inclui a decisão de dar o assunto recente aos atalhos, sem agente construtor de contexto).
 - Entrega: migration 20261103110000_joao_mensalidade_do_admin_socio aplicada; `whatsapp-webhook` v115 deployada. Testes: `joaoAdminMensalidadePropria.test.ts` e `supabase/tests/pglite/joao_mensalidade_admin_socio.sql`.
+- 2026-11-03 (Sonnet 5.5): chave oficial do Serra e Sertão 2026 (4ª com quali, 5ª) por migration, pré-inscritos na chave com Pix pendente, e correção do loading preso no StrictMode em `TournamentBracketView`. Commits e5d9858, af2e41a.
+- Contexto: `.fabuloso/conhecimento/campeonato.md` (novo) e linhas de Pix/chave em `arquitetura.md`. Não há CLAUDE.md.
+- Entrega: migration 20261103120000_serra_sertao_chave_oficial aplicada no remoto.

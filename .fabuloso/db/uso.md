@@ -357,7 +357,7 @@
 - tabela `club_form_voter_receipts`: lib/formsService.ts:344
 - tabela `conv_conversations`: lib/conversations/api.ts:345
 - tabela `conv_messages`: lib/conversations/api.ts:345
-- tabela `matches`: components/Championships.tsx:380, components/ResenhaOpenBracketView.tsx:39, components/SuperSet.tsx:182, components/TournamentBracketView.tsx:65
+- tabela `matches`: components/Championships.tsx:380, components/ResenhaOpenBracketView.tsx:39, components/SuperSet.tsx:182, components/TournamentBracketView.tsx:68
 - tabela `reservations`: components/Dashboard.tsx:86
 
 ## Alertas (2)

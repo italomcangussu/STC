@@ -1,6 +1,6 @@
 # Mapa do banco — postgres
-> Gerado por `fabuloso.mjs db` em 2026-11-03 10:31 UTC · fonte: api supabase (smztsayzldjmkzmufqcz) · Postgres 17.6 · hash fa1cfd8cf162
-> Última migração aplicada no remoto: 20261103110000 · última local no mapa: 20261103110000
+> Gerado por `fabuloso.mjs db` em 2026-11-03 12:41 UTC · fonte: api supabase (smztsayzldjmkzmufqcz) · Postgres 17.6 · hash ec63568d8b55
+> Última migração aplicada no remoto: 20261103120000 · última local no mapa: 20261103120000
 > Detalhe: `tabelas/<schema>.<tabela>.md` (colunas, FKs, índices, políticas, gatilhos) · `funcoes.md` · `relacoes.mmd`. Não introspecte o banco para o que está aqui.
 
 ## Alertas (194)
@@ -88,7 +88,7 @@ Views: charge_payments_effective ⚠definer
 | championship_groups | 0 | id | championships, championship_registrations | on | S1 I1 U1 D1 | — | siud/siud |
 | championship_participants | 0 | championship_id, user_id | championships, profiles | **OFF** | — | — | siud/siud |
 | championship_phase_points | 0 | phase | — | on | S1 A1 | — | siud/siud |
-| championship_registrations | <100 | id | championships, profiles, non_socio_students | on | S1 I1 U1 D1 | 1 | siud/siud |
+| championship_registrations | <1k | id | championships, profiles, non_socio_students | on | S1 I1 U1 D1 | 1 | siud/siud |
 | championship_rounds | <100 | id | championships | on | S1 A1 | 1 | siud/siud |
 | championship_series | 0 | id | profiles | on | S1 A1 | — | siud/siud |
 | championship_signups | <100 | id | championships, conv_conversations, fin_entries, profiles, conv_contacts, championship_registrations | on | S1 | 1 | ·/s |
