@@ -18,6 +18,9 @@ export interface BracketMatchWithPhase extends BracketMatch {
     scheduled_time?: string | null;
     score_a?: number[];
     score_b?: number[];
+    /** Perfil do sócio de cada lado; nulo para convidado ou vaga a definir. */
+    registration_a_user_id?: string | null;
+    registration_b_user_id?: string | null;
 }
 
 // ── Apply a result (regular or WO) ───────────────────────────────────────────

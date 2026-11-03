@@ -117,7 +117,7 @@ describe('resenhaOpenService', () => {
 
         const bracket = await fetchBracket('resenha-open-2026');
 
-        expect(registrationsChain.select).toHaveBeenCalledWith('id, participant_type, guest_name, class, user:profiles!user_id(name)');
+        expect(registrationsChain.select).toHaveBeenCalledWith('id, participant_type, guest_name, class, user_id, user:profiles!user_id(name)');
         expect(bracket).toHaveLength(34);
         expect(bracket[0]).toMatchObject({
             bracket_class: '5ª Classe',

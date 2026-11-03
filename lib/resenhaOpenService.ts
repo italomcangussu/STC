@@ -307,7 +307,7 @@ export async function fetchBracket(
             .order('match_number', { ascending: true }),
         supabase
             .from('championship_registrations')
-            .select('id, participant_type, guest_name, class, user:profiles!user_id(name)')
+            .select('id, participant_type, guest_name, class, user_id, user:profiles!user_id(name)')
             .eq('championship_id', championshipId),
     ]);
 
@@ -324,7 +324,9 @@ export async function fetchBracket(
     // registrationId → display name
     const nameMap = new Map<string, string>();
     const classMap = new Map<string, string>();
+    const userMap = new Map<string, string>();
     for (const r of regs) {
+        if (r.user_id) userMap.set(r.id, r.user_id);
         nameMap.set(r.id, r.participant_type === 'socio' ? (r.user?.name ?? '?') : (r.guest_name ?? 'Convidado'));
         classMap.set(r.id, r.class ?? '');
     }
@@ -360,6 +362,8 @@ export async function fetchBracket(
             match_number: m.match_number,
             registration_a_id: m.registration_a_id ?? null,
             registration_b_id: m.registration_b_id ?? null,
+            registration_a_user_id: m.registration_a_id ? (userMap.get(m.registration_a_id) ?? null) : null,
+            registration_b_user_id: m.registration_b_id ? (userMap.get(m.registration_b_id) ?? null) : null,
             player_a_label: m.registration_a_id
                 ? (nameMap.get(m.registration_a_id) ?? '?')
                 : (srcANum != null ? `Vencedor Jogo ${srcANum}` : '?'),
