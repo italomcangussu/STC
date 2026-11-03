@@ -47,7 +47,10 @@ export const TournamentBracketView: React.FC<Props> = ({ championshipId, champio
                 const dados = await fetchBracket(championshipId, { officialFallback: false });
                 if (active) setBracket(dados);
             } finally {
-                if (comLoading && active) setLoading(false);
+                // Sem condicionar a `comLoading`: no StrictMode o efeito roda,
+                // é cancelado e roda de novo já com `primeiraCarga` falsa, e o
+                // carregando nunca saía da tela.
+                if (active) setLoading(false);
             }
         })();
 
