@@ -223,4 +223,49 @@ describe('ResenhaOpenTournamentBoard', () => {
                 .toContain('scale(1)');
         });
     });
+
+    describe('navegação', () => {
+        it('mostra as fases da classe como atalhos, com a quantidade de jogos', () => {
+            render(<ResenhaOpenTournamentBoard bracket={bracket} championshipName="Resenha Open 2026" />);
+            fireEvent.click(screen.getByRole('button', { name: '5ª Classe' }));
+
+            const fases = screen.getByRole('navigation', { name: 'Fases da chave' });
+            expect(within(fases).getByRole('button', { name: /Oitavas\W+2 jogos/ })).toBeInTheDocument();
+            expect(within(fases).getByRole('button', { name: /Quartas\W+1 jogo$/ })).toBeInTheDocument();
+        });
+
+        it('não repete o nome do campeonato na tela, só na imagem exportada', () => {
+            render(<ResenhaOpenTournamentBoard bracket={bracket} championshipName="Resenha Open 2026" />);
+            expect(screen.queryByRole('heading', { name: 'Resenha Open 2026' })).not.toBeInTheDocument();
+        });
+
+        it('leva o atleta ao próprio jogo, trocando de classe, e marca o nome dele', () => {
+            const comAtleta = bracket.map(m =>
+                m.bracket_class === '5ª Classe' && m.match_number === 2
+                    ? { ...m, registration_b_user_id: 'u-macel' }
+                    : m,
+            );
+            render(
+                <ResenhaOpenTournamentBoard
+                    bracket={comAtleta}
+                    championshipName="Resenha Open 2026"
+                    currentUserId="u-macel"
+                />
+            );
+
+            fireEvent.click(screen.getByRole('button', { name: 'Ir para o meu jogo' }));
+
+            expect(screen.getByRole('button', { name: '5ª Classe' })).toHaveAttribute('aria-pressed', 'true');
+            const cartao = screen.getByRole('button', { name: /^Jogo 2,/ });
+            expect(cartao).toHaveAttribute('aria-pressed', 'true');
+            expect(within(cartao).getByText('Você')).toBeInTheDocument();
+        });
+
+        it('não oferece "Meu jogo" a quem não está na chave', () => {
+            render(
+                <ResenhaOpenTournamentBoard bracket={bracket} championshipName="Resenha Open 2026" currentUserId="ninguem" />
+            );
+            expect(screen.queryByRole('button', { name: /meu jogo/i })).not.toBeInTheDocument();
+        });
+    });
 });

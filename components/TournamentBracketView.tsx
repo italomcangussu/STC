@@ -18,6 +18,8 @@ interface Props {
      * para realtime no banco, então o evento nunca chega.
      */
     refreshToken?: number;
+    /** Quem está vendo, para o quadro achar e destacar os jogos da pessoa. */
+    currentUserId?: string;
 }
 
 /**
@@ -28,7 +30,7 @@ interface Props {
  * ele: o quadro oficial impresso como fallback e os horários oficiais por
  * número de jogo. As fases e as classes saem dos próprios dados.
  */
-export const TournamentBracketView: React.FC<Props> = ({ championshipId, championshipName, onMatchSelect, refreshToken = 0 }) => {
+export const TournamentBracketView: React.FC<Props> = ({ championshipId, championshipName, onMatchSelect, refreshToken = 0, currentUserId }) => {
     const [bracket, setBracket] = useState<BracketMatchWithPhase[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -111,6 +113,7 @@ export const TournamentBracketView: React.FC<Props> = ({ championshipId, champio
             bracket={bracket}
             championshipName={championshipName}
             onMatchSelect={onMatchSelect}
+            currentUserId={currentUserId}
         />
     );
 };

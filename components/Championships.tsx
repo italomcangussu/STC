@@ -1710,6 +1710,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                         {selectedChampIsResenhaOpen ? (
                             <ResenhaOpenBracketView
                                 championshipId={selectedChamp.id}
+                                currentUserId={currentUser?.id}
                                 onMatchSelect={(bracketMatch) => {
                                     const localMatch = matches.find(match => match.id === bracketMatch.id);
                                     setSelectedBracketMatch(localMatch || {
@@ -1774,6 +1775,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                                 championshipId={selectedChamp.id}
                                 championshipName={selectedChamp.name}
                                 refreshToken={bracketRefreshToken}
+                                currentUserId={currentUser?.id}
                                 onMatchSelect={bracketMatch => {
                                     const local = matches.find(m => m.id === bracketMatch.id);
                                     if (local) setSelectedBracketMatch(local);

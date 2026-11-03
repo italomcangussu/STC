@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Clock, Loader2, Minus, Plus, RotateCcw, Share2 } from 'lucide-react';
+import { Clock, Loader2, LocateFixed, Minus, Plus, RotateCcw, Share2 } from 'lucide-react';
 import {
     buildConnectorPath,
     buildResenhaBracketLayout,
@@ -25,6 +25,7 @@ import {
     waitForPaint,
 } from '../lib/bracketImageExport';
 import { notify } from '../lib/notifications';
+import { PHASE_FOCUS_FRACTION, findMyMatches, phaseAtScroll, sideOfUser } from '../lib/bracketNavigation';
 
 function formatMatchTime(raw: string): string {
     const parts = raw.split(':');
@@ -50,6 +51,8 @@ interface Props {
      * monta o quadro fora da tela — o que está visível nunca é a chave inteira.
      */
     exportClass?: string;
+    /** Quem está vendo. Com ele, o quadro acha e destaca os jogos da pessoa. */
+    currentUserId?: string;
 }
 
 const MIN_ZOOM = 0.65;
@@ -62,7 +65,7 @@ const SPRING = 'cubic-bezier(0.32,0.72,0,1)';
 /** Quanto tempo o quadro fica contando a história de um avanço. */
 const ADVANCE_MS = 1400;
 
-export const ResenhaOpenTournamentBoard: React.FC<Props> = ({ bracket, championshipName, onMatchSelect, isResenhaOpen = false, exportClass }) => {
+export const ResenhaOpenTournamentBoard: React.FC<Props> = ({ bracket, championshipName, onMatchSelect, isResenhaOpen = false, exportClass, currentUserId }) => {
     // As classes saem do próprio quadro: as duas do Resenha primeiro, para
     // preservar a ordem de sempre, e depois as demais, que só existem em
     // campeonatos criados pelo Criador.
@@ -130,7 +133,7 @@ export const ResenhaOpenTournamentBoard: React.FC<Props> = ({ bracket, champions
         const phaseLayout = layout.phases.find(item => item.phase === phase);
         if (!viewportRef.current || !phaseLayout) return;
         viewportRef.current.scrollTo({
-            left: Math.max(0, phaseLayout.x * zoom - viewportRef.current.clientWidth / 3),
+            left: Math.max(0, phaseLayout.x * zoom - viewportRef.current.clientWidth * PHASE_FOCUS_FRACTION),
             top: 0,
             behavior,
         });
@@ -140,6 +143,69 @@ export const ResenhaOpenTournamentBoard: React.FC<Props> = ({ bracket, champions
         if (exporting) return;
         requestAnimationFrame(() => centerPhase(currentPhase, 'auto'));
     }, [currentPhase, centerPhase, exporting]);
+
+    // ── Fase em foco ─────────────────────────────────────────────────────────
+    // O chip acompanha o arrasto: quem rola o quadro de lado sabe sempre em
+    // que fase está, sem ler o título da coluna, que some ao rolar para baixo.
+    const [focusedPhase, setFocusedPhase] = useState<string | null>(null);
+    const scrollFrame = useRef<number | null>(null);
+
+    const syncFocusedPhase = useCallback(() => {
+        const viewport = viewportRef.current;
+        if (!viewport) return;
+        setFocusedPhase(phaseAtScroll(layout.phases, { scrollLeft: viewport.scrollLeft, zoom, viewportWidth: viewport.clientWidth }));
+    }, [layout, zoom]);
+
+    useEffect(() => {
+        syncFocusedPhase();
+    }, [syncFocusedPhase]);
+
+    useEffect(() => () => {
+        if (scrollFrame.current != null) cancelAnimationFrame(scrollFrame.current);
+    }, []);
+
+    const handleViewportScroll = () => {
+        if (scrollFrame.current != null) return;
+        scrollFrame.current = requestAnimationFrame(() => {
+            scrollFrame.current = null;
+            syncFocusedPhase();
+        });
+    };
+
+    // ── Meu jogo ─────────────────────────────────────────────────────────────
+    // O atleta abre a chave para achar o próprio jogo. Em vez de ler o quadro
+    // inteiro, um toque leva ao próximo; tocar de novo passa ao seguinte, para
+    // quem joga mais de uma classe.
+    const myMatches = useMemo(
+        () => findMyMatches(bracket, currentUserId, availableClasses),
+        [bracket, currentUserId, availableClasses],
+    );
+    const myMatchCursor = useRef(0);
+    const [pendingFocusId, setPendingFocusId] = useState<string | null>(null);
+
+    // Roda depois da centralização automática da troca de classe (efeito
+    // acima), para o jogo não ser empurrado para fora da tela por ela.
+    useEffect(() => {
+        if (!pendingFocusId) return;
+        const escaped = typeof CSS !== 'undefined' && CSS.escape ? CSS.escape(pendingFocusId) : pendingFocusId;
+        const node = viewportRef.current?.querySelector<HTMLElement>(`[data-match-id="${escaped}"]`);
+        if (!node) return;
+        setPendingFocusId(null);
+        requestAnimationFrame(() => {
+            node.scrollIntoView?.({ block: 'center', inline: 'center', behavior: 'smooth' });
+        });
+    }, [pendingFocusId, classMatches]);
+
+    const goToMyMatch = () => {
+        if (myMatches.length === 0) return;
+        const target = myMatches[myMatchCursor.current % myMatches.length];
+        myMatchCursor.current += 1;
+        if (target.bracket_class && target.bracket_class !== selectedClass) {
+            setSelectedClass(target.bracket_class);
+        }
+        setSelectedMatchId(target.id);
+        setPendingFocusId(target.id);
+    };
 
     const handleClassChange = (className: string) => {
         setSelectedClass(className);
@@ -246,25 +312,32 @@ export const ResenhaOpenTournamentBoard: React.FC<Props> = ({ bracket, champions
             ? 'w-max p-6 bg-[#061320]'
             : 'w-auto -mx-4 px-0 py-3 sm:w-full sm:max-w-7xl sm:mx-auto sm:px-[max(0.75rem,env(safe-area-inset-left))]'}>
             <section className="relative rounded-none border-x-0 sm:rounded-[1.75rem] sm:border-x bg-[#061320] text-white shadow-2xl shadow-slate-950/30 overflow-hidden border border-white/10">
-                <div className="px-3 sm:px-6 pt-5 pb-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                    <div>
+                {exporting ? (
+                    // Na imagem não há página em volta: o título é o único
+                    // lugar que diz de que campeonato e classe ela é.
+                    <div className="px-6 pt-5 pb-4">
                         <p className="text-xs font-black uppercase tracking-[0.22em] text-orange-300">Tabela de Confrontos</p>
-                        <h2 className="text-xl sm:text-2xl font-black tracking-tight">{championshipName}</h2>
-                        {/* Sem as abas de classe, o título é o único lugar que
-                            diz de qual classe é esta imagem. */}
-                        {exporting && (
-                            <p className="mt-1 text-sm font-black uppercase tracking-[0.18em] text-sky-200/80">{selectedClass}</p>
-                        )}
+                        <h2 className="text-2xl font-black tracking-tight">{championshipName}</h2>
+                        <p className="mt-1 text-sm font-black uppercase tracking-[0.18em] text-sky-200/80">{selectedClass}</p>
                     </div>
-
-                    {!exporting && (
-                        <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
-                            <BracketClassSwitch
-                                availableClasses={availableClasses}
-                                selectedClass={selectedClass}
-                                onChange={handleClassChange}
-                            />
-                            <div className="flex items-center gap-3">
+                ) : (
+                    // Na tela, o nome do campeonato já está no topo da página:
+                    // repeti-lo aqui empurrava o primeiro jogo para fora da dobra.
+                    <div className="flex flex-col gap-3 px-3 pt-4 pb-3 sm:px-6">
+                        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                            <div className="flex items-center gap-2">
+                                <BracketClassSwitch
+                                    availableClasses={availableClasses}
+                                    selectedClass={selectedClass}
+                                    onChange={handleClassChange}
+                                />
+                                <ExportButton
+                                    busy={exportando}
+                                    classCount={availableClasses.length}
+                                    onExport={handleExport}
+                                />
+                            </div>
+                            <div className="flex items-center justify-between gap-2">
                                 <ZoomControls
                                     zoom={zoom}
                                     onZoomIn={() => updateZoom(ZOOM_STEP)}
@@ -274,19 +347,24 @@ export const ResenhaOpenTournamentBoard: React.FC<Props> = ({ bracket, champions
                                         requestAnimationFrame(() => centerPhase(currentPhase));
                                     }}
                                 />
-                                <ExportButton
-                                    busy={exportando}
-                                    classCount={availableClasses.length}
-                                    onExport={handleExport}
-                                />
+                                {myMatches.length > 0 && (
+                                    <MyMatchButton count={myMatches.length} onClick={goToMyMatch} />
+                                )}
                             </div>
                         </div>
-                    )}
-                </div>
+                        <PhaseStrip
+                            phases={layout.phases}
+                            focusedPhase={focusedPhase}
+                            currentPhase={currentPhase}
+                            onPick={phase => centerPhase(phase)}
+                        />
+                    </div>
+                )}
 
                 <div
                     ref={viewportRef}
                     data-bracket-viewport
+                    onScroll={exporting ? undefined : handleViewportScroll}
                     className={exporting
                         ? 'relative px-6 pb-6'
                         : 'relative overflow-auto overscroll-contain px-2 sm:px-6 pb-[max(2.75rem,env(safe-area-inset-bottom))] cursor-grab active:cursor-grabbing'}
@@ -324,6 +402,7 @@ export const ResenhaOpenTournamentBoard: React.FC<Props> = ({ bracket, champions
                                         showOfficialTimes={isResenhaOpen}
                                         advancing={advancingNumbers.has(layoutMatch.match.match_number)}
                                         landingSlot={landingSlotFor(layoutMatch.match, advancingNumbers)}
+                                        mySide={sideOfUser(layoutMatch.match, currentUserId)}
                                         enterDelayMs={Math.min(index * 45, 360)}
                                     />
                                 ))}
@@ -359,6 +438,10 @@ function landingSlotFor(match: BracketMatchWithPhase, advancingNumbers: Set<numb
     return null;
 }
 
+/**
+ * Exportar é ação de vez em quando, não da tela: no celular vira só o ícone,
+ * em contorno, para não disputar com a troca de classe nem com "Meu jogo".
+ */
 const ExportButton: React.FC<{
     busy: boolean;
     classCount: number;
@@ -369,13 +452,14 @@ const ExportButton: React.FC<{
         onClick={onExport}
         disabled={busy}
         aria-label={classCount > 1 ? `Exportar ${classCount} imagens, uma por classe` : 'Exportar imagem da chave'}
-        className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-saibro-600 px-4 py-2 text-xs font-black text-white shadow-lg shadow-orange-950/30 transition-[transform,opacity] duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] hover:brightness-110 active:scale-[0.97] disabled:opacity-60"
+        className="inline-flex size-13 shrink-0 items-center justify-center gap-2 rounded-full border border-white/15 text-sm font-bold text-slate-200 transition-[transform,background-color] duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-white/10 active:scale-[0.97] disabled:opacity-60 sm:w-auto sm:px-5"
     >
-        {busy ? <Loader2 size={14} className="animate-spin" /> : <Share2 size={14} />}
+        {busy ? <Loader2 size={18} className="animate-spin" aria-hidden="true" /> : <Share2 size={18} aria-hidden="true" />}
         {/* A contagem aparece antes do clique de propósito: se o quadro só
-            enxergar uma classe, isso fica visível aqui e não depois, na
-            dúvida entre "não capturou" e "não entregou". */}
-        {busy ? 'Gerando…' : classCount > 1 ? `Exportar ${classCount} imagens` : 'Exportar imagem'}
+            enxergar uma classe, isso fica visível aqui e não depois. */}
+        <span className="hidden sm:inline">
+            {busy ? 'Gerando…' : classCount > 1 ? `Exportar ${classCount} imagens` : 'Exportar imagem'}
+        </span>
     </button>
 );
 
@@ -384,16 +468,18 @@ const BracketClassSwitch: React.FC<{
     selectedClass: string;
     onChange: (className: string) => void;
 }> = ({ availableClasses, selectedClass, onChange }) => (
-    <div className="inline-flex rounded-full border border-white/10 bg-[#0d2338] p-1 shadow-inner" aria-label="Selecionar classe do chaveamento">
+    // Selecionado em branco, não em laranja: o laranja fica para o que é da
+    // pessoa (Meu jogo) e para o caminho de quem já venceu.
+    <div className="flex min-w-0 flex-1 rounded-full border border-white/10 bg-[#0d2338] p-1 shadow-inner lg:flex-none" aria-label="Selecionar classe do chaveamento">
         {availableClasses.map(className => (
             <button
                 key={className}
                 type="button"
                 aria-pressed={selectedClass === className}
                 onClick={() => onChange(className)}
-                className={`rounded-full px-4 py-2 text-xs font-black transition-[background-color,color] duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] ${
+                className={`h-11 min-w-0 flex-1 truncate rounded-full px-4 text-sm font-black transition-[background-color,color] duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] lg:flex-none ${
                     selectedClass === className
-                        ? 'bg-saibro-600 text-white shadow-lg shadow-orange-950/30'
+                        ? 'bg-white text-slate-950 shadow-lg shadow-black/30'
                         : 'text-slate-300 hover:text-white'
                 }`}
             >
@@ -409,19 +495,86 @@ const ZoomControls: React.FC<{
     onZoomOut: () => void;
     onReset: () => void;
 }> = ({ zoom, onZoomIn, onZoomOut, onReset }) => (
-    <div className="inline-flex items-center overflow-hidden rounded-full border border-white/10 bg-[#0d2338] text-xs font-black text-slate-200 shadow-inner">
-        <button type="button" aria-label="Reduzir zoom" onClick={onZoomOut} className="p-2 hover:bg-white/10">
-            <Minus size={14} />
+    <div className="inline-flex items-center overflow-hidden rounded-full border border-white/10 bg-[#0d2338] text-sm font-black text-slate-200 shadow-inner">
+        <button type="button" aria-label="Reduzir zoom" onClick={onZoomOut} className="grid size-11 shrink-0 place-items-center hover:bg-white/10">
+            <Minus size={16} aria-hidden="true" />
         </button>
-        <span className="min-w-14 border-x border-white/10 px-3 py-2 text-center tabular-nums">{Math.round(zoom * 100)}%</span>
-        <button type="button" aria-label="Aumentar zoom" onClick={onZoomIn} className="p-2 hover:bg-white/10">
-            <Plus size={14} />
+        <span className="min-w-14 border-x border-white/10 px-2 text-center tabular-nums" aria-live="polite">{Math.round(zoom * 100)}%</span>
+        <button type="button" aria-label="Aumentar zoom" onClick={onZoomIn} className="grid size-11 shrink-0 place-items-center hover:bg-white/10">
+            <Plus size={16} aria-hidden="true" />
         </button>
-        <button type="button" aria-label="Resetar zoom" onClick={onReset} className="border-l border-white/10 p-2 hover:bg-white/10">
-            <RotateCcw size={14} />
+        <button type="button" aria-label="Resetar zoom" onClick={onReset} className="grid size-11 shrink-0 place-items-center border-l border-white/10 hover:bg-white/10">
+            <RotateCcw size={16} aria-hidden="true" />
         </button>
     </div>
 );
+
+/** A ação do atleta na chave: ir direto ao próprio jogo. */
+const MyMatchButton: React.FC<{ count: number; onClick: () => void }> = ({ count, onClick }) => (
+    <button
+        type="button"
+        onClick={onClick}
+        aria-label={count > 1 ? `Ir para os meus jogos, ${count} pela frente` : 'Ir para o meu jogo'}
+        className="inline-flex h-11 shrink-0 items-center gap-2 rounded-full bg-saibro-700 px-4 text-sm font-black text-white shadow-lg shadow-orange-950/30 transition-transform duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] hover:brightness-110 active:scale-[0.97]"
+    >
+        <LocateFixed size={16} aria-hidden="true" />
+        {count > 1 ? `Meus jogos (${count})` : 'Meu jogo'}
+    </button>
+);
+
+/**
+ * As fases como atalhos. No celular só uma coluna cabe na tela; sem isto, ir
+ * da qualificatória à final era arrastar às cegas. O chip em foco segue o
+ * arrasto, e o ponto laranja marca a fase que está sendo jogada agora.
+ */
+const PhaseStrip: React.FC<{
+    phases: ReturnType<typeof buildResenhaBracketLayout>['phases'];
+    focusedPhase: string | null;
+    currentPhase: string;
+    onPick: (phase: string) => void;
+}> = ({ phases, focusedPhase, currentPhase, onPick }) => {
+    const stripRef = useRef<HTMLDivElement>(null);
+
+    // Mantém o chip em foco à vista, rolando só a faixa — scrollIntoView
+    // rolaria a página inteira junto.
+    useEffect(() => {
+        const strip = stripRef.current;
+        const chip = strip?.querySelector<HTMLElement>('[aria-current="true"]');
+        if (!strip || !chip) return;
+        const fora = chip.offsetLeft < strip.scrollLeft || chip.offsetLeft + chip.offsetWidth > strip.scrollLeft + strip.clientWidth;
+        if (fora) strip.scrollTo?.({ left: chip.offsetLeft - 12, behavior: 'smooth' });
+    }, [focusedPhase]);
+
+    if (phases.length < 2) return null;
+
+    return (
+        <nav aria-label="Fases da chave">
+            <div ref={stripRef} className="-mx-3 flex gap-1.5 overflow-x-auto overflow-y-hidden overscroll-x-none px-3 [scrollbar-width:none] sm:mx-0 sm:px-0">
+                {phases.map(phase => {
+                    const focused = phase.phase === focusedPhase;
+                    const playing = phase.phase === currentPhase;
+                    return (
+                        <button
+                            key={phase.phase}
+                            type="button"
+                            aria-current={focused ? 'true' : undefined}
+                            onClick={() => onPick(phase.phase)}
+                            className={`inline-flex h-11 shrink-0 items-center gap-2 rounded-full px-4 text-sm font-bold transition-[background-color,color] duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] ${
+                                focused ? 'bg-white/12 text-white ring-1 ring-white/25' : 'text-slate-300 hover:text-white'
+                            }`}
+                        >
+                            {playing && <span className="size-2 rounded-full bg-orange-400" aria-hidden="true" />}
+                            {phase.label}
+                            <span className="tabular-nums text-slate-400" aria-hidden="true">{phase.matches.length}</span>
+                            <span className="sr-only">, {phase.matches.length} {phase.matches.length === 1 ? 'jogo' : 'jogos'}</span>
+                            {playing && <span className="sr-only">, em andamento</span>}
+                        </button>
+                    );
+                })}
+            </div>
+        </nav>
+    );
+};
 
 const PhaseHeaders: React.FC<{ layout: ReturnType<typeof buildResenhaBracketLayout> }> = ({ layout }) => (
     <>
@@ -491,8 +644,9 @@ const BracketMatchCard: React.FC<{
     showOfficialTimes: boolean;
     advancing: boolean;
     landingSlot: 'a' | 'b' | null;
+    mySide: 'a' | 'b' | null;
     enterDelayMs: number;
-}> = ({ layoutMatch, phaseLabel, selected, onSelect, showOfficialTimes, advancing, landingSlot, enterDelayMs }) => {
+}> = ({ layoutMatch, phaseLabel, selected, onSelect, showOfficialTimes, advancing, landingSlot, mySide, enterDelayMs }) => {
     const { match, x, y } = layoutMatch;
     const state = getMatchState(match);
     const winnerSide = getMatchWinnerSide(match);
@@ -515,7 +669,7 @@ const BracketMatchCard: React.FC<{
             aria-pressed={selected}
             onClick={onSelect}
             className={`bracket-card-in absolute overflow-visible rounded-2xl text-left outline-none transition-[transform,box-shadow] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] focus-visible:ring-4 focus-visible:ring-orange-300/70 ${
-                selected ? 'scale-[1.03] ring-4 ring-orange-300/60' : ''
+                selected ? 'scale-[1.03] ring-4 ring-orange-300/60' : mySide ? 'ring-2 ring-saibro-500/80' : ''
             }`}
             style={{ left: x, top: y, width: 280, height: 88, animationDelay: `${enterDelayMs}ms` }}
         >
@@ -554,6 +708,7 @@ const BracketMatchCard: React.FC<{
                             divider
                             railAnimated={advancing && winnerSide === 'a'}
                             landing={landingSlot === 'a'}
+                            mine={mySide === 'a'}
                         />
                         <PlayerRow
                             label={match.player_b_label}
@@ -562,6 +717,7 @@ const BracketMatchCard: React.FC<{
                             lost={winnerSide === 'a'}
                             railAnimated={advancing && winnerSide === 'b'}
                             landing={landingSlot === 'b'}
+                            mine={mySide === 'b'}
                         />
                     </div>
                     <ScorePanel slots={slots} state={state} match={match} advancing={advancing} />
@@ -604,7 +760,8 @@ const PlayerRow: React.FC<{
     divider?: boolean;
     railAnimated: boolean;
     landing: boolean;
-}> = ({ label, pending, won, lost, divider, railAnimated, landing }) => (
+    mine?: boolean;
+}> = ({ label, pending, won, lost, divider, railAnimated, landing, mine }) => (
     <div className={`flex h-[34px] min-w-0 items-center gap-2 ${divider ? 'border-b border-slate-200' : ''} ${lost ? 'bracket-loser-fade' : ''}`}>
         {/* O trilho substitui o "V" e o troféu, que diziam a mesma coisa duas vezes. */}
         <span
@@ -617,11 +774,18 @@ const PlayerRow: React.FC<{
                     ? 'font-semibold italic text-slate-400'
                     : lost
                         ? 'font-semibold text-slate-500'
-                        : 'font-black text-slate-950'
+                        : mine
+                            ? 'font-black text-saibro-700'
+                            : 'font-black text-slate-950'
             }`}
         >
             {label}
         </span>
+        {mine && (
+            <span className="mr-2 ml-auto shrink-0 rounded-full bg-saibro-100 px-1.5 text-xs font-black uppercase tracking-[0.06em] text-saibro-800">
+                Você
+            </span>
+        )}
     </div>
 );
 
