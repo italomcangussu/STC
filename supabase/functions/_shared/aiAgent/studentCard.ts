@@ -30,7 +30,7 @@ function receiptFacts(r: Ctx): string {
 }
 
 /** Resposta ao comprovante recebido (imagem/PDF sem texto) de um administrador no privado. */
-export function receiptReceivedMessage(r: Ctx | null | undefined): string {
+export function receiptReceivedMessage(r: Ctx | null | undefined, topic?: string | null): string {
   if (!r || r.found !== true) {
     return 'Recebi o arquivo e estou conferindo. Me diga o nome do aluno (e se for outra coisa, o que é) que eu monto o resumo para você confirmar.';
   }
@@ -44,5 +44,10 @@ export function receiptReceivedMessage(r: Ctx | null | undefined): string {
   if (anexo) return `Recebi o comprovante (${dados}) e anexei à despesa "${anexo.description}" de ${dateBR(anexo.paid_on)}, que estava sem comprovante. Se era de outra coisa, me avisa.`;
   // Pago a outra pessoa: costuma ser despesa do clube que a diretoria pagou, não engano.
   if (r.payee_ok === false) return `Recebi o comprovante (${dados}). Foi uma despesa do clube? Me diz o que é que eu monto o resumo.`;
-  return `Recebi o comprovante${dados ? ` (${dados})` : ''}. É para renovar o Card de qual aluno? Se for outra coisa, me diz o que é.`;
+  return `Recebi o comprovante${dados ? ` (${dados})` : ''}. ${whatIsItFor(topic)}`;
 }
+
+/** A conversa já disse que é mensalidade e a baixa automática não bateu: pergunta de quem, nunca do Card. */
+const whatIsItFor = (topic?: string | null) => (topic === 'mensalidade'
+  ? 'Não bateu com a mensalidade em aberto que conferi. É a mensalidade de qual sócio e de qual mês?'
+  : 'É para renovar o Card de qual aluno? Se for outra coisa, me diz o que é.');

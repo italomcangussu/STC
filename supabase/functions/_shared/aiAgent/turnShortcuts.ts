@@ -7,9 +7,9 @@ import { isAdminAssistant } from './promptAdmin.ts';
 import { actingFor } from './promptContext.ts';
 import type { Ctx } from './promptTypes.ts';
 import { type ReceiptStage, handleReceiptIntent, loadReceiptStage } from './receiptIntent.ts';
-import { deliverForward } from './receiptForward.ts';
+import { deliverForward, tryMembershipAutoPay } from './receiptForward.ts';
 import { type ChampReceipt, HOLD, tryChampionshipPay } from './championshipReceipt.ts';
-import { receiptTopic } from './receiptContext.ts';
+import { receiptTopic, talksAboutOwnMembership } from './receiptContext.ts';
 import { UNCLEAR_AUDIO_REPLY, unheardOnly } from './audio.ts';
 import { cadence } from './cadence.ts';
 import { delegateSilence } from './delegate.ts';
@@ -19,7 +19,7 @@ import type { Turn } from './turnKit.ts';
 import type { TurnResult } from './turnTypes.ts';
 
 /** Avisos de algo que o servidor já fez com o comprovante: saem mesmo se a pessoa escreveu de novo no meio. */
-const DONE = new Set(['receipt_championship_paid', 'receipt_escalated', 'receipt_registered', 'receipt_donation_registered', 'receipt_pending_review']);
+const DONE = new Set(['receipt_championship_paid', 'receipt_membership_paid', 'receipt_escalated', 'receipt_registered', 'receipt_donation_registered', 'receipt_pending_review']);
 
 const onlyKinds = (t: Turn, kinds: string[]) => t.pendentes.every((m) => kinds.includes(String(m.kind)));
 
@@ -82,11 +82,11 @@ async function championshipReceipt(t: Turn): Promise<TurnResult | null> {
   const pago = await tryChampionshipPay(t.deps.db, stage.id, topic);
   // Guardar o comprovante é para o atleta; o administrador sem inscrição pendente segue para o fluxo dele (despesa).
   if (!pago || pago.action === HOLD || (!comMidia && pago.action !== 'receipt_championship_paid')) return null;
-  return deliverChampionshipReceipt(t, pago, stage.id);
+  return deliverAutoReceipt(t, pago, stage.id);
 }
 
 /** Fala com a pessoa e avisa o financeiro (menos quando o financeiro é quem está na conversa). */
-async function deliverChampionshipReceipt(t: Turn, pago: ChampReceipt, stageId: string): Promise<TurnResult> {
+async function deliverAutoReceipt(t: Turn, pago: ChampReceipt, stageId: string): Promise<TurnResult> {
   const sent = await t.entregar(cadence(pago.messages), { firme: DONE.has(pago.action) });
   const avisar = pago.forward && pago.forward.admin_conversation_id !== t.conversation;
   const repassadas = avisar ? await deliverForward(pago.forward!, { db: t.deps.db, uaz: t.deps.uaz, signedUrl: t.deps.files?.signedUrl }) : 0;
@@ -96,13 +96,42 @@ async function deliverChampionshipReceipt(t: Turn, pago: ChampReceipt, stageId: 
 
 /** Administrador manda o comprovante: o servidor já leu (valor, data, favorecido); o João responde com o que leu, sem equipe. */
 async function adminReceipt(t: Turn): Promise<TurnResult | null> {
-  if (!t.soMidia || t.isGroup || !isAdminAssistant(t.ctx) || !t.ultima?.id || !onlyKinds(t, ['image', 'document'])) return null;
+  // Texto depois do comprovante: "referente à mensalidade de novembro de Hermeson Veras".
+  if (!t.soMidia) return adminOwnMembership(t);
+  if (t.isGroup || !isAdminAssistant(t.ctx) || !t.ultima?.id || !onlyKinds(t, ['image', 'document'])) return null;
+  const lido = await readAdminReceipt(t, t.ultima.id as string);
+  const propria = isFreshReceipt(lido) ? await adminOwnMembership(t) : null;
+  if (propria) return propria;
+  return t.say([receiptReceivedMessage(lido, receiptTopic((t.ctx.transcript ?? []) as Ctx[]))], 'admin_receipt_received', () => ({ found: lido?.found === true }), { awaiting: true, action: 'admin_receipt_received' });
+}
+
+/** A leitura do comprovante chega alguns segundos depois da mídia: tenta por até ~10 s. */
+async function readAdminReceipt(t: Turn, messageId: string): Promise<Ctx | null> {
   let lido: Ctx | null = null;
   for (let tentativa = 0; tentativa < 6 && !lido?.found; tentativa++) {
     if (tentativa) await t.deps.sleep(2000);
-    lido = (await t.deps.db('conv_svc_ai_admin_receipt', { p_session: t.session, p_message: t.ultima.id as string })).data as Ctx | null;
+    lido = (await t.deps.db('conv_svc_ai_admin_receipt', { p_session: t.session, p_message: messageId })).data as Ctx | null;
   }
-  return t.say([receiptReceivedMessage(lido)], 'admin_receipt_received', () => ({ found: lido?.found === true }), { awaiting: true, action: 'admin_receipt_received' });
+  return lido;
+}
+
+const isFreshReceipt = (r: Ctx | null) => r?.found === true && r.duplicate !== true && r.status !== 'approved';
+
+/**
+ * Administrador que também é sócio manda o Pix da PRÓPRIA mensalidade (Hermeson, 03/11: "quero te enviar meu comprovante da
+ * mensalidade de novembro" e o João perguntou de qual aluno era o Card). A baixa automática confere valor exato, favorecido e
+ * duplicado; só tenta quando o assunto recente é mensalidade e ele disse que é a dele (na legenda, antes ou logo depois do arquivo).
+ */
+async function adminOwnMembership(t: Turn): Promise<TurnResult | null> {
+  if (t.isGroup || !isAdminAssistant(t.ctx)) return null;
+  const falaAgora = t.soMidia ? [] : [{ direction: 'inbound', body: t.buffered } as Ctx];
+  const transcript = [...((t.ctx.transcript ?? []) as Ctx[]), ...falaAgora];
+  const nome = String(((t.ctx.requester as Ctx | undefined)?.profile as Ctx | undefined)?.name ?? '');
+  if (receiptTopic(transcript) !== 'mensalidade' || !talksAboutOwnMembership(transcript, nome)) return null;
+  const stage = await stageFor(t, t.soMidia);
+  if (stage?.status !== 'awaiting_purpose') return null;
+  const pago = await tryMembershipAutoPay(t.deps.db, stage.id);
+  return pago ? deliverAutoReceipt(t, pago, stage.id) : null;
 }
 
 /** Mídia sem texto no privado, sem comprovante em jogo: o João não lê mídia e diz isso. */

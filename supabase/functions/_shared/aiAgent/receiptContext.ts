@@ -26,3 +26,17 @@ export function receiptTopic(transcript: Ctx[]): ReceiptTopic | null {
   }
   return null;
 }
+
+const MINE = /\b(meu|minha|meus|minhas|paguei)\b/;
+
+/**
+ * O administrador disse que a mensalidade é DELE ("meu comprovante da mensalidade", "mensalidade de Hermeson Veras").
+ * Sem isso, comprovante de mensalidade que o admin manda é de outro sócio e nunca baixa a cobrança dele por coincidência de valor.
+ */
+export function talksAboutOwnMembership(transcript: Ctx[], ownName: string): boolean {
+  const primeiro = fold(ownName.trim().split(/\s+/)[0] ?? '');
+  return transcript.filter((m) => m.direction === 'inbound' && m.body).slice(-6).some((m) => {
+    const texto = fold(String(m.body));
+    return /\bmensalidade/.test(texto) && (MINE.test(texto) || (primeiro.length > 2 && texto.includes(primeiro)));
+  });
+}
