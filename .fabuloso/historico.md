@@ -292,3 +292,7 @@ Orquestrador Sonnet 5.5 (sem subagentes, a pedido). Criados `20261007260000_conv
 - Contexto: `.fabuloso/conhecimento/campeonato.md` (seção Sistema visual da chave) e cardápio `.fabuloso/codigo/design.md`. Não há CLAUDE.md.
 - Entrega: sem migration e sem edge function; nenhum componente usa os tokens ainda.
 - Observação: mapa do banco sem mudança; alertas de RLS antigos seguem em `.fabuloso/db/alertas.md`.
+- 2026-11-03 (Sonnet 5.5, fabuloso-design): direção da chave aplicada: A (noite) em todas as classes e D (saibro) na 4ª Classe, por variáveis `--chave-*` e `lib/bracketTheme.ts`; card 280x120 com texto mínimo 12 px. Commits 098a861, 3dda7b4.
+- Contexto: `.fabuloso/conhecimento/campeonato.md` (seção Sistema visual da chave). Não há CLAUDE.md.
+- Entrega: sem migration e sem edge function.
+- Observação: mapa do banco sem mudança.

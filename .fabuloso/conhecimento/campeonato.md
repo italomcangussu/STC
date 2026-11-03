@@ -27,5 +27,7 @@ Leia antes de mexer em `components/TournamentBracketView.tsx`, `components/Resen
 ## Sistema visual da chave (design)
 - As regras (papéis de cor, escala tipográfica 24/20/16/14/12, anatomia do card, conectores, movimento, alvos de 44 px) ficam em `.fabuloso/design/sistema.md`; leia antes de mexer no visual de `ResenhaOpenTournamentBoard.tsx` ou `TournamentBracketView.tsx`.
 - `index.css` (`@theme`) tem a escala `noite` (50, 200, 400, 500, 600, 800, 900, 950): fundo azul-noite da chave. O 600 é só para conectores (não é texto); o 500 é o texto mínimo.
-- Nenhum componente usa os tokens `noite` ainda: `ResenhaOpenTournamentBoard.tsx` segue com hex soltos (#061320, #0d2338) e `text-[11px]`.
-- Direção visual ainda não escolhida: canvas com 4 propostas (A Padrão, B Placar, C Rodada, D Saibro) em https://claude.ai/artifact/LUGMUkB1tUdgN4mfmY55JD. Ao escolher, registrar em `.fabuloso/design/direcoes/chave.md`.
+- Direção escolhida em 03/11/2026 (contrato em `.fabuloso/design/direcoes/chave.md`): A (Padrão, fundo noite) em todas as classes; D (Saibro) na 4ª Classe. B e C ficaram de fora. Commits 098a861, 3dda7b4.
+- Tema por classe: `lib/bracketTheme.ts` (`temaDaClasse(classe)` devolve 'saibro' para '4ª Classe', senão 'noite'; teste em `__tests__/bracketTheme.test.ts`). O banco não guarda a superfície da classe, então a lista de classes de saibro mora nessa função.
+- Cores: `index.css` define `.chave-noite` e `.chave-saibro` com as variáveis `--chave-*` (fundo, superfície, borda, texto, apoio, ativo, foco, conector, card-topo). O quadro lê as cores só por elas, sem hex solto; trocar de tema é só de cor.
+- Card em `ResenhaOpenTournamentBoard.tsx`: 280x120 (topo 32 px + duas linhas de 44 px), check verde no vencedor (no lugar do trilho laranja), texto mínimo 12 px. `CARD_HEIGHT` em `lib/resenhaOpenBracketLayout.ts` passou de 88 para 120; se mudar o card, mude lá também.
