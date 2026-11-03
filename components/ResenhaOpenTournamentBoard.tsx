@@ -25,6 +25,7 @@ import {
     waitForPaint,
 } from '../lib/bracketImageExport';
 import { notify } from '../lib/notifications';
+import { temaDaClasse } from '../lib/bracketTheme';
 import { PHASE_FOCUS_FRACTION, findMyMatches, phaseAtScroll, sideOfUser } from '../lib/bracketNavigation';
 
 function formatMatchTime(raw: string): string {
@@ -306,7 +307,7 @@ export const ResenhaOpenTournamentBoard: React.FC<Props> = ({ bracket, champions
     return (
         // No celular o quadro sangra até as bordas: o padding do contêiner da
         // página custava mais largura útil do que a moldura valia.
-        <div className={`chave-noite ${exporting
+        <div className={`chave-${temaDaClasse(selectedClass)} ${exporting
             // Na cópia de exportação o quadro não sangra nem se limita: ele tem
             // o tamanho que tiver, que é o ponto de exportar.
             ? 'w-max p-6 bg-(--chave-fundo)'
@@ -741,7 +742,7 @@ const MatchStateTag: React.FC<{
         // parece defeito.
         return <span className="shrink-0 text-xs font-bold tabular-nums text-stone-600">{time}</span>;
     }
-    return <span className="shrink-0 text-xs font-semibold text-stone-500">{state === 'finished' ? 'Encerrado' : 'A definir'}</span>;
+    return <span className="shrink-0 text-xs font-semibold text-(--chave-card-topo-texto)">{state === 'finished' ? 'Encerrado' : 'A definir'}</span>;
 };
 
 const PlayerRow: React.FC<{
