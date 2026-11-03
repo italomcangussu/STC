@@ -279,3 +279,6 @@ Orquestrador Sonnet 5.5 (sem subagentes, a pedido). Criados `20261007260000_conv
 - 2026-11-03 (Sonnet 5.5): comprovante que o admin manda de um sócio vale para aprovar a mensalidade dele (incidente: Henrique mandou o de novembro do Gianmarco, R$ 400, e o João respondeu RECEIPT_NOT_FOUND). Commit de7c0ab.
 - Contexto: fluxo de comprovante de sócio comum em `arquitetura.md`. Não há CLAUDE.md.
 - Entrega: migration 20261103100000_joao_comprovante_do_admin_para_socio aplicada. Teste: `supabase/tests/pglite/joao_comprovante_admin_para_socio.sql`.
+- 2026-11-03 (Sonnet 5.5): admin que também é sócio (Hermeson) tem baixa automática da própria mensalidade; antes o João perguntava de qual aluno era o Card. Commit 2258093.
+- Contexto: fluxo de comprovante de sócio comum em `arquitetura.md` (inclui a decisão de dar o assunto recente aos atalhos, sem agente construtor de contexto).
+- Entrega: migration 20261103110000_joao_mensalidade_do_admin_socio aplicada; `whatsapp-webhook` v115 deployada. Testes: `joaoAdminMensalidadePropria.test.ts` e `supabase/tests/pglite/joao_mensalidade_admin_socio.sql`.

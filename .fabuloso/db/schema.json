@@ -8,7 +8,7 @@
     "public",
     "sig_private"
   ],
-  "ultima_migracao": "20261103100000",
+  "ultima_migracao": "20261103110000",
   "extensoes": [
     "pg_cron 1.6.4",
     "pg_net 0.19.5",
