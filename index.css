@@ -22,6 +22,18 @@
     --color-court-dark: #14532d;
     --color-court-line: #fafaf9;
 
+    /* Noite: fundo azul-noite da chave dos campeonatos.
+       Contraste sobre noite-950: 500 = 4,54:1 (texto mínimo), 400 = 7,45:1,
+       600 = 3,28:1 (só traço e conector, nunca texto). Regras em .fabuloso/design/sistema.md */
+    --color-noite-50: #f1f5f9;
+    --color-noite-200: #c5d3e0;
+    --color-noite-400: #8fa6bd;
+    --color-noite-500: #6b7f94;
+    --color-noite-600: #3d6a93;
+    --color-noite-800: #15324d;
+    --color-noite-900: #0d2338;
+    --color-noite-950: #061320;
+
     /* Sunset Colors */
     --color-sunset-start: #F97316;
     --color-sunset-mid: #EA580C;
