@@ -8,7 +8,7 @@
     "public",
     "sig_private"
   ],
-  "ultima_migracao": "20261102200000",
+  "ultima_migracao": "20261103100000",
   "extensoes": [
     "pg_cron 1.6.4",
     "pg_net 0.19.5",
@@ -30500,6 +30500,19 @@
       "comentario": null
     },
     {
+      "nome": "conv_private.admin_receipt_to_member",
+      "args": "p_session uuid, p jsonb",
+      "retorno": "void",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
       "nome": "conv_private.admin_student_receipt",
       "args": "p_conversation uuid, p_admin uuid, p_amount bigint",
       "retorno": "TABLE(id uuid, amount_cents bigint, remaining_cents bigint, paid_on date, payee text, from_name text)",
@@ -34611,7 +34624,7 @@
       "nome": "public.conv_svc_ai_admin_finance_propose",
       "args": "p_session uuid, p jsonb",
       "retorno": "jsonb",
-      "linguagem": "sql",
+      "linguagem": "plpgsql",
       "tipo": "f",
       "security_definer": true,
       "search_path": "search_path=\"\"",

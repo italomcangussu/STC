@@ -276,3 +276,6 @@ Orquestrador Sonnet 5.5 (sem subagentes, a pedido). Criados `20261007260000_conv
 - Contexto: fluxo de entrada espontânea em `arquitetura.md` (regra "PERGUNTA SÉRIA" e `isOpinionTalk`).
 - Entrega: migration 20261102200000_serra_sertao_formula_mantida aplicada (dado em `championships.joao_info`); `whatsapp-webhook` v114 deployada; fala avulsa enviada no grupo. Operacional: sem token no conector MCP, escrita remota foi pela API de gerenciamento com o token do .env.local.
 - Observação: teste com modelo real segue sem JOAO_LIVE_KEY; `deno check` local falha por ambiente.
+- 2026-11-03 (Sonnet 5.5): comprovante que o admin manda de um sócio vale para aprovar a mensalidade dele (incidente: Henrique mandou o de novembro do Gianmarco, R$ 400, e o João respondeu RECEIPT_NOT_FOUND). Commit de7c0ab.
+- Contexto: fluxo de comprovante de sócio comum em `arquitetura.md`. Não há CLAUDE.md.
+- Entrega: migration 20261103100000_joao_comprovante_do_admin_para_socio aplicada. Teste: `supabase/tests/pglite/joao_comprovante_admin_para_socio.sql`.

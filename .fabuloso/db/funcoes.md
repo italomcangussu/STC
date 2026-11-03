@@ -1,5 +1,5 @@
 # Funções
-> 564 funções nos schemas conv_private, fin_private, public, sig_private. Corpo completo sob demanda: `select pg_get_functiondef('<schema.nome>(<args>)'::regprocedure)`.
+> 565 funções nos schemas conv_private, fin_private, public, sig_private. Corpo completo sob demanda: `select pg_get_functiondef('<schema.nome>(<args>)'::regprocedure)`.
 
 | Função | Argumentos | Retorno | Ling. | Segurança | anon | Nota |
 |---|---|---|---|---|---|---|
@@ -13,6 +13,7 @@
 | conv_private.admin_pending_receipt | `p_conversation uuid, p_admin uuid` | `TABLE(id uuid, declared_amount_cents bigint, declared_paid_…` | sql | DEFINER | não |  |
 | conv_private.admin_prefs_json | `p_profile uuid` | `jsonb` | sql | DEFINER | não |  |
 | conv_private.admin_receipt_materialize | `p_receipt uuid, p_admin uuid` | `uuid` | plpgsql | DEFINER | não |  |
+| conv_private.admin_receipt_to_member | `p_session uuid, p jsonb` | `void` | plpgsql | DEFINER | não |  |
 | conv_private.admin_student_receipt | `p_conversation uuid, p_admin uuid, p_amount bigint` | `TABLE(id uuid, amount_cents bigint, remaining_cents bigint,…` | sql | DEFINER | sim |  |
 | conv_private.admin_usable_receipts | `p_conversation uuid, p_admin uuid` | `SETOF fin_private.whatsapp_receipt_intents` | sql | DEFINER | sim |  |
 | conv_private.ai_active_settings | — | `conv_ai_settings` | sql | DEFINER | não |  |
@@ -329,7 +330,7 @@
 | public.conv_svc_ai_admin_broadcast_propose | `p_session uuid, p jsonb` | `jsonb` | sql | DEFINER | não |  |
 | public.conv_svc_ai_admin_dependent_propose | `p_session uuid, p jsonb` | `jsonb` | sql | DEFINER | não |  |
 | public.conv_svc_ai_admin_file | `p_session uuid, p jsonb` | `jsonb` | sql | DEFINER | não |  |
-| public.conv_svc_ai_admin_finance_propose | `p_session uuid, p jsonb` | `jsonb` | sql | DEFINER | não |  |
+| public.conv_svc_ai_admin_finance_propose | `p_session uuid, p jsonb` | `jsonb` | plpgsql | DEFINER | não |  |
 | public.conv_svc_ai_admin_find_contact | `p_session uuid, p_name text` | `jsonb` | sql | DEFINER | não |  |
 | public.conv_svc_ai_admin_forms_propose | `p_session uuid, p jsonb` | `jsonb` | sql | DEFINER | não |  |
 | public.conv_svc_ai_admin_forms_read | `p_session uuid, p_domain text, p_args jsonb` | `jsonb` | sql | DEFINER | não |  |
