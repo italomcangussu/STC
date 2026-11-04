@@ -4,7 +4,7 @@
 // caixa e por fim disse que não sabia repassar. Agora o servidor tenta a baixa da mensalidade dele antes de perguntar.
 import { describe, expect, it } from 'vitest';
 import { beforeModel } from '../../supabase/functions/_shared/aiAgent/turnShortcuts';
-import { talksAboutOwnMembership } from '../../supabase/functions/_shared/aiAgent/receiptContext';
+import { confirmedOwnMembershipMonth, talksAboutOwnMembership } from '../../supabase/functions/_shared/aiAgent/receiptContext';
 import { receiptReceivedMessage } from '../../supabase/functions/_shared/aiAgent/studentCard';
 
 type Call = { name: string; args: Record<string, unknown> };
@@ -90,4 +90,74 @@ describe('talksAboutOwnMembership', () => {
 
 it('sem assunto de mensalidade, a pergunta antiga do Card continua', () => {
   expect(receiptReceivedMessage(lido, null)).toContain('Card');
+});
+
+// Caso Ítalo (04/11): mandou só a imagem do Pix de R$ 229 (400 menos 148 + 23 abatidos) e o João perguntou do Card.
+describe('admin manda só a imagem e o valor bate com a mensalidade dele', () => {
+  const comDica = { ...lido, amount_cents: 22900, paid_on: '2026-11-04', own_membership: { competence_month: '2026-11-01', total_due_cents: 40000, offset_cents: 17100 } };
+  const pergunta = 'Recebi o comprovante (R$ 229,00, de 04/11/2026, para Sobral Tenis Clube). É a sua mensalidade de 11/2026? Se for, responde "sim" que eu dou baixa. Se for outra coisa, me diz o que é.';
+
+  it('pergunta se é a mensalidade dele, não do Card', () => {
+    const texto = receiptReceivedMessage(comDica, null);
+    expect(texto).toBe(pergunta);
+    expect(texto).not.toContain('Card');
+  });
+
+  it('conversa sobre Card mantém a pergunta do Card', () => {
+    expect(receiptReceivedMessage(comDica, 'card')).toContain('Card');
+  });
+
+  it('"sim" depois da pergunta dá baixa na mensalidade do mês perguntado', async () => {
+    const conversa = [{ id: 'M1', direction: 'inbound', kind: 'image', body: '' }, { direction: 'outbound', kind: 'text', body: pergunta }];
+    const { t, calls } = turno(conversa, { soMidia: false, buffered: 'Sim' });
+    expect((await beforeModel(t) as { action?: string } | null)?.action).toBe('receipt_membership_paid');
+    const auto = calls.find(c => c.name === 'conv_svc_receipt_membership_auto');
+    expect(auto?.args).toMatchObject({ p_context: { month: '2026-11-01', purpose_kind: 'membership' } });
+  });
+
+  it('"sim" sem a pergunta antes não dá baixa', async () => {
+    const conversa = [{ id: 'M1', direction: 'inbound', kind: 'image', body: '' }, { direction: 'outbound', kind: 'text', body: 'Recebi o comprovante.' }];
+    const { t, calls } = turno(conversa, { soMidia: false, buffered: 'sim' });
+    await beforeModel(t);
+    expect(calls.map(c => c.name)).not.toContain('conv_svc_receipt_membership_auto');
+  });
+});
+
+describe('confirmedOwnMembershipMonth', () => {
+  const q = { direction: 'outbound', body: 'Recebi. É a sua mensalidade de 11/2026? Se for, responde "sim".' };
+  it.each([['sim', '2026-11-01'], ['É sim!', '2026-11-01'], ['isso mesmo', '2026-11-01'], ['não, é do Card do Pedro', null], ['sim, mas do Gianmarco', null]])(
+    '%s → %s', (body, mes) => expect(confirmedOwnMembershipMonth([q, { direction: 'inbound', body }])).toBe(mes));
+});
+
+// Conversa real do Ítalo (04/11, 14:14): "É a mensalidade de novembro" e depois "Confirmo"; o João não deu baixa.
+describe('admin diz só "é a mensalidade de novembro"', () => {
+  const comDica = { ...lido, amount_cents: 22900, own_membership: { competence_month: '2026-11-01' } };
+  const conversa = [{ id: 'M1', direction: 'inbound', kind: 'image', body: '' },
+    { direction: 'outbound', kind: 'text', body: 'Recebi o comprovante (R$ 229,00). É para renovar o Card de qual aluno? Se for outra coisa, me diz o que é.' }];
+  const comLeitura = (buffered: string, transcript = conversa) => {
+    const r = turno(transcript, { soMidia: false, buffered });
+    const db = (r.t as { deps: { db: (n: string, a?: Record<string, unknown>) => Promise<unknown> } }).deps;
+    const original = db.db;
+    db.db = (n, a) => n === 'conv_svc_ai_admin_receipt' ? Promise.resolve({ data: comDica, error: null }) : original(n, a);
+    return r;
+  };
+
+  it('valor bate com a mensalidade dele: dá baixa', async () => {
+    const { t, calls } = comLeitura('É a mensalidade de novembro');
+    expect((await beforeModel(t) as { action?: string } | null)?.action).toBe('receipt_membership_paid');
+    expect(calls.find(c => c.name === 'conv_svc_receipt_membership_auto')?.args).toMatchObject({ p_context: { month: '2026-11-01' } });
+  });
+
+  it('"Confirmo" depois de já ter dito a mensalidade: dá baixa', async () => {
+    const depois = [...conversa, { direction: 'inbound', kind: 'text', body: 'É a mensalidade de novembro' },
+      { direction: 'outbound', kind: 'text', body: 'Confirma essa finalidade para eu encaminhar à conferência?' }];
+    const { t } = comLeitura('Confirmo', depois);
+    expect((await beforeModel(t) as { action?: string } | null)?.action).toBe('receipt_membership_paid');
+  });
+
+  it('valor não bate com a mensalidade dele: não dá baixa', async () => {
+    const { t, calls } = turno(conversa, { soMidia: false, buffered: 'É a mensalidade de novembro' });
+    await beforeModel(t);
+    expect(calls.map(c => c.name)).not.toContain('conv_svc_receipt_membership_auto');
+  });
 });

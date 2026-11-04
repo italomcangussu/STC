@@ -2,6 +2,9 @@
 // Textos da proposta e do sucesso, e a resposta ao comprovante que o administrador manda na conversa.
 // Tudo é escrito pelo servidor a partir do que o banco devolveu: o modelo nunca afirma valor, data ou validade.
 
+import { OWN_MEMBERSHIP_QUESTION } from './receiptContext.ts';
+import { monthBR } from './adminText.ts';
+
 type Ctx = Record<string, unknown>;
 
 const centsBR = (v: unknown) => `R$ ${(Number(v ?? 0) / 100).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`;
@@ -44,8 +47,14 @@ export function receiptReceivedMessage(r: Ctx | null | undefined, topic?: string
   if (anexo) return `Recebi o comprovante (${dados}) e anexei à despesa "${anexo.description}" de ${dateBR(anexo.paid_on)}, que estava sem comprovante. Se era de outra coisa, me avisa.`;
   // Pago a outra pessoa: costuma ser despesa do clube que a diretoria pagou, não engano.
   if (r.payee_ok === false) return `Recebi o comprovante (${dados}). Foi uma despesa do clube? Me diz o que é que eu monto o resumo.`;
+  const propria = r.own_membership as Ctx | undefined;
+  if (propria && (!topic || topic === 'mensalidade')) return `Recebi o comprovante (${dados}). ${ownMembershipQuestion(propria)}`;
   return `Recebi o comprovante${dados ? ` (${dados})` : ''}. ${whatIsItFor(topic)}`;
 }
+
+/** O valor bate com a mensalidade em aberto do próprio admin: pergunta, nunca dá baixa sem ele confirmar. */
+const ownMembershipQuestion = (m: Ctx) =>
+  `${OWN_MEMBERSHIP_QUESTION} ${monthBR(m.competence_month)}? Se for, responde "sim" que eu dou baixa. Se for outra coisa, me diz o que é.`;
 
 /** A conversa já disse que é mensalidade e a baixa automática não bateu: pergunta de quem, nunca do Card. */
 const whatIsItFor = (topic?: string | null) => (topic === 'mensalidade'

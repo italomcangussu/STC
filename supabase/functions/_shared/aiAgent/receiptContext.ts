@@ -87,6 +87,23 @@ function declaredMembershipOwner(transcript: Ctx[]): string | null {
   return null;
 }
 
+/** Pergunta do João quando o Pix do admin bate com a mensalidade dele; a resposta "sim" confirma a finalidade. */
+export const OWN_MEMBERSHIP_QUESTION = 'É a sua mensalidade de';
+const YES = /^(?:sim|isso|isso mesmo|exato|pode|pode dar baixa|confirmo|e sim|e a minha|e minha|ok)\b[\s!.,]*(?:obrigad[oa])?[\s!.]*$/;
+
+/** "sim" logo depois de "É a sua mensalidade de 11/2026?": devolve o mês (AAAA-MM-01); qualquer outra resposta, null. */
+export function confirmedOwnMembershipMonth(transcript: Ctx[]): string | null {
+  const falas = transcript.filter(m => m.body);
+  const resposta = falas.at(-1);
+  if (resposta?.direction !== 'inbound' || !YES.test(fold(String(resposta.body)).trim())) return null;
+  // A pergunta pode ter saído em mais de um balão: vale qualquer balão do João entre a fala anterior dele e o "sim".
+  const antes = falas.slice(0, -1);
+  const inicio = antes.map(m => m.direction).lastIndexOf('inbound') + 1;
+  const pergunta = new RegExp(`${OWN_MEMBERSHIP_QUESTION} (\\d{2})/(20\\d{2})\\?`);
+  const mes = antes.slice(inicio).map(m => pergunta.exec(String(m.body))).find(Boolean);
+  return mes ? `${mes[2]}-${mes[1]}-01` : null;
+}
+
 /** Competência vem do pedido; a data do Pix não prova qual mês foi pago. */
 export function membershipReference(transcript: Ctx[], today: string): { month: string | null; ambiguous: boolean } {
   const msg = transcript.filter(m => m.direction === 'inbound' && m.body).slice().reverse()

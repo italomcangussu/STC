@@ -64,6 +64,15 @@ do $$ declare r jsonb := public.conv_svc_receipt_membership_auto('00000000-0000-
 end $$;
 select fab.dono();
 
+-- Admin que manda só a imagem: a leitura diz qual mensalidade dele bate (líquido ou cheio); outro valor não sugere nada
+do $$ begin
+  assert (conv_private.ai_admin_own_membership_hint((select ita from u), 22900, (select hoje from mes))->>'competence_month')::date = (select m from mes), 'líquido aponta a mensalidade do mês';
+  assert (conv_private.ai_admin_own_membership_hint((select ita from u), 22900, (select hoje from mes))->>'offset_cents')::bigint = 17100, 'dica traz o abatimento';
+  assert conv_private.ai_admin_own_membership_hint((select ita from u), 40000, (select hoje from mes)) is not null, 'valor cheio também aponta';
+  assert conv_private.ai_admin_own_membership_hint((select ita from u), 30000, (select hoje from mes)) is null, 'outro valor não sugere';
+  assert conv_private.ai_admin_own_membership_hint((select adm from u), 22900, (select hoje from mes)) is null, 'admin sem mensalidade não sugere';
+end $$;
+
 -- Pix de 229: quita os 400 e paga as despesas
 select pg_temp.comprovante('00000000-0000-0000-0000-00000000f102', 22900, repeat('9', 64));
 select fab.como('service_role');

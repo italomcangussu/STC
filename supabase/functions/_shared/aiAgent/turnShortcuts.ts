@@ -9,7 +9,7 @@ import type { Ctx } from './promptTypes.ts';
 import { type ReceiptStage, handleReceiptIntent, loadReceiptStage } from './receiptIntent.ts';
 import { deliverForward, forwardMembershipReview, tryMembershipAutoPay } from './receiptForward.ts';
 import { type ChampReceipt, HOLD, tryChampionshipPay } from './championshipReceipt.ts';
-import { membershipReference, receiptEvidence, receiptTopic, talksAboutOwnMembership } from './receiptContext.ts';
+import { confirmedOwnMembershipMonth, membershipIsForAnother, membershipReference, receiptEvidence, receiptTopic, talksAboutOwnMembership } from './receiptContext.ts';
 import { UNCLEAR_AUDIO_REPLY, unheardOnly } from './audio.ts';
 import { cadence } from './cadence.ts';
 import { delegateSilence } from './delegate.ts';
@@ -132,7 +132,8 @@ const isFreshReceipt = (r: Ctx | null) => r?.found === true && r.duplicate !== t
 /**
  * Administrador que também é sócio manda o Pix da PRÓPRIA mensalidade (Hermeson, 03/11: "quero te enviar meu comprovante da
  * mensalidade de novembro" e o João perguntou de qual aluno era o Card). A baixa automática confere valor exato, favorecido e
- * duplicado; só tenta quando o assunto recente é mensalidade e ele disse que é a dele (na legenda, antes ou logo depois do arquivo).
+ * duplicado; só tenta quando o assunto recente é mensalidade e ele disse que é a dele (na legenda, antes ou logo depois do arquivo),
+ * ou quando respondeu "sim" à pergunta "É a sua mensalidade de 11/2026?" que o João faz se o valor bate com a dele (Ítalo, 04/11).
  */
 async function adminOwnMembership(t: Turn): Promise<TurnResult | null> {
   if (t.isGroup || !isAdminAssistant(t.ctx)) return null;
@@ -140,14 +141,35 @@ async function adminOwnMembership(t: Turn): Promise<TurnResult | null> {
   const stage = await stageFor(t);
   if (stage?.status !== 'awaiting_purpose') return null;
   const transcript = receiptEvidence([...((t.ctx.transcript ?? []) as Ctx[]), ...falaAgora], stage);
-  const nome = receiptSenderName(t);
-  if (receiptTopic(transcript) !== 'mensalidade' || !talksAboutOwnMembership(transcript, nome)) return null;
-  const reference = membershipReference(transcript, receiptToday(t));
+  const confirmado = confirmedOwnMembershipMonth(transcript);
+  const reference = confirmado ? { month: confirmado, ambiguous: false } : await ownMembershipReference(t, transcript, stage.source_message_id);
+  if (!reference) return null;
   if (reference.ambiguous) return t.say(['Esse comprovante é de quais meses? Ainda não dei baixa.'], 'receipt_membership_review', () => ({}), { awaiting: true });
   const pago = await tryMembershipAutoPay(t.deps.db, stage.id, { month: reference.month, purpose_kind: 'membership' });
   if (!pago) return null;
   const result = await forwardMembershipReview({ db: t.deps.db, stage: stage.id, message: t.ultima?.id as string, month: reference.month, receipt: pago });
   return deliverAutoReceipt(t, result, stage.id);
+}
+
+/**
+ * A mensalidade é dele quando ele disse ("minha mensalidade", o próprio nome) ou quando disse só "é a mensalidade de
+ * novembro", sem citar outro sócio, e o valor bate com a mensalidade em aberto dele (Ítalo, 04/11: o modelo pediu
+ * confirmação e, no "Confirmo", disse que não tinha registrado nada). Sem isso, null: é comprovante de outro sócio.
+ */
+async function ownMembershipReference(t: Turn, transcript: Ctx[], messageId: string) {
+  if (receiptTopic(transcript) !== 'mensalidade') return null;
+  const nome = receiptSenderName(t);
+  const declarou = talksAboutOwnMembership(transcript, nome);
+  const dica = declarou || membershipIsForAnother(transcript, nome) ? null : await ownMembershipHint(t, messageId);
+  if (!declarou && !dica) return null;
+  const reference = membershipReference(transcript, receiptToday(t));
+  return reference.month || reference.ambiguous || !dica ? reference : { month: String(dica.competence_month), ambiguous: false };
+}
+
+/** Mensalidade em aberto do admin que bate com o valor do comprovante (cheio ou com o abatimento); null se nenhuma. */
+async function ownMembershipHint(t: Turn, messageId: string): Promise<Ctx | null> {
+  const lido = (await t.deps.db('conv_svc_ai_admin_receipt', { p_session: t.session, p_message: messageId })).data as Ctx | null;
+  return (lido?.own_membership as Ctx | undefined) ?? null;
 }
 
 /** Mídia sem texto no privado, sem comprovante em jogo: o João não lê mídia e diz isso. */
