@@ -296,3 +296,7 @@ Orquestrador Sonnet 5.5 (sem subagentes, a pedido). Criados `20261007260000_conv
 - Contexto: `.fabuloso/conhecimento/campeonato.md` (seção Sistema visual da chave). Não há CLAUDE.md.
 - Entrega: sem migration e sem edge function.
 - Observação: mapa do banco sem mudança.
+
+## 04/11/2026 — Confiabilidade dos comprovantes (publicado no Supabase)
+
+Finalidade exclusiva; titularidade sem coincidência de primeiro nome; contexto por arquivo; competência explícita; mês confirmado igual ao realmente pago; agendamento/baixa confiança sem baixa; deduplicação por identificador além do hash e serialização das chamadas automáticas. Detalhes e validações em `conhecimento/comprovantes.md`. MCP Supabase confirmado em agentes N8N/bkkdufqmfuxobyahvhjx. Migration 20261104091056 aplicada, leitor v14 e webhook v117 ativos. Verificação SQL pós-deploy passou. Git sem escrita: commit/push pendentes.

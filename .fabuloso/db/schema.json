@@ -8,7 +8,7 @@
     "public",
     "sig_private"
   ],
-  "ultima_migracao": "20261103120000",
+  "ultima_migracao": "20261104091056",
   "extensoes": [
     "pg_cron 1.6.4",
     "pg_net 0.19.5",
@@ -33724,6 +33724,19 @@
       "comentario": null
     },
     {
+      "nome": "fin_private.receipt_payment_issue",
+      "args": "d jsonb, today date",
+      "retorno": "text",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": false,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
       "nome": "fin_private.recurrence_due_date",
       "args": "p_competence date, p_day integer, p_offset integer",
       "retorno": "date",
@@ -35572,6 +35585,19 @@
     {
       "nome": "public.conv_svc_receipt_membership_auto",
       "args": "p_stage uuid",
+      "retorno": "jsonb",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "public.conv_svc_receipt_membership_auto",
+      "args": "p_stage uuid, p_context jsonb",
       "retorno": "jsonb",
       "linguagem": "plpgsql",
       "tipo": "f",

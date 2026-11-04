@@ -9,7 +9,7 @@
     "admin-athlete-access": "8943e49b9df0",
     "conversation-operations": "f3d35229bc90",
     "conversations-dispatch": "474767e8194a",
-    "finance-receipt-whatsapp": "7c9133e620b7",
+    "finance-receipt-whatsapp": "d0b31f70fae1",
     "joao-admin-alerts": "b62d55c74b63",
     "joao-admin-briefing": "c699de3b8712",
     "joao-birthdays": "eaa6c10f9a56",
@@ -17,6 +17,6 @@
     "send-push": "0d28132ff495",
     "signature-dispatch": "0984cf81baf1",
     "signature-operations": "6d6a2b33ede9",
-    "whatsapp-webhook": "021b646826cd"
+    "whatsapp-webhook": "69dc275a4b58"
   }
 }

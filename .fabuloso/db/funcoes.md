@@ -1,5 +1,5 @@
 # Funções
-> 565 funções nos schemas conv_private, fin_private, public, sig_private. Corpo completo sob demanda: `select pg_get_functiondef('<schema.nome>(<args>)'::regprocedure)`.
+> 567 funções nos schemas conv_private, fin_private, public, sig_private. Corpo completo sob demanda: `select pg_get_functiondef('<schema.nome>(<args>)'::regprocedure)`.
 
 | Função | Argumentos | Retorno | Ling. | Segurança | anon | Nota |
 |---|---|---|---|---|---|---|
@@ -261,6 +261,7 @@
 | fin_private.on_profile_membership_change | — | `trigger` | plpgsql | DEFINER | sim |  |
 | fin_private.payee_matches | `p_read text, p_expected text[]` | `boolean` | sql | invoker | não |  |
 | fin_private.receipt_auto_paid_notice | — | `trigger` | plpgsql | DEFINER | sim |  |
+| fin_private.receipt_payment_issue | `d jsonb, today date` | `text` | plpgsql | invoker | não |  |
 | fin_private.recurrence_due_date | `p_competence date, p_day integer, p_offset integer` | `date` | sql | invoker | sim |  |
 | fin_private.refresh_charge_status | `p_charge uuid` | `text` | plpgsql | DEFINER | sim |  |
 | fin_private.require_admin | — | `uuid` | plpgsql | DEFINER | sim |  |
@@ -403,7 +404,8 @@
 | public.conv_svc_receipt_championship_auto | `p_stage uuid` | `jsonb` | plpgsql | DEFINER | não |  |
 | public.conv_svc_receipt_confirm | `p_stage uuid, p_message uuid` | `jsonb` | plpgsql | DEFINER | não |  |
 | public.conv_svc_receipt_escalate | `p_stage uuid, p_message uuid, p_kind text, p_detail text` | `jsonb` | plpgsql | DEFINER | não |  |
-| public.conv_svc_receipt_membership_auto | `p_stage uuid` | `jsonb` | plpgsql | DEFINER | não |  |
+| public.conv_svc_receipt_membership_auto | `p_stage uuid` | `jsonb` | sql | DEFINER | não |  |
+| public.conv_svc_receipt_membership_auto | `p_stage uuid, p_context jsonb` | `jsonb` | plpgsql | DEFINER | não |  |
 | public.conv_svc_receipt_purpose | `p_stage uuid, p_message uuid, p_kind text, p_detail text` | `jsonb` | plpgsql | DEFINER | não |  |
 | public.conv_svc_receipt_revise | `p_stage uuid, p_message uuid` | `jsonb` | plpgsql | DEFINER | não |  |
 | public.conv_svc_receipt_stage | `p_conversation uuid` | `jsonb` | plpgsql | DEFINER | não |  |
