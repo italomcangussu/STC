@@ -158,16 +158,16 @@
 - select [edge]: supabase/functions/joao-birthdays/index.ts:36, supabase/functions/joao-daily-greeting/index.ts:128, supabase/functions/joao-group-intro/index.ts:29
 
 ### conv_contacts
-- select [edge]: supabase/functions/finance-receipt-whatsapp/index.ts:52, supabase/functions/whatsapp-webhook/index.ts:139, supabase/functions/whatsapp-webhook/index.ts:80
+- select [edge]: supabase/functions/finance-receipt-whatsapp/index.ts:65, supabase/functions/whatsapp-webhook/index.ts:139, supabase/functions/whatsapp-webhook/index.ts:80
 
 ### conv_conversations
-- select [edge]: supabase/functions/finance-receipt-whatsapp/index.ts:49, supabase/functions/joao-birthdays/index.ts:32, supabase/functions/joao-daily-greeting/index.ts:99, supabase/functions/whatsapp-webhook/index.ts:141, supabase/functions/whatsapp-webhook/index.ts:80
+- select [edge]: supabase/functions/finance-receipt-whatsapp/index.ts:62, supabase/functions/joao-birthdays/index.ts:32, supabase/functions/joao-daily-greeting/index.ts:99, supabase/functions/whatsapp-webhook/index.ts:141, supabase/functions/whatsapp-webhook/index.ts:80
 
 ### conv_groups
 - select [edge]: supabase/functions/joao-birthdays/index.ts:30, supabase/functions/joao-daily-greeting/index.ts:97
 
 ### conv_messages
-- select [edge]: supabase/functions/finance-receipt-whatsapp/index.ts:38, supabase/functions/joao-daily-greeting/index.ts:105, supabase/functions/joao-daily-greeting/index.ts:111, supabase/functions/whatsapp-webhook/index.ts:152, supabase/functions/whatsapp-webhook/index.ts:80
+- select [edge]: supabase/functions/finance-receipt-whatsapp/index.ts:51, supabase/functions/joao-daily-greeting/index.ts:105, supabase/functions/joao-daily-greeting/index.ts:111, supabase/functions/whatsapp-webhook/index.ts:152, supabase/functions/whatsapp-webhook/index.ts:80
 - update [edge]: supabase/functions/joao-birthdays/index.ts:76, supabase/functions/joao-daily-greeting/index.ts:254, supabase/functions/joao-group-intro/index.ts:80
 
 ### courts
@@ -324,7 +324,7 @@
 - `conv_svc_set_message_media`: — · [edge] supabase/functions/whatsapp-webhook/record.ts:152
 - `conv_svc_set_message_transcription`: — · [edge] supabase/functions/whatsapp-webhook/record.ts:174
 - `conv_svc_update_message_status`: — · [edge] supabase/functions/whatsapp-webhook/record.ts:128
-- `fin_submit_whatsapp_pendency_receipt`: — · [edge] supabase/functions/finance-receipt-whatsapp/index.ts:88
+- `fin_submit_whatsapp_pendency_receipt`: — · [edge] supabase/functions/finance-receipt-whatsapp/index.ts:101
 - `finish_championship`: components/ChampionshipAdmin.tsx:493
 - `get_admin_push_subscriptions`: — · [edge] supabase/functions/send-push/index.ts:55
 - `get_form_live_results`: lib/formsService.ts:302

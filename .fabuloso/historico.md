@@ -310,3 +310,8 @@ Finalidade exclusiva; titularidade sem coincidência de primeiro nome; contexto 
 - Contexto: `.fabuloso/conhecimento/comprovantes.md` (seção Comprovante do admin que também é sócio) e linha em `arquitetura.md`. Não há CLAUDE.md.
 - Entrega: migration 20261104180000 aplicada; `whatsapp-webhook` deployado.
 - Observação: mapa do banco só com função alterada; alertas de RLS antigos seguem em `.fabuloso/db/alertas.md`.
+
+- 2026-11-04 (Sonnet 5.5, fabuloso): segunda leitura do comprovante por IA de visão quando o OCR duvida (caso Diego, "Pagador" lido como favorecido) e finalidade da própria mensalidade pelo sentido da conversa; confirmação aceita qualquer forma de concordar. Commit fd2136d.
+- Contexto: `.fabuloso/conhecimento/comprovantes.md` (seção Segunda leitura) e fluxo em `arquitetura.md`. Não há CLAUDE.md.
+- Entrega: sem migration; `whatsapp-webhook` e `finance-receipt-whatsapp` deployadas.
+- Observação: intents b630dce4 e 55540027 do Diego seguem `awaiting_purpose`, não reprocessados.

@@ -3091,7 +3091,7 @@
    "nome": "fin_submit_whatsapp_pendency_receipt",
    "front": [],
    "edge": [
-    "supabase/functions/finance-receipt-whatsapp/index.ts:88"
+    "supabase/functions/finance-receipt-whatsapp/index.ts:101"
    ],
    "telas": []
   },
@@ -3560,7 +3560,7 @@
    "nome": "conv_contacts",
    "front": [],
    "edge": [
-    "supabase/functions/finance-receipt-whatsapp/index.ts:52",
+    "supabase/functions/finance-receipt-whatsapp/index.ts:65",
     "supabase/functions/whatsapp-webhook/index.ts:139",
     "supabase/functions/whatsapp-webhook/index.ts:80"
    ],
@@ -3571,7 +3571,7 @@
    "nome": "conv_conversations",
    "front": [],
    "edge": [
-    "supabase/functions/finance-receipt-whatsapp/index.ts:49",
+    "supabase/functions/finance-receipt-whatsapp/index.ts:62",
     "supabase/functions/joao-birthdays/index.ts:32",
     "supabase/functions/joao-daily-greeting/index.ts:99",
     "supabase/functions/whatsapp-webhook/index.ts:141",
@@ -3594,7 +3594,7 @@
    "nome": "conv_messages",
    "front": [],
    "edge": [
-    "supabase/functions/finance-receipt-whatsapp/index.ts:38",
+    "supabase/functions/finance-receipt-whatsapp/index.ts:51",
     "supabase/functions/joao-birthdays/index.ts:76",
     "supabase/functions/joao-daily-greeting/index.ts:105",
     "supabase/functions/joao-daily-greeting/index.ts:111",
@@ -4220,17 +4220,21 @@
    ],
    "buckets": [],
    "segredos": [
+    "STC_AI_API_KEY",
+    "STC_AI_BASE_URL",
     "STC_OCR_LANG_PATH",
+    "STC_RECEIPT_VISION_MODEL",
     "SUPABASE_SECRET_KEY",
     "SUPABASE_SERVICE_ROLE_KEY",
     "SUPABASE_URL"
    ],
    "hosts": [],
    "shared": [
-    "financeReceiptOcr.ts"
+    "financeReceiptOcr.ts",
+    "receiptVision.ts"
    ],
    "invocadaPor": [],
-   "deploy": "alterada desde o último deploy"
+   "deploy": "em dia"
   },
   {
    "nome": "joao-admin-alerts",
@@ -4536,6 +4540,7 @@
     "aiAgent/receiptContext.ts",
     "aiAgent/receiptForward.ts",
     "aiAgent/receiptIntent.ts",
+    "aiAgent/receiptPurposeAi.ts",
     "aiAgent/serverRules.ts",
     "aiAgent/serverTexts.ts",
     "aiAgent/studentCard.ts",
