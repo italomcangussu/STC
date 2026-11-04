@@ -22,12 +22,14 @@
 | created_by | uuid | sim |  |  |
 | updated_at | timestamp with time zone | não | `now()` |  |
 | updated_by | uuid | sim |  |  |
+| offset_profile_id | uuid | sim |  | Sócio que desconta esta despesa da própria mensalidade (o clube paga a ele abatendo). |
 
 ## Chaves e restrições
 - PK (id)
 - FK (account_id) → public.fin_accounts(id)
 - FK (category_id) → public.fin_categories(id)
 - FK (created_by) → public.profiles(id)
+- FK (offset_profile_id) → public.profiles(id)
 - FK (updated_by) → public.profiles(id)
 - CHECK fin_recurrences_amount_cents_check: `CHECK (((amount_cents > 0) AND (amount_cents <= 1000000000)))`
 - CHECK fin_recurrences_check: `CHECK (((end_month IS NULL) OR ((EXTRACT(day FROM end_month) = (1)::numeric) AND (end_month >= start_month))))`

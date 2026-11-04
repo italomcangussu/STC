@@ -1,5 +1,5 @@
 # Funções
-> 567 funções nos schemas conv_private, fin_private, public, sig_private. Corpo completo sob demanda: `select pg_get_functiondef('<schema.nome>(<args>)'::regprocedure)`.
+> 572 funções nos schemas conv_private, fin_private, public, sig_private. Corpo completo sob demanda: `select pg_get_functiondef('<schema.nome>(<args>)'::regprocedure)`.
 
 | Função | Argumentos | Retorno | Ling. | Segurança | anon | Nota |
 |---|---|---|---|---|---|---|
@@ -203,6 +203,7 @@
 | conv_private.queue_message | `p_conversation uuid, p jsonb, p_author uuid, p_key uuid, p_origin text, p_session uuid, p…` | `TABLE(message_id uuid, destination text, already_sent boole…` | plpgsql | DEFINER | não |  |
 | conv_private.queue_pendency_paid_notice | `p_profile uuid, p_submission uuid` | `uuid` | plpgsql | DEFINER | não |  |
 | conv_private.queue_pendency_receipt_review_notice | `p_profile uuid, p_submission uuid` | `uuid` | plpgsql | DEFINER | não |  |
+| conv_private.receipt_proposal_offsets | `p_payload jsonb` | `jsonb` | plpgsql | DEFINER | não |  |
 | conv_private.receipt_used_cents | `p_intent uuid` | `bigint` | sql | DEFINER | sim |  |
 | conv_private.render_template | `p_body text, p_ctx jsonb` | `text` | plpgsql | invoker | sim |  |
 | conv_private.require_admin | — | `uuid` | plpgsql | DEFINER | sim |  |
@@ -256,6 +257,9 @@
 | fin_private.generate_recurrences | `p_recurrence uuid, p_until date` | `integer` | plpgsql | DEFINER | sim |  |
 | fin_private.is_active_member | `p_profile uuid` | `boolean` | sql | DEFINER | sim |  |
 | fin_private.is_business_day | `p_date date` | `boolean` | sql | invoker | sim |  |
+| fin_private.member_offset_cents | `p_charge uuid` | `bigint` | sql | DEFINER | não |  |
+| fin_private.member_offset_plan | `p_profile uuid` | `jsonb` | sql | DEFINER | não |  |
+| fin_private.member_offsets | `p_charge uuid` | `TABLE(entry_id uuid, description text, remaining_cents bigi…` | sql | DEFINER | não |  |
 | fin_private.no_delete | — | `trigger` | plpgsql | invoker | sim |  |
 | fin_private.no_delete_recurrence | — | `trigger` | plpgsql | invoker | sim |  |
 | fin_private.on_profile_membership_change | — | `trigger` | plpgsql | DEFINER | sim |  |
@@ -267,6 +271,7 @@
 | fin_private.require_admin | — | `uuid` | plpgsql | DEFINER | sim |  |
 | fin_private.require_member_reader | — | `uuid` | plpgsql | DEFINER | não |  |
 | fin_private.seed_holidays | `p_year integer` | `integer` | plpgsql | DEFINER | sim |  |
+| fin_private.settle_member_offsets | `p_charge uuid, p_paid_on date, p_account uuid` | `bigint` | plpgsql | DEFINER | não |  |
 | fin_private.statement_json | `p_charge uuid, p_as_of date` | `jsonb` | sql | DEFINER | sim |  |
 | fin_private.today | — | `date` | sql | invoker | sim |  |
 | fin_private.waive_fees | `p_charge uuid, p_amount bigint, p_reason text, p_as_of date, p_request uuid` | `void` | plpgsql | DEFINER | sim |  |
@@ -343,7 +348,7 @@
 | public.conv_svc_ai_admin_message_propose | `p_session uuid, p jsonb` | `jsonb` | sql | DEFINER | não |  |
 | public.conv_svc_ai_admin_prefs | `p_session uuid` | `jsonb` | sql | DEFINER | não |  |
 | public.conv_svc_ai_admin_read | `p_session uuid, p_domain text, p_args jsonb` | `jsonb` | sql | DEFINER | não |  |
-| public.conv_svc_ai_admin_read_more | `p_session uuid, p_domain text, p_args jsonb` | `jsonb` | sql | DEFINER | não |  |
+| public.conv_svc_ai_admin_read_more | `p_session uuid, p_domain text, p_args jsonb` | `jsonb` | plpgsql | DEFINER | não |  |
 | public.conv_svc_ai_admin_receipt | `p_session uuid, p_message uuid` | `jsonb` | plpgsql | DEFINER | não |  |
 | public.conv_svc_ai_admin_student_propose | `p_session uuid, p jsonb` | `jsonb` | sql | DEFINER | sim |  |
 | public.conv_svc_ai_admin_wave8_propose | `p_session uuid, p jsonb` | `jsonb` | sql | DEFINER | não |  |

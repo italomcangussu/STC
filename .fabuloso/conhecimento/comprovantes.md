@@ -45,3 +45,13 @@ Migration `20261104091056_joao_receipt_evidence.sql`, sem backfill e sem exclus�
 - Typecheck global e avaliação com o modelo real permanecem pendentes conforme observações acima.
 
 A credencial de .env.local foi carregada sem exposição, mas o acesso direto falhou em DNS. A conexão pelo plugin Supabase funcionou por `link_6ab980ea43348191889ff9429865af6f`, confirmado pela organização e pelo projeto.
+
+## Abatimento de despesas na mensalidade (04/11/2026)
+- Caso: o sócio Ítalo Cangussú (admin, profile a585c738…) paga a mensalidade (R$ 400) já descontando "Custo aplicativo" (R$ 148/mês) e, desde 11/2026, "Custo agente de IA" (R$ 23/mês). O Pix dele vem líquido (R$ 229) e isso é o esperado.
+- Banco (`20261104140904_mensalidade_abatimento_despesas.sql`, aplicada no remoto pela API de migrations com `SUPABASE_ACCESS_TOKEN`): coluna `fin_recurrences.offset_profile_id` → profiles. Em `fin_private`: `member_offsets`/`member_offset_cents` (despesas pendentes da mesma competência ligadas ao sócio), `settle_member_offsets` (paga as despesas) e `member_offset_plan` (recorrências ativas abatidas).
+- `fin_approve_receipt`: se valor alocado + abatimento = saldo da mensalidade, quita a mensalidade cheia e paga as despesas na mesma conta e data (saldo líquido da conta = Pix; DRE com receita 400 e despesas 171). Vale para baixa automática, aprovação pelo WhatsApp e painel; retorna `offset_cents`.
+- `conv_svc_receipt_membership_auto` aceita Pix cheio OU líquido; `AMOUNT_MISMATCH` devolve o valor líquido; retorno ganha `offset_cents` e `offset_items`. `socio_ficha` (`ai_admin_read_more`) ganha `data.offsets`; a proposta `fin_receipt_approve` ganha `offset_cents/offset_items` (`conv_private.receipt_proposal_offsets`).
+- TS (`_shared/aiAgent`): `receiptForward.ts` (offsetNote na baixa e no aviso ao financeiro), `adminReads.ts` (linha "Abatido da mensalidade todo mês"), `adminMessagesFin.ts` (proposta cita o abatimento).
+- Dados: "Custo aplicativo" ligada ao Ítalo; criada recorrência "Custo agente de IA" R$ 23 (mesma categoria/conta, dia 5, início 2026-11-01). Outubro ficou como estava (lançado cheio pela planilha).
+- Testes: PGlite `mensalidade_abatimento_despesas.sql` 25/25; `mensalidadeAbatimento.test.ts` e 91 testes afetados passaram; deno check ok. Deploy: `whatsapp-webhook` v119 (verify_jwt false preservado).
+- Pendências: o painel (formulário de recorrência) não mostra nem edita `offset_profile_id`; só por SQL. O papel de leitura do script não executa funções `fin_private` (permissão revogada, esperado).

@@ -172,6 +172,7 @@ erDiagram
   public_fin_accounts ||--o{ public_fin_recurrences : "account_id"
   public_fin_categories ||--o{ public_fin_recurrences : "category_id"
   public_profiles ||--o{ public_fin_recurrences : "created_by"
+  public_profiles ||--o{ public_fin_recurrences : "offset_profile_id"
   public_profiles ||--o{ public_fin_recurrences : "updated_by"
   public_profiles ||--o{ public_fin_requests : "actor_id"
   public_profiles ||--o{ public_fin_settings : "finance_admin_profile_id"

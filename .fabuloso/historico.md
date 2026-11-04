@@ -300,3 +300,8 @@ Orquestrador Sonnet 5.5 (sem subagentes, a pedido). Criados `20261007260000_conv
 ## 04/11/2026 — Confiabilidade dos comprovantes (publicado no Supabase)
 
 Finalidade exclusiva; titularidade sem coincidência de primeiro nome; contexto por arquivo; competência explícita; mês confirmado igual ao realmente pago; agendamento/baixa confiança sem baixa; deduplicação por identificador além do hash e serialização das chamadas automáticas. Detalhes e validações em `conhecimento/comprovantes.md`. MCP Supabase confirmado em agentes N8N/bkkdufqmfuxobyahvhjx. Migration 20261104091056 aplicada, leitor v14 e webhook v117 ativos. Verificação SQL pós-deploy passou. Git sem escrita: commit/push pendentes.
+
+- 2026-11-04 (Sonnet 5.5, fabuloso): mensalidade do Ítalo Cangussú com despesas do clube abatidas (app R$ 148 + agente de IA R$ 23); Pix líquido quita a mensalidade cheia. Commit 12d5129 (renomeio da migration em 1d0365e).
+- Contexto: `.fabuloso/conhecimento/comprovantes.md` (seção Abatimento) e linha em `arquitetura.md`. Não há CLAUDE.md.
+- Entrega: migration 20261104140904 aplicada; `whatsapp-webhook` v119.
+- Observação: painel ainda não edita `offset_profile_id`.

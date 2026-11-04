@@ -8,7 +8,7 @@
     "public",
     "sig_private"
   ],
-  "ultima_migracao": "20261104091056",
+  "ultima_migracao": "20261104140904",
   "extensoes": [
     "pg_cron 1.6.4",
     "pg_net 0.19.5",
@@ -19829,6 +19829,15 @@
           "gerada": null,
           "identidade": null,
           "comentario": null
+        },
+        {
+          "nome": "offset_profile_id",
+          "tipo": "uuid",
+          "nulo": true,
+          "padrao": null,
+          "gerada": null,
+          "identidade": null,
+          "comentario": "Sócio que desconta esta despesa da própria mensalidade (o clube paga a ele abatendo)."
         }
       ],
       "restricoes": [
@@ -19964,6 +19973,19 @@
           "def": "FOREIGN KEY (created_by) REFERENCES profiles(id)",
           "colunas": [
             "created_by"
+          ],
+          "ref": "public.profiles",
+          "ref_colunas": [
+            "id"
+          ],
+          "ao_apagar": "a"
+        },
+        {
+          "nome": "fin_recurrences_offset_profile_id_fkey",
+          "tipo": "f",
+          "def": "FOREIGN KEY (offset_profile_id) REFERENCES profiles(id)",
+          "colunas": [
+            "offset_profile_id"
           ],
           "ref": "public.profiles",
           "ref_colunas": [
@@ -32970,6 +32992,19 @@
       "comentario": null
     },
     {
+      "nome": "conv_private.receipt_proposal_offsets",
+      "args": "p_payload jsonb",
+      "retorno": "jsonb",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
       "nome": "conv_private.receipt_used_cents",
       "args": "p_intent uuid",
       "retorno": "bigint",
@@ -33659,6 +33694,45 @@
       "comentario": null
     },
     {
+      "nome": "fin_private.member_offset_cents",
+      "args": "p_charge uuid",
+      "retorno": "bigint",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "fin_private.member_offset_plan",
+      "args": "p_profile uuid",
+      "retorno": "jsonb",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "fin_private.member_offsets",
+      "args": "p_charge uuid",
+      "retorno": "TABLE(entry_id uuid, description text, remaining_cents bigint)",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
       "nome": "fin_private.no_delete",
       "args": "",
       "retorno": "trigger",
@@ -33799,6 +33873,19 @@
       "volatilidade": "v",
       "exec_anon": true,
       "exec_authenticated": true,
+      "comentario": null
+    },
+    {
+      "nome": "fin_private.settle_member_offsets",
+      "args": "p_charge uuid, p_paid_on date, p_account uuid",
+      "retorno": "bigint",
+      "linguagem": "plpgsql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
       "comentario": null
     },
     {
@@ -34793,7 +34880,7 @@
       "nome": "public.conv_svc_ai_admin_read_more",
       "args": "p_session uuid, p_domain text, p_args jsonb",
       "retorno": "jsonb",
-      "linguagem": "sql",
+      "linguagem": "plpgsql",
       "tipo": "f",
       "security_definer": true,
       "search_path": "search_path=\"\"",

@@ -143,6 +143,7 @@
 - [info] public.fin_receipt_submissions — FK (reviewed_by) → public.profiles sem índice
 - [info] public.fin_receipt_submissions — FK (superseded_by) → public.fin_receipt_submissions sem índice
 - [info] public.fin_recurrences — FK (created_by) → public.profiles sem índice
+- [info] public.fin_recurrences — FK (offset_profile_id) → public.profiles sem índice
 - [info] public.fin_recurrences — FK (updated_by) → public.profiles sem índice
 - [info] public.fin_settings — FK (finance_admin_profile_id) → public.profiles sem índice
 - [info] public.fin_settings — FK (late_fee_confirmed_by) → public.profiles sem índice

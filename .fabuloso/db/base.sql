@@ -1,6 +1,6 @@
 -- base.sql — DDL do schema remoto. Gerado por `fabuloso.mjs db`; não edite.
 -- É a base do banco de teste em PGlite (`fabuloso.mjs pg`): schema real do remoto + migrations locais pendentes.
---@@ meta {"versao":1,"postgres":"17.6","schemas":["conv_private","fin_private","public","sig_private"],"extensoes":[{"nome":"pg_cron","schema":"pg_catalog"},{"nome":"pg_net","schema":"extensions"},{"nome":"pg_stat_statements","schema":"extensions"},{"nome":"pgcrypto","schema":"extensions"},{"nome":"supabase_vault","schema":"vault"},{"nome":"uuid-ossp","schema":"extensions"},{"nome":"vector","schema":"public"}],"papeis":["anon","authenticated","authenticator","cli_login_postgres","dashboard_user","pgbouncer","postgres","service_role","supabase_auth_admin","supabase_etl_admin","supabase_functions_admin","supabase_privileged_role","supabase_read_only_user","supabase_realtime_admin","supabase_replication_admin","supabase_storage_admin"],"migracoes":["20251228080214","20251228081253","20251228083254","20251228083507","20251228083944","20251228085506","20251228085656","20251228085817","20251228113842","20251228114731","20251228115147","20251228214931","20251228220119","20251228220952","20251230094628","20251230103441","20251230111220","20260101134906","20260101134940","20260101141731","20260101155936","20260103141626","20260103153236","20260103153329","20260103153404","20260103153757","20260115192527","20260119084237","20260119084321","20260119085322","20260119090000","20260119090225","20260119141114","20260123101818","20260123101853","20260123104620","20260123125031","20260124215137","20260125081739","20260125102639","20260125174723","20260127175350","20260127175608","20260128133915","20260129075257","20260129075631","20260129083027","20260129145632","20260131091223","20260203185748","20260205232352","20260205232412","20260212105246","20260212113107","20260212121128","20260213083000","20260215123000","20260216090000","20260216123000","20260323073000","20260421153000","20260421184125","20260422100000","20260422100100","20260422100200","20260422100300","20260422100400","20260422113000","20260422124000","20260422130000","20260422143000","20260422150000","20260427134500","20260427135800","20260427140500","20260502000001","20260502000002","20260519072400","20260519073500","20260519074500","20260519075000","20260519080000","20260519081000","20260519082000","20260805085500","20260805091000","20260807120000","20260807140000","20260807160000","20260807180000","20260807200000","20260808120000","20260824120000","20260824121000","20260824140000","20260912090000","20260912100000","20260930120000","20260930123000","20261005161200","20261006100000","20261006100100","20261006100200","20261006100300","20261006100400","20261006100500","20261007064837","20261007070656","20261007100000","20261007100100","20261007100200","20261007100300","20261007100400","20261007100500","20261007100600","20261007100700","20261007100800","20261007100900","20261007101000","20261007101100","20261007101200","20261007101210","20261007101300","20261007101400","20261007110000","20261007120000","20261007120100","20261007120200","20261007130000","20261007135553","20261007140000","20261007140144","20261007140427","20261007140831","20261007141000","20261007150000","20261007150010","20261007150100","20261007160000","20261007170000","20261007180000","20261007190000","20261007200000","20261007210000","20261007220000","20261007230000","20261007240000","20261007250000","20261007250100","20261007260000","20261007260100","20261007270000","20261007280000","20261007290000","20261007290100","20261007300000","20261007310000","20261007320000","20261007330000","20261007340000","20261007350000","20261007360000","20261007370000","20261007380000","20261007390000","20261007400000","20261008101944","20261008102600","20261008124729","20261008130005","20261008130203","20261008130745","20261008132237","20261008132335","20261008132419","20261008135821","20261008135824","20261008143837","20261008150000","20261009121500","20261010084210","20261010090024","20261010090914","20261010091225","20261010094921","20261010102037","20261010102042","20261010102047","20261010102051","20261010102254","20261010112046","20261014131036","20261016161000","20261016180000","20261016190000","20261016200000","20261017165532","20261017170244","20261017181704","20261019130000","20261019150000","20261021120000","20261021130000","20261022003000","20261022010000","20261022020000","20261022030000","20261022040000","20261022050000","20261022060000","20261026120000","20261026120100","20261026150000","20261026160000","20261026170000","20261026180000","20261026190000","20261026200000","20261028090000","20261028100000","20261028110000","20261029090000","20261030140000","20261030160000","20261030170000","20261030180000","20261030190000","20261030200000","20261030210000","20261030220000","20261030230000","20261102200000","20261103100000","20261103110000","20261103120000","20261104091056"]}
+--@@ meta {"versao":1,"postgres":"17.6","schemas":["conv_private","fin_private","public","sig_private"],"extensoes":[{"nome":"pg_cron","schema":"pg_catalog"},{"nome":"pg_net","schema":"extensions"},{"nome":"pg_stat_statements","schema":"extensions"},{"nome":"pgcrypto","schema":"extensions"},{"nome":"supabase_vault","schema":"vault"},{"nome":"uuid-ossp","schema":"extensions"},{"nome":"vector","schema":"public"}],"papeis":["anon","authenticated","authenticator","cli_login_postgres","dashboard_user","pgbouncer","postgres","service_role","supabase_auth_admin","supabase_etl_admin","supabase_functions_admin","supabase_privileged_role","supabase_read_only_user","supabase_realtime_admin","supabase_replication_admin","supabase_storage_admin"],"migracoes":["20251228080214","20251228081253","20251228083254","20251228083507","20251228083944","20251228085506","20251228085656","20251228085817","20251228113842","20251228114731","20251228115147","20251228214931","20251228220119","20251228220952","20251230094628","20251230103441","20251230111220","20260101134906","20260101134940","20260101141731","20260101155936","20260103141626","20260103153236","20260103153329","20260103153404","20260103153757","20260115192527","20260119084237","20260119084321","20260119085322","20260119090000","20260119090225","20260119141114","20260123101818","20260123101853","20260123104620","20260123125031","20260124215137","20260125081739","20260125102639","20260125174723","20260127175350","20260127175608","20260128133915","20260129075257","20260129075631","20260129083027","20260129145632","20260131091223","20260203185748","20260205232352","20260205232412","20260212105246","20260212113107","20260212121128","20260213083000","20260215123000","20260216090000","20260216123000","20260323073000","20260421153000","20260421184125","20260422100000","20260422100100","20260422100200","20260422100300","20260422100400","20260422113000","20260422124000","20260422130000","20260422143000","20260422150000","20260427134500","20260427135800","20260427140500","20260502000001","20260502000002","20260519072400","20260519073500","20260519074500","20260519075000","20260519080000","20260519081000","20260519082000","20260805085500","20260805091000","20260807120000","20260807140000","20260807160000","20260807180000","20260807200000","20260808120000","20260824120000","20260824121000","20260824140000","20260912090000","20260912100000","20260930120000","20260930123000","20261005161200","20261006100000","20261006100100","20261006100200","20261006100300","20261006100400","20261006100500","20261007064837","20261007070656","20261007100000","20261007100100","20261007100200","20261007100300","20261007100400","20261007100500","20261007100600","20261007100700","20261007100800","20261007100900","20261007101000","20261007101100","20261007101200","20261007101210","20261007101300","20261007101400","20261007110000","20261007120000","20261007120100","20261007120200","20261007130000","20261007135553","20261007140000","20261007140144","20261007140427","20261007140831","20261007141000","20261007150000","20261007150010","20261007150100","20261007160000","20261007170000","20261007180000","20261007190000","20261007200000","20261007210000","20261007220000","20261007230000","20261007240000","20261007250000","20261007250100","20261007260000","20261007260100","20261007270000","20261007280000","20261007290000","20261007290100","20261007300000","20261007310000","20261007320000","20261007330000","20261007340000","20261007350000","20261007360000","20261007370000","20261007380000","20261007390000","20261007400000","20261008101944","20261008102600","20261008124729","20261008130005","20261008130203","20261008130745","20261008132237","20261008132335","20261008132419","20261008135821","20261008135824","20261008143837","20261008150000","20261009121500","20261010084210","20261010090024","20261010090914","20261010091225","20261010094921","20261010102037","20261010102042","20261010102047","20261010102051","20261010102254","20261010112046","20261014131036","20261016161000","20261016180000","20261016190000","20261016200000","20261017165532","20261017170244","20261017181704","20261019130000","20261019150000","20261021120000","20261021130000","20261022003000","20261022010000","20261022020000","20261022030000","20261022040000","20261022050000","20261022060000","20261026120000","20261026120100","20261026150000","20261026160000","20261026170000","20261026180000","20261026190000","20261026200000","20261028090000","20261028100000","20261028110000","20261029090000","20261030140000","20261030160000","20261030170000","20261030180000","20261030190000","20261030200000","20261030210000","20261030220000","20261030230000","20261102200000","20261103100000","20261103110000","20261103120000","20261104091056","20261104140904"]}
 --@@ 10 schema conv_private
 create schema if not exists conv_private;
 --@@ 10 schema fin_private
@@ -1152,7 +1152,8 @@ create table public.fin_recurrences (
   created_at timestamp with time zone not null,
   created_by uuid,
   updated_at timestamp with time zone not null,
-  updated_by uuid
+  updated_by uuid,
+  offset_profile_id uuid
 );
 --@@ 40 tabela public.fin_requests
 create table public.fin_requests (
@@ -9151,6 +9152,27 @@ begin
   if v_rec is null then update public.conv_automation_runs set status='done',finished_at=clock_timestamp() where id=v_run; end if;
   return v_rec;
 end $function$;
+--@@ 45 funcao conv_private.receipt_proposal_offsets(p_payload jsonb)
+CREATE OR REPLACE FUNCTION conv_private.receipt_proposal_offsets(p_payload jsonb)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ STABLE SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare a jsonb; v_charge uuid; v_off bigint; v_total bigint := 0; v_items text[] := '{}'; v_paid_on date := (p_payload->>'paid_on')::date;
+begin
+  for a in select * from jsonb_array_elements(coalesce(p_payload->'allocations', '[]'::jsonb)) loop
+    v_charge := (a->>'charge_id')::uuid;
+    v_off := fin_private.member_offset_cents(v_charge);
+    if v_off > 0 and (a->>'amount_cents')::bigint + v_off = (select st.total_due from fin_private.charge_statement(v_charge, v_paid_on) st) then
+      v_total := v_total + v_off;
+      v_items := v_items || array(select o.description || ' ' || replace(trim(to_char(o.remaining_cents::numeric / 100, 'FM999999990D00')), '.', ',')
+                                  from fin_private.member_offsets(v_charge) o);
+    end if;
+  end loop;
+  if v_total = 0 then return '{}'::jsonb; end if;
+  return jsonb_build_object('offset_cents', v_total, 'offset_items', array_to_string(v_items, ', '));
+end $function$;
 --@@ 45 funcao conv_private.receipt_used_cents(p_intent uuid)
 CREATE OR REPLACE FUNCTION conv_private.receipt_used_cents(p_intent uuid)
  RETURNS bigint
@@ -10545,6 +10567,44 @@ AS $function$
            else true end
      and not exists (select 1 from public.fin_holidays h where h.holiday_date = p_date and h.active)
 $function$;
+--@@ 45 funcao fin_private.member_offset_cents(p_charge uuid)
+CREATE OR REPLACE FUNCTION fin_private.member_offset_cents(p_charge uuid)
+ RETURNS bigint
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+  select coalesce(sum(o.remaining_cents), 0)::bigint from fin_private.member_offsets(p_charge) o;
+$function$;
+--@@ 45 funcao fin_private.member_offset_plan(p_profile uuid)
+CREATE OR REPLACE FUNCTION fin_private.member_offset_plan(p_profile uuid)
+ RETURNS jsonb
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+  select coalesce(jsonb_agg(jsonb_build_object('description', r.description, 'amount_cents', r.amount_cents,
+    'start_month', r.start_month) order by r.start_month, r.description), '[]'::jsonb)
+  from public.fin_recurrences r
+  where r.offset_profile_id = p_profile and r.active
+    and (r.end_month is null or r.end_month >= date_trunc('month', fin_private.today())::date);
+$function$;
+--@@ 45 funcao fin_private.member_offsets(p_charge uuid)
+CREATE OR REPLACE FUNCTION fin_private.member_offsets(p_charge uuid)
+ RETURNS TABLE(entry_id uuid, description text, remaining_cents bigint)
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+  select e.id, e.description, e.amount_cents - fin_private.entry_paid_cents(e.id)
+  from public.fin_member_charges c
+  join public.fin_recurrences r on r.offset_profile_id = c.profile_id
+  join public.fin_entries e on e.recurrence_id = r.id and e.competence_date = c.competence_month
+  where c.id = p_charge and c.charge_type = 'membership' and c.status in ('open', 'partial')
+    and e.kind = 'expense' and e.status in ('pending', 'partial')
+    and e.amount_cents - fin_private.entry_paid_cents(e.id) > 0
+  order by e.description, e.id;
+$function$;
 --@@ 45 funcao fin_private.no_delete()
 CREATE OR REPLACE FUNCTION fin_private.no_delete()
  RETURNS trigger
@@ -10724,6 +10784,23 @@ begin
     on conflict (holiday_date, scope) do nothing;
   end if;
   return v_n;
+end $function$;
+--@@ 45 funcao fin_private.settle_member_offsets(p_charge uuid, p_paid_on date
+CREATE OR REPLACE FUNCTION fin_private.settle_member_offsets(p_charge uuid, p_paid_on date, p_account uuid)
+ RETURNS bigint
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare o record; v_total bigint := 0; v_note text;
+begin
+  select 'Abatido da mensalidade ' || to_char(c.competence_month, 'MM/YYYY') || ' de ' || p.name into v_note
+  from public.fin_member_charges c join public.profiles p on p.id = c.profile_id where c.id = p_charge;
+  for o in select * from fin_private.member_offsets(p_charge) loop
+    perform fin_private.add_entry_payment(o.entry_id, o.remaining_cents, p_paid_on, p_account, v_note, true, gen_random_uuid());
+    v_total := v_total + o.remaining_cents;
+  end loop;
+  return v_total;
 end $function$;
 --@@ 45 funcao fin_private.statement_json(p_charge uuid, p_as_of date)
 CREATE OR REPLACE FUNCTION fin_private.statement_json(p_charge uuid, p_as_of date)
@@ -12352,9 +12429,18 @@ CREATE OR REPLACE FUNCTION public.conv_svc_ai_admin_finance_propose(p_session uu
  SECURITY DEFINER
  SET search_path TO ''
 AS $function$
+declare v_res jsonb; v_off jsonb;
 begin
-  perform conv_private.admin_receipt_to_member(p_session, p);
-  return conv_private.ai_admin_finance_propose(p_session, p);
+  begin
+    perform conv_private.admin_receipt_to_member(p_session, p);
+  exception when invalid_text_representation then null;
+  end;
+  v_res := conv_private.ai_admin_finance_propose(p_session, p);
+  if v_res->>'action' is distinct from 'fin_receipt_approve' or not coalesce((v_res->>'ok')::boolean, false) then return v_res; end if;
+  v_off := conv_private.receipt_proposal_offsets(v_res->'summary');
+  if v_off = '{}'::jsonb then return v_res; end if;
+  update public.conv_booking_proposals set payload = payload || v_off where id = (v_res->>'proposal_id')::uuid;
+  return jsonb_set(v_res, '{summary}', (v_res->'summary') || v_off);
 exception when invalid_text_representation then
   return conv_private.ai_admin_finance_propose(p_session, p);
 end $function$;
@@ -12438,10 +12524,18 @@ AS $function$ select conv_private.ai_admin_read(p_session, p_domain, coalesce(p_
 --@@ 45 funcao public.conv_svc_ai_admin_read_more(p_session uuid, p_domain tex
 CREATE OR REPLACE FUNCTION public.conv_svc_ai_admin_read_more(p_session uuid, p_domain text, p_args jsonb DEFAULT '{}'::jsonb)
  RETURNS jsonb
- LANGUAGE sql
+ LANGUAGE plpgsql
  SECURITY DEFINER
  SET search_path TO ''
-AS $function$ select conv_private.ai_admin_read_more(p_session, p_domain, coalesce(p_args, '{}'::jsonb)) $function$;
+AS $function$
+declare v_res jsonb := conv_private.ai_admin_read_more(p_session, p_domain, coalesce(p_args, '{}'::jsonb)); v_profile uuid;
+begin
+  if p_domain <> 'socio_ficha' or not coalesce((v_res->>'ok')::boolean, false) then return v_res; end if;
+  v_profile := nullif(p_args->>'profile_id', '')::uuid;
+  return jsonb_set(v_res, '{data,offsets}', fin_private.member_offset_plan(v_profile));
+exception when invalid_text_representation then
+  return v_res;
+end $function$;
 --@@ 45 funcao public.conv_svc_ai_admin_receipt(p_session uuid, p_message uuid
 CREATE OR REPLACE FUNCTION public.conv_svc_ai_admin_receipt(p_session uuid, p_message uuid)
  RETURNS jsonb
@@ -13457,6 +13551,7 @@ declare
   v_admin uuid; v_admin_name text; v_contact uuid; v_conv uuid; v_today date := (now() at time zone 'America/Fortaleza')::date;
   v_month date := date_trunc('month', (now() at time zone 'America/Fortaleza'))::date; v_amount bigint; v_paid_on date; v_payee text;
   v_hash text; v_reference text; v_issue text; v_requested_month date; v_charge_month date; v_charge uuid; v_due bigint; v_type text; v_desc text; v_n int; v_account uuid; v_prev_claims text; v_prev_sub text; v_err text; v_res jsonb;
+  v_offset bigint; v_offset_items text;
 begin
   if coalesce(auth.role(), '') <> 'service_role' then raise exception 'FORBIDDEN'; end if;
   select * into s from fin_private.whatsapp_receipt_intents where id = p_stage for update;
@@ -13508,20 +13603,20 @@ begin
 
   -- O valor sozinho não escolhe entre meses ou finalidades. Competência explícita filtra antes da contagem.
   select count(*) into v_n from public.fin_member_charges c cross join lateral fin_private.charge_statement(c.id, v_paid_on) st
-  where c.profile_id = s.profile_id and c.status in ('open', 'partial') and st.total_due = v_amount
+  where c.profile_id = s.profile_id and c.status in ('open', 'partial') and (st.total_due = v_amount or st.total_due - fin_private.member_offset_cents(c.id) = v_amount)
     and (c.charge_type <> 'membership' or c.competence_month <= v_month)
     and (v_requested_month is null or (c.charge_type = 'membership' and c.competence_month = v_requested_month))
     and (p_context->>'purpose_kind' is null or c.charge_type = p_context->>'purpose_kind');
   if v_n > 1 then return jsonb_build_object('applied', false, 'reason', 'AMBIGUOUS'); end if;
   select c.id, st.total_due, c.charge_type, c.description, c.competence_month into v_charge, v_due, v_type, v_desc, v_charge_month
   from public.fin_member_charges c cross join lateral fin_private.charge_statement(c.id, v_paid_on) st
-  where c.profile_id = s.profile_id and c.status in ('open', 'partial') and st.total_due = v_amount
+  where c.profile_id = s.profile_id and c.status in ('open', 'partial') and (st.total_due = v_amount or st.total_due - fin_private.member_offset_cents(c.id) = v_amount)
     and (c.charge_type <> 'membership' or c.competence_month <= v_month)
     and (v_requested_month is null or (c.charge_type = 'membership' and c.competence_month = v_requested_month))
     and (p_context->>'purpose_kind' is null or c.charge_type = p_context->>'purpose_kind')
   order by c.due_date, c.id limit 1;
   if v_charge is null then
-    select st.total_due into v_due from public.fin_member_charges c cross join lateral fin_private.charge_statement(c.id, v_paid_on) st
+    select st.total_due - fin_private.member_offset_cents(c.id) into v_due from public.fin_member_charges c cross join lateral fin_private.charge_statement(c.id, v_paid_on) st
     where c.profile_id = s.profile_id and c.charge_type = 'membership' and c.competence_month = coalesce(v_requested_month, v_month) and c.status in ('open', 'partial')
     order by c.due_date limit 1;
     if v_due is null then return jsonb_build_object('applied', false, 'reason', 'NO_OPEN_CHARGE'); end if;
@@ -13535,6 +13630,11 @@ begin
   if v_account is null then select min(a.id::text)::uuid into v_account from public.fin_accounts a where a.active having count(*) = 1; end if;
   if v_account is null then return jsonb_build_object('applied', false, 'reason', 'ACCOUNT'); end if;
 
+  -- Antes da baixa: depois dela as despesas abatidas já estão pagas.
+  -- Pix cheio: nada a abater.
+  v_offset := case when v_due = v_amount then 0 else fin_private.member_offset_cents(v_charge) end;
+  select string_agg(o.description || ' ' || replace(trim(to_char(o.remaining_cents::numeric / 100, 'FM999999990D00')), '.', ','), ', ') into v_offset_items
+  from fin_private.member_offsets(v_charge) o where v_offset > 0;
   v_prev_claims := current_setting('request.jwt.claims', true);
   v_prev_sub := current_setting('request.jwt.claim.sub', true);
   perform set_config('request.jwt.claims', jsonb_build_object('sub', v_admin, 'role', 'authenticated')::text, true);
@@ -13569,7 +13669,8 @@ begin
    order by c.updated_at desc nulls last limit 1;
   if v_contact is not null then v_conv := conv_private.open_direct(v_contact); end if;
   return jsonb_build_object('applied', true, 'month', v_charge_month, 'charge_type', v_type, 'description', v_desc, 'amount_cents', v_amount, 'charge_id', v_charge,
-    'admin_conversation_id', v_conv, 'admin_name', split_part(v_admin_name, ' ', 1), 'sender_name', pr.name);
+    'admin_conversation_id', v_conv, 'admin_name', split_part(v_admin_name, ' ', 1), 'sender_name', pr.name,
+    'offset_cents', v_offset, 'offset_items', v_offset_items);
 end $function$;
 --@@ 45 funcao public.conv_svc_receipt_purpose(p_stage uuid, p_message uuid, p
 CREATE OR REPLACE FUNCTION public.conv_svc_receipt_purpose(p_stage uuid, p_message uuid, p_kind text, p_detail text)
@@ -13876,7 +13977,7 @@ CREATE OR REPLACE FUNCTION public.fin_approve_receipt(p_request_id uuid, p_submi
 AS $function$
 declare v_actor uuid; v_replay jsonb; s public.fin_receipt_submissions%rowtype; a jsonb; w jsonb; v_res jsonb; v_ids uuid[] := '{}';
   v_paid_on date := (p_data->>'paid_on')::date; v_method text := coalesce(p_data->>'method', 'pix'); v_account uuid := (p_data->>'account_id')::uuid;
-  v_total bigint := 0; v_i integer := 0; v_wres jsonb;
+  v_total bigint := 0; v_i integer := 0; v_wres jsonb; v_charge uuid; v_amount bigint; v_offset bigint; v_offset_total bigint := 0;
 begin
   v_actor := fin_private.require_admin();
   v_replay := fin_private.begin_op(p_request_id, 'receipt_approve', p_data->>'note');
@@ -13896,20 +13997,30 @@ begin
 
   for a in select * from jsonb_array_elements(p_data->'allocations') loop
     v_i := v_i + 1;
+    v_charge := (a->>'charge_id')::uuid;
+    v_amount := (a->>'amount_cents')::bigint;
     -- Só cobranças do próprio sócio que enviou.
-    if not exists (select 1 from public.fin_member_charges c where c.id = (a->>'charge_id')::uuid and c.profile_id = s.profile_id) then
+    if not exists (select 1 from public.fin_member_charges c where c.id = v_charge and c.profile_id = s.profile_id) then
       raise exception 'INVALID_CHARGES';
     end if;
-    v_res := fin_private.apply_payment((a->>'charge_id')::uuid, (a->>'amount_cents')::bigint, v_paid_on, v_method, v_account,
+    -- Pix da mensalidade já com as despesas abatidas: quita a mensalidade inteira e paga as despesas.
+    v_offset := case when v_account is null then 0 else fin_private.member_offset_cents(v_charge) end;
+    if v_offset > 0 and v_amount + v_offset = (select st.total_due from fin_private.charge_statement(v_charge, v_paid_on) st) then
+      perform fin_private.settle_member_offsets(v_charge, v_paid_on, v_account);
+      v_amount := v_amount + v_offset;
+      v_offset_total := v_offset_total + v_offset;
+    end if;
+    v_res := fin_private.apply_payment(v_charge, v_amount, v_paid_on, v_method, v_account,
       p_submission_id, null, 'Comprovante aprovado', gen_random_uuid());
     v_ids := v_ids || (v_res->>'payment_id')::uuid;
-    v_total := v_total + (a->>'amount_cents')::bigint;
+    v_total := v_total + v_amount;
   end loop;
 
   update public.fin_receipt_submissions set status = 'approved', reviewed_by = v_actor, reviewed_at = now(),
     decision_reason = nullif(trim(p_data->>'note'), ''), approved_payment_ids = v_ids, version = version + 1, updated_at = now()
   where id = p_submission_id;
-  return fin_private.finish_op(p_request_id, jsonb_build_object('id', p_submission_id, 'status', 'approved', 'payment_ids', to_jsonb(v_ids), 'total_cents', v_total));
+  return fin_private.finish_op(p_request_id, jsonb_build_object('id', p_submission_id, 'status', 'approved', 'payment_ids', to_jsonb(v_ids),
+    'total_cents', v_total, 'offset_cents', v_offset_total));
 end $function$;
 --@@ 45 funcao public.fin_attach_file(p_request_id uuid, p_entry uuid, p_path 
 CREATE OR REPLACE FUNCTION public.fin_attach_file(p_request_id uuid, p_entry uuid, p_path text, p_name text, p_content_type text, p_size integer)
@@ -21583,6 +21694,8 @@ alter table public.fin_recurrences add constraint fin_recurrences_account_id_fke
 alter table public.fin_recurrences add constraint fin_recurrences_category_id_fkey FOREIGN KEY (category_id) REFERENCES fin_categories(id);
 --@@ 70 fk public.fin_recurrences.fin_recurrences_created_by_fkey
 alter table public.fin_recurrences add constraint fin_recurrences_created_by_fkey FOREIGN KEY (created_by) REFERENCES profiles(id);
+--@@ 70 fk public.fin_recurrences.fin_recurrences_offset_profile_id_fkey
+alter table public.fin_recurrences add constraint fin_recurrences_offset_profile_id_fkey FOREIGN KEY (offset_profile_id) REFERENCES profiles(id);
 --@@ 70 fk public.fin_recurrences.fin_recurrences_updated_by_fkey
 alter table public.fin_recurrences add constraint fin_recurrences_updated_by_fkey FOREIGN KEY (updated_by) REFERENCES profiles(id);
 --@@ 70 fk public.fin_requests.fin_requests_actor_id_fkey
@@ -23039,6 +23152,8 @@ revoke all on routine conv_private.queue_message(uuid,jsonb,uuid,uuid,text,uuid,
 revoke all on routine conv_private.queue_pendency_paid_notice(uuid,uuid) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao conv_private.queue_pendency_receipt_review_notice(uuid,uuid)
 revoke all on routine conv_private.queue_pendency_receipt_review_notice(uuid,uuid) from public, anon, authenticated, service_role;
+--@@ 89 revoke-funcao conv_private.receipt_proposal_offsets(jsonb)
+revoke all on routine conv_private.receipt_proposal_offsets(jsonb) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao conv_private.resolve_contact(text,text)
 revoke all on routine conv_private.resolve_contact(text,text) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao conv_private.resolve_undecryptable(text,text,text)
@@ -23375,12 +23490,20 @@ revoke all on routine fin_private.cnpj_matches(text,text) from public, anon, aut
 revoke all on routine fin_private.ensure_member_charges(uuid,boolean) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao fin_private.fold_text(text)
 revoke all on routine fin_private.fold_text(text) from public, anon, authenticated, service_role;
+--@@ 89 revoke-funcao fin_private.member_offset_cents(uuid)
+revoke all on routine fin_private.member_offset_cents(uuid) from public, anon, authenticated, service_role;
+--@@ 89 revoke-funcao fin_private.member_offset_plan(uuid)
+revoke all on routine fin_private.member_offset_plan(uuid) from public, anon, authenticated, service_role;
+--@@ 89 revoke-funcao fin_private.member_offsets(uuid)
+revoke all on routine fin_private.member_offsets(uuid) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao fin_private.payee_matches(text,text[])
 revoke all on routine fin_private.payee_matches(text,text[]) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao fin_private.receipt_payment_issue(jsonb,date)
 revoke all on routine fin_private.receipt_payment_issue(jsonb,date) from public, anon, authenticated, service_role;
 --@@ 89 revoke-funcao fin_private.require_member_reader()
 revoke all on routine fin_private.require_member_reader() from public, anon, authenticated, service_role;
+--@@ 89 revoke-funcao fin_private.settle_member_offsets(uuid,date,uuid)
+revoke all on routine fin_private.settle_member_offsets(uuid,date,uuid) from public, anon, authenticated, service_role;
 --@@ 89 revoke fin_private.whatsapp_receipt_intents
 revoke all on table fin_private.whatsapp_receipt_intents from anon, authenticated, service_role;
 --@@ 89 revoke-funcao fin_private.word_stems(text)
