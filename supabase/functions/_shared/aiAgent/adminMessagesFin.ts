@@ -47,7 +47,7 @@ function chargeAdjustProposal(s: Ctx): string {
 
 function receiptApproveProposal(s: Ctx): string {
   const itens = (Array.isArray(s.allocations) ? s.allocations as Ctx[] : []).map((a) => `- ${a.description} (venc. ${dateBR(a.due_date)}): ${centsBR(a.amount_cents)}`).join('\n');
-  return `Vou aprovar o comprovante de ${s.member_name}, enviado em ${dateBR(s.sent_on)}: ${centsBR(s.amount_cents)}, pago em ${dateBR(s.paid_on)} via ${methodBR(s.method)}, conta ${s.account_name}. Baixa nas cobranças, da mais antiga para a mais nova:\n${itens}`;
+  return `Vou aprovar o comprovante de ${s.member_name}, enviado em ${dateBR(s.sent_on)}: ${centsBR(s.amount_cents)}, pago em ${dateBR(s.paid_on)} via ${methodBR(s.method)}, conta ${s.account_name}. Baixa nas cobranças, da mais antiga para a mais nova:\n${itens}${s.offset_cents ? `\nCom ${centsBR(s.offset_cents)} abatidos (${s.offset_items}), a mensalidade fica quitada e essas despesas ficam pagas.` : ''}`;
 }
 
 /** Como a categoria foi escolhida: dita por ele, sugerida por mim (pode trocar) ou criada agora. */

@@ -51,7 +51,7 @@ export async function deliverForward(f: ReceiptForward, deps: ForwardDeps): Prom
 }
 
 type MembershipAuto = { applied?: boolean; reason?: string; due_cents?: number; month?: string; amount_cents?: number; admin_conversation_id?: string | null; admin_name?: string; sender_name?: string;
-  charge_type?: string; description?: string | null };
+  charge_type?: string; description?: string | null; offset_cents?: number; offset_items?: string | null };
 const monthBR = (iso?: string) => (iso ? iso.slice(0, 7).split('-').reverse().join('/') : 'do mês');
 /** O que foi pago: a pendência pelo nome dela, ou a mensalidade do mês. */
 const paidCharge = (a: MembershipAuto) => (a.charge_type === 'member_pendency'
@@ -70,11 +70,18 @@ export async function tryMembershipAutoPay(db: Call, stageId: string, context?: 
   } catch { return MEMBERSHIP_UNAVAILABLE; }
   if (!a?.applied) return membershipReview(a);
   const oQue = paidCharge(a);
+  const abatido = offsetNote(a);
   const forward = a.admin_conversation_id ? { admin_conversation_id: a.admin_conversation_id, admin_name: a.admin_name ?? '', sender_name: a.sender_name ?? '',
     kind: 'membership_auto', detail: null,
-    text: `${a.admin_name}, para você saber: ${oQue} de ${a.sender_name} (${brl(a.amount_cents)}) chegou pelo WhatsApp e já dei baixa (valor igual ao devido e Pix para o clube).` } : undefined;
+    text: `${a.admin_name}, para você saber: ${oQue} de ${a.sender_name} (${brl(a.amount_cents)}) chegou pelo WhatsApp e já dei baixa (valor igual ao devido e Pix para o clube).${abatido}` } : undefined;
   const sua = oQue.replace(/^a /, 'Sua ');
-  return { action: 'receipt_membership_paid', forward, messages: [`Recebi! ${sua} (${brl(a.amount_cents)}) está registrada como paga. Obrigado!`] };
+  return { action: 'receipt_membership_paid', forward, messages: [`Recebi! ${sua} (${brl(a.amount_cents)}) está registrada como paga.${abatido} Obrigado!`] };
+}
+
+/** Pix que veio com despesas do clube abatidas: a mensalidade fica cheia e as despesas ficam pagas. */
+function offsetNote(a: MembershipAuto): string {
+  if (!a.offset_cents) return '';
+  return ` Com ${brl(a.offset_cents)} abatidos (${a.offset_items ?? 'despesas do clube'}), a mensalidade fica quitada em ${brl(Number(a.amount_cents ?? 0) + a.offset_cents)} e essas despesas ficam pagas.`;
 }
 
 function membershipReview(a: MembershipAuto | null) {

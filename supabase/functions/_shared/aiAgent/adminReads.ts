@@ -164,7 +164,15 @@ function renderSocioFicha(d: Row): string {
   return `${d.name} (${d.role === 'admin' ? 'diretoria' : 'sócio'}), ${sit}. No clube desde ${dia(d.since)}.\n`
     + `- Em aberto: ${brl(d.open_cents)}${d.next_due ? `; próximo vencimento ${dia(d.next_due)}` : ''}\n`
     + `- Último pagamento: ${d.last_payment ? dia(d.last_payment) : 'nenhum registrado'}\n`
-    + `- Dependentes: ${deps.length ? deps.join(', ') : 'nenhum'}${d.phone ? `\n- Telefone: ${d.phone}` : ''}`;
+    + `- Dependentes: ${deps.length ? deps.join(', ') : 'nenhum'}${d.phone ? `\n- Telefone: ${d.phone}` : ''}`
+    + offsetsLine(arr(d.offsets));
+}
+
+/** Despesas do clube que o sócio desconta da mensalidade: o Pix dele vem com esse valor a menos e está certo. */
+function offsetsLine(itens: Row[]): string {
+  if (!itens.length) return '';
+  const total = itens.reduce((t, i) => t + n(i.amount_cents), 0);
+  return `\n- Abatido da mensalidade todo mês: ${itens.map((i) => `${i.description} ${brl(i.amount_cents)}`).join(' + ')} = ${brl(total)}. O Pix dele vem com esse desconto e quita a mensalidade.`;
 }
 
 function renderVencimentos(d: Row): string {
