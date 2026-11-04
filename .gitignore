@@ -48,3 +48,6 @@ design/**/*.html
 !design/**/*.dc.html
 .fabuloso/checkpoint*.md
 .claude/agentmap/
+
+# gerado por deno install (check local das edge functions)
+/deno.lock

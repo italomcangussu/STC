@@ -109,8 +109,8 @@ function proTennisReply(t: Turn, memory: Memory): Promise<TurnResult> | null {
 async function askModel(t: Turn, memory: Memory): Promise<Answer | null> {
   try {
     const msgs = [
-      { role: 'system', content: systemPrompt(t.settings, t.ctx) },
-      { role: 'user', content: userPrompt(t.ctx, memory, t.buffered) },
+      { role: 'system' as const, content: systemPrompt(t.settings, t.ctx) },
+      { role: 'user' as const, content: userPrompt(t.ctx, memory, t.buffered) },
     ];
     const opts = { model: t.settings.model, temperature: turnTemperature(t.isGroup, t.ctx, memory), maxTokens: answerBudget(t.ctx), json: true };
     return await askParsed(async () => (await t.deps.chat!(msgs, opts)).output);
