@@ -8,7 +8,7 @@
     "public",
     "sig_private"
   ],
-  "ultima_migracao": "20261104200000",
+  "ultima_migracao": "20261104210000",
   "extensoes": [
     "pg_cron 1.6.4",
     "pg_net 0.19.5",
@@ -33819,6 +33819,19 @@
       "security_definer": false,
       "search_path": "search_path=\"\"",
       "volatilidade": "v",
+      "exec_anon": false,
+      "exec_authenticated": false,
+      "comentario": null
+    },
+    {
+      "nome": "fin_private.receipt_prior_use",
+      "args": "p_intent uuid",
+      "retorno": "jsonb",
+      "linguagem": "sql",
+      "tipo": "f",
+      "security_definer": true,
+      "search_path": "search_path=\"\"",
+      "volatilidade": "s",
       "exec_anon": false,
       "exec_authenticated": false,
       "comentario": null

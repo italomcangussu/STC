@@ -320,3 +320,8 @@ Finalidade exclusiva; titularidade sem coincidência de primeiro nome; contexto 
 - Contexto: `.fabuloso/conhecimento/comprovantes.md` (seção Mensalidade de quem fala) e fluxo em `arquitetura.md`. Não há CLAUDE.md.
 - Entrega: migration 20261104200000 aplicada; `whatsapp-webhook` deployada.
 - Observação: migration 20261104210000 (outra sessão) consta pendente no remoto segundo o mapa; alertas de RLS antigos seguem em `.fabuloso/db/alertas.md`.
+
+- 2026-11-04 (Opus 5.5, fabuloso): pendência de R$ 130 do Marcelo Sampieri presa "em análise": comprovante já usado (mesmo PDF/Pix) não vira mais pendência nova; o João avisa onde foi usado. Commit 186c16c.
+- Contexto: `.fabuloso/conhecimento/comprovantes.md` (seção Comprovante já usado) e fluxo em `arquitetura.md`. Não há CLAUDE.md.
+- Entrega: migration 20261104210000 aplicada; `whatsapp-webhook` v123 deployada.
+- Observação: fluxo antigo sem financeiro (`conv_svc_receipt_purpose`) ainda não acusa reenvio; alertas de RLS antigos seguem em `.fabuloso/db/alertas.md`.

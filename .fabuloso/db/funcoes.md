@@ -1,5 +1,5 @@
 # Funções
-> 574 funções nos schemas conv_private, fin_private, public, sig_private. Corpo completo sob demanda: `select pg_get_functiondef('<schema.nome>(<args>)'::regprocedure)`.
+> 575 funções nos schemas conv_private, fin_private, public, sig_private. Corpo completo sob demanda: `select pg_get_functiondef('<schema.nome>(<args>)'::regprocedure)`.
 
 | Função | Argumentos | Retorno | Ling. | Segurança | anon | Nota |
 |---|---|---|---|---|---|---|
@@ -267,6 +267,7 @@
 | fin_private.payee_matches | `p_read text, p_expected text[]` | `boolean` | sql | invoker | não |  |
 | fin_private.receipt_auto_paid_notice | — | `trigger` | plpgsql | DEFINER | sim |  |
 | fin_private.receipt_payment_issue | `d jsonb, today date` | `text` | plpgsql | invoker | não |  |
+| fin_private.receipt_prior_use | `p_intent uuid` | `jsonb` | sql | DEFINER | não |  |
 | fin_private.recurrence_due_date | `p_competence date, p_day integer, p_offset integer` | `date` | sql | invoker | sim |  |
 | fin_private.refresh_charge_status | `p_charge uuid` | `text` | plpgsql | DEFINER | sim |  |
 | fin_private.require_admin | — | `uuid` | plpgsql | DEFINER | sim |  |
