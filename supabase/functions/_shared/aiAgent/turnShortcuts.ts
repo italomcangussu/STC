@@ -7,9 +7,9 @@ import { isAdminAssistant } from './promptAdmin.ts';
 import { actingFor } from './promptContext.ts';
 import type { Ctx } from './promptTypes.ts';
 import { type ReceiptStage, handleReceiptIntent, loadReceiptStage } from './receiptIntent.ts';
-import { deliverForward, tryMembershipAutoPay } from './receiptForward.ts';
+import { deliverForward, forwardMembershipReview, tryMembershipAutoPay } from './receiptForward.ts';
 import { type ChampReceipt, HOLD, tryChampionshipPay } from './championshipReceipt.ts';
-import { receiptTopic, talksAboutOwnMembership } from './receiptContext.ts';
+import { membershipReference, receiptEvidence, receiptTopic, talksAboutOwnMembership } from './receiptContext.ts';
 import { UNCLEAR_AUDIO_REPLY, unheardOnly } from './audio.ts';
 import { cadence } from './cadence.ts';
 import { delegateSilence } from './delegate.ts';
@@ -22,6 +22,10 @@ import type { TurnResult } from './turnTypes.ts';
 const DONE = new Set(['receipt_championship_paid', 'receipt_membership_paid', 'receipt_escalated', 'receipt_registered', 'receipt_donation_registered', 'receipt_pending_review']);
 
 const onlyKinds = (t: Turn, kinds: string[]) => t.pendentes.every((m) => kinds.includes(String(m.kind)));
+const receiptAttachment = (t: Turn) => t.pendentes.filter(m => m.kind === 'image' || m.kind === 'document').slice(-1)[0];
+const receiptSenderName = (t: Turn) => String(((t.ctx.requester as Ctx | undefined)?.profile as Ctx | undefined)?.name ?? '');
+const receiptToday = (t: Turn) => t.today ?? new Date().toLocaleDateString('en-CA', { timeZone: 'America/Fortaleza' });
+const receiptMediaTurn = (t: Turn) => t.deps.mediaOnly === true || t.soMidia || Boolean(receiptAttachment(t));
 
 /** Áudio que não deu para ouvir: transcrição falhou → equipe ouve; ruído ou fala inaudível → pede de novo. */
 function unheardAudio(t: Turn): Promise<TurnResult> | null {
@@ -41,16 +45,18 @@ function unheardAudio(t: Turn): Promise<TurnResult> | null {
 async function memberReceipt(t: Turn): Promise<TurnResult | null> {
   if (t.isGroup || isAdminAssistant(t.ctx)) return null;
   const { db } = t.deps;
-  const mediaOnly = t.deps.mediaOnly === true || t.soMidia;
-  const comprovanteDaVez = mediaOnly && (t.ultima?.kind === 'image' || t.ultima?.kind === 'document');
+  const attachment = receiptAttachment(t);
+  const mediaOnly = receiptMediaTurn(t);
+  const comprovanteDaVez = attachment?.id as string | undefined;
   let stage: ReceiptStage | null = null;
   try {
-    stage = await loadReceiptStage({ db, conversation: t.conversation, mediaMessageId: comprovanteDaVez ? t.ultima?.id as string | undefined : undefined, sleep: t.deps.sleep });
+    stage = await loadReceiptStage({ db, conversation: t.conversation, mediaMessageId: comprovanteDaVez, sleep: t.deps.sleep });
   } catch { /* implantação parcial: fluxo geral continua; jamais força baixa */ }
   if (!stage) return null;
   const handled = await handleReceiptIntent({
     stage, messageId: t.ultima?.id as string | undefined, mediaOnly, text: t.buffered, transcript: (t.ctx.transcript ?? []) as Ctx[],
-    db, chat: t.deps.chat, model: t.settings.model,
+    db, chat: t.deps.chat, model: t.settings.model, today: t.today,
+    ownName: receiptSenderName(t),
   });
   if (!handled) return null;
   const sent = await t.entregar(cadence(handled.messages), { firme: DONE.has(handled.action) });
@@ -67,8 +73,8 @@ async function memberReceipt(t: Turn): Promise<TurnResult | null> {
  *    ainda espera finalidade é conferido contra as inscrições dela. Na conversa de texto só a confirmação responde; a
  *    explicação de valor diferente fica para quando o comprovante chega.
  */
-async function stageFor(t: Turn, comMidia: boolean): Promise<ReceiptStage | null> {
-  const mediaMessageId = comMidia ? t.ultima?.id as string : undefined;
+async function stageFor(t: Turn): Promise<ReceiptStage | null> {
+  const mediaMessageId = receiptAttachment(t)?.id as string | undefined;
   try { return await loadReceiptStage({ db: t.deps.db, conversation: t.conversation, mediaMessageId, sleep: t.deps.sleep }); } catch { return null; }
 }
 
@@ -76,13 +82,19 @@ async function championshipReceipt(t: Turn): Promise<TurnResult | null> {
   if (t.isGroup) return null;
   const comMidia = t.soMidia && onlyKinds(t, ['image', 'document']);
   const topic = receiptTopic((t.ctx.transcript ?? []) as Ctx[]);
-  if (comMidia ? !isAdminAssistant(t.ctx) : topic !== 'campeonato') return null;
-  const stage = await stageFor(t, comMidia);
+  if (topic !== 'campeonato') return null;
+  if (comMidia && !isAdminAssistant(t.ctx)) return null;
+  const stage = await stageFor(t);
   if (stage?.status !== 'awaiting_purpose') return null;
   const pago = await tryChampionshipPay(t.deps.db, stage.id, topic);
   // Guardar o comprovante é para o atleta; o administrador sem inscrição pendente segue para o fluxo dele (despesa).
-  if (!pago || pago.action === HOLD || (!comMidia && pago.action !== 'receipt_championship_paid')) return null;
+  if (!pago || !deliverSignupInTurn({ receipt: pago, mediaOnly: comMidia })) return null;
   return deliverAutoReceipt(t, pago, stage.id);
+}
+
+function deliverSignupInTurn(input: { receipt: ChampReceipt | null; mediaOnly: boolean }): boolean {
+  if (!input.receipt || input.receipt.action === HOLD) return false;
+  return input.mediaOnly || input.receipt.action === 'receipt_championship_paid';
 }
 
 /** Fala com a pessoa e avisa o financeiro (menos quando o financeiro é quem está na conversa). */
@@ -125,13 +137,17 @@ const isFreshReceipt = (r: Ctx | null) => r?.found === true && r.duplicate !== t
 async function adminOwnMembership(t: Turn): Promise<TurnResult | null> {
   if (t.isGroup || !isAdminAssistant(t.ctx)) return null;
   const falaAgora = t.soMidia ? [] : [{ direction: 'inbound', body: t.buffered } as Ctx];
-  const transcript = [...((t.ctx.transcript ?? []) as Ctx[]), ...falaAgora];
-  const nome = String(((t.ctx.requester as Ctx | undefined)?.profile as Ctx | undefined)?.name ?? '');
-  if (receiptTopic(transcript) !== 'mensalidade' || !talksAboutOwnMembership(transcript, nome)) return null;
-  const stage = await stageFor(t, t.soMidia);
+  const stage = await stageFor(t);
   if (stage?.status !== 'awaiting_purpose') return null;
-  const pago = await tryMembershipAutoPay(t.deps.db, stage.id);
-  return pago ? deliverAutoReceipt(t, pago, stage.id) : null;
+  const transcript = receiptEvidence([...((t.ctx.transcript ?? []) as Ctx[]), ...falaAgora], stage);
+  const nome = receiptSenderName(t);
+  if (receiptTopic(transcript) !== 'mensalidade' || !talksAboutOwnMembership(transcript, nome)) return null;
+  const reference = membershipReference(transcript, receiptToday(t));
+  if (reference.ambiguous) return t.say(['Esse comprovante é de quais meses? Ainda não dei baixa.'], 'receipt_membership_review', () => ({}), { awaiting: true });
+  const pago = await tryMembershipAutoPay(t.deps.db, stage.id, { month: reference.month, purpose_kind: 'membership' });
+  if (!pago) return null;
+  const result = await forwardMembershipReview({ db: t.deps.db, stage: stage.id, message: t.ultima?.id as string, month: reference.month, receipt: pago });
+  return deliverAutoReceipt(t, result, stage.id);
 }
 
 /** Mídia sem texto no privado, sem comprovante em jogo: o João não lê mídia e diz isso. */

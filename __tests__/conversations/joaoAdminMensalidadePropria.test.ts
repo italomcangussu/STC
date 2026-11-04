@@ -40,6 +40,12 @@ const avisou = [{ direction: 'inbound', kind: 'text', body: 'Quero te enviar meu
   { direction: 'outbound', kind: 'text', body: 'Pode mandar a imagem ou o PDF por aqui.' }];
 
 describe('admin que também é sócio paga a própria mensalidade', () => {
+  it('arquivo sem finalidade não tenta quitar inscrição por coincidência de valor', async () => {
+    const { t, calls } = turno([], { soMidia: true });
+    await beforeModel(t);
+    expect(calls.map(c => c.name)).not.toContain('conv_svc_receipt_championship_auto');
+    expect(calls.map(c => c.name)).not.toContain('conv_svc_receipt_membership_auto');
+  });
   it('avisou que é a mensalidade dele e mandou o Pix: baixa na hora, sem perguntar do Card', async () => {
     const { t, falas, calls } = turno(avisou, { soMidia: true });
     const r = await beforeModel(t) as { action?: string };
@@ -65,7 +71,7 @@ describe('admin que também é sócio paga a própria mensalidade', () => {
 
   it('valor que não bate: pergunta de qual sócio e mês, nunca do Card', async () => {
     const { t, falas } = turno(avisou, { soMidia: true, auto: { applied: false, reason: 'AMOUNT_MISMATCH' } });
-    expect((await beforeModel(t) as { action?: string }).action).toBe('admin_receipt_received');
+    expect((await beforeModel(t) as { action?: string }).action).toBe('receipt_membership_review');
     expect(falas.join(' ')).toContain('qual sócio');
     expect(falas.join(' ')).not.toContain('Card');
   });

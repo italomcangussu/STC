@@ -140,7 +140,7 @@ insert into fin_private.whatsapp_receipt_intents (id, source_message_id, convers
 select '00000000-0000-0000-0000-0000000008a1', '00000000-0000-0000-0000-0000000008a1', '00000000-0000-0000-0000-00000000d202', soc,
   '00000000-0000-0000-0000-00000000c202', jsonb_build_object('storage_path', 'soc/dc.jpg', 'file_name', 'dc.jpg', 'content_type', 'image/jpeg',
   'size_bytes', 700, 'content_sha256', repeat('8', 64), 'declared_amount_cents', 5000, 'declared_paid_on', conv_private.today()::text,
-  'ocr_status', 'ok', 'ocr', jsonb_build_object('payee', 'Sobral Tenis Clube')) from u;
+  'ocr_status', 'ok', 'ocr', jsonb_build_object('payee', 'Sobral Tenis Clube', 'amount_cents', 5000, 'paid_on', conv_private.today()::text, 'confidence', jsonb_build_object('amount', 'high', 'date', 'high'))) from u;
 select fab.como('service_role');
 do $$ declare r jsonb := public.conv_svc_receipt_membership_auto('00000000-0000-0000-0000-0000000008a1'); begin
   assert (r->>'applied')::boolean and r->>'charge_type' = 'member_pendency', 'pendência baixada sozinha: ' || r::text;

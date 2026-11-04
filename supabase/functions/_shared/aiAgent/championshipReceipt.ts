@@ -99,12 +99,17 @@ const holdReply: ChampReceipt = { action: HOLD, messages: [
 
 /** Tenta confirmar a inscrição pelo comprovante. null = não é (ou não dá para saber se é) da inscrição: segue o fluxo comum. */
 export async function tryChampionshipPay(db: Call, stageId: string, topic: ReceiptTopic | null): Promise<ChampReceipt | null> {
+  if (topic && topic !== 'campeonato') return null;
   let a: Auto | null = null;
   try { a = (await db('conv_svc_receipt_championship_auto', { p_stage: stageId })).data as Auto | null; } catch { return null; }
   if (!a) return null;
   if (a.applied) return { action: 'receipt_championship_paid', messages: paidMessages(a), forward: financeNotice(a) };
   if (a.reason === 'DUPLICATE') return { action: 'receipt_championship_duplicate', messages: ['Esse comprovante já foi usado antes, então não confirmei nada com ele. Se fez um Pix novo, me manda o comprovante dele.'] };
   if (a.reason === 'NO_SIGNUP' && topic === 'campeonato') return holdReply;
+  return signupMismatch(a, topic);
+}
+
+function signupMismatch(a: Auto, topic: ReceiptTopic | null): ChampReceipt | null {
   if (!a.pending?.length || !looksLikeSignup(a, topic)) return null;
   return mismatchReply(a);
 }

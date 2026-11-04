@@ -27,7 +27,7 @@ create function pg_temp.comprovante(p_id uuid, p_amount bigint, p_payee text, p_
   select p_id, p_id, '00000000-0000-0000-0000-00000000d602', soc, '00000000-0000-0000-0000-00000000c602',
     jsonb_build_object('storage_path', 'soc/' || p_id || '.jpg', 'file_name', 'pix.jpg', 'content_type', 'image/jpeg', 'size_bytes', 700,
       'content_sha256', p_hash, 'declared_amount_cents', p_amount, 'declared_paid_on', (now() at time zone 'America/Fortaleza')::date::text,
-      'ocr_status', 'ok', 'ocr', jsonb_build_object('payee', p_payee)) from u;
+      'ocr_status', 'ok', 'ocr', jsonb_build_object('payee', p_payee, 'amount_cents', p_amount, 'paid_on', (now() at time zone 'America/Fortaleza')::date::text, 'confidence', jsonb_build_object('amount', 'high', 'date', 'high'))) from u;
 $$;
 
 -- valor diferente: não baixa

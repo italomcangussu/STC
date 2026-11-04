@@ -50,7 +50,7 @@ export async function deliverForward(f: ReceiptForward, deps: ForwardDeps): Prom
   return ok ? 2 : 1;
 }
 
-type MembershipAuto = { applied?: boolean; month?: string; amount_cents?: number; admin_conversation_id?: string | null; admin_name?: string; sender_name?: string;
+type MembershipAuto = { applied?: boolean; reason?: string; due_cents?: number; month?: string; amount_cents?: number; admin_conversation_id?: string | null; admin_name?: string; sender_name?: string;
   charge_type?: string; description?: string | null };
 const monthBR = (iso?: string) => (iso ? iso.slice(0, 7).split('-').reverse().join('/') : 'do mês');
 /** O que foi pago: a pendência pelo nome dela, ou a mensalidade do mês. */
@@ -58,15 +58,52 @@ const paidCharge = (a: MembershipAuto) => (a.charge_type === 'member_pendency'
   ? `a pendência "${a.description ?? 'em aberto'}"` : `a mensalidade de ${monthBR(a.month)}`);
 
 /** Época da mensalidade: o servidor tenta a baixa (valor = devido, favorecido = clube). Aplicada: resposta ao sócio e aviso ao financeiro. */
-type Call = (name: string, args: Record<string, unknown>) => PromiseLike<{ data: unknown }>;
-export async function tryMembershipAutoPay(db: Call, stageId: string): Promise<{ messages: string[]; action: string; forward?: ReceiptForward } | null> {
+type Call = (name: string, args: Record<string, unknown>) => PromiseLike<{ data: unknown; error?: unknown }>;
+const MEMBERSHIP_UNAVAILABLE = { action: 'receipt_membership_unavailable', messages: ['Recebi o comprovante, mas não consegui concluir a conferência no sistema agora. Ainda não confirmei a baixa dessa mensalidade. O comprovante continua guardado para conferência.'] };
+export type MembershipReceipt = { messages: string[]; action: string; forward?: ReceiptForward; reviewReason?: string };
+export async function tryMembershipAutoPay(db: Call, stageId: string, context?: { month?: string | null; purpose_kind?: string }): Promise<MembershipReceipt | null> {
   let a: MembershipAuto | null = null;
-  try { a = (await db('conv_svc_receipt_membership_auto', { p_stage: stageId })).data as MembershipAuto | null; } catch { return null; }
-  if (!a?.applied) return null;
+  try {
+    const result = await db('conv_svc_receipt_membership_auto', { p_stage: stageId, ...(context ? { p_context: context } : {}) });
+    if (result.error) return MEMBERSHIP_UNAVAILABLE;
+    a = result.data as MembershipAuto | null;
+  } catch { return MEMBERSHIP_UNAVAILABLE; }
+  if (!a?.applied) return membershipReview(a);
   const oQue = paidCharge(a);
   const forward = a.admin_conversation_id ? { admin_conversation_id: a.admin_conversation_id, admin_name: a.admin_name ?? '', sender_name: a.sender_name ?? '',
     kind: 'membership_auto', detail: null,
     text: `${a.admin_name}, para você saber: ${oQue} de ${a.sender_name} (${brl(a.amount_cents)}) chegou pelo WhatsApp e já dei baixa (valor igual ao devido e Pix para o clube).` } : undefined;
   const sua = oQue.replace(/^a /, 'Sua ');
   return { action: 'receipt_membership_paid', forward, messages: [`Recebi! ${sua} (${brl(a.amount_cents)}) está registrada como paga. Obrigado!`] };
+}
+
+function membershipReview(a: MembershipAuto | null) {
+  const replies: Record<string, string> = {
+    AMBIGUOUS: 'Encontrei mais de uma cobrança com esse valor. Qual mês da mensalidade você está pagando? Ainda não dei baixa.',
+    OCR_UNCERTAIN: 'Recebi o comprovante, mas a leitura do valor ou da data ficou incerta. Pode enviar o PDF original ou uma imagem mais nítida? Ainda não dei baixa.',
+    PAYMENT_NOT_COMPLETED: 'O comprovante indica agendamento ou pagamento não concluído. Envie o comprovante após a conclusão do Pix. Ainda não dei baixa.',
+    INVALID_PAYMENT_DATE: 'Não consegui validar a data desse pagamento. Pode enviar o comprovante original? Ainda não dei baixa.',
+    DUPLICATE: 'Esse comprovante ou identificador de transação já foi recebido. Não dei outra baixa. Se fez outro Pix, envie o comprovante novo.',
+    NO_OPEN_CHARGE: 'Não encontrei mensalidade em aberto para essa competência e esse sócio. Pode confirmar de quem é e qual mês foi pago? Ainda não dei baixa.',
+    PAYEE: 'Não consegui confirmar o clube como favorecido nesse comprovante. Pode conferir o destinatário e enviar o comprovante original? Ainda não dei baixa.',
+    AMOUNT_MISMATCH: `O valor do comprovante não corresponde ao total devido${a?.due_cents ? ` (${brl(a.due_cents)})` : ''}. Esse Pix é de qual sócio e mês? Ainda não dei baixa.`,
+    APPROVE_FAILED: MEMBERSHIP_UNAVAILABLE.messages[0],
+    NO_FINANCE_ADMIN: MEMBERSHIP_UNAVAILABLE.messages[0],
+    ACCOUNT: MEMBERSHIP_UNAVAILABLE.messages[0],
+  };
+  const text = a?.reason ? replies[a.reason] : undefined;
+  return text ? { action: 'receipt_membership_review', messages: [text], reviewReason: a?.reason } : null;
+}
+
+/** Finalidade e titular conhecidos: o arquivo já guardado vira pendência de conferência, não um comprovante inexistente. */
+export async function forwardMembershipReview(input: { db: Call; stage: string; message: string; month: string | null; receipt: MembershipReceipt }): Promise<MembershipReceipt> {
+  const reviewable = new Set(['PAYEE', 'OCR_UNCERTAIN', 'INVALID_PAYMENT_DATE']);
+  if (!reviewable.has(input.receipt.reviewReason ?? '')) return input.receipt;
+  const detail = `Mensalidade própria${input.month ? ` de ${monthBR(input.month)}` : ''}; conferir comprovante: ${input.receipt.reviewReason}`;
+  try {
+    const result = await input.db('conv_svc_receipt_escalate', { p_stage: input.stage, p_message: input.message, p_kind: 'membership', p_detail: detail });
+    const forward = result.data as (ReceiptForward & { ok?: boolean }) | null;
+    if (!forward?.ok || !forward.admin_conversation_id) return input.receipt;
+    return { action: 'receipt_escalated', forward, messages: [`Identifiquei que é a sua mensalidade. Guardei o comprovante e encaminhei para ${forward.admin_name}, do financeiro, conferir os dados que a leitura não confirmou. Ainda não dei baixa.`] };
+  } catch { return input.receipt; }
 }

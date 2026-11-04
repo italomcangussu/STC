@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { deliverForward, forwardText, type ReceiptForward } from '../../supabase/functions/_shared/aiAgent/receiptForward';
+import { deliverForward, forwardMembershipReview, forwardText, type ReceiptForward } from '../../supabase/functions/_shared/aiAgent/receiptForward';
 import { handleReceiptIntent } from '../../supabase/functions/_shared/aiAgent/receiptIntent';
 
 const fwd: ReceiptForward = { admin_conversation_id: 'conv-h', admin_name: 'Henrique', sender_name: 'Diego Memória', kind: 'student_card',
@@ -12,7 +12,7 @@ describe('João: repasse do comprovante ao financeiro', () => {
     expect(forwardText({ ...fwd, kind: 'membership', detail: 'mensalidade de outubro' })).toMatch(/"pode dar baixa"/);
   });
   it('manda o texto e depois a própria imagem na conversa do financeiro', async () => {
-    const db = vi.fn(async (name: string) => (name === 'conv_svc_queue_message' ? { data: [{ message_id: 'm', destination: '5588999990000' }], error: null } : { data: null, error: null }));
+    const db = vi.fn(async (name: string, _args: Record<string, unknown>) => (name === 'conv_svc_queue_message' ? { data: [{ message_id: 'm', destination: '5588999990000' }], error: null } : { data: null, error: null }));
     const uaz = vi.fn().mockResolvedValue({ ok: true, body: { id: 'p' } });
     const n = await deliverForward(fwd, { db, uaz, signedUrl: async () => 'https://x/pix.jpg' });
     expect(n).toBe(2);
@@ -33,12 +33,26 @@ describe('João: repasse do comprovante ao financeiro', () => {
 });
 
 describe('João: época da mensalidade', () => {
+  it('caso Thieslley: própria mensalidade com favorecido ilegível vira revisão vinculada ao arquivo', async () => {
+    const db = vi.fn().mockResolvedValue({ data: { ok: true, ...fwd, kind: 'membership' } });
+    const result = await forwardMembershipReview({ db, stage: 'stage-thieslley', message: 'text', month: '2026-11-01',
+      receipt: { action: 'receipt_membership_review', reviewReason: 'PAYEE', messages: ['revisar'] } });
+    expect(db).toHaveBeenCalledWith('conv_svc_receipt_escalate', expect.objectContaining({ p_stage: 'stage-thieslley', p_kind: 'membership', p_message: 'text' }));
+    expect(result.action).toBe('receipt_escalated');
+    expect(result.messages.join(' ')).toContain('Ainda não dei baixa');
+  });
+  it('duplicado não é reapresentado ao financeiro como um novo pagamento', async () => {
+    const db = vi.fn();
+    await forwardMembershipReview({ db, stage: 's', message: 'm', month: null,
+      receipt: { action: 'receipt_membership_review', reviewReason: 'DUPLICATE', messages: ['duplicado'] } });
+    expect(db).not.toHaveBeenCalled();
+  });
   it('comprovante que bate tem baixa: responde ao sócio e avisa o financeiro só por texto', async () => {
     const db = vi.fn(async (name: string) => (name === 'conv_svc_receipt_membership_auto'
       ? { data: { applied: true, month: '2026-11-01', amount_cents: 15000, admin_conversation_id: 'conv-h', admin_name: 'Henrique', sender_name: 'Tiago' } }
       : { data: null }));
     const r = await handleReceiptIntent({ stage: { id: 's', source_message_id: 'img', status: 'awaiting_purpose', amount_cents: '15000' },
-      messageId: 'img', mediaOnly: true, text: '', transcript: [], db, chat: null, model: 'm' });
+      messageId: 'img', mediaOnly: true, text: '', transcript: [{ direction: 'inbound', body: 'minha mensalidade de novembro' }], db, chat: null, model: 'm' });
     expect(r?.messages[0]).toBe('Recebi! Sua mensalidade de 11/2026 (R$ 150,00) está registrada como paga. Obrigado!');
     expect(r?.forward?.text).toBe('Henrique, para você saber: a mensalidade de 11/2026 de Tiago (R$ 150,00) chegou pelo WhatsApp e já dei baixa (valor igual ao devido e Pix para o clube).');
     expect(r?.forward?.media_path).toBeUndefined();

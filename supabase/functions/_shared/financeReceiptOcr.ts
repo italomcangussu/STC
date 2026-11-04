@@ -31,6 +31,15 @@ const CNPJ_RE=/(?<![\w*])[\d*•xX#]{2}\.?[\d*•xX#]{3}\.?[\d*•xX#]{3}(\/)?[\
 const E2E_RE=/\bE\d{8}\d{8}\d{4}[A-Za-z0-9]{11}\b/;
 const ID_LABEL_RE=/(?:autentica[cç][aã]o|id da transa[cç][aã]o|id transa[cç][aã]o|c[oó]digo de transa[cç][aã]o|c[oó]digo da transa[cç][aã]o|protocolo|n[uú]mero da transa[cç][aã]o|nsu)\s*[:-]?\s*([A-Za-z0-9.-]{6,64})/i;
 
+/** Agendamento e operações recusadas podem ter valor, data e favorecido perfeitamente legíveis. */
+function incompletePayment(text: string): string | null {
+  const normalized = strip(text);
+  if (/\b(cancelad[oa]|estornad[oa]|devolvid[oa]|recusad[oa]|nao (?:foi )?(?:realizad[oa]|concluid[oa]|efetivad[oa]))\b/.test(normalized)) return 'failed';
+  if (/\b(agendad[oa]|agendamento)\b/.test(normalized)) return 'scheduled';
+  if (/\b(em processamento|em analise|pendente|aguardando (?:pagamento|confirmacao))\b/.test(normalized)) return 'pending';
+  return null;
+}
+
 /** Linha que é só o rótulo do favorecido ("Recebedor"), sem nome depois. */
 const isPayeeLabelOnly=(line:string)=>{const m=PAYEE_LABEL.exec(line);return Boolean(m)&&!clean(m![1]);};
 
@@ -52,23 +61,28 @@ const receiptLines=(text:string)=>text.replace(/\u00a0/g,' ').split(/\r?\n/).map
 
 /** Sem rótulo de favorecido (Mercado Pago: "Origem e destino"), vale o CNPJ quando o comprovante tem um só, completo. */
 function soleCnpj(lines:string[]):string|null{
+  // O CNPJ único pode ser do pagador; só o bloco combinado sem identificação separada permite essa recuperação.
+  if (lines.some(l => PAYER_LABEL.test(clean(l)) && !/origem e destino/i.test(l))) return null;
   const docs=new Set(lines.filter(l=>/cnpj/i.test(l)).map(l=>CNPJ_RE.exec(l)?.[0].replace(/\D/g,'')).filter(d=>d?.length===14));
   return docs.size===1?[...docs][0]!:null;
 }
 
 /** Exportado só para teste: o texto bruto nunca sai daqui, só os campos estruturados. */
-export function parseReceiptText(text:string):Record<string,unknown>{
-  const lines=receiptLines(text);
+function amountPriority(line: string, prev: string, matched: string): number {
+  const label=`${line} ${/valor|total|pago|transfer|pix/.test(prev)&&!MONEY_BEFORE.test(prev)?prev:''}`;
+  if(/valor (pago|da transfer|do pix|da transa|total|do pagamento|enviado|recebido)/.test(label))return 3;
+  if(/valor|total pago|total/.test(label))return 2;
+  return /r\$/i.test(matched)?1:0;
+}
+
+function receiptAmount(lines: string[]) {
   const amounts:{value:number;priority:number}[]=[];
   lines.forEach((raw,idx)=>{
     const line=strip(raw),prev=idx?strip(lines[idx-1]):'';
     if(NOISE.test(line))return;
     for(const m of moneyIn(raw)){
       const cents=moneyCents(m[1]); if(!cents||cents<=0)continue;
-      const label=`${line} ${/valor|total|pago|transfer|pix/.test(prev)&&!MONEY_BEFORE.test(prev)?prev:''}`;
-      let priority=/r\$/i.test(m[0])?1:0;
-      if(/valor (pago|da transfer|do pix|da transa|total|do pagamento|enviado|recebido)/.test(label))priority=3;
-      else if(/valor|total pago|total/.test(label))priority=2;
+      const priority = amountPriority(line, prev, m[0]);
       amounts.push({value:cents,priority});
     }
   });
@@ -77,6 +91,10 @@ export function parseReceiptText(text:string):Record<string,unknown>{
   const amount=best[0]?.value??null;
   const amountConf:Confidence=amount===null?'none':top>=2&&new Set(best.map(x=>x.value)).size===1?'high':'low';
 
+  return { amount, amountConf };
+}
+
+function receiptDate(lines: string[]) {
   const dates:{value:string;priority:number}[]=[];
   lines.forEach((raw,idx)=>{
     const line=strip(raw),near=`${idx?strip(lines[idx-1]):''} ${line}`;
@@ -97,43 +115,75 @@ export function parseReceiptText(text:string):Record<string,unknown>{
   const paidOn=bestD[0]?.value??null;
   const dateConf:Confidence=paidOn===null?'none':topD>=3&&new Set(bestD.map(x=>x.value)).size===1?'high':'low';
 
+  return { paidOn, dateConf };
+}
+
+function payeeCandidate(lines: string[], index: number): string {
+  const match = PAYEE_LABEL.exec(clean(lines[index]));
+  if (!match) return '';
+  const nearby = lines.slice(index + 1, index + 4).map(clean)
+    .find(line => line && !/^nome$/i.test(line) && !isPayeeLabelOnly(line));
+  return clean((clean(match[1]) || nearby || '').replace(/^nome(?:\s+(?:do|da)\s+\w+)?\s*[:-]?\s+(?=\S)/i, ''));
+}
+
+function validPayee(candidate: string): boolean {
+  return candidate.length >= 3 && candidate.length <= 80 && !NOT_NAME.test(candidate) && /[A-Za-zÀ-ÿ]{3}/.test(candidate);
+}
+
+function receiptPayee(lines: string[]) {
+  for (let i = 0; i < lines.length; i++) {
+    const candidate = payeeCandidate(lines, i);
+    if (validPayee(candidate)) return candidate;
+  }
+  return null;
+}
+
+function documentOnLine(lines: string[], j: number): string | null {
+  const line = clean(lines[j]);
+  const match = CNPJ_RE.exec(line);
+  if (!match || (!match[1] && !/cnpj|chave/i.test(`${lines[j-1] ?? ''} ${line}`))) return null;
+  const doc = match[0].replace(/[^\d*•xX#]/g, '').replace(/[^\d]/g, '*');
+  return doc.replace(/\*/g, '').length >= 4 ? doc : null;
+}
+
+function documentFromBlock(lines: string[], start: number): string | null {
+  for (let j = start; j < Math.min(start + 9, lines.length); j++) {
+    if (j > start && PAYER_LABEL.test(clean(lines[j]))) break;
+    const doc = documentOnLine(lines, j);
+    if (doc) return doc;
+  }
+  return null;
+}
+
+function receiptPayeeDocument(lines: string[]) {
+  for (let i = 0; i < lines.length; i++) {
+    if (!PAYEE_LABEL.test(clean(lines[i]))) continue;
+    const doc = documentFromBlock(lines, i);
+    if (doc) return doc;
+  }
+  return soleCnpj(lines);
+}
+
+function paymentConfidence(confidence: Confidence, status: string | null): Confidence {
+  return status && confidence === 'high' ? 'low' : confidence;
+}
+
+export function parseReceiptText(text:string):Record<string,unknown>{
+  const lines=receiptLines(text);
+  const { amount, amountConf } = receiptAmount(lines);
+  const { paidOn, dateConf } = receiptDate(lines);
   const e2e=E2E_RE.exec(text);
   const labeled=ID_LABEL_RE.exec(text);
   const identifier=e2e?.[0]??labeled?.[1]?.slice(0,64)??null;
   const idConf:Confidence=e2e?'high':labeled?'low':'none';
 
-  let payee:string|null=null;
-  for(let i=0;i<lines.length&&!payee;i++){
-    const m=PAYEE_LABEL.exec(clean(lines[i])); if(!m)continue;
-    let candidate=clean(m[1]);
-    const rotulo=(c:string)=>clean(c.replace(/^nome(?:\s+(?:do|da)\s+\w+)?\s*[:-]?\s+(?=\S)/i,''));
-    if(!candidate){
-      for(let j=i+1;j<Math.min(i+4,lines.length);j++){
-        const next=clean(lines[j]); if(!next||/^nome$/i.test(next)||isPayeeLabelOnly(next))continue; candidate=next; break;
-      }
-    }
-    candidate=rotulo(candidate);
-    if(candidate.length>=3&&candidate.length<=80&&!NOT_NAME.test(candidate)&&/[A-Za-zÀ-ÿ]{3}/.test(candidate))payee=candidate;
-  }
-
-  // CNPJ só do bloco do favorecido (nunca CPF nem dados do pagador); mascarado vira `*`.
-  let payeeDocument:string|null=null;
-  for(let i=0;i<lines.length&&!payeeDocument;i++){
-    if(!PAYEE_LABEL.test(clean(lines[i])))continue;
-    for(let j=i;j<Math.min(i+9,lines.length);j++){
-      const line=clean(lines[j]);
-      if(j>i&&PAYER_LABEL.test(line))break;
-      const m=CNPJ_RE.exec(line);
-      if(!m||(!m[1]&&!/cnpj|chave/i.test(`${lines[j-1]??''} ${line}`)))continue;
-      const doc=m[0].replace(/[^\d*•xX#]/g,'').replace(/[^\d]/g,'*');
-      if(doc.replace(/\*/g,'').length>=4){payeeDocument=doc;break;}
-    }
-  }
-
-  payeeDocument??=soleCnpj(lines);
+  const payee = receiptPayee(lines);
+  const payeeDocument = receiptPayeeDocument(lines);
+  const paymentStatus = incompletePayment(text);
   return {
     amount_cents:amount, paid_on:paidOn, identifier, payee, payee_document:payeeDocument,
-    confidence:{amount:amountConf,date:dateConf,identifier:idConf,payee:payee?'high':'none'},
+    ...(paymentStatus ? { payment_status: paymentStatus } : {}),
+    confidence:{amount:paymentConfidence(amountConf,paymentStatus),date:paymentConfidence(dateConf,paymentStatus),identifier:idConf,payee:payee?'high':'none'},
   };
 }
 
