@@ -1,5 +1,5 @@
 # Funções
-> 572 funções nos schemas conv_private, fin_private, public, sig_private. Corpo completo sob demanda: `select pg_get_functiondef('<schema.nome>(<args>)'::regprocedure)`.
+> 573 funções nos schemas conv_private, fin_private, public, sig_private. Corpo completo sob demanda: `select pg_get_functiondef('<schema.nome>(<args>)'::regprocedure)`.
 
 | Função | Argumentos | Retorno | Ling. | Segurança | anon | Nota |
 |---|---|---|---|---|---|---|
@@ -37,6 +37,7 @@
 | conv_private.ai_admin_memories | `p_session uuid, p_subject text` | `jsonb` | plpgsql | DEFINER | não |  |
 | conv_private.ai_admin_memory_forget_propose | `p_session uuid, p jsonb` | `jsonb` | plpgsql | DEFINER | não |  |
 | conv_private.ai_admin_message_propose | `p_session uuid, p jsonb` | `jsonb` | plpgsql | DEFINER | não |  |
+| conv_private.ai_admin_own_membership_hint | `p_admin uuid, p_amount bigint, p_paid_on date` | `jsonb` | sql | DEFINER | não |  |
 | conv_private.ai_admin_prefs | `p_session uuid` | `jsonb` | plpgsql | DEFINER | não |  |
 | conv_private.ai_admin_read | `p_session uuid, p_domain text, p_args jsonb` | `jsonb` | plpgsql | DEFINER | não |  |
 | conv_private.ai_admin_read_more | `p_session uuid, p_domain text, p_args jsonb` | `jsonb` | plpgsql | DEFINER | não |  |

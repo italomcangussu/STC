@@ -305,3 +305,8 @@ Finalidade exclusiva; titularidade sem coincidência de primeiro nome; contexto 
 - Contexto: `.fabuloso/conhecimento/comprovantes.md` (seção Abatimento) e linha em `arquitetura.md`. Não há CLAUDE.md.
 - Entrega: migration 20261104140904 aplicada; `whatsapp-webhook` v119.
 - Observação: painel ainda não edita `offset_profile_id`.
+
+- 2026-11-04 (Sonnet 5.5, fabuloso): João reconhece o Pix da própria mensalidade do admin sócio pelo valor (cheio ou líquido) e pergunta "é a sua mensalidade de MM/AAAA?"; "sim" ou "é a mensalidade de novembro" dá baixa. Commit e5c6e4f.
+- Contexto: `.fabuloso/conhecimento/comprovantes.md` (seção Comprovante do admin que também é sócio) e linha em `arquitetura.md`. Não há CLAUDE.md.
+- Entrega: migration 20261104180000 aplicada; `whatsapp-webhook` deployado.
+- Observação: mapa do banco só com função alterada; alertas de RLS antigos seguem em `.fabuloso/db/alertas.md`.
