@@ -13,7 +13,9 @@ import { confirmedOwnMembershipMonth, membershipIsForAnother, membershipReferenc
 import { UNCLEAR_AUDIO_REPLY, unheardOnly } from './audio.ts';
 import { cadence } from './cadence.ts';
 import { delegateSilence } from './delegate.ts';
-import { receiptReceivedMessage } from './studentCard.ts';
+import { ownMembershipQuestion, receiptReceivedMessage } from './studentCard.ts';
+import { ownMembershipVerdict } from './receiptPurposeAi.ts';
+import { centsBR } from './adminText.ts';
 import { wantsHuman } from './serverRules.ts';
 import type { Turn } from './turnKit.ts';
 import type { TurnResult } from './turnTypes.ts';
@@ -141,9 +143,9 @@ async function adminOwnMembership(t: Turn): Promise<TurnResult | null> {
   const stage = await stageFor(t);
   if (stage?.status !== 'awaiting_purpose') return null;
   const transcript = receiptEvidence([...((t.ctx.transcript ?? []) as Ctx[]), ...falaAgora], stage);
-  const confirmado = confirmedOwnMembershipMonth(transcript);
-  const reference = confirmado ? { month: confirmado, ambiguous: false } : await ownMembershipReference(t, transcript, stage.source_message_id);
+  const reference = await resolveOwnReference(t, transcript, stage);
   if (!reference) return null;
+  if ('ask' in reference) return t.say([ownMembershipQuestion(reference.ask)], 'receipt_membership_question', () => ({}), { awaiting: true });
   if (reference.ambiguous) return t.say(['Esse comprovante é de quais meses? Ainda não dei baixa.'], 'receipt_membership_review', () => ({}), { awaiting: true });
   const pago = await tryMembershipAutoPay(t.deps.db, stage.id, { month: reference.month, purpose_kind: 'membership' });
   if (!pago) return null;
@@ -151,19 +153,36 @@ async function adminOwnMembership(t: Turn): Promise<TurnResult | null> {
   return deliverAutoReceipt(t, result, stage.id);
 }
 
+type OwnReference = { month: string | null; ambiguous: boolean } | { ask: string } | null;
+
+async function resolveOwnReference(t: Turn, transcript: Ctx[], stage: ReceiptStage): Promise<OwnReference> {
+  const confirmado = confirmedOwnMembershipMonth(transcript);
+  return confirmado ? { month: confirmado, ambiguous: false } : await ownMembershipReference(t, transcript, stage);
+}
+
 /**
- * A mensalidade é dele quando ele disse ("minha mensalidade", o próprio nome) ou quando disse só "é a mensalidade de
- * novembro", sem citar outro sócio, e o valor bate com a mensalidade em aberto dele (Ítalo, 04/11: o modelo pediu
- * confirmação e, no "Confirmo", disse que não tinha registrado nada). Sem isso, null: é comprovante de outro sócio.
+ * A mensalidade é dele quando: ele disse ("minha mensalidade", o próprio nome); ou falou de mensalidade sem citar outro
+ * sócio e o valor bate com a mensalidade em aberto dele; ou, por qualquer palavra, a IA entende que ele confirmou
+ * ("Confirmo", "pode baixar", 👍). Na dúvida, { ask }: o João pergunta, sem afirmar. Comprovante de outro sócio: null.
  */
-async function ownMembershipReference(t: Turn, transcript: Ctx[], messageId: string) {
-  if (receiptTopic(transcript) !== 'mensalidade') return null;
+async function ownMembershipReference(t: Turn, transcript: Ctx[], stage: ReceiptStage): Promise<OwnReference> {
   const nome = receiptSenderName(t);
-  const declarou = talksAboutOwnMembership(transcript, nome);
-  const dica = declarou || membershipIsForAnother(transcript, nome) ? null : await ownMembershipHint(t, messageId);
-  if (!declarou && !dica) return null;
+  const mensalidade = receiptTopic(transcript) === 'mensalidade';
+  if (mensalidade && talksAboutOwnMembership(transcript, nome)) return membershipReference(transcript, receiptToday(t));
+  if (membershipIsForAnother(transcript, nome)) return null;
+  const dica = await ownMembershipHint(t, stage.source_message_id);
+  if (!dica) return null;
+  const month = String(dica.competence_month);
+  if (!mensalidade) return aiOwnReference(t, { transcript, stage, month });
   const reference = membershipReference(transcript, receiptToday(t));
-  return reference.month || reference.ambiguous || !dica ? reference : { month: String(dica.competence_month), ambiguous: false };
+  return reference.month || reference.ambiguous ? reference : { month, ambiguous: false };
+}
+
+/** Sem a palavra "mensalidade": a IA lê a conversa; na dúvida o João pergunta. */
+async function aiOwnReference(t: Turn, c: { transcript: Ctx[]; stage: ReceiptStage; month: string }): Promise<OwnReference> {
+  const ia = await ownMembershipVerdict(t.deps.chat, t.settings.model, { transcript: c.transcript, amount: centsBR(c.stage.amount_cents), month: c.month });
+  if (ia?.verdict === 'own') return { month: ia.month ?? c.month, ambiguous: false };
+  return ia?.verdict === 'unclear' ? { ask: c.month } : null;
 }
 
 /** Mensalidade em aberto do admin que bate com o valor do comprovante (cheio ou com o abatimento); null se nenhuma. */

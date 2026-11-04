@@ -2,6 +2,7 @@
 // OCR nunca define finalidade; "sim" apenas confirma proposta ainda aberta.
 import { type ReceiptForward, tryMembershipAutoPay } from './receiptForward.ts';
 import { HOLD, tryChampionshipPay } from './championshipReceipt.ts';
+import { replyIntent } from './receiptPurposeAi.ts';
 import { membershipIsForAnother, membershipReference, receiptEvidence, receiptTopic } from './receiptContext.ts';
 type Rpc=(name:string,args:Record<string,unknown>)=>PromiseLike<{data:unknown;error?:{message:string}|null}>;
 type Chat=(messages:{role:'system'|'user'|'assistant';content:string}[],config:{model:string;temperature?:number;maxTokens?:number;json?:boolean})=>Promise<{output:string}>;
@@ -54,27 +55,32 @@ async function acceptPurpose(t:Turn):Promise<Response>{
  const s=t.stage;
      const r=await t.db('conv_svc_receipt_confirm',{p_stage:s.id,p_message:t.messageId});
      const result=r.data as {ok?:boolean;status?:string;reason?:string;kind?:string;code?:string}|null;
-     if(!result?.ok)return {action:'receipt_not_confirmed',messages:['Não consegui validar a confirmação dessa proposta. Pode responder "confirmo" à descrição que enviei? Nenhum valor foi baixado.']};
+     if(!result?.ok)return {action:'receipt_not_confirmed',messages:['Não consegui validar a confirmação dessa proposta. Pode me confirmar de novo a descrição que enviei? Nenhum valor foi baixado.']};
      if(result.status==='needs_review')return {action:'receipt_pending_review',messages:['Finalidade confirmada. Separei o comprovante para conferência financeira, pois os dados ou a vinculação ainda precisam de revisão. Não dei baixa em mensalidade nem alterei o saldo do caixa.']};
      if(result.kind==='donation')return {action:'receipt_donation_registered',messages:['Confirmação recebida. Registrei a doação como receita a conferir, separada das mensalidades. O valor só entrará no saldo do caixa após conferência financeira.']};
      return {action:'receipt_registered',messages:['Confirmação recebida. Coloquei o comprovante na fila de conferência da finalidade informada. Ainda não dei baixa na cobrança nem alterei o caixa.']};
 }
 
+// Só a proposta financeira em aberto aceita "sim": uma pergunta nova do João não herda esta confirmação.
+// Confirmação por qualquer palavra ("pode", "fechado", 👍): a IA entende a resposta quando a lista fixa não reconhece.
+async function confirmationReply(t:Turn,clean:string){
+ const lastOutgoing=String(t.transcript.filter(x=>x.direction==='outbound').slice(-1)[0]?.body||'');
+ const proposta=/^Vou classificar o comprovante\b/i.test(lastOutgoing);
+ if(yes.test(clean))return {intent:'yes',proposta};
+ if(no.test(clean))return {intent:'no',proposta};
+ return {intent:proposta?await replyIntent({chat:t.chat,model:t.model},{question:lastOutgoing,reply:clean}):null,proposta};
+}
+
 async function confirmReceipt(t:Turn):Promise<Response>{
  const s=t.stage;
  const clean=t.text.trim();
-   if(no.test(clean)){
+   const {intent,proposta}=await confirmationReply(t,clean);
+   if(intent==='no'){
      const r=await t.db('conv_svc_receipt_revise',{p_stage:s.id,p_message:t.messageId});
      if((r.data as {ok?:boolean}|null)?.ok) return {action:'receipt_purpose_correction',messages:['Certo, não registrei nada. Qual é a finalidade correta desse comprovante?']};
      return {action:'receipt_error',messages:['Não consegui corrigir essa proposta. Pode repetir o que o pagamento representa?']};
    }
-   if(yes.test(clean)){
-     // Um "sim" só vale se a ÚLTIMA fala do João for esta proposta financeira,
-     // não uma nova reserva ou qualquer outra pergunta aberta na conversa.
-     const lastOutgoing=t.transcript.filter(x=>x.direction==='outbound').slice(-1)[0];
-     if(!/^Vou classificar o comprovante\b/i.test(String(lastOutgoing?.body||''))) return null;
-     return acceptPurpose(t);
-   }
+   if(intent==='yes')return proposta?acceptPurpose(t):null;
    if(!/(comprov|pagamento|doa|card|mensal|outro|corrig|troca|na verdade)/i.test(normal(clean)))return null;
    const r=await t.db('conv_svc_receipt_revise',{p_stage:s.id,p_message:t.messageId});
    if((r.data as {ok?:boolean}|null)?.ok)return {action:'receipt_purpose_correction',messages:['Entendi que quer ajustar a finalidade. Não lancei nada. Pode me dizer para que foi esse pagamento?']};
@@ -126,7 +132,7 @@ async function savePurpose(t:Turn,parsed:Purpose):Promise<Response>{
  // Sem responsável financeiro configurado: o fluxo antigo de confirmação e fila de conferência.
  const r=await t.db('conv_svc_receipt_purpose',{p_stage:s.id,p_message:t.messageId,p_kind:kind,p_detail:detail});
  if(!(r.data as {ok?:boolean}|null)?.ok)return {action:'receipt_purpose_not_saved',messages:['Não consegui preparar a classificação. Pode repetir a finalidade? Não fiz nenhum lançamento.']};
- return {action:'receipt_confirmation_requested',messages:['Vou classificar o comprovante de '+amount+' como '+names[kind]+' ('+detail+'). Confirma que essa é a finalidade e autoriza registrar para conferência? Responda "confirmo" ou "não". Ainda não dei baixa nem alterei o caixa.']};
+ return {action:'receipt_confirmation_requested',messages:['Vou classificar o comprovante de '+amount+' como '+names[kind]+' ('+detail+'). Confirma que essa é a finalidade e autoriza registrar para conferência? Ainda não dei baixa nem alterei o caixa.']};
 }
 
 function isMembershipClarification(t:Turn):boolean{

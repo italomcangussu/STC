@@ -127,6 +127,8 @@ function payeeCandidate(lines: string[], index: number): string {
 }
 
 function validPayee(candidate: string): boolean {
+  // "Para" seguido do bloco do pagador (Diego, 04/11): o rótulo "Pagador" virava o favorecido.
+  if (PAYER_LABEL.test(candidate)) return false;
   return candidate.length >= 3 && candidate.length <= 80 && !NOT_NAME.test(candidate) && /[A-Za-zÀ-ÿ]{3}/.test(candidate);
 }
 

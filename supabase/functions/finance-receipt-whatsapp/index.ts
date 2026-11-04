@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { createClient } from 'npm:@supabase/supabase-js@2.89.0';
 import { readReceiptServer } from '../_shared/financeReceiptOcr.ts';
+import { mergeVision, needsSecondRead, visionRead } from '../_shared/receiptVision.ts';
 
 const url=Deno.env.get('SUPABASE_URL');
 const secret=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')||Deno.env.get('SUPABASE_SECRET_KEY');
@@ -10,7 +11,19 @@ const service=createClient(url,secret,{auth:{persistSession:false}});
 const SOURCE_BUCKET='conv-media';
 const RECEIPTS_BUCKET='fin-receipts';
 const MAX=10*1024*1024;
+// Segunda leitura por IA quando o OCR fica em dúvida (mesma chave do João; sem chave, fica só o OCR).
+const aiKey=Deno.env.get('STC_AI_API_KEY');
+const visionModel=Deno.env.get('STC_RECEIPT_VISION_MODEL')||'openai/gpt-6-luna';
 const allowed=new Set(['application/pdf','image/jpeg','image/png','image/webp','image/heic']);
+
+/** OCR em dúvida: a IA lê o mesmo arquivo; o que ela confirmar ou ler sozinha passa a valer (falha não muda nada). */
+async function withSecondRead(ocr:{status:string;stored:Record<string,unknown>|null},bytes:Uint8Array,mime:string){
+  if(!aiKey||!needsSecondRead(ocr.stored))return ocr.stored;
+  const ai=await visionRead(bytes,mime,{apiKey:aiKey,baseUrl:Deno.env.get('STC_AI_BASE_URL'),model:visionModel});
+  const stored=mergeVision(ocr.stored,ai,mime);
+  if(ai&&ocr.status!=='ok'&&(stored?.amount_cents!=null||stored?.paid_on!=null))ocr.status='ok';
+  return stored;
+}
 
 const json=(status:number,body:unknown)=>new Response(JSON.stringify(body),{status,headers:{'content-type':'application/json; charset=utf-8'}});
 
@@ -71,7 +84,7 @@ Deno.serve(async(req)=>{
 
   const ocr=await readReceiptServer(bytes,mime);
   if(ocr.status==='failed') console.error('receipt_ocr_failed',ocr.reason);
-  const stored=ocr.stored as any;
+  const stored=await withSecondRead(ocr,bytes,mime) as any;
   const payload={
     storage_path:storagePath,
     file_name:name,

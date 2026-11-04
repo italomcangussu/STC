@@ -95,7 +95,7 @@ it('sem assunto de mensalidade, a pergunta antiga do Card continua', () => {
 // Caso Ítalo (04/11): mandou só a imagem do Pix de R$ 229 (400 menos 148 + 23 abatidos) e o João perguntou do Card.
 describe('admin manda só a imagem e o valor bate com a mensalidade dele', () => {
   const comDica = { ...lido, amount_cents: 22900, paid_on: '2026-11-04', own_membership: { competence_month: '2026-11-01', total_due_cents: 40000, offset_cents: 17100 } };
-  const pergunta = 'Recebi o comprovante (R$ 229,00, de 04/11/2026, para Sobral Tenis Clube). É a sua mensalidade de 11/2026? Se for, responde "sim" que eu dou baixa. Se for outra coisa, me diz o que é.';
+  const pergunta = 'Recebi o comprovante (R$ 229,00, de 04/11/2026, para Sobral Tenis Clube). É a sua mensalidade de 11/2026? Se for, me confirma que eu dou baixa. Se for outra coisa, me diz o que é.';
 
   it('pergunta se é a mensalidade dele, não do Card', () => {
     const texto = receiptReceivedMessage(comDica, null);
@@ -124,7 +124,7 @@ describe('admin manda só a imagem e o valor bate com a mensalidade dele', () =>
 });
 
 describe('confirmedOwnMembershipMonth', () => {
-  const q = { direction: 'outbound', body: 'Recebi. É a sua mensalidade de 11/2026? Se for, responde "sim".' };
+  const q = { direction: 'outbound', body: 'Recebi. É a sua mensalidade de 11/2026? Se for, me confirma.' };
   it.each([['sim', '2026-11-01'], ['É sim!', '2026-11-01'], ['isso mesmo', '2026-11-01'], ['não, é do Card do Pedro', null], ['sim, mas do Gianmarco', null]])(
     '%s → %s', (body, mes) => expect(confirmedOwnMembershipMonth([q, { direction: 'inbound', body }])).toBe(mes));
 });
@@ -157,6 +157,40 @@ describe('admin diz só "é a mensalidade de novembro"', () => {
 
   it('valor não bate com a mensalidade dele: não dá baixa', async () => {
     const { t, calls } = turno(conversa, { soMidia: false, buffered: 'É a mensalidade de novembro' });
+    await beforeModel(t);
+    expect(calls.map(c => c.name)).not.toContain('conv_svc_receipt_membership_auto');
+  });
+});
+
+// Sem palavra exata: a IA lê o sentido da conversa; na dúvida o João pergunta, sem afirmar.
+describe('finalidade do comprovante do admin pelo sentido da conversa', () => {
+  const comDica = { ...lido, amount_cents: 22900, own_membership: { competence_month: '2026-11-01' } };
+  const conversa = [{ id: 'M1', direction: 'inbound', kind: 'image', body: '' },
+    { direction: 'outbound', kind: 'text', body: 'Recebi o comprovante (R$ 229,00).' }];
+  const comIa = (buffered: string, verdict: string) => {
+    const r = turno(conversa, { soMidia: false, buffered });
+    const deps = (r.t as { deps: { db: (n: string, a?: Record<string, unknown>) => Promise<unknown>; chat: unknown } }).deps;
+    const original = deps.db;
+    deps.db = (n, a) => n === 'conv_svc_ai_admin_receipt' ? Promise.resolve({ data: comDica, error: null }) : original(n, a);
+    deps.chat = async () => ({ output: JSON.stringify({ verdict, month: null }) });
+    return r;
+  };
+
+  it('"pode baixar" (sem a palavra mensalidade): a IA entende e dá baixa', async () => {
+    const { t, calls } = comIa('pode baixar, é meu', 'own');
+    expect((await beforeModel(t) as { action?: string } | null)?.action).toBe('receipt_membership_paid');
+    expect(calls.find(c => c.name === 'conv_svc_receipt_membership_auto')?.args).toMatchObject({ p_context: { month: '2026-11-01' } });
+  });
+
+  it('na dúvida pergunta, sem afirmar e sem dar baixa', async () => {
+    const { t, falas, calls } = comIa('é aquele lá', 'unclear');
+    expect((await beforeModel(t) as { action?: string }).action).toBe('receipt_membership_question');
+    expect(falas.join(' ')).toContain('É a sua mensalidade de 11/2026?');
+    expect(calls.map(c => c.name)).not.toContain('conv_svc_receipt_membership_auto');
+  });
+
+  it('outro assunto: não pergunta da mensalidade', async () => {
+    const { t, calls } = comIa('quantas reservas tem hoje?', 'unrelated');
     await beforeModel(t);
     expect(calls.map(c => c.name)).not.toContain('conv_svc_receipt_membership_auto');
   });

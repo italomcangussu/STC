@@ -33,7 +33,8 @@ function receiptFacts(r: Ctx): string {
 }
 
 /** Resposta ao comprovante recebido (imagem/PDF sem texto) de um administrador no privado. */
-export function receiptReceivedMessage(r: Ctx | null | undefined, topic?: string | null): string {
+/** Comprovante que não dá para resumir: não achado, já usado, repetido ou ilegível. */
+function receiptBlocker(r: Ctx | null | undefined): string | null {
   if (!r || r.found !== true) {
     return 'Recebi o arquivo e estou conferindo. Me diga o nome do aluno (e se for outra coisa, o que é) que eu monto o resumo para você confirmar.';
   }
@@ -42,19 +43,25 @@ export function receiptReceivedMessage(r: Ctx | null | undefined, topic?: string
   if (r.ocr_status !== 'ok') {
     return 'Recebi o comprovante, mas não consegui ler os dados. Me diga o aluno, o valor e a data que eu monto o resumo.';
   }
+  return null;
+}
+
+export function receiptReceivedMessage(r: Ctx | null | undefined, topic?: string | null): string {
+  const bloqueio = receiptBlocker(r);
+  if (bloqueio || !r) return bloqueio ?? '';
   const dados = receiptFacts(r);
   const anexo = r.attached_entry as Ctx | undefined;
   if (anexo) return `Recebi o comprovante (${dados}) e anexei à despesa "${anexo.description}" de ${dateBR(anexo.paid_on)}, que estava sem comprovante. Se era de outra coisa, me avisa.`;
   // Pago a outra pessoa: costuma ser despesa do clube que a diretoria pagou, não engano.
   if (r.payee_ok === false) return `Recebi o comprovante (${dados}). Foi uma despesa do clube? Me diz o que é que eu monto o resumo.`;
   const propria = r.own_membership as Ctx | undefined;
-  if (propria && (!topic || topic === 'mensalidade')) return `Recebi o comprovante (${dados}). ${ownMembershipQuestion(propria)}`;
+  if (propria && (!topic || topic === 'mensalidade')) return `Recebi o comprovante (${dados}). ${ownMembershipQuestion(propria.competence_month)}`;
   return `Recebi o comprovante${dados ? ` (${dados})` : ''}. ${whatIsItFor(topic)}`;
 }
 
 /** O valor bate com a mensalidade em aberto do próprio admin: pergunta, nunca dá baixa sem ele confirmar. */
-const ownMembershipQuestion = (m: Ctx) =>
-  `${OWN_MEMBERSHIP_QUESTION} ${monthBR(m.competence_month)}? Se for, responde "sim" que eu dou baixa. Se for outra coisa, me diz o que é.`;
+export const ownMembershipQuestion = (month: unknown) =>
+  `${OWN_MEMBERSHIP_QUESTION} ${monthBR(month)}? Se for, me confirma que eu dou baixa. Se for outra coisa, me diz o que é.`;
 
 /** A conversa já disse que é mensalidade e a baixa automática não bateu: pergunta de quem, nunca do Card. */
 const whatIsItFor = (topic?: string | null) => (topic === 'mensalidade'
