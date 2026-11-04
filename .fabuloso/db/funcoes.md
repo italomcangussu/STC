@@ -1,5 +1,5 @@
 # Funções
-> 573 funções nos schemas conv_private, fin_private, public, sig_private. Corpo completo sob demanda: `select pg_get_functiondef('<schema.nome>(<args>)'::regprocedure)`.
+> 574 funções nos schemas conv_private, fin_private, public, sig_private. Corpo completo sob demanda: `select pg_get_functiondef('<schema.nome>(<args>)'::regprocedure)`.
 
 | Função | Argumentos | Retorno | Ling. | Segurança | anon | Nota |
 |---|---|---|---|---|---|---|
@@ -374,6 +374,7 @@
 | public.conv_svc_ai_is_latest | `p_message uuid` | `boolean` | sql | DEFINER | não |  |
 | public.conv_svc_ai_joao_pack | `p_session uuid` | `jsonb` | sql | DEFINER | não |  |
 | public.conv_svc_ai_memory_candidate | `p jsonb` | `uuid` | plpgsql | DEFINER | não |  |
+| public.conv_svc_ai_my_membership | `p_session uuid` | `jsonb` | sql | DEFINER | não |  |
 | public.conv_svc_ai_propose | `p_session uuid, p jsonb` | `jsonb` | sql | DEFINER | não |  |
 | public.conv_svc_ai_requester_title | `p_session uuid` | `text` | sql | DEFINER | não |  |
 | public.conv_svc_ai_resolve_mentions | `p_items jsonb` | `jsonb` | sql | DEFINER | não |  |

@@ -315,3 +315,8 @@ Finalidade exclusiva; titularidade sem coincidência de primeiro nome; contexto 
 - Contexto: `.fabuloso/conhecimento/comprovantes.md` (seção Segunda leitura) e fluxo em `arquitetura.md`. Não há CLAUDE.md.
 - Entrega: sem migration; `whatsapp-webhook` e `finance-receipt-whatsapp` deployadas.
 - Observação: intents b630dce4 e 55540027 do Diego seguem `awaiting_purpose`, não reprocessados.
+
+- 2026-11-04 (Sonnet 5.5, fabuloso): João responde valor e vencimento da mensalidade de quem fala no privado (antes caía em "Ainda não registrei nada"). Commit a750583.
+- Contexto: `.fabuloso/conhecimento/comprovantes.md` (seção Mensalidade de quem fala) e fluxo em `arquitetura.md`. Não há CLAUDE.md.
+- Entrega: migration 20261104200000 aplicada; `whatsapp-webhook` deployada.
+- Observação: migration 20261104210000 (outra sessão) consta pendente no remoto segundo o mapa; alertas de RLS antigos seguem em `.fabuloso/db/alertas.md`.
