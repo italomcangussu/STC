@@ -117,6 +117,13 @@ function purposeKind(t:Turn,parsed:Purpose):string{
  return membershipIsForAnother(transcript,t.ownName??'')?'other':kind;
 }
 
+// Reenvio de um Pix que já pagou outra coisa (caso Marcelo, 03/11): diz onde foi usado e pede o comprovante novo.
+export function alreadyUsedMessage(amount:string,usedFor?:string,usedOn?:string):string{
+ const day=usedOn&&/^\d{4}-\d{2}-\d{2}$/.test(usedOn)?' em '+usedOn.slice(8,10)+'/'+usedOn.slice(5,7):'';
+ const what=usedFor?.trim()?' ('+usedFor.trim()+')':'';
+ return 'Esse comprovante ('+amount+') já tinha sido usado'+day+what+', então não registrei de novo. Se você fez outro Pix, me manda o comprovante dele.';
+}
+
 async function savePurpose(t:Turn,parsed:Purpose):Promise<Response>{
  const s=t.stage;
  const amount=br(s.amount_cents);
@@ -127,7 +134,8 @@ async function savePurpose(t:Turn,parsed:Purpose):Promise<Response>{
  if(parsed.action!=='purpose'||!valid.has(kind)||detail.length<3)return {action:'receipt_purpose_unclear',messages:['Para não classificar errado, me diz: esse comprovante é referente a qual pagamento? Não registrei nada.']};
  // Com a finalidade dita, o comprovante vai ao financeiro, que decide; quem não é administrador não gera pagamento.
  const esc=await t.db('conv_svc_receipt_escalate',{p_stage:s.id,p_message:t.messageId,p_kind:kind,p_detail:detail});
- const fwd=esc.data as (ReceiptForward&{ok?:boolean})|null;
+ const fwd=esc.data as (ReceiptForward&{ok?:boolean;code?:string;used_for?:string;used_on?:string})|null;
+ if(fwd?.code==='DUPLICATE')return {action:'receipt_already_used',messages:[alreadyUsedMessage(amount,fwd.used_for,fwd.used_on)]};
  if(fwd?.ok&&fwd.admin_conversation_id)return {action:'receipt_escalated',forward:fwd,messages:['Obrigado! Passei o comprovante ('+amount+') para '+fwd.admin_name+', do financeiro, conferir: '+detail+'. Se precisar de mais alguma coisa, eu te aviso por aqui.']};
  // Sem responsável financeiro configurado: o fluxo antigo de confirmação e fila de conferência.
  const r=await t.db('conv_svc_receipt_purpose',{p_stage:s.id,p_message:t.messageId,p_kind:kind,p_detail:detail});

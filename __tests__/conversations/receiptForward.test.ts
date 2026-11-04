@@ -30,6 +30,17 @@ describe('João: repasse do comprovante ao financeiro', () => {
     expect(r?.messages[0]).toBe('Obrigado! Passei o comprovante (R$ 300,00) para Henrique, do financeiro, conferir: Card Mensal de Matheus e José. Se precisar de mais alguma coisa, eu te aviso por aqui.');
     expect(db).not.toHaveBeenCalledWith('conv_svc_receipt_purpose', expect.anything());
   });
+  it('caso Marcelo: Pix da inscrição reenviado como mensalidade não vira pendência, o João diz onde foi usado', async () => {
+    const db = vi.fn(async (name: string) => (name === 'conv_svc_receipt_escalate'
+      ? { data: { ok: false, code: 'DUPLICATE', used_for: 'Inscrição Serra e Sertão 2026: Marcelo Sampieri', used_on: '2026-10-28' } }
+      : { data: { ok: true } }));
+    const chat = vi.fn().mockResolvedValue({ output: JSON.stringify({ action: 'purpose', purpose_kind: 'membership', purpose_detail: 'mensalidade' }) });
+    const r = await handleReceiptIntent({ stage: { id: 's', source_message_id: 'img', status: 'awaiting_purpose', amount_cents: '13000' },
+      messageId: 'txt', mediaOnly: false, text: 'mensalidade', transcript: [], db, chat, model: 'm' });
+    expect(r?.action).toBe('receipt_already_used');
+    expect(r?.messages[0]).toBe('Esse comprovante (R$ 130,00) já tinha sido usado em 28/10 (Inscrição Serra e Sertão 2026: Marcelo Sampieri), então não registrei de novo. Se você fez outro Pix, me manda o comprovante dele.');
+    expect(db).not.toHaveBeenCalledWith('conv_svc_receipt_purpose', expect.anything());
+  });
 });
 
 describe('João: época da mensalidade', () => {

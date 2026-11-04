@@ -21,7 +21,7 @@ import type { Turn } from './turnKit.ts';
 import type { TurnResult } from './turnTypes.ts';
 
 /** Avisos de algo que o servidor já fez com o comprovante: saem mesmo se a pessoa escreveu de novo no meio. */
-const DONE = new Set(['receipt_championship_paid', 'receipt_membership_paid', 'receipt_escalated', 'receipt_registered', 'receipt_donation_registered', 'receipt_pending_review']);
+const DONE = new Set(['receipt_championship_paid', 'receipt_membership_paid', 'receipt_escalated', 'receipt_already_used', 'receipt_registered', 'receipt_donation_registered', 'receipt_pending_review']);
 
 const onlyKinds = (t: Turn, kinds: string[]) => t.pendentes.every((m) => kinds.includes(String(m.kind)));
 const receiptAttachment = (t: Turn) => t.pendentes.filter(m => m.kind === 'image' || m.kind === 'document').slice(-1)[0];
