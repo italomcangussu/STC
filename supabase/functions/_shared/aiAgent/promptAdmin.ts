@@ -104,6 +104,22 @@ function clubBalancesText(ctx: Ctx): string {
   return `\n\nSALDO DAS CONTAS DO CLUBE (caixa, banco etc.; "saldo do clube" = total):\n${linhas}\nTOTAL: ${moneyBR(Number(b.total_cents) / 100)}`;
 }
 
+const MONTH_BR = (iso: unknown) => String(iso ?? '').replace(/^(\d{4})-(\d{2}).*/, '$2/$1');
+
+/** Mensalidade de quem fala, no privado: em aberto (com o valor a pagar) e a última paga. */
+export function myMembershipText(ctx: Ctx): string {
+  const rows = ctx.is_group ? [] : asRows(ctx.my_membership);
+  if (!rows.length) return '';
+  const linhas = rows.map((m) => {
+    if (m.status === 'paid') return `- ${MONTH_BR(m.competence_month)}: PAGA`;
+    const abate = Number(m.offset_cents) > 0 ? ` (já com o abatimento de ${moneyBR(Number(m.offset_cents) / 100)})` : '';
+    return `- ${MONTH_BR(m.competence_month)}: EM ABERTO | vence ${brDateFull(m.due_date)} | valor a pagar ${moneyBR(Number(m.to_pay_cents) / 100)}${abate}`;
+  }).join('\n');
+  return `\n\nMENSALIDADE DE QUEM FALA (use para responder valor, vencimento e se já pagou):\n${linhas}`;
+}
+
+const asRows = (v: unknown): Ctx[] => (Array.isArray(v) ? v as Ctx[] : []);
+
 /** Professor (ou o assessor dele) no privado vê só os alunos DELE. */
 function professorStudents(students: Ctx[], requester: Ctx | undefined): Ctx[] {
   const nome = fold(String(requester?.name ?? '').trim());
@@ -193,5 +209,5 @@ export function financialContextText(ctx: Ctx, buffered = ''): string {
       }).join('\n')
     : '(nenhuma pendência de sócio relevante encontrada)';
 
-  return `ALUNOS/CARDS:\n${studentText}\n\nDAY CARDS DE CONVIDADOS:\n${dayText}\n\nPENDÊNCIAS DE SÓCIO:\n${pendencyText}${admin ? clubBalancesText(ctx) : ''}\n\nPIX DO CLUBE: ${fin.pix_key ?? '(não confirmado)'}\n\nAtualizado em: ${fin.as_of ?? '(agora)'}`;
+  return `ALUNOS/CARDS:\n${studentText}\n\nDAY CARDS DE CONVIDADOS:\n${dayText}\n\nPENDÊNCIAS DE SÓCIO:\n${pendencyText}${myMembershipText(ctx)}${admin ? clubBalancesText(ctx) : ''}\n\nPIX DO CLUBE: ${fin.pix_key ?? '(não confirmado)'}\n\nAtualizado em: ${fin.as_of ?? '(agora)'}`;
 }

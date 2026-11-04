@@ -74,6 +74,8 @@ export async function loadTurnContext(ctx: Ctx, deps: TurnDeps, where: Where): P
   ctx.club_roster = await read(db, 'conv_svc_ai_club_roster', {}, asArray, []);
   ctx.financial_context = await read(db, 'conv_svc_ai_financial_context', {}, (d) => asObject(d) ?? EMPTY_FINANCE(), EMPTY_FINANCE());
   await adminReads(ctx, db);
+  // Mensalidade de quem fala (só no privado): "Valor?" depois de "Qual o pix da mensalidade?" (Bruno, 04/11).
+  ctx.my_membership = where.isGroup ? [] : await read(db, 'conv_svc_ai_my_membership', { p_session: where.session }, asArray, []);
   if (where.isGroup) await groupContext(ctx, deps, where);
   await joaoPack(ctx, db, where.session);
   // Campeonato com inscrição pelo João: informações, vagas e as inscrições de quem fala (tudo, para o administrador).
