@@ -84,6 +84,8 @@ export async function newDb(): Promise<PGlite> {
     // Confirmação firme do comprovante; recado a quem conversa com o João e comprovantes do WhatsApp para o administrador.
     '20261028090000_joao_confirmacao_nao_se_perde.sql',
     '20261028100000_joao_recado_contato_e_comprovantes_whatsapp.sql',
+    // Automações de pendência passam na validação (voltam a ser ativadas pelo painel).
+    '20261106120000_automacao_estagios_pendencia_validos.sql',
   ];
   for (const f of files) {
     try {

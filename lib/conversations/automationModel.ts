@@ -81,6 +81,17 @@ export const FINANCE_STAGES: { id: string; label: string; help: string; defaultD
   { id: 'in_review', label: 'Comprovante em análise', help: 'Cobranças com comprovante enviado aguardando conferência.', defaultDays: 1 },
 ];
 
+/** Momentos de pendência de sócio: criados pelo sistema, não aparecem no construtor, mas são válidos. */
+export const PENDENCY_STAGES: { id: string; label: string }[] = [
+  { id: 'member_pendency', label: 'Pendência de sócio em aberto' },
+  { id: 'member_pendency_paid', label: 'Pagamento de pendência confirmado' },
+  { id: 'member_pendency_receipt_review', label: 'Comprovante de pendência em análise' },
+];
+
+export const pendencyStage = (stage: unknown) => PENDENCY_STAGES.find((s) => s.id === stage);
+
+const isFinanceStage = (stage: unknown) => FINANCE_STAGES.some((s) => s.id === stage) || Boolean(pendencyStage(stage));
+
 export const WEEKDAYS = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
 
 /** Códigos de pendência devolvidos por `automation_problems` → frase. */
@@ -263,7 +274,7 @@ export function draftProblems(d: AutomationDraft): string[] {
   if (!d.message_body.trim()) out.push('Escreva a mensagem.');
   for (const v of unknownVars(d.source, d.message_body)) out.push(`A variável {{${v}}} não existe para este tipo de automação.`);
   if (!TRIGGERS_BY_SOURCE[d.source].includes(d.trigger_type)) out.push('Esta origem não aceita este tipo de disparo.');
-  if (d.source === 'finance_charge' && !FINANCE_STAGES.some((s) => s.id === d.definition.stage)) out.push('Escolha o momento da mensalidade.');
+  if (d.source === 'finance_charge' && !isFinanceStage(d.definition.stage)) out.push('Escolha o momento da mensalidade.');
   if ((d.source === 'championship_notice' || (d.source === 'audience' && d.definition.audience === 'championship_participants')) && !d.definition.championship_id) {
     out.push('Escolha o campeonato.');
   }

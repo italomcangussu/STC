@@ -62,6 +62,19 @@ describe('regra de automação: o que falta para ativar', () => {
     expect(await rpcError(w.db, U.admin, `public.conv_save_automation('${key()}', '${ok.id}', ${j({ source: 'card_mensal' })})`)).toMatch(/AUTOMATION_KIND_FIXED/);
   }, 60000);
 
+  it('automações de pendência são válidas: pausadas, voltam a ser ativadas pelo painel', async () => {
+    const w = await world();
+    const stages = ['member_pendency', 'member_pendency_paid', 'member_pendency_receipt_review'];
+    for (const stage of stages) {
+      const a = await save(w, draft({ name: `Pendência ${stage}`, trigger_type: stage === 'member_pendency' ? 'conditional' : 'manual',
+        definition: { stage }, message_body: 'Olá, {{nome}}! Há uma pendência em aberto.' }));
+      expect(a.problems, stage).not.toContain('ESTAGIO_INVALIDO');
+      await status(w, a.id, 'active');
+      await status(w, a.id, 'paused');
+      await status(w, a.id, 'active');
+    }
+  }, 60000);
+
   it('editar uma regra ativa cria versão nova; a versão antiga fica intacta e imutável', async () => {
     const w = await world();
     const a = await save(w, draft());

@@ -10,7 +10,7 @@ import {
   type Automation, type AutomationPreview, type AutomationRecipient, type AutomationRun, type AutomationSettings, type ChampionshipOption,
 } from '../../lib/conversations/api';
 import {
-  AUDIENCES, EXAMPLE_VALUES, FINANCE_STAGES, SOURCE_LABEL, STATUS_LABEL, TEMPLATES, TRIGGERS_BY_SOURCE, TRIGGER_LABEL, VARS_BY_SOURCE, VAR_HELP, WEEKDAYS,
+  AUDIENCES, EXAMPLE_VALUES, FINANCE_STAGES, pendencyStage, SOURCE_LABEL, STATUS_LABEL, TEMPLATES, TRIGGERS_BY_SOURCE, TRIGGER_LABEL, VARS_BY_SOURCE, VAR_HELP, WEEKDAYS,
   describeProblem, describeReason, describeSchedule, draftProblems, renderExample, templateById,
   type AutomationDraft,
 } from '../../lib/conversations/automationModel';
@@ -267,7 +267,10 @@ function EditorSheet({ initial, onClose, onSaved }: { initial: { id: string | nu
         </Field>
       </div>
 
-      {draft.source === 'finance_charge' && (
+      {draft.source === 'finance_charge' && pendencyStage(draft.definition.stage) && (
+        <p className="text-sm text-stone-600">Momento: {pendencyStage(draft.definition.stage)?.label} (definido pelo sistema).</p>
+      )}
+      {draft.source === 'finance_charge' && !pendencyStage(draft.definition.stage) && (
         <div className="grid gap-3 sm:grid-cols-3">
           <Field label="Momento">
             <select className={fieldCls} value={String(draft.definition.stage ?? '')} aria-label="Momento da mensalidade"

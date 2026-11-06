@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
-  AUDIENCES, FINANCE_STAGES, PROBLEM_LABEL, REASON_LABEL, TEMPLATES, TRIGGERS_BY_SOURCE, VARS_BY_SOURCE,
+  AUDIENCES, FINANCE_STAGES, PENDENCY_STAGES, PROBLEM_LABEL, REASON_LABEL, TEMPLATES, TRIGGERS_BY_SOURCE, VARS_BY_SOURCE,
   describeProblem, describeReason, describeSchedule, draftProblems, renderExample, templateVars, unknownVars, EXAMPLE_VALUES,
   type AutomationDraft,
 } from '@/lib/conversations/automationModel';
@@ -59,6 +59,8 @@ describe('modelo de automações × migration', () => {
   it('os públicos e estágios do construtor são os que o banco aceita', () => {
     for (const a of AUDIENCES) expect(SQL).toContain(`'${a.id}'`);
     for (const s of FINANCE_STAGES) expect(SQL).toContain(`'${s.id}'`);
+    const VALIDACAO = readFileSync(resolve(__dirname, '../../../supabase/migrations/20261106120000_automacao_estagios_pendencia_validos.sql'), 'utf8');
+    for (const s of PENDENCY_STAGES) expect(VALIDACAO).toContain(`'${s.id}'`);
   });
 });
 
@@ -93,6 +95,11 @@ describe('modelos prontos', () => {
 
 describe('draftProblems', () => {
   const base = (): AutomationDraft => ({ ...TEMPLATES[0].draft, definition: { ...TEMPLATES[0].draft.definition }, schedule: { ...TEMPLATES[0].draft.schedule } });
+
+  it('momentos de pendência criados pelo sistema são válidos; momento desconhecido não', () => {
+    for (const s of PENDENCY_STAGES) expect(draftProblems({ ...base(), definition: { stage: s.id } })).not.toContain('Escolha o momento da mensalidade.');
+    expect(draftProblems({ ...base(), definition: { stage: 'qualquer' } })).toContain('Escolha o momento da mensalidade.');
+  });
 
   it('nome curto, mensagem vazia e variável inexistente', () => {
     expect(draftProblems({ ...base(), name: 'ab' })).toContain('Dê um nome com pelo menos 3 letras.');
