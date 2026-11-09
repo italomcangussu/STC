@@ -111,12 +111,30 @@ async function deliverAutoReceipt(t: Turn, pago: ChampReceipt, stageId: string):
 /** Administrador manda o comprovante: o servidor já leu (valor, data, favorecido); o João responde com o que leu, sem equipe. */
 async function adminReceipt(t: Turn): Promise<TurnResult | null> {
   // Texto depois do comprovante: "referente à mensalidade de novembro de Hermeson Veras".
-  if (!t.soMidia) return adminOwnMembership(t);
+  if (!t.soMidia) return (await adminOwnMembership(t)) ?? captionedAdminReceipt(t);
   if (t.isGroup || !isAdminAssistant(t.ctx) || !t.ultima?.id || !onlyKinds(t, ['image', 'document'])) return null;
   const lido = await readAdminReceipt(t, t.ultima.id as string);
   const propria = isFreshReceipt(lido) ? await adminOwnMembership(t) : null;
   if (propria) return propria;
   return t.say([receiptReceivedMessage(lido, receiptTopic((t.ctx.transcript ?? []) as Ctx[]))], 'admin_receipt_received', () => ({ found: lido?.found === true }), { awaiting: true, action: 'admin_receipt_received' });
+}
+
+/**
+ * "Segue o comprovante do aluguel" + PDF no mesmo turno (Henrique, 05 a 08/11): o modelo responde, mas sem a leitura perguntava
+ * "qual foi o valor?" de um comprovante já lido. A leitura vai para o contexto e o modelo já propõe com o valor lido.
+ * Comprovante já usado ou repetido: o servidor avisa, como no comprovante sem texto.
+ */
+async function captionedAdminReceipt(t: Turn): Promise<TurnResult | null> {
+  if (t.isGroup || !isAdminAssistant(t.ctx)) return null;
+  const midia = [...t.pendentes].reverse().find((m) => m.kind === 'image' || m.kind === 'document');
+  if (!midia?.id) return null;
+  const lido = await readAdminReceipt(t, midia.id as string);
+  if (!lido?.found) return null;
+  if (lido.status === 'approved' || lido.duplicate === true) {
+    return t.say([receiptReceivedMessage(lido)], 'admin_receipt_received', () => ({ found: true }), { awaiting: true, action: 'admin_receipt_received' });
+  }
+  t.ctx.admin_receipt_read = lido;
+  return null;
 }
 
 /** A leitura do comprovante chega alguns segundos depois da mídia: tenta por até ~10 s. */

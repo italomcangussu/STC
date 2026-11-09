@@ -107,6 +107,22 @@ function clubBalancesText(ctx: Ctx): string {
 const MONTH_BR = (iso: unknown) => String(iso ?? '').replace(/^(\d{4})-(\d{2}).*/, '$2/$1');
 
 /** Mensalidade de quem fala, no privado: em aberto (com o valor a pagar) e a última paga. */
+/**
+ * Comprovante que o administrador mandou neste turno com texto ("segue o comprovante do aluguel"), já lido pelo servidor.
+ * Com isso o modelo propõe com o valor lido em vez de perguntar (Henrique, 05 a 08/11).
+ */
+export function receiptJustReadText(ctx: Ctx): string {
+  const r = ctx.admin_receipt_read as Ctx | undefined;
+  if (!r) return '';
+  const reais = r.amount_cents != null ? (Number(r.amount_cents) / 100).toFixed(2) : null;
+  const linhas = [
+    reais ? `valor ${reais} (amount = ${reais})` : 'valor não lido (aí sim pergunte o valor)',
+    r.paid_on ? `pago em ${r.paid_on} (paid_on)` : null,
+    r.payee ? `para ${r.payee}` : null,
+  ].filter(Boolean).join(', ');
+  return `\n\nCOMPROVANTE QUE ELE MANDOU AGORA (lido pelo SISTEMA, fonte de verdade): ${linhas}. Se o texto dele diz do que é (despesa, receita, patrocínio…), use esse valor e essa data e monte a ação com ready: true; NUNCA pergunte o valor nem diga que não apareceu. Valor diferente do que ele disser: vale o que ele disser.`;
+}
+
 export function myMembershipText(ctx: Ctx): string {
   const rows = ctx.is_group ? [] : asRows(ctx.my_membership);
   if (!rows.length) return '';
@@ -209,5 +225,5 @@ export function financialContextText(ctx: Ctx, buffered = ''): string {
       }).join('\n')
     : '(nenhuma pendência de sócio relevante encontrada)';
 
-  return `ALUNOS/CARDS:\n${studentText}\n\nDAY CARDS DE CONVIDADOS:\n${dayText}\n\nPENDÊNCIAS DE SÓCIO:\n${pendencyText}${myMembershipText(ctx)}${admin ? clubBalancesText(ctx) : ''}\n\nPIX DO CLUBE: ${fin.pix_key ?? '(não confirmado)'}\n\nAtualizado em: ${fin.as_of ?? '(agora)'}`;
+  return `ALUNOS/CARDS:\n${studentText}\n\nDAY CARDS DE CONVIDADOS:\n${dayText}\n\nPENDÊNCIAS DE SÓCIO:\n${pendencyText}${myMembershipText(ctx)}${admin ? clubBalancesText(ctx) + receiptJustReadText(ctx) : ''}\n\nPIX DO CLUBE: ${fin.pix_key ?? '(não confirmado)'}\n\nAtualizado em: ${fin.as_of ?? '(agora)'}`;
 }
