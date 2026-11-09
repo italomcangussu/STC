@@ -52,6 +52,9 @@ const MAX_DECISIONS = 8;
 const MAX_SUMMARY = 480;
 const REPROPOSE = 'reapresentar a proposta e pedir nova confirmação';
 const RESUME_LATER = 'retomar quando a pessoa voltar ao assunto';
+/** Pendência de admin parada além disso some do prompt (o painel resolve muita coisa por fora). */
+const ADMIN_STALE_DAYS = 3;
+const DAY_MS = 86_400_000;
 
 export const isOpenTopic = (t: TopicSnapshot) => OPEN.has(t.status);
 
@@ -124,7 +127,9 @@ export type RestoreInput = { durable?: unknown; openProposalId?: string | null; 
  * Junta o que a sessão sabe com o que o banco guarda (por assunto, o mais novo vence; empate fica com o banco,
  * que tem a referência da proposta) e normaliza:
  * - aguardando confirmação sem a proposta aberta NESTA sessão → suspenso, para reapresentar (contexto volta, autorização não);
- * - assunto de agenda cuja data já passou → arquivado (regra explícita: não há o que reservar no passado).
+ * - assunto de agenda cuja data já passou → arquivado (regra explícita: não há o que reservar no passado);
+ * - pendência de admin parada há mais de 3 dias → arquivada. Caso do Hermeson: cobranças de 28/10 resolvidas no
+ *   painel voltavam "suspensas" em toda conversa até 09/11 e viravam "Falta no painel…" em assunto novo.
  */
 export function restoreTopics<T extends TopicMemory>(memory: T, input: RestoreInput): T {
   const merged = new Map<string, TopicSnapshot>();
@@ -148,14 +153,19 @@ export function restoreTopics<T extends TopicMemory>(memory: T, input: RestoreIn
   };
 }
 
-function normalize(t: TopicSnapshot, input: RestoreInput): TopicSnapshot {
+function normalize(raw: TopicSnapshot, input: RestoreInput): TopicSnapshot {
+  let t = raw;
   if (t.status === 'awaiting_confirmation') {
     const live = Boolean(input.openProposalId) && (!t.proposal_id || t.proposal_id === input.openProposalId);
-    if (!live) return { ...t, status: 'suspended', proposal_id: null, next_step: REPROPOSE };
+    if (!live) t = { ...t, status: 'suspended', proposal_id: null, next_step: REPROPOSE };
   }
   const date = typeof t.slots.date === 'string' ? t.slots.date : null;
   if (t.domain === 'agenda' && isOpenTopic(t) && date && date < input.today) {
     return { ...t, status: 'archived', close_reason: 'a data do pedido já passou', next_step: null, last_question: null };
+  }
+  const idle = Date.parse(`${input.today}T00:00:00Z`) - Date.parse(t.updated_at.slice(0, 10) + 'T00:00:00Z');
+  if (t.domain === 'admin' && t.status !== 'awaiting_confirmation' && isOpenTopic(t) && idle > ADMIN_STALE_DAYS * DAY_MS) {
+    return { ...t, status: 'archived', close_reason: `ficou parado por mais de ${ADMIN_STALE_DAYS} dias`, next_step: null, last_question: null };
   }
   return t;
 }

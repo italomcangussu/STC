@@ -80,7 +80,7 @@ describe('assunto: entre sessões técnicas', () => {
   it('sessão nova recebe o assunto do banco com todos os dados, mas sem a autorização da proposta antiga', () => {
     const antes = pendente();
     const durable = antes.topics!.map((t) => ({ ...t, proposal_id: 'proposta-velha' }));
-    const m = restoreTopics({} as TopicMemory, { durable, openProposalId: null, today: '2026-10-12' });
+    const m = restoreTopics({} as TopicMemory, { durable, openProposalId: null, today: '2026-10-10' });
     expect(m.intent).toBe('admin_financeiro');
     expect(m.slots).toMatchObject({ amount: 30, category_name: 'Outras receitas' });
     expect(activeTopic(m)).toMatchObject({ status: 'suspended', proposal_id: null, next_step: 'reapresentar a proposta e pedir nova confirmação' });
@@ -101,12 +101,42 @@ describe('assunto: entre sessões técnicas', () => {
     expect(openTopics(m)).toHaveLength(0);
   });
 
-  it('pedido de quadra com data passada é arquivado (regra explícita); pendência financeira antiga continua', () => {
+  it('pedido de quadra com data passada é arquivado (regra explícita); pendência financeira recente continua', () => {
     const quadra = turn({}, { intent: 'reservar', slots: { date: '2026-10-01', start: '18:00' }, awaiting: true, close: false, action: 'ask' });
     const fin = pendente();
-    const m = restoreTopics({} as TopicMemory, { durable: [...quadra.topics!, ...fin.topics!], today: '2026-10-20' });
+    const m = restoreTopics({} as TopicMemory, { durable: [...quadra.topics!, ...fin.topics!], today: '2026-10-11' });
     expect(openTopics(m).map((t) => t.intent)).toEqual(['admin_financeiro']);
     expect(m.topics!.find((t) => t.intent === 'reservar')).toMatchObject({ status: 'archived', close_reason: 'a data do pedido já passou' });
+  });
+});
+
+describe('assunto: validade das pendências administrativas', () => {
+  // Hermeson: assuntos de 28/10 (Romário, Thieslley…) resolvidos no painel voltavam "suspensos" em toda conversa até 09/11.
+  const admin = (updated_at: string) => ({ ...turn({}, { intent: 'admin_acao', slots: { target: 'Romário' }, summary: 'Cobrar Romário', awaiting: true, close: false, action: 'ask' }).topics![0], updated_at });
+
+  it('pendência de admin parada há mais de 3 dias é arquivada e não volta ao prompt', () => {
+    const m = restoreTopics({} as TopicMemory, { durable: [admin('2026-10-28T12:00:00Z')], today: '2026-11-09' });
+    expect(openTopics(m)).toHaveLength(0);
+    expect(m.topics![0]).toMatchObject({ status: 'archived', close_reason: 'ficou parado por mais de 3 dias', next_step: null });
+    expect(m.intent).toBeUndefined();
+    expect(topicsPromptText(m)).toMatch(/^\(nenhum assunto pendente\)\nEncerrados recentemente.*\n- \[admin_acao · arquivado\] Cobrar Romário$/);
+  });
+
+  it('pendência de admin de até 3 dias continua aberta', () => {
+    const m = restoreTopics({} as TopicMemory, { durable: [admin('2026-11-06T12:00:00Z')], today: '2026-11-09' });
+    expect(openTopics(m)).toHaveLength(1);
+  });
+
+  it('proposta velha sem a confirmação aberta é arquivada de uma vez, sem passar por suspensa', () => {
+    const t = { ...admin('2026-10-28T12:00:00Z'), status: 'awaiting_confirmation' as const, proposal_id: 'p-velha' };
+    const m = restoreTopics({} as TopicMemory, { durable: [t], openProposalId: null, today: '2026-11-09' });
+    expect(m.topics![0]).toMatchObject({ status: 'archived', proposal_id: null });
+  });
+
+  it('a proposta aberta nesta sessão nunca expira pela idade', () => {
+    const t = { ...admin('2026-10-28T12:00:00Z'), status: 'awaiting_confirmation' as const, proposal_id: 'p1' };
+    const m = restoreTopics({} as TopicMemory, { durable: [t], openProposalId: 'p1', today: '2026-11-09' });
+    expect(activeTopic(m)!.status).toBe('awaiting_confirmation');
   });
 });
 
