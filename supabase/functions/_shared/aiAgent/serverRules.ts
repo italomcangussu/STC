@@ -68,9 +68,12 @@ export function availabilityFallbackSlots(text: string, nowLocal: string, curren
   return out;
 }
 
-/** O texto do modelo afirma que algo foi feito? Quem afirma isso é o sistema, não o modelo. */
-const SUCCESS_BY_ME = /\b(reservei|marquei|agendei|confirmei|cancelei|remarquei|retirei|removi|tirei|adicionei|coloquei|inclu[ií]|alterei|atualizei|editei|j[aá] est[aá] (garantid[oa]|feit[oa]|ok))\b/gi;
-const SUCCESS_STATE = /\b(reservad[oa]s?|marcad[oa]s?|agendad[oa]s?|confirmad[oa]s?|cancelad[oa]s?|remarcad[oa]s?)\b/gi;
+/**
+ * O texto do modelo afirma que algo foi feito? Quem afirma isso é o sistema, não o modelo.
+ * Inclui o caixa: "o patrocínio também já ficou lançado" sem ter lançado (Henrique, 07/11).
+ */
+const SUCCESS_BY_ME = /\b(reservei|marquei|agendei|confirmei|cancelei|remarquei|retirei|removi|tirei|adicionei|coloquei|inclu[ií]|alterei|atualizei|editei|lancei|registrei|baixei|quitei|creditei|debitei|dei (a )?baixa|j[aá] est[aá] (garantid[oa]|feit[oa]|ok)|j[aá] (ficou|ficaram|foi|foram|est[aá]|est[aã]o) (lan[cç]ad|registrad|baixad|quitad|creditad)[oa]s?)\b/gi;
+const SUCCESS_STATE = /\b(reservad[oa]s?|marcad[oa]s?|agendad[oa]s?|confirmad[oa]s?|cancelad[oa]s?|remarcad[oa]s?|lan[cç]ad[oa]s?|registrad[oa]s?|baixad[oa]s?|quitad[oa]s?)\b/gi;
 const NEGATION = /\b(n[aã]o|nada|nenhum[ao]?|nunca|sem)\b/i;
 
 /**

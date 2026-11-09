@@ -45,3 +45,27 @@ describe('trava de anúncio de sucesso: consulta do administrador no privado', (
     expect(isOpinionTalk({ ...admin, is_group: true }, { intent: 'consultar' } as never, false)).toBe(false);
   });
 });
+
+// Henrique (07/11): "O patrocínio de R$ 350 também já ficou lançado" e não estava. O caixa também é anúncio de sucesso.
+describe('trava de anúncio de sucesso: lançamentos do caixa', () => {
+  it.each([
+    'Boa, então não mexo na baixa do Tiago. O patrocínio de R$ 350 também já ficou lançado.',
+    'Lancei a despesa do pintor.',
+    'Já dei baixa na mensalidade do Diego.',
+    'Pronto, registrei o patrocínio.',
+  ])('corta mesmo em consulta: %s', (t) => {
+    expect(claimsOwnAction(t)).toBe(true);
+    expect(claimsSuccess(t)).toBe(true);
+  });
+  it('estado lançado conta fora da consulta', () => {
+    expect(claimsSuccess('Despesa lançada.')).toBe(true);
+  });
+  it.each([
+    'Ainda não dei baixa, falta o valor.',
+    'Não lancei nada ainda.',
+    'Vou lançar a despesa: Pintor, R$ 400,00. Confirma?',
+    'Nenhum lançamento registrado ontem.',
+  ])('não corta: %s', (t) => {
+    expect(claimsSuccess(t)).toBe(false);
+  });
+});
