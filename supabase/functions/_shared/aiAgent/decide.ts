@@ -101,7 +101,9 @@ export async function decide(i: DecideInput): Promise<Decision> {
     // intenção que o modelo marcou ("informar" também: caso do Hermeson, 26/10, "Assim como?" depois do cartão).
     const falaDaInscricao = answer.intent === 'campeonato' || answer.messages.some((m) => /inscri[cç][aã]o|inscrit/i.test(m));
     const podeAfirmar = falaDaInscricao && hasConfirmedSignup(ctx);
-    const anuncia = isOpinionTalk(ctx, answer, hasProposal) ? claimsOwnAction : claimsSuccess;
+    // Status de inscrição sem pagamento no sistema continua na trava cheia, mesmo em consulta do admin.
+    const relato = isOpinionTalk(ctx, answer, hasProposal) && !(falaDaInscricao && !groupChampionship(ctx));
+    const anuncia = relato ? claimsOwnAction : claimsSuccess;
     const semAnuncio = podeAfirmar ? answer.messages : answer.messages.filter((m) => !anuncia(m));
     const seguro = semAnuncio.length < answer.messages.length && !semAnuncio.length
       ? ['Ainda não registrei nada. Me diga o que falta e eu monto o resumo para você confirmar.']
