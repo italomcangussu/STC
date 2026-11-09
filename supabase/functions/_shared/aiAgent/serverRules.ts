@@ -69,17 +69,34 @@ export function availabilityFallbackSlots(text: string, nowLocal: string, curren
 }
 
 /** O texto do modelo afirma que algo foi feito? Quem afirma isso é o sistema, não o modelo. */
-const SUCCESS_BY_ME = /\b(reservei|marquei|agendei|confirmei|cancelei|remarquei|retirei|removi|tirei|adicionei|coloquei|inclu[ií]|alterei|atualizei|editei|j[aá] est[aá] (garantid[oa]|feit[oa]|ok))\b/i;
-const SUCCESS_STATE = /\b(reservad[oa]s?|marcad[oa]s?|agendad[oa]s?|confirmad[oa]s?|cancelad[oa]s?|remarcad[oa]s?)\b/i;
+const SUCCESS_BY_ME = /\b(reservei|marquei|agendei|confirmei|cancelei|remarquei|retirei|removi|tirei|adicionei|coloquei|inclu[ií]|alterei|atualizei|editei|j[aá] est[aá] (garantid[oa]|feit[oa]|ok))\b/gi;
+const SUCCESS_STATE = /\b(reservad[oa]s?|marcad[oa]s?|agendad[oa]s?|confirmad[oa]s?|cancelad[oa]s?|remarcad[oa]s?)\b/gi;
+const NEGATION = /\b(n[aã]o|nada|nenhum[ao]?|nunca|sem)\b/i;
+
+/**
+ * Alguma ocorrência é afirmação? Não conta (conversa do Hermeson, 26/10 a 09/11):
+ * - negação na mesma oração, até 5 palavras antes ("Não confirmei ainda", "Nada foi agendado");
+ * - estado como rótulo de lista ("✅ *Confirmados:* 12") ou contagem ("12 inscritos confirmados").
+ */
+function affirms(text: string, re: RegExp, state: boolean): boolean {
+  for (const m of text.matchAll(re)) {
+    const clause = text.slice(0, m.index).split(/[.,;!?:\n]/).pop() ?? '';
+    const before = clause.trim().split(/\s+/).slice(-5).join(' ');
+    if (NEGATION.test(before)) continue;
+    if (state && (/^\*?\s*:/.test(text.slice(m.index + m[0].length)) || /\d/.test(before.split(/\s+/).slice(-2).join(' ')))) continue;
+    return true;
+  }
+  return false;
+}
 // "A Rápida tem aula marcada às 18h" relata a agenda; não é o João dizendo que fez algo.
 const AGENDA_REPORT = /\b(tem|t[eê]m|h[aá]|tinha|teve)\s+(\S+\s+){0,3}(reservad|marcad|agendad|confirmad|cancelad)/i;
 export function claimsSuccess(text: string): boolean {
-  if (SUCCESS_BY_ME.test(text)) return true;
-  return SUCCESS_STATE.test(text) && !AGENDA_REPORT.test(text);
+  if (affirms(text, SUCCESS_BY_ME, false)) return true;
+  return affirms(text, SUCCESS_STATE, true) && !AGENDA_REPORT.test(text);
 }
 
 /** Só o "eu fiz" (confirmei, coloquei…). Em papo sem ação possível, "cabeças confirmados" é relato, não anúncio. */
-export const claimsOwnAction = (text: string): boolean => SUCCESS_BY_ME.test(text);
+export const claimsOwnAction = (text: string): boolean => affirms(text, SUCCESS_BY_ME, false);
 
 export const TRANSFER_DIRECT = 'Vou passar a sua conversa para alguém da equipe, tá? Eles te respondem por aqui mesmo.';
 /** Sócio no privado nunca é transferido para a equipe: o João continua a conversa. */

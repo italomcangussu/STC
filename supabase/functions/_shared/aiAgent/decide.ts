@@ -73,13 +73,15 @@ export function proposalBelongsElsewhere(ctx: Ctx, topico: TopicSnapshot | null)
 }
 
 /**
- * Papo no grupo do campeonato sem nada a executar (opinião sobre chave, cabeças, fórmula): ali "os cabeças confirmados
- * pela organização" é relato. Caso do grupo do AUGE OPEN (02/11): a opinião pedida pelo Ítalo virou "Ainda não registrei nada".
+ * Papo sem nada a executar, em que "confirmado" é relato e só o "eu fiz" é cortado:
+ * - grupo do campeonato (opinião sobre chave, cabeças, fórmula). Caso do AUGE OPEN (02/11);
+ * - consulta do administrador no privado. Caso do Hermeson (28/10 "como estão as inscrições?", 02/11 "o Ítalo já
+ *   tinha deixado isso programado?"): a resposta certa virou "Ainda não registrei nada".
  */
 const TALK_ONLY: Answer['intent'][] = ['outro', 'informar', 'consultar'];
 
 export function isOpinionTalk(ctx: Ctx, answer: Answer, hasProposal: boolean): boolean {
-  return Boolean(groupChampionship(ctx)) && !hasProposal && TALK_ONLY.includes(answer.intent);
+  return Boolean(groupChampionship(ctx) || isAdminAssistant(ctx)) && !hasProposal && TALK_ONLY.includes(answer.intent);
 }
 
 /* ------------------------------- Decisão: o que o servidor executa ------------------------------- */

@@ -194,7 +194,7 @@ describe('João opina sobre a fórmula no grupo do campeonato (AUGE OPEN, 02/11)
     const answer = { intent: 'outro', messages: [opiniao] } as never;
     expect(isOpinionTalk({ group_championship: serra }, answer, false)).toBe(true);
     expect(claimsOwnAction(opiniao)).toBe(false);
-    expect(claimsSuccess(opiniao)).toBe(true);
+    expect(claimsSuccess('Os cabeças estão confirmados pela organização.')).toBe(true);
   });
 
   it('a trava cheia continua fora do grupo do campeonato, com proposta aberta ou intenção de ação', () => {
