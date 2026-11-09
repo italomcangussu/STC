@@ -4,11 +4,24 @@ import { ADMIN_READ_DOMAINS, isAdminReadDomain, renderAdminRead } from '../../su
 
 describe('consultas do assessor: texto escrito pelo servidor', () => {
   it('só aceita os domínios do registro', () => {
-    expect(ADMIN_READ_DOMAINS).toHaveLength(24);
+    expect(ADMIN_READ_DOMAINS).toHaveLength(25);
     expect(isAdminReadDomain('caixa')).toBe(true);
     expect(isAdminReadDomain('comprovantes_whatsapp')).toBe(true);
     expect(isAdminReadDomain('apagar_tudo')).toBe(false);
     expect(isAdminReadDomain(null)).toBe(false);
+  });
+
+  it('automacoes: ativas com último envio, rascunho dito como "não envia nada", e o switch geral', () => {
+    const t = renderAdminRead('automacoes', { enabled: true, items: [
+      { name: 'Confirmação de pagamento por comprovante', status: 'active', trigger_type: 'manual', schedule: {}, last_sent_at: '2026-11-09T11:12:02Z', sent_30d: 22, queued: 0 },
+      { name: 'Mensalidade: aviso de atraso', status: 'draft', trigger_type: 'scheduled', schedule: { time: '10:00', weekdays: [1, 2, 3, 4, 5] }, last_sent_at: null, sent_30d: 0, queued: 0 },
+      { name: 'Card Mensal: renovação', status: 'paused', trigger_type: 'scheduled', schedule: { time: '09:30', weekdays: [1, 3] }, last_sent_at: null, sent_30d: 0, queued: 2 },
+    ] });
+    expect(t).toContain('Envio automático: ligado');
+    expect(t).toContain('- Confirmação de pagamento por comprovante · quando acontece · último envio 09/11 · 22 nos últimos 30 dias');
+    expect(t).toContain('📝 *Em rascunho (não enviam nada):*\n- Mensalidade: aviso de atraso · seg a sex às 10:00');
+    expect(t).toContain('- Card Mensal: renovação · seg, qua às 09:30 · 2 na fila');
+    expect(renderAdminRead('automacoes', { enabled: false, items: [] })).toBe('Envio automático: DESLIGADO no painel (nenhuma automação sai).\nNenhuma automação cadastrada.');
   });
 
   it('caixa: entrou, saiu, resultado e saldos, com sinal negativo quando saiu mais', () => {

@@ -29,6 +29,7 @@ export const CAPABILITIES: readonly Capability[] = [
   { id: 'fin.comparativo', domain: 'financeiro', risk: 'N0', label: 'Comparativo com o período anterior (por que subiu/caiu)', panel: 'Financeiro', onDemand: 'comparativo' },
   { id: 'fin.receipts.whatsapp', domain: 'financeiro', risk: 'N0', label: 'Comprovantes que chegaram pelo WhatsApp em qualquer conversa (quem mandou, valor, o que foi feito)', panel: 'Conversas', onDemand: 'comprovantes_whatsapp' },
   { id: 'conv.followups', domain: 'conversas', risk: 'N0', label: 'Retornos pendentes', panel: 'Conversas', onDemand: 'followups' },
+  { id: 'conv.automations', domain: 'conversas', risk: 'N0', label: 'Automações de mensagem: quais estão ativas, pausadas ou em rascunho, horário e últimos envios', panel: 'Conversas', onDemand: 'automacoes' },
   { id: 'pessoas.members', domain: 'pessoas', risk: 'N0', label: 'Relação nominal dos sócios ativos', panel: 'Sócios', onDemand: 'socios' },
   { id: 'fin.overdue.list', domain: 'financeiro', risk: 'N0', label: 'Inadimplentes por nome e valor', panel: 'Financeiro', onDemand: 'inadimplentes' },
   { id: 'club.forms.list', domain: 'clube', risk: 'N0', label: 'Formulários do clube e quantas respostas cada um tem', panel: 'Formulários', onDemand: 'formularios' },

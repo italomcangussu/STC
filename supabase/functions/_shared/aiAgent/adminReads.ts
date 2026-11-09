@@ -1,7 +1,7 @@
 // Consultas do assessor (Onda 1): o servidor busca (RPC `conv_svc_ai_admin_read`, como o administrador) e escreve o texto.
 // O modelo só escolhe o domínio e o período; nenhum número passa pela cabeça dele.
 
-export const ADMIN_READ_DOMAINS = ['caixa', 'receber_pagar', 'dre', 'receita_alunos', 'comprovantes', 'comprovantes_whatsapp', 'acessos', 'assinaturas', 'ocupacao', 'comparativo', 'followups', 'preferencias', 'socios', 'inadimplentes', 'pagamentos', 'socio_ficha', 'vencimentos', 'alunos', 'movimentos', 'capacidades', 'memoria', 'formularios', 'formulario', 'formulario_resultado'] as const;
+export const ADMIN_READ_DOMAINS = ['caixa', 'receber_pagar', 'dre', 'receita_alunos', 'comprovantes', 'comprovantes_whatsapp', 'acessos', 'assinaturas', 'ocupacao', 'comparativo', 'followups', 'preferencias', 'socios', 'inadimplentes', 'pagamentos', 'socio_ficha', 'vencimentos', 'alunos', 'movimentos', 'capacidades', 'memoria', 'formularios', 'formulario', 'formulario_resultado', 'automacoes'] as const;
 /** Domínios de formulários do clube: buscados por `conv_svc_ai_admin_forms_read`. */
 export const FORMS_DOMAINS: readonly string[] = ['formularios', 'formulario', 'formulario_resultado'];
 /** Domínios que o servidor busca por `conv_svc_ai_admin_read_more` (o resto vai por `conv_svc_ai_admin_read`; `socios` por `conv_svc_ai_admin_members`). */
@@ -240,11 +240,36 @@ function renderFormularioResultado(d: Row): string {
   return `Resultado de «${d.title}» (${n(d.participants)} ${n(d.participants) === 1 ? 'participante' : 'participantes'}${d.secret ? ', votação secreta: sem nomes' : ''}):\n\n${blocos || 'O formulário não tem perguntas.'}`;
 }
 
+const DIA_SEMANA = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb', 'dom'];
+const AUTOMACAO_GRUPO: [string, string][] = [['active', '✅ *Ativas:*'], ['paused', '⏸️ *Pausadas:*'], ['draft', '📝 *Em rascunho (não enviam nada):*']];
+
+function quandoAutomacao(a: Row): string {
+  const sc = (a.schedule ?? {}) as Row;
+  if (typeof sc.time !== 'string') return a.trigger_type === 'conditional' ? 'quando a condição bate' : 'quando acontece';
+  const d = Array.isArray(sc.weekdays) ? sc.weekdays.map(Number) : [];
+  const dias = d.join() === '1,2,3,4,5' ? 'seg a sex' : d.length === 7 || !d.length ? 'todo dia' : d.map((x) => DIA_SEMANA[x]).join(', ');
+  return `${dias} às ${sc.time}`;
+}
+
+function renderAutomacoes(d: Row): string {
+  const topo = d.enabled ? 'Envio automático: ligado' : 'Envio automático: DESLIGADO no painel (nenhuma automação sai).';
+  const itens = arr(d.items);
+  if (!itens.length) return `${topo}\nNenhuma automação cadastrada.`;
+  const ddmm = (v: unknown) => new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Fortaleza', day: '2-digit', month: '2-digit' }).format(new Date(String(v)));
+  const linha = (a: Row) => [`- ${a.name}`, quandoAutomacao(a), a.last_sent_at ? `último envio ${ddmm(a.last_sent_at)}` : '',
+    n(a.sent_30d) ? `${n(a.sent_30d)} nos últimos 30 dias` : '', n(a.queued) ? `${n(a.queued)} na fila` : ''].filter(Boolean).join(' · ');
+  const blocos = AUTOMACAO_GRUPO.map(([st, titulo]) => {
+    const do_ = itens.filter((a) => a.status === st);
+    return do_.length ? `${titulo}\n${do_.map(linha).join('\n')}` : '';
+  }).filter(Boolean);
+  return `${topo}\n\n${blocos.join('\n\n')}`;
+}
+
 const RENDER: Record<AdminReadDomain, (d: Row) => string> = {
   caixa: renderCaixa, receber_pagar: renderReceberPagar, dre: renderDre, receita_alunos: renderReceitaAlunos,
   comprovantes: renderComprovantes, comprovantes_whatsapp: renderComprovantesWhatsapp, acessos: renderAcessos, assinaturas: renderAssinaturas, ocupacao: renderOcupacao, comparativo: renderComparativo, followups: renderFollowups, preferencias: renderPreferencias, socios: renderSocios, inadimplentes: renderInadimplentes, pagamentos: renderPagamentos,
   socio_ficha: renderSocioFicha, vencimentos: renderVencimentos, alunos: renderAlunos, movimentos: renderMovimentos, capacidades: renderCapacidades, memoria: renderMemoria,
-  formularios: renderFormularios, formulario: renderFormulario, formulario_resultado: renderFormularioResultado,
+  formularios: renderFormularios, formulario: renderFormulario, formulario_resultado: renderFormularioResultado, automacoes: renderAutomacoes,
 };
 
 export const renderAdminRead = (domain: AdminReadDomain, data: unknown): string =>

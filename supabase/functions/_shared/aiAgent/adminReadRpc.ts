@@ -31,6 +31,7 @@ function route(session: string, domain: AdminReadDomain, args: Args): { fn: stri
     return { fn: 'conv_svc_ai_admin_whatsapp_receipts', params: { p_session: session, p_name: args.name ?? null, p_from: args.from ?? null, p_to: args.to ?? null } };
   }
   if (domain === 'socios') return { fn: 'conv_svc_ai_admin_members', params: { p_session: session } };
+  if (domain === 'automacoes') return { fn: 'conv_svc_ai_admin_automations', params: { p_session: session } };
   const fn = FORMS_DOMAINS.includes(domain) ? 'conv_svc_ai_admin_forms_read' : READ_MORE_DOMAINS.includes(domain) ? 'conv_svc_ai_admin_read_more' : 'conv_svc_ai_admin_read';
   return { fn, params: { p_session: session, p_domain: domain, p_args: args } };
 }

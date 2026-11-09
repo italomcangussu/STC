@@ -86,6 +86,8 @@ export async function newDb(): Promise<PGlite> {
     '20261028100000_joao_recado_contato_e_comprovantes_whatsapp.sql',
     // Automações de pendência passam na validação (voltam a ser ativadas pelo painel).
     '20261106120000_automacao_estagios_pendencia_validos.sql',
+    // Consulta "automacoes" do assessor (status, horário e últimos envios das réguas).
+    '20261109120000_joao_consulta_automacoes.sql',
   ];
   for (const f of files) {
     try {
