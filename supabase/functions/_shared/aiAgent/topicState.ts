@@ -46,7 +46,8 @@ const ADMIN_INTENTS = new Set(['admin_financeiro', 'admin_acao']);
 /** Trocar entre estas é outra tarefa ("na verdade quero cancelar"); entre as demais da agenda é a mesma conversa sobre o jogo. */
 const BOOKING_ACTIONS = new Set(['reservar', 'cancelar', 'remarcar']);
 const OPEN = new Set<TopicStatus>(['awaiting_data', 'awaiting_confirmation', 'suspended']);
-const EXECUTED = new Set(['admin_confirmed', 'confirmed', 'joined', 'participants_changed']);
+/** Ações que o servidor executou de fato: o resultado delas sempre é dito, mesmo se chegou mensagem nova. */
+export const EXECUTED = new Set(['admin_confirmed', 'confirmed', 'joined', 'participants_changed']);
 const MAX_CLOSED_IN_MEMORY = 6;
 const MAX_DECISIONS = 8;
 const MAX_SUMMARY = 480;

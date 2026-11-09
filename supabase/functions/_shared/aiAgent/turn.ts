@@ -23,7 +23,7 @@ import { keepMemberInChat, refreshGroupHumor, serverOverrides } from './turnAnsw
 import { type Turn, turnKit } from './turnKit.ts';
 import { beforeModel } from './turnShortcuts.ts';
 import { deliverForward } from './receiptForward.ts';
-import { activeTopic, bringsNewData, openTopics, recordTopicTurn, restoreTopics, selectTopic, topicIdFromRef } from './topicState.ts';
+import { EXECUTED, activeTopic, bringsNewData, openTopics, recordTopicTurn, restoreTopics, selectTopic, topicIdFromRef } from './topicState.ts';
 import { askParsed, mergeSlots, turnTemperature } from './answerParse.ts';
 import { cadence } from './cadence.ts';
 import { noteMemories } from './memoryNotes.ts';
@@ -189,7 +189,9 @@ function limitationNote(t: Turn, d: Decision, fallback: 'reformulada' | 'pronta'
 /** Fala o que foi decidido (texto e arquivos) e salva o turno. */
 async function finishTurn(t: Turn, answer: Answer, { d, closeSession }: { d: Decision; closeSession: boolean }, fallback: 'reformulada' | 'pronta' | null): Promise<TurnResult> {
   if (d.handoff) return t.handoff(d.bubbles, d.handoff, d.memory, d.action);
-  let enviadas = await t.entregar(d.verbatim ? [{ text: d.bubbles.join('\n\n'), delayMs: 900 }] : cadence(d.bubbles), { firme: Boolean(d.forward) });
+  let enviadas = await t.entregar(d.verbatim ? [{ text: d.bubbles.join('\n\n'), delayMs: 900 }] : cadence(d.bubbles),
+    // Ação feita (despesa lançada, reserva confirmada) sempre avisa, mesmo se ele já mandou o próximo pedido (Henrique, 05/11).
+    { firme: Boolean(d.forward) || EXECUTED.has(d.action ?? '') });
   if (d.files?.length) enviadas += await t.entregarArquivos(d.files);
   if (d.forward && d.forward.admin_conversation_id !== t.conversation) await deliverForward(d.forward, { db: t.deps.db, uaz: t.deps.uaz, signedUrl: t.deps.files?.signedUrl });
   if (answer.transfer && !t.isGroup) {

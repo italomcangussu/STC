@@ -3,6 +3,7 @@
 // guarda "esta ainda é a última mensagem?" calou a confirmação. O aviso firme sai mesmo assim; só a equipe assumir para.
 import { describe, expect, it } from 'vitest';
 import { turnDelivery } from '../../supabase/functions/_shared/aiAgent/turnDelivery';
+import { EXECUTED } from '../../supabase/functions/_shared/aiAgent/topicState';
 
 function delivery({ latest, stillActive }: { latest: boolean; stillActive: boolean }) {
   const sent: string[] = [];
@@ -34,5 +35,16 @@ describe('aviso firme do que o servidor já fez', () => {
   it('a equipe assumiu: nem a firme sai', async () => {
     const { d } = delivery({ latest: false, stillActive: false });
     expect(await d.entregar(bolhas, { firme: true })).toBe(0);
+  });
+});
+
+// Caso Henrique (05/11): "Confirmo" e já o próximo comprovante; a despesa foi lançada e o "Pronto" não saiu.
+describe('resultado de ação feita é firme', () => {
+  it.each(['admin_confirmed', 'confirmed'])('%s entra como firme', (action) => {
+    expect(EXECUTED.has(action)).toBe(true);
+  });
+  it('pergunta e proposta não são firmes', () => {
+    expect(EXECUTED.has('ask')).toBe(false);
+    expect(EXECUTED.has('proposed_admin')).toBe(false);
   });
 });
