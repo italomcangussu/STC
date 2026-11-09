@@ -1,9 +1,9 @@
 // Assessor administrativo (financeiro): renovação de Card Mensal e ações financeiras propostas pelo servidor.
 
-import { adminPendencyRefs, isAdminAssistant } from './promptAdmin.ts';
+import { type AdminPendencyRef, adminPendencyRefs, isAdminAssistant } from './promptAdmin.ts';
 import type { Ctx } from './promptTypes.ts';
 import type { DecideInput } from './decide.ts';
-import type { Decision, Memory } from './turnTypes.ts';
+import type { Decision, Memory, Slots } from './turnTypes.ts';
 import { type AdminAction, adminProposalMessage, toCents } from './adminMessages.ts';
 import { resolve } from './turnOutcome.ts';
 
@@ -23,14 +23,43 @@ async function adminRenovarCard(i: DecideInput, memory: Memory): Promise<Decisio
   return { bubbles: [adminProposalMessage('student_card_renew', res.summary)], awaiting: true, close: false, action: 'proposed_admin', memory };
 }
 
+/** Ações que agem sobre UMA pendência; nas outras (receita, despesa…) o pendency_ref que sobrou de outro passo não vale. */
+const USES_PENDENCY = new Set(['cobrar', 'pausar', 'retomar', 'baixa', 'cancelar_pendencia', 'ajustar', 'estornar']);
+const norm = (v: unknown) => String(v ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+
+/**
+ * Acha a pendência pelo número da lista (p1) ou, sem número, pelo nome do sócio quando ele só tem uma.
+ * Sem nenhuma pendência do sócio, diz isso e oferece lançar a cobrança, em vez de repetir "Não achei" (Tiago, 07/11).
+ */
+export function pendencyFor(refs: AdminPendencyRef[], slots: Slots): { ref?: AdminPendencyRef } | { ask: string } {
+  if (!USES_PENDENCY.has(String(slots.fin_action ?? ''))) return {};
+  const code = slots.pendency_ref ? refs.find((r) => r.ref === slots.pendency_ref) : undefined;
+  if (code) return { ref: code };
+  const nome = norm(slots.member_name);
+  const doSocio = nome ? refs.filter((r) => norm(r.member_name).includes(nome)) : [];
+  if (doSocio.length === 1) return { ref: doSocio[0] };
+  if (doSocio.length > 1) {
+    return { ask: `${doSocio[0].member_name} tem ${doSocio.length} pendências em aberto: ${doSocio.map((r) => `${r.ref} ${r.description}`).join('; ')}. Qual delas?` };
+  }
+  if (nome && slots.fin_action === 'baixa') {
+    return { ask: `Não tem pendência em aberto de ${slots.member_name} no sistema (a cobrança pode não ter sido gerada). Quer que eu lance a pendência para depois dar baixa?` };
+  }
+  if (slots.pendency_ref) return { ask: 'Esse número não está na lista de pendências em aberto. Me diga o sócio e a descrição.' };
+  return {};
+}
+
 export async function adminFinanceiro(i: DecideInput, memory: Memory): Promise<Decision> {
   const { deps, ctx, slots, session } = i;
   const ask = (text: string): Decision => ({ bubbles: [text], awaiting: true, close: false, action: 'ask', memory });
   if (!isAdminAssistant(ctx)) return ask('Essa parte do financeiro é só com a diretoria, pela conversa privada. Posso te ajudar com outra coisa?');
   if (slots.fin_action === 'renovar_card') return adminRenovarCard(i, memory);
-  const refs = adminPendencyRefs(ctx);
-  const ref = slots.pendency_ref ? refs.find((r) => r.ref === slots.pendency_ref) : undefined;
-  if (slots.pendency_ref && !ref) return ask('Não achei essa pendência na lista. Qual é (sócio e descrição)?');
+  const found = pendencyFor(adminPendencyRefs(ctx), slots);
+  // O "p1" que não existe não fica preso nos slots: cada resposta dele voltava "Não achei essa pendência" (Henrique, 07/11).
+  if ('ask' in found) {
+    const semRef = { ...slots, pendency_ref: null };
+    return { ...ask(found.ask), slots: semRef, memory: { ...memory, slots: semRef } };
+  }
+  const ref = found.ref;
   const member = async () => {
     if (!slots.member_name) return { ask: 'De qual sócio?' };
     const r = await resolve(deps.db, [slots.member_name], 'member');
