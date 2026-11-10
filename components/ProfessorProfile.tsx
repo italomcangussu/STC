@@ -493,12 +493,7 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
         const student = students.find(s => s.id === id);
         if (!student) return;
 
-        if (!await confirm({
-            title: `Desativar ${student.name}?`,
-            description: 'Ele sai da sua lista de alunos ativos. O histórico de pagamentos é preservado.',
-            confirmLabel: 'Desativar aluno',
-        })) return;
-
+        // Reversível: desativa na hora e oferece "Desfazer" (no lugar do "tem certeza?").
         const { error } = await supabase
             .from('student_profiles')
             .update({ student_status: 'paused' })
@@ -514,6 +509,15 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
 
         setStudents(prev => prev.map(s => s.id === id ? { ...s, isActive: false, studentStatus: 'paused' } : s));
         setStudentProfiles(prev => prev.map(profile => profile.id === student.studentProfileId ? { ...profile, studentStatus: 'paused' } : profile));
+        notify.feito(`${student.name} foi desativado`, {
+            descricao: 'O histórico de pagamentos é preservado.',
+            desfazer: async () => {
+                const { error: e } = await supabase.from('student_profiles').update({ student_status: 'active' }).eq('id', student.studentProfileId);
+                if (e) throw e;
+                setStudents(prev => prev.map(s => s.id === id ? { ...s, isActive: true, studentStatus: 'active' } : s));
+                setStudentProfiles(prev => prev.map(profile => profile.id === student.studentProfileId ? { ...profile, studentStatus: 'active' } : profile));
+            },
+        });
     };
 
     const reactivateStudent = async (studentProfile: StudentProfile) => {

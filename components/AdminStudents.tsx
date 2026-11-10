@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { notify } from '../lib/notifications';
 import { matchesSearch } from '../lib/searchText';
-import { useConfirm } from '../hooks/useConfirm';
 import { validateStudentForm } from '../lib/students/validateStudentForm';
 import { NonSocioStudent, Professor, User, RelationshipType, StudentProfile } from '../types';
 import { STUDENT_LEVELS, StudentLevel } from '../lib/students/studentRules';
@@ -32,7 +31,6 @@ function addOneMonth(dateStr: string): string {
 
 export const AdminStudents: React.FC = () => {
     const embedded = useAdminEmbedded();
-    const confirm = useConfirm();
     const [students, setStudents] = useState<NonSocioStudent[]>([]);
     const [studentProfiles, setStudentProfiles] = useState<StudentProfile[]>([]);
     const [professors, setProfessors] = useState<Professor[]>([]);
@@ -202,12 +200,8 @@ export const AdminStudents: React.FC = () => {
 
     const handleDeleteStudent = async (id: string) => {
         const student = students.find(s => s.id === id);
-        if (!await confirm({
-            title: `Desativar ${student?.name ?? 'este aluno'}?`,
-            description: 'Ele sai da lista de alunos ativos. O histórico de pagamentos é preservado.',
-            confirmLabel: 'Desativar aluno',
-        })) return;
-
+        if (!student) return;
+        // Reversível: desativa na hora e oferece "Desfazer" (no lugar do "tem certeza?").
         setProcessing(true);
         try {
             const { error } = student.studentProfileId
@@ -215,6 +209,10 @@ export const AdminStudents: React.FC = () => {
                 : await supabase.from('non_socio_students').update({ is_active: false }).eq('id', id);
             if (error) throw error;
             await fetchData();
+            notify.feito(`${student.name} foi desativado`, {
+                descricao: 'O histórico de pagamentos é preservado.',
+                desfazer: () => setStudentActive(student, true),
+            });
         } catch (error) {
             notify.failure(error, 'Não foi possível desativar o aluno.', {
                 event: 'student_deactivate_failed',

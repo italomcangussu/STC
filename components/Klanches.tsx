@@ -393,15 +393,23 @@ export const Klanches: React.FC<KlanchesProps> = ({ currentUser }) => {
         }
     };
 
+    // Reversível: tira do cardápio na hora e oferece "Desfazer" (no lugar do "tem certeza?").
     const handleDeleteProduct = async (productId: string) => {
-        if (!await confirm({
-            title: 'Tirar este produto do cardápio?',
-            description: 'Ele deixa de aparecer para venda. O histórico de consumo é mantido.',
-            confirmLabel: 'Tirar do cardápio',
-        })) return;
-
-        await supabase.from('products').update({ is_active: false }).eq('id', productId);
-        setProducts(products.filter(p => p.id !== productId));
+        const produto = products.find(p => p.id === productId);
+        const { error } = await supabase.from('products').update({ is_active: false }).eq('id', productId);
+        if (error) {
+            notify.failure(error, 'Não foi possível tirar o produto do cardápio.', { event: 'product_deactivate_failed' });
+            return;
+        }
+        setProducts(prev => prev.filter(p => p.id !== productId));
+        notify.feito(`${produto?.name ?? 'Produto'} saiu do cardápio`, {
+            descricao: 'O histórico de consumo é mantido.',
+            desfazer: async () => {
+                const { error: e } = await supabase.from('products').update({ is_active: true }).eq('id', productId);
+                if (e) throw e;
+                if (produto) setProducts(prev => prev.some(p => p.id === productId) ? prev : [...prev, produto]);
+            },
+        });
     };
 
     const openEditProduct = (product: ExtendedProduct) => {
