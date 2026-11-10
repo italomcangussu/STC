@@ -52,7 +52,7 @@ export const MatchExportPreview = forwardRef<HTMLDivElement, MatchExportPreviewP
                                 {groupName || 'Fase de Grupos'}
                             </span>
                         </div>
-                        <h1 className="text-2xl font-extrabold uppercase italic tracking-tighter leading-none mb-1 text-transparent bg-clip-text bg-linear-to-r from-white to-stone-400">
+                        <h1 className="text-2xl font-extrabold uppercase italic tracking-tighter leading-none mb-1 text-white">
                             {championship.name}
                         </h1>
                         <p className="text-stone-400 text-sm font-medium flex items-center gap-1.5 capitalize">

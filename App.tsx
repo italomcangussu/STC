@@ -13,6 +13,7 @@ import { Auth } from './components/Auth';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ConfirmProvider } from './components/ui/ConfirmProvider';
 import { User } from './types';
+import { trocarTela } from './lib/motion';
 import { supabase } from './lib/supabase';
 
 // 🚀 Code Splitting via React.lazy (Uncle Bob Performance Optimization)
@@ -95,7 +96,7 @@ const PublicChampionshipEntry: React.FC<{ route: PublicChampionshipRoute }> = ({
 
   if (loadingPublic) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-stone-900">
+      <div className="min-h-dvh flex items-center justify-center bg-stone-900">
         <Loader2 className="animate-spin text-saibro-500" size={48} />
       </div>
     );
@@ -202,7 +203,8 @@ const AppContent: React.FC = () => {
   // Saiu da aba de documentos: o `#documentos/…` não pode reabri-la depois; tocar nela de novo volta à lista.
   const changeView = (next: string) => {
     if (next === 'documentos') showDocumentsList(); else clearDocumentsHash();
-    setView(next);
+    if (next === view) return;
+    trocarTela(() => setView(next));
   };
 
   const handleOpenProfile = (userId: string) => {
@@ -212,7 +214,7 @@ const AppContent: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-saibro-50">
+      <div className="min-h-dvh flex items-center justify-center bg-saibro-50">
         <Loader2 className="animate-spin text-saibro-600" size={48} />
       </div>
     );

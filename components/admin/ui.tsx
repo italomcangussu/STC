@@ -11,10 +11,10 @@ import { EmptyState } from '../ui/EmptyState';
 
 /** Botão de ação principal (Novo aluno, Novo aviso…). Largura total no celular: o polegar acerta sem mirar. */
 export const adminBtnPrimary =
-    'inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-saibro-600 px-4 py-2 text-sm font-bold text-white shadow-sm   transition active:scale-95 hover:bg-saibro-700 disabled:opacity-50 sm:w-auto';
+    'inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-saibro-600 px-4 py-2 text-sm font-bold text-white shadow-sm   transition active:scale-[0.97] hover:bg-saibro-700 disabled:opacity-50 sm:w-auto';
 
 export const adminBtnGhost =
-    'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-stone-200 bg-white px-4 py-2 text-sm font-bold text-stone-600 transition active:scale-95 hover:bg-stone-50 disabled:opacity-50';
+    'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-stone-200 bg-white px-4 py-2 text-sm font-bold text-stone-600 transition active:scale-[0.97] hover:bg-stone-50 disabled:opacity-50';
 
 /**
  * Cabeçalho de tela. Dentro do painel o título já está no topo da página, então

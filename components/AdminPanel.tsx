@@ -1834,7 +1834,7 @@ export const AdminPanel: React.FC = () => {
                                 <a
                                     href="/conversas"
                                     {...(isInstalledPWA() ? {} : { target: '_blank', rel: 'noopener noreferrer' })}
-                                    className="inline-flex min-h-[46px] items-center gap-2 rounded-2xl bg-emerald-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg transition hover:bg-emerald-700 active:scale-95"
+                                    className="inline-flex min-h-[46px] items-center gap-2 rounded-2xl bg-emerald-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg transition hover:bg-emerald-700 active:scale-[0.97]"
                                 >
                                     <span>Abrir Mensageiro em Nova Aba</span>
                                     <ExternalLink size={16} />

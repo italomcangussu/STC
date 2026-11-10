@@ -7,7 +7,7 @@ import { createPortal } from 'react-dom';
  * Características:
  * - Renderizado via Portal no document.body
  * - Z-index global z-999
- * - Backdrop escuro com blur
+ * - Fundo escurecido (sem desfoque: o desfoque custa quadro no celular e não informa nada)
  * - Bloqueio de scroll do body
  * - Animação de entrada suave
  * - Fechamento ao clicar no backdrop (opcional)
@@ -97,7 +97,7 @@ export const StandardModal: React.FC<StandardModalProps> = ({
 
     return createPortal(
         <div 
-            className={`fixed inset-0 z-999 bg-stone-900/60 backdrop-blur-md flex ${alignmentClass} justify-center ${padding} animate-in fade-in duration-200 ease-out motion-reduce:animate-none ${containerClassName}`}
+            className={`fixed inset-0 z-999 bg-stone-950/50 flex ${alignmentClass} justify-center ${padding} animate-in fade-in ${containerClassName}`}
             onClick={closeOnBackdrop ? onClose : undefined}
             role="dialog"
             aria-modal="true"
@@ -109,7 +109,7 @@ export const StandardModal: React.FC<StandardModalProps> = ({
             <div
                 ref={panelRef}
                 tabIndex={-1}
-                className={`max-w-full min-w-0 animate-in zoom-in-95 duration-180 ease-out motion-reduce:animate-none outline-none ${verticalAlign === 'center' ? 'my-auto' : ''}`}
+                className={`max-w-full min-w-0 outline-none ${verticalAlign === 'end' ? '' : 'animate-in fade-in zoom-in-95'} ${verticalAlign === 'center' ? 'my-auto' : ''}`}
                 onClick={(e) => e.stopPropagation()}
             >
                 {children}

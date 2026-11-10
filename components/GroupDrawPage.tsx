@@ -803,7 +803,7 @@ export const GroupDrawPage: React.FC<Props> = ({ currentUser: _currentUser, cham
 
                         <div className="relative bg-linear-to-br from-stone-800 to-stone-900 rounded-3xl p-8 border border-amber-500/30 shadow-2xl ">
                             <div className="text-center">
-                                <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-linear-to-br from-amber-400 to-orange-500 mb-6 animate-bounce">
+                                <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-linear-to-br from-amber-400 to-orange-500 mb-6">
                                     <Shuffle className="text-white" size={40} />
                                 </div>
 

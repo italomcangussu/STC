@@ -111,7 +111,7 @@ export const AdminPushPermissionBanner: React.FC<AdminPushPermissionBannerProps>
             type="button"
             onClick={handleVoltar}
             disabled={carregando}
-            className="inline-flex min-h-[44px] min-w-[80px] items-center justify-center rounded-xl border border-stone-300 bg-white px-4 text-xs font-semibold text-stone-700 transition hover:bg-stone-100 hover:text-stone-900 active:scale-95 disabled:opacity-50"
+            className="inline-flex min-h-[44px] min-w-[80px] items-center justify-center rounded-xl border border-stone-300 bg-white px-4 text-xs font-semibold text-stone-700 transition hover:bg-stone-100 hover:text-stone-900 active:scale-[0.97] disabled:opacity-50"
           >
             Voltar
           </button>
@@ -119,7 +119,7 @@ export const AdminPushPermissionBanner: React.FC<AdminPushPermissionBannerProps>
             type="button"
             onClick={handleContinuar}
             disabled={carregando}
-            className="inline-flex min-h-[44px] min-w-[96px] items-center justify-center rounded-xl bg-stone-900 px-4 text-xs font-semibold text-white shadow-sm transition hover:bg-stone-800 active:scale-95 disabled:opacity-50"
+            className="inline-flex min-h-[44px] min-w-[96px] items-center justify-center rounded-xl bg-stone-900 px-4 text-xs font-semibold text-white shadow-sm transition hover:bg-stone-800 active:scale-[0.97] disabled:opacity-50"
           >
             {carregando ? (
               <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />

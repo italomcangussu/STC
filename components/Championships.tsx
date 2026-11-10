@@ -2143,7 +2143,7 @@ export const ResultModal: React.FC<{ match: Match; profiles: User[]; registratio
                                         <div className="flex flex-col items-center gap-1.5">
                                             <button
                                                 onClick={() => updateScore('A', idx, String(scoreA[idx] + 1))}
-                                                className="w-10 h-7 bg-white border border-stone-200 rounded-lg flex items-center justify-center text-stone-400 hover:text-saibro-600 hover:border-saibro-200 transition-all active:scale-95"
+                                                className="w-10 h-7 bg-white border border-stone-200 rounded-lg flex items-center justify-center text-stone-400 hover:text-saibro-600 hover:border-saibro-200 transition-all active:scale-[0.97]"
                                             >
                                                 <Plus size={12} strokeWidth={3} />
                                             </button>
@@ -2152,7 +2152,7 @@ export const ResultModal: React.FC<{ match: Match; profiles: User[]; registratio
                                             </div>
                                             <button
                                                 onClick={() => updateScore('A', idx, String(Math.max(0, scoreA[idx] - 1)))}
-                                                className="w-10 h-7 bg-white border border-stone-200 rounded-lg flex items-center justify-center text-stone-400 hover:text-stone-600 transition-all active:scale-95"
+                                                className="w-10 h-7 bg-white border border-stone-200 rounded-lg flex items-center justify-center text-stone-400 hover:text-stone-600 transition-all active:scale-[0.97]"
                                             >
                                                 <Minus size={12} strokeWidth={3} />
                                             </button>
@@ -2162,7 +2162,7 @@ export const ResultModal: React.FC<{ match: Match; profiles: User[]; registratio
                                         <div className="flex flex-col items-center gap-1.5">
                                             <button
                                                 onClick={() => updateScore('B', idx, String(scoreB[idx] + 1))}
-                                                className="w-10 h-7 bg-white border border-stone-200 rounded-lg flex items-center justify-center text-stone-400 hover:text-saibro-600 hover:border-saibro-200 transition-all active:scale-95"
+                                                className="w-10 h-7 bg-white border border-stone-200 rounded-lg flex items-center justify-center text-stone-400 hover:text-saibro-600 hover:border-saibro-200 transition-all active:scale-[0.97]"
                                             >
                                                 <Plus size={12} strokeWidth={3} />
                                             </button>
@@ -2171,7 +2171,7 @@ export const ResultModal: React.FC<{ match: Match; profiles: User[]; registratio
                                             </div>
                                             <button
                                                 onClick={() => updateScore('B', idx, String(Math.max(0, scoreB[idx] - 1)))}
-                                                className="w-10 h-7 bg-white border border-stone-200 rounded-lg flex items-center justify-center text-stone-400 hover:text-stone-600 transition-all active:scale-95"
+                                                className="w-10 h-7 bg-white border border-stone-200 rounded-lg flex items-center justify-center text-stone-400 hover:text-stone-600 transition-all active:scale-[0.97]"
                                             >
                                                 <Minus size={12} strokeWidth={3} />
                                             </button>

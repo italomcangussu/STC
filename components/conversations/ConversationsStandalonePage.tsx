@@ -88,7 +88,7 @@ export const ConversationsStandalonePage: React.FC = () => {
             onClick={handleVoltarAoApp}
             title="Voltar ao STC Play"
             aria-label="Voltar ao STC Play"
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-stone-200 bg-stone-50 text-stone-600 transition hover:bg-stone-100 hover:text-stone-900 active:scale-95"
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-stone-200 bg-stone-50 text-stone-600 transition hover:bg-stone-100 hover:text-stone-900 active:scale-[0.97]"
           >
             <ArrowLeft size={18} />
           </button>
@@ -130,7 +130,7 @@ export const ConversationsStandalonePage: React.FC = () => {
                 type="button"
                 aria-selected={isSelected}
                 onClick={() => setActiveTab(tab.id)}
-                className={`relative flex min-h-[36px] items-center gap-1.5 rounded-xl px-2.5 py-1 text-xs font-semibold transition-all active:scale-95 sm:px-3 ${
+                className={`relative flex min-h-[36px] items-center gap-1.5 rounded-xl px-2.5 py-1 text-xs font-semibold transition-all active:scale-[0.97] sm:px-3 ${
                   isSelected
                     ? 'bg-white text-stone-900 shadow-xs'
                     : 'text-stone-500 hover:text-stone-800'
@@ -161,7 +161,7 @@ export const ConversationsStandalonePage: React.FC = () => {
                   ? 'Notificações ativas'
                   : 'Ativar notificações'
               }
-              className={`flex h-9 items-center gap-1.5 rounded-xl border px-2.5 text-xs font-medium transition active:scale-95 ${
+              className={`flex h-9 items-center gap-1.5 rounded-xl border px-2.5 text-xs font-medium transition active:scale-[0.97] ${
                 pushStatus === 'granted'
                   ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
                   : 'border-stone-200 bg-stone-50 text-stone-600 hover:bg-stone-100 hover:text-stone-900'

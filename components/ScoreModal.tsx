@@ -71,7 +71,7 @@ export const ScoreModal: React.FC<ScoreModalProps> = ({ challenge: _challenge, c
                                     <div className="flex items-center gap-2">
                                         <button
                                             onClick={() => handleSetChange(idx, 'a', (Math.max(0, parseInt(set.a || '0') - 1)).toString())}
-                                            className="w-10 h-10 flex items-center justify-center bg-white border border-stone-200 rounded-xl text-stone-600 shadow-sm active:scale-95 transition-transform"
+                                            className="w-10 h-10 flex items-center justify-center bg-white border border-stone-200 rounded-xl text-stone-600 shadow-sm active:scale-[0.97] transition-transform"
                                         >
                                             <Minus size={16} strokeWidth={3} />
                                         </button>
@@ -84,7 +84,7 @@ export const ScoreModal: React.FC<ScoreModalProps> = ({ challenge: _challenge, c
                                         />
                                         <button
                                             onClick={() => handleSetChange(idx, 'a', (parseInt(set.a || '0') + 1).toString())}
-                                            className="w-10 h-10 flex items-center justify-center bg-saibro-50 text-saibro-600 border border-saibro-100 rounded-xl shadow-sm active:scale-95 transition-transform"
+                                            className="w-10 h-10 flex items-center justify-center bg-saibro-50 text-saibro-600 border border-saibro-100 rounded-xl shadow-sm active:scale-[0.97] transition-transform"
                                         >
                                             <Plus size={16} strokeWidth={3} />
                                         </button>
@@ -96,7 +96,7 @@ export const ScoreModal: React.FC<ScoreModalProps> = ({ challenge: _challenge, c
                                     <div className="flex items-center gap-2">
                                         <button
                                             onClick={() => handleSetChange(idx, 'b', (parseInt(set.b || '0') + 1).toString())}
-                                            className="w-10 h-10 flex items-center justify-center bg-saibro-50 text-saibro-600 border border-saibro-100 rounded-xl shadow-sm active:scale-95 transition-transform"
+                                            className="w-10 h-10 flex items-center justify-center bg-saibro-50 text-saibro-600 border border-saibro-100 rounded-xl shadow-sm active:scale-[0.97] transition-transform"
                                         >
                                             <Plus size={16} strokeWidth={3} />
                                         </button>
@@ -109,7 +109,7 @@ export const ScoreModal: React.FC<ScoreModalProps> = ({ challenge: _challenge, c
                                         />
                                         <button
                                             onClick={() => handleSetChange(idx, 'b', (Math.max(0, parseInt(set.b || '0') - 1)).toString())}
-                                            className="w-10 h-10 flex items-center justify-center bg-white border border-stone-200 rounded-xl text-stone-600 shadow-sm active:scale-95 transition-transform"
+                                            className="w-10 h-10 flex items-center justify-center bg-white border border-stone-200 rounded-xl text-stone-600 shadow-sm active:scale-[0.97] transition-transform"
                                         >
                                             <Minus size={16} strokeWidth={3} />
                                         </button>

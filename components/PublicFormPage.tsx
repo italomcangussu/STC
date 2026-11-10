@@ -353,7 +353,7 @@ export const PublicFormPage: React.FC<PublicFormPageProps> = ({ slug, onBackToAp
         {onBackToApp && (
           <button
             onClick={onBackToApp}
-            className="min-h-[48px] px-6 py-2.5 rounded-xl bg-saibro-600 hover:bg-saibro-700 active:scale-95 text-white font-bold text-sm transition-all shadow-lg "
+            className="min-h-[48px] px-6 py-2.5 rounded-xl bg-saibro-600 hover:bg-saibro-700 active:scale-[0.97] text-white font-bold text-sm transition-all shadow-lg "
           >
             Voltar ao Início
           </button>
@@ -604,7 +604,7 @@ export const PublicFormPage: React.FC<PublicFormPageProps> = ({ slug, onBackToAp
             {onBackToApp && (
               <button
                 onClick={onBackToApp}
-                className="p-2 rounded-xl text-stone-400 hover:text-white hover:bg-stone-800 active:scale-95 transition-all"
+                className="p-2 rounded-xl text-stone-400 hover:text-white hover:bg-stone-800 active:scale-[0.97] transition-all"
                 title="Voltar ao STC Play"
               >
                 <ArrowLeft size={20} />
@@ -817,7 +817,7 @@ export const PublicFormPage: React.FC<PublicFormPageProps> = ({ slug, onBackToAp
                 {form.show_live_results && (
                   <button
                     onClick={() => setViewMode('results')}
-                    className="min-h-[48px] px-6 py-2.5 rounded-xl font-bold text-xs bg-saibro-600 hover:bg-saibro-700 active:scale-95 text-white transition-all"
+                    className="min-h-[48px] px-6 py-2.5 rounded-xl font-bold text-xs bg-saibro-600 hover:bg-saibro-700 active:scale-[0.97] text-white transition-all"
                   >
                     Acompanhar Placar ao Vivo
                   </button>

@@ -377,7 +377,7 @@ export const AdminForms: React.FC = () => {
             <button
               onClick={handleSaveForm}
               disabled={saving}
-              className="px-5 py-2.5 rounded-xl text-sm font-bold bg-saibro-600 hover:bg-saibro-700 text-white shadow-md active:scale-95 transition-all flex items-center gap-2"
+              className="px-5 py-2.5 rounded-xl text-sm font-bold bg-saibro-600 hover:bg-saibro-700 text-white shadow-md active:scale-[0.97] transition-all flex items-center gap-2"
             >
               {saving ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
               {saving ? 'Salvando...' : 'Salvar Formulário'}
@@ -697,7 +697,7 @@ export const AdminForms: React.FC = () => {
           <button
             onClick={handleSaveForm}
             disabled={saving}
-            className="px-6 py-3 rounded-xl text-sm font-bold bg-saibro-600 hover:bg-saibro-700 text-white shadow-lg active:scale-95 transition-all flex items-center gap-2"
+            className="px-6 py-3 rounded-xl text-sm font-bold bg-saibro-600 hover:bg-saibro-700 text-white shadow-lg active:scale-[0.97] transition-all flex items-center gap-2"
           >
             {saving ? <Loader2 size={18} className="animate-spin" /> : <CheckCircle2 size={18} />}
             {saving ? 'Gravando Formulário...' : 'Finalizar & Salvar Formulário'}

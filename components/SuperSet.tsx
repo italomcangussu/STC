@@ -296,7 +296,7 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
                         <div className="flex items-center justify-center gap-4 sm:gap-12 mb-2">
                             {/* ATLETA A */}
                             <div
-                                className={`flex flex-col items-center gap-2 sm:gap-3 flex-1 transition-all ${playerAId ? 'cursor-pointer active:scale-95' : ''}`}
+                                className={`flex flex-col items-center gap-2 sm:gap-3 flex-1 transition-all ${playerAId ? 'cursor-pointer active:scale-[0.97]' : ''}`}
                                 onClick={() => playerAId && setPlayerAId('')}
                             >
                                 <div className={`w-16 h-16 sm:w-24 sm:h-24 rounded-2xl sm:rounded-3xl border-2 sm:border-4 flex items-center justify-center transition-all duration-500 overflow-hidden shadow-xl sm:shadow-2xl ${playerAId ? 'border-saibro-500 hover:border-saibro-400' : 'border-stone-100 bg-stone-50'}`}>
@@ -321,7 +321,7 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
 
                             {/* ATLETA B */}
                             <div
-                                className={`flex flex-col items-center gap-2 sm:gap-3 flex-1 transition-all ${playerBId ? 'cursor-pointer active:scale-95' : ''}`}
+                                className={`flex flex-col items-center gap-2 sm:gap-3 flex-1 transition-all ${playerBId ? 'cursor-pointer active:scale-[0.97]' : ''}`}
                                 onClick={() => playerBId && setPlayerBId('')}
                             >
                                 <div className={`w-16 h-16 sm:w-24 sm:h-24 rounded-2xl sm:rounded-3xl border-2 sm:border-4 flex items-center justify-center transition-all duration-500 overflow-hidden shadow-xl sm:shadow-2xl ${playerBId ? 'border-court-green' : 'border-stone-100 bg-stone-50'}`}>
@@ -382,7 +382,7 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
                                                     else setPlayerBId(p.id);
                                                     setSearchTerm('');
                                                 }}
-                                                className="group/btn flex flex-col items-center gap-2 p-3 bg-white border border-stone-100 rounded-2xl hover:border-saibro-200 hover:shadow-lg transition-all active:scale-95"
+                                                className="group/btn flex flex-col items-center gap-2 p-3 bg-white border border-stone-100 rounded-2xl hover:border-saibro-200 hover:shadow-lg transition-all active:scale-[0.97]"
                                             >
                                                 <img src={p.avatar} className="w-12 h-12 rounded-full border-2 border-white shadow-sm object-cover group-hover/btn:scale-110 transition-transform" />
                                                 <span className="text-meta font-bold text-stone-600 uppercase truncate w-full text-center tracking-tight">
@@ -410,21 +410,21 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
                                     <button
                                         disabled={!!winner}
                                         onClick={() => !winner && setScoreA(s => Math.min(s + 1, 7))}
-                                        className="w-12 h-12 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl bg-white border-2 border-saibro-100 text-saibro-600 flex items-center justify-center text-2xl sm:text-4xl font-extrabold hover:bg-saibro-500 hover:text-white transition-all active:scale-90 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="w-12 h-12 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl bg-white border-2 border-saibro-100 text-saibro-600 flex items-center justify-center text-2xl sm:text-4xl font-extrabold hover:bg-saibro-500 hover:text-white transition-all active:scale-[0.97] shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                                     >+</button>
                                     <div className="relative group">
                                         <span className="text-7xl sm:text-[160px] font-extrabold text-stone-800 tabular-nums leading-none tracking-tighter drop-shadow-sm transition-transform block">
                                             {scoreA}
                                         </span>
                                         {winner === 'A' && (
-                                            <div className="absolute -top-3 -right-3 sm:-top-6 sm:-right-6 bg-yellow-400 text-yellow-900 p-1.5 sm:p-2 rounded-full shadow-lg animate-bounce border-2 border-white">
+                                            <div className="absolute -top-3 -right-3 sm:-top-6 sm:-right-6 bg-yellow-400 text-yellow-900 p-1.5 sm:p-2 rounded-full shadow-lg border-2 border-white">
                                                 <Trophy size={16} className="sm:w-6 sm:h-6" />
                                             </div>
                                         )}
                                     </div>
                                     <button
                                         onClick={() => setScoreA(s => Math.max(s - 1, 0))}
-                                        className="w-10 h-10 rounded-xl bg-white border border-stone-200 text-stone-400 flex items-center justify-center text-lg sm:text-2xl font-bold hover:bg-red-50 hover:text-red-500 transition-all active:scale-90"
+                                        className="w-10 h-10 rounded-xl bg-white border border-stone-200 text-stone-400 flex items-center justify-center text-lg sm:text-2xl font-bold hover:bg-red-50 hover:text-red-500 transition-all active:scale-[0.97]"
                                     >-</button>
                                 </div>
 
@@ -438,21 +438,21 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
                                     <button
                                         disabled={!!winner}
                                         onClick={() => !winner && setScoreB(s => Math.min(s + 1, 7))}
-                                        className="w-12 h-12 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl bg-white border-2 border-court-green/20 text-court-green flex items-center justify-center text-2xl sm:text-4xl font-extrabold hover:bg-court-green hover:text-white transition-all active:scale-90 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="w-12 h-12 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl bg-white border-2 border-court-green/20 text-court-green flex items-center justify-center text-2xl sm:text-4xl font-extrabold hover:bg-court-green hover:text-white transition-all active:scale-[0.97] shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                                     >+</button>
                                     <div className="relative group">
                                         <span className="text-7xl sm:text-[160px] font-extrabold text-stone-800 tabular-nums leading-none tracking-tighter drop-shadow-sm transition-transform block">
                                             {scoreB}
                                         </span>
                                         {winner === 'B' && (
-                                            <div className="absolute -top-3 -right-3 sm:-top-6 sm:-right-6 bg-yellow-400 text-yellow-900 p-1.5 sm:p-2 rounded-full shadow-lg animate-bounce border-2 border-white">
+                                            <div className="absolute -top-3 -right-3 sm:-top-6 sm:-right-6 bg-yellow-400 text-yellow-900 p-1.5 sm:p-2 rounded-full shadow-lg border-2 border-white">
                                                 <Trophy size={16} className="sm:w-6 sm:h-6" />
                                             </div>
                                         )}
                                     </div>
                                     <button
                                         onClick={() => setScoreB(s => Math.max(s - 1, 0))}
-                                        className="w-10 h-10 rounded-xl bg-white border border-stone-200 text-stone-400 flex items-center justify-center text-lg sm:text-2xl font-bold hover:bg-red-50 hover:text-red-500 transition-all active:scale-90"
+                                        className="w-10 h-10 rounded-xl bg-white border border-stone-200 text-stone-400 flex items-center justify-center text-lg sm:text-2xl font-bold hover:bg-red-50 hover:text-red-500 transition-all active:scale-[0.97]"
                                     >-</button>
                                 </div>
                             </div>
@@ -485,7 +485,7 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
                                     <button
                                         onClick={handleSave}
                                         disabled={saving}
-                                        className="w-full py-5 bg-stone-900 text-white rounded-3xl font-extrabold text-xl shadow-2xl transition-all active:scale-95 flex items-center justify-center gap-3 hover:bg-black group"
+                                        className="w-full py-5 bg-stone-900 text-white rounded-3xl font-extrabold text-xl shadow-2xl transition-all active:scale-[0.97] flex items-center justify-center gap-3 hover:bg-black group"
                                     >
                                         {saving ? (
                                             <span className="flex items-center gap-3">
@@ -531,7 +531,7 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
                                             <div className="relative">
                                                 <img src={playerA?.avatar} className={`w-14 h-14 sm:w-20 sm:h-20 rounded-3xl object-cover border-4 shadow-sm transition-all duration-500 ${isWinnerA ? 'border-saibro-400 scale-105' : 'border-stone-50 opacity-40'}`} />
                                                 {isWinnerA && (
-                                                    <div className="absolute -top-3 -right-3 bg-saibro-500 text-white p-1.5 rounded-full border-2 border-white shadow-lg animate-bounce">
+                                                    <div className="absolute -top-3 -right-3 bg-saibro-500 text-white p-1.5 rounded-full border-2 border-white shadow-lg">
                                                         <Trophy size={14} />
                                                     </div>
                                                 )}
@@ -556,7 +556,7 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
                                             <div className="relative">
                                                 <img src={playerB?.avatar} className={`w-14 h-14 sm:w-20 sm:h-20 rounded-3xl object-cover border-4 shadow-sm transition-all duration-500 ${!isWinnerA ? 'border-court-green scale-105' : 'border-stone-50 opacity-40'}`} />
                                                 {!isWinnerA && (
-                                                    <div className="absolute -top-3 -right-3 bg-court-green text-white p-1.5 rounded-full border-2 border-white shadow-lg animate-bounce">
+                                                    <div className="absolute -top-3 -right-3 bg-court-green text-white p-1.5 rounded-full border-2 border-white shadow-lg">
                                                         <Trophy size={14} />
                                                     </div>
                                                 )}

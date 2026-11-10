@@ -331,13 +331,8 @@
     .stagger-cascade > *:nth-child(6) { animation-delay: 175ms; }
 
     /* Accessibility: Reduced Motion */
+    /* O afundar de 3% no toque fica: é retorno, não viagem. */
     @media (prefers-reduced-motion: reduce) {
-        .card-court,
-        .btn-tactile {
-            transition: opacity 150ms ease !important;
-            transform: none !important;
-        }
-
         .stagger-cascade > * {
             animation: none !important;
             opacity: 1 !important;
@@ -576,6 +571,58 @@
         .anim-folha {
             animation: folhaAparece var(--dur-entrada) var(--ease-saida) both;
         }
+    }
+
+    /* ------------------------------------------------------------------
+       Entrada. As classes `animate-in fade-in zoom-in-95 slide-in-from-*`
+       vinham do plugin tailwindcss-animate, que nunca foi instalado: 52
+       lugares pediam animação e nada animava. Agora são nossas, sobre os
+       tokens, e o deslocamento é limitado a 16 px (nada voa pela tela).
+       `duration-*` e `ease-*` do Tailwind continuam valendo.
+       ------------------------------------------------------------------ */
+    @keyframes entrar {
+        from {
+            opacity: var(--entra-opacidade, 1);
+            transform: translate3d(var(--entra-x, 0), var(--entra-y, 0), 0) scale(var(--entra-escala, 1));
+        }
+    }
+    .animate-in {
+        animation: entrar var(--tw-duration, var(--dur-entrada)) var(--tw-ease, var(--ease-saida)) both;
+    }
+    .fade-in { --entra-opacidade: 0; }
+    .zoom-in, .zoom-in-95 { --entra-escala: 0.95; }
+    .slide-in-from-bottom, .slide-in-from-bottom-2 { --entra-y: 0.5rem; }
+    .slide-in-from-bottom-4, .slide-in-from-bottom-10 { --entra-y: 1rem; }
+    .slide-in-from-top, .slide-in-from-top-2 { --entra-y: -0.5rem; }
+    .slide-in-from-right, .slide-in-from-right-2 { --entra-x: 0.5rem; }
+    .slide-in-from-right-4 { --entra-x: 1rem; }
+    .slide-in-from-left { --entra-x: -0.5rem; }
+    .slide-in-from-left-4 { --entra-x: -1rem; }
+
+    /* Entrada padrão de bloco novo: 8 px + opacidade. */
+    .enter-up {
+        animation: entrar var(--dur-entrada) var(--ease-saida) both;
+        --entra-opacidade: 0;
+        --entra-y: 0.5rem;
+    }
+
+    /* Mudança de valor: a linha acende saibro-50 e apaga em 1,2 s. */
+    @keyframes valorMudou {
+        0%, 40% { background-color: var(--color-acao-suave); }
+        100% { background-color: transparent; }
+    }
+    .valor-mudou {
+        animation: valorMudou 1200ms var(--ease-saida);
+    }
+
+    /* Pico: o horário reservado "carimba" (0,96 → 1). */
+    @keyframes carimbo {
+        0% { transform: scale(0.96); }
+        60% { transform: scale(1.01); }
+        100% { transform: scale(1); }
+    }
+    .anim-carimbo {
+        animation: carimbo var(--dur-contexto) var(--ease-folha);
     }
 
     /* Custom Scrollbar */
@@ -1910,8 +1957,26 @@ input[type="datetime-local"] {
     *::after {
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
+        /* Retorno de estado continua (cor, opacidade), curto; deslocamento não. */
+        transition-duration: var(--dur-toque) !important;
         scroll-behavior: auto !important;
+    }
+
+    /* Entradas e folha viram só opacidade: aparecem, não voam. */
+    .animate-in,
+    .enter-up,
+    .anim-folha {
+        --entra-x: 0 !important;
+        --entra-y: 0 !important;
+        --entra-escala: 1 !important;
+        animation-name: entrar !important;
+        animation-duration: var(--dur-toque) !important;
+    }
+    .anim-folha {
+        --entra-opacidade: 0;
+    }
+    .valor-mudou {
+        animation-duration: 1200ms !important;
     }
 
     /**
@@ -2270,4 +2335,12 @@ html[data-reduce-motion="on"] *::after {
 html[data-native-feel="on"] .conv-shell {
     -webkit-user-select: text;
     user-select: text;
+}
+
+/* Troca de tela (View Transitions, ver lib/motion.ts): o conteúdo cruza em
+   200 ms; a barra de baixo e o cabeçalho ficam parados (têm nome próprio). */
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation-duration: var(--dur-estado);
+    animation-timing-function: var(--ease-saida);
 }

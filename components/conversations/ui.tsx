@@ -26,7 +26,7 @@ export const Button: React.FC<ButtonProps> = ({ variant = 'secondary', size = 'm
     type={type}
     disabled={disabled || loading}
     className={cx(
-      'inline-flex items-center justify-center gap-1.5 rounded-xl font-bold outline-hidden transition active:scale-95 focus-visible:ring-2 focus-visible:ring-saibro-300 disabled:opacity-50 disabled:active:scale-100',
+      'inline-flex items-center justify-center gap-1.5 rounded-xl font-bold outline-hidden transition active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-saibro-300 disabled:opacity-50 disabled:active:scale-100',
       size === 'sm' ? 'min-h-9 px-3 text-xs' : 'min-h-11 px-4 text-sm', VARIANT[variant], className)}
     {...rest}
   >

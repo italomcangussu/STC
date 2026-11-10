@@ -43,7 +43,7 @@ export const AdminNav: React.FC<{ active: AdminTabId; onGo: (id: AdminTabId) => 
                             role="tab"
                             aria-selected={on}
                             onClick={() => onGo(on ? active : g.sections[0].id)}
-                            className={`relative flex min-h-14 min-w-0 flex-col items-center justify-center gap-0.5 rounded-2xl px-0.5 py-1.5 transition-colors active:scale-95 ${on ? 'bg-saibro-600 text-white shadow-md  ' : 'text-stone-500 hover:bg-stone-100'}`}
+                            className={`relative flex min-h-14 min-w-0 flex-col items-center justify-center gap-0.5 rounded-2xl px-0.5 py-1.5 transition-colors active:scale-[0.97] ${on ? 'bg-saibro-600 text-white shadow-md  ' : 'text-stone-500 hover:bg-stone-100'}`}
                         >
                             <Icon size={20} aria-hidden />
                             <span className="w-full truncate text-center text-meta font-bold leading-tight tracking-tight min-[420px]:text-meta">{g.label}</span>

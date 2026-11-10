@@ -12,7 +12,7 @@ export const AgendaLoadError: React.FC<AgendaLoadErrorProps> = ({ onRetry }) => 
         <p className="flex-1 text-sm font-medium">Não consegui carregar a agenda. As reservas abaixo podem estar desatualizadas.</p>
         <button
             onClick={onRetry}
-            className="shrink-0 rounded-xl bg-red-600 px-3 py-2 text-sm font-bold text-white active:scale-95 transition-transform"
+            className="shrink-0 rounded-xl bg-red-600 px-3 py-2 text-sm font-bold text-white active:scale-[0.97] transition-transform"
         >
             Tentar de novo
         </button>

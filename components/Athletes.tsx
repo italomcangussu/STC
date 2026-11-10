@@ -254,13 +254,13 @@ const AthleteProfile: React.FC<AthleteProfileProps> = ({ userId, currentUser, us
                         <div className="flex gap-3 mt-6 w-full max-w-xs animate-in fade-in slide-in-from-bottom-2">
                             <button
                                 onClick={handleChallengeClick}
-                                className="flex-1 bg-white text-saibro-700 py-2.5 rounded-xl font-bold text-sm shadow-sm hover:bg-stone-50 transition-colors active:scale-95"
+                                className="flex-1 bg-white text-saibro-700 py-2.5 rounded-xl font-bold text-sm shadow-sm hover:bg-stone-50 transition-colors active:scale-[0.97]"
                             >
                                 Desafiar
                             </button>
                             <button
                                 onClick={handleReservationClick}
-                                className="flex-1 bg-saibro-800 text-white py-2.5 rounded-xl font-bold text-sm shadow-sm border border-saibro-700 hover:bg-saibro-900 transition-colors active:scale-95"
+                                className="flex-1 bg-saibro-800 text-white py-2.5 rounded-xl font-bold text-sm shadow-sm border border-saibro-700 hover:bg-saibro-900 transition-colors active:scale-[0.97]"
                             >
                                 + Reserva
                             </button>

@@ -65,7 +65,7 @@ export const InstallPrompt: React.FC = () => {
             <div className="fixed bottom-20 right-4 z-90 animate-in slide-in-from-bottom-4 duration-500">
                 <button
                     onClick={handleInstallClick}
-                    className="flex items-center gap-2 bg-linear-to-r from-saibro-600 to-saibro-500 text-white pl-4 pr-5 py-3 rounded-full shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all"
+                    className="flex items-center gap-2 bg-linear-to-r from-saibro-600 to-saibro-500 text-white pl-4 pr-5 py-3 rounded-full shadow-lg hover:shadow-xl hover:scale-105 active:scale-[0.97] transition-all"
                 >
                     <div className="bg-white/20 p-1.5 rounded-full">
                         <Download size={18} className="text-white" />
@@ -127,7 +127,7 @@ export const InstallPrompt: React.FC = () => {
 
                         <button
                             onClick={() => setShowIOSInstructions(false)}
-                            className="mt-6 w-full py-3 bg-saibro-600 text-white font-bold rounded-xl active:scale-95 transition-transform"
+                            className="mt-6 w-full py-3 bg-saibro-600 text-white font-bold rounded-xl active:scale-[0.97] transition-transform"
                         >
                             Entendi
                         </button>

@@ -34,6 +34,17 @@ Chão liso stone-50, superfícies brancas com borda de 1 px e sombra de contato,
 - **Movimento:** `--dur-toque` 120 · `--dur-estado` 200 · `--dur-entrada` 280 · `--dur-contexto` 400 ms; `ease-saida` (componentes) e `ease-folha` (folhas).
 - **Camadas:** `--z-barra` 40 · `--z-folha` 50 · `--z-dialogo` 60 · `--z-toast` 70.
 
+## Movimento (os seis, e nenhum outro)
+
+1. **Toque:** `active:scale-[0.97]` em `--dur-toque`. Fica mesmo com movimento reduzido, porque é retorno e não enfeite.
+2. **Entrada:** `animate-in fade-in` (+ `slide-in-from-bottom-*` até 1rem) em `--dur-entrada`, com `ease-saida`. Sem stagger em lista diária.
+3. **Folha:** `anim-folha` sobe com `ease-folha` em `--dur-contexto`; a alça arrasta e fecha depois de 96 px.
+4. **Troca de tela:** `trocarTela()` (`lib/motion.ts`, View Transitions) cruza em `--dur-estado`; sem suporte, a troca é seca.
+5. **Mudança de valor:** `destacar(el)` → `.valor-mudou` acende `acao-suave` por 1,2 s.
+6. **Reordenar:** `medirPosicoes` + `animarReordem` (FLIP em `[data-flip-key]`).
+
+Proibidos: `animate-bounce`, texto em gradiente (`bg-clip-text`), brilho colorido (`drop-shadow` laranja, `shadow-<cor>`), `blur` em fundo de modal, e `animate-pulse` fora de carregando ou "ao vivo". Movimento reduzido: só opacidade.
+
 ## Navegador
 
 Viewport sem bloqueio de zoom; campo com 16 px no toque; `accent-color`, `caret-color`, `::selection` e `:focus-visible` em saibro; `theme-color` #fafaf9; ícone maskable no manifest.

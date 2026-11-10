@@ -222,7 +222,7 @@ export const LiveScoreboard: React.FC<LiveScoreboardProps> = ({
                             {canEdit && (
                                 <button
                                     onClick={() => updateFn(idx, 1)}
-                                    className="p-1 text-stone-300 hover:text-saibro-600 hover:bg-saibro-50 rounded active:scale-90 transition-all"
+                                    className="p-1 text-stone-300 hover:text-saibro-600 hover:bg-saibro-50 rounded active:scale-[0.97] transition-all"
                                 >
                                     <Plus size={12} strokeWidth={3} />
                                 </button>
@@ -236,7 +236,7 @@ export const LiveScoreboard: React.FC<LiveScoreboardProps> = ({
                             {canEdit && (
                                 <button
                                     onClick={() => updateFn(idx, -1)}
-                                    className="p-1 text-stone-300 hover:text-red-500 hover:bg-red-50 rounded active:scale-90 transition-all"
+                                    className="p-1 text-stone-300 hover:text-red-500 hover:bg-red-50 rounded active:scale-[0.97] transition-all"
                                 >
                                     <Minus size={12} strokeWidth={3} />
                                 </button>

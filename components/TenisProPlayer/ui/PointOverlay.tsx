@@ -81,7 +81,7 @@ export const PointOverlay: React.FC<PointOverlayProps> = ({
           <div className="text-5xl mb-4">{winner === 1 ? '🏆' : '😤'}</div>
           <h2 className="text-3xl font-extrabold text-white mb-2">
             {winner === 1 ? (
-              <span className="bg-linear-to-r from-amber-400 to-yellow-300 bg-clip-text text-transparent">VITÓRIA!</span>
+              <span className="text-amber-300">VITÓRIA!</span>
             ) : (
               <span className="text-red-400">DERROTA</span>
             )}
@@ -96,7 +96,7 @@ export const PointOverlay: React.FC<PointOverlayProps> = ({
           </div>
           <button
             onClick={onBackToMenu}
-            className="px-8 py-3 bg-saibro-600 hover:bg-saibro-700 text-white rounded-xl font-bold text-sm uppercase tracking-wider transition-all active:scale-95 shadow-lg "
+            className="px-8 py-3 bg-saibro-600 hover:bg-saibro-700 text-white rounded-xl font-bold text-sm uppercase tracking-wider transition-all active:scale-[0.97] shadow-lg "
           >
             Voltar ao Menu
           </button>

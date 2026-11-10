@@ -78,7 +78,7 @@ export const TenisProPlayer: React.FC = () => {
           {/* Play button */}
           <button
             onClick={() => setGameState('difficulty')}
-            className="w-full py-5 bg-linear-to-r from-saibro-500 to-saibro-600 hover:from-saibro-600 hover:to-saibro-700 text-white rounded-2xl font-extrabold text-lg uppercase tracking-wider shadow-xl active:scale-95 transition-all flex items-center justify-center gap-3"
+            className="w-full py-5 bg-linear-to-r from-saibro-500 to-saibro-600 hover:from-saibro-600 hover:to-saibro-700 text-white rounded-2xl font-extrabold text-lg uppercase tracking-wider shadow-xl active:scale-[0.97] transition-all flex items-center justify-center gap-3"
           >
             <Gamepad2 size={24} />
             JOGAR vs IA

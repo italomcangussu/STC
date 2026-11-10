@@ -90,7 +90,7 @@ export const PushPermissionPrompt: React.FC = () => {
                         <button
                             onClick={handleEnable}
                             disabled={loading}
-                            className="w-full py-3.5 bg-saibro-600 hover:bg-saibro-700 text-white font-bold rounded-xl shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2"
+                            className="w-full py-3.5 bg-saibro-600 hover:bg-saibro-700 text-white font-bold rounded-xl shadow-lg active:scale-[0.97] transition-all flex items-center justify-center gap-2"
                         >
                             {loading ? (
                                 <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

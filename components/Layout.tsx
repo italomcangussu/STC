@@ -167,7 +167,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
                 <div className="flex items-center gap-2.5">
                     <img
                         src="https://smztsayzldjmkzmufqcz.supabase.co/storage/v1/object/public/logoapp/SOBRAL.zip%20-%201.png"
-                        className="w-8 h-8 object-contain cursor-pointer active:scale-90 transition-transform duration-150"
+                        className="w-8 h-8 object-contain cursor-pointer active:scale-[0.97] transition-transform duration-150"
                         alt="Logo"
                         onClick={handleLogoClick}
                     />
@@ -182,7 +182,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
                         <button
                             onClick={handleEnablePush}
                             aria-label="Ativar Notificações"
-                            className="w-9 h-9 rounded-full bg-saibro-100 text-saibro-700 flex items-center justify-center active:scale-90 transition-transform shadow-xs"
+                            className="w-9 h-9 rounded-full bg-saibro-100 text-saibro-700 flex items-center justify-center active:scale-[0.97] transition-transform shadow-xs"
                         >
                             <Bell size={18} />
                         </button>
@@ -194,7 +194,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
                         className={`flex items-center gap-1.5 p-1 pl-1.5 pr-2 rounded-full border transition-all shadow-xs ${
                             isMenuOpen
                                 ? 'bg-saibro-500 border-saibro-600 text-white'
-                                : 'bg-saibro-50/90 border-saibro-200/90 text-saibro-900 active:scale-95'
+                                : 'bg-saibro-50/90 border-saibro-200/90 text-saibro-900 active:scale-[0.97]'
                         }`}
                         aria-label="Menu Principal"
                     >
@@ -347,7 +347,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
                     <div className="flex items-center gap-2">
                         <img
                             src="https://smztsayzldjmkzmufqcz.supabase.co/storage/v1/object/public/logoapp/SOBRAL.zip%20-%201.png"
-                            className="w-10 h-10 object-contain cursor-pointer active:scale-95 transition-transform"
+                            className="w-10 h-10 object-contain cursor-pointer active:scale-[0.97] transition-transform"
                             alt="Logo"
                             onClick={handleLogoClick}
                         />
@@ -430,9 +430,9 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
                     <button
                         key={item.id}
                         onClick={() => goTo(item.id)}
-                        className={`flex flex-col items-center justify-center py-1 px-1 rounded-xl flex-1 transition-all duration-300 active:scale-75 ${view === item.id ? 'text-saibro-600 bg-saibro-50/50 shadow-inner' : 'text-stone-400 hover:text-stone-600'}`}
+                        className={`flex flex-col items-center justify-center py-1 px-1 rounded-xl flex-1 transition-all duration-300 active:scale-[0.97] ${view === item.id ? 'text-saibro-600 bg-saibro-50/50 shadow-inner' : 'text-stone-400 hover:text-stone-600'}`}
                     >
-                        <div className={`transition-transform duration-300 ${view === item.id ? 'scale-110 drop-shadow-[0_0_8px_rgba(249,115,22,0.3)]' : ''}`}>
+                        <div className={`transition-transform duration-300 ${view === item.id ? 'scale-110' : ''}`}>
                             {React.cloneElement(item.icon as React.ReactElement<any>, { size: 22 })}
                         </div>
                         <span className={`text-meta mt-1 font-bold uppercase tracking-tighter truncate w-full text-center transition-all ${view === item.id ? 'opacity-100 scale-105' : 'opacity-70'}`}>{item.label}</span>

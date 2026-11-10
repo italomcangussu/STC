@@ -622,7 +622,7 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
     if (rounds.length === 0) {
         return (
             <div className="p-8 flex flex-col items-center justify-center min-h-[40vh] bg-stone-50 rounded-3xl border border-stone-200">
-                <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6 animate-pulse">
+                <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6">
                     <Play size={40} className="text-green-600 ml-1" />
                 </div>
                 <h2 className="text-2xl font-extrabold text-stone-800 mb-2">Pronto para Iniciar!</h2>
@@ -1095,7 +1095,7 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                                 <button
                                     onClick={handleExportImage}
                                     disabled={!exportDate || exporting}
-                                    className="w-full py-4 bg-saibro-600 hover:bg-saibro-700 text-white rounded-xl font-extrabold uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95 disabled:opacity-50 disabled:active:scale-100"
+                                    className="w-full py-4 bg-saibro-600 hover:bg-saibro-700 text-white rounded-xl font-extrabold uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg transition-all active:scale-[0.97] disabled:opacity-50 disabled:active:scale-100"
                                 >
                                     {exporting ? <Loader2 className="animate-spin" /> : <Download size={20} />}
                                     Baixar Imagem

@@ -15,7 +15,7 @@ export const StatementHeader: React.FC<{ overdueCount: number; owedCents: number
     <p className="mt-2 text-sm text-saibro-100">{headerSentence(overdueCount, owedCents)}</p>
     <p className="text-4xl font-extrabold tabular-nums">{formatBRL(owedCents)}</p>
     <p className="mt-1 text-xs text-saibro-100">Total atualizado de hoje, com encargos de atraso quando houver.</p>
-    <button className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-xl bg-white px-4 text-sm font-extrabold text-saibro-700 shadow-sm active:scale-95 disabled:opacity-60" disabled={!canSend} onClick={onSend}>
+    <button className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-xl bg-white px-4 text-sm font-extrabold text-saibro-700 shadow-sm active:scale-[0.97] disabled:opacity-60" disabled={!canSend} onClick={onSend}>
       <Receipt size={16} /> Enviar comprovante{pickedCount ? ` (${pickedCount})` : ''}
     </button>
   </header>

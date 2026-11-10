@@ -457,12 +457,12 @@ export const ReservationDetails: React.FC<{
                 <div className="bg-stone-50 w-full max-w-lg rounded-3xl flex flex-col max-h-[92vh] overflow-hidden shadow-2xl">
                 {/* 1. Header with Glass effect */}
                 <div className="bg-white/80 backdrop-blur-xl px-6 py-5 border-b border-stone-200/60 flex items-center justify-between sticky top-0 z-10">
-                    <button onClick={onClose} className="p-2.5 -ml-2 text-stone-600 hover:bg-stone-100 rounded-full transition-all active:scale-90">
+                    <button onClick={onClose} className="p-2.5 -ml-2 text-stone-600 hover:bg-stone-100 rounded-full transition-all active:scale-[0.97]">
                         <ArrowLeft size={22} strokeWidth={2.5} />
                     </button>
                     <h2 className="text-xl font-extrabold text-stone-800 tracking-tight">Detalhes do {res.type}</h2>
                     {canShare ? (
-                        <button onClick={handleShareWhatsapp} className="p-2.5 -mr-2 text-green-600 hover:bg-green-50 rounded-full transition-all active:scale-90">
+                        <button onClick={handleShareWhatsapp} className="p-2.5 -mr-2 text-green-600 hover:bg-green-50 rounded-full transition-all active:scale-[0.97]">
                             <Share2 size={22} strokeWidth={2.5} />
                         </button>
                     ) : <div className="w-10" />}
@@ -836,7 +836,7 @@ export const ReservationDetails: React.FC<{
                         {canManageParticipants && (
                             <button
                                 onClick={() => setShowManageParticipants(true)}
-                                className="flex-1 h-14 bg-stone-50 text-stone-800 font-extrabold rounded-2xl hover:bg-stone-100 flex items-center justify-center gap-2.5 transition-all active:scale-95 border border-stone-200/50 text-xs uppercase tracking-widest"
+                                className="flex-1 h-14 bg-stone-50 text-stone-800 font-extrabold rounded-2xl hover:bg-stone-100 flex items-center justify-center gap-2.5 transition-all active:scale-[0.97] border border-stone-200/50 text-xs uppercase tracking-widest"
                             >
                                 <UserCog size={20} /> <span className="hidden xs:inline">Atletas</span>
                             </button>
@@ -844,7 +844,7 @@ export const ReservationDetails: React.FC<{
                         {canEdit && (
                             <button
                                 onClick={() => onEdit(res)}
-                                className="flex-1 h-14 bg-stone-50 text-stone-800 font-extrabold rounded-2xl hover:bg-saibro-50 hover:text-saibro-700 hover:border-saibro-100 flex items-center justify-center gap-2.5 transition-all active:scale-95 border border-stone-200/50 text-xs uppercase tracking-widest"
+                                className="flex-1 h-14 bg-stone-50 text-stone-800 font-extrabold rounded-2xl hover:bg-saibro-50 hover:text-saibro-700 hover:border-saibro-100 flex items-center justify-center gap-2.5 transition-all active:scale-[0.97] border border-stone-200/50 text-xs uppercase tracking-widest"
                             >
                                 <Pencil size={20} /> <span className="hidden xs:inline">Editar</span>
                             </button>
@@ -852,7 +852,7 @@ export const ReservationDetails: React.FC<{
                         {canCancel && (
                             <button
                                 onClick={() => onCancel(res.id)}
-                                className="flex-1 h-14 bg-stone-50 text-red-500 font-extrabold rounded-2xl hover:bg-red-50 hover:border-red-100 flex items-center justify-center gap-2.5 transition-all active:scale-95 border border-stone-200/50 text-xs uppercase tracking-widest"
+                                className="flex-1 h-14 bg-stone-50 text-red-500 font-extrabold rounded-2xl hover:bg-red-50 hover:border-red-100 flex items-center justify-center gap-2.5 transition-all active:scale-[0.97] border border-stone-200/50 text-xs uppercase tracking-widest"
                             >
                                 <Trash2 size={20} /> <span className="hidden xs:inline">Cancelar</span>
                             </button>
@@ -1147,7 +1147,7 @@ const ReservationCard: React.FC<{
 
                         return (
                             <div className={`flex items-center gap-1.5 text-meta uppercase font-bold tracking-wider ${statusColor} bg-white/50 px-2.5 py-1 rounded-full border border-stone-100 shadow-sm mr-2`}>
-                                <div className={`w-2 h-2 rounded-full ${dotColor} ${pulse ? 'animate-pulse shadow-[0_0_8px_currentColor]' : ''}`} />
+                                <div className={`w-2 h-2 rounded-full ${dotColor} ${pulse ? 'animate-pulse' : ''}`} />
                                 {statusText}
                             </div>
                         );
@@ -1169,7 +1169,7 @@ const ReservationCard: React.FC<{
                                             e.stopPropagation();
                                             onLaunchScore(challenge);
                                         }}
-                                        className="px-3 py-1.5 bg-saibro-500 text-white text-xs font-bold rounded-lg shadow-md hover:bg-saibro-600 flex items-center gap-1.5 transition-all active:scale-95"
+                                        className="px-3 py-1.5 bg-saibro-500 text-white text-xs font-bold rounded-lg shadow-md hover:bg-saibro-600 flex items-center gap-1.5 transition-all active:scale-[0.97]"
                                     >
                                         <Trophy size={14} /> Lançar Placar
                                     </button>
@@ -1872,7 +1872,7 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                             <button
                                 key={d}
                                 onClick={() => { setCurrentDate(new Date(year, month, d)); setView('day'); }}
-                                className={`h-12 rounded-lg flex flex-col items-center justify-center relative border transition-all active:scale-95
+                                className={`h-12 rounded-lg flex flex-col items-center justify-center relative border transition-all active:scale-[0.97]
                                     ${isToday ? 'bg-saibro-100 border-saibro-300 text-saibro-800 font-bold' : 'bg-white border-stone-100 text-stone-600 hover:border-saibro-200'}
                                 `}
                             >
@@ -1923,7 +1923,7 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                         <div className="flex justify-between items-center">
                             <h2 className="text-2xl font-bold text-saibro-900">Agenda</h2>
                             {currentUser.role !== 'lanchonete' && (
-                                <button onClick={handleOpenAdd} className="bg-saibro-600 text-white px-3 py-2 rounded-xl shadow-lg flex items-center gap-2 text-sm font-bold active:scale-95 transition-transform">
+                                <button onClick={handleOpenAdd} className="bg-saibro-600 text-white px-3 py-2 rounded-xl shadow-lg flex items-center gap-2 text-sm font-bold active:scale-[0.97] transition-transform">
                                     <Plus size={18} /> <span className="hidden md:inline">Nova Reserva</span>
                                 </button>
                             )}
@@ -1950,13 +1950,13 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                             <div className="flex items-center justify-between gap-4">
                                 <button
                                     onClick={() => navigate('prev')}
-                                    className="w-10 h-10 flex items-center justify-center rounded-full bg-stone-50 text-stone-400 hover:bg-stone-100 hover:text-saibro-600 transition-all active:scale-95"
+                                    className="w-10 h-10 flex items-center justify-center rounded-full bg-stone-50 text-stone-400 hover:bg-stone-100 hover:text-saibro-600 transition-all active:scale-[0.97]"
                                 >
                                     <ChevronLeft size={20} strokeWidth={2.5} />
                                 </button>
 
                                 <div className="flex flex-col items-center cursor-pointer group" onClick={goToToday}>
-                                    <div className="flex items-baseline gap-1.5 transition-transform group-active:scale-95">
+                                    <div className="flex items-baseline gap-1.5 transition-transform group-active:scale-[0.97]">
                                         <span className="text-2xl font-extrabold text-stone-800 capitalize tracking-tight leading-none">
                                             {currentDate.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '')},
                                         </span>
@@ -1971,7 +1971,7 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
 
                                 <button
                                     onClick={() => navigate('next')}
-                                    className="w-10 h-10 flex items-center justify-center rounded-full bg-stone-50 text-stone-400 hover:bg-stone-100 hover:text-saibro-600 transition-all active:scale-95"
+                                    className="w-10 h-10 flex items-center justify-center rounded-full bg-stone-50 text-stone-400 hover:bg-stone-100 hover:text-saibro-600 transition-all active:scale-[0.97]"
                                 >
                                     <ChevronRight size={20} strokeWidth={2.5} />
                                 </button>
@@ -2917,14 +2917,14 @@ export const AddReservationModal: React.FC<{
                     )}
 
                     {step < 3 ? (
-                        <button onClick={handleNext} className="flex-1 py-3 bg-stone-800 text-white rounded-xl font-bold hover:bg-black transition-colors shadow-lg active:scale-95 flex items-center justify-center gap-2">
+                        <button onClick={handleNext} className="flex-1 py-3 bg-stone-800 text-white rounded-xl font-bold hover:bg-black transition-colors shadow-lg active:scale-[0.97] flex items-center justify-center gap-2">
                             Próximo <ArrowRight size={18} />
                         </button>
                     ) : (
                         <button
                             onClick={handleConfirm}
                             disabled={saving}
-                            className={`flex-1 py-3 rounded-xl font-bold transition-colors shadow-lg   active:scale-95 flex items-center justify-center gap-2 ${saving ? 'bg-stone-300 text-stone-500 cursor-not-allowed shadow-none' : 'bg-saibro-600 text-white hover:bg-saibro-700'}`}
+                            className={`flex-1 py-3 rounded-xl font-bold transition-colors shadow-lg   active:scale-[0.97] flex items-center justify-center gap-2 ${saving ? 'bg-stone-300 text-stone-500 cursor-not-allowed shadow-none' : 'bg-saibro-600 text-white hover:bg-saibro-700'}`}
                         >
                             {saving ? <Loader2 className="animate-spin" size={18} /> : <Check size={18} />}
                             {saving ? 'Salvando...' : 'Confirmar Reserva'}
