@@ -47,6 +47,7 @@ const reservations = [
     { id: 'r2', type: 'Aula', date: dia(0), start_time: '08:00', end_time: '09:00', court_id: 'c2', creator_id: profiles[2].id, participant_ids: [profiles[2].id], status: 'active' },
     { id: 'r3', type: 'Desafio', date: dia(0), start_time: '18:00', end_time: '19:30', court_id: 'c1', creator_id: profiles[3].id, participant_ids: [profiles[3].id, profiles[4].id], status: 'active' },
     { id: 'r4', type: 'Play', date: dia(1), start_time: '19:00', end_time: '20:00', court_id: 'c3', creator_id: profiles[5].id, participant_ids: [profiles[5].id, profiles[6].id], status: 'active' },
+    { id: 'r5', type: 'Play', date: dia(0), start_time: '20:00', end_time: '21:00', court_id: 'c2', creator_id: ME, participant_ids: [ME, profiles[2].id], status: 'active' },
 ];
 const tabelas: Record<string, unknown[]> = {
     profiles,

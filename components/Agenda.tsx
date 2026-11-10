@@ -7,6 +7,7 @@ import { supabase } from '../lib/supabase';
 import { loadAgendaReservations } from '../lib/agenda/loadAgendaReservations';
 import { defaultHistoryStart, extendedHistoryStart, firstDayShown } from '../lib/agenda/reservationWindow';
 import { AgendaLoadError } from './agenda/AgendaLoadError';
+import { SeuAgora } from './agenda/SeuAgora';
 import { notify } from '../lib/notifications';
 import { matchesSearch } from '../lib/searchText';
 import { useConfirm } from '../hooks/useConfirm';
@@ -1930,6 +1931,14 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                         </div>
 
                         {loadFailed && <AgendaLoadError onRetry={() => fetchData(true)} />}
+
+                        <SeuAgora
+                            reservas={reservations}
+                            quadras={courts}
+                            userId={currentUser.id}
+                            agora={getNowInFortaleza()}
+                            onAbrir={setSelectedReservation}
+                        />
 
                         {/* View Switcher */}
                         <div className="bg-stone-100 p-1 rounded-lg flex text-sm font-medium">
