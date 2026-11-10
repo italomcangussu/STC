@@ -20,6 +20,7 @@ import { TennisCourtAnimation } from './ui/TennisCourtAnimation';
 import { Challenge } from '../types';
 import { getNowInFortaleza, formatDate, addDays, formatDateBr, getSetWinner, getMatchWinner, countSetsWon, isMember } from '../utils';
 import { canParticipateInClass, getCardStatus, StudentLevel, STUDENT_LEVELS } from '../lib/students/studentRules';
+import { Button, EmptyState } from './ui';
 
 // Court type
 interface Court {
@@ -1777,7 +1778,13 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
             </h3>
             <div className="space-y-3">
                 {filteredReservations.length === 0 ? (
-                    !loadFailed && <div className="text-center py-10 text-stone-600 section-header animate-fade-in">Nenhuma reserva para este dia.</div>
+                    !loadFailed && (
+                        <EmptyState
+                            title="Quadras livres o dia todo"
+                            hint="Ninguém reservou este dia ainda."
+                            action={currentUser.role !== 'lanchonete' ? <Button icon={<Plus size={18} />} onClick={handleOpenAdd}>Reservar um horário</Button> : undefined}
+                        />
+                    )
                 ) : (
                     filteredReservations.map((res, index) => (
                         <div key={res.id} className={`animate-slide-in opacity-0`} style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'forwards' }}>

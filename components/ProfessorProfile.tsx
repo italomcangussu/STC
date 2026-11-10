@@ -665,11 +665,15 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
             confirmLabel: 'Cancelar aula',
             cancelLabel: 'Manter',
         })) {
-            await supabase
+            const { error } = await supabase
                 .from('reservations')
                 .update({ status: 'cancelled' })
                 .eq('id', id);
-
+            if (error) {
+                notify.failure(error, 'Não foi possível cancelar a aula.', { event: 'class_cancel_failed' });
+                return;
+            }
+            notify.feito('Aula cancelada', { descricao: 'O horário voltou a ficar livre.' });
             setReservations(prev => prev.map(r => r.id === id ? { ...r, status: 'cancelled' } : r));
         }
     };

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { User, Challenge, Court } from '../types';
 import { Trophy, XCircle, CheckCircle, Calendar, Clock, MapPin, Loader2, AlertTriangle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { notify } from '../lib/notifications';
 import { PlayerStats, fetchRanking } from '../lib/rankingService';
 
 interface ChallengeNotificationPopupProps {
@@ -91,13 +92,14 @@ export const ChallengeNotificationPopup: React.FC<ChallengeNotificationPopupProp
         try {
             // Update challenge status
             const newStatus = accept ? 'accepted' : 'declined';
-            await supabase
+            const { error } = await supabase
                 .from('challenges')
                 .update({
                     status: newStatus,
                     notification_seen: true
                 })
                 .eq('id', challenge.id);
+            if (error) throw error;
 
             // If declined, cancel the linked reservation
             if (!accept && challenge.reservationId) {
@@ -107,9 +109,12 @@ export const ChallengeNotificationPopup: React.FC<ChallengeNotificationPopupProp
                     .eq('id', challenge.reservationId);
             }
 
+            notify.feito(accept ? 'Desafio aceito' : 'Desafio recusado', {
+                descricao: accept ? 'Ele aparece na sua agenda.' : undefined,
+            });
             onClose();
         } catch (err) {
-            console.error('Error responding to challenge:', err);
+            notify.failure(err, 'Não foi possível responder ao desafio.', { event: 'challenge_respond_failed' });
             setResponding(false);
         }
     };

@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLiveRefresh } from '../hooks/useLiveRefresh';
-import { Trophy, Info, Crown, Loader2, ChevronRight, Target } from 'lucide-react';
+import { Info, Crown, Loader2, ChevronRight, Target } from 'lucide-react';
 import { fetchRanking, fetchRankingByCategory, PlayerStats, CLASS_ORDER } from '../lib/rankingService';
+import { EmptyState } from './ui';
 
 interface RankingProps {
   onSelectProfile: (userId: string) => void;
@@ -274,10 +275,7 @@ export const Ranking: React.FC<RankingProps> = ({ onSelectProfile }) => {
         )}
 
         {displayPlayers.length === 0 && (
-          <div className="text-center py-12 text-stone-400">
-            <Trophy size={48} className="mx-auto mb-3 opacity-50" />
-            <p>Nenhum atleta nesta categoria.</p>
-          </div>
+          <EmptyState kind="sem-resultado" title="Ninguém nesta categoria ainda" hint="Escolha outra categoria acima." />
         )}
       </div>
     </div>

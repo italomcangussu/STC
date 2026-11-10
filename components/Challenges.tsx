@@ -8,6 +8,7 @@ import { supabase } from '../lib/supabase';
 import { notify } from '../lib/notifications';
 import { LiveScoreboard } from './LiveScoreboard';
 import { getNowInFortaleza, formatDate } from '../utils';
+import { EmptyState } from './ui';
 
 // Time slots available for challenges (7am to 9pm)
 const TIME_SLOTS = [
@@ -873,7 +874,7 @@ export const ChallengesView: React.FC<{ currentUser: User }> = ({ currentUser })
                     <PlayCircle size={18} className="text-saibro-500" /> Meus Desafios (Enviados)
                 </h3>
                 {pendingSent.length === 0 ? (
-                    <p className="text-sm text-stone-400 italic section-header">Nenhum desafio ativo no momento.</p>
+                    <EmptyState bare title="Nenhum desafio enviado" hint="Toque em “Criar Novo Desafio” para escolher um adversário." className="py-6" />
                 ) : (
                     pendingSent.map(c => {
                         const challenged = profiles[c.challengedId];

@@ -329,11 +329,16 @@ export const Klanches: React.FC<KlanchesProps> = ({ currentUser }) => {
             confirmLabel: 'Recebi o pagamento',
         })) return;
 
-        await supabase
+        const { error } = await supabase
             .from('consumptions')
             .update({ status: 'paid' })
             .eq('user_id', userId)
             .eq('status', 'open');
+        if (error) {
+            notify.failure(error, 'Não foi possível baixar a conta.', { event: 'consumption_liquidate_failed' });
+            return;
+        }
+        notify.feito('Conta paga', { descricao: 'O consumo aberto deste cliente foi baixado.' });
 
         setConsumptions(consumptions.map(c =>
             c.userId === userId && c.status === 'open'
