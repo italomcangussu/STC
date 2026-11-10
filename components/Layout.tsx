@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
     Calendar, Trophy, LayoutDashboard,
-    Sandwich, Menu, X, LogOut, GraduationCap, Swords, Settings, Bell, Gamepad2, Shuffle, ChevronRight, Wallet, MessagesSquare, ShieldCheck, FileSignature
+    Sandwich, Menu, X, LogOut, GraduationCap, Swords, Settings, Bell, Gamepad2, Shuffle, ChevronRight, Wallet, MessagesSquare, ShieldCheck, FileSignature, ListOrdered, Zap
 } from 'lucide-react';
 import { User } from '../types';
 import { supabase } from '../lib/supabase';
@@ -39,6 +39,8 @@ const NavBadge: React.FC<{ count?: number; active: boolean }> = ({ count, active
     ) : null
 );
 
+const ABAS_FIXAS = ['agenda', 'ranking', 'desafios', 'campeonatos'];
+
 export const Layout: React.FC<LayoutProps> = ({ children, view, setView, currentUser, onLogout }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [_hasActiveChamps, setHasActiveChamps] = useState(false);
@@ -69,6 +71,14 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
             setLogoClicks(0);
         }
     }, [logoClicks, currentUser.role, setView]);
+
+    // Esc fecha a folha "Mais".
+    useEffect(() => {
+        if (!isMenuOpen) return;
+        const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setIsMenuOpen(false); };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, [isMenuOpen]);
 
     // Check for active championships
     useEffect(() => {
@@ -132,9 +142,9 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
     // Dynamic Navigation Items
     const navItems: NavItem[] = [
         { id: 'agenda', label: 'Agenda', icon: <Calendar size={20} />, roles: ['admin', 'socio'] },
-        { id: 'ranking', label: 'Ranking', icon: <Trophy size={20} />, roles: ['admin', 'socio'] },
+        { id: 'ranking', label: 'Ranking', icon: <ListOrdered size={20} />, roles: ['admin', 'socio'] },
         { id: 'desafios', label: 'Desafios', icon: <Swords size={20} />, roles: ['admin', 'socio'] },
-        { id: 'superset', label: 'SuperSet', icon: <Trophy size={20} />, roles: ['admin', 'socio'] },
+        { id: 'superset', label: 'SuperSet', icon: <Zap size={20} />, roles: ['admin', 'socio'] },
         { id: 'campeonatos', label: 'Campeonatos', icon: <Trophy size={20} />, roles: ['admin', 'socio'] },
         { id: 'tenisproplayer', label: 'TenisProPlayer', icon: <Gamepad2 size={20} />, roles: ['admin', 'socio'] },
         { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} />, roles: ['admin', 'socio'] },
@@ -160,6 +170,14 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
 
     const filteredNav = navItems.filter(item => (!item.roles || item.roles.includes(currentUser.role)));
 
+    // Barra de baixo: as quatro tarefas de toda semana, fixas; o resto mora em "Mais".
+    // Perfis sem elas (lanchonete) ficam com os seus próprios itens.
+    const fixas = filteredNav.filter(item => ABAS_FIXAS.includes(item.id));
+    const abas = fixas.length > 0 ? fixas : filteredNav.slice(0, 4);
+    const idsAbas = new Set(abas.map(a => a.id));
+    const maisAtivo = isMenuOpen || !idsAbas.has(view);
+    const pendenteNoMais = filteredNav.some(i => !idsAbas.has(i.id) && (i.badge ?? 0) > 0);
+
     return (
         <div className="relative h-full flex flex-col md:flex-row w-full max-w-full min-w-0 overflow-hidden bg-clay-pattern">
             {/* Mobile Header Bar (HIG Standard Navigation Bar) */}
@@ -173,7 +191,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
                     />
                     <div className="flex flex-col">
                         <h1 className="text-lg font-extrabold text-saibro-700 tracking-tight leading-none">STC Play</h1>
-                        <span className="text-meta text-stone-400 font-semibold tracking-wider uppercase leading-none mt-0.5">Clube de Tênis</span>
+                        <span className="text-meta text-texto-3 font-semibold tracking-wider uppercase leading-none mt-0.5">Clube de Tênis</span>
                     </div>
                 </div>
 
@@ -182,7 +200,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
                         <button
                             onClick={handleEnablePush}
                             aria-label="Ativar Notificações"
-                            className="w-9 h-9 rounded-full bg-saibro-100 text-saibro-700 flex items-center justify-center active:scale-[0.97] transition-transform shadow-xs"
+                            className="w-11 h-11 rounded-full bg-acao-suave text-acao-forte flex items-center justify-center active:scale-[0.97] transition-transform"
                         >
                             <Bell size={18} />
                         </button>
@@ -191,7 +209,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
                     {/* Tactile Menu Trigger */}
                     <button
                         onClick={() => setIsMenuOpen(!isMenuOpen)}
-                        className={`flex items-center gap-1.5 p-1 pl-1.5 pr-2 rounded-full border transition-all shadow-xs ${
+                        className={`flex min-h-11 items-center gap-1.5 p-1 pl-1.5 pr-2 rounded-full border transition-all ${
                             isMenuOpen
                                 ? 'bg-saibro-500 border-saibro-600 text-white'
                                 : 'bg-saibro-50/90 border-saibro-200/90 text-saibro-900 active:scale-[0.97]'
@@ -225,14 +243,15 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
                 <>
                     {/* Backdrop overlay */}
                     <div
-                        className="fixed inset-0 z-40 bg-black/40 backdrop-blur-xs md:hidden animate-fade-in"
+                        className="fixed inset-0 z-50 bg-stone-950/50 md:hidden animate-in fade-in"
                         onClick={() => setIsMenuOpen(false)}
                     />
 
                     {/* Origin-aware Popover Menu */}
-                    <div className="fixed top-16 right-3 z-50 w-[calc(100vw-24px)] max-w-sm bg-white/95 backdrop-blur-2xl border border-stone-200/90 rounded-3xl shadow-2xl overflow-hidden animate-popover-enter max-h-[80vh] flex flex-col md:hidden">
+                    <div role="dialog" aria-modal="true" aria-label="Mais" className="anim-folha fixed inset-x-0 bottom-0 z-50 bg-superficie rounded-t-folha shadow-e3 overflow-hidden max-h-[85dvh] flex flex-col md:hidden pb-[env(safe-area-inset-bottom)]">
+                        <div className="flex justify-center pt-2 flex-none" aria-hidden><span className="h-1.5 w-10 rounded-full bg-linha" /></div>
                         {/* User Profile Snippet */}
-                        <div className="p-4 bg-gradient-to-b from-saibro-50/80 to-transparent border-b border-saibro-100 flex-none">
+                        <div className="p-4 pt-2 border-b border-linha flex-none">
                             <button
                                 onClick={() => { setView('perfil'); setIsMenuOpen(false); }}
                                 className="flex items-center justify-between w-full bg-white/80 p-3 rounded-2xl border border-saibro-200/60 shadow-xs hover:bg-white active:scale-[0.98] transition-all text-left group"
@@ -253,7 +272,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
                                         </div>
                                     </div>
                                 </div>
-                                <ChevronRight size={18} className="text-stone-400 group-hover:text-saibro-600 transition-colors shrink-0" />
+                                <ChevronRight size={18} className="text-texto-3 group-hover:text-acao transition-colors shrink-0" />
                             </button>
 
                             {/* Push Notification Banner */}
@@ -281,22 +300,22 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
                         <div className="p-3 overflow-y-auto space-y-4 flex-1 custom-scrollbar">
                             {/* Regular Navigation Items */}
                             <div className="space-y-1">
-                                <p className="text-meta font-extrabold tracking-wider uppercase text-stone-400 px-3 mb-1">Menu Principal</p>
-                                {filteredNav.filter(item => !item.id.startsWith('admin-') && item.id !== 'championship-admin' && item.id !== 'championship-creator' && item.id !== 'financeiro-admin' && item.id !== 'conversas').map(item => (
+                                <p className="text-meta font-bold uppercase tracking-wider text-texto-3 px-3 mb-1">Mais do clube</p>
+                                {filteredNav.filter(item => !idsAbas.has(item.id) && !item.id.startsWith('admin-') && item.id !== 'championship-admin' && item.id !== 'championship-creator' && item.id !== 'financeiro-admin' && item.id !== 'conversas').map(item => (
                                     <button
                                         key={item.id}
                                         onClick={() => { goTo(item.id); setIsMenuOpen(false); }}
-                                        className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all active:scale-[0.98] ${
+                                        className={`w-full min-h-12 flex items-center gap-3 px-3.5 rounded-xl text-base font-medium transition-colors active:scale-[0.98] ${
                                             view === item.id
-                                                ? 'bg-sunset-gradient text-white shadow-md   font-bold'
-                                                : 'text-stone-700 hover:bg-saibro-50 hover:text-saibro-700'
+                                                ? 'bg-acao-suave text-acao-forte font-semibold'
+                                                : 'text-texto hover:bg-superficie-2'
                                         }`}
                                     >
-                                        <div className={`${view === item.id ? 'text-white' : 'text-saibro-600'}`}>
+                                        <div className="text-acao">
                                             {item.icon}
                                         </div>
                                         <span>{item.label}</span>
-                                        <NavBadge count={item.badge} active={view === item.id} />
+                                        <NavBadge count={item.badge} active={false} />
                                     </button>
                                 ))}
                             </div>
@@ -312,13 +331,13 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
                                         <button
                                             key={item.id}
                                             onClick={() => { goTo(item.id); setIsMenuOpen(false); }}
-                                            className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all active:scale-[0.98] ${
+                                            className={`w-full min-h-12 flex items-center gap-3 px-3.5 rounded-xl text-base font-medium transition-colors active:scale-[0.98] ${
                                                 view === item.id
-                                                    ? 'bg-sunset-gradient text-white shadow-md   font-bold'
-                                                    : 'text-stone-700 hover:bg-saibro-50 hover:text-saibro-700'
+                                                    ? 'bg-acao-suave text-acao-forte font-semibold'
+                                                    : 'text-texto hover:bg-superficie-2'
                                             }`}
                                         >
-                                            <div className={`${view === item.id ? 'text-white' : 'text-saibro-600'}`}>
+                                            <div className="text-acao">
                                                 {item.icon}
                                             </div>
                                             <span>{item.label}</span>
@@ -370,7 +389,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
                             </p>
                         </div>
                     </button>
-                    <p className="text-meta text-stone-400 text-center mt-1">Toque para ver/editar perfil</p>
+                    <p className="text-meta text-texto-3 text-center mt-1">Toque para ver/editar perfil</p>
 
                     {/* Push Notification Banner */}
                     {showPushBanner && (
@@ -399,13 +418,13 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
                             key={item.id}
                             onClick={() => goTo(item.id)}
                             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-smooth ${view === item.id
-                                ? 'bg-sunset-gradient text-white shadow-lg  '
-                                : 'text-stone-600 hover:bg-saibro-100 hover:text-saibro-700'
+                                ? 'bg-acao-suave text-acao-forte font-semibold'
+                                : 'text-texto-2 hover:bg-superficie-2 hover:text-texto'
                                 }`}
                         >
                             {item.icon}
                             {item.label}
-                            <NavBadge count={item.badge} active={view === item.id} />
+                            <NavBadge count={item.badge} active={false} />
                         </button>
                     ))}
 
@@ -424,21 +443,37 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
                 </div>
             </main>
 
-            {/* Bottom Nav (Mobile Only) */}
-            <div className="absolute bottom-0 left-0 right-0 md:hidden bg-white/95 backdrop-blur-md border-t border-saibro-200 flex justify-around px-6 pt-3 pb-navbottom z-40 shadow-[0_-8px_20px_rgba(0,0,0,0.08)]">
-                {filteredNav.slice(0, 5).map(item => (
-                    <button
-                        key={item.id}
-                        onClick={() => goTo(item.id)}
-                        className={`flex flex-col items-center justify-center py-1 px-1 rounded-xl flex-1 transition-all duration-300 active:scale-[0.97] ${view === item.id ? 'text-saibro-600 bg-saibro-50/50 shadow-inner' : 'text-stone-400 hover:text-stone-600'}`}
-                    >
-                        <div className={`transition-transform duration-300 ${view === item.id ? 'scale-110' : ''}`}>
-                            {React.cloneElement(item.icon as React.ReactElement<any>, { size: 22 })}
-                        </div>
-                        <span className={`text-meta mt-1 font-bold uppercase tracking-tighter truncate w-full text-center transition-all ${view === item.id ? 'opacity-100 scale-105' : 'opacity-70'}`}>{item.label}</span>
-                    </button>
-                ))}
-            </div>
+            {/* Barra de baixo (só celular): quatro tarefas fixas + Mais */}
+            <nav aria-label="Principal" className="absolute bottom-0 left-0 right-0 md:hidden bg-superficie border-t border-linha flex gap-0.5 px-1 pt-1.5 pb-navbottom z-40">
+                {abas.map(item => {
+                    const ativo = view === item.id && !isMenuOpen;
+                    return (
+                        <button
+                            key={item.id}
+                            onClick={() => { setIsMenuOpen(false); goTo(item.id); }}
+                            aria-current={ativo ? 'page' : undefined}
+                            className={`flex min-h-12 flex-auto basis-0 flex-col items-center justify-center gap-0.5 active:scale-[0.97] transition-colors ${ativo ? 'text-acao-forte' : 'text-texto-2'}`}
+                        >
+                            <span className={`flex h-7 w-14 items-center justify-center rounded-full transition-colors ${ativo ? 'bg-acao-suave' : ''}`}>
+                                {React.cloneElement(item.icon as React.ReactElement<any>, { size: 22, strokeWidth: ativo ? 2.25 : 1.75 })}
+                            </span>
+                            <span className={`whitespace-nowrap text-center text-meta ${ativo ? 'font-bold' : 'font-medium'}`}>{item.label}</span>
+                        </button>
+                    );
+                })}
+                <button
+                    onClick={() => setIsMenuOpen(o => !o)}
+                    aria-expanded={isMenuOpen}
+                    aria-label={pendenteNoMais ? 'Mais (há pendências)' : 'Mais'}
+                    className={`flex min-h-12 flex-auto basis-0 flex-col items-center justify-center gap-0.5 active:scale-[0.97] transition-colors ${maisAtivo ? 'text-acao-forte' : 'text-texto-2'}`}
+                >
+                    <span className={`relative flex h-7 w-14 items-center justify-center rounded-full transition-colors ${maisAtivo ? 'bg-acao-suave' : ''}`}>
+                        <Menu size={22} strokeWidth={maisAtivo ? 2.25 : 1.75} />
+                        {pendenteNoMais && <span className="absolute right-3 top-0.5 h-2.5 w-2.5 rounded-full border-2 border-superficie bg-erro" aria-hidden />}
+                    </span>
+                    <span className={`text-meta ${maisAtivo ? 'font-bold' : 'font-medium'}`}>Mais</span>
+                </button>
+            </nav>
 
             <PushPermissionPrompt />
 
