@@ -94,7 +94,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ currentUser, o
                                 ) : avatarUrl ? (
                                     <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
                                 ) : (
-                                    <UserIcon size={40} className="text-stone-300" />
+                                    <UserIcon size={40} className="text-linha-forte" />
                                 )}
                             </div>
                             <button

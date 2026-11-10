@@ -166,7 +166,7 @@ export const MatchGenerationModal: React.FC<Props> = ({
                     {step === 'selection' ? (
                         <div className="space-y-6">
                             <div>
-                                <label className="block text-xs font-extrabold text-stone-400 uppercase tracking-widest mb-3 px-1">Selecione a Categoria</label>
+                                <label className="block text-xs font-extrabold text-texto-3 uppercase tracking-widest mb-3 px-1">Selecione a Categoria</label>
                                 <div className="grid grid-cols-2 gap-2">
                                     {CLASSES.map(cls => (
                                         <button
@@ -196,10 +196,10 @@ export const MatchGenerationModal: React.FC<Props> = ({
                                                 }`}
                                         >
                                             <div className="flex items-center gap-3">
-                                                <Calendar size={18} className={selectedRoundId === round.id ? 'text-saibro-600' : 'text-stone-300'} />
+                                                <Calendar size={18} className={selectedRoundId === round.id ? 'text-saibro-600' : 'text-linha-forte'} />
                                                 <div>
                                                     <p className={`text-sm font-bold ${selectedRoundId === round.id ? 'text-saibro-700' : 'text-stone-700'}`}>{round.name}</p>
-                                                    <p className="text-xs text-stone-400">{round.start_date} até {round.end_date}</p>
+                                                    <p className="text-xs text-texto-3">{round.start_date} até {round.end_date}</p>
                                                 </div>
                                             </div>
                                             {selectedRoundId === round.id && <Check size={18} className="text-saibro-600" />}
@@ -211,7 +211,7 @@ export const MatchGenerationModal: React.FC<Props> = ({
                     ) : step === 'preview' ? (
                         <div className="space-y-6">
                             <div className="flex items-center justify-between pb-2">
-                                <h4 className="text-xs font-extrabold text-stone-400 uppercase tracking-widest">Preview dos Confrontos</h4>
+                                <h4 className="text-xs font-extrabold text-texto-3 uppercase tracking-widest">Preview dos Confrontos</h4>
                                 <span className="bg-saibro-100 text-saibro-600 text-xs font-extrabold px-2 py-0.5 rounded-full">{previewMatches.length} JOGOS</span>
                             </div>
                             <div className="space-y-3">
@@ -219,11 +219,11 @@ export const MatchGenerationModal: React.FC<Props> = ({
                                     <div key={i} className="p-4 rounded-2xl bg-stone-50 border border-stone-100 flex items-center justify-between gap-4">
                                         <div className="flex-1 text-xs">
                                             <p className="font-bold text-stone-800">{m._nameA}</p>
-                                            <p className="text-xs text-stone-300 font-extrabold my-1">VS</p>
+                                            <p className="text-xs text-linha-forte font-extrabold my-1">VS</p>
                                             <p className="font-bold text-stone-800">{m._nameB}</p>
                                         </div>
                                         <div className="text-right">
-                                            <span className="text-xs font-extrabold text-stone-400 uppercase">Grupo {m._groupName}</span>
+                                            <span className="text-xs font-extrabold text-texto-3 uppercase">Grupo {m._groupName}</span>
                                         </div>
                                     </div>
                                 ))}

@@ -76,7 +76,7 @@ export const CreatorSetup: React.FC<Props> = ({ value, onChange, onNext }) => {
 
                 <div>
                     <label htmlFor="creator-series" className="block text-xs font-bold text-stone-500 uppercase mb-1">
-                        Série <span className="font-medium normal-case text-stone-400">(liga as edições para defesa de pontos)</span>
+                        Série <span className="font-medium normal-case text-texto-3">(liga as edições para defesa de pontos)</span>
                     </label>
                     <select
                         id="creator-series"
@@ -147,8 +147,8 @@ export const CreatorSetup: React.FC<Props> = ({ value, onChange, onNext }) => {
                     aria-expanded={showAdvanced}
                     className="w-full flex items-center justify-between font-extrabold text-stone-800"
                 >
-                    <span className="flex items-center gap-2"><Settings size={16} className="text-stone-400" /> Avançado — pontuação</span>
-                    <span className="text-xs font-bold text-stone-400">{showAdvanced ? 'ocultar' : 'usando padrão'}</span>
+                    <span className="flex items-center gap-2"><Settings size={16} className="text-texto-3" /> Avançado — pontuação</span>
+                    <span className="text-xs font-bold text-texto-3">{showAdvanced ? 'ocultar' : 'usando padrão'}</span>
                 </button>
 
                 {showAdvanced && (
@@ -163,7 +163,7 @@ export const CreatorSetup: React.FC<Props> = ({ value, onChange, onNext }) => {
                             ['finalRankingPts', 'Bônus do campeão'],
                         ] as [keyof ScoringRules, string][]).map(([key, label]) => (
                             <div key={key}>
-                                <label htmlFor={`scoring-${key}`} className="block text-xs font-bold text-stone-400 uppercase mb-1">{label}</label>
+                                <label htmlFor={`scoring-${key}`} className="block text-xs font-bold text-texto-3 uppercase mb-1">{label}</label>
                                 <input
                                     id={`scoring-${key}`}
                                     type="number"

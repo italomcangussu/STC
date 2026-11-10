@@ -4,7 +4,7 @@ Plano: `plano-evolucao.md`. Tokens: `index.css` @theme (bloco "CARDÁPIO v2"). T
 
 ## Frase de identidade
 
-Chão liso stone-50, superfícies brancas com borda de 1 px e sombra de contato, Inter de 400 a 800, saibro só para ação ou "agora", raio 8 / 14 / 24, alvo de 44 px e nenhum texto abaixo de 12 px. Nada de foto nem vidro atrás de texto.
+Chão liso stone-50, superfícies brancas com borda de 1 px e sombra de contato, Inter de 400 a 800, saibro só para ação ou "agora", raio 8 / 14 / 24, alvo de 48 px (44 pt no iOS, 48 dp no Android: fica o maior) e nenhum texto abaixo de 12 px. Nada de foto nem vidro atrás de texto.
 
 ## Papéis de cor (use o papel, não o tom)
 

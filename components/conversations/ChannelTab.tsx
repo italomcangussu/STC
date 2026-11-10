@@ -204,7 +204,7 @@ function MentionCard({ canal, amostras, onChanged, onRefresh }: {
         {!verificada && !temIdentidade && <span className="text-xs text-amber-700">Informe o telefone ou LID da conta primeiro.</span>}
         {verificada && canal.mention_verified_at && <span className="text-xs text-stone-500">desde {dataHora.format(new Date(canal.mention_verified_at))}</span>}
       </div>
-      <h4 className="mt-4 text-meta font-extrabold uppercase tracking-wider text-stone-400">Últimas mensagens de grupo e como foram classificadas</h4>
+      <h4 className="mt-4 text-meta font-extrabold uppercase tracking-wider text-texto-3">Últimas mensagens de grupo e como foram classificadas</h4>
       {amostras.length === 0 ? (
         <p className="mt-1 text-xs text-stone-500">Nenhuma mensagem de grupo gravada ainda (grupos só são gravados depois de permitidos).</p>
       ) : (
@@ -213,7 +213,7 @@ function MentionCard({ canal, amostras, onChanged, onRefresh }: {
             <li key={m.id} className="flex items-start justify-between gap-2 rounded-xl border border-stone-100 px-3 py-2 text-xs">
               <span className="min-w-0">
                 <span className="block truncate text-stone-700">{m.body ?? '(sem texto)'}</span>
-                <span className="text-meta text-stone-400">{dataHora.format(new Date(m.created_at))}{m.mention_evidence ? ` · evidência: ${m.mention_evidence}` : ''}</span>
+                <span className="text-meta text-texto-3">{dataHora.format(new Date(m.created_at))}{m.mention_evidence ? ` · evidência: ${m.mention_evidence}` : ''}</span>
               </span>
               <span className={cx('inline-flex shrink-0 items-center gap-0.5 rounded-full px-2 py-0.5 text-meta font-bold', m.mention_direct ? 'bg-emerald-100 text-emerald-800' : 'bg-stone-100 text-stone-500')}>
                 <AtSign size={10} aria-hidden /> {m.mention_direct ? 'chamou o STC' : 'sem menção direta'}
@@ -244,11 +244,11 @@ function AiChannelCard({ canal, aiConfigured, onChanged }: { canal: Channel; aiC
     <Card title="IA neste canal" subtitle="Duas chaves separadas. Os modelos e regras ficam na aba IA.">
       {aiConfigured === false && <Notice tone="warn" title="Provedor de IA sem chave no servidor">Defina <code>STC_AI_API_KEY</code> (e, se não for OpenRouter, <code>STC_AI_BASE_URL</code>) nos segredos das funções. Sem isso a IA transfere para a equipe.</Notice>}
       {erro && <InlineAlert tone="error" title={erro} onDismiss={() => setErro(null)} />}
-      <label className="mt-2 flex min-h-11 items-center gap-2 text-sm font-semibold">
+      <label className="mt-2 flex min-h-12 items-center gap-2 text-sm font-semibold">
         <input type="checkbox" className="h-4 w-4 accent-saibro-600" checked={canal.ai_direct_enabled} disabled={ocupado} onChange={(e) => void mudar(e.target.checked, canal.ai_group_enabled)} />
         IA atende conversas individuais
       </label>
-      <label className="flex min-h-11 items-center gap-2 text-sm font-semibold">
+      <label className="flex min-h-12 items-center gap-2 text-sm font-semibold">
         <input type="checkbox" className="h-4 w-4 accent-saibro-600" checked={canal.ai_group_enabled} disabled={ocupado || !verificada} onChange={(e) => void mudar(canal.ai_direct_enabled, e.target.checked)} />
         IA atende grupos (só quem a marcar diretamente)
       </label>
@@ -282,7 +282,7 @@ function GroupsCard({ canal, grupos, loading, onChanged }: { canal: Channel; gru
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <p className="truncate text-sm font-bold text-stone-800">{g.name ?? 'Grupo sem nome'}</p>
-                    <p className="text-meta text-stone-400">{g.events_seen} evento{g.events_seen === 1 ? '' : 's'} · último {dataHora.format(new Date(g.last_seen_at))}</p>
+                    <p className="text-meta text-texto-3">{g.events_seen} evento{g.events_seen === 1 ? '' : 's'} · último {dataHora.format(new Date(g.last_seen_at))}</p>
                   </div>
                   <Badge tone={tom}>{rotulo}</Badge>
                 </div>

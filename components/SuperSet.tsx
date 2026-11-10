@@ -273,7 +273,7 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
                 {stats.totalGames > 0 && (
                     <div className="flex items-center justify-center gap-2 bg-stone-100/50 p-1.5 rounded-2xl border border-stone-200/50 self-center sm:self-auto">
                         <div className="px-3 py-1.5 bg-white rounded-xl shadow-sm border border-stone-200/50">
-                            <span className="text-meta sm:text-meta font-extrabold text-stone-400 block leading-none mb-1">JOGOS</span>
+                            <span className="text-meta sm:text-meta font-extrabold text-texto-3 block leading-none mb-1">JOGOS</span>
                             <span className="text-base sm:text-lg font-extrabold text-stone-800 leading-none tabular-nums">{stats.totalGames}</span>
                         </div>
                         <div className="px-3 py-1.5 bg-saibro-50 rounded-xl shadow-sm border border-saibro-100/50">
@@ -303,12 +303,12 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
                                     {playerAId ? (
                                         <img src={players.find(p => p.id === playerAId)?.avatar} className="w-full h-full object-cover animate-in zoom-in duration-300" alt="" />
                                     ) : (
-                                        <Users size={24} className="text-stone-300 sm:w-8 sm:h-8" />
+                                        <Users size={24} className="text-linha-forte sm:w-8 sm:h-8" />
                                     )}
                                 </div>
                                 <div className="space-y-0.5 sm:space-y-1">
-                                    <span className="text-meta sm:text-meta font-extrabold text-stone-400 uppercase tracking-widest block">Atleta A</span>
-                                    <span className={`text-meta sm:text-sm font-extrabold uppercase tracking-tight truncate max-w-[70px] sm:max-w-[100px] block ${playerAId ? 'text-stone-800' : 'text-stone-300'}`}>
+                                    <span className="text-meta sm:text-meta font-extrabold text-texto-3 uppercase tracking-widest block">Atleta A</span>
+                                    <span className={`text-meta sm:text-sm font-extrabold uppercase tracking-tight truncate max-w-[70px] sm:max-w-[100px] block ${playerAId ? 'text-stone-800' : 'text-linha-forte'}`}>
                                         {playerAId ? getPlayerName(playerAId).split(' ')[0] : 'Pendente'}
                                     </span>
                                 </div>
@@ -328,12 +328,12 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
                                     {playerBId ? (
                                         <img src={players.find(p => p.id === playerBId)?.avatar} className="w-full h-full object-cover animate-in zoom-in duration-300" alt="" />
                                     ) : (
-                                        <Users size={24} className="text-stone-300 sm:w-8 sm:h-8" />
+                                        <Users size={24} className="text-linha-forte sm:w-8 sm:h-8" />
                                     )}
                                 </div>
                                 <div className="space-y-0.5 sm:space-y-1">
-                                    <span className="text-meta sm:text-meta font-extrabold text-stone-400 uppercase tracking-widest block">Atleta B</span>
-                                    <span className={`text-meta sm:text-sm font-extrabold uppercase tracking-tight truncate max-w-[70px] sm:max-w-[100px] block ${playerBId ? 'text-stone-800' : 'text-stone-300'}`}>
+                                    <span className="text-meta sm:text-meta font-extrabold text-texto-3 uppercase tracking-widest block">Atleta B</span>
+                                    <span className={`text-meta sm:text-sm font-extrabold uppercase tracking-tight truncate max-w-[70px] sm:max-w-[100px] block ${playerBId ? 'text-stone-800' : 'text-linha-forte'}`}>
                                         {playerBId ? getPlayerName(playerBId).split(' ')[0] : 'Pendente'}
                                     </span>
                                 </div>
@@ -343,7 +343,7 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
                         {(!playerAId || !playerBId) && (
                             <div className="max-w-md mx-auto space-y-4 px-2">
                                 <div className="relative group">
-                                    <div className="absolute inset-y-0 left-4 flex items-center text-stone-400 group-focus-within:text-saibro-500 transition-colors">
+                                    <div className="absolute inset-y-0 left-4 flex items-center text-texto-3 group-focus-within:text-saibro-500 transition-colors">
                                         <Search size={16} />
                                     </div>
                                     <input
@@ -364,7 +364,7 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
                                 {playersPresentToday.length > 0 && !searchTerm && (
                                     <div className="sm:hidden flex items-center justify-center gap-1.5 py-1">
                                         <span className="flex h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse"></span>
-                                        <span className="text-meta font-extrabold text-stone-400 uppercase tracking-widest">Atletas presentes hoje</span>
+                                        <span className="text-meta font-extrabold text-texto-3 uppercase tracking-widest">Atletas presentes hoje</span>
                                     </div>
                                 )}
 
@@ -391,7 +391,7 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
                                             </button>
                                         )) : (
                                         <div className="col-span-full py-8 text-center bg-stone-50 rounded-2xl border-2 border-dashed border-stone-100">
-                                            <p className="text-xs font-extrabold text-stone-400 uppercase tracking-widest">
+                                            <p className="text-xs font-extrabold text-texto-3 uppercase tracking-widest">
                                                 Nenhum atleta encontrado com reservas para hoje
                                             </p>
                                         </div>
@@ -424,7 +424,7 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
                                     </div>
                                     <button
                                         onClick={() => setScoreA(s => Math.max(s - 1, 0))}
-                                        className="w-10 h-10 rounded-xl bg-white border border-stone-200 text-stone-400 flex items-center justify-center text-lg sm:text-2xl font-bold hover:bg-red-50 hover:text-red-500 transition-all active:scale-[0.97]"
+                                        className="w-10 h-10 rounded-xl bg-white border border-stone-200 text-texto-3 flex items-center justify-center text-lg sm:text-2xl font-bold hover:bg-red-50 hover:text-red-500 transition-all active:scale-[0.97]"
                                     >-</button>
                                 </div>
 
@@ -452,7 +452,7 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
                                     </div>
                                     <button
                                         onClick={() => setScoreB(s => Math.max(s - 1, 0))}
-                                        className="w-10 h-10 rounded-xl bg-white border border-stone-200 text-stone-400 flex items-center justify-center text-lg sm:text-2xl font-bold hover:bg-red-50 hover:text-red-500 transition-all active:scale-[0.97]"
+                                        className="w-10 h-10 rounded-xl bg-white border border-stone-200 text-texto-3 flex items-center justify-center text-lg sm:text-2xl font-bold hover:bg-red-50 hover:text-red-500 transition-all active:scale-[0.97]"
                                     >-</button>
                                 </div>
                             </div>
@@ -476,7 +476,7 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className="flex items-center justify-center gap-2 text-stone-400 bg-white border border-stone-100 px-6 py-4 rounded-3xl text-xs font-extrabold uppercase tracking-widest shadow-inner">
+                                    <div className="flex items-center justify-center gap-2 text-texto-3 bg-white border border-stone-100 px-6 py-4 rounded-3xl text-xs font-extrabold uppercase tracking-widest shadow-inner">
                                         <Zap size={16} /> Jogo em andamento...
                                     </div>
                                 )}
@@ -511,7 +511,7 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
                     <h3 className="font-extrabold text-stone-800 text-xl tracking-tighter flex items-center gap-2">
                         <History className="text-saibro-500" /> Match Feed
                     </h3>
-                    <div className="flex items-center gap-1.5 text-meta font-extrabold text-stone-400 uppercase tracking-widest bg-stone-100/80 px-3 py-1.5 rounded-full">
+                    <div className="flex items-center gap-1.5 text-meta font-extrabold text-texto-3 uppercase tracking-widest bg-stone-100/80 px-3 py-1.5 rounded-full">
                         <TrendingUp size={14} /> Recentes
                     </div>
                 </div>
@@ -573,10 +573,10 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
 
                     {history.length === 0 && (
                         <div className="py-20 text-center space-y-4">
-                            <div className="w-20 h-20 bg-stone-100 rounded-3xl flex items-center justify-center mx-auto text-stone-300">
+                            <div className="w-20 h-20 bg-stone-100 rounded-3xl flex items-center justify-center mx-auto text-linha-forte">
                                 <History size={40} />
                             </div>
-                            <p className="text-stone-400 font-extrabold text-meta uppercase tracking-widest">Aguardando estreias no Match Feed...</p>
+                            <p className="text-texto-3 font-extrabold text-meta uppercase tracking-widest">Aguardando estreias no Match Feed...</p>
                         </div>
                     )}
                 </div>

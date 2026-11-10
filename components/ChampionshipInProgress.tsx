@@ -652,7 +652,7 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                 </div>
                 <div className="flex-1">
                     <h3 className="text-sm font-extrabold text-stone-800 uppercase tracking-tighter">Regras de Agendamento</h3>
-                    <p className="text-xs text-stone-400 mt-1 leading-relaxed">
+                    <p className="text-xs text-texto-3 mt-1 leading-relaxed">
                         Jogos devem ser agendados via WhatsApp. Verifique as restrições:
                     </p>
                     <div className="flex flex-wrap gap-2 mt-3">
@@ -698,21 +698,21 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
             <div className="flex bg-stone-100 p-1.5 rounded-3xl shadow-inner">
                 <button
                     onClick={() => setActiveTab('matches')}
-                    className={`flex-1 py-3 rounded-2xl text-xs font-extrabold tracking-widest transition-all ${activeTab === 'matches' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-400'}`}
+                    className={`flex-1 py-3 rounded-2xl text-xs font-extrabold tracking-widest transition-all ${activeTab === 'matches' ? 'bg-white text-stone-900 shadow-sm' : 'text-texto-3'}`}
                 >
                     RODADAS
                 </button>
                 {!isResenhaOpen && (
                     <button
                         onClick={() => setActiveTab('standings')}
-                        className={`flex-1 py-3 rounded-2xl text-xs font-extrabold tracking-widest transition-all ${activeTab === 'standings' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-400'}`}
+                        className={`flex-1 py-3 rounded-2xl text-xs font-extrabold tracking-widest transition-all ${activeTab === 'standings' ? 'bg-white text-stone-900 shadow-sm' : 'text-texto-3'}`}
                     >
                         CLASSIFICAÇÃO
                     </button>
                 )}
                 <button
                     onClick={() => setActiveTab('bracket')}
-                    className={`flex-1 py-3 rounded-2xl text-xs font-extrabold tracking-widest transition-all ${activeTab === 'bracket' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-400'}`}
+                    className={`flex-1 py-3 rounded-2xl text-xs font-extrabold tracking-widest transition-all ${activeTab === 'bracket' ? 'bg-white text-stone-900 shadow-sm' : 'text-texto-3'}`}
                 >
                     CHAVEAMENTO
                 </button>
@@ -800,7 +800,7 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                                             className={`flex-1 py-3 rounded-2xl text-xs font-extrabold tracking-widest transition-all ${
                                                 selectedMatchClass === 'Todas'
                                                     ? 'bg-white text-stone-900 shadow-sm'
-                                                    : 'text-stone-400 hover:text-stone-600'
+                                                    : 'text-texto-3 hover:text-stone-600'
                                             }`}
                                         >
                                             TODAS
@@ -812,7 +812,7 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                                                 className={`flex-1 py-3 rounded-2xl text-xs font-extrabold tracking-widest transition-all ${
                                                     selectedMatchClass === cls
                                                         ? 'bg-white text-stone-900 shadow-sm'
-                                                        : 'text-stone-400 hover:text-stone-600'
+                                                        : 'text-texto-3 hover:text-stone-600'
                                                 }`}
                                             >
                                                 {cls.toUpperCase()}
@@ -832,7 +832,7 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
 
                                         if (filtered.length === 0) {
                                             return (
-                                                <div className="p-8 text-center text-stone-400 text-xs font-bold bg-white rounded-3xl border border-stone-100 shadow-xs">
+                                                <div className="p-8 text-center text-texto-3 text-xs font-bold bg-white rounded-3xl border border-stone-100 shadow-xs">
                                                     Nenhum jogo nesta classe para esta rodada.
                                                 </div>
                                             );
@@ -851,14 +851,14 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
 
                                             return (
                                                 <div key={match.id} className="bg-white rounded-4xl p-6 shadow-sm border border-stone-100 relative overflow-hidden transition-all hover:border-saibro-200">
-                                                    <div className="absolute top-0 left-0 bg-stone-50 px-3 py-1 rounded-br-2xl text-xs font-extrabold text-stone-400 uppercase tracking-tighter">
+                                                    <div className="absolute top-0 left-0 bg-stone-50 px-3 py-1 rounded-br-2xl text-xs font-extrabold text-texto-3 uppercase tracking-tighter">
                                                         {regA?.class || 'N/A'}
                                                     </div>
 
                                                     <div className="flex items-center gap-6 mt-2">
                                                         <div className="flex-1 space-y-4">
                                                             <div className="flex items-center justify-between">
-                                                                <span className="text-xs uppercase tracking-widest font-extrabold text-stone-400">
+                                                                <span className="text-xs uppercase tracking-widest font-extrabold text-texto-3">
                                                                     {resultLabel}
                                                                 </span>
                                                             </div>
@@ -898,7 +898,7 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                                                             ) : (
                                                                 <button
                                                                     onClick={() => setSchedulingMatch(match)}
-                                                                    className="w-10 h-10 rounded-2xl bg-stone-50 flex items-center justify-center text-stone-300 hover:text-saibro-600 transition-colors"
+                                                                    className="w-10 h-10 rounded-2xl bg-stone-50 flex items-center justify-center text-linha-forte hover:text-saibro-600 transition-colors"
                                                                 >
                                                                     <Calendar size={18} />
                                                                 </button>
@@ -1052,7 +1052,7 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                         <div className="p-6 md:w-80 border-r border-stone-100 bg-stone-50 flex flex-col gap-6 overflow-y-auto">
                             <div className="flex items-center justify-between">
                                 <h3 className="font-extrabold text-stone-800 text-lg tracking-tight">Exportar Agenda</h3>
-                                <button onClick={() => setShowExportModal(false)} className="text-stone-400 hover:text-stone-700">
+                                <button onClick={() => setShowExportModal(false)} className="text-texto-3 hover:text-stone-700">
                                     <X size={20} />
                                 </button>
                             </div>

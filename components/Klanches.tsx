@@ -221,7 +221,7 @@ export const Klanches: React.FC<KlanchesProps> = ({ currentUser }) => {
                     <h3 className="font-semibold text-stone-700 mb-3">Histórico de Consumo</h3>
                     <div className="space-y-3">
                         {myConsumptions.length === 0 ? (
-                            <p className="text-stone-400 text-center py-4">Nenhum consumo em aberto.</p>
+                            <p className="text-texto-3 text-center py-4">Nenhum consumo em aberto.</p>
                         ) : (
                             myConsumptions.map(c => {
                                 const product = products.find(p => p.id === c.productId);
@@ -233,7 +233,7 @@ export const Klanches: React.FC<KlanchesProps> = ({ currentUser }) => {
                                             </div>
                                             <div>
                                                 <p className="font-medium text-stone-800">{product?.name || 'Produto'}</p>
-                                                <p className="text-xs text-stone-400">{c.date} • {c.quantity}x</p>
+                                                <p className="text-xs text-texto-3">{c.date} • {c.quantity}x</p>
                                             </div>
                                         </div>
                                         <span className="font-bold text-saibro-700">R$ {c.totalPrice.toFixed(2)}</span>
@@ -602,7 +602,7 @@ export const Klanches: React.FC<KlanchesProps> = ({ currentUser }) => {
                     {/* Debtors List */}
                     <div className="space-y-3">
                         {debtors.length === 0 ? (
-                            <div className="text-center py-8 text-stone-400">
+                            <div className="text-center py-8 text-texto-3">
                                 <CheckCircle size={40} className="mx-auto mb-2 text-green-400" />
                                 Nenhuma conta em aberto!
                             </div>
@@ -617,12 +617,12 @@ export const Klanches: React.FC<KlanchesProps> = ({ currentUser }) => {
                                             <img src={debtor.avatar || 'https://via.placeholder.com/40'} alt="" className="w-10 h-10 rounded-full bg-stone-200" />
                                             <div className="text-left">
                                                 <p className="font-semibold text-stone-800">{debtor.name}</p>
-                                                <p className="text-xs text-stone-400">{debtor.consumptions.length} itens</p>
+                                                <p className="text-xs text-texto-3">{debtor.consumptions.length} itens</p>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <span className="text-lg font-bold text-red-500">R$ {debtor.total.toFixed(2)}</span>
-                                            {expandedDebtor === debtor.id ? <ChevronUp size={20} className="text-stone-400" /> : <ChevronDown size={20} className="text-stone-400" />}
+                                            {expandedDebtor === debtor.id ? <ChevronUp size={20} className="text-texto-3" /> : <ChevronDown size={20} className="text-texto-3" />}
                                         </div>
                                     </button>
 
@@ -638,7 +638,7 @@ export const Klanches: React.FC<KlanchesProps> = ({ currentUser }) => {
                                                             </div>
                                                             <div>
                                                                 <span className="text-stone-700">{product?.name}</span>
-                                                                <span className="text-xs text-stone-400 ml-2">{c.quantity}x • {c.date}</span>
+                                                                <span className="text-xs text-texto-3 ml-2">{c.quantity}x • {c.date}</span>
                                                             </div>
                                                         </div>
                                                         <span className="font-medium text-stone-700">R$ {c.totalPrice.toFixed(2)}</span>
@@ -668,14 +668,14 @@ export const Klanches: React.FC<KlanchesProps> = ({ currentUser }) => {
                             <p className="text-xs text-stone-500 uppercase font-semibold">Agendamentos Hoje</p>
                             <p className="text-2xl font-bold text-saibro-600">{reservations.length}</p>
                         </div>
-                        <div className="text-stone-300">
+                        <div className="text-linha-forte">
                             <Calendar size={32} />
                         </div>
                     </div>
 
                     <div className="space-y-3">
                         {reservations.length === 0 ? (
-                            <div className="text-center py-12 text-stone-400 bg-white rounded-2xl border-2 border-dashed border-stone-100">
+                            <div className="text-center py-12 text-texto-3 bg-white rounded-2xl border-2 border-dashed border-stone-100">
                                 <AlertCircle size={40} className="mx-auto mb-2 text-stone-200" />
                                 <p>Nenhum agendamento para hoje.</p>
                             </div>
@@ -700,9 +700,9 @@ export const Klanches: React.FC<KlanchesProps> = ({ currentUser }) => {
 
                                             <div className="p-4 space-y-3">
                                                 <div className="flex items-center gap-2 text-sm text-stone-600">
-                                                    <MapPin size={14} className="text-stone-400" />
+                                                    <MapPin size={14} className="text-texto-3" />
                                                     <span className="font-medium">{court?.name || 'Quadra'}</span>
-                                                    <span className="text-xs text-stone-400">({court?.type})</span>
+                                                    <span className="text-xs text-texto-3">({court?.type})</span>
                                                 </div>
 
                                                 <div className="flex flex-wrap gap-2">
@@ -722,7 +722,7 @@ export const Klanches: React.FC<KlanchesProps> = ({ currentUser }) => {
                                                 </div>
 
                                                 {res.guestName && res.guestResponsibleId && (
-                                                    <p className="text-meta text-stone-400 italic">
+                                                    <p className="text-meta text-texto-3 italic">
                                                         Responsável: {profiles.find(p => p.id === res.guestResponsibleId)?.name || 'N/A'}
                                                     </p>
                                                 )}
@@ -808,7 +808,7 @@ export const Klanches: React.FC<KlanchesProps> = ({ currentUser }) => {
                                             />
                                         </label>
                                     </div>
-                                    <p className="text-meta text-stone-400">Formatos: JPG, PNG, WEBP. Salvo em 'klancheimages'.</p>
+                                    <p className="text-meta text-texto-3">Formatos: JPG, PNG, WEBP. Salvo em 'klancheimages'.</p>
                                 </div>
                             </div>
 
@@ -819,7 +819,7 @@ export const Klanches: React.FC<KlanchesProps> = ({ currentUser }) => {
                                         <button
                                             key={icon}
                                             onClick={() => setProductForm({ ...productForm, icon })}
-                                            className={`p-3 rounded-xl border-2 transition-all ${productForm.icon === icon ? 'border-saibro-500 bg-saibro-50 text-saibro-600' : 'border-stone-200 text-stone-400'}`}
+                                            className={`p-3 rounded-xl border-2 transition-all ${productForm.icon === icon ? 'border-saibro-500 bg-saibro-50 text-saibro-600' : 'border-stone-200 text-texto-3'}`}
                                         >
                                             {ICON_MAP[icon]}
                                         </button>

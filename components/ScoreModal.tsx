@@ -90,7 +90,7 @@ export const ScoreModal: React.FC<ScoreModalProps> = ({ challenge: _challenge, c
                                         </button>
                                     </div>
 
-                                    <span className="text-stone-300 font-extrabold text-xl italic mx-1">vs</span>
+                                    <span className="text-linha-forte font-extrabold text-xl italic mx-1">vs</span>
 
                                     {/* Player B Controls */}
                                     <div className="flex items-center gap-2">

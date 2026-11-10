@@ -105,7 +105,7 @@ export const CodeSheet: React.FC<CodeSheetProps> = ({ challenge, onClose, onRese
       </div>
 
       <label className="block space-y-1">
-        <span className="text-meta font-extrabold uppercase tracking-wider text-stone-400">Código de 6 dígitos</span>
+        <span className="text-meta font-extrabold uppercase tracking-wider text-texto-3">Código de 6 dígitos</span>
         <input
           ref={input}
           value={code}

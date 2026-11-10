@@ -115,7 +115,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ currentUser,
                                 ) : avatarUrl ? (
                                     <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
                                 ) : (
-                                    <UserIcon className="text-stone-300" size={40} />
+                                    <UserIcon className="text-linha-forte" size={40} />
                                 )}
 
                                 <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">

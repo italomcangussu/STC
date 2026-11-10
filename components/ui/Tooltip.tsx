@@ -98,7 +98,7 @@ export const InfoTooltip: React.FC<InfoTooltipProps> = ({
   return (
     <Tooltip content={content} position={position} className={className}>
       {children ?? (
-        <Info size={iconSize} className="text-stone-400 hover:text-stone-600 cursor-help transition-colors" />
+        <Info size={iconSize} className="text-texto-3 hover:text-stone-600 cursor-help transition-colors" />
       )}
     </Tooltip>
   );

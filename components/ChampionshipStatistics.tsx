@@ -50,7 +50,7 @@ export const ChampionshipStatistics: React.FC<Props> = ({ matches, registrations
 
     if (registrations.length === 0) {
         return (
-            <div className="rounded-3xl border border-dashed border-stone-200 bg-white p-10 text-center text-stone-400">
+            <div className="rounded-3xl border border-dashed border-stone-200 bg-white p-10 text-center text-texto-3">
                 Nenhum inscrito encontrado.
             </div>
         );
@@ -104,7 +104,7 @@ export const ChampionshipStatistics: React.FC<Props> = ({ matches, registrations
 
 const Metric: React.FC<{ label: string; value: number }> = ({ label, value }) => (
     <div className="rounded-2xl border border-white/10 bg-white/10 p-3">
-        <p className="text-xs font-extrabold uppercase tracking-widest text-stone-300">{label}</p>
+        <p className="text-xs font-extrabold uppercase tracking-widest text-linha-forte">{label}</p>
         <p className="mt-1 text-2xl font-extrabold">{value}</p>
     </div>
 );

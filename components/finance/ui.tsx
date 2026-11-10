@@ -14,10 +14,10 @@ import { exportFilename, toCsv, type ReportSpec } from '../../lib/finance/export
 import { downloadBlob } from './hooks';
 import { financeErrorInfo, notifyFinanceError } from '../../lib/finance/errors';
 
-export const inputCls = 'w-full min-w-0 max-w-full min-h-11 rounded-xl border border-stone-200 bg-white px-3 py-2 text-sm text-stone-800 outline-hidden focus:border-saibro-400 focus:ring-2 focus:ring-saibro-100 disabled:bg-stone-50 disabled:text-stone-400';
-export const btnPrimary = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-saibro-600 px-4 py-2 text-sm font-extrabold text-white shadow-sm   transition active:scale-[0.97] hover:bg-saibro-700 disabled:opacity-50 disabled:active:scale-100';
-export const btnGhost = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-stone-200 bg-white px-4 py-2 text-sm font-bold text-stone-600 transition active:scale-[0.97] hover:bg-stone-50 disabled:opacity-50';
-export const btnDanger = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm font-bold text-red-700 transition active:scale-[0.97] hover:bg-red-100 disabled:opacity-50';
+export const inputCls = 'w-full min-w-0 max-w-full min-h-12 rounded-xl border border-stone-200 bg-white px-3 py-2 text-sm text-stone-800 outline-hidden focus:border-saibro-400 focus:ring-2 focus:ring-saibro-100 disabled:bg-stone-50 disabled:text-texto-3';
+export const btnPrimary = 'inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-saibro-600 px-4 py-2 text-sm font-extrabold text-white shadow-sm   transition active:scale-[0.97] hover:bg-saibro-700 disabled:opacity-50 disabled:active:scale-100';
+export const btnGhost = 'inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-stone-200 bg-white px-4 py-2 text-sm font-bold text-stone-600 transition active:scale-[0.97] hover:bg-stone-50 disabled:opacity-50';
+export const btnDanger = 'inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm font-bold text-red-700 transition active:scale-[0.97] hover:bg-red-100 disabled:opacity-50';
 
 export const Money: React.FC<{ cents: number; className?: string; signed?: boolean }> = ({ cents, className = '', signed }) => (
   <span className={`tabular-nums ${cents < 0 ? 'text-red-600' : ''} ${className}`}>{signed && cents > 0 ? '+' : ''}{formatBRL(cents)}</span>
@@ -44,7 +44,7 @@ export const Card: React.FC<{ title?: React.ReactNode; subtitle?: React.ReactNod
 type Tone = 'neutral' | 'good' | 'bad' | 'warn' | 'info' | 'muted';
 const toneCls: Record<Tone, string> = {
   neutral: 'bg-stone-100 text-stone-700', good: 'bg-emerald-100 text-emerald-700', bad: 'bg-red-100 text-red-700',
-  warn: 'bg-amber-100 text-amber-800', info: 'bg-sky-100 text-sky-700', muted: 'bg-stone-50 text-stone-400',
+  warn: 'bg-amber-100 text-amber-800', info: 'bg-sky-100 text-sky-700', muted: 'bg-stone-50 text-texto-3',
 };
 
 export const Badge: React.FC<{ tone?: Tone; children: React.ReactNode }> = ({ tone = 'neutral', children }) => (
@@ -57,7 +57,7 @@ const statusTone: Record<ChargeDisplayStatus, Tone> = {
 export const ChargeStatusBadge: React.FC<{ status: ChargeDisplayStatus }> = ({ status }) => <Badge tone={statusTone[status]}>{CHARGE_STATUS_LABEL[status]}</Badge>;
 
 export const Spinner: React.FC<{ label?: string }> = ({ label = 'Carregando…' }) => (
-  <div className="flex items-center justify-center gap-2 py-10 text-sm font-medium text-stone-400" role="status">
+  <div className="flex items-center justify-center gap-2 py-10 text-sm font-medium text-texto-3" role="status">
     <Loader2 className="animate-spin" size={18} /> {label}
   </div>
 );
@@ -76,9 +76,9 @@ export const ErrorBlock: React.FC<{ error: unknown; onRetry?: () => void }> = ({
 
 export const Empty: React.FC<{ title: string; hint?: string; action?: React.ReactNode; icon?: React.ReactNode }> = ({ title, hint, action, icon }) => (
   <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-stone-200 px-4 py-10 text-center">
-    {icon && <div className="text-stone-300">{icon}</div>}
+    {icon && <div className="text-linha-forte">{icon}</div>}
     <p className="text-sm font-bold text-stone-600">{title}</p>
-    {hint && <p className="max-w-sm text-xs text-stone-400">{hint}</p>}
+    {hint && <p className="max-w-sm text-xs text-texto-3">{hint}</p>}
     {action}
   </div>
 );
@@ -95,9 +95,9 @@ export const Notice: React.FC<{ tone?: 'info' | 'warn' | 'bad'; title?: string; 
 
 export const Field: React.FC<{ label: string; hint?: string; children: React.ReactNode; className?: string }> = ({ label, hint, children, className = '' }) => (
   <label className={`block min-w-0 space-y-1 ${className}`}>
-    <span className="text-meta font-extrabold uppercase tracking-wider text-stone-400">{label}</span>
+    <span className="text-meta font-extrabold uppercase tracking-wider text-texto-3">{label}</span>
     {children}
-    {hint && <span className="block text-meta text-stone-400">{hint}</span>}
+    {hint && <span className="block text-meta text-texto-3">{hint}</span>}
   </label>
 );
 
@@ -135,8 +135,8 @@ export const StatCard: React.FC<{ indicator: keyof typeof INDICATOR_DEFINITIONS;
   return (
     <div className="rounded-3xl border border-stone-100 bg-white p-4 shadow-sm">
       <div className="flex items-start justify-between gap-2">
-        <p className="text-meta font-extrabold uppercase tracking-wider text-stone-400">{def.label}</p>
-        <button onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-label={`Como é calculado: ${def.label}`} className="-m-2 flex h-11 w-11 items-center justify-center text-stone-300 hover:text-saibro-600"><Info size={16} /></button>
+        <p className="text-meta font-extrabold uppercase tracking-wider text-texto-3">{def.label}</p>
+        <button onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-label={`Como é calculado: ${def.label}`} className="-m-2 flex h-12 w-12 items-center justify-center text-linha-forte hover:text-saibro-600"><Info size={16} /></button>
       </div>
       <p className={`whitespace-nowrap text-xl font-extrabold tabular-nums sm:text-2xl ${tone === 'bad' ? 'text-red-600' : tone === 'good' ? 'text-emerald-600' : 'text-stone-800'}`}>{value}</p>
       {sub && <p className="mt-0.5 text-xs text-stone-500">{sub}</p>}
@@ -166,7 +166,7 @@ export const PeriodBar: React.FC<{ value: Period; onChange: (p: Period) => void;
             <button
               key={p} aria-pressed={isActive}
               onClick={() => { if (p === 'custom') setCustom(true); else { setCustom(false); onChange(resolvePeriod(p, today)); } }}
-              className={`min-h-11 whitespace-nowrap rounded-full border px-3.5 text-xs font-bold transition-colors ${isActive ? 'border-saibro-300 bg-saibro-50 text-saibro-700' : 'border-stone-200 bg-white text-stone-500'}`}
+              className={`min-h-12 whitespace-nowrap rounded-full border px-3.5 text-xs font-bold transition-colors ${isActive ? 'border-saibro-300 bg-saibro-50 text-saibro-700' : 'border-stone-200 bg-white text-stone-500'}`}
             >{PERIOD_LABELS[p]}</button>
           );
         })}
@@ -235,7 +235,7 @@ export const SectionTabs: React.FC<{ items: TabItem[]; value: string; onChange: 
         {items.map((i) => (
           <button
             key={i.id} role="tab" aria-selected={i.id === value} onClick={() => onChange(i.id)}
-            className={`relative min-h-11 min-w-0 rounded-xl px-1 text-sm font-bold transition ${i.id === value ? 'bg-white text-saibro-700 shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}
+            className={`relative min-h-12 min-w-0 rounded-xl px-1 text-sm font-bold transition ${i.id === value ? 'bg-white text-saibro-700 shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}
           >
             {i.label}{cornerBadge(i.badge)}
           </button>
@@ -248,7 +248,7 @@ export const SectionTabs: React.FC<{ items: TabItem[]; value: string; onChange: 
       {items.map((i) => (
         <button
           key={i.id} role="tab" aria-selected={i.id === value} onClick={() => onChange(i.id)}
-          className={`min-h-11 whitespace-nowrap rounded-full border px-3.5 text-xs font-bold transition-colors ${i.id === value ? 'border-saibro-300 bg-saibro-50 text-saibro-700' : 'border-stone-200 bg-white text-stone-500 hover:border-stone-300'}`}
+          className={`min-h-12 whitespace-nowrap rounded-full border px-3.5 text-xs font-bold transition-colors ${i.id === value ? 'border-saibro-300 bg-saibro-50 text-saibro-700' : 'border-stone-200 bg-white text-stone-500 hover:border-stone-300'}`}
         >
           {i.label}{badge(i.badge)}
         </button>

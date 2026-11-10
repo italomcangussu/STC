@@ -562,7 +562,7 @@ export default function InboxTab({ currentUserId, standalone = false }: { curren
               <div className="grid place-items-center py-10"><LoadingSpinner text="Carregando conversas…" /></div>
             ) : conversas.length === 0 && !erroLista ? (
               <div className="px-6 py-12 text-center">
-                <MessageCircle size={28} className="mx-auto text-stone-300" aria-hidden />
+                <MessageCircle size={28} className="mx-auto text-linha-forte" aria-hidden />
                 <p className="mt-2 text-sm font-semibold text-stone-800">{busca ? 'Nada encontrado' : 'Nada por aqui'}</p>
                 <p className="mt-1 text-xs text-stone-500">{busca ? 'Confira o nome, a etiqueta ou digite ao menos 3 dígitos do número.' : VAZIO[filtro]}</p>
               </div>

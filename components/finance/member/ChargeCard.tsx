@@ -19,7 +19,7 @@ const LateRows: React.FC<{ charge: ChargeStatementRow }> = ({ charge: c }) => (
         <Line label="Multa" value={formatBRL(c.fine_due_cents)} valueClass="tabular-nums" />
         <Line label="Juros" value={formatBRL(c.interest_due_cents)} valueClass="tabular-nums" />
       </>
-    ) : <p className="text-xs text-stone-400">Encargos de atraso ainda não definidos pelo clube.</p>}
+    ) : <p className="text-xs text-texto-3">Encargos de atraso ainda não definidos pelo clube.</p>}
   </>
 );
 
@@ -42,7 +42,7 @@ const Heading: React.FC<{ charge: ChargeStatementRow; meta: MemberPendencyMeta |
       <div className="min-w-0">
         <p className="text-sm font-extrabold text-stone-800">{chargeTitle(charge, meta)}</p>
         <p className="text-xs text-stone-500">{chargeSubtitle(charge, meta)}</p>
-        {guest && <p className="mt-1 text-xs text-stone-400">{guest}</p>}
+        {guest && <p className="mt-1 text-xs text-texto-3">{guest}</p>}
       </div>
       <ChargeStatusBadge status={charge.display_status} />
     </div>
@@ -59,7 +59,7 @@ const PayToggle: React.FC<{ title: string; selected: boolean; onToggle: () => vo
 const Notes: React.FC<{ charge: ChargeStatementRow }> = ({ charge }) => (
   <>
     {charge.in_review && <p className="mt-2 rounded-xl bg-amber-50 p-2 text-xs font-medium text-amber-800">Você enviou um comprovante para esta cobrança. O clube está conferindo — ela só muda de situação quando o pagamento for confirmado.</p>}
-    {charge.cancel_reason && <p className="mt-2 text-xs text-stone-400">Cancelada: {charge.cancel_reason}</p>}
+    {charge.cancel_reason && <p className="mt-2 text-xs text-texto-3">Cancelada: {charge.cancel_reason}</p>}
   </>
 );
 

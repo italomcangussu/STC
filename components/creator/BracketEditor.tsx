@@ -141,7 +141,7 @@ export const BracketEditor: React.FC<Props> = ({
         if (sourceMatch) {
             return (
                 <div
-                    className="px-3 py-2 rounded-lg border border-stone-100 bg-stone-50 text-xs text-stone-400"
+                    className="px-3 py-2 rounded-lg border border-stone-100 bg-stone-50 text-xs text-texto-3"
                     aria-label={`${faseLabel}, jogo ${slot.matchNumber}, vaga ${side.toUpperCase()}, recebe o vencedor do jogo ${sourceMatch}`}
                 >
                     vencedor do jogo {sourceMatch}
@@ -165,7 +165,7 @@ export const BracketEditor: React.FC<Props> = ({
                             : 'border-stone-200 bg-white text-stone-700'
                         : selecionando
                             ? 'border-blue-400 bg-blue-50 text-blue-700'
-                            : 'border-dashed border-stone-300 text-stone-400'
+                            : 'border-dashed border-stone-300 text-texto-3'
                 }`}
             >
                 {athlete ? (
@@ -183,7 +183,7 @@ export const BracketEditor: React.FC<Props> = ({
             <div className="bg-white rounded-2xl border border-stone-100 p-5 space-y-3">
                 <div className="flex items-center justify-between">
                     <h2 className="font-extrabold text-stone-800">Chave{classe ? ` — ${classe}` : ''}</h2>
-                    <span className="text-xs font-bold text-stone-400">
+                    <span className="text-xs font-bold text-texto-3">
                         {alocados.size}/{athletes.length} alocados
                     </span>
                 </div>
@@ -204,12 +204,12 @@ export const BracketEditor: React.FC<Props> = ({
                     <div className="flex gap-4 min-w-max">
                         {fases.map(({ phase, slots: fasesSlots }) => (
                             <div key={phase} className="w-44 shrink-0 space-y-3">
-                                <p className="text-xs font-extrabold text-stone-400 uppercase tracking-widest">
+                                <p className="text-xs font-extrabold text-texto-3 uppercase tracking-widest">
                                     {PHASE_LABELS[phase] ?? phase}
                                 </p>
                                 {fasesSlots.map(slot => (
                                     <div key={slot.matchNumber} className="space-y-1 p-2 rounded-xl bg-stone-50/60">
-                                        <p className="text-xs font-bold text-stone-400">Jogo {slot.matchNumber}</p>
+                                        <p className="text-xs font-bold text-texto-3">Jogo {slot.matchNumber}</p>
                                         {renderVaga(slot, 'a')}
                                         {renderVaga(slot, 'b')}
                                     </div>
@@ -226,7 +226,7 @@ export const BracketEditor: React.FC<Props> = ({
                         Quem entra no jogo {picking.matchNumber}, vaga {picking.side.toUpperCase()}?
                     </h3>
                     {disponiveis.length === 0 ? (
-                        <p className="text-sm text-stone-400">Todos os inscritos já estão alocados.</p>
+                        <p className="text-sm text-texto-3">Todos os inscritos já estão alocados.</p>
                     ) : (
                         <ul className="max-h-56 overflow-y-auto space-y-1">
                             {disponiveis.map(a => (

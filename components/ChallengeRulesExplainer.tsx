@@ -180,7 +180,7 @@ export const PlayerChallengeStatus: React.FC<PlayerChallengeStatusProps> = ({
         </InfoTooltip>
       </div>
 
-      <span className="text-stone-300">|</span>
+      <span className="text-linha-forte">|</span>
 
       {/* Status de Recebimento */}
       <div className="flex items-center gap-1">

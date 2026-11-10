@@ -128,7 +128,7 @@ export default function ContactPanel({ conversation: c, staff, currentUserId, on
               <div className="mt-2 grid gap-2 rounded-lg border border-stone-200 p-2">
                 <label className="relative block">
                   <span className="sr-only">Buscar cadastro</span>
-                  <Search size={14} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-stone-400" aria-hidden />
+                  <Search size={14} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-texto-3" aria-hidden />
                   <input value={buscaPessoa} onChange={(e) => setBuscaPessoa(e.target.value)} placeholder="Nome do sócio ou aluno" className={cx(fieldCls, 'min-h-9 pl-8')} />
                 </label>
                 <ul className="grid gap-1">
@@ -182,7 +182,7 @@ export default function ContactPanel({ conversation: c, staff, currentUserId, on
               <span key={t} className="inline-flex items-center gap-1 rounded-full border border-stone-200 bg-stone-50 px-2 py-0.5 text-xs">
                 #{t}
                 <button type="button" aria-label={`Remover etiqueta ${t}`} onClick={() => void meta({ tags: c.tags.filter((x) => x !== t) })}
-                  className="text-stone-400 hover:text-red-600"><X size={12} aria-hidden /></button>
+                  className="text-texto-3 hover:text-red-600"><X size={12} aria-hidden /></button>
               </span>
             ))}
             {c.tags.length === 0 && <span className="text-xs text-stone-500">Nenhuma</span>}

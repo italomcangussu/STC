@@ -84,7 +84,7 @@ export const AdminPushPermissionBanner: React.FC<AdminPushPermissionBannerProps>
         {/* Lado Esquerdo: Ícone + Explicação Transparente */}
         <div className="flex items-start gap-3.5">
           <div
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-stone-200/70 text-stone-700 shadow-inner"
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-stone-200/70 text-stone-700 shadow-inner"
             aria-hidden="true"
           >
             <Bell size={20} className="stroke-[2.2]" />

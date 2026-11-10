@@ -5,9 +5,9 @@
 import React from 'react';
 import { AlertTriangle, CheckCircle2, Info, Loader2 } from 'lucide-react';
 
-export const inputCls = 'w-full min-w-0 max-w-full min-h-11 rounded-xl border border-stone-200 bg-white px-3 py-2 text-sm text-stone-800 outline-hidden focus:border-saibro-400 focus:ring-2 focus:ring-saibro-100 disabled:bg-stone-50 disabled:text-stone-400';
-export const btnPrimary = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-saibro-600 px-4 py-2 text-sm font-extrabold text-white shadow-sm   transition active:scale-[0.97] hover:bg-saibro-700 disabled:opacity-50 disabled:active:scale-100';
-export const btnGhost = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-stone-200 bg-white px-4 py-2 text-sm font-bold text-stone-600 transition active:scale-[0.97] hover:bg-stone-50 disabled:opacity-50';
+export const inputCls = 'w-full min-w-0 max-w-full min-h-12 rounded-xl border border-stone-200 bg-white px-3 py-2 text-sm text-stone-800 outline-hidden focus:border-saibro-400 focus:ring-2 focus:ring-saibro-100 disabled:bg-stone-50 disabled:text-texto-3';
+export const btnPrimary = 'inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-saibro-600 px-4 py-2 text-sm font-extrabold text-white shadow-sm   transition active:scale-[0.97] hover:bg-saibro-700 disabled:opacity-50 disabled:active:scale-100';
+export const btnGhost = 'inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-stone-200 bg-white px-4 py-2 text-sm font-bold text-stone-600 transition active:scale-[0.97] hover:bg-stone-50 disabled:opacity-50';
 
 export const Spinner: React.FC<{ label?: string }> = ({ label = 'Carregando…' }) => (
   <div className="flex items-center justify-center gap-2 py-10 text-sm font-medium text-stone-400" role="status">

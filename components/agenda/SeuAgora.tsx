@@ -39,7 +39,7 @@ export const SeuAgora: React.FC<{
             onClick={() => onAbrir(reserva)}
             className="animate-in fade-in flex w-full min-h-16 items-center gap-3 rounded-card border border-acao/20 bg-acao-suave p-4 text-left active:scale-[0.99] transition-transform"
         >
-            <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${quando === 'agora' ? 'bg-acao text-acao-texto' : 'bg-superficie text-acao'}`}>
+            <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full ${quando === 'agora' ? 'bg-acao text-acao-texto' : 'bg-superficie text-acao'}`}>
                 <Clock size={20} aria-hidden />
             </span>
             <span className="min-w-0 flex-1">

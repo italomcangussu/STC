@@ -29,7 +29,7 @@ const SHOWN = 300;
 
 const Tile: React.FC<{ label: string; value: string; sub: string }> = ({ label, value, sub }) => (
   <div className="rounded-3xl border border-stone-100 bg-white p-4 shadow-sm">
-    <p className="text-meta font-extrabold uppercase tracking-wider text-stone-400">{label}</p>
+    <p className="text-meta font-extrabold uppercase tracking-wider text-texto-3">{label}</p>
     <p className="text-2xl font-extrabold tabular-nums text-stone-800">{value}</p>
     <p className="mt-0.5 text-xs text-stone-500">{sub}</p>
   </div>
@@ -55,7 +55,7 @@ const DayCardItem: React.FC<{ row: DayCardRow; onChanged: () => void }> = ({ row
       </div>
       <div className="mt-1 flex items-center justify-between gap-2">
         <Badge tone={row.exempt ? 'muted' : 'warn'}>{row.exempt ? 'Isento' : 'Cobrado'}</Badge>
-        <button className={`${btnGhost} min-h-11 px-3 text-xs`} disabled={busy} onClick={toggle}>{row.exempt ? 'Voltar a cobrar' : 'Isentar'}</button>
+        <button className={`${btnGhost} min-h-12 px-3 text-xs`} disabled={busy} onClick={toggle}>{row.exempt ? 'Voltar a cobrar' : 'Isentar'}</button>
       </div>
     </Row>
   );
@@ -67,7 +67,7 @@ const DayCardCard: React.FC<{ rows: DayCardRow[]; period: Period; onChanged: () 
     {rows.length === 0 ? <Empty icon={<Users size={28} />} title="Nenhum convidado no período" hint="Aparece aqui toda reserva de amistoso com convidado." /> : (
       <ul className="space-y-2">{rows.slice(0, SHOWN).map((r) => <li key={r.reservation_id}><DayCardItem row={r} onChanged={onChanged} /></li>)}</ul>
     )}
-    {rows.length > SHOWN && <p className="mt-2 text-xs text-stone-400">Mostrando {SHOWN} de {rows.length}. A exportação leva todas.</p>}
+    {rows.length > SHOWN && <p className="mt-2 text-xs text-texto-3">Mostrando {SHOWN} de {rows.length}. A exportação leva todas.</p>}
   </Card>
 );
 
@@ -87,10 +87,10 @@ const PaymentItem: React.FC<{ payment: StudentPaymentRow; onChanged: () => void 
         </div>
         <div className="flex shrink-0 items-center gap-1">
           <div className="text-right">
-            <p className={`text-sm font-extrabold tabular-nums ${p.canceled ? 'text-stone-400 line-through' : ''}`}>{formatBRL(p.amountCents)}</p>
+            <p className={`text-sm font-extrabold tabular-nums ${p.canceled ? 'text-texto-3 line-through' : ''}`}>{formatBRL(p.amountCents)}</p>
             {p.canceled && <Badge tone="muted">Estornado</Badge>}
           </div>
-          {!p.canceled && <button className="hit-44 rounded-xl text-stone-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-50" disabled={busy} onClick={remove} aria-label={`Excluir pagamento de ${p.studentName}`}><Trash2 size={16} /></button>}
+          {!p.canceled && <button className="hit-44 rounded-xl text-texto-3 hover:bg-red-50 hover:text-red-600 disabled:opacity-50" disabled={busy} onClick={remove} aria-label={`Excluir pagamento de ${p.studentName}`}><Trash2 size={16} /></button>}
         </div>
       </div>
     </Row>
@@ -127,7 +127,7 @@ const StudentsTab: React.FC = () => {
           </div>
           <DayCardCard rows={data.data.dayCards} period={period} onChanged={data.reload} />
           <PaymentsCard rows={data.data.payments} onChanged={data.reload} />
-          <p className="px-1 text-meta text-stone-400">O professor é pago pelo próprio aluno, por hora/aula: isso não entra no financeiro do clube.</p>
+          <p className="px-1 text-meta text-texto-3">O professor é pago pelo próprio aluno, por hora/aula: isso não entra no financeiro do clube.</p>
         </>
       )}
     </div>

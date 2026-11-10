@@ -79,7 +79,7 @@ export default function AudioRecorder({ onStop, onCancel, onError, isSending, on
   const tempo = `${Math.floor(duracao / 60)}:${(duracao % 60).toString().padStart(2, '0')}`;
 
   return (
-    <div className={cx('flex min-h-11 flex-1 items-center gap-3 rounded-2xl border px-4 py-1.5',
+    <div className={cx('flex min-h-12 flex-1 items-center gap-3 rounded-2xl border px-4 py-1.5',
       ocupado ? 'border-emerald-200 bg-emerald-50' : 'border-red-100 bg-red-50')}>
       {ocupado ? <Loader2 className="h-3 w-3 animate-spin text-emerald-600" aria-hidden /> : <span className="h-3 w-3 animate-pulse rounded-full bg-red-500" aria-hidden />}
       <span className={cx('flex-1 font-medium tabular-nums', ocupado ? 'text-emerald-700' : 'text-red-700')} aria-live="polite">

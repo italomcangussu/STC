@@ -34,7 +34,7 @@ const DocumentCard: React.FC<{ doc: MyDocumentRow; onOpen: () => void }> = ({ do
   const due = signed ? null : dueInfo(doc.due_at);
   return (
     <button type="button" onClick={onOpen} className="flex w-full items-center gap-3 rounded-3xl border border-stone-100 bg-white p-4 text-left shadow-sm transition active:scale-[0.99] hover:border-saibro-200">
-      <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${signed ? 'bg-emerald-50 text-emerald-600' : 'bg-saibro-50 text-saibro-600'}`} aria-hidden>
+      <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${signed ? 'bg-emerald-50 text-emerald-600' : 'bg-saibro-50 text-saibro-600'}`} aria-hidden>
         <FileText size={22} />
       </span>
       <span className="min-w-0 flex-1 space-y-1">
@@ -43,7 +43,7 @@ const DocumentCard: React.FC<{ doc: MyDocumentRow; onOpen: () => void }> = ({ do
           {signed ? <Badge tone="good">Assinado em {formatDate(doc.signed_at)}</Badge> : <Badge tone="warn">Pendente</Badge>}
           {due && <Badge tone={due.tone}>{due.label}</Badge>}
         </span>
-        <span className="block text-meta text-stone-400">{doc.page_count} {doc.page_count === 1 ? 'página' : 'páginas'} · versão {doc.version}</span>
+        <span className="block text-meta text-texto-3">{doc.page_count} {doc.page_count === 1 ? 'página' : 'páginas'} · versão {doc.version}</span>
       </span>
       <span className="flex shrink-0 items-center gap-1 text-xs font-bold text-saibro-700">{signed ? 'Ver' : 'Ler e assinar'}<ChevronRight size={16} aria-hidden /></span>
     </button>
@@ -111,21 +111,21 @@ export const DocumentsPage: React.FC<{ currentUser: User }> = ({ currentUser }) 
           <HowItWorks />
           {docs.length === 0 && (
             <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-stone-200 px-4 py-10 text-center">
-              <FileSignature className="text-stone-300" size={28} aria-hidden />
+              <FileSignature className="text-linha-forte" size={28} aria-hidden />
               <p className="text-sm font-bold text-stone-600">Nenhum documento por aqui</p>
-              <p className="max-w-sm text-xs text-stone-400">Quando o clube enviar um documento para você assinar, ele aparece aqui e você recebe um aviso no WhatsApp.</p>
+              <p className="max-w-sm text-xs text-texto-3">Quando o clube enviar um documento para você assinar, ele aparece aqui e você recebe um aviso no WhatsApp.</p>
             </div>
           )}
           {pending.length > 0 && (
             <section className="space-y-2" aria-label="Documentos pendentes">
-              <h3 className="text-meta font-extrabold uppercase tracking-wider text-stone-400">Para assinar ({pending.length})</h3>
+              <h3 className="text-meta font-extrabold uppercase tracking-wider text-texto-3">Para assinar ({pending.length})</h3>
               {pending.map((d) => <DocumentCard key={d.document_id} doc={d} onOpen={() => open(d.document_id)} />)}
             </section>
           )}
           {docs.length > 0 && pending.length === 0 && <Notice tone="good">Tudo em dia: você não tem documentos pendentes.</Notice>}
           {done.length > 0 && (
             <section className="space-y-2" aria-label="Documentos assinados">
-              <h3 className="text-meta font-extrabold uppercase tracking-wider text-stone-400">Já assinados ({done.length})</h3>
+              <h3 className="text-meta font-extrabold uppercase tracking-wider text-texto-3">Já assinados ({done.length})</h3>
               {done.map((d) => <DocumentCard key={d.document_id} doc={d} onOpen={() => open(d.document_id)} />)}
             </section>
           )}

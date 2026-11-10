@@ -51,7 +51,7 @@ const RuleRow: React.FC<RuleRowProps> = ({ rule, draft, saving, justSaved, onCha
             <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
                     <p className="text-sm font-bold leading-snug text-stone-800">{label}</p>
-                    <p className="mt-0.5 truncate font-mono text-meta text-stone-400">{rule.rule_key}</p>
+                    <p className="mt-0.5 truncate font-mono text-meta text-texto-3">{rule.rule_key}</p>
                     {dirty && <p className="mt-1.5 text-xs font-bold text-amber-700">Era {rule.points} · alterado, falta salvar</p>}
                     {justSaved && (
                         <p className="mt-1.5 flex items-center gap-1 text-xs font-bold text-green-700" role="status">
@@ -74,7 +74,7 @@ const RuleRow: React.FC<RuleRowProps> = ({ rule, draft, saving, justSaved, onCha
                                 ? 'border-amber-400 bg-white text-amber-700 ring-4 ring-amber-100'
                                 : 'border-stone-200 bg-stone-50 text-stone-800 focus:border-saibro-500 focus:ring-4 focus:ring-saibro-100'}`}
                     />
-                    <span className="mt-1 block text-center text-meta font-extrabold uppercase tracking-wider text-stone-400">pontos</span>
+                    <span className="mt-1 block text-center text-meta font-extrabold uppercase tracking-wider text-texto-3">pontos</span>
                 </label>
             </div>
 

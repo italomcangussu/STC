@@ -73,7 +73,7 @@ export const EntriesTab: React.FC<{ direction: EntryDirection }> = ({ direction 
       <Card title={cfg.title} subtitle={cfg.subtitle} right={newButton(cfg.newLabel)}>
         <SectionTabs label="Situação" value={status} onChange={(v) => setStatus(v as Status)} items={statusFilters.map(([id, label]) => ({ id, label }))} />
         <div className="mt-3 grid grid-cols-2 gap-2 md:grid-cols-4">
-          <div className="relative col-span-2"><Search size={16} className="pointer-events-none absolute left-3 top-3.5 text-stone-300" /><input className={`${inputCls} pl-9`} placeholder="Buscar pela descrição" aria-label="Buscar pela descrição" value={search} onChange={(e) => setSearch(e.target.value)} /></div>
+          <div className="relative col-span-2"><Search size={16} className="pointer-events-none absolute left-3 top-3.5 text-linha-forte" /><input className={`${inputCls} pl-9`} placeholder="Buscar pela descrição" aria-label="Buscar pela descrição" value={search} onChange={(e) => setSearch(e.target.value)} /></div>
           <select className={inputCls} aria-label="Tipo" value={kind} onChange={(e) => setKind(e.target.value)}><option value="">Todos os tipos</option>{cfg.listKinds.map((k) => <option key={k} value={k}>{ENTRY_KIND_LABEL[k]}</option>)}</select>
           <div className="flex gap-2"><input type="date" className={inputCls} aria-label="Vencimento a partir de" value={dueFrom} onChange={(e) => setDueFrom(e.target.value)} /><input type="date" className={inputCls} aria-label="Vencimento até" value={dueTo} onChange={(e) => setDueTo(e.target.value)} /></div>
         </div>
@@ -89,7 +89,7 @@ export const EntriesTab: React.FC<{ direction: EntryDirection }> = ({ direction 
                 <Row onClick={() => setOpenId(r.id)}>
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0"><p className="truncate text-sm font-extrabold text-stone-800">{r.description}</p><p className="text-xs text-stone-500">{ENTRY_KIND_LABEL[r.kind]}{r.due_date ? ` · vence ${brDate(r.due_date)}` : ''}{r.recurrence_id ? ' · recorrente' : ''}</p></div>
-                    <div className="text-right"><p className="text-sm font-extrabold tabular-nums">{formatBRL(r.amount_cents)}</p>{r.remaining_cents > 0 && r.paid_cents > 0 && <p className="text-meta text-stone-400">faltam {formatBRL(r.remaining_cents)}</p>}</div>
+                    <div className="text-right"><p className="text-sm font-extrabold tabular-nums">{formatBRL(r.amount_cents)}</p>{r.remaining_cents > 0 && r.paid_cents > 0 && <p className="text-meta text-texto-3">faltam {formatBRL(r.remaining_cents)}</p>}</div>
                   </div>
                   <div className="mt-1"><Badge tone={STATUS_TONE[r.display_status]}>{entryStatusLabel(r.display_status, r.kind)}</Badge></div>
                 </Row>

@@ -39,7 +39,7 @@ export const AdminProtect: React.FC<AdminProtectProps> = ({ children, fallback }
     if (isAdmin === null) {
         return (
             <div className="min-h-[50vh] flex items-center justify-center">
-                <Loader2 className="animate-spin text-stone-400" size={32} />
+                <Loader2 className="animate-spin text-texto-3" size={32} />
             </div>
         );
     }

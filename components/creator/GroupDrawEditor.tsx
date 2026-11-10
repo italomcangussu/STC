@@ -96,7 +96,7 @@ export const GroupDrawEditor: React.FC<Props> = ({
                     <h2 className="font-extrabold text-stone-800">
                         {ehGrupos ? 'Fase de grupos' : 'Pontos corridos'} — {classe}
                     </h2>
-                    <span className="text-xs font-bold text-stone-400">
+                    <span className="text-xs font-bold text-texto-3">
                         {totalConfrontos} confronto{totalConfrontos === 1 ? '' : 's'}
                     </span>
                 </div>

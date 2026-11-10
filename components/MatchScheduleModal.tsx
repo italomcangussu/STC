@@ -117,7 +117,7 @@ export const MatchScheduleModal: React.FC<Props> = ({
                         type="button"
                         onClick={onClose}
                         aria-label="Fechar"
-                        className="hit-target-44 shrink-0 rounded-full text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors"
+                        className="hit-target-44 shrink-0 rounded-full text-texto-3 hover:text-stone-700 hover:bg-stone-100 transition-colors"
                     >
                         <X size={20} />
                     </button>
@@ -128,7 +128,7 @@ export const MatchScheduleModal: React.FC<Props> = ({
                     <form onSubmit={handleSubmit} className="space-y-6">
                         {/* Date Selection */}
                         <div>
-                            <label className="text-xs font-extrabold text-stone-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                            <label className="text-xs font-extrabold text-texto-3 uppercase tracking-widest mb-3 flex items-center gap-2">
                                 <Calendar size={14} className="text-saibro-500" /> {isSuggestedTimeMode ? 'Data sugerida' : 'Data do Confronto'}
                             </label>
                             <input
@@ -139,14 +139,14 @@ export const MatchScheduleModal: React.FC<Props> = ({
                                 onChange={(e) => setDate(e.target.value)}
                                 className="w-full p-4 bg-stone-50 border border-stone-100 rounded-2xl focus:ring-2 focus:ring-saibro-500 outline-hidden transition-all font-bold text-stone-800"
                             />
-                            <p className="text-xs text-stone-400 mt-2 pl-1 font-medium italic">
+                            <p className="text-xs text-texto-3 mt-2 pl-1 font-medium italic">
                                 {isSuggestedTimeMode ? 'Período previsto da fase' : 'Período da rodada'}: {formatDateBr(roundStartDate)} até {formatDateBr(roundEndDate)}
                             </p>
                         </div>
 
                         {/* Time Selection */}
                         <div>
-                            <label className="text-xs font-extrabold text-stone-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                            <label className="text-xs font-extrabold text-texto-3 uppercase tracking-widest mb-3 flex items-center gap-2">
                                 <Clock size={14} className="text-saibro-500" /> {isSuggestedTimeMode ? 'Horário informativo' : 'Horários Sugeridos'}
                             </label>
 
@@ -166,7 +166,7 @@ export const MatchScheduleModal: React.FC<Props> = ({
                                 <div className="space-y-4">
                                     {TIME_PERIODS.map(period => (
                                         <div key={period.label}>
-                                            <p className="mb-2 text-meta font-extrabold uppercase tracking-widest text-stone-400">{period.label}</p>
+                                            <p className="mb-2 text-meta font-extrabold uppercase tracking-widest text-texto-3">{period.label}</p>
                                             <div className="grid grid-cols-3 gap-2">
                                                 {period.slots.map(slot => (
                                                     <button
@@ -202,7 +202,7 @@ export const MatchScheduleModal: React.FC<Props> = ({
 
                         {!isSuggestedTimeMode && (
                             <div>
-                                <label className="text-xs font-extrabold text-stone-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                <label className="text-xs font-extrabold text-texto-3 uppercase tracking-widest mb-3 flex items-center gap-2">
                                     <MapPin size={14} className="text-saibro-500" /> Quadras Disponíveis ({className})
                                 </label>
                                 {availableCourts.length === 0 ? (

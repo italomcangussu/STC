@@ -161,7 +161,7 @@ export const DocumentDetail: React.FC<Props> = ({ doc, onBack, onChanged, onNewV
 
       <section className="space-y-2 rounded-3xl border border-stone-100 bg-white p-4 shadow-sm" aria-label="Resumo">
         <div className="flex items-end justify-between">
-          <p className="text-2xl font-extrabold text-stone-800">{signed}<span className="text-base font-bold text-stone-400"> de {total} assinaram</span></p>
+          <p className="text-2xl font-extrabold text-stone-800">{signed}<span className="text-base font-bold text-texto-3"> de {total} assinaram</span></p>
           {total > 0 && <span className="text-sm font-extrabold text-saibro-700">{Math.round((signed / total) * 100)}%</span>}
         </div>
         <div className="h-2 overflow-hidden rounded-full bg-stone-100" role="progressbar" aria-valuemin={0} aria-valuemax={total} aria-valuenow={signed} aria-label="Assinaturas">
@@ -212,7 +212,7 @@ export const DocumentDetail: React.FC<Props> = ({ doc, onBack, onChanged, onNewV
             <ul className="max-h-60 divide-y divide-stone-100 overflow-y-auto rounded-2xl border border-stone-100">
               {candidates.map((m) => (
                 <li key={m.id}>
-                  <label className="flex min-h-11 items-center gap-3 px-3 text-sm text-stone-700">
+                  <label className="flex min-h-12 items-center gap-3 px-3 text-sm text-stone-700">
                     <input type="checkbox" className="h-4 w-4 accent-saibro-600" checked={toAdd.has(m.id)}
                       onChange={() => setToAdd((p) => { const n = new Set(p); if (n.has(m.id)) n.delete(m.id); else n.add(m.id); return n; })} />
                     <span className="min-w-0 flex-1 truncate font-bold">{m.name}</span>
@@ -257,14 +257,14 @@ export const DocumentDetail: React.FC<Props> = ({ doc, onBack, onChanged, onNewV
                     {r.signed_at ? <Badge tone="good">Assinou</Badge> : <Badge tone={n.tone}>{n.tone === 'good' ? 'Pendente' : n.text}</Badge>}
                     {r.signed_at && r.signature_id && <ReceiptButton signatureId={r.signature_id} full compact label="Comprovante" ariaLabel={`Comprovante de ${r.name}`} />}
                     {published && !r.signed_at && (
-                      <button type="button" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-stone-400 transition hover:bg-red-50 hover:text-red-600" aria-label={`Tirar ${r.name} da lista`} onClick={() => void removeOne(r)} disabled={busy !== null}>
+                      <button type="button" className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-texto-3 transition hover:bg-red-50 hover:text-red-600" aria-label={`Tirar ${r.name} da lista`} onClick={() => void removeOne(r)} disabled={busy !== null}>
                         <UserX size={18} aria-hidden />
                       </button>
                     )}
                   </li>
                 );
               })}
-              {shown.length === 0 && <li className="rounded-2xl border border-dashed border-stone-200 p-6 text-center text-sm text-stone-400">Ninguém nesta lista.</li>}
+              {shown.length === 0 && <li className="rounded-2xl border border-dashed border-stone-200 p-6 text-center text-sm text-texto-3">Ninguém nesta lista.</li>}
             </ul>
           )}
       </section>

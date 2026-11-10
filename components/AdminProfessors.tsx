@@ -80,7 +80,7 @@ const ProfessorModal: React.FC<ProfessorModalProps> = ({ professor, onClose, onS
                     maxLength={300}
                 />
             </AdminField>
-            <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-xl bg-stone-50 px-3.5 text-sm font-bold text-stone-700">
+            <label className="flex min-h-12 cursor-pointer items-center gap-3 rounded-xl bg-stone-50 px-3.5 text-sm font-bold text-stone-700">
                 <input
                     type="checkbox"
                     checked={isActive}
@@ -89,7 +89,7 @@ const ProfessorModal: React.FC<ProfessorModalProps> = ({ professor, onClose, onS
                 />
                 <span className="min-w-0">
                     Professor ativo
-                    <span className="block text-xs font-normal text-stone-400">Desmarque para tirar da lista sem perder o histórico.</span>
+                    <span className="block text-xs font-normal text-texto-3">Desmarque para tirar da lista sem perder o histórico.</span>
                 </span>
             </label>
         </Sheet>
@@ -278,7 +278,7 @@ export const AdminProfessors: React.FC = () => {
                                         aria-controls={panelId}
                                         className="flex min-h-16 min-w-0 flex-1 items-center gap-3 px-4 py-3 text-left"
                                     >
-                                        <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-lg font-extrabold ${prof.isActive ? 'bg-saibro-100 text-saibro-700' : 'bg-stone-200 text-stone-500'}`} aria-hidden>
+                                        <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-lg font-extrabold ${prof.isActive ? 'bg-saibro-100 text-saibro-700' : 'bg-stone-200 text-stone-500'}`} aria-hidden>
                                             {prof.name.charAt(0).toUpperCase()}
                                         </span>
                                         <span className="min-w-0 flex-1">
@@ -288,19 +288,19 @@ export const AdminProfessors: React.FC = () => {
                                                 <span>{activeCount === 1 ? '1 aluno ativo' : `${activeCount} alunos ativos`}</span>
                                             </span>
                                         </span>
-                                        {isExpanded ? <ChevronDown className="shrink-0 text-stone-400" size={20} /> : <ChevronRight className="shrink-0 text-stone-400" size={20} />}
+                                        {isExpanded ? <ChevronDown className="shrink-0 text-texto-3" size={20} /> : <ChevronRight className="shrink-0 text-texto-3" size={20} />}
                                     </button>
                                     <button
                                         onClick={() => { setEditingProf(prof); setShowModal(true); }}
                                         aria-label={`Editar ${prof.name}`}
-                                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-stone-400 hover:bg-saibro-50 hover:text-saibro-600"
+                                        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-texto-3 hover:bg-saibro-50 hover:text-saibro-600"
                                     >
                                         <Edit size={19} />
                                     </button>
                                     <button
                                         onClick={() => handleDeleteProfessor(prof)}
                                         aria-label={`Remover ${prof.name}`}
-                                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-stone-400 hover:bg-red-50 hover:text-red-500"
+                                        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-texto-3 hover:bg-red-50 hover:text-red-500"
                                     >
                                         <Trash2 size={19} />
                                     </button>
@@ -309,12 +309,12 @@ export const AdminProfessors: React.FC = () => {
                                 {isExpanded && (
                                     <div id={panelId} className="space-y-3 border-t border-stone-100 bg-stone-50 p-4 animate-in slide-in-from-top-2 duration-200">
                                         {prof.bio && <p className="text-sm text-stone-500">{prof.bio}</p>}
-                                        <h4 className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-stone-400">
+                                        <h4 className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-texto-3">
                                             <Users size={14} /> Alunos
                                         </h4>
 
                                         {profStudents.length === 0 ? (
-                                            <p className="text-sm text-stone-400">Nenhum aluno vinculado. Vincule na seção Alunos.</p>
+                                            <p className="text-sm text-texto-3">Nenhum aluno vinculado. Vincule na seção Alunos.</p>
                                         ) : (
                                             <ul className="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3">
                                                 {profStudents.map(student => (

@@ -60,7 +60,7 @@ const CategorySheet: React.FC<{ category: FinCategory | 'new' | null; categories
       {!hasParent && !system && (!editing || !editing.parent_id) && (
         <Field label="Linha do DRE" hint="Define onde a categoria aparece na demonstração."><select className={inputCls} value={line} onChange={(e) => setLine(e.target.value as DreLineKey)}>{LINES_BY_KIND[editing?.kind ?? kind].map((l) => <option key={l} value={l}>{LINE_LABEL[l]}</option>)}</select></Field>
       )}
-      {editing && !system && <label className="flex min-h-11 items-center gap-2 text-sm font-bold text-stone-700"><input type="checkbox" className="h-5 w-5" checked={active} onChange={(e) => setActive(e.target.checked)} />Ativa</label>}
+      {editing && !system && <label className="flex min-h-12 items-center gap-2 text-sm font-bold text-stone-700"><input type="checkbox" className="h-5 w-5" checked={active} onChange={(e) => setActive(e.target.checked)} />Ativa</label>}
     </Sheet>
   );
 };
@@ -80,7 +80,7 @@ const CategoriesTab: React.FC = () => {
       <Card title="Categorias" right={<button className={btnPrimary} onClick={() => setSheet('new')}><Plus size={16} /> Nova</button>}>
         <div className="mb-3 flex gap-2">
           {(['expense', 'revenue'] as const).map((k) => (
-            <button key={k} onClick={() => setKind(k)} aria-pressed={kind === k} className={`min-h-11 rounded-full border px-4 text-xs font-bold ${kind === k ? 'border-saibro-300 bg-saibro-50 text-saibro-700' : 'border-stone-200 bg-white text-stone-500'}`}>{k === 'expense' ? 'Despesas' : 'Receitas'}</button>
+            <button key={k} onClick={() => setKind(k)} aria-pressed={kind === k} className={`min-h-12 rounded-full border px-4 text-xs font-bold ${kind === k ? 'border-saibro-300 bg-saibro-50 text-saibro-700' : 'border-stone-200 bg-white text-stone-500'}`}>{k === 'expense' ? 'Despesas' : 'Receitas'}</button>
           ))}
         </div>
         {tree.length === 0 ? <Empty icon={<Tags size={28} />} title="Nenhuma categoria" /> : (

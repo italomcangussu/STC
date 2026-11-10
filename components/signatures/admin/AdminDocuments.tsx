@@ -25,7 +25,7 @@ const Card: React.FC<{ doc: OverviewRow; onOpen: () => void }> = ({ doc, onOpen 
   const due = !draft && doc.status === 'published' ? dueInfo(doc.due_at) : null;
   return (
     <button type="button" onClick={onOpen} className="flex w-full items-center gap-3 rounded-3xl border border-stone-100 bg-white p-4 text-left shadow-sm transition active:scale-[0.99] hover:border-saibro-200">
-      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-saibro-50 text-saibro-600" aria-hidden><FileText size={22} /></span>
+      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-saibro-50 text-saibro-600" aria-hidden><FileText size={22} /></span>
       <span className="min-w-0 flex-1 space-y-1">
         <span className="block truncate text-sm font-extrabold text-stone-800">{doc.title}</span>
         <span className="block text-xs text-stone-500">
@@ -41,7 +41,7 @@ const Card: React.FC<{ doc: OverviewRow; onOpen: () => void }> = ({ doc, onOpen 
           {doc.no_phone > 0 && <Badge tone="warn">{doc.no_phone} sem telefone</Badge>}
         </span>
       </span>
-      <ChevronRight size={18} className="shrink-0 text-stone-300" aria-hidden />
+      <ChevronRight size={18} className="shrink-0 text-linha-forte" aria-hidden />
     </button>
   );
 };
@@ -49,7 +49,7 @@ const Card: React.FC<{ doc: OverviewRow; onOpen: () => void }> = ({ doc, onOpen 
 const Group: React.FC<{ label: string; docs: OverviewRow[]; onOpen: (d: OverviewRow) => void }> = ({ label, docs, onOpen }) => (
   docs.length === 0 ? null : (
     <section className="space-y-2" aria-label={label}>
-      <h3 className="px-1 text-xs font-extrabold uppercase tracking-wide text-stone-400">{label} ({docs.length})</h3>
+      <h3 className="px-1 text-xs font-extrabold uppercase tracking-wide text-texto-3">{label} ({docs.length})</h3>
       {docs.map((d) => <Card key={d.id} doc={d} onOpen={() => onOpen(d)} />)}
     </section>
   )

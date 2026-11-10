@@ -181,7 +181,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
     return (
         <div className="relative h-full flex flex-col md:flex-row w-full max-w-full min-w-0 overflow-hidden bg-clay-pattern">
             {/* Mobile Header Bar (HIG Standard Navigation Bar) */}
-            <header className="flex-none md:hidden bg-white/85 backdrop-blur-xl border-b border-saibro-200/80 px-4 py-3 flex justify-between items-center z-50 pt-safe sticky top-0 shadow-xs">
+            <header className="flex-none md:hidden bg-superficie border-b border-linha px-4 py-3 flex justify-between items-center z-50 pt-safe sticky top-0 shadow-xs">
                 <div className="flex items-center gap-2.5">
                     <img
                         src="https://smztsayzldjmkzmufqcz.supabase.co/storage/v1/object/public/logoapp/SOBRAL.zip%20-%201.png"
@@ -200,7 +200,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
                         <button
                             onClick={handleEnablePush}
                             aria-label="Ativar Notificações"
-                            className="w-11 h-11 rounded-full bg-acao-suave text-acao-forte flex items-center justify-center active:scale-[0.97] transition-transform"
+                            className="w-12 h-12 rounded-full bg-acao-suave text-acao-forte flex items-center justify-center active:scale-[0.97] transition-transform"
                         >
                             <Bell size={18} />
                         </button>
@@ -209,7 +209,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
                     {/* Tactile Menu Trigger */}
                     <button
                         onClick={() => setIsMenuOpen(!isMenuOpen)}
-                        className={`flex min-h-11 items-center gap-1.5 p-1 pl-1.5 pr-2 rounded-full border transition-all ${
+                        className={`flex min-h-12 items-center gap-1.5 p-1 pl-1.5 pr-2 rounded-full border transition-all ${
                             isMenuOpen
                                 ? 'bg-saibro-500 border-saibro-600 text-white'
                                 : 'bg-saibro-50/90 border-saibro-200/90 text-saibro-900 active:scale-[0.97]'
@@ -257,7 +257,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
                                 className="flex items-center justify-between w-full bg-white/80 p-3 rounded-2xl border border-saibro-200/60 shadow-xs hover:bg-white active:scale-[0.98] transition-all text-left group"
                             >
                                 <div className="flex items-center gap-3 min-w-0">
-                                    <img src={currentUser.avatar} alt="User" className="w-11 h-11 rounded-full bg-stone-200 object-cover border-2 border-saibro-300 group-hover:scale-105 transition-transform" />
+                                    <img src={currentUser.avatar} alt="User" className="w-12 h-12 rounded-full bg-stone-200 object-cover border-2 border-saibro-300 group-hover:scale-105 transition-transform" />
                                     <div className="overflow-hidden">
                                         <p className="font-bold text-sm text-stone-900 truncate group-hover:text-saibro-700">{currentUser.name}</p>
                                         <div className="flex items-center gap-1.5 mt-0.5">

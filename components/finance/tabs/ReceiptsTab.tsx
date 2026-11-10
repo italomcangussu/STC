@@ -55,7 +55,7 @@ const LinkChargesPanel: React.FC<{ submissionId: string; profileId: string; link
   if (!open) return <button className={btnGhost} onClick={() => setOpen(true)}><Link2 size={16} /> Ligar outra cobrança do sócio</button>;
   return (
     <div className="space-y-2 rounded-2xl border border-stone-200 p-3">
-      <p className="text-meta font-extrabold uppercase tracking-wider text-stone-400">Ligar cobrança ao comprovante</p>
+      <p className="text-meta font-extrabold uppercase tracking-wider text-texto-3">Ligar cobrança ao comprovante</p>
       {linked.length === 0 && <Notice tone="warn">Este comprovante chegou sem cobrança ligada. Escolha a que ele paga para poder aprovar.</Notice>}
       {list.error ? <ErrorBlock error={list.error} onRetry={list.reload} /> : list.loading || !list.data ? <Spinner /> : list.data.length === 0 ? (
         <p className="text-sm text-stone-500">Este sócio não tem outra cobrança em aberto. Crie a pendência ou a mensalidade em Cobranças e volte aqui.</p>
@@ -64,7 +64,7 @@ const LinkChargesPanel: React.FC<{ submissionId: string; profileId: string; link
           <ul className="space-y-1.5">
             {list.data.map((c) => (
               <li key={c.charge_id}>
-                <label className="flex min-h-11 items-center gap-3 rounded-xl border border-stone-200 px-3 py-2 text-sm">
+                <label className="flex min-h-12 items-center gap-3 rounded-xl border border-stone-200 px-3 py-2 text-sm">
                   <input type="checkbox" className="h-5 w-5" checked={chosen.includes(c.charge_id)}
                     onChange={(e) => setChosen((x) => e.target.checked ? [...x, c.charge_id] : x.filter((y) => y !== c.charge_id))} />
                   <span className="flex-1"><b className="capitalize">{monthLabel(c.competence_month)}</b> <span className="text-xs text-stone-500">· vence {brDate(c.due_date)}</span></span>
@@ -215,7 +215,7 @@ const ReviewSheet: React.FC<ReviewProps> = ({ id, queue, onClose, onDone }) => {
 
           {analysis && (
             <div className="space-y-2">
-              <p className="text-meta font-extrabold uppercase tracking-wider text-stone-400">Conferência (apenas orienta)</p>
+              <p className="text-meta font-extrabold uppercase tracking-wider text-texto-3">Conferência (apenas orienta)</p>
               {analysis.flags.length === 0 && <Notice tone="info"><span className="flex items-center gap-1.5"><CheckCircle2 size={14} />Nada de estranho encontrado. Mesmo assim, confira o arquivo.</span></Notice>}
               {analysis.flags.map((f, i) => <Notice key={`${f.code}${i}`} tone={flagTone(f) === 'bad' ? 'bad' : flagTone(f) === 'warn' ? 'warn' : 'info'}>{f.message}</Notice>)}
             </div>
@@ -231,7 +231,7 @@ const ReviewSheet: React.FC<ReviewProps> = ({ id, queue, onClose, onDone }) => {
 
               {stm.loading ? <Spinner /> : (
                 <div className="space-y-2">
-                  <p className="text-meta font-extrabold uppercase tracking-wider text-stone-400">Divisão do pagamento por cobrança</p>
+                  <p className="text-meta font-extrabold uppercase tracking-wider text-texto-3">Divisão do pagamento por cobrança</p>
                   {entries.map(({ c, amount, w }) => (
                     <Row key={c.charge_id}>
                       <div className="flex items-center justify-between gap-2 text-sm">
@@ -242,7 +242,7 @@ const ReviewSheet: React.FC<ReviewProps> = ({ id, queue, onClose, onDone }) => {
                       <div className="mt-2 grid grid-cols-2 items-end gap-2">
                         <Field label="Valor a lançar"><MoneyInput value={amount} onChange={(v) => setAlloc((a) => ({ ...a, [c.charge_id]: v }))} aria-label={`Valor para ${monthLabel(c.competence_month)}`} /></Field>
                         {c.fees_due_cents > 0 && (
-                          <label className="flex min-h-11 items-center gap-2 text-xs font-bold text-stone-600">
+                          <label className="flex min-h-12 items-center gap-2 text-xs font-bold text-stone-600">
                             <input type="checkbox" className="h-5 w-5" checked={w.on} onChange={(e) => setWaive((x) => ({ ...x, [c.charge_id]: { ...w, on: e.target.checked } }))} />
                             Dispensar {formatBRL(c.fees_due_cents)} de encargos
                           </label>

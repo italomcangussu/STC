@@ -343,7 +343,7 @@ export const CreatorRegistration: React.FC<Props> = ({
                 {loading ? (
                     <div className="py-6 text-center"><Loader2 className="animate-spin mx-auto text-saibro-600" /></div>
                 ) : registrations.length === 0 ? (
-                    <p className="text-sm text-stone-400 py-4 text-center">Nenhum inscrito nesta classe ainda.</p>
+                    <p className="text-sm text-texto-3 py-4 text-center">Nenhum inscrito nesta classe ainda.</p>
                 ) : (
                     <ul className="space-y-2">
                         {registrations.map(r => (
@@ -354,12 +354,12 @@ export const CreatorRegistration: React.FC<Props> = ({
                                         onClick={() => toggleSeed(r.registrationId)}
                                         aria-pressed={seedIds.includes(r.registrationId)}
                                         aria-label={`Marcar ${r.name} como cabeça de chave`}
-                                        className={`hit-44 ${seedIds.includes(r.registrationId) ? 'text-saibro-600' : 'text-stone-300'}`}
+                                        className={`hit-44 ${seedIds.includes(r.registrationId) ? 'text-saibro-600' : 'text-linha-forte'}`}
                                     >
                                         <Star size={16} fill={seedIds.includes(r.registrationId) ? 'currentColor' : 'none'} />
                                     </button>
                                     <span className="font-bold text-sm text-stone-700 truncate">{r.name}</span>
-                                    <span className="text-xs uppercase text-stone-400">{r.participantType}</span>
+                                    <span className="text-xs uppercase text-texto-3">{r.participantType}</span>
                                 </div>
                                 <button type="button" onClick={() => remover(r.registrationId)} aria-label={`Remover ${r.name}`}
                                     className="hit-44 text-red-400 hover:text-red-600">
@@ -432,7 +432,7 @@ export const CreatorRegistration: React.FC<Props> = ({
             <div className="bg-white rounded-2xl border border-stone-100 p-5 space-y-3">
                 <h2 className="font-extrabold text-stone-800 flex items-center gap-2">
                     <Star size={18} className="text-saibro-600" /> Cabeças de chave
-                    <span className="text-sm font-bold text-stone-400">({seedIds.length})</span>
+                    <span className="text-sm font-bold text-texto-3">({seedIds.length})</span>
                 </h2>
                 <p className="text-xs text-stone-500">
                     Marque na lista acima, ou puxe os primeiros do ranking da classe. Convidados e alunos

@@ -16,9 +16,9 @@ export const ChargePicker: React.FC<{ payable: ChargeStatementRow[]; selected: C
   return (
     <Field label="1. Quais cobranças você pagou?">
       <div className="space-y-2">
-        {payable.length === 0 && <p className="text-sm text-stone-400">Você não tem cobranças em aberto.</p>}
+        {payable.length === 0 && <p className="text-sm text-texto-3">Você não tem cobranças em aberto.</p>}
         {payable.map((c) => (
-          <label key={c.charge_id} className="flex min-h-11 cursor-pointer items-center gap-3 rounded-xl border border-stone-200 p-3 text-sm">
+          <label key={c.charge_id} className="flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border border-stone-200 p-3 text-sm">
             <input type="checkbox" className="h-5 w-5 accent-orange-600" checked={chosen.includes(c.charge_id)} onChange={() => onToggle(c.charge_id)} />
             <span className="flex-1">{pendencyMeta.get(c.charge_id)?.description ?? `Mensalidade · ${monthLabel(c.competence_month)}`}</span>
             <span className="font-bold tabular-nums">{formatBRL(c.total_due_cents)}</span>

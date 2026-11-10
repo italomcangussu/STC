@@ -567,7 +567,7 @@ export const ChampionshipCreator: React.FC = () => {
                             </select>
                             {classesDoSelecionado.length > 0 && (
                                 <div className="space-y-2">
-                                    <p className="text-xs font-extrabold text-stone-400 uppercase tracking-widest">
+                                    <p className="text-xs font-extrabold text-texto-3 uppercase tracking-widest">
                                         Retomar em qual classe
                                     </p>
                                     <div className="flex flex-wrap gap-2">
@@ -703,7 +703,7 @@ export const ChampionshipCreator: React.FC = () => {
                         </div>
 
                         {athletes.length === 0 ? (
-                            <p className="text-stone-400 text-sm text-center py-4">Nenhum atleta inscrito.</p>
+                            <p className="text-texto-3 text-sm text-center py-4">Nenhum atleta inscrito.</p>
                         ) : (
                             <div className="space-y-2">
                                 {athletes.map(a => (
@@ -713,12 +713,12 @@ export const ChampionshipCreator: React.FC = () => {
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <p className="font-bold text-stone-800 text-sm truncate">{a.name}</p>
-                                            <p className="text-xs text-stone-400">
+                                            <p className="text-xs text-texto-3">
                                                 {a.participant_type === 'guest' ? `Convidado${a.guest_cidade ? ` · ${a.guest_cidade}` : ''}` : 'Sócio'}
                                                 {a.cabeca_de_chave && ' · CC'}
                                             </p>
                                         </div>
-                                        <button onClick={() => handleRemoveAthlete(a.id)} className="text-stone-400 hover:text-red-500 transition-colors">
+                                        <button onClick={() => handleRemoveAthlete(a.id)} className="text-texto-3 hover:text-red-500 transition-colors">
                                             <Trash2 size={16} />
                                         </button>
                                     </div>
@@ -760,12 +760,12 @@ export const ChampionshipCreator: React.FC = () => {
                                         </div>
                                         <div>
                                             <p className="font-bold text-stone-800 text-sm">{p.name}</p>
-                                            <p className="text-xs text-stone-400">{p.category ?? 'Sem classe'}</p>
+                                            <p className="text-xs text-texto-3">{p.category ?? 'Sem classe'}</p>
                                         </div>
                                     </button>
                                 ))}
                                 {filteredProfiles.length === 0 && (
-                                    <p className="text-center py-3 text-stone-400 text-sm">Nenhum sócio encontrado.</p>
+                                    <p className="text-center py-3 text-texto-3 text-sm">Nenhum sócio encontrado.</p>
                                 )}
                             </div>
                         )}
@@ -805,7 +805,7 @@ export const ChampionshipCreator: React.FC = () => {
                                     type="number"
                                     className="w-24 p-3 border border-stone-200 rounded-xl text-sm"
                                 />
-                                <span className="text-xs text-stone-400 text-center">opcional</span>
+                                <span className="text-xs text-texto-3 text-center">opcional</span>
                             </div>
                         </div>
                         <button
@@ -1058,7 +1058,7 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, onWin, saving }) => {
     return (
         <div className={`px-4 py-3 ${isFinished ? 'opacity-75' : ''}`}>
             <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-stone-400 w-8">J{match.match_number}</span>
+                <span className="text-xs font-bold text-texto-3 w-8">J{match.match_number}</span>
                 <div className="flex-1 space-y-1">
                     <PlayerLine
                         label={match.player_a_label}
@@ -1082,7 +1082,7 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, onWin, saving }) => {
                     </button>
                 )}
                 {isFinished && <Check size={16} className="text-green-500 shrink-0" />}
-                {pending && <span className="text-xs text-stone-300 font-bold">aguarda</span>}
+                {pending && <span className="text-xs text-linha-forte font-bold">aguarda</span>}
             </div>
 
             {showActions && !isFinished && match.registration_a_id && match.registration_b_id && (
@@ -1120,7 +1120,7 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, onWin, saving }) => {
                             W.O. → {match.player_b_label}
                         </button>
                     </div>
-                    <button onClick={() => setShowActions(false)} className="w-full py-2 text-xs text-stone-400 hover:text-stone-600 flex items-center justify-center gap-1">
+                    <button onClick={() => setShowActions(false)} className="w-full py-2 text-xs text-texto-3 hover:text-stone-600 flex items-center justify-center gap-1">
                         <X size={12} /> Cancelar
                     </button>
                 </div>
@@ -1132,7 +1132,7 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, onWin, saving }) => {
 const PlayerLine: React.FC<{ label: string; regId: string | null; isWinner: boolean; isLoser: boolean }> = ({
     label, isWinner, isLoser,
 }) => (
-    <div className={`flex items-center gap-2 text-sm ${isWinner ? 'font-extrabold text-saibro-700' : isLoser ? 'text-stone-400 line-through' : 'font-medium text-stone-700'}`}>
+    <div className={`flex items-center gap-2 text-sm ${isWinner ? 'font-extrabold text-saibro-700' : isLoser ? 'text-texto-3 line-through' : 'font-medium text-stone-700'}`}>
         {isWinner && <Trophy size={11} className="text-yellow-500 shrink-0" />}
         <span className="truncate">{label}</span>
     </div>

@@ -68,7 +68,7 @@ const DueSection: React.FC<{ s: FinSettings; holidays: FinHoliday[]; onSaved: ()
         <Field label="Vence no"><select className={inputCls} value={offset} onChange={(e) => setOffset(e.target.value)}><option value="0">mesmo mês cobrado</option><option value="1">mês seguinte ao cobrado</option><option value="2">2º mês seguinte</option></select></Field>
         <Field label="Se cair em dia não útil" className="col-span-2"><select className={inputCls} value={rule} onChange={(e) => setRule(e.target.value as NonBusinessRule)}><option value="next_business_day">Vai para o próximo dia útil</option><option value="previous_business_day">Vai para o dia útil anterior</option><option value="keep">Mantém a data</option></select></Field>
         <div className="col-span-2"><Notice tone="info" title="Competência atual">Mensalidades de outro mês só serão geradas e apresentadas a partir do dia 1º daquele mês. Cobranças de novembro não aparecem em outubro.</Notice></div>
-        <label className="flex min-h-11 items-center gap-2 self-end text-sm font-bold text-stone-700"><input type="checkbox" className="h-5 w-5" checked={saturday} onChange={(e) => setSaturday(e.target.checked)} />Sábado é dia útil</label>
+        <label className="flex min-h-12 items-center gap-2 self-end text-sm font-bold text-stone-700"><input type="checkbox" className="h-5 w-5" checked={saturday} onChange={(e) => setSaturday(e.target.checked)} />Sábado é dia útil</label>
       </div>
       <div className="mt-3 space-y-1 rounded-2xl bg-stone-50 p-3 text-xs text-stone-600">
         <p className="font-extrabold text-stone-500">Prévia (com os feriados ativos abaixo)</p>
@@ -144,14 +144,14 @@ const FeesSection: React.FC<{ s: FinSettings; onSaved: () => void }> = ({ s, onS
       <div className="mt-3"><Notice tone="info" title="Como o cálculo funciona">Juros <b>simples</b> por dia de atraso, sobre o principal em aberto no início do dia. Multa e juros nunca entram na base de cálculo (sem juros sobre juros). Um pagamento abate primeiro a multa, depois os juros, depois o principal.</Notice></div>
 
       <div className="mt-3 space-y-2 rounded-2xl border border-stone-100 p-3">
-        <p className="text-meta font-extrabold uppercase tracking-wider text-stone-400">Simulador (não grava nada)</p>
+        <p className="text-meta font-extrabold uppercase tracking-wider text-texto-3">Simulador (não grava nada)</p>
         <div className="grid grid-cols-2 gap-3">
           <Field label="Mensalidade (R$)"><MoneyInput value={simPrincipal} onChange={setSimPrincipal} /></Field>
           <Field label="Dias além da carência"><input inputMode="numeric" className={inputCls} value={simDays} onChange={(e) => setSimDays(e.target.value.replace(/\D/g, '').slice(0, 3))} /></Field>
         </div>
         {sim ? (
           <p className="text-sm">Multa <b>{formatBRL(sim.fineDueCents)}</b> + juros <b>{formatBRL(sim.interestDueCents)}</b> → total a pagar <b>{formatBRL(sim.totalDueCents)}</b></p>
-        ) : <p className="text-xs text-stone-400">Informe um valor para ver quanto o sócio pagaria.</p>}
+        ) : <p className="text-xs text-texto-3">Informe um valor para ver quanto o sócio pagaria.</p>}
       </div>
 
       {confirmed && changed && <Field label="Justificativa da mudança (obrigatória)" className="mt-3" hint="Mudar encargo altera o que o sócio deve."><input className={inputCls} value={reason} onChange={(e) => setReason(e.target.value)} /></Field>}
@@ -189,7 +189,7 @@ const OptionsSection: React.FC<{ s: FinSettings; onSaved: () => void }> = ({ s, 
     <Card title="Day Card e comprovantes">
       <div className="space-y-3">
         <Field label="Valor do Day Card (R$)" hint="Taxa do convidado de um sócio (acesso ao clube por um dia). Vale por reserva com convidado. Card Mensal e Aula avulsa dos alunos valem o que foi pago e registrado no cadastro do aluno."><MoneyInput value={price} onChange={setPrice} /></Field>
-        <label className="flex min-h-11 items-start gap-2 text-sm font-bold text-stone-700"><input type="checkbox" className="mt-0.5 h-5 w-5" checked={inCash} onChange={(e) => setInCash(e.target.checked)} />Contar o Day Card como entrada no fluxo de caixa <span className="font-normal text-stone-400">(desligado: o Day Card é derivado da reserva, sem pagamento registrado, e só conta no DRE)</span></label>
+        <label className="flex min-h-12 items-start gap-2 text-sm font-bold text-stone-700"><input type="checkbox" className="mt-0.5 h-5 w-5" checked={inCash} onChange={(e) => setInCash(e.target.checked)} />Contar o Day Card como entrada no fluxo de caixa <span className="font-normal text-texto-3">(desligado: o Day Card é derivado da reserva, sem pagamento registrado, e só conta no DRE)</span></label>
         <Field label="Nomes do clube em comprovantes (um por linha)" hint="O favorecido lido no comprovante precisa conter um destes nomes inteiro para haver baixa automática. Vazio = nenhum comprovante é baixado automaticamente; todos vão para análise."><textarea className={inputCls} rows={3} value={payees} onChange={(e) => setPayees(e.target.value)} /></Field>
         <button className={btnPrimary} disabled={busy || price === null} onClick={save}>Salvar</button>
       </div>
@@ -218,7 +218,7 @@ const HolidaysSection: React.FC<{ holidays: FinHoliday[]; onChanged: () => void 
   };
 
   return (
-    <Card title="Calendário de feriados" subtitle="O vencimento só pula sábado e domingo. Marque um feriado para que ele também seja pulado." right={<CalendarDays size={18} className="text-stone-300" />}>
+    <Card title="Calendário de feriados" subtitle="O vencimento só pula sábado e domingo. Marque um feriado para que ele também seja pulado." right={<CalendarDays size={18} className="text-linha-forte" />}>
       <div className="mb-3 flex items-center gap-2">
         <button className={btnGhost} aria-label="Ano anterior" onClick={() => setYear((y) => y - 1)}>‹</button><span className="min-w-14 text-center text-sm font-extrabold">{year}</span><button className={btnGhost} aria-label="Próximo ano" onClick={() => setYear((y) => y + 1)}>›</button>
         <button className={btnGhost} disabled={busy} onClick={() => run(() => seedHolidays(year, key), `Feriados nacionais de ${year} carregados (desativados: ative os que o vencimento deve pular).`)}>Carregar nacionais de {year}</button>
@@ -229,8 +229,8 @@ const HolidaysSection: React.FC<{ holidays: FinHoliday[]; onChanged: () => void 
             <li key={h.id}>
               <Row>
                 <div className="flex items-center justify-between gap-2">
-                  <div className="min-w-0"><p className="truncate text-sm font-bold">{brDate(h.holiday_date)} · {h.name}</p><p className="text-meta text-stone-400">{h.scope === 'national' ? 'Nacional' : h.scope === 'state' ? 'Estadual' : h.scope === 'municipal' ? 'Municipal' : 'Do clube'}{h.kind === 'optional' ? ' · ponto facultativo' : ''}</p></div>
-                  <label className="flex min-h-11 items-center gap-2 text-xs font-bold text-stone-600"><input type="checkbox" className="h-5 w-5" checked={h.active} disabled={busy} onChange={(e) => run(() => saveHoliday(h.id, { active: e.target.checked }, key), 'Feriado atualizado.')} />Conta como feriado</label>
+                  <div className="min-w-0"><p className="truncate text-sm font-bold">{brDate(h.holiday_date)} · {h.name}</p><p className="text-meta text-texto-3">{h.scope === 'national' ? 'Nacional' : h.scope === 'state' ? 'Estadual' : h.scope === 'municipal' ? 'Municipal' : 'Do clube'}{h.kind === 'optional' ? ' · ponto facultativo' : ''}</p></div>
+                  <label className="flex min-h-12 items-center gap-2 text-xs font-bold text-stone-600"><input type="checkbox" className="h-5 w-5" checked={h.active} disabled={busy} onChange={(e) => run(() => saveHoliday(h.id, { active: e.target.checked }, key), 'Feriado atualizado.')} />Conta como feriado</label>
                 </div>
               </Row>
             </li>
@@ -238,7 +238,7 @@ const HolidaysSection: React.FC<{ holidays: FinHoliday[]; onChanged: () => void 
         </ul>
       )}
       <div className="mt-4 space-y-3 rounded-2xl border border-stone-100 p-3">
-        <p className="text-meta font-extrabold uppercase tracking-wider text-stone-400">Adicionar feriado local</p>
+        <p className="text-meta font-extrabold uppercase tracking-wider text-texto-3">Adicionar feriado local</p>
         <div className="grid grid-cols-2 gap-3">
           <Field label="Data"><input type="date" className={inputCls} value={date} onChange={(e) => setDate(e.target.value)} /></Field>
           <Field label="Tipo"><select className={inputCls} value={scope} onChange={(e) => setScope(e.target.value as typeof scope)}><option value="municipal">Municipal</option><option value="state">Estadual</option><option value="club">Do clube</option></select></Field>
@@ -259,7 +259,7 @@ const AuditSection: React.FC = () => {
   const [table, setTable] = useState('');
   const audit = useAsync(() => listAudit(100, table || undefined), [table]);
   return (
-    <Card title="Auditoria financeira" subtitle="Quem fez o quê e quando (últimos 100 registros)" right={<History size={18} className="text-stone-300" />}>
+    <Card title="Auditoria financeira" subtitle="Quem fez o quê e quando (últimos 100 registros)" right={<History size={18} className="text-linha-forte" />}>
       <select className={`${inputCls} mb-3`} aria-label="Filtrar por área" value={table} onChange={(e) => setTable(e.target.value)}>{AUDIT_TABLES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>
       {audit.error ? <ErrorBlock error={audit.error} onRetry={audit.reload} /> : audit.loading ? <Spinner /> : (audit.data ?? []).length === 0 ? <Empty title="Nenhum registro" /> : (
         <ul className="space-y-1.5">

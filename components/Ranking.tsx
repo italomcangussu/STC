@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useLiveRefresh } from '../hooks/useLiveRefresh';
 import { Info, Crown, Loader2, ChevronRight, Target } from 'lucide-react';
 import { fetchRanking, fetchRankingByCategory, PlayerStats, CLASS_ORDER } from '../lib/rankingService';
-import { EmptyState } from './ui';
+import { EmptyState, Segmented } from './ui';
 
 interface RankingProps {
   onSelectProfile: (userId: string) => void;
@@ -51,7 +51,7 @@ const PlayerCard: React.FC<{
       {/* Rank & Avatar */}
       <div className="flex items-center gap-3 shrink-0 relative">
         <div className={`flex flex-col items-center justify-center w-8 sm:w-10 ${rankColor}`}>
-          {rank <= 3 ? <Crown size={rank === 1 ? 24 : 20} className="fill-current mb-[-4px]" /> : <span className="font-bold text-stone-300 font-mono text-xs">#</span>}
+          {rank <= 3 ? <Crown size={rank === 1 ? 24 : 20} className="fill-current mb-[-4px]" /> : <span className="font-bold text-linha-forte font-mono text-xs">#</span>}
           <span className={`font-extrabold ${rank === 1 ? 'text-2xl sm:text-3xl' : 'text-xl sm:text-2xl'} leading-none tracking-tighter`}>{rank}</span>
         </div>
 
@@ -109,7 +109,7 @@ const PlayerCard: React.FC<{
         {/* Compact Stats Grid inline */}
         <div className="flex items-center gap-2 sm:gap-3 opacity-90">
           <div className="flex flex-col leading-none">
-            <span className="text-meta text-stone-400 font-bold uppercase tracking-wider scale-90 origin-left">Vit</span>
+            <span className="text-meta text-texto-3 font-bold uppercase tracking-wider scale-90 origin-left">Vit</span>
             <span className="font-bold text-stone-600 text-xs sm:text-sm">{player.totalWins}</span>
           </div>
           <div className="w-px h-5 bg-black/5" />
@@ -190,20 +190,12 @@ export const Ranking: React.FC<RankingProps> = ({ onSelectProfile }) => {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-stone-100 p-1 rounded-xl overflow-x-auto">
-        {tabs.map(tab => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`flex-1 min-w-[80px] py-2 px-3 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${activeTab === tab
-              ? 'bg-white text-saibro-700 shadow-sm'
-              : 'text-stone-500 hover:text-stone-700'
-              }`}
-          >
-            {tab === 'Geral' ? '🏆 Geral' : tab.replace(' Classe', 'ª')}
-          </button>
-        ))}
-      </div>
+      <Segmented
+        label="Classe do ranking"
+        value={activeTab}
+        onChange={setActiveTab}
+        options={tabs.map(tab => ({ value: tab, label: tab.replace(' Classe', '') }))}
+      />
 
       {/* Info Box */}
       <div className="bg-saibro-50 border border-saibro-100 rounded-lg p-3 flex items-start gap-3 text-xs text-stone-600">

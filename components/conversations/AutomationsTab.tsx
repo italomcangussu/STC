@@ -136,7 +136,7 @@ export default function AutomationsTab() {
                   <Count label="Falhas" value={a.failed} tone={a.failed ? 'bad' : undefined} />
                   <Count label="Puladas" value={a.skipped} />
                 </dl>
-                <p className="mt-2 text-meta text-stone-400">Versão {a.version} · {a.last_run_at ? `última execução ${dataHora.format(new Date(a.last_run_at))}` : 'ainda não executou'}</p>
+                <p className="mt-2 text-meta text-texto-3">Versão {a.version} · {a.last_run_at ? `última execução ${dataHora.format(new Date(a.last_run_at))}` : 'ainda não executou'}</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {a.status !== 'ended' && <Button size="sm" variant="secondary" onClick={() => setEditor({ id: a.id, draft: toDraft(a) })}><Pencil size={13} aria-hidden /> Editar</Button>}
                   <Button size="sm" variant="secondary" onClick={() => setPrevia(a)}><Eye size={13} aria-hidden /> Prévia</Button>
@@ -285,7 +285,7 @@ function EditorSheet({ initial, onClose, onSaved }: { initial: { id: string | nu
             <Field label="Repetir a cada (dias)"><input type="number" min={1} max={90} className={fieldCls} value={Number(draft.definition.repeat_days ?? 7)} onChange={(e) => def({ repeat_days: Number(e.target.value) })} /></Field>
           )}
           {draft.definition.stage !== 'in_review' && (
-            <label className="flex min-h-11 items-center gap-2 text-sm sm:col-span-3">
+            <label className="flex min-h-12 items-center gap-2 text-sm sm:col-span-3">
               <input type="checkbox" className="h-4 w-4 accent-saibro-600" checked={draft.definition.exclude_in_review !== false} onChange={(e) => def({ exclude_in_review: e.target.checked })} />
               Não cobrar quem já enviou comprovante em análise
             </label>
@@ -327,7 +327,7 @@ function EditorSheet({ initial, onClose, onSaved }: { initial: { id: string | nu
         <div className="grid gap-3 rounded-2xl border border-stone-100 p-3">
           <Field label="Horário (Fortaleza)"><input type="time" className={fieldCls} value={draft.schedule.time ?? ''} onChange={(e) => horario({ time: e.target.value })} aria-label="Horário" /></Field>
           <div>
-            <span className="text-meta font-extrabold uppercase tracking-wider text-stone-400">Dias da semana</span>
+            <span className="text-meta font-extrabold uppercase tracking-wider text-texto-3">Dias da semana</span>
             <div className="mt-1 flex flex-wrap gap-1.5" role="group" aria-label="Dias da semana">
               {WEEKDAYS.map((nome, i) => {
                 const on = (draft.schedule.weekdays ?? []).includes(i);
@@ -397,7 +397,7 @@ function PreviewSheet({ automation, onClose }: { automation: Automation; onClose
           {p.sample.length > 0 && <p className="text-xs text-stone-500">Exemplos: {p.sample.join(', ')}</p>}
           {Object.keys(p.excluded_by_reason).length > 0 && (
             <div>
-              <p className="text-meta font-extrabold uppercase tracking-wider text-stone-400">Fora do público</p>
+              <p className="text-meta font-extrabold uppercase tracking-wider text-texto-3">Fora do público</p>
               <ul className="mt-1 grid gap-1 text-xs text-stone-600">
                 {Object.entries(p.excluded_by_reason).map(([k, n]) => <li key={k} className="flex justify-between gap-2"><span>{describeReason(k)}</span><span className="tabular-nums">{n}</span></li>)}
               </ul>
@@ -407,7 +407,7 @@ function PreviewSheet({ automation, onClose }: { automation: Automation; onClose
             <p className="mb-1 text-meta font-extrabold uppercase tracking-wider text-emerald-800">Mensagem montada com os dados de {p.rendered_for ?? 'um destinatário real'}</p>
             <p className="whitespace-pre-wrap">{p.rendered_example ?? 'Ninguém no público agora, ou faltou algum dado para montar a mensagem.'}</p>
           </div>
-          <p className="text-meta text-stone-400">O teste vai só para o telefone do seu perfil, com a marca “[TESTE]”.</p>
+          <p className="text-meta text-texto-3">O teste vai só para o telefone do seu perfil, com a marca “[TESTE]”.</p>
         </>
       )}
     </Sheet>
@@ -490,7 +490,7 @@ function RunsSheet({ automation, onClose }: { automation: Automation; onClose: (
                   </span>
                   <span className="shrink-0 text-right">
                     <Badge tone={r.status === 'sent' ? 'good' : r.status === 'failed' ? 'bad' : r.status === 'skipped' || r.status === 'canceled' ? 'muted' : 'info'}>{REC_LABEL[r.status]}</Badge>
-                    {r.sent_at && <span className="block text-meta text-stone-400">{dataHora.format(new Date(r.sent_at))}</span>}
+                    {r.sent_at && <span className="block text-meta text-texto-3">{dataHora.format(new Date(r.sent_at))}</span>}
                   </span>
                 </li>
               ))}
@@ -527,7 +527,7 @@ function RulesSheet({ settings, onClose, onSaved }: { settings: AutomationSettin
     <Sheet open onClose={onClose} closeOnBackdrop={false} title="Regras de envio" subtitle="Valem para TODAS as automações, somadas."
       footer={<><Button variant="ghost" onClick={onClose}>Cancelar</Button><Button variant="primary" loading={salvando} onClick={() => void salvar()}>Salvar</Button></>}>
       {erro && <InlineAlert tone="error" title={erro} onDismiss={() => setErro(null)} />}
-      <label className="flex min-h-11 items-center gap-2 text-sm font-semibold">
+      <label className="flex min-h-12 items-center gap-2 text-sm font-semibold">
         <input type="checkbox" className="h-4 w-4 accent-saibro-600" checked={s.enabled} onChange={(e) => setS({ ...s, enabled: e.target.checked })} />
         Envio automático ligado (interruptor geral)
       </label>
@@ -536,7 +536,7 @@ function RulesSheet({ settings, onClose, onSaved }: { settings: AutomationSettin
         <Field label="Não enviar depois de"><input type="time" className={fieldCls} value={s.window_end} onChange={(e) => setS({ ...s, window_end: e.target.value })} /></Field>
       </div>
       <div>
-        <span className="text-meta font-extrabold uppercase tracking-wider text-stone-400">Dias em que pode enviar</span>
+        <span className="text-meta font-extrabold uppercase tracking-wider text-texto-3">Dias em que pode enviar</span>
         <div className="mt-1 flex flex-wrap gap-1.5" role="group" aria-label="Dias de envio">
           {WEEKDAYS.map((nome, i) => {
             const on = s.days.includes(i);

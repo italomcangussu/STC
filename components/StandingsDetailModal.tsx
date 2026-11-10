@@ -88,7 +88,7 @@ export const StandingsDetailModal: React.FC<StandingsDetailModalProps> = ({
                                                 <span className="text-xs font-bold text-stone-600">
                                                     {s.matchesPlayed} {s.matchesPlayed === 1 ? 'partida' : 'partidas'}
                                                 </span>
-                                                <span className="text-xs text-stone-400">•</span>
+                                                <span className="text-xs text-texto-3">•</span>
                                                 <span className="text-xs font-bold text-green-600">
                                                     {winRate}% vitórias
                                                 </span>
@@ -96,7 +96,7 @@ export const StandingsDetailModal: React.FC<StandingsDetailModalProps> = ({
                                         </div>
                                         <div className="text-right">
                                             <div className="text-3xl font-extrabold text-saibro-600">{s.points}</div>
-                                            <div className="text-xs font-bold text-stone-400 uppercase tracking-wider">Pontos</div>
+                                            <div className="text-xs font-bold text-texto-3 uppercase tracking-wider">Pontos</div>
                                         </div>
                                     </div>
 
@@ -106,10 +106,10 @@ export const StandingsDetailModal: React.FC<StandingsDetailModalProps> = ({
                                         <div className="bg-white rounded-xl p-3 border border-stone-200">
                                             <div className="flex items-center gap-2 mb-2">
                                                 <Trophy className="w-4 h-4 text-green-600" />
-                                                <p className="text-xs font-bold text-stone-400 uppercase">V/D</p>
+                                                <p className="text-xs font-bold text-texto-3 uppercase">V/D</p>
                                             </div>
                                             <p className="text-xl font-extrabold text-stone-800">
-                                                {s.wins} <span className="text-sm text-stone-400">/ {s.losses}</span>
+                                                {s.wins} <span className="text-sm text-texto-3">/ {s.losses}</span>
                                             </p>
                                         </div>
 
@@ -117,10 +117,10 @@ export const StandingsDetailModal: React.FC<StandingsDetailModalProps> = ({
                                         <div className="bg-white rounded-xl p-3 border border-stone-200">
                                             <div className="flex items-center gap-2 mb-2">
                                                 <TrendingUp className="w-4 h-4 text-blue-600" />
-                                                <p className="text-xs font-bold text-stone-400 uppercase">Sets</p>
+                                                <p className="text-xs font-bold text-texto-3 uppercase">Sets</p>
                                             </div>
                                             <p className="text-xl font-extrabold text-stone-800">
-                                                {s.setsWon} <span className="text-sm text-stone-400">/ {s.setsLost}</span>
+                                                {s.setsWon} <span className="text-sm text-texto-3">/ {s.setsLost}</span>
                                             </p>
                                             <p className={`text-xs font-bold mt-1 ${setsDiff >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                                                 {setsDiff >= 0 ? '+' : ''}{setsDiff}
@@ -131,10 +131,10 @@ export const StandingsDetailModal: React.FC<StandingsDetailModalProps> = ({
                                         <div className="bg-white rounded-xl p-3 border border-stone-200">
                                             <div className="flex items-center gap-2 mb-2">
                                                 <Target className="w-4 h-4 text-purple-600" />
-                                                <p className="text-xs font-bold text-stone-400 uppercase">Games</p>
+                                                <p className="text-xs font-bold text-texto-3 uppercase">Games</p>
                                             </div>
                                             <p className="text-xl font-extrabold text-stone-800">
-                                                {s.gamesWon} <span className="text-sm text-stone-400">/ {s.gamesLost}</span>
+                                                {s.gamesWon} <span className="text-sm text-texto-3">/ {s.gamesLost}</span>
                                             </p>
                                             <p className={`text-xs font-bold mt-1 ${gamesDiff >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                                                 {gamesDiff >= 0 ? '+' : ''}{gamesDiff}
@@ -145,7 +145,7 @@ export const StandingsDetailModal: React.FC<StandingsDetailModalProps> = ({
                                         <div className="bg-white rounded-xl p-3 border border-stone-200">
                                             <div className="flex items-center gap-2 mb-2">
                                                 <Award className="w-4 h-4 text-orange-600" />
-                                                <p className="text-xs font-bold text-stone-400 uppercase">Aproveitamento</p>
+                                                <p className="text-xs font-bold text-texto-3 uppercase">Aproveitamento</p>
                                             </div>
                                             <p className="text-xl font-extrabold text-stone-800">{winRate}%</p>
                                             <div className="w-full bg-stone-200 h-1.5 rounded-full mt-2 overflow-hidden">

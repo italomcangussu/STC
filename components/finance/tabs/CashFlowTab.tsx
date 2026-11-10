@@ -65,9 +65,9 @@ const CashFlowTab: React.FC = () => {
       <Card title="Período e filtros">
         <PeriodBar value={period} onChange={setPeriod} today={today} />
         <div className="mt-3 grid grid-cols-2 gap-3">
-          <div><p className="mb-1 text-meta font-extrabold uppercase tracking-wider text-stone-400">Agrupar por</p>
+          <div><p className="mb-1 text-meta font-extrabold uppercase tracking-wider text-texto-3">Agrupar por</p>
             <SectionTabs label="Agrupar por" value={gran} onChange={(v) => setGran(v as Gran)} items={(['day', 'week', 'month'] as Gran[]).map((g) => ({ id: g, label: GRAN_LABEL[g] }))} /></div>
-          <label className="block"><span className="mb-1 block text-meta font-extrabold uppercase tracking-wider text-stone-400">Conta</span>
+          <label className="block"><span className="mb-1 block text-meta font-extrabold uppercase tracking-wider text-texto-3">Conta</span>
             <select className={inputCls} value={account} onChange={(e) => setAccount(e.target.value)} aria-label="Conta"><option value="">Todas as contas</option>{accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</select></label>
         </div>
       </Card>
@@ -79,7 +79,7 @@ const CashFlowTab: React.FC = () => {
             <StatCard indicator="balance" value={formatBRL(totals.closing)} sub={`saldo final · inicial ${formatBRL(totals.opening)}`} tone={totals.closing < 0 ? 'bad' : 'neutral'} />
             <StatCard indicator="cash_in" value={formatBRL(totals.inflow)} sub={`${brDate(period.from)} a ${brDate(period.to)}`} tone="good" />
             <StatCard indicator="cash_out" value={formatBRL(totals.outflow)} sub="saídas do período" />
-            <div className="rounded-3xl border border-stone-100 bg-white p-4 shadow-sm"><p className="text-meta font-extrabold uppercase tracking-wider text-stone-400">Variação</p><p className="text-2xl font-extrabold tabular-nums"><Money cents={totals.inflow - totals.outflow} signed /></p><p className="text-xs text-stone-500">entradas − saídas</p></div>
+            <div className="rounded-3xl border border-stone-100 bg-white p-4 shadow-sm"><p className="text-meta font-extrabold uppercase tracking-wider text-texto-3">Variação</p><p className="text-2xl font-extrabold tabular-nums"><Money cents={totals.inflow - totals.outflow} signed /></p><p className="text-xs text-stone-500">entradas − saídas</p></div>
           </div>
 
           <Card title="Entradas, saídas e saldo" subtitle={`Por ${GRAN_LABEL[gran].toLowerCase()}`}>
@@ -105,7 +105,7 @@ const CashFlowTab: React.FC = () => {
               <input className={inputCls} aria-label="Buscar pela descrição" placeholder="Buscar pela descrição" value={search} onChange={(e) => setSearch(e.target.value)} />
             </div>
             <div className="mb-3 flex flex-wrap items-center gap-3">
-              <label className="flex min-h-11 items-center gap-2 text-xs font-bold text-stone-600"><input type="checkbox" className="h-5 w-5" checked={hideTransfers} onChange={(e) => setHideTransfers(e.target.checked)} />Ocultar transferências entre contas</label>
+              <label className="flex min-h-12 items-center gap-2 text-xs font-bold text-stone-600"><input type="checkbox" className="h-5 w-5" checked={hideTransfers} onChange={(e) => setHideTransfers(e.target.checked)} />Ocultar transferências entre contas</label>
               <BalanceExport build={exportBalance} />
             </div>
             <p className="mb-3 text-xs text-stone-500">Exclua entradas e saídas registradas indevidamente. Pagamentos e estornos vinculados desaparecem juntos do caixa e dos saldos; as evidências ficam na auditoria.</p>
@@ -119,7 +119,7 @@ const CashFlowTab: React.FC = () => {
                         <div className="flex shrink-0 flex-col items-end gap-1">
                           <Money cents={m.amount_cents} className="text-sm font-extrabold" signed />
                           <button type="button"
-                            className="inline-flex min-h-11 items-center gap-1 rounded-lg px-2 text-xs font-bold text-saibro-700 hover:bg-saibro-50"
+                            className="inline-flex min-h-12 items-center gap-1 rounded-lg px-2 text-xs font-bold text-saibro-700 hover:bg-saibro-50"
                             aria-label={`Corrigir ou excluir movimento: ${m.description}, ${brDate(m.occurred_on)}`}
                             onClick={() => setSelectedMovement(m)}>
                             <Pencil size={14} /> Editar / excluir
@@ -131,7 +131,7 @@ const CashFlowTab: React.FC = () => {
                 ))}
               </ul>
             )}
-            {rows.length > 300 && <p className="mt-2 text-xs text-stone-400">Mostrando 300 de {rows.length}. A exportação leva todos os movimentos filtrados.</p>}
+            {rows.length > 300 && <p className="mt-2 text-xs text-texto-3">Mostrando 300 de {rows.length}. A exportação leva todos os movimentos filtrados.</p>}
             {(moves.data?.[0]?.total_count ?? 0) > MOVEMENTS_LIMIT && <div className="mt-2"><Notice tone="warn">Há mais de {MOVEMENTS_LIMIT.toLocaleString('pt-BR')} movimentos no filtro; só os mais recentes aparecem (e são exportados). Reduza o período ou use os filtros.</Notice></div>}
           </Card>
           <button type="button" className={btnGhost} onClick={() => setShowRemoved(v => !v)} aria-expanded={showRemoved}>

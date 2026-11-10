@@ -27,7 +27,7 @@ export const Button: React.FC<ButtonProps> = ({ variant = 'secondary', size = 'm
     disabled={disabled || loading}
     className={cx(
       'inline-flex items-center justify-center gap-1.5 rounded-xl font-bold outline-hidden transition active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-saibro-300 disabled:opacity-50 disabled:active:scale-100',
-      size === 'sm' ? 'min-h-9 px-3 text-xs' : 'min-h-11 px-4 text-sm', VARIANT[variant], className)}
+      size === 'sm' ? 'min-h-9 px-3 text-xs' : 'min-h-12 px-4 text-sm', VARIANT[variant], className)}
     {...rest}
   >
     {loading && <Loader2 size={14} className="animate-spin" aria-hidden />}

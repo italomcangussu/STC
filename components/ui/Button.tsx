@@ -7,7 +7,7 @@ import { Loader2 } from 'lucide-react';
  * - Uma primária por tela: é a única peça em saibro cheio.
  * - `loading` desabilita e troca o conteúdo por um spinner sem mudar a
  *   largura: o toque repetido não dispara duas vezes e nada pula.
- * - 44 px (`md`) ou 52 px (`lg`) de alvo; o rótulo diz o verbo.
+ * - 48 px (`md`, o mínimo do Android; cobre os 44 pt do iOS) ou 52 px (`lg`) de alvo; o rótulo diz o verbo.
  */
 export type ButtonVariant = 'primaria' | 'secundaria' | 'fantasma' | 'destrutiva';
 export type ButtonSize = 'md' | 'lg';
@@ -25,7 +25,7 @@ const variantes: Record<ButtonVariant, string> = {
 };
 
 const tamanhos: Record<ButtonSize, string> = {
-    md: 'min-h-11 rounded-lg px-4 text-sm',
+    md: 'min-h-12 rounded-lg px-4 text-sm',
     lg: 'min-h-13 rounded-lg px-5 text-base',
 };
 
@@ -74,7 +74,7 @@ export interface IconButtonProps extends React.ButtonHTMLAttributes<HTMLButtonEl
     tom?: 'neutro' | 'acao' | 'erro';
 }
 
-/** Botão só de ícone com 44 × 44 de alvo, por menor que seja o ícone. */
+/** Botão só de ícone com 48 × 48 de alvo, por menor que seja o ícone. */
 export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(function IconButton(
     { className = '', tom = 'neutro', type = 'button', children, ...rest },
     ref,
@@ -84,7 +84,7 @@ export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(f
         <button
             ref={ref}
             type={type}
-            className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-[transform,background-color] duration-(--dur-estado) ease-saida active:scale-[0.94] disabled:opacity-50 ${cor} ${className}`}
+            className={`inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full transition-[transform,background-color] duration-(--dur-estado) ease-saida active:scale-[0.94] disabled:opacity-50 ${cor} ${className}`}
             {...rest}
         >
             {children}

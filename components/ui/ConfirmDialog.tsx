@@ -169,7 +169,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
                             onClick={onCancel}
                             disabled={busy}
                             aria-label="Fechar"
-                            className="text-stone-300 hover:text-stone-500 transition-colors disabled:opacity-40 -mt-1 -mr-1 p-1"
+                            className="text-linha-forte hover:text-stone-500 transition-colors disabled:opacity-40 -mt-1 -mr-1 p-1"
                         >
                             <X size={20} />
                         </button>

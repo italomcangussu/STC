@@ -277,28 +277,28 @@ const AthleteProfile: React.FC<AthleteProfileProps> = ({ userId, currentUser, us
                         <Trophy size={16} className="text-yellow-500" />
                         <span className="text-2xl font-extrabold text-stone-800">#{userRankStats?.categoryPosition || '-'}</span>
                     </div>
-                    <span className="text-meta text-stone-400">{userRankStats?.category}</span>
+                    <span className="text-meta text-texto-3">{userRankStats?.category}</span>
                 </div>
 
                 <div className="bg-white p-3 rounded-xl shadow-md border border-stone-100 flex flex-col items-center text-center">
-                    <span className="text-xs font-bold text-stone-400 uppercase tracking-wider">Pontos</span>
+                    <span className="text-xs font-bold text-texto-3 uppercase tracking-wider">Pontos</span>
                     <span className="text-2xl font-extrabold text-saibro-600 mt-1">{userRankStats?.totalPoints || 0}</span>
-                    <span className="text-meta text-stone-400 leading-none">Total</span>
+                    <span className="text-meta text-texto-3 leading-none">Total</span>
                 </div>
 
                 <div className="bg-white p-3 rounded-xl shadow-md border border-stone-100 flex flex-col items-center text-center">
-                    <span className="text-xs font-bold text-stone-400 uppercase tracking-wider">V / D</span>
+                    <span className="text-xs font-bold text-texto-3 uppercase tracking-wider">V / D</span>
                     <span className="text-2xl font-extrabold text-stone-800 mt-1">
                         {userRankStats?.totalWins || 0} / {userRankStats?.totalLosses || 0}
                     </span>
-                    <span className="text-meta text-stone-400 leading-none">Vitórias / Derrotas</span>
+                    <span className="text-meta text-texto-3 leading-none">Vitórias / Derrotas</span>
                 </div>
 
                 <div className="bg-white p-3 rounded-xl shadow-md border border-stone-100 flex flex-col items-center text-center">
-                    <span className="text-xs font-bold text-stone-400 uppercase tracking-wider">Presença</span>
+                    <span className="text-xs font-bold text-texto-3 uppercase tracking-wider">Presença</span>
                     <span className="text-2xl font-extrabold text-stone-800 mt-1">{userReservations.length}</span>
 
-                    <span className="text-meta text-stone-400 leading-none">Reservas</span>
+                    <span className="text-meta text-texto-3 leading-none">Reservas</span>
                 </div>
             </div>
 
@@ -319,7 +319,7 @@ const AthleteProfile: React.FC<AthleteProfileProps> = ({ userId, currentUser, us
                                 className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 relative z-10 
                                     ${active
                                         ? 'bg-white text-saibro-700 shadow-md transform scale-[1.02] border border-stone-50'
-                                        : 'text-stone-400 hover:text-stone-600 hover:bg-stone-200/50'
+                                        : 'text-texto-3 hover:text-stone-600 hover:bg-stone-200/50'
                                     }`}
                             >
                                 <tab.icon size={16} className={active ? 'text-saibro-500' : ''} />
@@ -355,28 +355,28 @@ const AthleteProfile: React.FC<AthleteProfileProps> = ({ userId, currentUser, us
                                 <div className="flex justify-between items-end">
                                     <div className="text-center">
                                         <span className="block text-xl font-bold text-green-600">{userRankStats?.totalSetsWon || 0}</span>
-                                        <span className="text-meta text-stone-400">Ganhos</span>
+                                        <span className="text-meta text-texto-3">Ganhos</span>
                                     </div>
                                     <div className="h-8 w-px bg-stone-100 mx-2" />
                                     <div className="text-center">
                                         <span className="block text-xl font-bold text-red-500">{userRankStats?.totalSetsLost || 0}</span>
-                                        <span className="text-meta text-stone-400">Perdidos</span>
+                                        <span className="text-meta text-texto-3">Perdidos</span>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Games */}
                             <div className="bg-white border border-stone-100 p-4 rounded-xl shadow-sm">
-                                <h4 className="text-xs font-bold text-stone-400 uppercase mb-2">Games</h4>
+                                <h4 className="text-xs font-bold text-texto-3 uppercase mb-2">Games</h4>
                                 <div className="flex justify-between items-end">
                                     <div className="text-center">
                                         <span className="block text-xl font-bold text-green-600">{userRankStats?.totalGamesWon || 0}</span>
-                                        <span className="text-meta text-stone-400">Ganhos</span>
+                                        <span className="text-meta text-texto-3">Ganhos</span>
                                     </div>
                                     <div className="h-8 w-px bg-stone-100 mx-2" />
                                     <div className="text-center">
                                         <span className="block text-xl font-bold text-red-500">{userRankStats?.totalGamesLost || 0}</span>
-                                        <span className="text-meta text-stone-400">Perdidos</span>
+                                        <span className="text-meta text-texto-3">Perdidos</span>
                                     </div>
                                 </div>
                             </div>
@@ -420,7 +420,7 @@ const AthleteProfile: React.FC<AthleteProfileProps> = ({ userId, currentUser, us
                         {/* Day Use Stats */}
                         <div className="bg-white border border-stone-100 p-4 rounded-xl shadow-sm flex justify-between items-center">
                             <div>
-                                <h4 className="text-xs font-bold text-stone-400 uppercase">Convidados (Day Use)</h4>
+                                <h4 className="text-xs font-bold text-texto-3 uppercase">Convidados (Day Use)</h4>
                                 <p className="text-xs text-stone-500 mt-1">Levados ao clube</p>
                             </div>
                             <span className="text-2xl font-bold text-stone-800">{dayUsesCount}</span>
@@ -433,7 +433,7 @@ const AthleteProfile: React.FC<AthleteProfileProps> = ({ userId, currentUser, us
                     <div className="space-y-3 animate-in fade-in duration-300">
 
                         {matches.length === 0 ? (
-                            <div className="text-center py-10 text-stone-400">
+                            <div className="text-center py-10 text-texto-3">
                                 <History size={32} className="mx-auto mb-2 opacity-30" />
                                 <p>Nenhum jogo registrado.</p>
                             </div>
@@ -459,19 +459,19 @@ const AthleteProfile: React.FC<AthleteProfileProps> = ({ userId, currentUser, us
 
                                         <div className="flex justify-between items-center">
                                             <div className="flex items-center gap-2 min-w-0 flex-1">
-                                                <span className="text-xs text-stone-400 shrink-0">vs</span>
+                                                <span className="text-xs text-texto-3 shrink-0">vs</span>
                                                 <span className="font-semibold text-stone-800 truncate">{opponent?.name || 'Desconhecido'}</span>
                                             </div>
                                             <div className="flex gap-1">
                                                 {myScore.map((s: number, i: number) => (
                                                     <span key={i} className="text-sm font-mono font-bold text-stone-800">
                                                         {s}-{oppScore[i] || 0}
-                                                        {i < myScore.length - 1 && <span className="text-stone-300 mx-1">|</span>}
+                                                        {i < myScore.length - 1 && <span className="text-linha-forte mx-1">|</span>}
                                                     </span>
                                                 ))}
                                             </div>
                                         </div>
-                                        <div className="text-meta text-stone-400 text-right">
+                                        <div className="text-meta text-texto-3 text-right">
                                             {m.date ? formatDateBr(m.date.split('T')[0]) : 'Data N/A'}
                                         </div>
                                     </div>
@@ -499,7 +499,7 @@ const AthleteProfile: React.FC<AthleteProfileProps> = ({ userId, currentUser, us
                             <h3 className="font-bold text-stone-700 text-sm mt-4">Próximas Reservas & Histórico</h3>
                             <div className="space-y-3">
                                 {userReservations.length === 0 ? (
-                                    <p className="text-stone-400 text-sm text-center py-4">Nenhuma reserva encontrada.</p>
+                                    <p className="text-texto-3 text-sm text-center py-4">Nenhuma reserva encontrada.</p>
                                 ) : (
                                     userReservations.map(r => {
                                         const court = courts.find(c => c.id === r.courtId);
@@ -513,7 +513,7 @@ const AthleteProfile: React.FC<AthleteProfileProps> = ({ userId, currentUser, us
                                                 <div className="flex-1">
                                                     <div className="flex justify-between">
                                                         <span className="font-bold text-stone-800 text-sm">{court?.name}</span>
-                                                        <span className="text-meta uppercase font-bold text-stone-400">{r.type}</span>
+                                                        <span className="text-meta uppercase font-bold text-texto-3">{r.type}</span>
                                                     </div>
                                                     <p className="text-xs text-stone-500">
                                                         {formatDateBr(r.date)}
@@ -544,11 +544,11 @@ const AthleteProfile: React.FC<AthleteProfileProps> = ({ userId, currentUser, us
 
                         {/* Championship defense */}
                         <div>
-                            <h3 className="text-xs font-bold text-stone-400 uppercase mb-2 flex items-center gap-1">
+                            <h3 className="text-xs font-bold text-texto-3 uppercase mb-2 flex items-center gap-1">
                                 <Trophy size={12} /> Campeonatos
                             </h3>
                             {championshipDefensePoints.length === 0 ? (
-                                <p className="text-sm text-stone-400 text-center py-4">Sem pontos de campeonato ativos.</p>
+                                <p className="text-sm text-texto-3 text-center py-4">Sem pontos de campeonato ativos.</p>
                             ) : (
                                 <div className="space-y-2">
                                     {[...championshipDefensePoints]
@@ -563,7 +563,7 @@ const AthleteProfile: React.FC<AthleteProfileProps> = ({ userId, currentUser, us
                                                 </div>
                                                 <div className="text-right">
                                                     <span className="text-lg font-extrabold text-saibro-700">{item.points}</span>
-                                                    <p className="text-meta text-stone-400 uppercase font-bold">pts</p>
+                                                    <p className="text-meta text-texto-3 uppercase font-bold">pts</p>
                                                 </div>
                                             </div>
                                         ))}
@@ -573,11 +573,11 @@ const AthleteProfile: React.FC<AthleteProfileProps> = ({ userId, currentUser, us
 
                         {/* H2H defense */}
                         <div>
-                            <h3 className="text-xs font-bold text-stone-400 uppercase mb-2 flex items-center gap-1">
+                            <h3 className="text-xs font-bold text-texto-3 uppercase mb-2 flex items-center gap-1">
                                 <Swords size={12} /> Head-to-Head (Desafio / SUPERSET)
                             </h3>
                             {h2hPoints.filter(h => h.points > 0).length === 0 ? (
-                                <p className="text-sm text-stone-400 text-center py-4">Sem pontos H2H ativos.</p>
+                                <p className="text-sm text-texto-3 text-center py-4">Sem pontos H2H ativos.</p>
                             ) : (
                                 <div className="space-y-2">
                                     {h2hPoints
@@ -593,7 +593,7 @@ const AthleteProfile: React.FC<AthleteProfileProps> = ({ userId, currentUser, us
                                                 </div>
                                                 <div className="text-right">
                                                     <span className="text-lg font-extrabold text-saibro-700">{h.points}</span>
-                                                    <p className="text-meta text-stone-400 uppercase font-bold">pts</p>
+                                                    <p className="text-meta text-texto-3 uppercase font-bold">pts</p>
                                                 </div>
                                             </div>
                                         ))}
@@ -698,7 +698,7 @@ export const Athletes: React.FC<AthletesProps> = ({ initialUserId, currentUser, 
     );
 
     if (loading) {
-        return <div className="p-8 text-center text-stone-400">Carregando atletas...</div>;
+        return <div className="p-8 text-center text-texto-3">Carregando atletas...</div>;
     }
 
     if (selectedUserId) {
@@ -726,7 +726,7 @@ export const Athletes: React.FC<AthletesProps> = ({ initialUserId, currentUser, 
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full p-3 pl-10 bg-white border border-stone-200 rounded-xl shadow-sm focus:ring-2 focus:ring-saibro-400 outline-hidden"
                 />
-                <Search size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+                <Search size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-texto-3" />
             </div>
 
             {/* Grid List */}
@@ -756,13 +756,13 @@ export const Athletes: React.FC<AthletesProps> = ({ initialUserId, currentUser, 
                                 {u.isProfessor && <span className="bg-saibro-100 text-saibro-700 px-1.5 py-0.5 rounded uppercase font-bold">PRO</span>}
                             </div>
                         </div>
-                        <div className="ml-auto text-stone-300">
+                        <div className="ml-auto text-linha-forte">
                             <ArrowRight size={20} />
                         </div>
                     </div>
                 ))}
                 {filteredUsers.length === 0 && (
-                    <div className="text-center py-8 text-stone-400">
+                    <div className="text-center py-8 text-texto-3">
                         Nenhum atleta encontrado.
                     </div>
                 )}

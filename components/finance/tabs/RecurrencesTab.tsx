@@ -92,7 +92,7 @@ const RecurrenceSheet: React.FC<{ rec: FinRecurrence | 'new' | null; onClose: ()
       </div>
       <Field label="Conta padrão (opcional)"><select className={inputCls} value={account} onChange={(e) => setAccount(e.target.value)}><option value="">Sem conta definida</option>{accounts.filter((a) => a.active).map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</select></Field>
       <Field label="Observações"><textarea className={inputCls} rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} /></Field>
-      <label className="flex min-h-11 items-center gap-2 text-sm font-bold text-stone-700"><input type="checkbox" className="h-5 w-5" checked={active} onChange={(e) => setActive(e.target.checked)} />Ativa (gera lançamentos)</label>
+      <label className="flex min-h-12 items-center gap-2 text-sm font-bold text-stone-700"><input type="checkbox" className="h-5 w-5" checked={active} onChange={(e) => setActive(e.target.checked)} />Ativa (gera lançamentos)</label>
       {editing && <Field label="Mudança vale a partir de" hint="Competências anteriores e já pagas não mudam."><input type="month" className={inputCls} value={applyFrom.slice(0, 7)} onChange={(e) => e.target.value && setApplyFrom(`${e.target.value}-01`)} /></Field>}
       {editing && (
         <div className="mt-2 border-t border-stone-200 pt-4">
@@ -132,7 +132,7 @@ const RecurrencesTab: React.FC = () => {
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0"><p className="truncate text-sm font-extrabold">{r.description}</p>
                       <p className="text-xs text-stone-500">{FREQ_LABEL[r.frequency]} · dia {r.due_day}{r.due_month_offset ? ` do ${r.due_month_offset === 1 ? 'mês seguinte' : '2º mês seguinte'}` : ''} · {categoryLabel(r.category_id, categories)}</p>
-                      <p className="text-xs text-stone-400">desde {monthLabel(r.start_month)}{r.end_month ? ` até ${monthLabel(r.end_month)}` : ''}</p></div>
+                      <p className="text-xs text-texto-3">desde {monthLabel(r.start_month)}{r.end_month ? ` até ${monthLabel(r.end_month)}` : ''}</p></div>
                     <div className="text-right"><p className="text-sm font-extrabold tabular-nums">{formatBRL(r.amount_cents)}</p><Badge tone={r.active ? 'good' : 'muted'}>{r.active ? 'Ativa' : 'Pausada'}</Badge></div>
                   </div>
                 </Row>

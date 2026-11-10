@@ -24,7 +24,7 @@ export const StatementHistory: React.FC<{ chargeId: string }> = ({ chargeId }) =
   return (
     <div className="mt-3 space-y-1.5 border-t border-stone-100 pt-3 text-xs text-stone-600">
       {history.loading && <Spinner label="Carregando histórico…" />}
-      {data && data.payments.length === 0 && data.adjustments.length === 0 && <p className="text-stone-400">Nenhum pagamento ou ajuste ainda.</p>}
+      {data && data.payments.length === 0 && data.adjustments.length === 0 && <p className="text-texto-3">Nenhum pagamento ou ajuste ainda.</p>}
       {data?.payments.map((p) => <PaymentLine key={p.id} payment={p} />)}
       {data?.adjustments.map((a) => <AdjustmentLine key={a.id} adjustment={a} />)}
     </div>

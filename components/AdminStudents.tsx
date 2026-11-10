@@ -507,7 +507,7 @@ export const AdminStudents: React.FC = () => {
                                         {student.studentType === 'dependent' ? (
                                             <UserPlus size={20} className="text-blue-600" />
                                         ) : (
-                                            <Users size={20} className={isStudentActive ? 'text-saibro-600' : 'text-stone-400'} />
+                                            <Users size={20} className={isStudentActive ? 'text-saibro-600' : 'text-texto-3'} />
                                         )}
                                     </div>
                                     <div className="flex gap-1">
@@ -701,7 +701,7 @@ export const AdminStudents: React.FC = () => {
                                         </select>
                                     </div>
                                 ) : (
-                                    <p className="text-xs text-stone-400 italic">
+                                    <p className="text-xs text-texto-3 italic">
                                         Nenhum professor cadastrado. As aulas atribuirão professores automaticamente na Agenda.
                                     </p>
                                 )}
@@ -761,7 +761,7 @@ export const AdminStudents: React.FC = () => {
                                                         role="radio"
                                                         aria-checked={studentForm.cardTier === tier}
                                                         onClick={() => setStudentForm({ ...studentForm, cardTier: tier })}
-                                                        className={`min-h-11 py-2 px-2 rounded-xl font-bold text-xs transition-all ${studentForm.cardTier === tier
+                                                        className={`min-h-12 py-2 px-2 rounded-xl font-bold text-xs transition-all ${studentForm.cardTier === tier
                                                             ? 'bg-saibro-600 text-white shadow-lg'
                                                             : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
                                                         }`}
@@ -848,13 +848,13 @@ export const AdminStudents: React.FC = () => {
                 <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl">
                     <div className="flex justify-between items-center mb-6">
                         <h3 className="text-xl font-bold text-stone-800">Registrar Pagamento</h3>
-                        <button onClick={() => setShowPaymentModal(false)}><X className="text-stone-400" /></button>
+                        <button onClick={() => setShowPaymentModal(false)}><X className="text-texto-3" /></button>
                     </div>
 
                     <div className="bg-stone-50 p-4 rounded-xl mb-6">
                         <p className="text-sm text-stone-500 mb-1">Aluno</p>
                         <p className="font-bold text-lg text-stone-800">{paymentStudent?.name}</p>
-                        <p className="text-xs text-stone-400 mt-1">{paymentStudent?.planType}</p>
+                        <p className="text-xs text-texto-3 mt-1">{paymentStudent?.planType}</p>
                         <div className="h-px bg-stone-200 my-3"></div>
                         <div className="flex justify-between items-center">
                             <span className="text-stone-500 text-sm">Valor</span>
@@ -873,7 +873,7 @@ export const AdminStudents: React.FC = () => {
                             className="w-full p-3 border-2 border-stone-200 rounded-xl text-lg font-bold text-stone-800 focus:border-saibro-500 outline-hidden"
                         />
                         {paymentStudent?.planType === 'Card Mensal' && (
-                            <p className="text-xs text-stone-400 mt-2">
+                            <p className="text-xs text-texto-3 mt-2">
                                 O vencimento será calculado para <b>1 mês</b> após esta data.
                             </p>
                         )}
@@ -899,13 +899,13 @@ export const AdminStudents: React.FC = () => {
                 <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl">
                     <div className="flex justify-between items-center mb-6">
                         <h3 className="text-xl font-bold text-stone-800">Converter para Card Mensal</h3>
-                        <button onClick={() => setShowConvertModal(false)}><X className="text-stone-400" /></button>
+                        <button onClick={() => setShowConvertModal(false)}><X className="text-texto-3" /></button>
                     </div>
 
                     <div className="bg-stone-50 p-4 rounded-xl mb-4">
                         <p className="text-sm text-stone-500 mb-1">Aluno</p>
                         <p className="font-bold text-lg text-stone-800">{convertStudent?.name}</p>
-                        <p className="text-xs text-stone-400 mt-1">Plano atual: {convertStudent?.planType}</p>
+                        <p className="text-xs text-texto-3 mt-1">Plano atual: {convertStudent?.planType}</p>
                     </div>
 
                     {convertStudent?.planType === 'Day Card Experimental' && (
@@ -941,7 +941,7 @@ export const AdminStudents: React.FC = () => {
                             onChange={e => setConvertDate(e.target.value)}
                             className="w-full p-3 border-2 border-stone-200 rounded-xl text-lg font-bold text-stone-800 focus:border-saibro-500 outline-hidden"
                         />
-                        <p className="text-xs text-stone-400 mt-2">
+                        <p className="text-xs text-texto-3 mt-2">
                             Vencimento: <b>{formatDateBr(addOneMonth(convertDate))}</b>
                         </p>
                     </div>

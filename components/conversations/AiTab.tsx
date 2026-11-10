@@ -46,12 +46,12 @@ export default function AiTab() {
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <p className="font-bold text-stone-800">{ACTION_LABEL[p.action]} · {proposalSummary(p)}</p>
-                    <p className="text-meta text-stone-400">{dataHora.format(new Date(p.created_at))}{p.confirmed_at ? ` · confirmada ${dataHora.format(new Date(p.confirmed_at))}` : ''} · origem WhatsApp</p>
+                    <p className="text-meta text-texto-3">{dataHora.format(new Date(p.created_at))}{p.confirmed_at ? ` · confirmada ${dataHora.format(new Date(p.confirmed_at))}` : ''} · origem WhatsApp</p>
                   </div>
                   <Badge tone={TONE[p.status]}>{PROPOSAL_STATUS_LABEL[p.status]}</Badge>
                 </div>
                 {p.status === 'failed' && p.failure_code && <p className="mt-1 text-xs text-red-700">O sistema recusou: {describeFailure(p.failure_code)}.</p>}
-                {p.reservation_id && <p className="mt-1 text-meta text-stone-400">Reserva #{p.reservation_id.slice(0, 8)}</p>}
+                {p.reservation_id && <p className="mt-1 text-meta text-texto-3">Reserva #{p.reservation_id.slice(0, 8)}</p>}
               </li>
             ))}
           </ul>
@@ -147,14 +147,14 @@ function MemoryItem({ c, onReview }: { c: MemoryCandidate; onReview: (c: MemoryC
         <p className="font-bold text-stone-800">{c.subject_name}</p>
         <div className="flex items-center gap-1.5">
           <Badge tone={c.kind === 'inside_joke' ? 'warn' : 'info'}>{MEMORY_KIND_LABEL[c.kind]}</Badge>
-          <span className="text-meta text-stone-400">{confidenceLabel(c.confidence)}</span>
+          <span className="text-meta text-texto-3">{confidenceLabel(c.confidence)}</span>
         </div>
       </div>
-      <p className="text-meta text-stone-400">{MEMORY_KIND_HINT[c.kind]} · {dataHora.format(new Date(c.created_at))}</p>
+      <p className="text-meta text-texto-3">{MEMORY_KIND_HINT[c.kind]} · {dataHora.format(new Date(c.created_at))}</p>
       {pendente ? (
         <input className={cx(fieldCls, 'mt-2')} value={texto} maxLength={500} onChange={(e) => setTexto(e.target.value)} aria-label={`Texto da memória sobre ${c.subject_name}`} />
       ) : <p className="mt-2 text-stone-700">{c.content}</p>}
-      {c.source_body && <p className="mt-1 text-meta italic text-stone-400">Na conversa: “{c.source_body}”</p>}
+      {c.source_body && <p className="mt-1 text-meta italic text-texto-3">Na conversa: “{c.source_body}”</p>}
       <div className="mt-2 flex flex-wrap gap-2">
         {pendente && <Button size="sm" variant="primary" loading={ocupado} disabled={texto.trim().length < 3} onClick={() => void agir('approved')}><Check size={14} aria-hidden /> Aprovar</Button>}
         <Button size="sm" variant="secondary" loading={ocupado && !pendente} disabled={ocupado} onClick={() => void agir('rejected')}><X size={14} aria-hidden /> {pendente ? 'Recusar' : 'Retirar'}</Button>
@@ -191,9 +191,9 @@ function SettingsCard({ settings, onSaved }: { settings: AiSettings; onSaved: ()
 
   return (
     <Card title={`Configuração (versão ${settings.version})`} subtitle="Salvar cria uma versão nova; as decisões antigas continuam ligadas à versão que as produziu."
-      right={<Bot size={20} className={cx(s.active ? 'text-emerald-600' : 'text-stone-300')} aria-hidden />}>
+      right={<Bot size={20} className={cx(s.active ? 'text-emerald-600' : 'text-linha-forte')} aria-hidden />}>
       {erro && <InlineAlert tone="error" title={erro} onDismiss={() => setErro(null)} />}
-      <label className="flex min-h-11 items-center gap-2 text-sm font-semibold">
+      <label className="flex min-h-12 items-center gap-2 text-sm font-semibold">
         <input type="checkbox" className="h-4 w-4 accent-saibro-600" checked={s.active} onChange={(e) => setS({ ...s, active: e.target.checked })} />
         Agente ligado
       </label>

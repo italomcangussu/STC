@@ -81,7 +81,7 @@ export const Sheet: React.FC<SheetProps> = ({ open, onClose, title, subtitle, ch
               <h2 className="text-lg font-bold text-texto">{title}</h2>
               {subtitle && <p className="text-sm text-texto-2">{subtitle}</p>}
             </div>
-            <button onClick={onClose} aria-label="Fechar" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-texto-2 hover:bg-superficie-2"><X size={20} /></button>
+            <button onClick={onClose} aria-label="Fechar" className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-texto-2 hover:bg-superficie-2"><X size={20} /></button>
           </header>
         </div>
         <div className="min-w-0 flex-1 space-y-4 overflow-y-auto overflow-x-hidden overscroll-contain px-5 py-4">{children}</div>

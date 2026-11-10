@@ -20,7 +20,7 @@ import { TennisCourtAnimation } from './ui/TennisCourtAnimation';
 import { Challenge } from '../types';
 import { getNowInFortaleza, formatDate, addDays, formatDateBr, getSetWinner, getMatchWinner, countSetsWon, isMember } from '../utils';
 import { canParticipateInClass, getCardStatus, StudentLevel, STUDENT_LEVELS } from '../lib/students/studentRules';
-import { Button, EmptyState } from './ui';
+import { Button, EmptyState, Segmented } from './ui';
 
 // Court type
 interface Court {
@@ -148,14 +148,14 @@ const ManageParticipantsModal: React.FC<{
             <div className="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col max-h-[90vh]">
                 <div className="p-4 border-b border-stone-100 flex items-center justify-between">
                     <h3 className="text-lg font-bold text-stone-800">Gerenciar Atletas</h3>
-                    <button onClick={onClose} className="p-2 text-stone-400 hover:bg-stone-50 rounded-full">
+                    <button onClick={onClose} className="p-2 text-texto-3 hover:bg-stone-50 rounded-full">
                         <X size={20} />
                     </button>
                 </div>
 
                 <div className="p-4 space-y-4 flex-1 overflow-hidden flex flex-col">
                     <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" size={18} />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-texto-3" size={18} />
                         <input
                             type="text"
                             placeholder="Buscar por nome ou número..."
@@ -179,7 +179,7 @@ const ManageParticipantsModal: React.FC<{
                                         <img src={user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`} className="w-10 h-10 rounded-full border border-stone-100" />
                                         <div>
                                             <p className="font-bold text-stone-800 text-sm">{user.name}</p>
-                                            <p className="text-meta text-stone-400">{user.phone ? `+${user.phone}` : user.email}</p>
+                                            <p className="text-meta text-texto-3">{user.phone ? `+${user.phone}` : user.email}</p>
                                         </div>
                                     </div >
                                     <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 transition-colors ${isSelected ? 'bg-saibro-500 border-saibro-500 text-white' : 'border-stone-200'
@@ -253,7 +253,7 @@ const ManageGuestModal: React.FC<{
             <div className="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl">
                 <div className="flex justify-between items-center border-b border-stone-100 pb-3">
                     <h3 className="text-lg font-bold text-stone-800">{res.guestName ? 'Editar Convidado' : 'Adicionar Convidado'}</h3>
-                    <button onClick={onClose} className="p-2 text-stone-400 hover:bg-stone-50 rounded-full">
+                    <button onClick={onClose} className="p-2 text-texto-3 hover:bg-stone-50 rounded-full">
                         <X size={20} />
                     </button>
                 </div>
@@ -495,14 +495,14 @@ export const ReservationDetails: React.FC<{
                                         )}
                                     </div>
                                     <h1 className="text-4xl font-extrabold text-stone-800 tracking-tighter pt-2 tabular-nums">
-                                        {res.startTime} <span className="text-stone-300 font-light mx-1">/</span> <span className="text-2xl text-stone-400">{res.endTime}</span>
+                                        {res.startTime} <span className="text-linha-forte font-light mx-1">/</span> <span className="text-2xl text-texto-3">{res.endTime}</span>
                                     </h1>
                                     <p className="text-stone-500 font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 opacity-80">
                                         <Calendar size={14} className="text-saibro-500" /> {getDayName(res.date)}, {formatDateBr(res.date)}
                                     </p>
                                 </div>
                                 <div className="w-16 h-16 rounded-2xl bg-stone-50 border border-stone-100 flex flex-col items-center justify-center shadow-inner mt-2">
-                                    <span className="text-meta font-extrabold text-stone-400 uppercase leading-none mb-1">Quadra</span>
+                                    <span className="text-meta font-extrabold text-texto-3 uppercase leading-none mb-1">Quadra</span>
                                     <span className="text-xl font-extrabold text-stone-800 leading-none">{court?.name.split(' ')[1] || '0'}</span>
                                 </div>
                             </div>
@@ -513,7 +513,7 @@ export const ReservationDetails: React.FC<{
                                 </div>
                                 <div>
                                     <p className="font-extrabold text-stone-800 text-lg tracking-tight leading-tight">{court?.name}</p>
-                                    <p className="text-meta text-stone-400 uppercase font-extrabold tracking-widest">{court?.type}</p>
+                                    <p className="text-meta text-texto-3 uppercase font-extrabold tracking-widest">{court?.type}</p>
                                 </div>
                             </div>
 
@@ -594,7 +594,7 @@ export const ReservationDetails: React.FC<{
                                         {isAdmin && p?.id !== res.creatorId && (
                                             <button
                                                 onClick={() => onUpdate({ ...res, participantIds: res.participantIds.filter(id => id !== p?.id) })}
-                                                className="p-2.5 text-stone-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                                                className="p-2.5 text-linha-forte hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
                                             >
                                                 <UserMinus size={18} />
                                             </button>
@@ -631,7 +631,7 @@ export const ReservationDetails: React.FC<{
                                         onClick={() => setShowGuestModal(true)}
                                         className="w-full h-16 flex items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-stone-300 text-stone-500 hover:border-saibro-400 hover:text-saibro-600 hover:bg-saibro-50/50 transition-all text-xs font-extrabold uppercase tracking-widest"
                                     >
-                                        <div className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center text-stone-400 group-hover:bg-saibro-100 transition-colors">
+                                        <div className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center text-texto-3 group-hover:bg-saibro-100 transition-colors">
                                             <UserPlus size={18} strokeWidth={2.5} />
                                         </div>
                                         Convidado (Day Use)
@@ -730,7 +730,7 @@ export const ReservationDetails: React.FC<{
                                                 <img src={championshipPlayers[0].avatar} className="w-20 h-20 rounded-full border-4 border-stone-100 shadow-lg object-cover" alt="" />
                                                 <span className="font-extrabold text-stone-800 text-sm">{championshipPlayers[0].name}</span>
                                             </div>
-                                            <div className="text-3xl font-extrabold text-stone-300 italic">VS</div>
+                                            <div className="text-3xl font-extrabold text-linha-forte italic">VS</div>
                                             <div className="flex flex-col items-center gap-2">
                                                 <img src={championshipPlayers[1].avatar} className="w-20 h-20 rounded-full border-4 border-stone-100 shadow-lg object-cover" alt="" />
                                                 <span className="font-extrabold text-stone-800 text-sm">{championshipPlayers[1].name}</span>
@@ -766,7 +766,7 @@ export const ReservationDetails: React.FC<{
                                                     <div key={p?.id} className="bg-white rounded-2xl p-4 border border-stone-200/60 shadow-sm flex items-center gap-4">
                                                         <img src={p?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${p?.id}`} className="w-14 h-14 rounded-full border-4 border-saibro-50 p-0.5 object-cover" alt="" />
                                                         <div>
-                                                            <p className="text-meta font-extrabold text-stone-400 uppercase tracking-widest mb-0.5">Aluno Sócio</p>
+                                                            <p className="text-meta font-extrabold text-texto-3 uppercase tracking-widest mb-0.5">Aluno Sócio</p>
                                                             <p className="font-extrabold text-stone-800 text-lg uppercase leading-tight tracking-tight">{p?.name}</p>
                                                         </div>
                                                     </div>
@@ -803,7 +803,7 @@ export const ReservationDetails: React.FC<{
                                         )}
                                     </div>
                                 ) : (
-                                    <p className="text-stone-400 italic text-center text-sm py-4">Nenhum aluno vinculado.</p>
+                                    <p className="text-texto-3 italic text-center text-sm py-4">Nenhum aluno vinculado.</p>
                                 )}
                             </div>
                         )}
@@ -823,10 +823,10 @@ export const ReservationDetails: React.FC<{
 
                     {/* 5. Meta Info */}
                     <div className="text-center pt-2 pb-8 border-t border-stone-100">
-                        <p className="text-meta text-stone-400 font-bold uppercase tracking-tighter">
+                        <p className="text-meta text-texto-3 font-bold uppercase tracking-tighter">
                             Protocolo: {res.id.slice(0, 8).toUpperCase()}
                         </p>
-                        <p className="text-meta text-stone-300 mt-0.5 font-medium">
+                        <p className="text-meta text-linha-forte mt-0.5 font-medium">
                             Criado por {creator?.name} • SCT Play Cloud
                         </p>
                     </div>
@@ -945,24 +945,24 @@ const ReservationCard: React.FC<{
                         {res.status === 'cancelled' && <span className="text-meta font-bold text-red-500 uppercase bg-red-100 px-1.5 py-0.5 rounded-md">Cancelada</span>}
                     </div>
                     <h4 className="font-bold text-stone-800 text-base leading-tight">
-                        {court?.name} <span className="text-stone-400 font-normal text-xs block sm:inline">({court?.type})</span>
+                        {court?.name} <span className="text-texto-3 font-normal text-xs block sm:inline">({court?.type})</span>
                     </h4>
                 </div>
                 <div className="text-right">
                     <div className="flex items-center gap-3 bg-stone-50/80 rounded-xl p-1.5 pl-3 border border-stone-100 shadow-sm backdrop-blur-sm">
                         <div className="flex flex-col items-center">
-                            <span className="text-meta text-stone-400 font-bold uppercase tracking-wider mb-0.5">Início</span>
+                            <span className="text-meta text-texto-3 font-bold uppercase tracking-wider mb-0.5">Início</span>
                             <span className="text-sm font-extrabold text-stone-800 tabular-nums leading-none tracking-tight">{res.startTime.slice(0, 5)}</span>
                         </div>
 
                         <div className="relative h-6 w-px bg-stone-200">
                             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-white border border-stone-200 flex items-center justify-center shadow-sm z-10">
-                                <ArrowRight size={10} className="text-stone-400" />
+                                <ArrowRight size={10} className="text-texto-3" />
                             </div>
                         </div>
 
                         <div className="flex flex-col items-center">
-                            <span className="text-meta text-stone-400 font-bold uppercase tracking-wider mb-0.5">Fim</span>
+                            <span className="text-meta text-texto-3 font-bold uppercase tracking-wider mb-0.5">Fim</span>
                             <span className="text-sm font-bold text-stone-500 tabular-nums leading-none tracking-tight">{res.endTime.slice(0, 5)}</span>
                         </div>
                     </div>
@@ -1011,7 +1011,7 @@ const ReservationCard: React.FC<{
                                         </div>
                                     )}
                                     {participants.length === 0 && nonSocioStudentsList.length === 0 && (
-                                        <span className="text-stone-400 text-xs italic">Nenhum aluno</span>
+                                        <span className="text-texto-3 text-xs italic">Nenhum aluno</span>
                                     )}
                                 </div>
                             </div>
@@ -1079,7 +1079,7 @@ const ReservationCard: React.FC<{
                         </div>
 
                         {participants.length === 0 && !res.guestName && (
-                            <span className="text-stone-400 text-xs italic pl-1">Sem participantes</span>
+                            <span className="text-texto-3 text-xs italic pl-1">Sem participantes</span>
                         )}
                     </div>
                 )}
@@ -1097,17 +1097,17 @@ const ReservationCard: React.FC<{
                         const isToday = res.date === todayStr;
 
                         let statusText = '';
-                        let statusColor = 'text-stone-400';
+                        let statusColor = 'text-texto-3';
                         let dotColor = 'bg-stone-300';
                         let pulse = false;
 
                         if (res.type === 'Campeonato' && res.matchStatus === 'finished') {
                             statusText = 'Finalizada';
-                            statusColor = 'text-stone-400';
+                            statusColor = 'text-texto-3';
                             dotColor = 'bg-stone-300';
                         } else if (now > end) {
                             statusText = 'Finalizada';
-                            statusColor = 'text-stone-400';
+                            statusColor = 'text-texto-3';
                             dotColor = 'bg-stone-300';
                         } else if (now >= start && now <= end) {
                             statusText = 'Em andamento';
@@ -1772,8 +1772,8 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
     // --- Renders ---
     const renderDayView = () => (
         <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
-            <h3 className="text-lg font-bold text-saibro-800 capitalize flex items-center gap-2 section-header">
-                <CalendarIcon date={currentDate} />
+            {/* O navegador de datas logo acima já diz o dia; aqui fica só para o leitor de tela. */}
+            <h3 className="sr-only">
                 {getDayName(formatDate(currentDate))}, {currentDate.getDate()}
             </h3>
             <div className="space-y-3">
@@ -1786,8 +1786,8 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                         />
                     )
                 ) : (
-                    filteredReservations.map((res, index) => (
-                        <div key={res.id} className={`animate-slide-in opacity-0`} style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'forwards' }}>
+                    filteredReservations.map((res) => (
+                        <div key={res.id} className="animate-in fade-in">
                             <ReservationCard
                                 res={res}
                                 currentUser={currentUser}
@@ -1861,7 +1861,7 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
             <div className="animate-in zoom-in-95 duration-200">
                 <div className="grid grid-cols-7 mb-2 text-center">
                     {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((d, i) => (
-                        <span key={i} className="text-xs font-bold text-stone-400 py-2">{d}</span>
+                        <span key={i} className="text-xs font-bold text-texto-3 py-2">{d}</span>
                     ))}
                 </div>
                 <div className="grid grid-cols-7 gap-1">
@@ -1907,7 +1907,7 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                             />
                         ))}
                         {filteredReservations.filter(r => r.date === formatDate(currentDate)).length === 0 && (
-                            <p className="text-stone-400 text-sm text-center">Selecione um dia com marcações.</p>
+                            <p className="text-texto-3 text-sm text-center">Selecione um dia com marcações.</p>
                         )}
                     </div>
                 </div>
@@ -1929,11 +1929,11 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                     {/* Header Controls */}
                     <div className="flex flex-col gap-4">
                         <div className="flex justify-between items-center">
-                            <h2 className="text-2xl font-bold text-saibro-900">Agenda</h2>
+                            <h2 className="text-2xl font-bold text-texto">Agenda</h2>
                             {currentUser.role !== 'lanchonete' && (
-                                <button onClick={handleOpenAdd} className="bg-saibro-600 text-white px-3 py-2 rounded-xl shadow-lg flex items-center gap-2 text-sm font-bold active:scale-[0.97] transition-transform">
-                                    <Plus size={18} /> <span className="hidden md:inline">Nova Reserva</span>
-                                </button>
+                                <Button icon={<Plus size={20} />} onClick={handleOpenAdd} aria-label="Nova reserva" className="px-3 md:px-4">
+                                    <span className="hidden md:inline">Nova reserva</span>
+                                </Button>
                             )}
                         </div>
 
@@ -1948,17 +1948,12 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                         />
 
                         {/* View Switcher */}
-                        <div className="bg-stone-100 p-1 rounded-lg flex text-sm font-medium">
-                            {['day', 'week', 'month'].map((v) => (
-                                <button
-                                    key={v}
-                                    onClick={() => setView(v as any)}
-                                    className={`flex-1 py-1.5 rounded-md transition-all ${view === v ? 'bg-white text-saibro-700 shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}
-                                >
-                                    {v === 'day' ? 'Dia' : v === 'week' ? 'Semana' : 'Mês'}
-                                </button>
-                            ))}
-                        </div>
+                        <Segmented<typeof view>
+                            label="Período da agenda"
+                            value={view}
+                            onChange={setView}
+                            options={[{ value: 'day', label: 'Dia' }, { value: 'week', label: 'Semana' }, { value: 'month', label: 'Mês' }]}
+                        />
 
                         {/* Date Navigator */}
                         {/* Date Navigator & Filters Container */}
@@ -1966,7 +1961,8 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                             <div className="flex items-center justify-between gap-4">
                                 <button
                                     onClick={() => navigate('prev')}
-                                    className="w-10 h-10 flex items-center justify-center rounded-full bg-stone-50 text-stone-400 hover:bg-stone-100 hover:text-saibro-600 transition-all active:scale-[0.97]"
+                                    aria-label="Período anterior"
+                                    className="w-12 h-12 flex items-center justify-center rounded-full bg-superficie-2 text-texto-2 hover:text-acao transition-colors active:scale-[0.97]"
                                 >
                                     <ChevronLeft size={20} strokeWidth={2.5} />
                                 </button>
@@ -1987,7 +1983,8 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
 
                                 <button
                                     onClick={() => navigate('next')}
-                                    className="w-10 h-10 flex items-center justify-center rounded-full bg-stone-50 text-stone-400 hover:bg-stone-100 hover:text-saibro-600 transition-all active:scale-[0.97]"
+                                    aria-label="Período seguinte"
+                                    className="w-12 h-12 flex items-center justify-center rounded-full bg-superficie-2 text-texto-2 hover:text-acao transition-colors active:scale-[0.97]"
                                 >
                                     <ChevronRight size={20} strokeWidth={2.5} />
                                 </button>
@@ -2011,7 +2008,7 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                                             ${showCancelled ? 'translate-x-3' : 'translate-x-0'}
                                         `} />
                                     </div>
-                                    <span className={`text-meta uppercase font-bold tracking-wider ${showCancelled ? 'text-red-600' : 'text-stone-400'}`}>
+                                    <span className={`text-meta uppercase font-bold tracking-wider ${showCancelled ? 'text-red-600' : 'text-texto-3'}`}>
                                         Ver Canceladas
                                     </span>
                                 </div>
@@ -2075,14 +2072,6 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
         </div>
     );
 };
-
-// --- SUB-COMPONENT: Calendar Icon ---
-const CalendarIcon: React.FC<{ date: Date }> = ({ date }) => (
-    <div className="w-8 h-8 bg-white border border-stone-200 rounded-lg flex flex-col items-center justify-center shadow-sm overflow-hidden">
-        <div className="w-full h-2.5 bg-red-500" />
-        <span className="text-xs font-bold text-stone-800 leading-none mt-0.5">{date.getDate()}</span>
-    </div>
-);
 
 // --- SUB-COMPONENT: Add/Edit Reservation Modal ---
 /**
@@ -2713,7 +2702,7 @@ export const AddReservationModal: React.FC<{
                                                 <button
                                                     key={d}
                                                     onClick={() => setDuration(d)}
-                                                    className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${duration === d ? 'bg-white text-saibro-700 shadow-sm' : 'text-stone-400 hover:text-stone-600'}`}
+                                                    className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${duration === d ? 'bg-white text-saibro-700 shadow-sm' : 'text-texto-3 hover:text-stone-600'}`}
                                                 >
                                                     {d}m
                                                 </button>
@@ -2847,7 +2836,7 @@ export const AddReservationModal: React.FC<{
                                             </button>
                                         </div>
                                         <div className="relative mb-2">
-                                            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+                                            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-texto-3" />
                                             <input
                                                 value={studentSearch}
                                                 onChange={event => setStudentSearch(event.target.value)}
@@ -2927,7 +2916,7 @@ export const AddReservationModal: React.FC<{
                             Voltar
                         </button>
                     ) : (
-                        <button onClick={onClose} className="px-6 py-3 rounded-xl font-bold text-stone-400 hover:bg-stone-50 transition-colors">
+                        <button onClick={onClose} className="px-6 py-3 rounded-xl font-bold text-texto-3 hover:bg-stone-50 transition-colors">
                             Cancelar
                         </button>
                     )}

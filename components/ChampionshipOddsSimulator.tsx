@@ -31,7 +31,7 @@ export const ChampionshipOddsSimulator: React.FC<Props> = ({ matches, registrati
 
     if (registrations.length === 0) {
         return (
-            <div className="rounded-3xl border border-dashed border-stone-200 bg-white p-10 text-center text-stone-400">
+            <div className="rounded-3xl border border-dashed border-stone-200 bg-white p-10 text-center text-texto-3">
                 Nenhum inscrito encontrado.
             </div>
         );
@@ -60,12 +60,12 @@ export const ChampionshipOddsSimulator: React.FC<Props> = ({ matches, registrati
                     </div>
                     <div>
                         <h3 className="text-lg font-extrabold text-stone-900">Simulador de odds</h3>
-                        <p className="text-xs font-bold text-stone-400">Simulação informativa, sem aposta real.</p>
+                        <p className="text-xs font-bold text-texto-3">Simulação informativa, sem aposta real.</p>
                     </div>
                 </div>
 
                 {eligibleAthletes.length < 2 ? (
-                    <div className="rounded-2xl border border-dashed border-stone-200 bg-stone-50 p-5 text-center text-sm font-bold text-stone-400">
+                    <div className="rounded-2xl border border-dashed border-stone-200 bg-stone-50 p-5 text-center text-sm font-bold text-texto-3">
                         Dados insuficientes para comparar atletas desta classe.
                     </div>
                 ) : (
@@ -98,7 +98,7 @@ const AthleteSelect: React.FC<{
     onChange: (value: string) => void;
 }> = ({ label, athletes, value, onChange }) => (
     <label className="block">
-        <span className="mb-2 block text-xs font-extrabold uppercase tracking-widest text-stone-400">{label}</span>
+        <span className="mb-2 block text-xs font-extrabold uppercase tracking-widest text-texto-3">{label}</span>
         <div className="relative">
             <select
                 value={value || athletes[0]?.registrationId || ''}
@@ -109,7 +109,7 @@ const AthleteSelect: React.FC<{
                     <option key={athlete.registrationId} value={athlete.registrationId}>{athlete.name}</option>
                 ))}
             </select>
-            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-stone-400" size={16} />
+            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-texto-3" size={16} />
         </div>
     </label>
 );
@@ -123,11 +123,11 @@ const OddCard: React.FC<{
         <p className="truncate text-sm font-extrabold text-stone-900">{stat.name}</p>
         <div className="mt-3 flex items-end justify-between gap-3">
             <div>
-                <p className="text-xs font-extrabold uppercase tracking-widest text-stone-400">Prob.</p>
+                <p className="text-xs font-extrabold uppercase tracking-widest text-texto-3">Prob.</p>
                 <p className="text-xl font-extrabold text-stone-900">{side.probability}%</p>
             </div>
             <div className="text-right">
-                <p className="text-xs font-extrabold uppercase tracking-widest text-stone-400">Odd</p>
+                <p className="text-xs font-extrabold uppercase tracking-widest text-texto-3">Odd</p>
                 <p className="text-3xl font-extrabold text-saibro-600">{side.decimalOdd.toFixed(2)}</p>
             </div>
         </div>

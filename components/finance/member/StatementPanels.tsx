@@ -15,7 +15,7 @@ export const StatementHeader: React.FC<{ overdueCount: number; owedCents: number
     <p className="mt-2 text-sm text-saibro-100">{headerSentence(overdueCount, owedCents)}</p>
     <p className="text-4xl font-extrabold tabular-nums">{formatBRL(owedCents)}</p>
     <p className="mt-1 text-xs text-saibro-100">Total atualizado de hoje, com encargos de atraso quando houver.</p>
-    <button className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-xl bg-white px-4 text-sm font-extrabold text-saibro-700 shadow-sm active:scale-[0.97] disabled:opacity-60" disabled={!canSend} onClick={onSend}>
+    <button className="mt-3 inline-flex min-h-12 items-center gap-2 rounded-xl bg-white px-4 text-sm font-extrabold text-saibro-700 shadow-sm active:scale-[0.97] disabled:opacity-60" disabled={!canSend} onClick={onSend}>
       <Receipt size={16} /> Enviar comprovante{pickedCount ? ` (${pickedCount})` : ''}
     </button>
   </header>
@@ -41,7 +41,7 @@ const CopyPixButton: React.FC<{ pix: string }> = ({ pix }) => {
 export const PendenciesCard: React.FC<{ cents: number; pixKey: string | null | undefined }> = ({ cents, pixKey }) => (
   <Card title="Pendências financeiras" subtitle="Pendências lançadas pelo clube ficam aqui até a quitação.">
     <div className="flex items-end justify-between gap-3 rounded-2xl bg-stone-50 p-3">
-      <div><p className="text-meta font-extrabold uppercase tracking-wide text-stone-400">Saldo das pendências</p><p className="text-2xl font-extrabold text-stone-900">{formatBRL(cents)}</p></div>
+      <div><p className="text-meta font-extrabold uppercase tracking-wide text-texto-3">Saldo das pendências</p><p className="text-2xl font-extrabold text-stone-900">{formatBRL(cents)}</p></div>
       {pixKey && <CopyPixButton pix={pixKey} />}
     </div>
     {pixKey && <p className="mt-2 break-all text-xs text-stone-500">PIX do clube: <b className="text-stone-700">{pixKey}</b></p>}
@@ -81,7 +81,7 @@ export const ReceiptsCard: React.FC<{ receipts: MyReceipt[] | null; loading: boo
   const list = receipts ?? [];
   return (
     <Card title="Meus comprovantes" subtitle="Acompanhe a análise do clube">
-      {loading ? <Spinner /> : list.length === 0 ? <p className="text-sm text-stone-400">Você ainda não enviou comprovantes.</p> : (
+      {loading ? <Spinner /> : list.length === 0 ? <p className="text-sm text-texto-3">Você ainda não enviou comprovantes.</p> : (
         <div className="space-y-2">{list.map((r) => <ReceiptItem key={r.id} receipt={r} onResend={onResend} />)}</div>
       )}
     </Card>

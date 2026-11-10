@@ -68,7 +68,7 @@ export const AdminNav: React.FC<{ active: AdminTabId; onGo: (id: AdminTabId) => 
                                 aria-selected={on}
                                 aria-controls={PANEL_DOM_ID}
                                 onClick={() => onGo(s.id)}
-                                className={`relative flex min-h-11 shrink-0 items-center gap-1.5 whitespace-nowrap px-3 text-sm font-bold transition-colors ${on ? 'text-saibro-700 after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:rounded-full after:bg-saibro-600' : 'text-stone-500 hover:text-stone-800'}`}
+                                className={`relative flex min-h-12 shrink-0 items-center gap-1.5 whitespace-nowrap px-3 text-sm font-bold transition-colors ${on ? 'text-saibro-700 after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:rounded-full after:bg-saibro-600' : 'text-stone-500 hover:text-stone-800'}`}
                             >
                                 {s.label}
                                 {n > 0 && <Badge n={n} />}
@@ -119,7 +119,7 @@ export const AdminSearchBox: React.FC<{ onGo: (id: AdminTabId) => void }> = ({ o
 
     return (
         <div className="relative z-30 max-w-xl">
-            <Search size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" aria-hidden />
+            <Search size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-texto-3" aria-hidden />
             <input
                 type="search"
                 inputMode="search"
@@ -141,13 +141,13 @@ export const AdminSearchBox: React.FC<{ onGo: (id: AdminTabId) => void }> = ({ o
                     type="button"
                     onClick={() => setQuery('')}
                     aria-label="Limpar busca"
-                    className="absolute right-1.5 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-stone-400 hover:bg-stone-100"
+                    className="absolute right-1.5 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-texto-3 hover:bg-stone-100"
                 ><X size={16} /></button>
             )}
             {query && (
                 <ul id={listId} role="listbox" aria-label="Seções encontradas" className="absolute z-40 mt-1 max-h-72 w-full overflow-y-auto rounded-2xl border border-stone-100 bg-white shadow-xl">
                     {results.length === 0 ? (
-                        <li className="px-4 py-3 text-sm text-stone-400">Nada encontrado. Tente “aluno”, “mensalidade” ou “reserva”.</li>
+                        <li className="px-4 py-3 text-sm text-texto-3">Nada encontrado. Tente “aluno”, “mensalidade” ou “reserva”.</li>
                     ) : results.map((r, i) => {
                         const Icon = SECTION_ICON[r.id];
                         return (
@@ -163,7 +163,7 @@ export const AdminSearchBox: React.FC<{ onGo: (id: AdminTabId) => void }> = ({ o
                                 <Icon size={18} className="shrink-0 text-saibro-600" aria-hidden />
                                 <span className="min-w-0">
                                     <span className="block text-sm font-bold text-stone-700">{r.label}</span>
-                                    <span className="block truncate text-xs text-stone-400">{groupOf(r.id).label} · {r.hint}</span>
+                                    <span className="block truncate text-xs text-texto-3">{groupOf(r.id).label} · {r.hint}</span>
                                 </span>
                             </li>
                         );

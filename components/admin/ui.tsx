@@ -11,10 +11,10 @@ import { EmptyState } from '../ui/EmptyState';
 
 /** Botão de ação principal (Novo aluno, Novo aviso…). Largura total no celular: o polegar acerta sem mirar. */
 export const adminBtnPrimary =
-    'inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-saibro-600 px-4 py-2 text-sm font-bold text-white shadow-sm   transition active:scale-[0.97] hover:bg-saibro-700 disabled:opacity-50 sm:w-auto';
+    'inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-saibro-600 px-4 py-2 text-sm font-bold text-white shadow-sm   transition active:scale-[0.97] hover:bg-saibro-700 disabled:opacity-50 sm:w-auto';
 
 export const adminBtnGhost =
-    'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-stone-200 bg-white px-4 py-2 text-sm font-bold text-stone-600 transition active:scale-[0.97] hover:bg-stone-50 disabled:opacity-50';
+    'inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-stone-200 bg-white px-4 py-2 text-sm font-bold text-stone-600 transition active:scale-[0.97] hover:bg-stone-50 disabled:opacity-50';
 
 /**
  * Cabeçalho de tela. Dentro do painel o título já está no topo da página, então
@@ -53,7 +53,7 @@ export const AdminSearch: React.FC<{
     className?: string;
 }> = ({ value, onChange, placeholder, label, className = '' }) => (
     <div className={`relative ${className}`}>
-        <Search size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" aria-hidden />
+        <Search size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-texto-3" aria-hidden />
         <input
             type="search"
             inputMode="search"
@@ -63,14 +63,14 @@ export const AdminSearch: React.FC<{
             placeholder={placeholder}
             aria-label={label}
             autoComplete="off"
-            className="min-h-11 w-full min-w-0 appearance-none rounded-xl border border-stone-200 bg-white py-2 pl-10 pr-10 text-sm text-stone-700 outline-hidden focus:border-saibro-400 focus:ring-2 focus:ring-saibro-100 [&::-webkit-search-cancel-button]:hidden"
+            className="min-h-12 w-full min-w-0 appearance-none rounded-xl border border-stone-200 bg-white py-2 pl-10 pr-10 text-sm text-stone-700 outline-hidden focus:border-saibro-400 focus:ring-2 focus:ring-saibro-100 [&::-webkit-search-cancel-button]:hidden"
         />
         {value && (
             <button
                 type="button"
                 onClick={() => onChange('')}
                 aria-label="Limpar busca"
-                className="absolute right-1 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-stone-400 hover:bg-stone-100 hover:text-stone-600"
+                className="absolute right-1 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-texto-3 hover:bg-stone-100 hover:text-stone-600"
             >
                 <X size={16} />
             </button>
@@ -101,7 +101,7 @@ export function ChipGroup<T extends string>({ items, value, onChange, label, cla
                         type="button"
                         aria-pressed={on}
                         onClick={() => onChange(i.id)}
-                        className={`min-h-11 rounded-full border px-4 text-sm font-bold transition-colors ${on ? 'border-saibro-300 bg-saibro-50 text-saibro-700' : 'border-stone-200 bg-white text-stone-600 hover:border-stone-300'}`}
+                        className={`min-h-12 rounded-full border px-4 text-sm font-bold transition-colors ${on ? 'border-saibro-300 bg-saibro-50 text-saibro-700' : 'border-stone-200 bg-white text-stone-600 hover:border-stone-300'}`}
                     >
                         {i.label}
                     </button>
@@ -118,7 +118,7 @@ export const AdminEmpty: React.FC<{ title: string; hint?: string; icon?: React.R
 
 /** Campo de formulário do painel: 44 px de altura, `min-w-0` para nunca estourar a coluna do grid. */
 export const adminInputCls =
-    'min-h-11 w-full min-w-0 rounded-xl border border-stone-200 bg-white px-3.5 py-2.5 text-sm text-stone-800 outline-hidden placeholder:text-stone-300 focus:border-saibro-400 focus:ring-2 focus:ring-saibro-100 disabled:bg-stone-50 disabled:text-stone-400';
+    'min-h-12 w-full min-w-0 rounded-xl border border-stone-200 bg-white px-3.5 py-2.5 text-sm text-stone-800 outline-hidden placeholder:text-texto-3 focus:border-saibro-400 focus:ring-2 focus:ring-saibro-100 disabled:bg-stone-50 disabled:text-texto-3';
 
 /**
  * Rótulo + campo + dica/erro. O `<label>` envolve o campo, então tocar no texto
@@ -132,12 +132,12 @@ export const AdminField: React.FC<{
     className?: string;
 }> = ({ label, hint, error, children, className = '' }) => (
     <label className={`block min-w-0 space-y-1 ${className}`}>
-        <span className="text-meta font-extrabold uppercase tracking-wider text-stone-400">{label}</span>
+        <span className="text-meta font-extrabold uppercase tracking-wider text-texto-3">{label}</span>
         {children}
         {error ? (
             <span role="alert" className="block text-xs font-medium text-red-600">{error}</span>
         ) : hint ? (
-            <span className="block text-xs text-stone-400">{hint}</span>
+            <span className="block text-xs text-texto-3">{hint}</span>
         ) : null}
     </label>
 );
@@ -148,8 +148,8 @@ export { StatusPill } from '../ui/StatusPill';
 /** Bloco de número no topo de uma tela: grande, com legenda curta. */
 export const StatTile: React.FC<{ label: string; value: React.ReactNode; hint?: string }> = ({ label, value, hint }) => (
     <div className="min-w-0 rounded-2xl border border-stone-100 bg-stone-50/70 p-3">
-        <p className="truncate text-meta font-extrabold uppercase tracking-wider text-stone-400">{label}</p>
+        <p className="truncate text-meta font-extrabold uppercase tracking-wider text-texto-3">{label}</p>
         <p className="text-2xl font-extrabold tabular-nums text-stone-800">{value}</p>
-        {hint && <p className="truncate text-xs text-stone-400">{hint}</p>}
+        {hint && <p className="truncate text-xs text-texto-3">{hint}</p>}
     </div>
 );

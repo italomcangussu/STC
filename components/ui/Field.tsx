@@ -51,7 +51,7 @@ export const Field: React.FC<{
 };
 
 const campo =
-    'block min-h-11 w-full min-w-0 rounded-lg border bg-superficie px-3.5 py-2.5 text-base text-texto ' +
+    'block min-h-12 w-full min-w-0 rounded-lg border bg-superficie px-3.5 py-2.5 text-base text-texto ' +
     'placeholder:text-texto-3 transition-[border-color,box-shadow] duration-(--dur-estado) ease-saida ' +
     'focus:outline-none focus-visible:outline-none focus:border-acao focus:ring-3 focus:ring-acao/15 ' +
     'disabled:cursor-not-allowed disabled:bg-superficie-2 disabled:text-texto-3';

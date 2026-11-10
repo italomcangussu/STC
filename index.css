@@ -462,14 +462,10 @@
     }
 
     /* Section Header - For standalone titles */
+    /* Era a "pílula de vidro" para ler sobre a foto do saibro. Com o chão liso
+       (cardápio v2), título de seção é só texto: nada de card em volta. */
     .section-header {
-        background: rgba(255, 255, 255, 0.85);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        padding: 0.5rem 1rem;
-        border-radius: 12px;
-        display: inline-block;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        display: block;
     }
 
     /* Tennis Net Divider */

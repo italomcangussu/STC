@@ -198,12 +198,12 @@ describe('Agenda reservation persistence', () => {
     render(<ConfirmProvider><Agenda currentUser={currentUser} /></ConfirmProvider>);
 
     expect(await screen.findByRole('alert')).toHaveTextContent(/não consegui carregar a agenda/i);
-    expect(screen.queryByText(/nenhuma reserva para este dia/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/quadras livres o dia todo/i)).not.toBeInTheDocument();
 
     failReservationsFetch = false;
     fireEvent.click(screen.getByRole('button', { name: /tentar de novo/i }));
     await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument());
-    expect(await screen.findByText(/nenhuma reserva para este dia/i)).toBeInTheDocument();
+    expect(await screen.findByText(/quadras livres o dia todo/i)).toBeInTheDocument();
 
     consoleErrorSpy.mockRestore();
   });
@@ -217,7 +217,7 @@ describe('Agenda reservation persistence', () => {
     expect(firstLoad[0].column).toBe('date');
     expect(gteCalls.some(c => c.table === 'matches' && c.column === 'scheduled_date' && c.value === firstLoad[0].value)).toBe(true);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Semana' }));
+    fireEvent.click(screen.getByRole('radio', { name: 'Semana' }));
     for (let i = 0; i < 10; i += 1) {
       const previous = await waitFor(() => {
         const button = screen.getAllByRole('button').find(b => b.querySelector('svg.lucide-chevron-left'));

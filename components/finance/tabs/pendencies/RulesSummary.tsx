@@ -5,7 +5,7 @@ import { feeText, reminderDaysText } from '../../../../lib/finance/pendencies';
 import { Badge, Card, Spinner, btnGhost } from '../../ui';
 
 const Item: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
-  <div className="rounded-2xl bg-stone-50 p-3"><dt className="text-meta font-extrabold uppercase tracking-wide text-stone-400">{label}</dt><dd className="mt-0.5 text-sm font-bold text-stone-700">{children}</dd></div>
+  <div className="rounded-2xl bg-stone-50 p-3"><dt className="text-meta font-extrabold uppercase tracking-wide text-texto-3">{label}</dt><dd className="mt-0.5 text-sm font-bold text-stone-700">{children}</dd></div>
 );
 
 const FeeItems: React.FC<{ settings: FinSettings }> = ({ settings: s }) => {
@@ -25,7 +25,7 @@ export const RulesSummary: React.FC<{ settings: FinSettings | null; onConfigure:
   if (!s) return <Card title="Régua de cobrança" right={configure}><Spinner /></Card>;
   return (
     <Card
-      title={<span className="flex items-center gap-2"><BellRing size={18} className="text-stone-400" /> Régua de cobrança <Badge tone={s.pendency_automation_enabled ? 'good' : 'muted'}>{s.pendency_automation_enabled ? 'Ativa' : 'Pausada'}</Badge></span>}
+      title={<span className="flex items-center gap-2"><BellRing size={18} className="text-texto-3" /> Régua de cobrança <Badge tone={s.pendency_automation_enabled ? 'good' : 'muted'}>{s.pendency_automation_enabled ? 'Ativa' : 'Pausada'}</Badge></span>}
       subtitle="Antes de cada envio o saldo é recalculado e as pendências abertas do sócio vão numa mensagem só."
       right={configure}>
       <dl className="grid grid-cols-1 gap-2 sm:grid-cols-2">

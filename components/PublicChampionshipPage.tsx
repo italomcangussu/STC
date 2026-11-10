@@ -227,7 +227,7 @@ export const PublicChampionshipPage: React.FC<Props> = ({ slug, championshipId }
                                 <div className="w-16 h-16 bg-stone-50 rounded-full flex items-center justify-center mx-auto text-stone-200">
                                     <ListOrdered size={32} />
                                 </div>
-                                <p className="text-stone-400 font-extrabold text-xs uppercase tracking-[0.2em]">Sem grupos cadastrados</p>
+                                <p className="text-texto-3 font-extrabold text-xs uppercase tracking-[0.2em]">Sem grupos cadastrados</p>
                             </div>
                         )}
                     </div>

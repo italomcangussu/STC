@@ -84,7 +84,7 @@ export const NewEntrySheet: React.FC<{ open: boolean; onClose: () => void; onDon
         <Field label="Competência" hint="Mês a que pertence"><input type="date" className={inputCls} value={competence} onChange={(e) => setCompetence(e.target.value)} /></Field>
         {isDoc && <Field label="Vencimento"><input type="date" className={inputCls} value={due} onChange={(e) => setDue(e.target.value)} /></Field>}
       </div>
-      {isDoc && <label className="flex min-h-11 items-center gap-2 text-sm font-bold text-stone-700"><input type="checkbox" className="h-5 w-5" checked={paidNow} onChange={(e) => setPaidNow(e.target.checked)} />Já foi {kind === 'expense' ? 'paga' : 'recebida'}</label>}
+      {isDoc && <label className="flex min-h-12 items-center gap-2 text-sm font-bold text-stone-700"><input type="checkbox" className="h-5 w-5" checked={paidNow} onChange={(e) => setPaidNow(e.target.checked)} />Já foi {kind === 'expense' ? 'paga' : 'recebida'}</label>}
       {paid && (
         <div className="grid grid-cols-2 gap-3">
           <Field label={kind === 'transfer' ? 'Data' : 'Data do dinheiro'}><input type="date" className={inputCls} value={paidOn} max={today} onChange={(e) => setPaidOn(e.target.value)} /></Field>
@@ -193,7 +193,7 @@ export const EntrySheet: React.FC<{ entry: FinEntry | null; onClose: () => void;
             <Field label="Data do dinheiro"><input type="date" className={inputCls} value={date} max={today} onChange={(ev) => setDate(ev.target.value)} /></Field>
             <Field label="Conta" className="col-span-2"><select className={inputCls} value={account} onChange={(ev) => setAccount(ev.target.value)}><option value="">Escolha…</option>{accounts.filter((a) => a.active).map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</select></Field>
           </div>
-          <label className="flex min-h-11 items-start gap-2 text-xs font-bold text-stone-600"><input type="checkbox" className="mt-0.5 h-5 w-5" checked={settle} onChange={(ev) => setSettle(ev.target.checked)} />Dar baixa mesmo que o valor seja diferente do documento (a diferença vira juros/multa ou desconto)</label>
+          <label className="flex min-h-12 items-start gap-2 text-xs font-bold text-stone-600"><input type="checkbox" className="mt-0.5 h-5 w-5" checked={settle} onChange={(ev) => setSettle(ev.target.checked)} />Dar baixa mesmo que o valor seja diferente do documento (a diferença vira juros/multa ou desconto)</label>
           <Field label="Observação (opcional)"><input className={inputCls} value={note} onChange={(ev) => setNote(ev.target.value)} /></Field>
           <div className="flex gap-2"><button className={btnGhost} onClick={() => setMode(null)}>Voltar</button>
             <button className={btnPrimary} disabled={busy || !amount || !account} onClick={() => run(() => payEntry(e.id, e.version, { amount_cents: amount, paid_on: date, account_id: account, note: note.trim() || null, settle }, key), incoming ? 'Recebimento registrado.' : 'Pagamento registrado.')}>Confirmar</button></div>
@@ -257,13 +257,13 @@ export const EntrySheet: React.FC<{ entry: FinEntry | null; onClose: () => void;
 
       {(payments.data ?? []).length > 0 && (
         <div className="space-y-1.5 border-t border-stone-100 pt-3 text-xs">
-          <p className="text-meta font-extrabold uppercase tracking-wider text-stone-400">{incoming ? 'Recebimentos' : 'Pagamentos'}</p>
+          <p className="text-meta font-extrabold uppercase tracking-wider text-texto-3">{incoming ? 'Recebimentos' : 'Pagamentos'}</p>
           {payments.data!.map((p) => (
             <div key={p.id} className="flex items-center justify-between gap-2">
               <span>{brDate(p.paid_on)} — {p.kind === 'reversal' ? <b className="text-red-600">Estorno</b> : incoming ? 'Recebimento' : 'Pagamento'}{p.note ? ` · ${p.note}` : ''}</span>
               <span className="flex items-center gap-2"><b className="tabular-nums">{formatBRL(p.amount_cents)}</b>
                 {live && reversible.some((r) => r.id === p.id) && (
-                  <button className="min-h-11 px-2 font-bold text-red-600" onClick={async () => {
+                  <button className="min-h-12 px-2 font-bold text-red-600" onClick={async () => {
                     if (!reasonOk) { notify.error('Escreva o motivo do estorno no campo abaixo (mínimo de 5 caracteres).'); return; }
                     if (await confirm({ tone: 'danger', title: incoming ? 'Estornar este recebimento?' : 'Estornar este pagamento?', description: 'Cria uma linha de estorno; o histórico fica.', confirmLabel: 'Estornar' })) await run(() => reverseEntryPayment(p.id, reason.trim(), key), incoming ? 'Recebimento estornado.' : 'Pagamento estornado.');
                   }}>estornar</button>)}
@@ -275,15 +275,15 @@ export const EntrySheet: React.FC<{ entry: FinEntry | null; onClose: () => void;
       )}
 
       <div className="space-y-2 border-t border-stone-100 pt-3">
-        <div className="flex items-center justify-between"><p className="text-meta font-extrabold uppercase tracking-wider text-stone-400">Anexos (nota, boleto, recibo)</p>
+        <div className="flex items-center justify-between"><p className="text-meta font-extrabold uppercase tracking-wider text-texto-3">Anexos (nota, boleto, recibo)</p>
           {live && <button className={btnGhost} disabled={busy} onClick={() => fileRef.current?.click()}><Paperclip size={16} /> Anexar</button>}</div>
         <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp,image/heic,application/pdf" className="hidden" aria-label="Anexar arquivo" onChange={(ev) => upload(ev.target.files?.[0] ?? null)} />
-        {(attachments.data ?? []).length === 0 ? <p className="text-xs text-stone-400">Nenhum anexo. Imagem ou PDF de até 10 MB, em armazenamento privado.</p> : (
+        {(attachments.data ?? []).length === 0 ? <p className="text-xs text-texto-3">Nenhum anexo. Imagem ou PDF de até 10 MB, em armazenamento privado.</p> : (
           <ul className="space-y-1.5">
             {attachments.data!.map((a) => (
               <li key={a.id} className="flex items-center justify-between gap-2 text-xs">
-                <button className="min-h-11 truncate text-left font-bold text-saibro-700 underline" onClick={() => openAttachment(a.storage_path, a.bucket)}>{a.file_name}</button>
-                <button className="min-h-11 px-2 font-bold text-red-600" onClick={async () => {
+                <button className="min-h-12 truncate text-left font-bold text-saibro-700 underline" onClick={() => openAttachment(a.storage_path, a.bucket)}>{a.file_name}</button>
+                <button className="min-h-12 px-2 font-bold text-red-600" onClick={async () => {
                   if (!reasonOk) { notify.error('Escreva o motivo da remoção no campo de motivo (mínimo de 5 caracteres).'); return; }
                   if (await confirm({ tone: 'warning', title: 'Remover este anexo?', description: 'O arquivo deixa de aparecer; a remoção fica registrada.', confirmLabel: 'Remover' })) await run(() => removeAttachment(a.id, reason.trim(), key), 'Anexo removido.');
                 }}>remover</button>

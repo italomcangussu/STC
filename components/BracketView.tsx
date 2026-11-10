@@ -46,9 +46,9 @@ export const BracketView: React.FC<BracketViewProps> = ({ groups, registrations,
             return (
                 <div className="flex-1 p-4 bg-stone-100 rounded-xl border-2 border-dashed border-stone-300 flex items-center justify-center">
                     <div className="text-center">
-                        <Users className="w-8 h-8 mx-auto text-stone-400 mb-2" />
+                        <Users className="w-8 h-8 mx-auto text-texto-3 mb-2" />
                         <p className="text-xs font-bold text-stone-500 uppercase tracking-wider">{rotulo}</p>
-                        <p className="text-xs text-stone-400 mt-1">Aguardando definição</p>
+                        <p className="text-xs text-texto-3 mt-1">Aguardando definição</p>
                     </div>
                 </div>
             );
@@ -66,9 +66,9 @@ export const BracketView: React.FC<BracketViewProps> = ({ groups, registrations,
             return (
                 <div className="flex-1 p-4 bg-stone-100 rounded-xl border-2 border-dashed border-stone-300 flex items-center justify-center">
                     <div className="text-center">
-                        <Users className="w-8 h-8 mx-auto text-stone-400 mb-2" />
+                        <Users className="w-8 h-8 mx-auto text-texto-3 mb-2" />
                         <p className="text-xs font-bold text-stone-500 uppercase tracking-wider">{label}</p>
-                        <p className="text-xs text-stone-400 mt-1">Aguardando definição</p>
+                        <p className="text-xs text-texto-3 mt-1">Aguardando definição</p>
                     </div>
                 </div>
             );
@@ -109,7 +109,7 @@ export const BracketView: React.FC<BracketViewProps> = ({ groups, registrations,
 
                     return (
                         <div key={round.id}>
-                            <h3 className="text-xs font-extrabold text-stone-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                            <h3 className="text-xs font-extrabold text-texto-3 uppercase tracking-widest mb-4 flex items-center gap-2">
                                 {ehFinal ? <Trophy className="w-4 h-4" /> : <Medal className="w-4 h-4" />}
                                 {round.name}
                             </h3>
@@ -149,7 +149,7 @@ export const BracketView: React.FC<BracketViewProps> = ({ groups, registrations,
     return (
         <div className="space-y-8">
             <div className="bg-stone-50 p-4 rounded-2xl border border-stone-200">
-                <h4 className="text-xs font-extrabold text-stone-400 uppercase tracking-widest mb-3">Legenda</h4>
+                <h4 className="text-xs font-extrabold text-texto-3 uppercase tracking-widest mb-3">Legenda</h4>
                 <div className="grid grid-cols-2 gap-3">
                     <div className="flex items-center gap-2">
                         <div className="w-8 h-8 bg-green-50 border-2 border-green-500 rounded-lg flex items-center justify-center">
@@ -162,7 +162,7 @@ export const BracketView: React.FC<BracketViewProps> = ({ groups, registrations,
                     </div>
                     <div className="flex items-center gap-2">
                         <div className="w-8 h-8 bg-stone-100 border-2 border-dashed border-stone-300 rounded-lg flex items-center justify-center">
-                            <Users className="w-4 h-4 text-stone-400" />
+                            <Users className="w-4 h-4 text-texto-3" />
                         </div>
                         <div>
                             <p className="text-xs font-bold text-stone-800">Aguardando</p>
@@ -174,7 +174,7 @@ export const BracketView: React.FC<BracketViewProps> = ({ groups, registrations,
 
             <div className="space-y-6">
                 <div>
-                    <h3 className="text-xs font-extrabold text-stone-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <h3 className="text-xs font-extrabold text-texto-3 uppercase tracking-widest mb-4 flex items-center gap-2">
                         <Medal className="w-4 h-4" />
                         Semifinais
                     </h3>
@@ -214,7 +214,7 @@ export const BracketView: React.FC<BracketViewProps> = ({ groups, registrations,
                 </div>
 
                 <div>
-                    <h3 className="text-xs font-extrabold text-stone-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <h3 className="text-xs font-extrabold text-texto-3 uppercase tracking-widest mb-4 flex items-center gap-2">
                         <Trophy className="w-4 h-4" />
                         Final
                     </h3>

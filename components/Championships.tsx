@@ -528,7 +528,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
         return (
             <div className="p-8 flex flex-col items-center justify-center text-center min-h-[50vh]">
                 <Loader2 size={48} className="animate-spin text-saibro-600 mb-4" />
-                <p className="text-stone-400">Carregando competições...</p>
+                <p className="text-texto-3">Carregando competições...</p>
             </div>
         );
     }
@@ -538,7 +538,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
             <div className="p-8 flex flex-col items-center justify-center text-center min-h-[50vh]">
                 <Trophy size={64} className="text-saibro-200 mb-4" />
                 <h2 className="text-xl font-bold text-stone-600">Sem competições ativas</h2>
-                <p className="text-stone-400 mt-2">Aguarde o próximo campeonato!</p>
+                <p className="text-texto-3 mt-2">Aguarde o próximo campeonato!</p>
             </div>
         );
     }
@@ -1051,12 +1051,12 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                                     {classRegs.map((reg, idx) => (
                                         <div key={reg.id} className="flex items-center justify-between px-4 py-3">
                                             <div className="flex items-center gap-3">
-                                                <span className="text-xs font-bold text-stone-400 w-6">{idx + 1}</span>
+                                                <span className="text-xs font-bold text-texto-3 w-6">{idx + 1}</span>
                                                 <div>
                                                     <p className="font-semibold text-stone-800 text-sm">
                                                         {getParticipantName(reg)}
                                                     </p>
-                                                    <p className="text-xs text-stone-400 uppercase">
+                                                    <p className="text-xs text-texto-3 uppercase">
                                                         {reg.participant_type === 'guest' ? '🎫 Convidado' : '✅ Sócio'}
                                                         {' • '} <Shirt size={10} className="inline" /> {reg.shirt_size}
                                                     </p>
@@ -1074,8 +1074,8 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                 {registrations.length === 0 && (
                     <div className="text-center py-12">
                         <Users size={48} className="mx-auto text-stone-200 mb-4" />
-                        <p className="text-stone-400">Nenhuma inscrição ainda</p>
-                        <p className="text-stone-300 text-sm mt-1">As inscrições começarão em breve!</p>
+                        <p className="text-texto-3">Nenhuma inscrição ainda</p>
+                        <p className="text-linha-forte text-sm mt-1">As inscrições começarão em breve!</p>
                     </div>
                 )}
             </div>
@@ -1238,7 +1238,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                     const currentRound = rounds[selectedRoundIndex];
                     if (rounds.length === 0) return (
                         <div className="text-center py-10 bg-white rounded-3xl border border-dashed border-stone-200">
-                            <p className="text-stone-400">Nenhuma rodada gerada ainda.</p>
+                            <p className="text-texto-3">Nenhuma rodada gerada ainda.</p>
                         </div>
                     );
 
@@ -1251,7 +1251,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                         <div className="space-y-6">
                             {/* Rounds Header & Toggle */}
                             <div className="flex items-center justify-between px-2">
-                                <h3 className="text-xs font-extrabold text-stone-400 uppercase tracking-widest leading-none">
+                                <h3 className="text-xs font-extrabold text-texto-3 uppercase tracking-widest leading-none">
                                     {showAllRounds ? 'Todos os Confrontos' : 'Confrontos por Rodada'}
                                 </h3>
                                 <button
@@ -1274,7 +1274,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                                     </button>
                                     <div className="text-center">
                                         <h3 className="font-extrabold text-stone-800 text-sm">{currentRound.name}</h3>
-                                        <p className="text-xs font-bold text-stone-400 uppercase tracking-widest mt-0.5">
+                                        <p className="text-xs font-bold text-texto-3 uppercase tracking-widest mt-0.5">
                                             {formatDateBr(currentRound.start_date)} - {formatDateBr(currentRound.end_date)}
                                         </p>
                                     </div>
@@ -1358,7 +1358,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                             ) : (
                                 <div className="text-center py-10">
                                     <Trophy className="mx-auto text-stone-200 mb-2" size={48} />
-                                    <p className="text-stone-400 text-sm font-medium italic">
+                                    <p className="text-texto-3 text-sm font-medium italic">
                                         Partidas ainda não geradas para esta rodada.
                                     </p>
                                 </div>
@@ -1620,7 +1620,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                                                                                                     </button>
                                                                                                 ) : (
                                                                                                     <span className="inline-flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wide text-stone-500 bg-stone-100 px-3 py-1.5 rounded-lg border border-dashed border-stone-300 whitespace-nowrap">
-                                                                                                        <Calendar size={12} className="text-stone-400" />
+                                                                                                        <Calendar size={12} className="text-texto-3" />
                                                                                                         {selectedChampIsResenhaOpen ? 'Sem horário sugerido' : 'Sem agendamento'}
                                                                                                     </span>
                                                                                                 )
@@ -1639,7 +1639,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                                     </div>
                                 ))
                             ) : (
-                                <div className="bg-white rounded-3xl shadow-sm border border-stone-100 p-8 text-center text-stone-400">
+                                <div className="bg-white rounded-3xl shadow-sm border border-stone-100 p-8 text-center text-texto-3">
                                     <CalendarCheck size={48} className="mx-auto mb-2 text-stone-200" />
                                     <p className="text-sm font-medium">Nenhum jogo gerado ainda</p>
                                 </div>
@@ -1696,7 +1696,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                             </div>
                         ) : (
                             <div className="bg-white rounded-3xl shadow-sm border border-stone-100 overflow-hidden">
-                                <div className="p-8 text-center text-stone-400">
+                                <div className="p-8 text-center text-texto-3">
                                     <p>Classificação não disponível ou formato não suportado.</p>
                                 </div>
                             </div>
@@ -1871,7 +1871,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                             })()
                         ) : (
                             <div className="bg-white rounded-3xl shadow-sm border border-stone-100 overflow-hidden">
-                                <div className="p-8 text-center text-stone-400">
+                                <div className="p-8 text-center text-texto-3">
                                     <p>Chaveamento não disponível para este formato de campeonato.</p>
                                 </div>
                             </div>
@@ -2130,7 +2130,7 @@ export const ResultModal: React.FC<{ match: Match; profiles: User[]; registratio
                             return (
                                 <div key={idx} className={`flex items-center justify-between ${idx > 0 ? 'pt-4 border-t border-stone-100' : ''}`}>
                                     <div className="w-12 text-center">
-                                        <p className="text-xs font-extrabold text-stone-400 uppercase tracking-widest leading-none">
+                                        <p className="text-xs font-extrabold text-texto-3 uppercase tracking-widest leading-none">
                                             {isSuperTie ? 'Super' : 'Set'}
                                         </p>
                                         <p className="text-xs font-extrabold text-saibro-600 mt-1">
@@ -2143,7 +2143,7 @@ export const ResultModal: React.FC<{ match: Match; profiles: User[]; registratio
                                         <div className="flex flex-col items-center gap-1.5">
                                             <button
                                                 onClick={() => updateScore('A', idx, String(scoreA[idx] + 1))}
-                                                className="w-10 h-7 bg-white border border-stone-200 rounded-lg flex items-center justify-center text-stone-400 hover:text-saibro-600 hover:border-saibro-200 transition-all active:scale-[0.97]"
+                                                className="w-10 h-7 bg-white border border-stone-200 rounded-lg flex items-center justify-center text-texto-3 hover:text-saibro-600 hover:border-saibro-200 transition-all active:scale-[0.97]"
                                             >
                                                 <Plus size={12} strokeWidth={3} />
                                             </button>
@@ -2152,7 +2152,7 @@ export const ResultModal: React.FC<{ match: Match; profiles: User[]; registratio
                                             </div>
                                             <button
                                                 onClick={() => updateScore('A', idx, String(Math.max(0, scoreA[idx] - 1)))}
-                                                className="w-10 h-7 bg-white border border-stone-200 rounded-lg flex items-center justify-center text-stone-400 hover:text-stone-600 transition-all active:scale-[0.97]"
+                                                className="w-10 h-7 bg-white border border-stone-200 rounded-lg flex items-center justify-center text-texto-3 hover:text-stone-600 transition-all active:scale-[0.97]"
                                             >
                                                 <Minus size={12} strokeWidth={3} />
                                             </button>
@@ -2162,7 +2162,7 @@ export const ResultModal: React.FC<{ match: Match; profiles: User[]; registratio
                                         <div className="flex flex-col items-center gap-1.5">
                                             <button
                                                 onClick={() => updateScore('B', idx, String(scoreB[idx] + 1))}
-                                                className="w-10 h-7 bg-white border border-stone-200 rounded-lg flex items-center justify-center text-stone-400 hover:text-saibro-600 hover:border-saibro-200 transition-all active:scale-[0.97]"
+                                                className="w-10 h-7 bg-white border border-stone-200 rounded-lg flex items-center justify-center text-texto-3 hover:text-saibro-600 hover:border-saibro-200 transition-all active:scale-[0.97]"
                                             >
                                                 <Plus size={12} strokeWidth={3} />
                                             </button>
@@ -2171,7 +2171,7 @@ export const ResultModal: React.FC<{ match: Match; profiles: User[]; registratio
                                             </div>
                                             <button
                                                 onClick={() => updateScore('B', idx, String(Math.max(0, scoreB[idx] - 1)))}
-                                                className="w-10 h-7 bg-white border border-stone-200 rounded-lg flex items-center justify-center text-stone-400 hover:text-stone-600 transition-all active:scale-[0.97]"
+                                                className="w-10 h-7 bg-white border border-stone-200 rounded-lg flex items-center justify-center text-texto-3 hover:text-stone-600 transition-all active:scale-[0.97]"
                                             >
                                                 <Minus size={12} strokeWidth={3} />
                                             </button>
@@ -2225,11 +2225,11 @@ const AdminMatchResultModal: React.FC<{
                 <div className="p-5 border-b border-stone-100 flex items-center justify-between">
                     <div>
                         <h3 className="text-lg font-extrabold text-stone-800">Definir Resultado</h3>
-                        <p className="text-xs uppercase tracking-widest font-bold text-stone-400">Administração</p>
+                        <p className="text-xs uppercase tracking-widest font-bold text-texto-3">Administração</p>
                     </div>
                     <button
                         onClick={onClose}
-                        className="hit-44 rounded-full text-stone-400 hover:text-stone-700 hover:bg-stone-50 transition-colors"
+                        className="hit-44 rounded-full text-texto-3 hover:text-stone-700 hover:bg-stone-50 transition-colors"
                     >
                         <X size={18} />
                     </button>
@@ -2241,7 +2241,7 @@ const AdminMatchResultModal: React.FC<{
                             <img src={avatarA} className="w-12 h-12 rounded-full border-2 border-stone-100 object-cover" />
                             <p className="text-sm font-extrabold text-stone-800 truncate">{nameA}</p>
                         </div>
-                        <span className="text-xs font-extrabold text-stone-300">VS</span>
+                        <span className="text-xs font-extrabold text-linha-forte">VS</span>
                         <div className="flex items-center gap-3 min-w-0">
                             <p className="text-sm font-extrabold text-stone-800 truncate">{nameB}</p>
                             <img src={avatarB} className="w-12 h-12 rounded-full border-2 border-stone-100 object-cover" />
@@ -2539,10 +2539,10 @@ const MatchCard: React.FC<{
                         </div>
                     ) : (
                         <div className="bg-stone-50 px-4 py-3 rounded-2xl border-2 border-dashed border-stone-200 text-center">
-                            <div className="w-10 h-10 bg-stone-100 rounded-full flex items-center justify-center text-stone-300 mb-2 mx-auto">
+                            <div className="w-10 h-10 bg-stone-100 rounded-full flex items-center justify-center text-linha-forte mb-2 mx-auto">
                                 <Calendar size={18} />
                             </div>
-                            <p className="text-xs font-extrabold text-stone-400 uppercase tracking-wider">
+                            <p className="text-xs font-extrabold text-texto-3 uppercase tracking-wider">
                                 {isSuggestedSchedule ? 'Sem horário sugerido' : 'Pendente'}
                             </p>
                         </div>

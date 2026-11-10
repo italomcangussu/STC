@@ -100,7 +100,7 @@ export const AgendaFilters: React.FC<AgendaFiltersProps> = ({
         <div className="flex-1 max-w-sm">
           <div className="relative">
             <Search
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-texto-3"
               size={18}
             />
             <input
@@ -201,7 +201,7 @@ export const AgendaFilters: React.FC<AgendaFiltersProps> = ({
                 }
                 className="px-3 py-2 border border-stone-200 rounded-lg focus:ring-2 focus:ring-saibro-500 outline-hidden"
               />
-              <span className="text-stone-400">até</span>
+              <span className="text-texto-3">até</span>
               <input
                 type="date"
                 value={filters.dateRange?.end || ''}
@@ -219,7 +219,7 @@ export const AgendaFilters: React.FC<AgendaFiltersProps> = ({
               {filters.dateRange && (
                 <button
                   onClick={() => onFilterChange({ ...filters, dateRange: null })}
-                  className="p-2 text-stone-400 hover:text-stone-600 transition-colors"
+                  className="p-2 text-texto-3 hover:text-stone-600 transition-colors"
                 >
                   <X size={18} />
                 </button>

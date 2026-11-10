@@ -237,7 +237,7 @@ export const AdminReports: React.FC = () => {
           onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
           className="px-3 py-2 border border-stone-200 rounded-lg"
         />
-        <span className="text-stone-400">até</span>
+        <span className="text-texto-3">até</span>
         <input
           type="date"
           value={dateRange.end}

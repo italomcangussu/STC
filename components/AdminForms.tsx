@@ -426,7 +426,7 @@ export const AdminForms: React.FC = () => {
                 Link Público Amigável (Slug da URL) *
               </label>
               <div className="flex items-center rounded-xl border border-stone-200 bg-stone-50/50 overflow-hidden text-sm">
-                <span className="px-3.5 py-3 text-stone-400 bg-stone-100/80 border-r border-stone-200 font-mono text-xs select-none">
+                <span className="px-3.5 py-3 text-texto-3 bg-stone-100/80 border-r border-stone-200 font-mono text-xs select-none">
                   stcplay.com.br/votacao/
                 </span>
                 <input
@@ -437,7 +437,7 @@ export const AdminForms: React.FC = () => {
                   className="w-full px-3 py-3 focus:outline-none text-stone-800 font-mono text-xs bg-transparent"
                 />
               </div>
-              <p className="text-meta text-stone-400">
+              <p className="text-meta text-texto-3">
                 Este link será usado para compartilhar a votação pelo WhatsApp ou gerar QR Code.
               </p>
             </div>
@@ -594,7 +594,7 @@ export const AdminForms: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => handleRemoveQuestion(qIndex)}
-                        className="p-1.5 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        className="p-1.5 text-texto-3 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                         title="Remover pergunta"
                       >
                         <Trash2 size={16} />
@@ -639,7 +639,7 @@ export const AdminForms: React.FC = () => {
                     <div className="space-y-2">
                       {(q.options || []).map((opt, optIndex) => (
                         <div key={optIndex} className="flex items-center gap-2">
-                          <div className="text-stone-400">
+                          <div className="text-texto-3">
                             {q.question_type === 'single_choice' ? (
                               <Radio size={16} />
                             ) : (
@@ -657,7 +657,7 @@ export const AdminForms: React.FC = () => {
                             <button
                               type="button"
                               onClick={() => handleRemoveOption(qIndex, optIndex)}
-                              className="p-1.5 text-stone-400 hover:text-red-500 rounded-lg hover:bg-stone-100"
+                              className="p-1.5 text-texto-3 hover:text-red-500 rounded-lg hover:bg-stone-100"
                               title="Remover alternativa"
                             >
                               <Trash2 size={14} />
@@ -677,7 +677,7 @@ export const AdminForms: React.FC = () => {
                   </div>
                 ) : (
                   <div className="p-3 bg-stone-100/70 rounded-xl text-xs text-stone-500 flex items-center gap-2">
-                    <MessageSquare size={16} className="text-stone-400 shrink-0" />
+                    <MessageSquare size={16} className="text-texto-3 shrink-0" />
                     <span>Os sócios responderão com uma caixa de texto livre.</span>
                   </div>
                 )}
@@ -869,7 +869,7 @@ export const AdminForms: React.FC = () => {
 
                   <button
                     onClick={() => handleDeleteForm(form)}
-                    className="p-2 rounded-xl text-stone-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                    className="p-2 rounded-xl text-texto-3 hover:text-red-600 hover:bg-red-50 transition-colors"
                     title="Excluir formulário"
                   >
                     <Trash2 size={15} />
@@ -893,7 +893,7 @@ export const AdminForms: React.FC = () => {
               <h3 className="font-bold text-stone-800 text-base">Compartilhar Formulário</h3>
               <button
                 onClick={() => setShareModalForm(null)}
-                className="p-1 rounded-lg text-stone-400 hover:text-stone-700 transition-colors"
+                className="p-1 rounded-lg text-texto-3 hover:text-stone-700 transition-colors"
                 title="Fechar"
               >
                 <X size={18} />
@@ -951,7 +951,7 @@ export const AdminForms: React.FC = () => {
               <h3 className="font-bold text-stone-800 text-base">Apuração & Resultados</h3>
               <button
                 onClick={() => setResultsModalForm(null)}
-                className="p-1 rounded-lg text-stone-400 hover:text-stone-700 transition-colors"
+                className="p-1 rounded-lg text-texto-3 hover:text-stone-700 transition-colors"
                 title="Fechar"
               >
                 <X size={18} />
@@ -989,7 +989,7 @@ export const AdminForms: React.FC = () => {
             {loadingResults ? (
               <div className="py-12 flex flex-col items-center justify-center gap-2">
                 <Loader2 className="animate-spin text-saibro-600" size={32} />
-                <span className="text-xs font-semibold text-stone-400">Carregando apuração dos votos...</span>
+                <span className="text-xs font-semibold text-texto-3">Carregando apuração dos votos...</span>
               </div>
             ) : liveResults?.questions && liveResults.questions.length > 0 ? (
               <div className="space-y-6 max-h-[60vh] overflow-y-auto pr-1">
@@ -1001,7 +1001,7 @@ export const AdminForms: React.FC = () => {
                         <h5 className="font-bold text-stone-800 text-sm">
                           {qIdx + 1}. {q.title}
                         </h5>
-                        <span className="text-meta font-mono text-stone-400">
+                        <span className="text-meta font-mono text-texto-3">
                           {totalQVotes} {totalQVotes === 1 ? 'voto' : 'votos'}
                         </span>
                       </div>
@@ -1017,7 +1017,7 @@ export const AdminForms: React.FC = () => {
                                   <span className="font-semibold text-stone-700">{opt.label}</span>
                                   <div className="flex items-center gap-2">
                                     <span className="font-mono font-bold text-stone-900">{percent}%</span>
-                                    <span className="text-stone-400 text-meta">({opt.votes})</span>
+                                    <span className="text-texto-3 text-meta">({opt.votes})</span>
                                   </div>
                                 </div>
                                 <div className="w-full h-3 bg-stone-200/80 rounded-full overflow-hidden">
@@ -1048,12 +1048,12 @@ export const AdminForms: React.FC = () => {
                                   <Loader2 size={18} className="animate-spin text-saibro-600 mx-auto" />
                                 </div>
                               ) : openResponses.length === 0 ? (
-                                <p className="text-xs text-stone-400 italic">Nenhuma resposta registrada ainda.</p>
+                                <p className="text-xs text-texto-3 italic">Nenhuma resposta registrada ainda.</p>
                               ) : (
                                 openResponses.map((item, idx) => (
                                   <div key={idx} className="p-3 bg-white rounded-xl border border-stone-200 text-xs space-y-1">
                                     <p className="text-stone-800 whitespace-pre-wrap font-medium">"{item.text}"</p>
-                                    <div className="flex items-center justify-between text-meta text-stone-400 pt-1">
+                                    <div className="flex items-center justify-between text-meta text-texto-3 pt-1">
                                       <span>{item.authorName}</span>
                                       <span>{new Date(item.date).toLocaleString('pt-BR')}</span>
                                     </div>
@@ -1069,7 +1069,7 @@ export const AdminForms: React.FC = () => {
                 })}
               </div>
             ) : (
-              <p className="text-xs text-stone-400 text-center py-6">Nenhum resultado computado até agora.</p>
+              <p className="text-xs text-texto-3 text-center py-6">Nenhum resultado computado até agora.</p>
             )}
             </div>
           </div>

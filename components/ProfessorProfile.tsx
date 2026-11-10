@@ -100,7 +100,7 @@ const StudentCard: React.FC<{
                     {icon} {statusLabel}
                 </span>
                 {isMaster && (
-                    <span className="text-xs text-stone-400">
+                    <span className="text-xs text-texto-3">
                         {student.masterExpirationDate ? `Vence: ${new Date(student.masterExpirationDate + 'T12:00:00').toLocaleDateString('pt-BR', { timeZone: 'America/Fortaleza' })}` : 'Sem validade definida'}
                     </span>
                 )}
@@ -730,7 +730,7 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                             <Clock size={18} className="text-saibro-500" /> Aulas de Hoje
                         </h3>
                         {todaysClasses.length === 0 ? (
-                            <div className="bg-white p-6 rounded-xl border border-dashed border-stone-200 text-center text-stone-400">
+                            <div className="bg-white p-6 rounded-xl border border-dashed border-stone-200 text-center text-texto-3">
                                 Nenhuma aula agendada para hoje.
                             </div>
                         ) : (
@@ -754,7 +754,7 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                                             <div>
                                                 <div className="flex items-center gap-2">
                                                     <span className="font-mono font-bold text-lg text-stone-800">{r.startTime}</span>
-                                                    <span className="text-stone-300">|</span>
+                                                    <span className="text-linha-forte">|</span>
                                                     <span className="font-semibold text-stone-700">{studentName}</span>
                                                 </div>
                                                 <div className="flex gap-2 mt-1 text-xs text-stone-500">
@@ -762,7 +762,7 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                                                     <span className="bg-stone-100 px-1.5 rounded">{studentInfo}</span>
                                                 </div>
                                             </div>
-                                            <button onClick={() => handleDeleteClass(r.id)} className="p-2 text-stone-400 hover:bg-red-50 hover:text-red-500 rounded-lg transition-colors">
+                                            <button onClick={() => handleDeleteClass(r.id)} className="p-2 text-texto-3 hover:bg-red-50 hover:text-red-500 rounded-lg transition-colors">
                                                 <XCircle size={20} />
                                             </button>
                                         </div>
@@ -776,7 +776,7 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                     <div>
                         <h3 className="text-stone-800 font-bold mb-3">Próximas Aulas</h3>
                         <div className="space-y-3">
-                            {myClasses.filter(r => !todaysClasses.includes(r)).length === 0 && <p className="text-stone-400 text-sm">Sem aulas futuras.</p>}
+                            {myClasses.filter(r => !todaysClasses.includes(r)).length === 0 && <p className="text-texto-3 text-sm">Sem aulas futuras.</p>}
                             {myClasses.filter(r => !todaysClasses.includes(r)).map(r => {
                                 const court = courts.find(c => c.id === r.courtId);
                                 const socioIds = getClassSocioIds(r);
@@ -848,7 +848,7 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                                     <StudentCard key={student.id} student={student} onEdit={openStudentModal} onToggleStatus={() => { const p = studentProfiles.find(profile => profile.id === student.studentProfileId); if (student.studentStatus === 'paused' && p) void reactivateStudent(p); else void handleDeleteStudent(student.id); }} onConvert={handleOpenConvert} onHistory={s => void showStudentLevelHistory(studentProfiles.find(p => p.id === s.studentProfileId), s.name)} canConvert={canConvertToMensal(student)} />
                                 ))}
                                 {visibleMemberStudents.map(({ profile, person }) => <div key={profile.id} className="bg-white rounded-xl border p-4 flex items-center justify-between gap-3"><div><p className="font-bold text-stone-800">{person.name}</p><p className="text-sm text-stone-500">Sócio</p></div><select aria-label={`Nível de ${person.name}`} value={profile.technicalLevel || ''} onChange={e => e.target.value && void changeStudentLevel(profile, e.target.value as StudentLevel)} className="max-w-44 rounded-lg border px-2 py-2 text-sm"><option value="">Nível</option>{STUDENT_LEVELS.map(level => <option key={level} value={level}>{level}</option>)}</select><button onClick={() => void showStudentLevelHistory(profile, person.name)} className="text-sm font-semibold text-stone-600">Evolução</button><button onClick={() => toggleMemberStudentStatus(profile)} className="text-sm font-semibold text-saibro-700">{profile.studentStatus === 'paused' ? 'Reativar' : 'Pausar'}</button></div>)}
-                                {visibleStudents.length + visibleMemberStudents.length === 0 && <p className="text-stone-400 text-sm italic">Nenhum aluno encontrado.</p>}
+                                {visibleStudents.length + visibleMemberStudents.length === 0 && <p className="text-texto-3 text-sm italic">Nenhum aluno encontrado.</p>}
                             </div>
                         </div>
                     </div>
@@ -1106,7 +1106,7 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                                 onChange={e => setConvertDate(e.target.value)}
                                 className="w-full p-3 border-2 border-stone-200 rounded-xl text-lg font-bold text-stone-800 focus:border-saibro-500 outline-hidden"
                             />
-                            <p className="text-xs text-stone-400 mt-2">
+                            <p className="text-xs text-texto-3 mt-2">
                                 O vencimento será calculado para <b>1 mês</b> após esta data.
                             </p>
                         </div>

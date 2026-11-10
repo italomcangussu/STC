@@ -38,7 +38,7 @@ const DetailSheet: React.FC<{ category: { id: string; name: string } | null; per
             ))}
           </ul>
           <p className="text-sm font-extrabold">Total: {formatBRL(rows.reduce((s, r) => s + r.amount_cents, 0))}</p>
-          {rows.length > 400 && <p className="text-xs text-stone-400">Mostrando 400 de {rows.length}; o arquivo exportado leva todos.</p>}
+          {rows.length > 400 && <p className="text-xs text-texto-3">Mostrando 400 de {rows.length}; o arquivo exportado leva todos.</p>}
         </>
       )}
     </Sheet>
@@ -83,21 +83,21 @@ const DreTab: React.FC = () => {
                 return (
                   <li key={r.key} className={r.kind === 'line' ? '' : 'bg-stone-50/70'}>
                     <button className="flex min-h-12 w-full items-center gap-2 px-1 py-2 text-left disabled:cursor-default" disabled={!canOpen} aria-expanded={canOpen ? open : undefined} onClick={() => setExpanded(open ? null : r.key)}>
-                      <span className="w-4 shrink-0 text-stone-300">{canOpen ? (open ? <ChevronDown size={16} /> : <ChevronRight size={16} />) : null}</span>
+                      <span className="w-4 shrink-0 text-linha-forte">{canOpen ? (open ? <ChevronDown size={16} /> : <ChevronRight size={16} />) : null}</span>
                       <span className={`flex-1 text-sm ${r.kind === 'line' ? 'font-medium text-stone-700' : 'font-extrabold text-stone-900'}`}>{r.label}</span>
                       <span className="text-right">
                         <Money cents={signed(r, r.current)} className={`block text-sm ${r.kind === 'line' ? 'font-bold' : 'font-extrabold'}`} />
-                        <span className="block text-meta text-stone-400">ant. {formatBRL(signed(r, r.previous))} · {pctText(r.deltaPct)}{r.share !== null && r.kind === 'line' ? ` · ${r.share.toLocaleString('pt-BR')}% da rec.` : ''}</span>
+                        <span className="block text-meta text-texto-3">ant. {formatBRL(signed(r, r.previous))} · {pctText(r.deltaPct)}{r.share !== null && r.kind === 'line' ? ` · ${r.share.toLocaleString('pt-BR')}% da rec.` : ''}</span>
                       </span>
                     </button>
                     {open && (
                       <ul className="mb-2 ml-6 space-y-1 border-l-2 border-stone-100 pl-3">
-                        {cats.length === 0 && <li className="py-1 text-xs text-stone-400">Sem categorias.</li>}
+                        {cats.length === 0 && <li className="py-1 text-xs text-texto-3">Sem categorias.</li>}
                         {cats.map((c) => (
                           <li key={c.category_id}>
-                            <button className="flex min-h-11 w-full items-center justify-between gap-2 text-left text-xs hover:text-saibro-700" onClick={() => setDetail({ id: c.category_id, name: c.parent_name ? `${c.parent_name} › ${c.name}` : c.name })}>
+                            <button className="flex min-h-12 w-full items-center justify-between gap-2 text-left text-xs hover:text-saibro-700" onClick={() => setDetail({ id: c.category_id, name: c.parent_name ? `${c.parent_name} › ${c.name}` : c.name })}>
                               <span className="font-bold underline-offset-2 hover:underline">{c.parent_name ? `${c.parent_name} › ` : ''}{c.name}</span>
-                              <span className="tabular-nums">{formatBRL(c.current)} <span className="text-stone-400">(ant. {formatBRL(c.previous)})</span></span>
+                              <span className="tabular-nums">{formatBRL(c.current)} <span className="text-texto-3">(ant. {formatBRL(c.previous)})</span></span>
                             </button>
                           </li>
                         ))}
@@ -114,7 +114,7 @@ const DreTab: React.FC = () => {
               <div className="flex justify-between"><dt className="text-stone-500">Aportes no período</dt><dd className="font-bold tabular-nums">{formatBRL(data.data!.memo?.contributions_cents ?? 0)}</dd></div>
               <div className="flex justify-between"><dt className="text-stone-500">Retiradas no período</dt><dd className="font-bold tabular-nums">{formatBRL(data.data!.memo?.withdrawals_cents ?? 0)}</dd></div>
             </dl>
-            <p className="mt-2 text-meta text-stone-400">Transferências entre contas também ficam de fora.</p>
+            <p className="mt-2 text-meta text-texto-3">Transferências entre contas também ficam de fora.</p>
           </Card>
         </>
       )}

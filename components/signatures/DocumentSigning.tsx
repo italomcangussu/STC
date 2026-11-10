@@ -197,7 +197,7 @@ export const DocumentSigning: React.FC<DocumentSigningProps> = ({ doc, currentUs
         </div>
         <h2 className="text-xl font-extrabold leading-tight text-stone-800">{doc.title}</h2>
         {doc.description && <p className="text-sm text-stone-500">{doc.description}</p>}
-        <p className="text-xs text-stone-400">Versão {doc.version} · {doc.page_count} {doc.page_count === 1 ? 'página' : 'páginas'}</p>
+        <p className="text-xs text-texto-3">Versão {doc.version} · {doc.page_count} {doc.page_count === 1 ? 'página' : 'páginas'}</p>
       </header>
 
       {finished && (
@@ -258,7 +258,7 @@ export const DocumentSigning: React.FC<DocumentSigningProps> = ({ doc, currentUs
           </Step>
 
           <Step n={2} title="Concorde com os termos" done={consent} active={readState === 'done' && !consent}>
-            <label className={`flex items-start gap-3 text-sm ${readState === 'done' ? 'text-stone-700' : 'text-stone-400'}`}>
+            <label className={`flex items-start gap-3 text-sm ${readState === 'done' ? 'text-stone-700' : 'text-texto-3'}`}>
               <input
                 type="checkbox"
                 className="mt-0.5 h-5 w-5 shrink-0 accent-saibro-600"
@@ -266,9 +266,9 @@ export const DocumentSigning: React.FC<DocumentSigningProps> = ({ doc, currentUs
                 disabled={readState !== 'done' || consentBusy}
                 onChange={(e) => void toggleConsent(e.target.checked)}
               />
-              <span>{doc.consent_text}{consentBusy && <span className="ml-1 text-meta text-stone-400">Registrando…</span>}</span>
+              <span>{doc.consent_text}{consentBusy && <span className="ml-1 text-meta text-texto-3">Registrando…</span>}</span>
             </label>
-            {readState !== 'done' && <p className="text-meta text-stone-400">Disponível depois que você ler o documento até o fim.</p>}
+            {readState !== 'done' && <p className="text-meta text-texto-3">Disponível depois que você ler o documento até o fim.</p>}
             {consentError && <Notice tone="bad">{consentError}</Notice>}
           </Step>
 

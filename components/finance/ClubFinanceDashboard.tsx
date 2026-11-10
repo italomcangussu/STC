@@ -13,7 +13,7 @@ const FixedExpenseItem: React.FC<{ row: FixedExpenseRow }> = ({ row }) => (
     <div className="min-w-0">
       <p className="truncate text-sm font-extrabold text-stone-800">{row.description}</p>
       <p className="text-xs text-stone-500">{FREQUENCY_LABEL[row.frequency]} · vence dia {row.due_day} · {row.category_name}</p>
-      <p className="text-xs text-stone-400">{row.supplier ? `${row.supplier} · ` : ''}desde {monthLabel(row.start_month)}{row.end_month ? ` até ${monthLabel(row.end_month)}` : ''}</p>
+      <p className="text-xs text-texto-3">{row.supplier ? `${row.supplier} · ` : ''}desde {monthLabel(row.start_month)}{row.end_month ? ` até ${monthLabel(row.end_month)}` : ''}</p>
     </div>
     <p className="shrink-0 text-sm font-extrabold tabular-nums text-stone-800">{formatBRL(row.amount_cents)}</p>
   </li>

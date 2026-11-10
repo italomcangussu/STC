@@ -38,7 +38,7 @@ const PlanHeader: React.FC<{ plan: PlanWithMember }> = ({ plan }) => {
 const CurrentPrice: React.FC<{ prices: PlanPriceRow[] | null }> = ({ prices }) => {
   const today = useToday();
   const cents = prices ? priceFor(prices.map((p) => ({ effectiveFrom: p.effective_from, amountCents: p.amount_cents })), firstOfMonth(today)) : null;
-  return <p className="mt-2 text-lg font-extrabold tabular-nums">{cents !== null ? formatBRL(cents) : '—'}<span className="text-xs font-medium text-stone-400"> vigente hoje</span></p>;
+  return <p className="mt-2 text-lg font-extrabold tabular-nums">{cents !== null ? formatBRL(cents) : '—'}<span className="text-xs font-medium text-texto-3"> vigente hoje</span></p>;
 };
 
 interface ActionsProps { plan: PlanWithMember; busy: boolean; onChoose: (mode: PlanMode) => void; onToggleStatus: () => void }
@@ -81,7 +81,7 @@ export const PlanCard: React.FC<{ plan: PlanWithMember; onChanged: () => void }>
     <div className={`rounded-3xl border bg-white p-4 shadow-sm ${ended ? 'border-stone-100 opacity-70' : 'border-stone-100'}`}>
       <PlanHeader plan={plan} />
       <CurrentPrice prices={prices.data} />
-      {plan.end_reason && <p className="text-xs text-stone-400">Motivo: {plan.end_reason}</p>}
+      {plan.end_reason && <p className="text-xs text-texto-3">Motivo: {plan.end_reason}</p>}
       {!ended && mode === null && <PlanActions plan={plan} busy={busy} onChoose={setMode} onToggleStatus={toggleStatus} />}
       {ended && <button className={`${btnGhost} mt-3`} onClick={() => setMode(mode === 'prices' ? null : 'prices')}>Histórico de preços</button>}
       <PlanModePanel mode={mode} form={form} prices={prices.data ?? []} />

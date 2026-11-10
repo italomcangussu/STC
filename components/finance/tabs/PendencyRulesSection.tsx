@@ -82,7 +82,7 @@ export const PendencyRulesSection: React.FC<{ s: FinSettings; onSaved: () => voi
 
   const form = (
       <div className="space-y-3">
-        <label className="flex min-h-11 items-start gap-3 rounded-2xl border border-stone-200 p-3">
+        <label className="flex min-h-12 items-start gap-3 rounded-2xl border border-stone-200 p-3">
           <input type="checkbox" className="mt-0.5 h-5 w-5" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} />
           <span>
             <b className="block text-sm text-stone-800">Cobrança automática ativa</b>
@@ -124,7 +124,7 @@ export const PendencyRulesSection: React.FC<{ s: FinSettings; onSaved: () => voi
     <Card
       title="Pendências de sócios"
       subtitle="Régua de cobrança, PIX e encargos próprios das pendências manuais."
-      right={<div className="flex items-center gap-2"><Badge tone={enabled ? 'good' : 'muted'}>{enabled ? 'Ativa' : 'Pausada'}</Badge><BellRing size={18} className="text-stone-300" /></div>}
+      right={<div className="flex items-center gap-2"><Badge tone={enabled ? 'good' : 'muted'}>{enabled ? 'Ativa' : 'Pausada'}</Badge><BellRing size={18} className="text-linha-forte" /></div>}
     >
       {form}
     </Card>

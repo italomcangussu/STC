@@ -255,7 +255,7 @@ export const Dashboard: React.FC<DashboardProps> = () => {
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value === 'all' ? 'all' : Number(e.target.value))}
             disabled={selectedYear === 'all'}
-            className={`hit-target-44 w-full px-3.5 py-2.5 rounded-xl border border-saibro-200/80 text-stone-800 text-sm font-semibold outline-hidden focus:ring-2 focus:ring-saibro-500 shadow-xs btn-tactile ${selectedYear === 'all' ? 'bg-stone-100/80 text-stone-400 cursor-not-allowed border-stone-200' : 'bg-white/90'}`}
+            className={`hit-target-44 w-full px-3.5 py-2.5 rounded-xl border border-saibro-200/80 text-stone-800 text-sm font-semibold outline-hidden focus:ring-2 focus:ring-saibro-500 shadow-xs btn-tactile ${selectedYear === 'all' ? 'bg-stone-100/80 text-texto-3 cursor-not-allowed border-stone-200' : 'bg-white/90'}`}
           >
             <option value="all">Todos os Meses</option>
             {months.map(m => (
@@ -322,7 +322,7 @@ export const Dashboard: React.FC<DashboardProps> = () => {
         <div className="bg-white p-6 rounded-2xl card-court flex items-center justify-between">
           <div>
             <p className="text-stone-500 text-sm font-semibold mb-1">Sócios Ativos</p>
-            <h3 className="text-3xl font-bold text-stone-800">{memberStats.activeCount} <span className="text-sm text-stone-400 font-normal">/ {totalSocios}</span></h3>
+            <h3 className="text-3xl font-bold text-stone-800">{memberStats.activeCount} <span className="text-sm text-texto-3 font-normal">/ {totalSocios}</span></h3>
             <p className="text-xs text-green-600 mt-2 font-medium bg-green-50 inline-block px-2 py-1 rounded-lg">
               {memberStats.utilizationRate}% da base
             </p>
@@ -341,7 +341,7 @@ export const Dashboard: React.FC<DashboardProps> = () => {
             {memberStats.topAthletes.map((athlete, index) => (
               <div key={athlete.id} className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <span className={`w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold ${index === 0 ? 'bg-yellow-100 text-yellow-700' : index === 1 ? 'bg-stone-200 text-stone-600' : index === 2 ? 'bg-orange-100 text-orange-700' : 'text-stone-400'}`}>
+                  <span className={`w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold ${index === 0 ? 'bg-yellow-100 text-yellow-700' : index === 1 ? 'bg-stone-200 text-stone-600' : index === 2 ? 'bg-orange-100 text-orange-700' : 'text-texto-3'}`}>
                     {index + 1}
                   </span>
                   <img src={athlete.avatar || 'https://via.placeholder.com/40'} alt={athlete.name} className="w-8 h-8 rounded-full bg-stone-100 object-cover" />

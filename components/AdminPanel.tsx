@@ -135,7 +135,7 @@ const NewChallengeModal: React.FC<NewChallengeModalProps> = ({ onClose, onSave, 
                     <h3 className="text-xl font-bold text-saibro-800 flex items-center gap-2">
                         <Swords size={20} className="text-saibro-500" /> Novo Desafio
                     </h3>
-                    <button onClick={onClose} className="text-stone-400 hover:text-stone-600"><XCircle size={24} /></button>
+                    <button onClick={onClose} className="text-texto-3 hover:text-stone-600"><XCircle size={24} /></button>
                 </div>
 
                 {error && (
@@ -207,7 +207,7 @@ const NewChallengeModal: React.FC<NewChallengeModalProps> = ({ onClose, onSave, 
                                 <option key={t} value={t}>{t}</option>
                             ))}
                         </select>
-                        <p className="text-xs text-stone-400 mt-1">Duração padrão: 90 min</p>
+                        <p className="text-xs text-texto-3 mt-1">Duração padrão: 90 min</p>
                     </div>
                 </div>
 
@@ -346,12 +346,12 @@ const ReservasTab: React.FC = () => {
             <ChipGroup<ReservationPeriod> label="Período" items={PERIODS} value={period} onChange={setPeriod} />
             <ChipGroup label="Tipo de reserva" items={TYPES} value={type} onChange={setType} />
             {cancelledCount > 0 && (
-                <label className="flex min-h-11 cursor-pointer items-center gap-2.5 text-sm text-stone-600">
+                <label className="flex min-h-12 cursor-pointer items-center gap-2.5 text-sm text-stone-600">
                     <input type="checkbox" className="h-5 w-5 accent-saibro-600" checked={showCancelled} onChange={e => setShowCancelled(e.target.checked)} />
                     Mostrar canceladas ({cancelledCount})
                 </label>
             )}
-            <p className="text-xs text-stone-400">{plural(visible.length, 'reserva')} · últimos 90 dias em diante</p>
+            <p className="text-xs text-texto-3">{plural(visible.length, 'reserva')} · últimos 90 dias em diante</p>
 
             <div className="space-y-3">
                 {visible.length === 0 && (
@@ -398,7 +398,7 @@ const ReservasTab: React.FC = () => {
                                         onClick={() => handleCancel(res.id)}
                                         aria-label="Cancelar reserva"
                                         title="Cancelar reserva"
-                                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-stone-400 transition-colors hover:bg-red-50 hover:text-red-500"
+                                        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-texto-3 transition-colors hover:bg-red-50 hover:text-red-500"
                                     >
                                         <XCircle size={20} />
                                     </button>
@@ -687,14 +687,14 @@ const DesafiosTab: React.FC = () => {
                                         <span className={`text-xs font-bold px-2 py-0.5 rounded ${statusInfo.color}`}>
                                             {statusInfo.label}
                                         </span>
-                                        <span className="text-xs text-stone-400">{challenge.monthRef}</span>
+                                        <span className="text-xs text-texto-3">{challenge.monthRef}</span>
                                     </div>
                                     <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                                         <div className="flex min-w-0 items-center gap-2">
                                             <img src={challenger?.avatar} alt="" className="w-8 h-8 shrink-0 rounded-full bg-stone-200" />
                                             <span className="truncate font-medium text-stone-700">{challenger?.name}</span>
                                         </div>
-                                        <ChevronRight size={16} className="shrink-0 text-stone-400" />
+                                        <ChevronRight size={16} className="shrink-0 text-texto-3" />
                                         <div className="flex min-w-0 items-center gap-2">
                                             <img src={challenged?.avatar} alt="" className="w-8 h-8 shrink-0 rounded-full bg-stone-200" />
                                             <span className="truncate font-medium text-stone-700">{challenged?.name}</span>
@@ -706,7 +706,7 @@ const DesafiosTab: React.FC = () => {
                                         onClick={() => handleCancel(challenge.id)}
                                         aria-label="Cancelar desafio"
                                         title="Cancelar desafio"
-                                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-stone-400 transition-colors hover:bg-red-50 hover:text-red-500"
+                                        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-texto-3 transition-colors hover:bg-red-50 hover:text-red-500"
                                     >
                                         <XCircle size={20} />
                                     </button>
@@ -879,7 +879,7 @@ const AnunciosTab: React.FC = () => {
                                 <div className="min-w-0 flex-1">
                                     <h3 className="font-bold text-stone-800">{ann.title}</h3>
                                     <p className="text-sm text-stone-500 mt-1 line-clamp-2">{ann.message}</p>
-                                    <div className="flex flex-wrap gap-2 mt-2 text-meta text-stone-400">
+                                    <div className="flex flex-wrap gap-2 mt-2 text-meta text-texto-3">
                                         {expired && <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded">Expirado — não aparece mais</span>}
                                         {ann.showOnce && <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded">Única vez</span>}
                                         {ann.expiresAt && <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded">Expira: {new Date(ann.expiresAt).toLocaleDateString('pt-BR', { timeZone: 'America/Fortaleza' })}</span>}
@@ -890,14 +890,14 @@ const AnunciosTab: React.FC = () => {
                                         onClick={() => toggleActive(ann.id, ann.isActive)}
                                         aria-pressed={ann.isActive}
                                         title={ann.isActive ? 'Clique para desativar' : 'Clique para ativar'}
-                                        className={`min-h-11 rounded-full px-4 text-xs font-bold ${ann.isActive ? 'bg-green-100 text-green-700' : 'bg-stone-200 text-stone-500'}`}
+                                        className={`min-h-12 rounded-full px-4 text-xs font-bold ${ann.isActive ? 'bg-green-100 text-green-700' : 'bg-stone-200 text-stone-500'}`}
                                     >
                                         {ann.isActive ? 'Ativo' : 'Inativo'}
                                     </button>
-                                    <button onClick={() => openEditModal(ann)} aria-label="Editar aviso" className="flex h-11 w-11 items-center justify-center rounded-xl hover:bg-stone-100">
+                                    <button onClick={() => openEditModal(ann)} aria-label="Editar aviso" className="flex h-12 w-12 items-center justify-center rounded-xl hover:bg-stone-100">
                                         <Edit size={18} className="text-stone-500" />
                                     </button>
-                                    <button onClick={() => handleDelete(ann.id)} aria-label="Excluir aviso" className="flex h-11 w-11 items-center justify-center rounded-xl hover:bg-red-50">
+                                    <button onClick={() => handleDelete(ann.id)} aria-label="Excluir aviso" className="flex h-12 w-12 items-center justify-center rounded-xl hover:bg-red-50">
                                         <Trash2 size={18} className="text-red-500" />
                                     </button>
                                 </div>
@@ -1057,7 +1057,7 @@ const SociosTab: React.FC = () => {
                         onChange={setRoleFilter}
                         items={[{ id: 'all', label: 'Todos' }, { id: 'admin', label: 'Administradores' }, { id: 'professor', label: 'Professores' }]}
                     />
-                    <span className="text-xs text-stone-400 sm:ml-auto">{plural(visibleMembers.length, 'sócio')}</span>
+                    <span className="text-xs text-texto-3 sm:ml-auto">{plural(visibleMembers.length, 'sócio')}</span>
                 </div>
 
                 <div className="grid gap-3">
@@ -1067,7 +1067,7 @@ const SociosTab: React.FC = () => {
                                 <img src={member.avatar || 'https://via.placeholder.com/50'} alt="" className="h-12 w-12 shrink-0 rounded-full border-2 border-saibro-50 object-cover" />
                                 <div className="min-w-0">
                                     <h3 className="truncate font-bold text-stone-800">{member.name}</h3>
-                                    <p className="text-xs text-stone-400">+{member.phone}</p>
+                                    <p className="text-xs text-texto-3">+{member.phone}</p>
                                     <p className="text-meta text-saibro-600 uppercase font-bold mt-1">
                                         {member.category || 'Sem classe'}
                                         {member.role === 'admin' && <span className="ml-2 bg-stone-800 text-white px-1.5 py-0.5 rounded">Admin</span>}
@@ -1080,7 +1080,7 @@ const SociosTab: React.FC = () => {
                                     onClick={() => openEditMember(member)}
                                     aria-label={`Editar ${member.name}`}
                                     title="Editar sócio"
-                                    className="flex h-11 w-11 items-center justify-center rounded-xl text-stone-400 hover:bg-saibro-50 hover:text-saibro-600"
+                                    className="flex h-12 w-12 items-center justify-center rounded-xl text-stone-400 hover:bg-saibro-50 hover:text-saibro-600"
                                 >
                                     <Edit size={20} />
                                 </button>
@@ -1367,7 +1367,7 @@ const AcessosTab: React.FC = () => {
                                 <p className="text-sm font-bold text-stone-800">{req.name}</p>
                                 <p className="text-xs text-stone-500">Telefone: {req.phone}</p>
                                 <p className="text-xs text-stone-500">Email: {req.email || 'Não informado'}</p>
-                                <p className="text-meta text-stone-400">
+                                <p className="text-meta text-texto-3">
                                     Solicitado em {new Date(req.createdAt).toLocaleString('pt-BR', { timeZone: 'America/Fortaleza' })}
                                 </p>
                             </div>
@@ -1375,14 +1375,14 @@ const AcessosTab: React.FC = () => {
                                 <button
                                     onClick={() => handleReject(req)}
                                     disabled={saving}
-                                    className="min-h-11 flex-1 rounded-xl bg-stone-100 px-4 text-sm font-bold text-stone-700 hover:bg-stone-200 disabled:opacity-50 md:flex-none"
+                                    className="min-h-12 flex-1 rounded-xl bg-stone-100 px-4 text-sm font-bold text-stone-700 hover:bg-stone-200 disabled:opacity-50 md:flex-none"
                                 >
                                     Rejeitar
                                 </button>
                                 <button
                                     onClick={() => handleApprove(req)}
                                     disabled={saving}
-                                    className="min-h-11 flex-1 rounded-xl bg-saibro-600 px-4 text-sm font-bold text-white hover:bg-saibro-700 disabled:opacity-50 md:flex-none"
+                                    className="min-h-12 flex-1 rounded-xl bg-saibro-600 px-4 text-sm font-bold text-white hover:bg-saibro-700 disabled:opacity-50 md:flex-none"
                                 >
                                     Aprovar
                                 </button>
@@ -1410,7 +1410,7 @@ const AcessosTab: React.FC = () => {
                                 <p className="text-xs text-red-500 mt-1">Motivo: {req.rejectionReason}</p>
                             )}
                             {req.decidedAt && (
-                                <p className="text-meta text-stone-400 mt-1">
+                                <p className="text-meta text-texto-3 mt-1">
                                     Decisão em {new Date(req.decidedAt).toLocaleString('pt-BR', { timeZone: 'America/Fortaleza' })}
                                 </p>
                             )}
@@ -1508,7 +1508,7 @@ const AcessosTab: React.FC = () => {
                                     </span>
                                 </div>
                                 {log.table_name && (
-                                    <p className="text-meta text-stone-400 mt-2">
+                                    <p className="text-meta text-texto-3 mt-2">
                                         Tabela: {log.table_name}{log.record_id ? ` • Registro: ${log.record_id}` : ''}
                                     </p>
                                 )}
@@ -1683,7 +1683,7 @@ const LancamentosTab: React.FC = () => {
 
             <div className="space-y-4">
                 <h3 className="text-lg font-bold text-stone-800 flex items-center gap-2">
-                    <History size={20} className="text-stone-400" /> Auditoria de Pontos
+                    <History size={20} className="text-texto-3" /> Auditoria de Pontos
                 </h3>
                 <div className="space-y-2">
                     {auditLogs.map(log => (
@@ -1692,7 +1692,7 @@ const LancamentosTab: React.FC = () => {
                                 <p className="font-bold text-stone-800">{log.profiles?.name}</p>
                                 <p className="text-xs text-stone-500">{log.reason}</p>
                                 {log.created_at && (
-                                    <p className="text-meta text-stone-400">
+                                    <p className="text-meta text-texto-3">
                                         {new Date(log.created_at).toLocaleString('pt-BR', { timeZone: 'America/Fortaleza' })}
                                     </p>
                                 )}
@@ -1702,7 +1702,7 @@ const LancamentosTab: React.FC = () => {
                             </div>
                         </div>
                     ))}
-                    {auditLogs.length === 0 && <p className="text-center py-8 text-stone-400 italic">Nenhum histórico encontrado.</p>}
+                    {auditLogs.length === 0 && <p className="text-center py-8 text-texto-3 italic">Nenhum histórico encontrado.</p>}
                 </div>
             </div>
 

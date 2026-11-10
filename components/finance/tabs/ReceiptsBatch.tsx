@@ -153,7 +153,7 @@ export const BatchApproveSheet: React.FC<{ open: boolean; queue: ReceiptQueueRow
             <Empty title="Nenhum comprovante pronto para o lote" hint={others.length ? 'Os que aguardam estão logo abaixo, para conferência individual.' : 'Quando os sócios enviarem, eles aparecem aqui.'} icon={<FileText size={28} />} />
           ) : (
             <div className="space-y-2">
-              <label className="flex min-h-11 items-center gap-3 rounded-2xl border border-saibro-200 bg-saibro-50/60 px-3 text-sm font-extrabold text-stone-800">
+              <label className="flex min-h-12 items-center gap-3 rounded-2xl border border-saibro-200 bg-saibro-50/60 px-3 text-sm font-extrabold text-stone-800">
                 <input type="checkbox" className="h-5 w-5" checked={allSelected} onChange={toggleAll} disabled={busy} />
                 Selecionar todos os prontos ({ready.length}) · {formatBRL(ready.reduce((s, i) => s + (i.analysis.amountCents ?? 0), 0))}
               </label>
@@ -175,7 +175,7 @@ export const BatchApproveSheet: React.FC<{ open: boolean; queue: ReceiptQueueRow
                             <Badge tone="good">Valor confere</Badge>
                             {it.analysis.flags.some((f) => f.code === 'paid_after_due') && <Badge tone="warn">Pago após o vencimento</Badge>}
                             {it.analysis.flags.some((f) => f.code === 'amount_edited') && <Badge tone="warn">Valor corrigido pelo sócio</Badge>}
-                            <button className="min-h-11 px-1 text-xs font-bold text-saibro-700 underline" onClick={() => showFile(it)}>{preview?.id === it.row.id ? 'Ocultar comprovante' : 'Ver comprovante'}</button>
+                            <button className="min-h-12 px-1 text-xs font-bold text-saibro-700 underline" onClick={() => showFile(it)}>{preview?.id === it.row.id ? 'Ocultar comprovante' : 'Ver comprovante'}</button>
                           </div>
                           {failures[it.row.id] && <p className="mt-1 text-xs font-bold text-red-700" role="alert">Não aprovado: {failures[it.row.id]}</p>}
                           {preview?.id === it.row.id && (preview.image
@@ -192,7 +192,7 @@ export const BatchApproveSheet: React.FC<{ open: boolean; queue: ReceiptQueueRow
 
           {(others.length > 0 || failedReads.length > 0) && (
             <div className="space-y-2">
-              <p className="text-meta font-extrabold uppercase tracking-wider text-stone-400">Conferir individualmente ({others.length + failedReads.length})</p>
+              <p className="text-meta font-extrabold uppercase tracking-wider text-texto-3">Conferir individualmente ({others.length + failedReads.length})</p>
               {others.map((it) => (
                 <Row key={it.row.id} onClick={() => { onClose(); onOpenOne(it.row.id); }}>
                   <div className="flex items-start justify-between gap-2">

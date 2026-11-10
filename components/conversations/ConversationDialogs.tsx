@@ -61,7 +61,7 @@ export function NewConversationDialog({ open, onClose, onOpened }: { open: boole
         <p className="text-xs font-bold uppercase tracking-wide text-stone-500">Sócios e alunos</p>
         <label className="relative block">
           <span className="sr-only">Buscar por nome</span>
-          <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" aria-hidden />
+          <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-texto-3" aria-hidden />
           <input type="search" value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Nome (mínimo 2 letras)" className={cx(fieldCls, 'pl-9')} />
         </label>
         {carregando ? <div className="grid place-items-center py-6"><LoadingSpinner /></div> : (

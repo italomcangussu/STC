@@ -222,7 +222,7 @@ export const LiveScoreboard: React.FC<LiveScoreboardProps> = ({
                             {canEdit && (
                                 <button
                                     onClick={() => updateFn(idx, 1)}
-                                    className="p-1 text-stone-300 hover:text-saibro-600 hover:bg-saibro-50 rounded active:scale-[0.97] transition-all"
+                                    className="p-1 text-linha-forte hover:text-saibro-600 hover:bg-saibro-50 rounded active:scale-[0.97] transition-all"
                                 >
                                     <Plus size={12} strokeWidth={3} />
                                 </button>
@@ -263,7 +263,7 @@ export const LiveScoreboard: React.FC<LiveScoreboardProps> = ({
                             Ao Vivo
                         </div>
                     )}
-                    <span className="text-stone-400 text-xs font-bold tracking-wider uppercase hidden sm:block">
+                    <span className="text-texto-3 text-xs font-bold tracking-wider uppercase hidden sm:block">
                         {match.type === 'Desafio Ranking' ? 'Desafio STC' : 'Torneio STC'}
                     </span>
                 </div>
@@ -324,7 +324,7 @@ export const LiveScoreboard: React.FC<LiveScoreboardProps> = ({
                         )}
                     </button>
                     {!matchWinner && canEdit && (scoreA[0] > 0 || scoreB[0] > 0) && (
-                        <p className="text-meta uppercase tracking-widest text-stone-400 text-center mt-3 font-bold">
+                        <p className="text-meta uppercase tracking-widest text-texto-3 text-center mt-3 font-bold">
                             Defina um vencedor para salvar
                         </p>
                     )}

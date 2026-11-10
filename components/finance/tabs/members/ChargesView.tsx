@@ -15,8 +15,8 @@ const DateFilters: React.FC<{ list: ChargesList }> = ({ list }) => {
   const active = [filters.compFrom, filters.compTo, filters.dueFrom, filters.dueTo].filter(Boolean).length;
   return (
     <details className="group rounded-2xl border border-stone-100 bg-stone-50/60 px-3" open={active > 0}>
-      <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between text-xs font-bold text-stone-600">
-        <span>Competência e vencimento{active ? ` · ${active} filtro(s)` : ''}</span><span className="text-stone-400 group-open:rotate-180">▾</span>
+      <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between text-xs font-bold text-stone-600">
+        <span>Competência e vencimento{active ? ` · ${active} filtro(s)` : ''}</span><span className="text-texto-3 group-open:rotate-180">▾</span>
       </summary>
       <div className="grid grid-cols-2 gap-2 pb-3 md:grid-cols-4">
         <Field label="Competência de"><input type="month" className={inputCls} value={filters.compFrom} onChange={(e) => change({ compFrom: e.target.value })} /></Field>
@@ -44,7 +44,7 @@ const FiltersCard: React.FC<{ list: ChargesList; actions: React.ReactNode }> = (
 
 const Totals: React.FC<{ list: ChargesList }> = ({ list }) => (
   <div className="grid grid-cols-2 gap-3">
-    <div className="rounded-2xl bg-white p-3 shadow-sm"><p className="text-meta font-extrabold uppercase tracking-wider text-stone-400">A receber</p><p className="text-xl font-extrabold tabular-nums text-stone-800">{formatBRL(list.totals.due)}</p></div>
+    <div className="rounded-2xl bg-white p-3 shadow-sm"><p className="text-meta font-extrabold uppercase tracking-wider text-texto-3">A receber</p><p className="text-xl font-extrabold tabular-nums text-stone-800">{formatBRL(list.totals.due)}</p></div>
     <div className="rounded-2xl bg-red-50 p-3"><p className="text-meta font-extrabold uppercase tracking-wider text-red-400">Vencido</p><p className="text-xl font-extrabold tabular-nums text-red-700">{formatBRL(list.totals.overdue)}</p></div>
   </div>
 );

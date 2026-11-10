@@ -148,7 +148,7 @@ export const Auth: React.FC = () => {
                                     <div className="space-y-1">
                                         <label className="text-xs font-bold text-stone-500 uppercase ml-1">Celular</label>
                                         <div className="relative">
-                                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" size={18} />
+                                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-texto-3" size={18} />
                                             <input
                                                 type="tel"
                                                 required
@@ -259,7 +259,7 @@ export const Auth: React.FC = () => {
                                         setIsAdminMode(true);
                                         resetAthleteFlow();
                                     }}
-                                    className="text-stone-400 hover:text-stone-600 text-xs font-medium flex items-center justify-center gap-1"
+                                    className="text-texto-3 hover:text-stone-600 text-xs font-medium flex items-center justify-center gap-1"
                                 >
                                     <Shield size={14} /> Área do Administrador
                                 </button>
@@ -280,7 +280,7 @@ export const Auth: React.FC = () => {
                                 <div className="space-y-1">
                                     <label className="text-xs font-bold text-stone-500 uppercase ml-1">Email</label>
                                     <div className="relative">
-                                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" size={18} />
+                                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-texto-3" size={18} />
                                         <input
                                             type="email"
                                             required
@@ -295,7 +295,7 @@ export const Auth: React.FC = () => {
                                 <div className="space-y-1">
                                     <label className="text-xs font-bold text-stone-500 uppercase ml-1">Senha</label>
                                     <div className="relative">
-                                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" size={18} />
+                                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-texto-3" size={18} />
                                         <input
                                             type="password"
                                             required

@@ -210,11 +210,11 @@ export const AdminMatchCreator: React.FC<AdminMatchCreatorProps> = ({ isOpen, on
                             <Trophy className="text-saibro-500" size={24} strokeWidth={2.5} />
                             Lançar {matchType} (Retro)
                         </h2>
-                        <p className="text-xs text-stone-400 font-bold uppercase tracking-widest mt-1">
+                        <p className="text-xs text-texto-3 font-bold uppercase tracking-widest mt-1">
                             Gera pontos no ranking automaticamente.
                         </p>
                     </div>
-                    <button onClick={onClose} className="p-3 bg-stone-50 hover:bg-stone-100 text-stone-400 hover:text-stone-600 rounded-full transition-all active:scale-[0.97]">
+                    <button onClick={onClose} className="p-3 bg-stone-50 hover:bg-stone-100 text-texto-3 hover:text-stone-600 rounded-full transition-all active:scale-[0.97]">
                         <X size={20} strokeWidth={3} />
                     </button>
                 </div>
@@ -225,7 +225,7 @@ export const AdminMatchCreator: React.FC<AdminMatchCreatorProps> = ({ isOpen, on
                     {/* Date & Time */}
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <label className="flex items-center gap-2 text-meta font-extrabold text-stone-400 uppercase tracking-widest">
+                            <label className="flex items-center gap-2 text-meta font-extrabold text-texto-3 uppercase tracking-widest">
                                 <Calendar size={12} /> Data
                             </label>
                             <input
@@ -236,7 +236,7 @@ export const AdminMatchCreator: React.FC<AdminMatchCreatorProps> = ({ isOpen, on
                             />
                         </div>
                         <div className="space-y-2">
-                            <label className="flex items-center gap-2 text-meta font-extrabold text-stone-400 uppercase tracking-widest">
+                            <label className="flex items-center gap-2 text-meta font-extrabold text-texto-3 uppercase tracking-widest">
                                 <Clock size={12} /> Hora
                             </label>
                             <input
@@ -250,7 +250,7 @@ export const AdminMatchCreator: React.FC<AdminMatchCreatorProps> = ({ isOpen, on
 
                     {/* Court Selector */}
                     <div className="bg-stone-50/50 p-4 rounded-2xl border border-stone-100">
-                        <label className="block text-meta font-extrabold text-stone-400 uppercase tracking-widest mb-2">
+                        <label className="block text-meta font-extrabold text-texto-3 uppercase tracking-widest mb-2">
                             Onde ocorreu o jogo? (Opcional)
                         </label>
                         <select
@@ -280,7 +280,7 @@ export const AdminMatchCreator: React.FC<AdminMatchCreatorProps> = ({ isOpen, on
                             </div>
 
                             <div className="px-4 pb-6">
-                                <span className="text-2xl font-extrabold text-stone-300 italic">VS</span>
+                                <span className="text-2xl font-extrabold text-linha-forte italic">VS</span>
                             </div>
 
                             {/* Player B */}
@@ -324,7 +324,7 @@ export const AdminMatchCreator: React.FC<AdminMatchCreatorProps> = ({ isOpen, on
                                             </div>
                                             <button
                                                 onClick={() => handleSetChange(0, 'a', Math.max((parseInt(sets[0].a) || 0) - 1, 0).toString())}
-                                                className="w-12 h-12 rounded-xl bg-white border border-stone-200 text-stone-400 flex items-center justify-center text-xl font-bold hover:bg-red-50 hover:text-red-500 transition-all active:scale-[0.97]"
+                                                className="w-12 h-12 rounded-xl bg-white border border-stone-200 text-texto-3 flex items-center justify-center text-xl font-bold hover:bg-red-50 hover:text-red-500 transition-all active:scale-[0.97]"
                                             >-</button>
                                         </div>
 
@@ -354,7 +354,7 @@ export const AdminMatchCreator: React.FC<AdminMatchCreatorProps> = ({ isOpen, on
                                             </div>
                                             <button
                                                 onClick={() => handleSetChange(0, 'b', Math.max((parseInt(sets[0].b) || 0) - 1, 0).toString())}
-                                                className="w-12 h-12 rounded-xl bg-white border border-stone-200 text-stone-400 flex items-center justify-center text-xl font-bold hover:bg-red-50 hover:text-red-500 transition-all active:scale-[0.97]"
+                                                className="w-12 h-12 rounded-xl bg-white border border-stone-200 text-texto-3 flex items-center justify-center text-xl font-bold hover:bg-red-50 hover:text-red-500 transition-all active:scale-[0.97]"
                                             >-</button>
                                         </div>
                                     </div>
@@ -371,7 +371,7 @@ export const AdminMatchCreator: React.FC<AdminMatchCreatorProps> = ({ isOpen, on
                                                 className="w-16 h-16 text-center text-3xl font-extrabold text-blue-600 bg-white rounded-2xl border-none shadow-sm focus:ring-4 focus:ring-blue-100 outline-hidden placeholder:text-stone-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                             />
                                             <div className="flex flex-col items-center gap-1">
-                                                <span className="text-meta font-extrabold text-stone-300 uppercase tracking-wider">SET {idx + 1}</span>
+                                                <span className="text-meta font-extrabold text-linha-forte uppercase tracking-wider">SET {idx + 1}</span>
                                                 <div className="w-8 h-1 bg-stone-200 rounded-full"></div>
                                             </div>
                                             <input
@@ -392,7 +392,7 @@ export const AdminMatchCreator: React.FC<AdminMatchCreatorProps> = ({ isOpen, on
                                         <div className="text-center pt-2">
                                             <button
                                                 onClick={addSet}
-                                                className="px-4 py-2 bg-white text-stone-400 hover:text-saibro-600 hover:bg-saibro-50 font-bold text-xs rounded-full border border-stone-200 transition-all shadow-sm active:scale-[0.97] inline-flex items-center gap-2"
+                                                className="px-4 py-2 bg-white text-texto-3 hover:text-saibro-600 hover:bg-saibro-50 font-bold text-xs rounded-full border border-stone-200 transition-all shadow-sm active:scale-[0.97] inline-flex items-center gap-2"
                                             >
                                                 <Plus size={14} strokeWidth={3} /> Adicionar 3º Set
                                             </button>
@@ -409,7 +409,7 @@ export const AdminMatchCreator: React.FC<AdminMatchCreatorProps> = ({ isOpen, on
                 <div className="p-6 border-t border-stone-100 bg-white flex gap-4">
                     <button
                         onClick={onClose}
-                        className="flex-1 py-4 text-stone-400 font-bold bg-stone-50 hover:bg-stone-100 rounded-2xl transition-colors uppercase tracking-wider text-sm"
+                        className="flex-1 py-4 text-texto-3 font-bold bg-stone-50 hover:bg-stone-100 rounded-2xl transition-colors uppercase tracking-wider text-sm"
                     >
                         Cancelar
                     </button>

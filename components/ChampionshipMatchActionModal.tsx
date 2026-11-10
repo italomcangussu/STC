@@ -52,7 +52,7 @@ const getWinnerSide = (match: Match): 'A' | 'B' | null => {
 
 const ScoreSummary: React.FC<{ match: Match }> = ({ match }) => {
     if (!isFinished(match)) {
-        return <span className="text-xs font-extrabold uppercase tracking-widest text-stone-400">Partida pendente</span>;
+        return <span className="text-xs font-extrabold uppercase tracking-widest text-texto-3">Partida pendente</span>;
     }
 
     if (match.is_walkover) {
@@ -79,10 +79,10 @@ const ScoreSummary: React.FC<{ match: Match }> = ({ match }) => {
 
 const PlayerLine: React.FC<{ registration?: RegistrationLike; winner: boolean; label: string }> = ({ registration, winner, label }) => (
     <div className={`flex items-center gap-3 rounded-2xl border p-3 ${winner ? 'border-saibro-200 bg-saibro-50' : 'border-stone-100 bg-stone-50'}`}>
-        <img src={getRegistrationAvatar(registration)} className="h-11 w-11 rounded-full border-2 border-white object-cover shadow-sm" />
+        <img src={getRegistrationAvatar(registration)} className="h-12 w-12 rounded-full border-2 border-white object-cover shadow-sm" />
         <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-extrabold text-stone-900">{getRegistrationName(registration, label)}</p>
-            <p className="text-xs font-extrabold uppercase tracking-widest text-stone-400">{registration?.participant_type === 'guest' ? 'Convidado' : registration ? 'Sócio' : 'Origem da chave'}</p>
+            <p className="text-xs font-extrabold uppercase tracking-widest text-texto-3">{registration?.participant_type === 'guest' ? 'Convidado' : registration ? 'Sócio' : 'Origem da chave'}</p>
         </div>
         {winner && <Trophy size={18} className="text-saibro-600" />}
     </div>
@@ -134,7 +134,7 @@ export const ChampionshipMatchActionModal: React.FC<ChampionshipMatchActionModal
                             </p>
                         </div>
                         <div className="rounded-2xl border border-stone-100 bg-stone-50 p-3">
-                            <p className="mb-1 flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-widest text-stone-400">
+                            <p className="mb-1 flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-widest text-texto-3">
                                 <Clock size={12} />
                                 Horário
                             </p>
@@ -146,7 +146,7 @@ export const ChampionshipMatchActionModal: React.FC<ChampionshipMatchActionModal
 
                     <div className="flex items-center justify-between rounded-2xl border border-stone-100 bg-white p-4 shadow-sm">
                         <div>
-                            <p className="text-xs font-extrabold uppercase tracking-widest text-stone-400">Status</p>
+                            <p className="text-xs font-extrabold uppercase tracking-widest text-texto-3">Status</p>
                             <p className="mt-1 text-sm font-extrabold text-stone-900">{isFinished(match) ? 'Finalizada' : 'Pendente'}</p>
                         </div>
                         <ScoreSummary match={match} />

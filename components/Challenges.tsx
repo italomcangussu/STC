@@ -220,7 +220,7 @@ const CreateChallengeModal: React.FC<{
                             {step === 'opponent' ? 'Escolher Adversário' : 'Agendar Horário'}
                         </h3>
                     </div>
-                    <button onClick={onClose} className="text-stone-400 hover:text-stone-600"><XCircle size={24} /></button>
+                    <button onClick={onClose} className="text-texto-3 hover:text-stone-600"><XCircle size={24} /></button>
                 </div>
 
                 {/* Content */}
@@ -268,7 +268,7 @@ const CreateChallengeModal: React.FC<{
                                         </div>
                                     ) : eligibleOpponents.length === 0 ? (
                                         <div className="text-center py-4">
-                                            <p className="text-stone-400 text-sm">Nenhum adversário disponível.</p>
+                                            <p className="text-texto-3 text-sm">Nenhum adversário disponível.</p>
                                         </div>
                                     ) : (
                                         eligibleOpponents.map(opp => (
@@ -354,7 +354,7 @@ const CreateChallengeModal: React.FC<{
                                             <Loader2 className="animate-spin text-saibro-600" size={20} />
                                         </div>
                                     ) : availableTimes.length === 0 ? (
-                                        <p className="text-center text-stone-400 text-sm py-4">Nenhum horário disponível nesta data/quadra.</p>
+                                        <p className="text-center text-texto-3 text-sm py-4">Nenhum horário disponível nesta data/quadra.</p>
                                     ) : (
                                         <div className="grid grid-cols-4 gap-2">
                                             {availableTimes.map(time => (
@@ -717,20 +717,20 @@ export const ChallengesView: React.FC<{ currentUser: User }> = ({ currentUser })
                         <div className="flex items-center gap-1">
                             <span className="text-2xl font-extrabold text-saibro-600">#{myRankEntry?.categoryPosition || '-'}</span>
                         </div>
-                        <span className="text-meta uppercase font-bold text-stone-400">{myRankEntry?.category}</span>
+                        <span className="text-meta uppercase font-bold text-texto-3">{myRankEntry?.category}</span>
                     </div>
                 </div>
 
                 <div className="mt-4 grid grid-cols-2 gap-4 relative z-10">
                     <div className="bg-stone-50 p-2 rounded-lg border border-stone-100">
-                        <p className="text-meta text-stone-400 uppercase font-bold">Como Desafiante</p>
-                        <p className={`font-bold ${monthlyStats.challenger > 0 ? 'text-red-500' : 'text-green-600'}`}>
+                        <p className="text-meta text-texto-3 uppercase font-bold">Como Desafiante</p>
+                        <p className={`font-bold ${monthlyStats.challenger > 0 ? 'text-erro' : 'text-sucesso'}`}>
                             {monthlyStats.challenger}/1
                         </p>
                     </div>
                     <div className="bg-stone-50 p-2 rounded-lg border border-stone-100">
-                        <p className="text-meta text-stone-400 uppercase font-bold">Como Desafiado</p>
-                        <p className={`font-bold ${monthlyStats.challenged > 0 ? 'text-red-500' : 'text-green-600'}`}>
+                        <p className="text-meta text-texto-3 uppercase font-bold">Como Desafiado</p>
+                        <p className={`font-bold ${monthlyStats.challenged > 0 ? 'text-erro' : 'text-sucesso'}`}>
                             {monthlyStats.challenged}/1
                         </p>
                     </div>
@@ -884,9 +884,9 @@ export const ChallengesView: React.FC<{ currentUser: User }> = ({ currentUser })
                             <div key={c.id} className="bg-white p-4 rounded-xl shadow-sm border border-stone-100">
                                 <div className="flex justify-between items-center mb-2">
                                     <div className="flex items-center gap-2">
-                                        <span className="text-xs font-bold text-stone-400">vs</span>
+                                        <span className="text-xs font-bold text-texto-3">vs</span>
                                         <span className="font-bold text-stone-800">{challenged?.name}</span>
-                                        <span className="text-meta text-stone-400">
+                                        <span className="text-meta text-texto-3">
                                             #{challengedRank?.categoryPosition} • {challengedRank?.category}
                                         </span>
                                     </div>
@@ -921,13 +921,13 @@ export const ChallengesView: React.FC<{ currentUser: User }> = ({ currentUser })
                         <div className="flex bg-stone-100 rounded-lg p-0.5">
                             <button
                                 onClick={() => setHistoryScope('mine')}
-                                className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${historyScope === 'mine' ? 'bg-white shadow text-saibro-600' : 'text-stone-400 hover:text-stone-600'}`}
+                                className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${historyScope === 'mine' ? 'bg-white shadow text-saibro-600' : 'text-texto-3 hover:text-stone-600'}`}
                             >
                                 Meus
                             </button>
                             <button
                                 onClick={() => setHistoryScope('all')}
-                                className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${historyScope === 'all' ? 'bg-white shadow text-saibro-600' : 'text-stone-400 hover:text-stone-600'}`}
+                                className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${historyScope === 'all' ? 'bg-white shadow text-saibro-600' : 'text-texto-3 hover:text-stone-600'}`}
                             >
                                 Geral
                             </button>
@@ -959,19 +959,19 @@ export const ChallengesView: React.FC<{ currentUser: User }> = ({ currentUser })
                                 <div className="flex items-center gap-2 overflow-hidden">
                                     {amInvolved ? (
                                         <>
-                                            <span className="text-xs font-bold text-stone-400 shrink-0">{isChallenger ? 'Desafiou' : 'Desafiado por'}</span>
+                                            <span className="text-xs font-bold text-texto-3 shrink-0">{isChallenger ? 'Desafiou' : 'Desafiado por'}</span>
                                             <span className="font-semibold text-stone-700 text-sm truncate">{other?.name}</span>
                                         </>
                                     ) : (
                                         <>
                                             <span className="font-semibold text-stone-700 text-sm truncate max-w-[80px] sm:max-w-[120px]">{challengerProfile?.name}</span>
-                                            <span className="text-xs font-bold text-stone-400 shrink-0">vs</span>
+                                            <span className="text-xs font-bold text-texto-3 shrink-0">vs</span>
                                             <span className="font-semibold text-stone-700 text-sm truncate max-w-[80px] sm:max-w-[120px]">{challengedProfile?.name}</span>
                                         </>
                                     )}
-                                    {isFinished && <ChevronRight size={14} className="text-stone-300 shrink-0" />}
+                                    {isFinished && <ChevronRight size={14} className="text-linha-forte shrink-0" />}
                                 </div>
-                                <span className={`text-meta font-bold uppercase shrink-0 ${c.status === 'finished' ? 'text-green-600' : 'text-red-500'}`}>
+                                <span className={`text-meta font-bold uppercase shrink-0 ${c.status === 'finished' ? 'text-sucesso' : 'text-erro'}`}>
                                     {c.status}
                                 </span>
                             </div>

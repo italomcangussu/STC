@@ -169,12 +169,12 @@ export const DocumentForm: React.FC<Props> = ({ target, onCancel, onSaved, onPub
       </label>
 
       <label className="block space-y-1 text-sm font-bold text-stone-700">
-        Descrição <span className="font-medium text-stone-400">(opcional)</span>
+        Descrição <span className="font-medium text-texto-3">(opcional)</span>
         <textarea className={`${inputCls} min-h-20`} value={description} onChange={(e) => setDescription(e.target.value)} maxLength={2000} placeholder="Uma frase que explique o documento ao sócio." />
       </label>
 
       <div className="space-y-1 text-sm font-bold text-stone-700">
-        PDF <span className="font-medium text-stone-400">(até 10 MB)</span>
+        PDF <span className="font-medium text-texto-3">(até 10 MB)</span>
         <input ref={fileInput} id="sig-file" type="file" accept="application/pdf,.pdf" className="sr-only" onChange={(e) => void pickFile(e.target.files?.[0])} />
         <label htmlFor="sig-file" className={`${btnGhost} w-full cursor-pointer justify-start`}>
           {reading ? <Loader2 size={16} className="animate-spin" aria-hidden /> : <FileUp size={16} aria-hidden />}
@@ -187,20 +187,20 @@ export const DocumentForm: React.FC<Props> = ({ target, onCancel, onSaved, onPub
       </div>
 
       <label className="block space-y-1 text-sm font-bold text-stone-700">
-        Prazo para assinar <span className="font-medium text-stone-400">(opcional)</span>
+        Prazo para assinar <span className="font-medium text-texto-3">(opcional)</span>
         <input type="date" className={inputCls} value={due} min={todayInput()} onChange={(e) => setDue(e.target.value)} />
-        <span className="block text-xs font-medium text-stone-400">Os sócios que não assinarem recebem lembretes 3 dias antes e no dia do prazo. Quem assinar depois do prazo continua podendo.{due && ` Vale até ${formatDate(endOfClubDay(due))}.`}</span>
+        <span className="block text-xs font-medium text-texto-3">Os sócios que não assinarem recebem lembretes 3 dias antes e no dia do prazo. Quem assinar depois do prazo continua podendo.{due && ` Vale até ${formatDate(endOfClubDay(due))}.`}</span>
       </label>
 
       <fieldset className="space-y-2">
         <legend className="text-sm font-bold text-stone-700">Quem deve assinar</legend>
         {([['all', 'Todos os sócios ativos'], ['selected', 'Só alguns sócios']] as const).map(([value, label]) => (
-          <label key={value} className="flex min-h-11 items-center gap-3 rounded-xl border border-stone-200 bg-white px-3 text-sm font-bold text-stone-700">
+          <label key={value} className="flex min-h-12 items-center gap-3 rounded-xl border border-stone-200 bg-white px-3 text-sm font-bold text-stone-700">
             <input type="radio" name="audience" checked={audience === value} onChange={() => setAudience(value)} className="h-4 w-4 accent-saibro-600" /> {label}
           </label>
         ))}
         {audience === 'all' && (
-          <label className="flex min-h-11 items-start gap-3 rounded-xl px-1 text-sm font-medium text-stone-600">
+          <label className="flex min-h-12 items-start gap-3 rounded-xl px-1 text-sm font-medium text-stone-600">
             <input type="checkbox" checked={newMembers} onChange={(e) => setNewMembers(e.target.checked)} className="mt-1 h-4 w-4 accent-saibro-600" />
             <span>Vale também para quem virar sócio depois (recebe o aviso ao entrar).</span>
           </label>
@@ -212,7 +212,7 @@ export const DocumentForm: React.FC<Props> = ({ target, onCancel, onSaved, onPub
           {loadError ? <Notice tone="bad">{loadError}</Notice> : members === null ? <Spinner label="Carregando sócios…" /> : (
             <>
               <div className="relative">
-                <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" aria-hidden />
+                <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-texto-3" aria-hidden />
                 <input className={`${inputCls} pl-9`} value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar sócio" aria-label="Buscar sócio" />
               </div>
               <div className="flex items-center justify-between text-xs font-bold text-stone-500">
@@ -225,14 +225,14 @@ export const DocumentForm: React.FC<Props> = ({ target, onCancel, onSaved, onPub
               <ul className="max-h-72 divide-y divide-stone-100 overflow-y-auto rounded-2xl border border-stone-100">
                 {visible.map((m) => (
                   <li key={m.id}>
-                    <label className="flex min-h-11 items-center gap-3 px-3 text-sm text-stone-700">
+                    <label className="flex min-h-12 items-center gap-3 px-3 text-sm text-stone-700">
                       <input type="checkbox" checked={selected.has(m.id)} onChange={() => toggle(m.id)} className="h-4 w-4 accent-saibro-600" />
                       <span className="min-w-0 flex-1 truncate font-bold">{m.name}</span>
                       {!m.phone?.trim() && <span className="shrink-0 text-meta font-bold text-amber-700">sem telefone</span>}
                     </label>
                   </li>
                 ))}
-                {visible.length === 0 && <li className="px-3 py-4 text-center text-xs text-stone-400">Nenhum sócio com esse nome.</li>}
+                {visible.length === 0 && <li className="px-3 py-4 text-center text-xs text-texto-3">Nenhum sócio com esse nome.</li>}
               </ul>
             </>
           )}
