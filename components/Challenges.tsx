@@ -707,7 +707,7 @@ export const ChallengesView: React.FC<{ currentUser: User }> = ({ currentUser })
     return (
         <div className="p-4 space-y-6 pb-24">
             {/* --- HEADER STATUS CARD --- */}
-            <div className="bg-white rounded-2xl p-5 shadow-sm border-l-4 border-saibro-500 relative overflow-hidden">
+            <div className="bg-superficie rounded-card p-5 shadow-e1 border border-linha relative overflow-hidden">
                 <div className="relative z-10 flex justify-between items-start">
                     <div>
                         <h2 className="text-2xl font-bold text-stone-800 mb-1">Desafios</h2>

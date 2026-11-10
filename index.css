@@ -465,9 +465,7 @@
     /* Section Header - For standalone titles */
     /* Era a "pílula de vidro" para ler sobre a foto do saibro. Com o chão liso
        (cardápio v2), título de seção é só texto: nada de card em volta. */
-    .section-header {
-        display: block;
-    }
+    /* Sem regra: o elemento decide o próprio display (muitos usam `flex`). */
 
     /* Tennis Net Divider */
     .divider-net {
@@ -1993,6 +1991,8 @@ input[type="datetime-local"] {
 [data-tema="escuro"] .bg-green-100 { background-color: #143222; }
 [data-tema="escuro"] .bg-green-50 { background-color: #10241a; }
 [data-tema="escuro"] .bg-green-50\/50 { background-color: rgb(16 36 26 / 50%); }
+[data-tema="escuro"] .bg-indigo-100 { background-color: #20234a; }
+[data-tema="escuro"] .bg-indigo-50 { background-color: #181a36; }
 [data-tema="escuro"] .bg-orange-100 { background-color: #3a2112; }
 [data-tema="escuro"] .bg-orange-200\/80 { background-color: rgb(87 48 26 / 80%); }
 [data-tema="escuro"] .bg-orange-50 { background-color: #2b1a10; }
@@ -2035,6 +2035,8 @@ input[type="datetime-local"] {
 [data-tema="escuro"] .bg-stone-50\/70 { background-color: rgb(12 10 9 / 70%); }
 [data-tema="escuro"] .bg-stone-50\/80 { background-color: rgb(12 10 9 / 80%); }
 [data-tema="escuro"] .bg-stone-50\/95 { background-color: rgb(12 10 9 / 95%); }
+[data-tema="escuro"] .bg-violet-100 { background-color: #2a2249; }
+[data-tema="escuro"] .bg-violet-50 { background-color: #1f1a36; }
 [data-tema="escuro"] .bg-white { background-color: #1c1917; }
 [data-tema="escuro"] .bg-white\/50 { background-color: rgb(28 25 23 / 50%); }
 [data-tema="escuro"] .bg-white\/60 { background-color: rgb(28 25 23 / 60%); }
@@ -2063,6 +2065,8 @@ input[type="datetime-local"] {
 [data-tema="escuro"] .border-green-300 { border-color: #245c3d; }
 [data-tema="escuro"] .border-green-300\/50 { border-color: rgb(36 92 61 / 50%); }
 [data-tema="escuro"] .border-green-300\/70 { border-color: rgb(36 92 61 / 70%); }
+[data-tema="escuro"] .border-indigo-100 { border-color: #20234a; }
+[data-tema="escuro"] .border-indigo-300 { border-color: #3a4082; }
 [data-tema="escuro"] .border-orange-100 { border-color: #3a2112; }
 [data-tema="escuro"] .border-orange-200 { border-color: #57301a; }
 [data-tema="escuro"] .border-orange-300 { border-color: #6b3a1d; }
@@ -2139,6 +2143,9 @@ input[type="datetime-local"] {
 [data-tema="escuro"] .text-green-600 { color: #4ade80; }
 [data-tema="escuro"] .text-green-700 { color: #86efac; }
 [data-tema="escuro"] .text-green-800 { color: #86efac; }
+[data-tema="escuro"] .text-indigo-600 { color: #818cf8; }
+[data-tema="escuro"] .text-indigo-700 { color: #a5b4fc; }
+[data-tema="escuro"] .text-indigo-800 { color: #a5b4fc; }
 [data-tema="escuro"] .text-orange-600 { color: #fb923c; }
 [data-tema="escuro"] .text-orange-700 { color: #fdba74; }
 [data-tema="escuro"] .text-orange-800 { color: #fdba74; }
@@ -2168,6 +2175,8 @@ input[type="datetime-local"] {
 [data-tema="escuro"] .text-stone-700 { color: #d6d3d1; }
 [data-tema="escuro"] .text-stone-800 { color: #f5f5f4; }
 [data-tema="escuro"] .text-stone-900 { color: #f5f5f4; }
+[data-tema="escuro"] .text-violet-700 { color: #c4b5fd; }
+[data-tema="escuro"] .text-violet-800 { color: #c4b5fd; }
 [data-tema="escuro"] .text-yellow-600 { color: #facc15; }
 [data-tema="escuro"] .text-yellow-700 { color: #fde047; }
 [data-tema="escuro"] .text-yellow-800 { color: #fde047; }

@@ -930,7 +930,7 @@ const ReservationCard: React.FC<{
     return (
         <div
             onClick={() => onSelect(res)}
-            className={`relative rounded-2xl border-l-[6px] bg-linear-to-br from-white to-stone-50/50 p-5 shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer ${style.border} group border-t border-r border-b border-stone-100/50`}
+            className="relative rounded-card border border-linha bg-superficie p-5 shadow-e1 hover:shadow-e2 transition-shadow duration-(--dur-estado) cursor-pointer group"
         >
             {/* ANIMAÇÃO DE QUADRA (apenas para Campeonatos) */}
             {res.type === 'Campeonato' && <TennisCourtAnimation />}
@@ -1111,7 +1111,7 @@ const ReservationCard: React.FC<{
                             dotColor = 'bg-stone-300';
                         } else if (now >= start && now <= end) {
                             statusText = 'Em andamento';
-                            statusColor = 'text-green-600';
+                            statusColor = 'text-sucesso';
                             dotColor = 'bg-green-500';
                             pulse = true;
                         } else {
@@ -1125,17 +1125,17 @@ const ReservationCard: React.FC<{
                             if (isToday) {
                                 if (diffMinutes < 30) {
                                     statusText = 'Inicia em instantes';
-                                    statusColor = 'text-green-600';
+                                    statusColor = 'text-sucesso';
                                     dotColor = 'bg-green-500';
                                     pulse = true;
                                 } else {
                                     statusText = 'Inicia hoje';
-                                    statusColor = 'text-saibro-600';
+                                    statusColor = 'text-acao';
                                     dotColor = 'bg-saibro-500';
                                 }
                             } else if (isTomorrow) {
                                 statusText = 'Começa amanhã';
-                                statusColor = 'text-blue-600';
+                                statusColor = 'text-info';
                                 dotColor = 'bg-blue-500';
                             } else {
                                 const dayName = getDayName(res.date);
