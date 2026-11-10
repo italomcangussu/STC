@@ -4,12 +4,14 @@ import App from './App';
 import './index.css';
 import { installViewportHeightSync } from './lib/viewportHeightSync';
 import { installAppPreferences } from './lib/appPreferences';
+import { instalarTema } from './lib/tema';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) throw new Error('Failed to find the root element');
 
 installViewportHeightSync();
 installAppPreferences();
+instalarTema();
 
 const root = ReactDOM.createRoot(rootElement);
 root.render(

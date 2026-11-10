@@ -119,6 +119,7 @@
     --color-aviso: #b45309;           /* âmbar 700 · 5,0:1 */
     --color-aviso-suave: #fffbeb;
     --color-erro: #b91c1c;            /* red-700 · 6,5:1 */
+    --color-erro-forte: #991b1b;      /* red-800: hover e pressionado */
     --color-erro-suave: #fef2f2;
     --color-info: #3d6a93;            /* noite-600 · 5,6:1 no branco */
     --color-info-suave: #f1f5f9;
@@ -1923,17 +1924,314 @@ input[type="datetime-local"] {
     }
 }
 
-/* ===== MODO ESCURO (Opcional) ===== */
+/* ===== TEMA ESCURO (sistema "Quadra") =====
+   Ligado por <html data-tema="escuro"> (lib/tema.ts; escolha em Configurações).
+   1. Os papéis de cor ganham valores escuros: telas no cardápio v2 já trocam sozinhas.
+   2. As classes antigas mais usadas (bg-white, stone, tons -50/-100/-200, textos
+      -600..-900) apontam para os papéis. Seções que já são escuras (bg-stone-800/900,
+      text-white, saibro-600 com branco) não mudam.
+   Tudo em HEX/rgb (html2canvas). Branco translúcido abaixo de 50% fica: é brilho
+   sobre seção escura. Ao ajustar, ajuste a família inteira. */
 
-@media (prefers-color-scheme: dark) {
-    .tennis-court-bg {
-        opacity: 0.2;
-    }
-
-    .tennis-court-animation {
-        opacity: 0.5;
-    }
+[data-tema="escuro"] {
+    color-scheme: dark;
+    --color-chao: #0c0a09;            /* stone-950 */
+    --color-superficie: #1c1917;      /* stone-900 */
+    --color-superficie-2: #292524;    /* stone-800 */
+    --color-linha: #3a3532;
+    --color-linha-forte: #78716c;     /* 3,6:1 na superfície */
+    --color-texto: #f5f5f4;           /* 16:1 */
+    --color-texto-2: #d6d3d1;         /* 11:1 */
+    --color-texto-3: #a8a29e;         /* 6,9:1 */
+    --color-acao: #f97316;            /* saibro-500 · texto escuro 6,2:1; como texto na superfície 6,2:1 */
+    --color-acao-forte: #fdba74;      /* saibro-300 */
+    --color-acao-suave: #2b1a10;
+    --color-acao-texto: #1c1917;
+    --color-sucesso: #4ade80;
+    --color-sucesso-suave: #10241a;
+    --color-aviso: #fbbf24;
+    --color-aviso-suave: #291f0b;
+    --color-erro: #f87171;
+    --color-erro-forte: #fca5a5;
+    --color-erro-suave: #2a1515;
+    --color-info: #7fb0dc;
+    --color-info-suave: #121e33;
+    --shadow-e1: 0 1px 2px rgb(0 0 0 / 0.4);
+    --shadow-e2: 0 2px 4px rgb(0 0 0 / 0.35), 0 6px 16px rgb(0 0 0 / 0.4);
+    --shadow-e3: 0 4px 8px rgb(0 0 0 / 0.35), 0 16px 40px rgb(0 0 0 / 0.5);
+    --shadow-e4: 0 8px 16px rgb(0 0 0 / 0.4), 0 24px 64px rgb(0 0 0 / 0.6);
 }
+
+[data-tema="escuro"] ::selection {
+    background-color: #7c2d12; /* saibro-900 */
+    color: #ffffff;
+}
+
+[data-tema="escuro"] .tennis-court-bg { opacity: 0.2; }
+[data-tema="escuro"] .tennis-court-animation { opacity: 0.5; }
+[data-tema="escuro"] .animate-shimmer {
+    background-image: linear-gradient(90deg, rgb(255 255 255 / 0) 0%, rgb(255 255 255 / 0.07) 50%, rgb(255 255 255 / 0) 100%);
+}
+
+/* Classes antigas → escuro (gerado de scripts do código; só o que é usado). */
+[data-tema="escuro"] .bg-amber-100 { background-color: #382a0e; }
+[data-tema="escuro"] .bg-amber-100\/70 { background-color: rgb(56 42 14 / 70%); }
+[data-tema="escuro"] .bg-amber-50 { background-color: #291f0b; }
+[data-tema="escuro"] .bg-amber-50\/50 { background-color: rgb(41 31 11 / 50%); }
+[data-tema="escuro"] .bg-amber-50\/60 { background-color: rgb(41 31 11 / 60%); }
+[data-tema="escuro"] .bg-amber-50\/90 { background-color: rgb(41 31 11 / 90%); }
+[data-tema="escuro"] .bg-blue-100 { background-color: #172846; }
+[data-tema="escuro"] .bg-blue-50 { background-color: #121e33; }
+[data-tema="escuro"] .bg-blue-50\/60 { background-color: rgb(18 30 51 / 60%); }
+[data-tema="escuro"] .bg-emerald-100 { background-color: #123226; }
+[data-tema="escuro"] .bg-emerald-200\/70 { background-color: rgb(27 74 56 / 70%); }
+[data-tema="escuro"] .bg-emerald-50 { background-color: #0f241d; }
+[data-tema="escuro"] .bg-emerald-50\/40 { background-color: rgb(15 36 29 / 40%); }
+[data-tema="escuro"] .bg-emerald-50\/50 { background-color: rgb(15 36 29 / 50%); }
+[data-tema="escuro"] .bg-emerald-50\/80 { background-color: rgb(15 36 29 / 80%); }
+[data-tema="escuro"] .bg-emerald-50\/90 { background-color: rgb(15 36 29 / 90%); }
+[data-tema="escuro"] .bg-green-100 { background-color: #143222; }
+[data-tema="escuro"] .bg-green-50 { background-color: #10241a; }
+[data-tema="escuro"] .bg-green-50\/50 { background-color: rgb(16 36 26 / 50%); }
+[data-tema="escuro"] .bg-orange-100 { background-color: #3a2112; }
+[data-tema="escuro"] .bg-orange-200\/80 { background-color: rgb(87 48 26 / 80%); }
+[data-tema="escuro"] .bg-orange-50 { background-color: #2b1a10; }
+[data-tema="escuro"] .bg-orange-50\/50 { background-color: rgb(43 26 16 / 50%); }
+[data-tema="escuro"] .bg-orange-50\/80 { background-color: rgb(43 26 16 / 80%); }
+[data-tema="escuro"] .bg-purple-100 { background-color: #2d2245; }
+[data-tema="escuro"] .bg-purple-50 { background-color: #221a33; }
+[data-tema="escuro"] .bg-red-100 { background-color: #3a1b1b; }
+[data-tema="escuro"] .bg-red-50 { background-color: #2a1515; }
+[data-tema="escuro"] .bg-red-50\/40 { background-color: rgb(42 21 21 / 40%); }
+[data-tema="escuro"] .bg-red-50\/60 { background-color: rgb(42 21 21 / 60%); }
+[data-tema="escuro"] .bg-saibro-100 { background-color: #3a2112; }
+[data-tema="escuro"] .bg-saibro-200 { background-color: #57301a; }
+[data-tema="escuro"] .bg-saibro-50 { background-color: #2b1a10; }
+[data-tema="escuro"] .bg-saibro-50\/50 { background-color: rgb(43 26 16 / 50%); }
+[data-tema="escuro"] .bg-saibro-50\/60 { background-color: rgb(43 26 16 / 60%); }
+[data-tema="escuro"] .bg-saibro-50\/70 { background-color: rgb(43 26 16 / 70%); }
+[data-tema="escuro"] .bg-saibro-50\/80 { background-color: rgb(43 26 16 / 80%); }
+[data-tema="escuro"] .bg-saibro-50\/90 { background-color: rgb(43 26 16 / 90%); }
+[data-tema="escuro"] .bg-sky-100 { background-color: #132c40; }
+[data-tema="escuro"] .bg-sky-50 { background-color: #0f2130; }
+[data-tema="escuro"] .bg-slate-100 { background-color: #292524; }
+[data-tema="escuro"] .bg-slate-200 { background-color: #3a3532; }
+[data-tema="escuro"] .bg-slate-50 { background-color: #0c0a09; }
+[data-tema="escuro"] .bg-stone-100 { background-color: #292524; }
+[data-tema="escuro"] .bg-stone-100\/50 { background-color: rgb(41 37 36 / 50%); }
+[data-tema="escuro"] .bg-stone-100\/60 { background-color: rgb(41 37 36 / 60%); }
+[data-tema="escuro"] .bg-stone-100\/70 { background-color: rgb(41 37 36 / 70%); }
+[data-tema="escuro"] .bg-stone-100\/80 { background-color: rgb(41 37 36 / 80%); }
+[data-tema="escuro"] .bg-stone-100\/90 { background-color: rgb(41 37 36 / 90%); }
+[data-tema="escuro"] .bg-stone-200 { background-color: #3a3532; }
+[data-tema="escuro"] .bg-stone-200\/60 { background-color: rgb(58 53 50 / 60%); }
+[data-tema="escuro"] .bg-stone-200\/70 { background-color: rgb(58 53 50 / 70%); }
+[data-tema="escuro"] .bg-stone-200\/80 { background-color: rgb(58 53 50 / 80%); }
+[data-tema="escuro"] .bg-stone-300 { background-color: #57534e; }
+[data-tema="escuro"] .bg-stone-50 { background-color: #0c0a09; }
+[data-tema="escuro"] .bg-stone-50\/30 { background-color: rgb(12 10 9 / 30%); }
+[data-tema="escuro"] .bg-stone-50\/50 { background-color: rgb(12 10 9 / 50%); }
+[data-tema="escuro"] .bg-stone-50\/60 { background-color: rgb(12 10 9 / 60%); }
+[data-tema="escuro"] .bg-stone-50\/70 { background-color: rgb(12 10 9 / 70%); }
+[data-tema="escuro"] .bg-stone-50\/80 { background-color: rgb(12 10 9 / 80%); }
+[data-tema="escuro"] .bg-stone-50\/95 { background-color: rgb(12 10 9 / 95%); }
+[data-tema="escuro"] .bg-white { background-color: #1c1917; }
+[data-tema="escuro"] .bg-white\/50 { background-color: rgb(28 25 23 / 50%); }
+[data-tema="escuro"] .bg-white\/60 { background-color: rgb(28 25 23 / 60%); }
+[data-tema="escuro"] .bg-white\/65 { background-color: rgb(28 25 23 / 65%); }
+[data-tema="escuro"] .bg-white\/80 { background-color: rgb(28 25 23 / 80%); }
+[data-tema="escuro"] .bg-white\/85 { background-color: rgb(28 25 23 / 85%); }
+[data-tema="escuro"] .bg-white\/90 { background-color: rgb(28 25 23 / 90%); }
+[data-tema="escuro"] .bg-white\/95 { background-color: rgb(28 25 23 / 95%); }
+[data-tema="escuro"] .bg-yellow-100 { background-color: #38310e; }
+[data-tema="escuro"] .bg-yellow-50 { background-color: #29240b; }
+[data-tema="escuro"] .bg-yellow-50\/70 { background-color: rgb(41 36 11 / 70%); }
+[data-tema="escuro"] .border-amber-100 { border-color: #382a0e; }
+[data-tema="escuro"] .border-amber-200 { border-color: #52400f; }
+[data-tema="escuro"] .border-amber-300 { border-color: #6b5312; }
+[data-tema="escuro"] .border-amber-300\/80 { border-color: rgb(107 83 18 / 80%); }
+[data-tema="escuro"] .border-blue-100 { border-color: #172846; }
+[data-tema="escuro"] .border-blue-200 { border-color: #223a63; }
+[data-tema="escuro"] .border-blue-300\/50 { border-color: rgb(42 72 120 / 50%); }
+[data-tema="escuro"] .border-blue-300\/70 { border-color: rgb(42 72 120 / 70%); }
+[data-tema="escuro"] .border-emerald-100 { border-color: #123226; }
+[data-tema="escuro"] .border-emerald-200 { border-color: #1b4a38; }
+[data-tema="escuro"] .border-emerald-300 { border-color: #225c45; }
+[data-tema="escuro"] .border-emerald-300\/80 { border-color: rgb(34 92 69 / 80%); }
+[data-tema="escuro"] .border-green-100 { border-color: #143222; }
+[data-tema="escuro"] .border-green-200 { border-color: #1d4a31; }
+[data-tema="escuro"] .border-green-300 { border-color: #245c3d; }
+[data-tema="escuro"] .border-green-300\/50 { border-color: rgb(36 92 61 / 50%); }
+[data-tema="escuro"] .border-green-300\/70 { border-color: rgb(36 92 61 / 70%); }
+[data-tema="escuro"] .border-orange-100 { border-color: #3a2112; }
+[data-tema="escuro"] .border-orange-200 { border-color: #57301a; }
+[data-tema="escuro"] .border-orange-300 { border-color: #6b3a1d; }
+[data-tema="escuro"] .border-orange-300\/50 { border-color: rgb(107 58 29 / 50%); }
+[data-tema="escuro"] .border-orange-300\/70 { border-color: rgb(107 58 29 / 70%); }
+[data-tema="escuro"] .border-purple-100 { border-color: #2d2245; }
+[data-tema="escuro"] .border-red-100 { border-color: #3a1b1b; }
+[data-tema="escuro"] .border-red-200 { border-color: #572626; }
+[data-tema="escuro"] .border-red-300 { border-color: #6e2e2e; }
+[data-tema="escuro"] .border-saibro-100 { border-color: #3a2112; }
+[data-tema="escuro"] .border-saibro-100\/50 { border-color: rgb(58 33 18 / 50%); }
+[data-tema="escuro"] .border-saibro-200 { border-color: #57301a; }
+[data-tema="escuro"] .border-saibro-200\/60 { border-color: rgb(87 48 26 / 60%); }
+[data-tema="escuro"] .border-saibro-200\/80 { border-color: rgb(87 48 26 / 80%); }
+[data-tema="escuro"] .border-saibro-200\/90 { border-color: rgb(87 48 26 / 90%); }
+[data-tema="escuro"] .border-saibro-300 { border-color: #6b3a1d; }
+[data-tema="escuro"] .border-saibro-50 { border-color: #3a2112; }
+[data-tema="escuro"] .border-sky-200 { border-color: #1c405d; }
+[data-tema="escuro"] .border-slate-100 { border-color: #3a3532; }
+[data-tema="escuro"] .border-slate-200 { border-color: #3a3532; }
+[data-tema="escuro"] .border-stone-100 { border-color: #3a3532; }
+[data-tema="escuro"] .border-stone-100\/50 { border-color: rgb(58 53 50 / 50%); }
+[data-tema="escuro"] .border-stone-100\/80 { border-color: rgb(58 53 50 / 80%); }
+[data-tema="escuro"] .border-stone-200 { border-color: #3a3532; }
+[data-tema="escuro"] .border-stone-200\/50 { border-color: rgb(58 53 50 / 50%); }
+[data-tema="escuro"] .border-stone-200\/60 { border-color: rgb(58 53 50 / 60%); }
+[data-tema="escuro"] .border-stone-200\/80 { border-color: rgb(58 53 50 / 80%); }
+[data-tema="escuro"] .border-stone-200\/90 { border-color: rgb(58 53 50 / 90%); }
+[data-tema="escuro"] .border-stone-300 { border-color: #78716c; }
+[data-tema="escuro"] .border-stone-50 { border-color: #292524; }
+[data-tema="escuro"] .border-white { border-color: #1c1917; }
+[data-tema="escuro"] .border-white\/50 { border-color: rgb(28 25 23 / 50%); }
+[data-tema="escuro"] .border-yellow-100 { border-color: #38310e; }
+[data-tema="escuro"] .border-yellow-200 { border-color: #524810; }
+[data-tema="escuro"] .border-yellow-300 { border-color: #6b5e12; }
+[data-tema="escuro"] .divide-stone-100 > :not(:last-child) { border-color: #3a3532; }
+[data-tema="escuro"] .divide-stone-50 > :not(:last-child) { border-color: #292524; }
+[data-tema="escuro"] .from-blue-50 { --tw-gradient-from: #121e33; }
+[data-tema="escuro"] .from-emerald-50 { --tw-gradient-from: #0f241d; }
+[data-tema="escuro"] .from-emerald-50\/30 { --tw-gradient-from: rgb(15 36 29 / 30%); }
+[data-tema="escuro"] .from-orange-300 { --tw-gradient-from: #6b3a1d; }
+[data-tema="escuro"] .from-orange-50 { --tw-gradient-from: #2b1a10; }
+[data-tema="escuro"] .from-orange-50\/80 { --tw-gradient-from: rgb(43 26 16 / 80%); }
+[data-tema="escuro"] .from-saibro-200 { --tw-gradient-from: #57301a; }
+[data-tema="escuro"] .from-saibro-50 { --tw-gradient-from: #2b1a10; }
+[data-tema="escuro"] .from-saibro-50\/40 { --tw-gradient-from: rgb(43 26 16 / 40%); }
+[data-tema="escuro"] .from-stone-100 { --tw-gradient-from: #292524; }
+[data-tema="escuro"] .from-stone-100\/80 { --tw-gradient-from: rgb(41 37 36 / 80%); }
+[data-tema="escuro"] .from-stone-300 { --tw-gradient-from: #57534e; }
+[data-tema="escuro"] .from-stone-50 { --tw-gradient-from: #0c0a09; }
+[data-tema="escuro"] .from-white { --tw-gradient-from: #1c1917; }
+[data-tema="escuro"] .from-yellow-100 { --tw-gradient-from: #38310e; }
+[data-tema="escuro"] .from-yellow-50 { --tw-gradient-from: #29240b; }
+[data-tema="escuro"] .from-yellow-50\/80 { --tw-gradient-from: rgb(41 36 11 / 80%); }
+[data-tema="escuro"] .ring-amber-100 { --tw-ring-color: #382a0e; }
+[data-tema="escuro"] .ring-amber-200\/70 { --tw-ring-color: rgb(82 64 15 / 70%); }
+[data-tema="escuro"] .ring-red-100 { --tw-ring-color: #3a1b1b; }
+[data-tema="escuro"] .ring-saibro-100 { --tw-ring-color: #3a2112; }
+[data-tema="escuro"] .ring-saibro-200 { --tw-ring-color: #57301a; }
+[data-tema="escuro"] .ring-saibro-300 { --tw-ring-color: #6b3a1d; }
+[data-tema="escuro"] .text-amber-600 { color: #fbbf24; }
+[data-tema="escuro"] .text-amber-700 { color: #fcd34d; }
+[data-tema="escuro"] .text-amber-800 { color: #fcd34d; }
+[data-tema="escuro"] .text-amber-900 { color: #fcd34d; }
+[data-tema="escuro"] .text-blue-600 { color: #60a5fa; }
+[data-tema="escuro"] .text-blue-700 { color: #93c5fd; }
+[data-tema="escuro"] .text-blue-800 { color: #93c5fd; }
+[data-tema="escuro"] .text-blue-900 { color: #93c5fd; }
+[data-tema="escuro"] .text-emerald-600 { color: #34d399; }
+[data-tema="escuro"] .text-emerald-700 { color: #6ee7b7; }
+[data-tema="escuro"] .text-emerald-800 { color: #6ee7b7; }
+[data-tema="escuro"] .text-emerald-900 { color: #6ee7b7; }
+[data-tema="escuro"] .text-emerald-900\/60 { color: rgb(110 231 183 / 60%); }
+[data-tema="escuro"] .text-green-600 { color: #4ade80; }
+[data-tema="escuro"] .text-green-700 { color: #86efac; }
+[data-tema="escuro"] .text-green-800 { color: #86efac; }
+[data-tema="escuro"] .text-orange-600 { color: #fb923c; }
+[data-tema="escuro"] .text-orange-700 { color: #fdba74; }
+[data-tema="escuro"] .text-orange-800 { color: #fdba74; }
+[data-tema="escuro"] .text-orange-900 { color: #fdba74; }
+[data-tema="escuro"] .text-purple-600 { color: #c084fc; }
+[data-tema="escuro"] .text-purple-700 { color: #d8b4fe; }
+[data-tema="escuro"] .text-purple-800 { color: #d8b4fe; }
+[data-tema="escuro"] .text-red-600 { color: #f87171; }
+[data-tema="escuro"] .text-red-700 { color: #fca5a5; }
+[data-tema="escuro"] .text-red-800 { color: #fca5a5; }
+[data-tema="escuro"] .text-red-900 { color: #fca5a5; }
+[data-tema="escuro"] .text-saibro-600 { color: #fb923c; }
+[data-tema="escuro"] .text-saibro-700 { color: #fdba74; }
+[data-tema="escuro"] .text-saibro-800 { color: #fdba74; }
+[data-tema="escuro"] .text-saibro-900 { color: #fdba74; }
+[data-tema="escuro"] .text-sky-600 { color: #38bdf8; }
+[data-tema="escuro"] .text-sky-700 { color: #7dd3fc; }
+[data-tema="escuro"] .text-sky-800 { color: #7dd3fc; }
+[data-tema="escuro"] .text-sky-900 { color: #7dd3fc; }
+[data-tema="escuro"] .text-slate-500 { color: #a8a29e; }
+[data-tema="escuro"] .text-slate-600 { color: #d6d3d1; }
+[data-tema="escuro"] .text-slate-700 { color: #d6d3d1; }
+[data-tema="escuro"] .text-slate-800 { color: #f5f5f4; }
+[data-tema="escuro"] .text-slate-900 { color: #f5f5f4; }
+[data-tema="escuro"] .text-stone-500 { color: #a8a29e; }
+[data-tema="escuro"] .text-stone-600 { color: #d6d3d1; }
+[data-tema="escuro"] .text-stone-700 { color: #d6d3d1; }
+[data-tema="escuro"] .text-stone-800 { color: #f5f5f4; }
+[data-tema="escuro"] .text-stone-900 { color: #f5f5f4; }
+[data-tema="escuro"] .text-yellow-600 { color: #facc15; }
+[data-tema="escuro"] .text-yellow-700 { color: #fde047; }
+[data-tema="escuro"] .text-yellow-800 { color: #fde047; }
+[data-tema="escuro"] .text-yellow-900 { color: #fde047; }
+[data-tema="escuro"] .to-amber-200 { --tw-gradient-to: #52400f; }
+[data-tema="escuro"] .to-amber-50\/50 { --tw-gradient-to: rgb(41 31 11 / 50%); }
+[data-tema="escuro"] .to-blue-100 { --tw-gradient-to: #172846; }
+[data-tema="escuro"] .to-green-50 { --tw-gradient-to: #10241a; }
+[data-tema="escuro"] .to-green-50\/20 { --tw-gradient-to: rgb(16 36 26 / 20%); }
+[data-tema="escuro"] .to-orange-50 { --tw-gradient-to: #2b1a10; }
+[data-tema="escuro"] .to-orange-50\/20 { --tw-gradient-to: rgb(43 26 16 / 20%); }
+[data-tema="escuro"] .to-orange-50\/30 { --tw-gradient-to: rgb(43 26 16 / 30%); }
+[data-tema="escuro"] .to-saibro-300 { --tw-gradient-to: #6b3a1d; }
+[data-tema="escuro"] .to-stone-100 { --tw-gradient-to: #292524; }
+[data-tema="escuro"] .to-stone-200 { --tw-gradient-to: #3a3532; }
+[data-tema="escuro"] .to-stone-50\/50 { --tw-gradient-to: rgb(12 10 9 / 50%); }
+[data-tema="escuro"] .to-white { --tw-gradient-to: #1c1917; }
+[data-tema="escuro"] .to-yellow-50 { --tw-gradient-to: #29240b; }
+[data-tema="escuro"] .via-stone-200 { --tw-gradient-via: #3a3532; }
+[data-tema="escuro"] .via-white\/60 { --tw-gradient-via: rgb(28 25 23 / 60%); }
+[data-tema="escuro"] .active\:bg-stone-100:active { background-color: #292524; }
+[data-tema="escuro"] .active\:bg-stone-200:active { background-color: #3a3532; }
+[data-tema="escuro"] .hover\:bg-amber-100:hover { background-color: #382a0e; }
+[data-tema="escuro"] .hover\:bg-amber-50:hover { background-color: #291f0b; }
+[data-tema="escuro"] .hover\:bg-blue-100:hover { background-color: #172846; }
+[data-tema="escuro"] .hover\:bg-emerald-100:hover { background-color: #123226; }
+[data-tema="escuro"] .hover\:bg-emerald-50:hover { background-color: #0f241d; }
+[data-tema="escuro"] .hover\:bg-green-50:hover { background-color: #10241a; }
+[data-tema="escuro"] .hover\:bg-orange-50:hover { background-color: #2b1a10; }
+[data-tema="escuro"] .hover\:bg-red-100:hover { background-color: #3a1b1b; }
+[data-tema="escuro"] .hover\:bg-red-50:hover { background-color: #2a1515; }
+[data-tema="escuro"] .hover\:bg-saibro-100:hover { background-color: #3a2112; }
+[data-tema="escuro"] .hover\:bg-saibro-200:hover { background-color: #57301a; }
+[data-tema="escuro"] .hover\:bg-saibro-50:hover { background-color: #2b1a10; }
+[data-tema="escuro"] .hover\:bg-saibro-50\/50:hover { background-color: rgb(43 26 16 / 50%); }
+[data-tema="escuro"] .hover\:bg-slate-100:hover { background-color: #292524; }
+[data-tema="escuro"] .hover\:bg-slate-50:hover { background-color: #0c0a09; }
+[data-tema="escuro"] .hover\:bg-stone-100:hover { background-color: #292524; }
+[data-tema="escuro"] .hover\:bg-stone-200:hover { background-color: #3a3532; }
+[data-tema="escuro"] .hover\:bg-stone-200\/50:hover { background-color: rgb(58 53 50 / 50%); }
+[data-tema="escuro"] .hover\:bg-stone-300:hover { background-color: #57534e; }
+[data-tema="escuro"] .hover\:bg-stone-50:hover { background-color: #0c0a09; }
+[data-tema="escuro"] .hover\:bg-white:hover { background-color: #1c1917; }
+[data-tema="escuro"] .hover\:bg-white\/50:hover { background-color: rgb(28 25 23 / 50%); }
+[data-tema="escuro"] .hover\:border-red-100:hover { border-color: #3a1b1b; }
+[data-tema="escuro"] .hover\:border-saibro-100:hover { border-color: #3a2112; }
+[data-tema="escuro"] .hover\:border-saibro-200:hover { border-color: #57301a; }
+[data-tema="escuro"] .hover\:border-saibro-300:hover { border-color: #6b3a1d; }
+[data-tema="escuro"] .hover\:border-stone-200:hover { border-color: #3a3532; }
+[data-tema="escuro"] .hover\:border-stone-300:hover { border-color: #78716c; }
+[data-tema="escuro"] .hover\:from-emerald-50\/50:hover { --tw-gradient-from: rgb(15 36 29 / 50%); }
+[data-tema="escuro"] .hover\:text-blue-700:hover { color: #93c5fd; }
+[data-tema="escuro"] .hover\:text-red-600:hover { color: #f87171; }
+[data-tema="escuro"] .hover\:text-red-700:hover { color: #fca5a5; }
+[data-tema="escuro"] .hover\:text-saibro-600:hover { color: #fb923c; }
+[data-tema="escuro"] .hover\:text-saibro-700:hover { color: #fdba74; }
+[data-tema="escuro"] .hover\:text-saibro-900:hover { color: #fdba74; }
+[data-tema="escuro"] .hover\:text-stone-500:hover { color: #a8a29e; }
+[data-tema="escuro"] .hover\:text-stone-600:hover { color: #d6d3d1; }
+[data-tema="escuro"] .hover\:text-stone-700:hover { color: #d6d3d1; }
+[data-tema="escuro"] .hover\:text-stone-800:hover { color: #f5f5f4; }
+[data-tema="escuro"] .hover\:text-stone-900:hover { color: #f5f5f4; }
+[data-tema="escuro"] .hover\:text-stone-950:hover { color: #f5f5f4; }
+[data-tema="escuro"] .hover\:to-green-50\/30:hover { --tw-gradient-to: rgb(16 36 26 / 30%); }
 
 /* ===== REDUÇÃO DE MOVIMENTO (Acessibilidade) ===== */
 

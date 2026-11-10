@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
     Bell, BellOff, Download, Smartphone, RefreshCw, Trash2, Share, PlusSquare,
-    Loader2, CheckCircle2, AlertTriangle, Sparkles, MonitorSmartphone, Zap,
+    Loader2, CheckCircle2, AlertTriangle, Sparkles, MonitorSmartphone, Zap, SunMoon,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { User } from '../types';
@@ -13,6 +13,8 @@ import { sendPushNotification } from '../lib/notificationService';
 import {
     AppPreferences, applyPreferences, isWakeLockSupported, loadPreferences, savePreferences,
 } from '../lib/appPreferences';
+import { lerTema, salvarTema, type Tema } from '../lib/tema';
+import { Segmented } from './ui';
 
 interface AppSettingsProps {
     currentUser: User;
@@ -72,6 +74,7 @@ const ActionButton: React.FC<{ onClick: () => void; busy?: boolean; disabled?: b
 
 export const AppSettings: React.FC<AppSettingsProps> = ({ currentUser }) => {
     const [prefs, setPrefs] = useState<AppPreferences>(() => loadPreferences());
+    const [tema, setTema] = useState<Tema>(() => lerTema());
     const [installed] = useState(() => isInstalledPWA());
     const [ios] = useState(() => isIOS());
     const [permission, setPermission] = useState<NotificationPermission>(() => getPermissionStatus());
@@ -242,6 +245,15 @@ export const AppSettings: React.FC<AppSettingsProps> = ({ currentUser }) => {
                         </div>
                     </>
                 )}
+            </Section>
+
+            <Section icon={<SunMoon size={18} />} title="Aparência" hint="Vale só para este aparelho.">
+                <Segmented<Tema>
+                    label="Tema do app"
+                    value={tema}
+                    onChange={(v) => { setTema(v); salvarTema(v); }}
+                    options={[{ value: 'claro', label: 'Claro' }, { value: 'escuro', label: 'Escuro' }, { value: 'auto', label: 'Do aparelho' }]}
+                />
             </Section>
 
             <Section icon={<Sparkles size={18} />} title="Comportamento" hint="Valem só para este aparelho.">

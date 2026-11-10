@@ -21,7 +21,7 @@ const variantes: Record<ButtonVariant, string> = {
     primaria: 'bg-acao text-acao-texto shadow-e1 hover:bg-acao-forte active:bg-acao-forte',
     secundaria: 'border border-linha bg-superficie text-texto shadow-e1 hover:bg-superficie-2 active:bg-superficie-2',
     fantasma: 'text-texto-2 hover:bg-superficie-2 active:bg-superficie-2',
-    destrutiva: 'bg-erro text-white shadow-e1 hover:bg-red-800 active:bg-red-800',
+    destrutiva: 'bg-erro text-acao-texto shadow-e1 hover:bg-erro-forte active:bg-erro-forte',
 };
 
 const tamanhos: Record<ButtonSize, string> = {

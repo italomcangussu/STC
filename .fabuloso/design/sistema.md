@@ -21,9 +21,26 @@ Chão liso stone-50, superfícies brancas com borda de 1 px e sombra de contato,
 | Ação | `bg-acao` / `text-acao` | #c2410c | branco 5,18:1 |
 | Ação forte (hover, pressionado) | `bg-acao-forte` | #9a3412 | |
 | Ação suave (seleção, "agora") | `bg-acao-suave` | #fff7ed | |
+| Texto sobre cor sólida (ação, erro) | `text-acao-texto` | #ffffff | |
+| Erro forte (hover do destrutivo) | `bg-erro-forte` | #991b1b | |
 | Sucesso / aviso / erro / info | `*-sucesso`, `*-aviso`, `*-erro`, `*-info` (+ `-suave`) | green-700, #b45309, red-700, noite-600 | ≥ 5:1 |
 
 `text-stone-400` e `text-stone-300` sobre claro ficam abaixo de 4,5:1: são trocados por `text-texto-3` (Fase 2).
+
+## Tema escuro
+
+`<html data-tema="escuro">`, escolhido em Configurações → Aparência (Claro, Escuro, Do aparelho; padrão Claro). `lib/tema.ts` aplica antes do React montar e troca o `theme-color` para #0c0a09.
+
+| Papel | Escuro | Contraste |
+|---|---|---|
+| Chão · Superfície · Superfície 2 | #0c0a09 · #1c1917 · #292524 | |
+| Linha · Borda de campo | #3a3532 · #78716c | 3,6:1 |
+| Texto · 2 · 3 | #f5f5f4 · #d6d3d1 · #a8a29e | 16 · 11 · 6,9:1 |
+| Ação (texto escuro por cima) | #f97316 | 6,2:1 |
+| Ação forte · suave | #fdba74 · #2b1a10 | |
+| Sucesso · aviso · erro · info | #4ade80 · #fbbf24 · #f87171 · #7fb0dc | ≥ 6:1 |
+
+Telas no cardápio trocam sozinhas. As classes antigas (`bg-white`, `stone-*`, tons `-50…-300`, textos `-600…-900`, gradientes e variantes `/alfa`) são mapeadas no fim do `index.css` por um bloco gerado das classes em uso. Seções já escuras (`bg-stone-800/900`, `text-white`, botões `saibro-600`) e branco translúcido abaixo de 50% ficam como estão. Tela nova: use os papéis, e o escuro vem de graça.
 
 ## Escalas
 
@@ -47,7 +64,7 @@ Proibidos: `animate-bounce`, texto em gradiente (`bg-clip-text`), brilho colorid
 
 ## Navegador
 
-Viewport sem bloqueio de zoom; campo com 16 px no toque; `accent-color`, `caret-color`, `::selection` e `:focus-visible` em saibro; `theme-color` #fafaf9; ícone maskable no manifest.
+Viewport sem bloqueio de zoom; campo com 16 px no toque; `accent-color`, `caret-color`, `::selection` e `:focus-visible` em saibro; `theme-color` #fafaf9 (escuro #0c0a09); ícone maskable no manifest.
 
 ---
 
