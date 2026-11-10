@@ -95,6 +95,85 @@
     --color-orange-800: #9a3412;
     --color-orange-900: #7c2d12;
     --color-orange-950: #431407;
+
+    /* =====================================================================
+       CARDÁPIO v2 · sistema "Quadra" (.fabuloso/design/sistema.md)
+       Tudo em HEX (html2canvas não lê oklch). As telas escolhem daqui.
+       ===================================================================== */
+
+    /* Papéis de cor. O escuro redefine estes mesmos nomes em [data-tema=escuro]. */
+    --color-chao: #fafaf9;            /* stone-50: fundo das telas */
+    --color-superficie: #ffffff;      /* card, folha, barra */
+    --color-superficie-2: #f5f5f4;    /* stone-100: campo, trilho, linha alternada */
+    --color-linha: #e7e5e4;           /* stone-200: divisória e borda de card */
+    --color-linha-forte: #a8a29e;     /* stone-400: borda de campo (3:1 no branco) */
+    --color-texto: #1c1917;           /* stone-900 */
+    --color-texto-2: #57534e;         /* stone-600 · 7,6:1 */
+    --color-texto-3: #78716c;         /* stone-500 · 4,8:1 · o mínimo para texto */
+    --color-acao: #c2410c;            /* saibro-700 · branco 5,18:1 */
+    --color-acao-forte: #9a3412;      /* saibro-800: hover e pressionado */
+    --color-acao-suave: #fff7ed;      /* saibro-50: seleção, "agora" */
+    --color-acao-texto: #ffffff;
+    --color-sucesso: #15803d;         /* green-700 · 5,0:1 */
+    --color-sucesso-suave: #f0fdf4;
+    --color-aviso: #b45309;           /* âmbar 700 · 5,0:1 */
+    --color-aviso-suave: #fffbeb;
+    --color-erro: #b91c1c;            /* red-700 · 6,5:1 */
+    --color-erro-suave: #fef2f2;
+    --color-info: #3d6a93;            /* noite-600 · 5,6:1 no branco */
+    --color-info-suave: #f1f5f9;
+
+    /* Texto (razão 1,2). `meta` substitui os 8–11 px soltos. */
+    --text-meta: 0.75rem;
+    --text-meta--line-height: 1rem;
+    --text-meta--font-weight: 600;
+
+    /* Peso: o Inter carregado vai de 400 a 800. `font-black` era 900 sintético
+       (borrado e mais largo) em 554 lugares; agora é o 800 real. */
+    --font-weight-black: 800;
+
+    /* Raio: uma personalidade, quatro degraus. Os nomes do Tailwind apontam
+       para eles, para as telas antigas já caírem na escala. */
+    --radius-controle: 8px;
+    --radius-card: 14px;
+    --radius-folha: 24px;
+    --radius-md: 8px;
+    --radius-lg: 8px;
+    --radius-xl: 14px;
+    --radius-2xl: 14px;
+    --radius-3xl: 24px;
+    --radius-4xl: 24px;
+
+    /* Sombra: luz de cima, preto transparente, duas camadas (contato + elevação). */
+    --shadow-e1: 0 1px 2px rgb(28 25 23 / 0.06), 0 1px 3px rgb(28 25 23 / 0.04);
+    --shadow-e2: 0 2px 4px rgb(28 25 23 / 0.06), 0 6px 16px rgb(28 25 23 / 0.08);
+    --shadow-e3: 0 4px 8px rgb(28 25 23 / 0.06), 0 16px 40px rgb(28 25 23 / 0.14);
+    --shadow-e4: 0 8px 16px rgb(28 25 23 / 0.08), 0 24px 64px rgb(28 25 23 / 0.22);
+    --shadow-xs: var(--shadow-e1);
+    --shadow-sm: var(--shadow-e1);
+    --shadow-md: var(--shadow-e2);
+    --shadow-lg: var(--shadow-e2);
+    --shadow-xl: var(--shadow-e3);
+    --shadow-2xl: var(--shadow-e4);
+
+    /* Movimento: saída exponencial (componentes) e a curva da folha (iOS). */
+    --ease-saida: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-folha: cubic-bezier(0.32, 0.72, 0, 1);
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --default-transition-duration: 200ms;
+    --default-transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Durações e camadas (fora do @theme: não geram classe, são lidas pelo CSS). */
+:root {
+    --dur-toque: 120ms;
+    --dur-estado: 200ms;
+    --dur-entrada: 280ms;
+    --dur-contexto: 400ms;
+    --z-barra: 40;
+    --z-folha: 50;
+    --z-dialogo: 60;
+    --z-toast: 70;
 }
 
 @layer base {
@@ -130,9 +209,44 @@
         top: 0;
         right: 0;
         left: 0;
-        background-color: #fff7ed;
-        color: #431407;
+        background-color: var(--color-chao);
+        color: var(--color-texto);
         width: 100%;
+        font-feature-settings: "cv11", "ss01";
+        -webkit-font-smoothing: antialiased;
+    }
+
+    /* Superfícies do navegador: o app inteiro fala a mesma cor. */
+    :root {
+        color-scheme: light;
+        accent-color: var(--color-acao);
+        caret-color: var(--color-acao);
+    }
+
+    ::selection {
+        background-color: #fed7aa; /* saibro-200 */
+        color: var(--color-texto);
+    }
+
+    /* Foco visível só para teclado; o toque não ganha anel. */
+    :focus-visible {
+        outline: 2px solid var(--color-acao);
+        outline-offset: 2px;
+    }
+
+    /* Número que muda não pula de largura. */
+    .tabular-nums,
+    time {
+        font-variant-numeric: tabular-nums;
+    }
+
+    /* Campo abaixo de 16 px faz o iOS dar zoom ao focar. No toque, nunca. */
+    @media (pointer: coarse) {
+        input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+        select,
+        textarea {
+            font-size: max(16px, 1em) !important;
+        }
     }
 }
 
@@ -157,37 +271,28 @@
         justify-content: center;
     }
 
-    /* Tennis Court Background */
+    /* Chão das telas. Era a foto da quadra com vidro por cima: o texto
+       perdia contraste no sol. Agora é chão liso; a quadra fica na marca. */
     .bg-clay-pattern {
-        background-color: #c45c2c;
-        background-image:
-            linear-gradient(rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.2)),
-            url('/tennis-bg.jpg');
-        background-size: cover;
-        background-position: center bottom;
-        background-attachment: fixed;
+        background-color: var(--color-chao);
     }
 
-    /* iOS 26 Liquid Glass - Frosted Glass Effect */
+    /* Card: superfície lisa, borda fina e a sombra de contato (e1). */
     .card-court {
-        background: rgba(255, 255, 255, 0.82);
-        backdrop-filter: blur(25px) saturate(200%);
-        -webkit-backdrop-filter: blur(25px) saturate(200%);
-        border: 1px solid rgba(255, 255, 255, 0.6);
-        border-radius: 24px;
-        box-shadow:
-            0 12px 35px rgba(0, 0, 0, 0.07),
-            inset 0 1px 0 rgba(255, 255, 255, 0.95);
-        transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1), box-shadow 160ms ease-out;
+        background: var(--color-superficie);
+        border: 1px solid var(--color-linha);
+        border-radius: var(--radius-card);
+        box-shadow: var(--shadow-e1);
+        transition: transform var(--dur-toque) var(--ease-saida), box-shadow var(--dur-estado) var(--ease-saida);
     }
 
     .card-court:active {
         transform: scale(0.97);
     }
 
-    /* Tactile Micro-Interactions (Emil Kowalski Framework) */
+    /* Resposta ao toque: afunda 3% em 120 ms e volta. */
     .btn-tactile {
-        transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1), box-shadow 160ms ease-out, background-color 160ms ease-out;
+        transition: transform var(--dur-toque) var(--ease-saida), box-shadow var(--dur-estado) var(--ease-saida), background-color var(--dur-estado) var(--ease-saida);
     }
 
     .btn-tactile:active {
@@ -250,8 +355,8 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        font-size: 9px;
-        font-weight: 900;
+        font-size: 0.75rem;
+        font-weight: 800;
         box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
         flex-shrink: 0;
     }
@@ -265,8 +370,8 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        font-size: 9px;
-        font-weight: 900;
+        font-size: 0.75rem;
+        font-weight: 800;
         box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
         flex-shrink: 0;
     }
@@ -335,14 +440,12 @@
     }
 
     .card-kpi {
-        background: rgba(255, 255, 255, 0.88);
-        backdrop-filter: blur(20px) saturate(180%);
-        -webkit-backdrop-filter: blur(20px) saturate(180%);
-        border-radius: 1.25rem;
+        background: var(--color-superficie);
+        border-radius: var(--radius-card);
         padding: 1.25rem;
-        border: 1.5px solid rgba(255, 255, 255, 0.8);
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.95);
-        transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1), box-shadow 160ms ease-out;
+        border: 1px solid var(--color-linha);
+        box-shadow: var(--shadow-e1);
+        transition: transform var(--dur-toque) var(--ease-saida), box-shadow var(--dur-estado) var(--ease-saida);
     }
     .card-kpi:active {
         transform: scale(0.98);
@@ -414,7 +517,7 @@
     }
 
     .min-h-safe {
-        min-height: calc(var(--app-viewport-height, 100vh) - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+        min-height: calc(var(--app-viewport-height, 100dvh) - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
     }
 
     .pb-navbottom {

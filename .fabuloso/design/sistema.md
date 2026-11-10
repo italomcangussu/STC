@@ -1,3 +1,45 @@
+# Sistema visual · "Quadra" (app inteiro)
+
+Plano: `plano-evolucao.md`. Tokens: `index.css` @theme (bloco "CARDÁPIO v2"). Tudo em HEX (html2canvas não lê oklch).
+
+## Frase de identidade
+
+Chão liso stone-50, superfícies brancas com borda de 1 px e sombra de contato, Inter de 400 a 800, saibro só para ação ou "agora", raio 8 / 14 / 24, alvo de 44 px e nenhum texto abaixo de 12 px. Nada de foto nem vidro atrás de texto.
+
+## Papéis de cor (use o papel, não o tom)
+
+| Papel | Classe | Valor | Contraste no branco |
+|---|---|---|---|
+| Chão | `bg-chao` | #fafaf9 | |
+| Superfície | `bg-superficie` | #ffffff | |
+| Superfície 2 (campo, trilho) | `bg-superficie-2` | #f5f5f4 | |
+| Linha | `border-linha` | #e7e5e4 | |
+| Borda de campo | `border-linha-forte` | #a8a29e | 3:1 |
+| Texto | `text-texto` | #1c1917 | 17:1 |
+| Texto 2 | `text-texto-2` | #57534e | 7,6:1 |
+| Texto 3 (o mínimo) | `text-texto-3` | #78716c | 4,8:1 |
+| Ação | `bg-acao` / `text-acao` | #c2410c | branco 5,18:1 |
+| Ação forte (hover, pressionado) | `bg-acao-forte` | #9a3412 | |
+| Ação suave (seleção, "agora") | `bg-acao-suave` | #fff7ed | |
+| Sucesso / aviso / erro / info | `*-sucesso`, `*-aviso`, `*-erro`, `*-info` (+ `-suave`) | green-700, #b45309, red-700, noite-600 | ≥ 5:1 |
+
+`text-stone-400` e `text-stone-300` sobre claro ficam abaixo de 4,5:1: são trocados por `text-texto-3` (Fase 2).
+
+## Escalas
+
+- **Texto:** `text-meta` 12/16 600 é o menor. 11, 10, 9 e 8 px não existem.
+- **Peso:** `font-black` agora é 800 real (Inter carrega 400–800).
+- **Raio:** `rounded-lg` 8 (controle), `rounded-xl`/`rounded-2xl` 14 (card), `rounded-3xl` 24 (folha). Aliases `rounded-controle`, `rounded-card`, `rounded-folha`.
+- **Sombra:** `shadow-e1` contato · `e2` card erguido/menu · `e3` folha · `e4` diálogo. `shadow-sm…2xl` apontam para eles.
+- **Movimento:** `--dur-toque` 120 · `--dur-estado` 200 · `--dur-entrada` 280 · `--dur-contexto` 400 ms; `ease-saida` (componentes) e `ease-folha` (folhas).
+- **Camadas:** `--z-barra` 40 · `--z-folha` 50 · `--z-dialogo` 60 · `--z-toast` 70.
+
+## Navegador
+
+Viewport sem bloqueio de zoom; campo com 16 px no toque; `accent-color`, `caret-color`, `::selection` e `:focus-visible` em saibro; `theme-color` #fafaf9; ícone maskable no manifest.
+
+---
+
 # Sistema visual · Chave dos campeonatos
 
 Canvas de referência: https://claude.ai/artifact/LUGMUkB1tUdgN4mfmY55JD (privado do dono).
