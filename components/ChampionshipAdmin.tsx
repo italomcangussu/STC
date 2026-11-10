@@ -727,7 +727,7 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
     return (
         <div className={`space-y-6 ${embedded ? '' : 'p-4 pb-24'}`}>
             <div className="bg-white rounded-3xl border border-stone-100 p-5 shadow-sm space-y-4">
-                <div className="flex items-center gap-2 text-stone-800 font-black">
+                <div className="flex items-center gap-2 text-stone-800 font-extrabold">
                     <Trophy size={18} className="text-saibro-600" />
                     Escolha o campeonato
                 </div>
@@ -765,7 +765,7 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
             ) : (
                 <>
                     <div className="bg-linear-to-br from-saibro-600 to-saibro-500 p-6 rounded-3xl text-white shadow-lg">
-                        <h2 className="text-2xl font-black">{selectedChampionship.name}</h2>
+                        <h2 className="text-2xl font-extrabold">{selectedChampionship.name}</h2>
                         <p className="text-saibro-100 text-sm mt-1">
                             Status: {CHAMPIONSHIP_STATUS_LABEL[selectedChampionship.status] ?? selectedChampionship.status} • Formato: {selectedChampionship.format}
                         </p>
@@ -847,7 +847,7 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
                             </div>
 
                             <div className="bg-white rounded-2xl border border-stone-100 p-5">
-                                <h2 className="text-lg font-black text-stone-800 mb-4">Nova inscrição</h2>
+                                <h2 className="text-lg font-extrabold text-stone-800 mb-4">Nova inscrição</h2>
                                 <form onSubmit={handleAddRegistration} className="space-y-4">
                                     <div className="flex gap-2">
                                         <button
@@ -917,7 +917,7 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
                             </div>
 
                             <div className="bg-white rounded-2xl border border-stone-100 overflow-hidden">
-                                <div className="px-4 py-3 border-b border-stone-100 font-black text-stone-700">
+                                <div className="px-4 py-3 border-b border-stone-100 font-extrabold text-stone-700">
                                     Inscritos ({registrations.length})
                                 </div>
                                 <div className="divide-y divide-stone-100">
@@ -1001,7 +1001,7 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
                                 return (
                                     <div key={round.id} className="bg-white rounded-2xl border border-stone-100 p-4 space-y-3">
                                         <div className="flex items-center justify-between gap-2">
-                                            <h3 className="font-black text-stone-800 flex items-center gap-2 min-w-0">
+                                            <h3 className="font-extrabold text-stone-800 flex items-center gap-2 min-w-0">
                                                 <input
                                                     type="checkbox"
                                                     checked={selectedRoundIds.includes(round.id)}
@@ -1011,7 +1011,7 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
                                                 />
                                                 <span className="truncate">{round.name}</span>
                                                 {round.class && (
-                                                    <span className="shrink-0 px-2 py-0.5 rounded-full bg-saibro-50 text-saibro-700 text-xs font-black uppercase tracking-wide">
+                                                    <span className="shrink-0 px-2 py-0.5 rounded-full bg-saibro-50 text-saibro-700 text-xs font-extrabold uppercase tracking-wide">
                                                         {round.class}
                                                     </span>
                                                 )}
@@ -1062,7 +1062,7 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
 
                                         {conflicts.length > 0 && (
                                             <div className="p-3 rounded-xl bg-amber-50 border border-amber-200">
-                                                <p className="text-xs font-black text-amber-800 uppercase mb-2">
+                                                <p className="text-xs font-extrabold text-amber-800 uppercase mb-2">
                                                     Conflitos de agendamento ({conflicts.length})
                                                 </p>
                                                 <div className="space-y-1 text-xs text-amber-900">
@@ -1085,13 +1085,13 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
                         <PhasePointsEditor />
                     ) : activeTab === 'audit' ? (
                         <div className="bg-white rounded-2xl border border-stone-100 overflow-hidden">
-                            <div className="px-4 py-3 border-b border-stone-100 font-black text-stone-700">Auditoria</div>
+                            <div className="px-4 py-3 border-b border-stone-100 font-extrabold text-stone-700">Auditoria</div>
                             <div className="divide-y divide-stone-100">
                                 {auditLogs.length === 0 ? (
                                     <div className="px-4 py-8 text-sm text-stone-500 text-center">Sem eventos de auditoria.</div>
                                 ) : auditLogs.map(log => (
                                     <div key={log.id} className="px-4 py-3 space-y-1">
-                                        <div className="text-sm font-black text-stone-800">{log.action}</div>
+                                        <div className="text-sm font-extrabold text-stone-800">{log.action}</div>
                                         <div className="text-xs text-stone-500">
                                             {new Date(log.created_at).toLocaleString('pt-BR')} • {Array.isArray(log.actor) ? log.actor[0]?.name : log.actor?.name || 'admin'} • {log.entity_type}
                                         </div>
@@ -1130,7 +1130,7 @@ export const ChampionshipAdmin: React.FC<Props> = ({ currentUser }) => {
 const TabButton: React.FC<{ active: boolean; label: string; onClick: () => void }> = ({ active, label, onClick }) => (
     <button
         onClick={onClick}
-        className={`px-4 py-2 rounded-2xl text-xs font-black uppercase tracking-wide whitespace-nowrap transition-all ${
+        className={`px-4 py-2 rounded-2xl text-xs font-extrabold uppercase tracking-wide whitespace-nowrap transition-all ${
             active ? 'bg-saibro-600 text-white shadow-sm' : 'text-stone-500 hover:bg-stone-50'
         }`}
     >

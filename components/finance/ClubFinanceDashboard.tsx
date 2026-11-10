@@ -11,11 +11,11 @@ import { Card, Empty, ErrorBlock, Spinner } from './ui';
 const FixedExpenseItem: React.FC<{ row: FixedExpenseRow }> = ({ row }) => (
   <li className="flex items-start justify-between gap-3 py-3">
     <div className="min-w-0">
-      <p className="truncate text-sm font-black text-stone-800">{row.description}</p>
+      <p className="truncate text-sm font-extrabold text-stone-800">{row.description}</p>
       <p className="text-xs text-stone-500">{FREQUENCY_LABEL[row.frequency]} · vence dia {row.due_day} · {row.category_name}</p>
       <p className="text-xs text-stone-400">{row.supplier ? `${row.supplier} · ` : ''}desde {monthLabel(row.start_month)}{row.end_month ? ` até ${monthLabel(row.end_month)}` : ''}</p>
     </div>
-    <p className="shrink-0 text-sm font-black tabular-nums text-stone-800">{formatBRL(row.amount_cents)}</p>
+    <p className="shrink-0 text-sm font-extrabold tabular-nums text-stone-800">{formatBRL(row.amount_cents)}</p>
   </li>
 );
 

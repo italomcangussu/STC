@@ -18,7 +18,7 @@ const RotatePrompt: React.FC = () => (
       <RotateCcw size={40} className="text-saibro-400" />
     </div>
     <div className="text-center">
-      <h3 className="text-white font-black text-xl mb-2">Gire o Celular</h3>
+      <h3 className="text-white font-extrabold text-xl mb-2">Gire o Celular</h3>
       <p className="text-stone-400 text-sm max-w-[250px]">
         Para uma melhor experiência, coloque o celular na horizontal (paisagem)
       </p>
@@ -62,23 +62,23 @@ export const TenisProPlayer: React.FC = () => {
         <div className="w-full max-w-sm mx-auto flex flex-col items-center gap-6">
           {/* Logo */}
           <div className="relative">
-            <div className="w-24 h-24 rounded-full bg-linear-to-br from-saibro-500 to-saibro-700 flex items-center justify-center shadow-2xl shadow-saibro-500/30">
+            <div className="w-24 h-24 rounded-full bg-linear-to-br from-saibro-500 to-saibro-700 flex items-center justify-center shadow-2xl ">
               <Trophy size={48} className="text-white" />
             </div>
-            <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-[10px] font-black shadow-lg">
+            <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-meta font-extrabold shadow-lg">
               3D
             </div>
           </div>
 
           <div className="text-center">
-            <h1 className="text-3xl font-black text-white tracking-tight">TenisProPlayer</h1>
+            <h1 className="text-3xl font-extrabold text-white tracking-tight">TenisProPlayer</h1>
             <p className="text-stone-400 text-sm mt-1">Jogo de Tênis 3D do Clube</p>
           </div>
 
           {/* Play button */}
           <button
             onClick={() => setGameState('difficulty')}
-            className="w-full py-5 bg-linear-to-r from-saibro-500 to-saibro-600 hover:from-saibro-600 hover:to-saibro-700 text-white rounded-2xl font-black text-lg uppercase tracking-wider shadow-xl shadow-saibro-500/30 active:scale-95 transition-all flex items-center justify-center gap-3"
+            className="w-full py-5 bg-linear-to-r from-saibro-500 to-saibro-600 hover:from-saibro-600 hover:to-saibro-700 text-white rounded-2xl font-extrabold text-lg uppercase tracking-wider shadow-xl active:scale-95 transition-all flex items-center justify-center gap-3"
           >
             <Gamepad2 size={24} />
             JOGAR vs IA
@@ -103,9 +103,9 @@ export const TenisProPlayer: React.FC = () => {
                 <p>👉 <span className="text-stone-300">Lado esquerdo</span> - Joystick para mover</p>
                 <p>👉 <span className="text-stone-300">Lado direito</span> - Botões de golpe</p>
                 <div className="flex gap-3 mt-2">
-                  <span className="px-2 py-0.5 bg-green-500/20 border border-green-500/30 rounded text-green-400 text-[10px] font-bold">HIT</span>
-                  <span className="px-2 py-0.5 bg-blue-500/20 border border-blue-500/30 rounded text-blue-400 text-[10px] font-bold">LOB</span>
-                  <span className="px-2 py-0.5 bg-orange-500/20 border border-orange-500/30 rounded text-orange-400 text-[10px] font-bold">SLICE</span>
+                  <span className="px-2 py-0.5 bg-green-500/20 border border-green-500/30 rounded text-green-400 text-meta font-bold">HIT</span>
+                  <span className="px-2 py-0.5 bg-blue-500/20 border border-blue-500/30 rounded text-blue-400 text-meta font-bold">LOB</span>
+                  <span className="px-2 py-0.5 bg-orange-500/20 border border-orange-500/30 rounded text-orange-400 text-meta font-bold">SLICE</span>
                 </div>
               </div>
             ) : (
@@ -144,7 +144,7 @@ export const TenisProPlayer: React.FC = () => {
             Voltar
           </button>
 
-          <h2 className="text-2xl font-black text-white">Dificuldade</h2>
+          <h2 className="text-2xl font-extrabold text-white">Dificuldade</h2>
 
           <div className="w-full space-y-3">
             {(Object.entries(DIFFICULTY_CONFIG) as [Difficulty, typeof DIFFICULTY_CONFIG['easy']][]).map(([key, config]) => (

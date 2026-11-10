@@ -65,9 +65,9 @@ const CashFlowTab: React.FC = () => {
       <Card title="Período e filtros">
         <PeriodBar value={period} onChange={setPeriod} today={today} />
         <div className="mt-3 grid grid-cols-2 gap-3">
-          <div><p className="mb-1 text-[11px] font-black uppercase tracking-wider text-stone-400">Agrupar por</p>
+          <div><p className="mb-1 text-meta font-extrabold uppercase tracking-wider text-stone-400">Agrupar por</p>
             <SectionTabs label="Agrupar por" value={gran} onChange={(v) => setGran(v as Gran)} items={(['day', 'week', 'month'] as Gran[]).map((g) => ({ id: g, label: GRAN_LABEL[g] }))} /></div>
-          <label className="block"><span className="mb-1 block text-[11px] font-black uppercase tracking-wider text-stone-400">Conta</span>
+          <label className="block"><span className="mb-1 block text-meta font-extrabold uppercase tracking-wider text-stone-400">Conta</span>
             <select className={inputCls} value={account} onChange={(e) => setAccount(e.target.value)} aria-label="Conta"><option value="">Todas as contas</option>{accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</select></label>
         </div>
       </Card>
@@ -79,7 +79,7 @@ const CashFlowTab: React.FC = () => {
             <StatCard indicator="balance" value={formatBRL(totals.closing)} sub={`saldo final · inicial ${formatBRL(totals.opening)}`} tone={totals.closing < 0 ? 'bad' : 'neutral'} />
             <StatCard indicator="cash_in" value={formatBRL(totals.inflow)} sub={`${brDate(period.from)} a ${brDate(period.to)}`} tone="good" />
             <StatCard indicator="cash_out" value={formatBRL(totals.outflow)} sub="saídas do período" />
-            <div className="rounded-3xl border border-stone-100 bg-white p-4 shadow-sm"><p className="text-[11px] font-black uppercase tracking-wider text-stone-400">Variação</p><p className="text-2xl font-black tabular-nums"><Money cents={totals.inflow - totals.outflow} signed /></p><p className="text-xs text-stone-500">entradas − saídas</p></div>
+            <div className="rounded-3xl border border-stone-100 bg-white p-4 shadow-sm"><p className="text-meta font-extrabold uppercase tracking-wider text-stone-400">Variação</p><p className="text-2xl font-extrabold tabular-nums"><Money cents={totals.inflow - totals.outflow} signed /></p><p className="text-xs text-stone-500">entradas − saídas</p></div>
           </div>
 
           <Card title="Entradas, saídas e saldo" subtitle={`Por ${GRAN_LABEL[gran].toLowerCase()}`}>
@@ -117,7 +117,7 @@ const CashFlowTab: React.FC = () => {
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0"><p className="truncate text-sm font-bold text-stone-800">{m.description}</p><p className="text-xs text-stone-500">{brDate(m.occurred_on)} · {m.account_name}{m.category_name ? ` · ${m.category_name}` : ''}{m.is_transfer ? ' · transferência' : ''}</p></div>
                         <div className="flex shrink-0 flex-col items-end gap-1">
-                          <Money cents={m.amount_cents} className="text-sm font-black" signed />
+                          <Money cents={m.amount_cents} className="text-sm font-extrabold" signed />
                           <button type="button"
                             className="inline-flex min-h-11 items-center gap-1 rounded-lg px-2 text-xs font-bold text-saibro-700 hover:bg-saibro-50"
                             aria-label={`Corrigir ou excluir movimento: ${m.description}, ${brDate(m.occurred_on)}`}
@@ -143,7 +143,7 @@ const CashFlowTab: React.FC = () => {
               <ul className="space-y-2">
                 {(removed.data ?? []).map(d => <li key={d.source_type + '-' + d.source_id} className="rounded-xl border border-stone-100 bg-stone-50 p-3">
                   <p className="text-xs font-bold text-stone-700">{d.reason}</p>
-                  <p className="mt-1 text-[11px] text-stone-500">{d.actor_name} · {new Date(d.removed_at).toLocaleString('pt-BR')} · {d.source_type}</p>
+                  <p className="mt-1 text-meta text-stone-500">{d.actor_name} · {new Date(d.removed_at).toLocaleString('pt-BR')} · {d.source_type}</p>
                 </li>)}
               </ul>}
           </Card>}

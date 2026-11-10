@@ -64,7 +64,7 @@ export const KnockoutFromGroups: React.FC<Props> = ({
 
     return (
         <div className="bg-white rounded-2xl border border-stone-100 p-5 space-y-3">
-            <h2 className="font-black text-stone-800 flex items-center gap-2">
+            <h2 className="font-extrabold text-stone-800 flex items-center gap-2">
                 <Trophy size={18} className="text-saibro-600" /> Mata-mata a partir dos grupos — {classe}
             </h2>
 
@@ -102,7 +102,7 @@ export const KnockoutFromGroups: React.FC<Props> = ({
                     )}
 
                     <div>
-                        <p className="text-xs font-black text-stone-400 uppercase tracking-widest mb-2">
+                        <p className="text-xs font-extrabold text-stone-400 uppercase tracking-widest mb-2">
                             {preview.qualified.length} classificados
                         </p>
                         <ul className="space-y-2">

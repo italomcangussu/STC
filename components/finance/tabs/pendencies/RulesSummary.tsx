@@ -5,7 +5,7 @@ import { feeText, reminderDaysText } from '../../../../lib/finance/pendencies';
 import { Badge, Card, Spinner, btnGhost } from '../../ui';
 
 const Item: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
-  <div className="rounded-2xl bg-stone-50 p-3"><dt className="text-[10px] font-black uppercase tracking-wide text-stone-400">{label}</dt><dd className="mt-0.5 text-sm font-bold text-stone-700">{children}</dd></div>
+  <div className="rounded-2xl bg-stone-50 p-3"><dt className="text-meta font-extrabold uppercase tracking-wide text-stone-400">{label}</dt><dd className="mt-0.5 text-sm font-bold text-stone-700">{children}</dd></div>
 );
 
 const FeeItems: React.FC<{ settings: FinSettings }> = ({ settings: s }) => {

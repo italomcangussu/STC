@@ -146,17 +146,17 @@ export const PublicChampionshipPage: React.FC<Props> = ({ slug, championshipId }
         <div className="h-screen overflow-y-auto">
         <div className="min-h-screen bg-stone-50 pb-20 font-sans selection:bg-saibro-100">
             {/* Header */}
-            <div className="bg-stone-900 text-white pt-10 pb-16 px-6 relative overflow-hidden rounded-b-[3.5rem] shadow-2xl">
+            <div className="bg-stone-900 text-white pt-10 pb-16 px-6 relative overflow-hidden rounded-b-3xl shadow-2xl">
                 <div className="absolute top-0 left-0 w-full h-full bg-linear-to-b from-saibro-600/30 to-transparent" />
                 <div className="absolute -right-20 -top-20 w-64 h-64 bg-saibro-500/10 rounded-full blur-3xl" />
 
                 <div className="relative z-10 text-center space-y-4">
-                    <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-saibro-600 shadow-2xl shadow-saibro-900/40 transform -rotate-3 transition-transform hover:rotate-0">
+                    <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-saibro-600 shadow-2xl transform -rotate-3 transition-transform hover:rotate-0">
                         <Trophy size={40} className="text-white drop-shadow-md" />
                     </div>
                     <div>
-                        <h1 className="text-3xl font-black tracking-tight leading-none">{championship.name}</h1>
-                        <p className="text-saibro-200 text-xs font-black uppercase tracking-[0.2em] mt-2 opacity-80">Ranking Oficial SCT</p>
+                        <h1 className="text-3xl font-extrabold tracking-tight leading-none">{championship.name}</h1>
+                        <p className="text-saibro-200 text-xs font-extrabold uppercase tracking-[0.2em] mt-2 opacity-80">Ranking Oficial SCT</p>
                     </div>
                 </div>
             </div>
@@ -168,26 +168,26 @@ export const PublicChampionshipPage: React.FC<Props> = ({ slug, championshipId }
                     {!isResenhaOpen && temClassificacao && (
                         <button
                             onClick={() => setActiveTab('standings')}
-                            className={`flex-1 py-3.5 rounded-2xl text-xs font-black tracking-widest transition-all duration-500 ${activeTab === 'standings' ? 'bg-white text-stone-900 shadow-lg' : 'bg-white/25 text-stone-800 hover:bg-white/50 hover:text-stone-950'}`}
+                            className={`flex-1 py-3.5 rounded-2xl text-xs font-extrabold tracking-widest transition-all duration-500 ${activeTab === 'standings' ? 'bg-white text-stone-900 shadow-lg' : 'bg-white/25 text-stone-800 hover:bg-white/50 hover:text-stone-950'}`}
                         >
                             CLASSIFICAÇÃO
                         </button>
                     )}
                     <button
                         onClick={() => setActiveTab('bracket')}
-                        className={`flex-1 py-3.5 rounded-2xl text-xs font-black tracking-widest transition-all duration-500 ${activeTab === 'bracket' ? 'bg-white text-stone-900 shadow-lg' : 'bg-white/25 text-stone-800 hover:bg-white/50 hover:text-stone-950'}`}
+                        className={`flex-1 py-3.5 rounded-2xl text-xs font-extrabold tracking-widest transition-all duration-500 ${activeTab === 'bracket' ? 'bg-white text-stone-900 shadow-lg' : 'bg-white/25 text-stone-800 hover:bg-white/50 hover:text-stone-950'}`}
                     >
                         CHAVEAMENTO
                     </button>
                     <button
                         onClick={() => setActiveTab('stats')}
-                        className={`flex-1 py-3.5 rounded-2xl text-xs font-black tracking-widest transition-all duration-500 ${activeTab === 'stats' ? 'bg-white text-stone-900 shadow-lg' : 'bg-white/25 text-stone-800 hover:bg-white/50 hover:text-stone-950'}`}
+                        className={`flex-1 py-3.5 rounded-2xl text-xs font-extrabold tracking-widest transition-all duration-500 ${activeTab === 'stats' ? 'bg-white text-stone-900 shadow-lg' : 'bg-white/25 text-stone-800 hover:bg-white/50 hover:text-stone-950'}`}
                     >
                         STATS
                     </button>
                     <button
                         onClick={() => setActiveTab('odds')}
-                        className={`flex-1 py-3.5 rounded-2xl text-xs font-black tracking-widest transition-all duration-500 ${activeTab === 'odds' ? 'bg-white text-stone-900 shadow-lg' : 'bg-white/25 text-stone-800 hover:bg-white/50 hover:text-stone-950'}`}
+                        className={`flex-1 py-3.5 rounded-2xl text-xs font-extrabold tracking-widest transition-all duration-500 ${activeTab === 'odds' ? 'bg-white text-stone-900 shadow-lg' : 'bg-white/25 text-stone-800 hover:bg-white/50 hover:text-stone-950'}`}
                     >
                         ODDS
                     </button>
@@ -223,11 +223,11 @@ export const PublicChampionshipPage: React.FC<Props> = ({ slug, championshipId }
                         })}
 
                         {groups.length === 0 && (
-                            <div className="py-20 text-center space-y-4 bg-white rounded-[3rem] border border-dashed border-stone-200 shadow-inner">
+                            <div className="py-20 text-center space-y-4 bg-white rounded-3xl border border-dashed border-stone-200 shadow-inner">
                                 <div className="w-16 h-16 bg-stone-50 rounded-full flex items-center justify-center mx-auto text-stone-200">
                                     <ListOrdered size={32} />
                                 </div>
-                                <p className="text-stone-400 font-black text-xs uppercase tracking-[0.2em]">Sem grupos cadastrados</p>
+                                <p className="text-stone-400 font-extrabold text-xs uppercase tracking-[0.2em]">Sem grupos cadastrados</p>
                             </div>
                         )}
                     </div>
@@ -252,7 +252,7 @@ export const PublicChampionshipPage: React.FC<Props> = ({ slug, championshipId }
                                             <button
                                                 key={category}
                                                 onClick={() => setSelectedCategory(category)}
-                                                className={`flex-1 min-w-25 py-3 px-4 rounded-2xl text-xs font-black tracking-wider transition-all ${
+                                                className={`flex-1 min-w-25 py-3 px-4 rounded-2xl text-xs font-extrabold tracking-wider transition-all ${
                                                     selectedCategory === category
                                                         ? 'bg-saibro-600 text-white shadow-md'
                                                         : 'text-stone-400 hover:text-stone-600'

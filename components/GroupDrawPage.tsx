@@ -744,11 +744,11 @@ export const GroupDrawPage: React.FC<Props> = ({ currentUser: _currentUser, cham
                     </button>
 
                     <div className="flex items-center gap-4">
-                        <div className="w-16 h-16 rounded-2xl bg-linear-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/30">
+                        <div className="w-16 h-16 rounded-2xl bg-linear-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg ">
                             <Dices className="text-white" size={32} />
                         </div>
                         <div>
-                            <h1 className="text-2xl font-black text-white tracking-tight">
+                            <h1 className="text-2xl font-extrabold text-white tracking-tight">
                                 Sorteador de Grupos
                             </h1>
                             <p className="text-amber-200/70 text-sm mt-1 flex items-center gap-2">
@@ -801,13 +801,13 @@ export const GroupDrawPage: React.FC<Props> = ({ currentUser: _currentUser, cham
                             ))}
                         </div>
 
-                        <div className="relative bg-linear-to-br from-stone-800 to-stone-900 rounded-3xl p-8 border border-amber-500/30 shadow-2xl shadow-amber-500/20">
+                        <div className="relative bg-linear-to-br from-stone-800 to-stone-900 rounded-3xl p-8 border border-amber-500/30 shadow-2xl ">
                             <div className="text-center">
                                 <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-linear-to-br from-amber-400 to-orange-500 mb-6 animate-bounce">
                                     <Shuffle className="text-white" size={40} />
                                 </div>
 
-                                <h3 className="text-xl font-black text-white mb-2">
+                                <h3 className="text-xl font-extrabold text-white mb-2">
                                     Sorteando {animatingCategory}
                                 </h3>
                                 <p className="text-amber-200/60 text-sm mb-6">
@@ -856,7 +856,7 @@ export const GroupDrawPage: React.FC<Props> = ({ currentUser: _currentUser, cham
                                             <ListChecks className="text-white" size={28} />
                                         </div>
                                         <div>
-                                            <h2 className="text-xl font-black text-white">Definir Grupos</h2>
+                                            <h2 className="text-xl font-extrabold text-white">Definir Grupos</h2>
                                             <p className="text-violet-200/60 text-sm">{manualDefineCategory}</p>
                                         </div>
                                     </div>
@@ -882,7 +882,7 @@ export const GroupDrawPage: React.FC<Props> = ({ currentUser: _currentUser, cham
                                     {/* Group A */}
                                     <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl overflow-hidden">
                                         <div className="bg-amber-500/20 px-4 py-3 border-b border-amber-500/20">
-                                            <h4 className="font-black text-amber-400 flex items-center gap-2">
+                                            <h4 className="font-extrabold text-amber-400 flex items-center gap-2">
                                                 <Crown size={16} />
                                                 Grupo A ({manualGroupA.length})
                                             </h4>
@@ -918,7 +918,7 @@ export const GroupDrawPage: React.FC<Props> = ({ currentUser: _currentUser, cham
                                     {/* Group B */}
                                     <div className="bg-orange-500/10 border border-orange-500/20 rounded-2xl overflow-hidden">
                                         <div className="bg-orange-500/20 px-4 py-3 border-b border-orange-500/20">
-                                            <h4 className="font-black text-orange-400 flex items-center gap-2">
+                                            <h4 className="font-extrabold text-orange-400 flex items-center gap-2">
                                                 <Crown size={16} />
                                                 Grupo B ({manualGroupB.length})
                                             </h4>
@@ -1004,7 +1004,7 @@ export const GroupDrawPage: React.FC<Props> = ({ currentUser: _currentUser, cham
                                             manualGroupA.some(m => m.id === r.id) || manualGroupB.some(m => m.id === r.id)
                                         );
                                     })()}
-                                    className="w-full py-4 bg-linear-to-r from-violet-500 to-purple-500 text-white font-black rounded-xl shadow-lg shadow-violet-500/30 hover:shadow-violet-500/50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                    className="w-full py-4 bg-linear-to-r from-violet-500 to-purple-500 text-white font-extrabold rounded-xl shadow-lg shadow-violet-500/30 hover:shadow-violet-500/50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 transition-all hover:scale-[1.02] active:scale-[0.98]"
                                 >
                                     <Check size={20} />
                                     Confirmar Grupos
@@ -1028,9 +1028,9 @@ export const GroupDrawPage: React.FC<Props> = ({ currentUser: _currentUser, cham
                         <div
                             key={cls}
                             className={`bg-linear-to-br from-stone-800/80 to-stone-900/80 rounded-3xl border overflow-hidden backdrop-blur-sm transition-all ${categoryDraw?.isSaved
-                                ? 'border-green-500/30 shadow-lg shadow-green-500/10'
+                                ? 'border-green-500/30 shadow-lg  '
                                 : categoryDraw?.isDrawn
-                                    ? 'border-amber-500/30 shadow-lg shadow-amber-500/10'
+                                    ? 'border-amber-500/30 shadow-lg  '
                                     : 'border-white/10'
                                 }`}
                         >
@@ -1051,7 +1051,7 @@ export const GroupDrawPage: React.FC<Props> = ({ currentUser: _currentUser, cham
                                         )}
                                     </div>
                                     <div>
-                                        <h3 className="font-black text-white">{cls}</h3>
+                                        <h3 className="font-extrabold text-white">{cls}</h3>
                                         <p className="text-xs text-white/50">
                                             {classRegs.length} inscritos
                                         </p>
@@ -1130,7 +1130,7 @@ export const GroupDrawPage: React.FC<Props> = ({ currentUser: _currentUser, cham
                                         <button
                                             onClick={() => handleDraw(cls)}
                                             disabled={!categoryDraw?.groupA.seed || !categoryDraw?.groupB.seed}
-                                            className="w-full py-4 bg-linear-to-r from-amber-500 to-orange-500 text-white font-black rounded-xl shadow-lg shadow-amber-500/30 hover:shadow-amber-500/50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                            className="w-full py-4 bg-linear-to-r from-amber-500 to-orange-500 text-white font-extrabold rounded-xl shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 transition-all hover:scale-[1.02] active:scale-[0.98]"
                                         >
                                             <Shuffle size={20} />
                                             Sortear Grupos
@@ -1141,7 +1141,7 @@ export const GroupDrawPage: React.FC<Props> = ({ currentUser: _currentUser, cham
                                         <button
                                             onClick={() => handleStartManualDefine(cls)}
                                             disabled={!categoryDraw?.groupA.seed || !categoryDraw?.groupB.seed}
-                                            className="w-full py-4 bg-linear-to-r from-violet-500 to-purple-500 text-white font-black rounded-xl shadow-lg shadow-violet-500/30 hover:shadow-violet-500/50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                            className="w-full py-4 bg-linear-to-r from-violet-500 to-purple-500 text-white font-extrabold rounded-xl shadow-lg shadow-violet-500/30 hover:shadow-violet-500/50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 transition-all hover:scale-[1.02] active:scale-[0.98]"
                                         >
                                             <ListChecks size={20} />
                                             Definir Grupo
@@ -1157,7 +1157,7 @@ export const GroupDrawPage: React.FC<Props> = ({ currentUser: _currentUser, cham
                                             {/* Group A */}
                                             <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl overflow-hidden">
                                                 <div className="bg-amber-500/20 px-3 py-2 border-b border-amber-500/20">
-                                                    <h4 className="font-black text-amber-400 text-sm">Grupo A</h4>
+                                                    <h4 className="font-extrabold text-amber-400 text-sm">Grupo A</h4>
                                                 </div>
                                                 <div className="p-3 space-y-2">
                                                     {categoryDraw.groupA.members.map((member, idx) => (
@@ -1186,7 +1186,7 @@ export const GroupDrawPage: React.FC<Props> = ({ currentUser: _currentUser, cham
                                             {/* Group B */}
                                             <div className="bg-orange-500/10 border border-orange-500/20 rounded-2xl overflow-hidden">
                                                 <div className="bg-orange-500/20 px-3 py-2 border-b border-orange-500/20">
-                                                    <h4 className="font-black text-orange-400 text-sm">Grupo B</h4>
+                                                    <h4 className="font-extrabold text-orange-400 text-sm">Grupo B</h4>
                                                 </div>
                                                 <div className="p-3 space-y-2">
                                                     {categoryDraw.groupB.members.map((member, idx) => (
@@ -1218,7 +1218,7 @@ export const GroupDrawPage: React.FC<Props> = ({ currentUser: _currentUser, cham
                                             <button
                                                 onClick={() => handleSaveGroups(cls)}
                                                 disabled={saving === cls}
-                                                className="w-full py-4 bg-linear-to-r from-green-500 to-emerald-500 text-white font-black rounded-xl shadow-lg shadow-green-500/30 hover:shadow-green-500/50 disabled:opacity-50 flex items-center justify-center gap-3 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                                className="w-full py-4 bg-linear-to-r from-green-500 to-emerald-500 text-white font-extrabold rounded-xl shadow-lg disabled:opacity-50 flex items-center justify-center gap-3 transition-all hover:scale-[1.02] active:scale-[0.98]"
                                             >
                                                 {saving === cls ? (
                                                     <Loader2 className="animate-spin" size={20} />
@@ -1237,7 +1237,7 @@ export const GroupDrawPage: React.FC<Props> = ({ currentUser: _currentUser, cham
                                                     <button
                                                         onClick={() => handleExportPDF(cls)}
                                                         disabled={exporting === `${cls}-pdf`}
-                                                        className="flex-1 py-3 bg-linear-to-r from-red-500 to-rose-500 text-white font-bold rounded-xl shadow-lg shadow-red-500/20 hover:shadow-red-500/40 disabled:opacity-50 flex items-center justify-center gap-2 transition-all hover:scale-[1.01] active:scale-[0.99]"
+                                                        className="flex-1 py-3 bg-linear-to-r from-red-500 to-rose-500 text-white font-bold rounded-xl shadow-lg disabled:opacity-50 flex items-center justify-center gap-2 transition-all hover:scale-[1.01] active:scale-[0.99]"
                                                     >
                                                         {exporting === `${cls}-pdf` ? (
                                                             <Loader2 className="animate-spin" size={16} />
@@ -1249,7 +1249,7 @@ export const GroupDrawPage: React.FC<Props> = ({ currentUser: _currentUser, cham
                                                     <button
                                                         onClick={() => handleExportPNG(cls)}
                                                         disabled={exporting === `${cls}-png`}
-                                                        className="flex-1 py-3 bg-linear-to-r from-blue-500 to-cyan-500 text-white font-bold rounded-xl shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 disabled:opacity-50 flex items-center justify-center gap-2 transition-all hover:scale-[1.01] active:scale-[0.99]"
+                                                        className="flex-1 py-3 bg-linear-to-r from-blue-500 to-cyan-500 text-white font-bold rounded-xl shadow-lg disabled:opacity-50 flex items-center justify-center gap-2 transition-all hover:scale-[1.01] active:scale-[0.99]"
                                                     >
                                                         {exporting === `${cls}-png` ? (
                                                             <Loader2 className="animate-spin" size={16} />
@@ -1309,7 +1309,7 @@ export const GroupDrawPage: React.FC<Props> = ({ currentUser: _currentUser, cham
                     <div className="flex items-center justify-center gap-4 p-4 bg-linear-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30 rounded-2xl backdrop-blur-sm">
                         <PartyPopper className="text-green-400" size={32} />
                         <div>
-                            <h3 className="text-white font-black">Todos os grupos sorteados!</h3>
+                            <h3 className="text-white font-extrabold">Todos os grupos sorteados!</h3>
                             <p className="text-green-200/70 text-sm">O campeonato está pronto para começar.</p>
                         </div>
                     </div>

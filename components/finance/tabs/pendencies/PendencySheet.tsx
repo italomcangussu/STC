@@ -20,7 +20,7 @@ const Amounts: React.FC<{ row: PendencyRow }> = ({ row: c }) => (
     <Line label="Valor original" value={formatBRL(c.original_amount_cents)} valueClass="font-bold" />
     <Line label="Já pago" value={formatBRL(c.principal_paid_cents)} />
     <Line label="Encargos" value={formatBRL(c.fees_due_cents)} />
-    <div className="flex justify-between border-t border-stone-200 pt-1.5 text-base font-black"><dt>Saldo</dt><dd>{formatBRL(c.total_due_cents)}</dd></div>
+    <div className="flex justify-between border-t border-stone-200 pt-1.5 text-base font-extrabold"><dt>Saldo</dt><dd>{formatBRL(c.total_due_cents)}</dd></div>
   </dl>
 );
 

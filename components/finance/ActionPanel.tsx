@@ -7,7 +7,7 @@ export type PanelTone = keyof typeof BORDER;
 /** Quadro de uma ação em andamento dentro de uma folha (pagar, cancelar…): a borda diz a gravidade, o título diz a ação. */
 export const ActionPanel: React.FC<{ tone?: PanelTone; title?: React.ReactNode; className?: string; children: React.ReactNode }> = ({ tone = 'saibro', title, className = '', children }) => (
   <div className={`space-y-3 rounded-2xl border ${BORDER[tone]} p-3 ${className}`}>
-    {title && <p className={`text-sm font-black ${tone === 'red' ? 'text-red-700' : ''}`}>{title}</p>}
+    {title && <p className={`text-sm font-extrabold ${tone === 'red' ? 'text-red-700' : ''}`}>{title}</p>}
     {children}
   </div>
 );

@@ -457,7 +457,7 @@ export const Klanches: React.FC<KlanchesProps> = ({ currentUser }) => {
                 >
                     <Users size={16} /> Devedores
                     {debtors.length > 0 && (
-                        <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">{debtors.length}</span>
+                        <span className="bg-red-500 text-white text-meta px-1.5 py-0.5 rounded-full">{debtors.length}</span>
                     )}
                 </button>
                 <button
@@ -680,7 +680,7 @@ export const Klanches: React.FC<KlanchesProps> = ({ currentUser }) => {
                                                     <Clock size={16} className="text-saibro-500" />
                                                     <span className="font-bold text-stone-700">{res.startTime} - {res.endTime}</span>
                                                 </div>
-                                                <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-white border border-stone-200 text-stone-500">
+                                                <span className="text-meta font-bold uppercase px-2 py-0.5 rounded-full bg-white border border-stone-200 text-stone-500">
                                                     {res.type}
                                                 </span>
                                             </div>
@@ -701,15 +701,15 @@ export const Klanches: React.FC<KlanchesProps> = ({ currentUser }) => {
                                                     ))}
                                                     {res.guestName && (
                                                         <div className="flex items-center gap-2 bg-saibro-50 border border-saibro-100 pl-2 pr-3 py-1 rounded-full shadow-sm">
-                                                            <div className="w-5 h-5 rounded-full bg-saibro-200 flex items-center justify-center text-[8px] font-bold text-saibro-700">G</div>
+                                                            <div className="w-5 h-5 rounded-full bg-saibro-200 flex items-center justify-center text-meta font-bold text-saibro-700">G</div>
                                                             <span className="text-xs font-bold text-saibro-700">{res.guestName}</span>
-                                                            <span className="text-[9px] text-saibro-400">(Convidado)</span>
+                                                            <span className="text-meta text-saibro-400">(Convidado)</span>
                                                         </div>
                                                     )}
                                                 </div>
 
                                                 {res.guestName && res.guestResponsibleId && (
-                                                    <p className="text-[10px] text-stone-400 italic">
+                                                    <p className="text-meta text-stone-400 italic">
                                                         Responsável: {profiles.find(p => p.id === res.guestResponsibleId)?.name || 'N/A'}
                                                     </p>
                                                 )}
@@ -795,7 +795,7 @@ export const Klanches: React.FC<KlanchesProps> = ({ currentUser }) => {
                                             />
                                         </label>
                                     </div>
-                                    <p className="text-[10px] text-stone-400">Formatos: JPG, PNG, WEBP. Salvo em 'klancheimages'.</p>
+                                    <p className="text-meta text-stone-400">Formatos: JPG, PNG, WEBP. Salvo em 'klancheimages'.</p>
                                 </div>
                             </div>
 

@@ -312,7 +312,7 @@ export const ResenhaOpenTournamentBoard: React.FC<Props> = ({ bracket, champions
             // o tamanho que tiver, que é o ponto de exportar.
             ? 'w-max p-6 bg-(--chave-fundo)'
             : 'w-auto -mx-4 px-0 py-3 sm:w-full sm:max-w-7xl sm:mx-auto sm:px-[max(0.75rem,env(safe-area-inset-left))]'}`}>
-            <section className="relative rounded-none border-x-0 sm:rounded-[1.75rem] sm:border-x bg-(--chave-fundo) text-(--chave-texto) shadow-2xl shadow-slate-950/30 overflow-hidden border border-(--chave-borda)">
+            <section className="relative rounded-none border-x-0 sm:rounded-3xl sm:border-x bg-(--chave-fundo) text-(--chave-texto) shadow-2xl shadow-slate-950/30 overflow-hidden border border-(--chave-borda)">
                 {exporting ? (
                     // Na imagem não há página em volta: o título é o único
                     // lugar que diz de que campeonato e classe ela é.
@@ -672,7 +672,7 @@ const BracketMatchCard: React.FC<{
             aria-label={accessibleName}
             aria-pressed={selected}
             onClick={onSelect}
-            className={`bracket-card-in absolute overflow-visible rounded-[14px] text-left outline-none transition-[transform,box-shadow] duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] focus-visible:ring-4 focus-visible:ring-saibro-300 ${
+            className={`bracket-card-in absolute overflow-visible rounded-2xl text-left outline-none transition-[transform,box-shadow] duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] focus-visible:ring-4 focus-visible:ring-saibro-300 ${
                 selected ? 'scale-[1.03] ring-4 ring-saibro-300' : mySide ? 'ring-2 ring-saibro-500' : ''
             }`}
             style={{ left: x, top: y, width, height, animationDelay: `${enterDelayMs}ms` }}
@@ -680,7 +680,7 @@ const BracketMatchCard: React.FC<{
             {/* O pulso mora na casca interna, e não no botão: os dois animam a
                 mesma propriedade, e no mesmo elemento um apagaria o outro. */}
             <div
-                className={`h-full overflow-hidden rounded-[14px] border border-(--chave-card-borda) bg-white text-stone-900 shadow-lg shadow-black/20 ${landingSlot ? 'bracket-slot-pulse' : ''}`}
+                className={`h-full overflow-hidden rounded-2xl border border-(--chave-card-borda) bg-white text-stone-900 shadow-lg shadow-black/20 ${landingSlot ? 'bracket-slot-pulse' : ''}`}
             >
                 <div className="flex h-8 items-center justify-between gap-2 border-b border-stone-100 bg-(--chave-card-topo) px-3">
                     {/* Quando o jogo tem data, ela ocupa o lugar do nome da

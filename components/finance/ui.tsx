@@ -15,7 +15,7 @@ import { downloadBlob } from './hooks';
 import { financeErrorInfo, notifyFinanceError } from '../../lib/finance/errors';
 
 export const inputCls = 'w-full min-w-0 max-w-full min-h-11 rounded-xl border border-stone-200 bg-white px-3 py-2 text-sm text-stone-800 outline-hidden focus:border-saibro-400 focus:ring-2 focus:ring-saibro-100 disabled:bg-stone-50 disabled:text-stone-400';
-export const btnPrimary = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-saibro-600 px-4 py-2 text-sm font-black text-white shadow-sm shadow-saibro-200 transition active:scale-95 hover:bg-saibro-700 disabled:opacity-50 disabled:active:scale-100';
+export const btnPrimary = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-saibro-600 px-4 py-2 text-sm font-extrabold text-white shadow-sm   transition active:scale-95 hover:bg-saibro-700 disabled:opacity-50 disabled:active:scale-100';
 export const btnGhost = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-stone-200 bg-white px-4 py-2 text-sm font-bold text-stone-600 transition active:scale-95 hover:bg-stone-50 disabled:opacity-50';
 export const btnDanger = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm font-bold text-red-700 transition active:scale-95 hover:bg-red-100 disabled:opacity-50';
 
@@ -31,7 +31,7 @@ export const Card: React.FC<{ title?: React.ReactNode; subtitle?: React.ReactNod
       // lançamentos" + "Nova") esmagavam o título até sumir atrás delas.
       <header className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
         <div className="min-w-0 sm:flex-1">
-          {title && <h3 className="text-base font-black text-stone-800">{title}</h3>}
+          {title && <h3 className="text-base font-extrabold text-stone-800">{title}</h3>}
           {subtitle && <p className="text-xs font-medium text-stone-500">{subtitle}</p>}
         </div>
         {right && <div className="flex flex-wrap items-center gap-2 sm:shrink-0 sm:justify-end">{right}</div>}
@@ -48,7 +48,7 @@ const toneCls: Record<Tone, string> = {
 };
 
 export const Badge: React.FC<{ tone?: Tone; children: React.ReactNode }> = ({ tone = 'neutral', children }) => (
-  <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-black uppercase tracking-wide ${toneCls[tone]}`}>{children}</span>
+  <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-meta font-extrabold uppercase tracking-wide ${toneCls[tone]}`}>{children}</span>
 );
 
 const statusTone: Record<ChargeDisplayStatus, Tone> = {
@@ -87,7 +87,7 @@ export const Notice: React.FC<{ tone?: 'info' | 'warn' | 'bad'; title?: string; 
   const cls = tone === 'bad' ? 'border-red-200 bg-red-50 text-red-800' : tone === 'warn' ? 'border-amber-200 bg-amber-50 text-amber-900' : 'border-sky-200 bg-sky-50 text-sky-900';
   return (
     <div className={`rounded-2xl border p-3 text-xs ${cls}`} role={tone === 'info' ? 'note' : 'alert'}>
-      {title && <p className="mb-0.5 text-sm font-black">{title}</p>}
+      {title && <p className="mb-0.5 text-sm font-extrabold">{title}</p>}
       <div className="leading-relaxed">{children}</div>
     </div>
   );
@@ -95,9 +95,9 @@ export const Notice: React.FC<{ tone?: 'info' | 'warn' | 'bad'; title?: string; 
 
 export const Field: React.FC<{ label: string; hint?: string; children: React.ReactNode; className?: string }> = ({ label, hint, children, className = '' }) => (
   <label className={`block min-w-0 space-y-1 ${className}`}>
-    <span className="text-[11px] font-black uppercase tracking-wider text-stone-400">{label}</span>
+    <span className="text-meta font-extrabold uppercase tracking-wider text-stone-400">{label}</span>
     {children}
-    {hint && <span className="block text-[11px] text-stone-400">{hint}</span>}
+    {hint && <span className="block text-meta text-stone-400">{hint}</span>}
   </label>
 );
 
@@ -135,14 +135,14 @@ export const StatCard: React.FC<{ indicator: keyof typeof INDICATOR_DEFINITIONS;
   return (
     <div className="rounded-3xl border border-stone-100 bg-white p-4 shadow-sm">
       <div className="flex items-start justify-between gap-2">
-        <p className="text-[11px] font-black uppercase tracking-wider text-stone-400">{def.label}</p>
+        <p className="text-meta font-extrabold uppercase tracking-wider text-stone-400">{def.label}</p>
         <button onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-label={`Como é calculado: ${def.label}`} className="-m-2 flex h-11 w-11 items-center justify-center text-stone-300 hover:text-saibro-600"><Info size={16} /></button>
       </div>
-      <p className={`whitespace-nowrap text-xl font-black tabular-nums sm:text-2xl ${tone === 'bad' ? 'text-red-600' : tone === 'good' ? 'text-emerald-600' : 'text-stone-800'}`}>{value}</p>
+      <p className={`whitespace-nowrap text-xl font-extrabold tabular-nums sm:text-2xl ${tone === 'bad' ? 'text-red-600' : tone === 'good' ? 'text-emerald-600' : 'text-stone-800'}`}>{value}</p>
       {sub && <p className="mt-0.5 text-xs text-stone-500">{sub}</p>}
       <div className="mt-2"><BasisTag basis={def.basis} /></div>
       {open && (
-        <p className="mt-2 rounded-xl bg-stone-50 p-2.5 text-[11px] leading-relaxed text-stone-600">
+        <p className="mt-2 rounded-xl bg-stone-50 p-2.5 text-meta leading-relaxed text-stone-600">
           {def.definition} <span className="font-bold text-stone-500">Origem: {def.source}.</span>
         </p>
       )}
@@ -226,9 +226,9 @@ type TabItem = { id: string; label: string; badge?: number };
  * `chips` (pílulas roláveis, o nível de baixo).
  */
 export const SectionTabs: React.FC<{ items: TabItem[]; value: string; onChange: (id: string) => void; label: string; variant?: 'chips' | 'segmented' }> = ({ items, value, onChange, label, variant = 'chips' }) => {
-  const badge = (n?: number) => !!n && <span className="ml-1.5 rounded-full bg-saibro-600 px-1.5 py-0.5 text-[10px] font-black text-white">{n}<span className="sr-only"> pendentes</span></span>;
+  const badge = (n?: number) => !!n && <span className="ml-1.5 rounded-full bg-saibro-600 px-1.5 py-0.5 text-meta font-extrabold text-white">{n}<span className="sr-only"> pendentes</span></span>;
   // No seletor de blocos o selo flutua no canto: dentro do texto ele disputava a largura com o nome da aba.
-  const cornerBadge = (n?: number) => !!n && <span className="absolute right-1 top-0.5 min-w-4 rounded-full bg-saibro-600 px-1 text-center text-[10px] font-black leading-4 text-white">{n}<span className="sr-only"> pendentes</span></span>;
+  const cornerBadge = (n?: number) => !!n && <span className="absolute right-1 top-0.5 min-w-4 rounded-full bg-saibro-600 px-1 text-center text-meta font-extrabold leading-4 text-white">{n}<span className="sr-only"> pendentes</span></span>;
   if (variant === 'segmented') {
     return (
       <div className="grid auto-cols-fr grid-flow-col gap-1 rounded-2xl bg-stone-100 p-1" role="tablist" aria-label={label}>

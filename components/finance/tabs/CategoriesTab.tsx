@@ -88,7 +88,7 @@ const CategoriesTab: React.FC = () => {
             {tree.map(({ root, children }) => (
               <li key={root.id} className="space-y-1.5">
                 <Row onClick={() => setSheet(root)}>
-                  <div className="flex items-center justify-between gap-2"><p className="text-sm font-black">{root.name}</p><div className="flex gap-1.5">{root.system_key && <Badge tone="info">Automática</Badge>}{!root.active && <Badge tone="muted">Inativa</Badge>}<Badge>{LINE_LABEL[root.dre_line]}</Badge></div></div>
+                  <div className="flex items-center justify-between gap-2"><p className="text-sm font-extrabold">{root.name}</p><div className="flex gap-1.5">{root.system_key && <Badge tone="info">Automática</Badge>}{!root.active && <Badge tone="muted">Inativa</Badge>}<Badge>{LINE_LABEL[root.dre_line]}</Badge></div></div>
                 </Row>
                 {children.length > 0 && (
                   <ul className="ml-4 space-y-1.5 border-l-2 border-stone-100 pl-3">

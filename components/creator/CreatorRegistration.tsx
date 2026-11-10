@@ -299,7 +299,7 @@ export const CreatorRegistration: React.FC<Props> = ({
         <div className="space-y-4">
             {classes.length > 1 && (
                 <div className="bg-white rounded-2xl border border-stone-100 p-5 space-y-3">
-                    <h2 className="font-black text-stone-800">Classe</h2>
+                    <h2 className="font-extrabold text-stone-800">Classe</h2>
                     <div className="flex flex-wrap gap-2">
                         {classes.map(c => (
                             <button
@@ -319,7 +319,7 @@ export const CreatorRegistration: React.FC<Props> = ({
             )}
 
             <div className="bg-white rounded-2xl border border-stone-100 p-5 space-y-3">
-                <h2 className="font-black text-stone-800 flex items-center gap-2">
+                <h2 className="font-extrabold text-stone-800 flex items-center gap-2">
                     <Users size={18} className="text-saibro-600" /> Quem pode se inscrever
                 </h2>
                 <Toggle id="allow-guests" label="Aceitar convidados" checked={allowGuests} onChange={v => {
@@ -334,7 +334,7 @@ export const CreatorRegistration: React.FC<Props> = ({
 
             <div className="bg-white rounded-2xl border border-stone-100 p-5 space-y-3">
                 <div className="flex items-center justify-between">
-                    <h2 className="font-black text-stone-800">Inscritos</h2>
+                    <h2 className="font-extrabold text-stone-800">Inscritos</h2>
                     <span className="text-sm font-bold px-2 py-0.5 rounded-full bg-stone-100 text-stone-600">
                         {registrations.length}
                     </span>
@@ -372,7 +372,7 @@ export const CreatorRegistration: React.FC<Props> = ({
             </div>
 
             <div className="bg-white rounded-2xl border border-stone-100 p-5 space-y-3">
-                <h2 className="font-black text-stone-800 flex items-center gap-2">
+                <h2 className="font-extrabold text-stone-800 flex items-center gap-2">
                     <UserPlus size={18} className="text-saibro-600" /> Adicionar
                 </h2>
 
@@ -430,7 +430,7 @@ export const CreatorRegistration: React.FC<Props> = ({
             </div>
 
             <div className="bg-white rounded-2xl border border-stone-100 p-5 space-y-3">
-                <h2 className="font-black text-stone-800 flex items-center gap-2">
+                <h2 className="font-extrabold text-stone-800 flex items-center gap-2">
                     <Star size={18} className="text-saibro-600" /> Cabeças de chave
                     <span className="text-sm font-bold text-stone-400">({seedIds.length})</span>
                 </h2>

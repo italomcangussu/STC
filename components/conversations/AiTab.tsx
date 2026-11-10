@@ -27,7 +27,7 @@ export default function AiTab() {
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="text-lg font-black text-stone-800">Agente de IA</h2>
+        <h2 className="text-lg font-extrabold text-stone-800">Agente de IA</h2>
         <p className="text-xs text-stone-500">Atende o WhatsApp do clube e grava reservas na mesma tabela do aplicativo, com as mesmas regras (conferidas pelo servidor).</p>
       </div>
       {saude.data?.aiConfigured === false && (
@@ -46,12 +46,12 @@ export default function AiTab() {
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <p className="font-bold text-stone-800">{ACTION_LABEL[p.action]} · {proposalSummary(p)}</p>
-                    <p className="text-[11px] text-stone-400">{dataHora.format(new Date(p.created_at))}{p.confirmed_at ? ` · confirmada ${dataHora.format(new Date(p.confirmed_at))}` : ''} · origem WhatsApp</p>
+                    <p className="text-meta text-stone-400">{dataHora.format(new Date(p.created_at))}{p.confirmed_at ? ` · confirmada ${dataHora.format(new Date(p.confirmed_at))}` : ''} · origem WhatsApp</p>
                   </div>
                   <Badge tone={TONE[p.status]}>{PROPOSAL_STATUS_LABEL[p.status]}</Badge>
                 </div>
                 {p.status === 'failed' && p.failure_code && <p className="mt-1 text-xs text-red-700">O sistema recusou: {describeFailure(p.failure_code)}.</p>}
-                {p.reservation_id && <p className="mt-1 text-[11px] text-stone-400">Reserva #{p.reservation_id.slice(0, 8)}</p>}
+                {p.reservation_id && <p className="mt-1 text-meta text-stone-400">Reserva #{p.reservation_id.slice(0, 8)}</p>}
               </li>
             ))}
           </ul>
@@ -66,7 +66,7 @@ function Guardrails() {
     <Card title="O que o agente faz — e o que nunca faz" right={<ShieldCheck size={20} className="text-emerald-600" aria-hidden />}>
       <div className="grid gap-3 text-xs text-stone-700 sm:grid-cols-2">
         <div>
-          <p className="font-black text-stone-800">Faz</p>
+          <p className="font-extrabold text-stone-800">Faz</p>
           <ul className="mt-1 list-disc space-y-0.5 pl-4">
             <li>Reservar quadra (Play) e, para professor ou administrador, aula.</li>
             <li>Consultar, cancelar e remarcar reservas da própria pessoa.</li>
@@ -76,7 +76,7 @@ function Guardrails() {
           </ul>
         </div>
         <div>
-          <p className="font-black text-stone-800">Nunca faz</p>
+          <p className="font-extrabold text-stone-800">Nunca faz</p>
           <ul className="mt-1 list-disc space-y-0.5 pl-4">
             <li>Confirmar reserva sem “sim” explícito do solicitante.</li>
             <li>Dizer que reservou antes de o sistema gravar.</li>
@@ -147,14 +147,14 @@ function MemoryItem({ c, onReview }: { c: MemoryCandidate; onReview: (c: MemoryC
         <p className="font-bold text-stone-800">{c.subject_name}</p>
         <div className="flex items-center gap-1.5">
           <Badge tone={c.kind === 'inside_joke' ? 'warn' : 'info'}>{MEMORY_KIND_LABEL[c.kind]}</Badge>
-          <span className="text-[11px] text-stone-400">{confidenceLabel(c.confidence)}</span>
+          <span className="text-meta text-stone-400">{confidenceLabel(c.confidence)}</span>
         </div>
       </div>
-      <p className="text-[11px] text-stone-400">{MEMORY_KIND_HINT[c.kind]} · {dataHora.format(new Date(c.created_at))}</p>
+      <p className="text-meta text-stone-400">{MEMORY_KIND_HINT[c.kind]} · {dataHora.format(new Date(c.created_at))}</p>
       {pendente ? (
         <input className={cx(fieldCls, 'mt-2')} value={texto} maxLength={500} onChange={(e) => setTexto(e.target.value)} aria-label={`Texto da memória sobre ${c.subject_name}`} />
       ) : <p className="mt-2 text-stone-700">{c.content}</p>}
-      {c.source_body && <p className="mt-1 text-[11px] italic text-stone-400">Na conversa: “{c.source_body}”</p>}
+      {c.source_body && <p className="mt-1 text-meta italic text-stone-400">Na conversa: “{c.source_body}”</p>}
       <div className="mt-2 flex flex-wrap gap-2">
         {pendente && <Button size="sm" variant="primary" loading={ocupado} disabled={texto.trim().length < 3} onClick={() => void agir('approved')}><Check size={14} aria-hidden /> Aprovar</Button>}
         <Button size="sm" variant="secondary" loading={ocupado && !pendente} disabled={ocupado} onClick={() => void agir('rejected')}><X size={14} aria-hidden /> {pendente ? 'Recusar' : 'Retirar'}</Button>

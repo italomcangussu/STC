@@ -353,7 +353,7 @@ export const PublicFormPage: React.FC<PublicFormPageProps> = ({ slug, onBackToAp
         {onBackToApp && (
           <button
             onClick={onBackToApp}
-            className="min-h-[48px] px-6 py-2.5 rounded-xl bg-saibro-600 hover:bg-saibro-700 active:scale-95 text-white font-bold text-sm transition-all shadow-lg shadow-saibro-600/20"
+            className="min-h-[48px] px-6 py-2.5 rounded-xl bg-saibro-600 hover:bg-saibro-700 active:scale-95 text-white font-bold text-sm transition-all shadow-lg "
           >
             Voltar ao Início
           </button>
@@ -366,7 +366,7 @@ export const PublicFormPage: React.FC<PublicFormPageProps> = ({ slug, onBackToAp
   if (form.requires_auth && !currentUser) {
     return (
       <div className="fixed inset-0 h-full w-full overflow-y-auto overscroll-y-contain -webkit-overflow-scrolling-touch bg-stone-950 text-stone-100 flex flex-col items-center justify-start md:justify-center px-4 py-8 pt-[max(1.5rem,env(safe-area-inset-top))] pb-[max(3.5rem,env(safe-area-inset-bottom))] z-50">
-        <div className="max-w-md w-full my-auto bg-stone-900/95 border border-stone-800 rounded-[32px] p-6 md:p-8 shadow-2xl backdrop-blur-xl space-y-6">
+        <div className="max-w-md w-full my-auto bg-stone-900/95 border border-stone-800 rounded-3xl p-6 md:p-8 shadow-2xl backdrop-blur-xl space-y-6">
           
           {/* Header Mobile Apple HIG */}
           <div className="flex flex-col items-center text-center space-y-3">
@@ -379,11 +379,11 @@ export const PublicFormPage: React.FC<PublicFormPageProps> = ({ slug, onBackToAp
             </div>
             
             <div className="space-y-1">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold tracking-wider uppercase bg-saibro-500/15 text-saibro-400 border border-saibro-500/30">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-meta font-bold tracking-wider uppercase bg-saibro-500/15 text-saibro-400 border border-saibro-500/30">
                 <Lock size={12} />
                 Área Restrita a Sócios
               </span>
-              <h2 className="text-xl md:text-2xl font-black text-white tracking-tight pt-1">
+              <h2 className="text-xl md:text-2xl font-extrabold text-white tracking-tight pt-1">
                 {form.title}
               </h2>
               <p className="text-xs text-stone-400 leading-relaxed max-w-xs mx-auto">
@@ -434,7 +434,7 @@ export const PublicFormPage: React.FC<PublicFormPageProps> = ({ slug, onBackToAp
               <button
                 type="submit"
                 disabled={authSubmitting}
-                className="w-full min-h-[52px] py-4 bg-saibro-600 hover:bg-saibro-500 active:scale-[0.98] disabled:opacity-50 text-white font-bold text-base rounded-2xl shadow-xl shadow-saibro-600/25 transition-all flex items-center justify-center gap-2"
+                className="w-full min-h-[52px] py-4 bg-saibro-600 hover:bg-saibro-500 active:scale-[0.98] disabled:opacity-50 text-white font-bold text-base rounded-2xl shadow-xl transition-all flex items-center justify-center gap-2"
               >
                 {authSubmitting ? (
                   <>
@@ -491,7 +491,7 @@ export const PublicFormPage: React.FC<PublicFormPageProps> = ({ slug, onBackToAp
               <button
                 type="submit"
                 disabled={authSubmitting}
-                className="w-full min-h-[52px] py-4 bg-saibro-600 hover:bg-saibro-500 active:scale-[0.98] disabled:opacity-50 text-white font-bold text-base rounded-2xl shadow-xl shadow-saibro-600/25 transition-all flex items-center justify-center gap-2"
+                className="w-full min-h-[52px] py-4 bg-saibro-600 hover:bg-saibro-500 active:scale-[0.98] disabled:opacity-50 text-white font-bold text-base rounded-2xl shadow-xl transition-all flex items-center justify-center gap-2"
               >
                 {authSubmitting ? (
                   <>
@@ -543,7 +543,7 @@ export const PublicFormPage: React.FC<PublicFormPageProps> = ({ slug, onBackToAp
               <button
                 type="submit"
                 disabled={authSubmitting}
-                className="w-full min-h-[52px] py-4 bg-saibro-600 hover:bg-saibro-500 active:scale-[0.98] disabled:opacity-50 text-white font-bold text-base rounded-2xl shadow-xl shadow-saibro-600/25 transition-all flex items-center justify-center gap-2"
+                className="w-full min-h-[52px] py-4 bg-saibro-600 hover:bg-saibro-500 active:scale-[0.98] disabled:opacity-50 text-white font-bold text-base rounded-2xl shadow-xl transition-all flex items-center justify-center gap-2"
               >
                 {authSubmitting ? (
                   <>
@@ -677,7 +677,7 @@ export const PublicFormPage: React.FC<PublicFormPageProps> = ({ slug, onBackToAp
           </div>
 
           <div className="space-y-2">
-            <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight leading-tight">
+            <h1 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight leading-tight">
               {form.title}
             </h1>
             {form.description && (
@@ -707,7 +707,7 @@ export const PublicFormPage: React.FC<PublicFormPageProps> = ({ slug, onBackToAp
           <div className="bg-stone-900/90 border border-stone-800 rounded-3xl p-6 md:p-8 shadow-xl space-y-6">
             <div className="flex items-center justify-between border-b border-stone-800 pb-4">
               <div>
-                <h3 className="text-lg md:text-xl font-black text-white flex items-center gap-2">
+                <h3 className="text-lg md:text-xl font-extrabold text-white flex items-center gap-2">
                   <BarChart3 className="text-saibro-500" size={22} />
                   Placar & Apuração ao Vivo
                 </h3>
@@ -760,7 +760,7 @@ export const PublicFormPage: React.FC<PublicFormPageProps> = ({ slug, onBackToAp
                                 <div className="flex items-center justify-between text-xs md:text-sm">
                                   <span className="font-bold text-stone-200">{opt.label}</span>
                                   <div className="flex items-center gap-2">
-                                    <span className="font-mono font-black text-saibro-400 text-sm">
+                                    <span className="font-mono font-extrabold text-saibro-400 text-sm">
                                       {percent}%
                                     </span>
                                     <span className="text-stone-500 text-xs">({opt.votes})</span>
@@ -809,7 +809,7 @@ export const PublicFormPage: React.FC<PublicFormPageProps> = ({ slug, onBackToAp
                   <CheckCircle2 size={32} />
                 </div>
                 <div className="space-y-1">
-                  <h3 className="text-lg font-black text-white">Voto Já Registrado</h3>
+                  <h3 className="text-lg font-extrabold text-white">Voto Já Registrado</h3>
                   <p className="text-xs text-stone-300 max-w-md mx-auto">
                     Você já participou desta votação. As regras deste formulário permitem apenas um único voto por sócio.
                   </p>
@@ -841,7 +841,7 @@ export const PublicFormPage: React.FC<PublicFormPageProps> = ({ slug, onBackToAp
                             <span className="w-6 h-6 rounded-full bg-saibro-500/20 text-saibro-400 font-bold text-xs flex items-center justify-center">
                               {qIndex + 1}
                             </span>
-                            <span className="text-[11px] font-bold uppercase tracking-wider text-stone-400">
+                            <span className="text-meta font-bold uppercase tracking-wider text-stone-400">
                               {q.question_type === 'single_choice' && 'Escolha Única'}
                               {q.question_type === 'multiple_choice' && 'Múltipla Escolha (Selecione 1 ou mais)'}
                               {q.question_type === 'open_text' && 'Resposta Aberta'}
@@ -872,7 +872,7 @@ export const PublicFormPage: React.FC<PublicFormPageProps> = ({ slug, onBackToAp
                                   onClick={() => handleSelectSingleChoice(q.id, opt.id)}
                                   className={`w-full min-h-[50px] px-4 py-3.5 rounded-2xl border text-left flex items-center gap-3.5 transition-all duration-200 active:scale-[0.99] select-none ${
                                     isSelected
-                                      ? 'bg-saibro-950/60 border-saibro-500 ring-2 ring-saibro-500 text-white shadow-md shadow-saibro-950'
+                                      ? 'bg-saibro-950/60 border-saibro-500 ring-2 ring-saibro-500 text-white shadow-md  '
                                       : 'bg-stone-950/70 border-stone-800 text-stone-200 hover:border-stone-700 hover:bg-stone-900'
                                   }`}
                                 >
@@ -906,7 +906,7 @@ export const PublicFormPage: React.FC<PublicFormPageProps> = ({ slug, onBackToAp
                                   onClick={() => handleToggleMultipleChoice(q.id, opt.id)}
                                   className={`w-full min-h-[50px] px-4 py-3.5 rounded-2xl border text-left flex items-center gap-3.5 transition-all duration-200 active:scale-[0.99] select-none ${
                                     isSelected
-                                      ? 'bg-saibro-950/60 border-saibro-500 ring-2 ring-saibro-500 text-white shadow-md shadow-saibro-950'
+                                      ? 'bg-saibro-950/60 border-saibro-500 ring-2 ring-saibro-500 text-white shadow-md  '
                                       : 'bg-stone-950/70 border-stone-800 text-stone-200 hover:border-stone-700 hover:bg-stone-900'
                                   }`}
                                 >
@@ -950,7 +950,7 @@ export const PublicFormPage: React.FC<PublicFormPageProps> = ({ slug, onBackToAp
                   <button
                     onClick={handleSubmit}
                     disabled={submitting || !form.is_active}
-                    className="w-full min-h-[54px] py-4 rounded-2xl font-black text-base bg-saibro-600 hover:bg-saibro-500 active:scale-[0.99] text-white shadow-xl shadow-saibro-600/30 transition-all flex items-center justify-center gap-2.5 cursor-pointer disabled:opacity-50"
+                    className="w-full min-h-[54px] py-4 rounded-2xl font-extrabold text-base bg-saibro-600 hover:bg-saibro-500 active:scale-[0.99] text-white shadow-xl transition-all flex items-center justify-center gap-2.5 cursor-pointer disabled:opacity-50"
                   >
                     {submitting ? (
                       <>
@@ -964,7 +964,7 @@ export const PublicFormPage: React.FC<PublicFormPageProps> = ({ slug, onBackToAp
                       </>
                     )}
                   </button>
-                  <p className="text-center text-[11px] text-stone-500 mt-2.5">
+                  <p className="text-center text-meta text-stone-500 mt-2.5">
                     {form.is_secret_vote
                       ? '🔒 Urna Cega Criptográfica: seu voto é estritamente confidencial.'
                       : 'Respostas associadas ao seu perfil de sócio para acompanhamento da diretoria.'}

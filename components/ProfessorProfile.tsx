@@ -87,7 +87,7 @@ const StudentCard: React.FC<{
 
     return (
         <div className="bg-white p-4 rounded-xl shadow-sm border border-stone-100 relative group overflow-hidden">
-            <div className={`absolute top-0 right-0 px-3 py-1 rounded-bl-xl text-[10px] font-bold uppercase ${planBadgeColor}`}>
+            <div className={`absolute top-0 right-0 px-3 py-1 rounded-bl-xl text-meta font-bold uppercase ${planBadgeColor}`}>
                 {student.planType}
             </div>
 
@@ -110,12 +110,12 @@ const StudentCard: React.FC<{
             {canConvert && (
                 <button 
                     onClick={() => onConvert(student)} 
-                    className="w-full mb-3 py-2.5 rounded-xl font-bold text-sm flex justify-center items-center gap-2 bg-purple-500 text-white hover:bg-purple-600 shadow-md shadow-purple-100 transition-colors"
+                    className="w-full mb-3 py-2.5 rounded-xl font-bold text-sm flex justify-center items-center gap-2 bg-purple-500 text-white hover:bg-purple-600 shadow-md transition-colors"
                 >
                     <ArrowUpCircle size={16} />
                     Converter para Card Mensal
                     {student.planType === 'Day Card Experimental' && (
-                        <span className="text-[10px] bg-purple-400 px-1.5 py-0.5 rounded ml-1">ESTORNO R$50</span>
+                        <span className="text-meta bg-purple-400 px-1.5 py-0.5 rounded ml-1">ESTORNO R$50</span>
                     )}
                 </button>
             )}
@@ -690,7 +690,7 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                     <div>
                         <div className="flex items-center gap-2">
                             <h2 className="text-xl font-bold">{professorRecord.name}</h2>
-                            <span className="bg-white/20 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide">Professor</span>
+                            <span className="bg-white/20 px-2 py-0.5 rounded text-meta font-bold uppercase tracking-wide">Professor</span>
                         </div>
                         <p className="text-saibro-100 text-sm mt-1">{professorRecord.bio || 'Instrutor'}</p>
                     </div>
@@ -854,8 +854,8 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
             >
                 <div className="bg-white rounded-3xl p-6 w-full max-w-md space-y-5 shadow-2xl shadow-stone-300/50 border-2 border-stone-100 max-h-[90vh] overflow-y-auto">
                     {/* Header */}
-                    <div className="bg-linear-to-br from-saibro-600 via-saibro-500 to-orange-500 px-6 py-4 -mx-6 -mt-6 mb-6 rounded-t-3xl shadow-xl shadow-saibro-300/30 border-b-2 border-white/10">
-                        <h3 className="text-xl font-black uppercase tracking-tight text-white drop-shadow-lg">
+                    <div className="bg-linear-to-br from-saibro-600 via-saibro-500 to-orange-500 px-6 py-4 -mx-6 -mt-6 mb-6 rounded-t-3xl shadow-xl border-b-2 border-white/10">
+                        <h3 className="text-xl font-extrabold uppercase tracking-tight text-white drop-shadow-lg">
                             {editingStudent ? '✏️ Editar Aluno' : '➕ Novo Aluno'}
                         </h3>
                     </div>
@@ -869,7 +869,7 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                             </select>
                         </div>
                         <div>
-                            <label className="block text-xs font-black text-stone-500 uppercase mb-2 tracking-wide">Nome Completo</label>
+                            <label className="block text-xs font-extrabold text-stone-500 uppercase mb-2 tracking-wide">Nome Completo</label>
                             <input
                                 type="text"
                                 value={studentForm.name}
@@ -880,7 +880,7 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                         </div>
 
                         <div>
-                            <label className="block text-xs font-black text-stone-500 uppercase mb-2 tracking-wide">Telefone</label>
+                            <label className="block text-xs font-extrabold text-stone-500 uppercase mb-2 tracking-wide">Telefone</label>
                             <input
                                 type="text"
                                 value={studentForm.phone}
@@ -891,13 +891,13 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                         </div>
 
                         <div>
-                            <label className="block text-xs font-black text-stone-500 uppercase mb-2 tracking-wide">Tipo de Aluno</label>
+                            <label className="block text-xs font-extrabold text-stone-500 uppercase mb-2 tracking-wide">Tipo de Aluno</label>
                             <div className="grid grid-cols-2 gap-3">
                                 <button
                                     type="button"
                                     onClick={() => setStudentForm({ ...studentForm, studentType: 'regular' })}
-                                    className={`py-3 px-4 rounded-xl font-black text-xs uppercase tracking-tight shadow-lg transition-all duration-200 ${studentForm.studentType === 'regular'
-                                        ? 'bg-linear-to-br from-saibro-600 to-saibro-700 text-white shadow-saibro-200 scale-105'
+                                    className={`py-3 px-4 rounded-xl font-extrabold text-xs uppercase tracking-tight shadow-lg transition-all duration-200 ${studentForm.studentType === 'regular'
+                                        ? 'bg-linear-to-br from-saibro-600 to-saibro-700 text-white   scale-105'
                                         : 'bg-linear-to-br from-stone-50 to-stone-100 text-stone-600 hover:shadow-xl hover:scale-105 border-2 border-stone-200'
                                     }`}
                                 >
@@ -906,8 +906,8 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                                 <button
                                     type="button"
                                     onClick={() => setStudentForm({ ...studentForm, studentType: 'dependent' })}
-                                    className={`py-3 px-4 rounded-xl font-black text-xs uppercase tracking-tight shadow-lg transition-all duration-200 ${studentForm.studentType === 'dependent'
-                                        ? 'bg-linear-to-br from-blue-600 to-blue-700 text-white shadow-blue-200 scale-105'
+                                    className={`py-3 px-4 rounded-xl font-extrabold text-xs uppercase tracking-tight shadow-lg transition-all duration-200 ${studentForm.studentType === 'dependent'
+                                        ? 'bg-linear-to-br from-blue-600 to-blue-700 text-white   scale-105'
                                         : 'bg-linear-to-br from-stone-50 to-stone-100 text-stone-600 hover:shadow-xl hover:scale-105 border-2 border-stone-200'
                                     }`}
                                 >
@@ -920,13 +920,13 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                         {studentForm.studentType === 'regular' && (
                             <>
                                 <div>
-                                    <label className="block text-xs font-black text-stone-500 uppercase mb-2 tracking-wide">Tipo de Plano</label>
+                                    <label className="block text-xs font-extrabold text-stone-500 uppercase mb-2 tracking-wide">Tipo de Plano</label>
                                     <div className="grid grid-cols-3 gap-2">
                                         <button
                                             type="button"
                                             onClick={() => setStudentForm({ ...studentForm, planType: 'Day Card' })}
-                                            className={`py-3 px-2 rounded-xl font-black text-[10px] uppercase tracking-tight shadow-lg transition-all duration-200 ${studentForm.planType === 'Day Card'
-                                                ? 'bg-linear-to-br from-saibro-600 to-saibro-700 text-white shadow-saibro-200 scale-105'
+                                            className={`py-3 px-2 rounded-xl font-extrabold text-meta uppercase tracking-tight shadow-lg transition-all duration-200 ${studentForm.planType === 'Day Card'
+                                                ? 'bg-linear-to-br from-saibro-600 to-saibro-700 text-white   scale-105'
                                                 : 'bg-linear-to-br from-stone-50 to-stone-100 text-stone-600 hover:shadow-xl hover:scale-105 border-2 border-stone-200'
                                             }`}
                                         >
@@ -935,8 +935,8 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                                         <button
                                             type="button"
                                             onClick={() => setStudentForm({ ...studentForm, planType: 'Day Card Experimental' })}
-                                            className={`py-3 px-2 rounded-xl font-black text-[10px] uppercase tracking-tight shadow-lg transition-all duration-200 ${studentForm.planType === 'Day Card Experimental'
-                                                ? 'bg-linear-to-br from-amber-600 to-amber-700 text-white shadow-amber-200 scale-105'
+                                            className={`py-3 px-2 rounded-xl font-extrabold text-meta uppercase tracking-tight shadow-lg transition-all duration-200 ${studentForm.planType === 'Day Card Experimental'
+                                                ? 'bg-linear-to-br from-amber-600 to-amber-700 text-white   scale-105'
                                                 : 'bg-linear-to-br from-stone-50 to-stone-100 text-stone-600 hover:shadow-xl hover:scale-105 border-2 border-stone-200'
                                             }`}
                                         >
@@ -945,8 +945,8 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                                         <button
                                             type="button"
                                             onClick={() => setStudentForm({ ...studentForm, planType: 'Card Mensal' })}
-                                            className={`py-3 px-2 rounded-xl font-black text-[10px] uppercase tracking-tight shadow-lg transition-all duration-200 ${studentForm.planType === 'Card Mensal'
-                                                ? 'bg-linear-to-br from-purple-600 to-purple-700 text-white shadow-purple-200 scale-105'
+                                            className={`py-3 px-2 rounded-xl font-extrabold text-meta uppercase tracking-tight shadow-lg transition-all duration-200 ${studentForm.planType === 'Card Mensal'
+                                                ? 'bg-linear-to-br from-purple-600 to-purple-700 text-white   scale-105'
                                                 : 'bg-linear-to-br from-stone-50 to-stone-100 text-stone-600 hover:shadow-xl hover:scale-105 border-2 border-stone-200'
                                             }`}
                                         >
@@ -978,7 +978,7 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                         {studentForm.studentType === 'dependent' && (
                             <>
                                 <div>
-                                    <label className="block text-xs font-black text-stone-500 uppercase mb-2 tracking-wide">Sócio Responsável</label>
+                                    <label className="block text-xs font-extrabold text-stone-500 uppercase mb-2 tracking-wide">Sócio Responsável</label>
                                     <select
                                         value={studentForm.responsibleSocioId}
                                         onChange={e => setStudentForm({ ...studentForm, responsibleSocioId: e.target.value })}
@@ -991,7 +991,7 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-black text-stone-500 uppercase mb-2 tracking-wide">Parentesco</label>
+                                    <label className="block text-xs font-extrabold text-stone-500 uppercase mb-2 tracking-wide">Parentesco</label>
                                     <select
                                         value={studentForm.relationshipType}
                                         onChange={e => setStudentForm({ ...studentForm, relationshipType: e.target.value as RelationshipType })}
@@ -1005,7 +1005,7 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                                         <option value="outro">Outro</option>
                                     </select>
                                 </div>
-                                <div className="bg-linear-to-br from-blue-50 to-blue-100 p-4 rounded-xl border-2 border-blue-200 shadow-lg shadow-blue-100">
+                                <div className="bg-linear-to-br from-blue-50 to-blue-100 p-4 rounded-xl border-2 border-blue-200 shadow-lg ">
                                     <p className="text-xs font-bold text-blue-700">
                                         💡 Dependentes não possuem cobrança. Vinculados ao sócio responsável.
                                     </p>
@@ -1017,13 +1017,13 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                     <div className="flex gap-3 pt-5 border-t-2 border-stone-100">
                         <button
                             onClick={() => setShowStudentModal(false)}
-                            className="flex-1 py-3 bg-linear-to-br from-stone-50 to-stone-100 text-stone-600 font-black text-xs uppercase tracking-tight rounded-xl shadow-lg shadow-stone-200 hover:shadow-xl hover:scale-105 transition-all duration-200 border-2 border-stone-200"
+                            className="flex-1 py-3 bg-linear-to-br from-stone-50 to-stone-100 text-stone-600 font-extrabold text-xs uppercase tracking-tight rounded-xl shadow-lg shadow-stone-200 hover:shadow-xl hover:scale-105 transition-all duration-200 border-2 border-stone-200"
                         >
                             Cancelar
                         </button>
                         <button
                             onClick={handleSaveStudent}
-                            className="flex-1 py-3 bg-linear-to-br from-saibro-600 to-saibro-700 text-white font-black text-xs uppercase tracking-tight rounded-xl shadow-lg shadow-saibro-200 hover:shadow-xl hover:scale-105 transition-all duration-200"
+                            className="flex-1 py-3 bg-linear-to-br from-saibro-600 to-saibro-700 text-white font-extrabold text-xs uppercase tracking-tight rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200"
                         >
                             💾 Salvar
                         </button>
@@ -1106,7 +1106,7 @@ export const ProfessorProfile: React.FC<ProfessorProfileProps> = ({ currentUser 
                         <button
                             onClick={handleConfirmConvert}
                             disabled={processing}
-                            className="w-full py-4 bg-purple-500 hover:bg-purple-600 text-white rounded-xl font-bold shadow-lg shadow-purple-100 flex justify-center items-center gap-2 disabled:opacity-50"
+                            className="w-full py-4 bg-purple-500 hover:bg-purple-600 text-white rounded-xl font-bold shadow-lg flex justify-center items-center gap-2 disabled:opacity-50"
                         >
                             {processing ? <Loader2 className="animate-spin" /> : <>
                                 <CheckCircle size={20} /> Confirmar Conversão

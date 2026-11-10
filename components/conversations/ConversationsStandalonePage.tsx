@@ -94,7 +94,7 @@ export const ConversationsStandalonePage: React.FC = () => {
           </button>
 
           <div className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-linear-to-br from-emerald-500 to-teal-600 text-white shadow-sm shadow-emerald-500/20">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-linear-to-br from-emerald-500 to-teal-600 text-white shadow-sm ">
               <MessagesSquare size={19} />
             </div>
             <div className="leading-tight">
@@ -102,12 +102,12 @@ export const ConversationsStandalonePage: React.FC = () => {
                 <span className="text-sm font-bold tracking-tight text-stone-900 md:text-base">
                   Conversas
                 </span>
-                <span className="hidden items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 sm:inline-flex">
+                <span className="hidden items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-meta font-bold text-emerald-700 sm:inline-flex">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                   WhatsApp
                 </span>
               </div>
-              <span className="block text-[11px] font-medium text-stone-500">
+              <span className="block text-meta font-medium text-stone-500">
                 STC Play Admin
               </span>
             </div>
@@ -282,7 +282,7 @@ export const ConversationsStandalonePage: React.FC = () => {
               type="button"
               aria-selected={isSelected}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex min-h-[49px] flex-col items-center justify-center gap-0.5 px-1 pt-1.5 pb-1 text-[10px] font-semibold transition-colors active:bg-stone-100 ${
+              className={`flex min-h-[49px] flex-col items-center justify-center gap-0.5 px-1 pt-1.5 pb-1 text-meta font-semibold transition-colors active:bg-stone-100 ${
                 isSelected ? 'text-saibro-600' : 'text-stone-500'
               }`}
             >

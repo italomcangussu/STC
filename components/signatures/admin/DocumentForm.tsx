@@ -158,7 +158,7 @@ export const DocumentForm: React.FC<Props> = ({ target, onCancel, onSaved, onPub
 
   return (
     <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); void save(); }} aria-label={titleOf(target)}>
-      <h2 className="text-lg font-black text-stone-800">{titleOf(target)}</h2>
+      <h2 className="text-lg font-extrabold text-stone-800">{titleOf(target)}</h2>
       {target.kind === 'version' && (
         <Notice tone="info">A nova versão começa como rascunho. Só ao publicar a versão {target.of.version} sai de circulação, e quem já assinou continua com a assinatura registrada. Os sócios precisam assinar a versão nova.</Notice>
       )}
@@ -228,7 +228,7 @@ export const DocumentForm: React.FC<Props> = ({ target, onCancel, onSaved, onPub
                     <label className="flex min-h-11 items-center gap-3 px-3 text-sm text-stone-700">
                       <input type="checkbox" checked={selected.has(m.id)} onChange={() => toggle(m.id)} className="h-4 w-4 accent-saibro-600" />
                       <span className="min-w-0 flex-1 truncate font-bold">{m.name}</span>
-                      {!m.phone?.trim() && <span className="shrink-0 text-[11px] font-bold text-amber-700">sem telefone</span>}
+                      {!m.phone?.trim() && <span className="shrink-0 text-meta font-bold text-amber-700">sem telefone</span>}
                     </label>
                   </li>
                 ))}

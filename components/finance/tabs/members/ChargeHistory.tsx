@@ -28,7 +28,7 @@ const AdjustmentLine: React.FC<{ adjustment: ChargeAdjustmentRow }> = ({ adjustm
 /** Pagamentos, estornos e ajustes da cobrança, do mais antigo para o mais novo como o banco entrega. */
 export const ChargeHistory: React.FC<{ data: ChargeHistoryData | null; loading: boolean }> = ({ data, loading }) => (
   <div className="space-y-1.5 border-t border-stone-100 pt-3 text-xs text-stone-600">
-    <p className="text-[11px] font-black uppercase tracking-wider text-stone-400">Histórico</p>
+    <p className="text-meta font-extrabold uppercase tracking-wider text-stone-400">Histórico</p>
     {loading && <Spinner label="Carregando…" />}
     {data?.payments.map((p) => <PaymentLine key={p.id} payment={p} />)}
     {data?.adjustments.map((a) => <AdjustmentLine key={a.id} adjustment={a} />)}

@@ -99,7 +99,7 @@ function ConversationCard({ conversation: c, selected, draft, presence, onSelect
       onClick={() => onSelect(c.id)}
       aria-current={selected ? 'true' : undefined}
       className={cx(
-        'mx-2 mb-1 flex w-[calc(100%-1rem)] min-h-[76px] items-start gap-2.5 rounded-[18px] border px-3 py-2.5 text-left outline-hidden transition-colors focus-visible:ring-2 focus-visible:ring-saibro-300',
+        'mx-2 mb-1 flex w-[calc(100%-1rem)] min-h-[76px] items-start gap-2.5 rounded-2xl border px-3 py-2.5 text-left outline-hidden transition-colors focus-visible:ring-2 focus-visible:ring-saibro-300',
         selected ? 'border-saibro-300 bg-saibro-50 shadow-sm' : 'border-transparent hover:border-stone-200 hover:bg-white',
       )}
     >
@@ -110,7 +110,7 @@ function ConversationCard({ conversation: c, selected, draft, presence, onSelect
             <span className="truncate">{displayName(c)}</span>
             {c.ai_status === 'ai' && c.ai_session_open && <Bot size={13} className="shrink-0 text-emerald-600" aria-label="Agente de IA atendendo" />}
           </span>
-          <span className={cx('shrink-0 text-[11px]', naoLidas ? 'font-semibold text-saibro-700' : 'text-stone-500')}>
+          <span className={cx('shrink-0 text-meta', naoLidas ? 'font-semibold text-saibro-700' : 'text-stone-500')}>
             {formatLastInteraction(c.last_message_at)}
           </span>
         </div>
@@ -131,31 +131,31 @@ function ConversationCard({ conversation: c, selected, draft, presence, onSelect
             )}
           </p>
           {naoLidas && (
-            <span className="grid h-5 min-w-5 shrink-0 place-items-center rounded-full bg-emerald-500 px-1.5 text-[11px] font-bold text-white"
+            <span className="grid h-5 min-w-5 shrink-0 place-items-center rounded-full bg-emerald-500 px-1.5 text-meta font-bold text-white"
               aria-label={`${c.unread_count} não lida${c.unread_count > 1 ? 's' : ''}`}>
               {c.unread_count > 99 ? '99+' : c.unread_count}
             </span>
           )}
         </div>
         <div className="mt-1.5 flex flex-wrap items-center gap-1">
-          {c.kind === 'group' && <span className="inline-flex items-center gap-0.5 rounded-full bg-sky-100 px-2 py-0.5 text-[10px] font-bold text-sky-800"><Users size={10} aria-hidden /> Grupo</span>}
+          {c.kind === 'group' && <span className="inline-flex items-center gap-0.5 rounded-full bg-sky-100 px-2 py-0.5 text-meta font-bold text-sky-800"><Users size={10} aria-hidden /> Grupo</span>}
           {transferida && (
-            <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800" title={c.handoff_note ?? undefined}>
+            <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-100 px-2 py-0.5 text-meta font-bold text-amber-800" title={c.handoff_note ?? undefined}>
               <Hand size={10} aria-hidden /> Transferida pela IA
             </span>
           )}
-          {vinculo && <span className={cx('rounded-full px-2 py-0.5 text-[10px] font-semibold', vinculo.tone)}>{vinculo.text}</span>}
-          {c.opt_out && <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-700">Não receber automações</span>}
+          {vinculo && <span className={cx('rounded-full px-2 py-0.5 text-meta font-semibold', vinculo.tone)}>{vinculo.text}</span>}
+          {c.opt_out && <span className="rounded-full bg-red-100 px-2 py-0.5 text-meta font-semibold text-red-700">Não receber automações</span>}
           {c.tags.slice(0, 3).map((t) => (
-            <span key={t} className="rounded-full border border-stone-200 bg-white px-2 py-0.5 text-[10px] font-medium text-stone-600">#{t}</span>
+            <span key={t} className="rounded-full border border-stone-200 bg-white px-2 py-0.5 text-meta font-medium text-stone-600">#{t}</span>
           ))}
           {c.next_followup_at && (
-            <span className={cx('inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[10px] font-semibold',
+            <span className={cx('inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-meta font-semibold',
               retornoVencido ? 'bg-red-100 text-red-700' : 'bg-stone-100 text-stone-600')}>
               <AlarmClock size={10} aria-hidden /> {retornoVencido ? 'Retorno vencido' : `Retorno ${formatLastInteraction(c.next_followup_at)}`}
             </span>
           )}
-          {c.assigned_name && <span className="text-[10px] text-stone-500">· {c.assigned_name}</span>}
+          {c.assigned_name && <span className="text-meta text-stone-500">· {c.assigned_name}</span>}
         </div>
       </div>
     </button>

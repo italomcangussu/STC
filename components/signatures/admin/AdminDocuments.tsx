@@ -27,7 +27,7 @@ const Card: React.FC<{ doc: OverviewRow; onOpen: () => void }> = ({ doc, onOpen 
     <button type="button" onClick={onOpen} className="flex w-full items-center gap-3 rounded-3xl border border-stone-100 bg-white p-4 text-left shadow-sm transition active:scale-[0.99] hover:border-saibro-200">
       <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-saibro-50 text-saibro-600" aria-hidden><FileText size={22} /></span>
       <span className="min-w-0 flex-1 space-y-1">
-        <span className="block truncate text-sm font-black text-stone-800">{doc.title}</span>
+        <span className="block truncate text-sm font-extrabold text-stone-800">{doc.title}</span>
         <span className="block text-xs text-stone-500">
           versão {doc.version} · {doc.page_count} {doc.page_count === 1 ? 'página' : 'páginas'}
           {draft ? ` · criado em ${formatDate(doc.created_at)}` : ` · ${doc.signed} de ${doc.recipients} assinaram`}
@@ -49,7 +49,7 @@ const Card: React.FC<{ doc: OverviewRow; onOpen: () => void }> = ({ doc, onOpen 
 const Group: React.FC<{ label: string; docs: OverviewRow[]; onOpen: (d: OverviewRow) => void }> = ({ label, docs, onOpen }) => (
   docs.length === 0 ? null : (
     <section className="space-y-2" aria-label={label}>
-      <h3 className="px-1 text-xs font-black uppercase tracking-wide text-stone-400">{label} ({docs.length})</h3>
+      <h3 className="px-1 text-xs font-extrabold uppercase tracking-wide text-stone-400">{label} ({docs.length})</h3>
       {docs.map((d) => <Card key={d.id} doc={d} onOpen={() => onOpen(d)} />)}
     </section>
   )
@@ -128,7 +128,7 @@ export const AdminDocuments: React.FC = () => {
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
-          <h2 className="flex items-center gap-2 text-lg font-black text-stone-800"><FileSignature size={20} className="text-saibro-600" aria-hidden /> Documentos e Assinaturas</h2>
+          <h2 className="flex items-center gap-2 text-lg font-extrabold text-stone-800"><FileSignature size={20} className="text-saibro-600" aria-hidden /> Documentos e Assinaturas</h2>
           <p className="text-sm text-stone-500">Publique um PDF e acompanhe quem já assinou. Cada sócio recebe o link no WhatsApp.</p>
         </div>
         <button type="button" className={`${btnPrimary} w-full sm:w-auto`} onClick={() => { setNotice(null); setView({ kind: 'form', target: { kind: 'new' } }); }}>

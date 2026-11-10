@@ -89,6 +89,36 @@ class NotificationService {
   }
 
   /**
+   * Ação feita, com a chance de voltar atrás.
+   *
+   * É a troca do "tem certeza?" (que a pessoa confirma no automático) por
+   * fazer na hora e oferecer "Desfazer" por 6 s. Use só no que é reversível:
+   * o `desfazer` precisa repor exatamente o estado anterior.
+   *
+   *   notify.feito('Reserva cancelada', { desfazer: () => restaurar(r) });
+   */
+  feito(
+    message: string,
+    opts: { descricao?: string; desfazer?: () => void | Promise<void>; rotuloDesfazer?: string } = {},
+    logContext?: NotificationContext
+  ): void {
+    logger.info('notification_done', { message, undoable: !!opts.desfazer, ...logContext });
+    const { desfazer } = opts;
+    toast.success(message, {
+      description: opts.descricao,
+      duration: desfazer ? 6000 : 4000,
+      action: desfazer
+        ? {
+            label: opts.rotuloDesfazer ?? 'Desfazer',
+            onClick: () => {
+              Promise.resolve(desfazer()).catch(e => this.failure(e, 'Não foi possível desfazer.'));
+            },
+          }
+        : undefined,
+    });
+  }
+
+  /**
    * Notificação de aviso
    */
   warning(message: string, options?: NotificationOptions, logContext?: NotificationContext): void {

@@ -106,7 +106,7 @@
     --color-superficie: #ffffff;      /* card, folha, barra */
     --color-superficie-2: #f5f5f4;    /* stone-100: campo, trilho, linha alternada */
     --color-linha: #e7e5e4;           /* stone-200: divisória e borda de card */
-    --color-linha-forte: #a8a29e;     /* stone-400: borda de campo (3:1 no branco) */
+    --color-linha-forte: #928a83;     /* entre stone-400 e 500: borda de campo, 3,4:1 no branco */
     --color-texto: #1c1917;           /* stone-900 */
     --color-texto-2: #57534e;         /* stone-600 · 7,6:1 */
     --color-texto-3: #78716c;         /* stone-500 · 4,8:1 · o mínimo para texto */
@@ -537,6 +537,45 @@
 
     .scrollbar-hide::-webkit-scrollbar {
         display: none;
+    }
+
+    /* Faixa de chips/abas que rola na horizontal sem levar a página junto:
+       trava o eixo y, encaixa no item e dá respiro nas bordas. */
+    .faixa-rolavel {
+        display: flex;
+        gap: 0.5rem;
+        overflow-x: auto;
+        overflow-y: hidden;
+        overscroll-behavior-x: contain;
+        scroll-snap-type: x proximity;
+        scroll-padding-inline: 1rem;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+    }
+    .faixa-rolavel::-webkit-scrollbar {
+        display: none;
+    }
+    .faixa-rolavel > * {
+        scroll-snap-align: start;
+        flex-shrink: 0;
+    }
+
+    /* Folha que sobe da borda (Sheet). No tablet, onde vira modal, só aparece. */
+    @keyframes folhaSobe {
+        from { transform: translateY(100%); }
+        to { transform: translateY(0); }
+    }
+    @keyframes folhaAparece {
+        from { opacity: 0; transform: scale(0.97); }
+        to { opacity: 1; transform: scale(1); }
+    }
+    .anim-folha {
+        animation: folhaSobe var(--dur-contexto) var(--ease-folha) both;
+    }
+    @media (min-width: 640px) {
+        .anim-folha {
+            animation: folhaAparece var(--dur-entrada) var(--ease-saida) both;
+        }
     }
 
     /* Custom Scrollbar */

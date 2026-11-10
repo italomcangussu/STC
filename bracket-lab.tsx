@@ -99,19 +99,19 @@ const Lab: React.FC = () => {
             <div className="mx-auto mb-4 flex max-w-7xl flex-wrap gap-2">
                 <button
                     onClick={() => setDados(encerrarJ4)}
-                    className="rounded-full bg-saibro-600 px-4 py-2 text-xs font-black text-white"
+                    className="rounded-full bg-saibro-600 px-4 py-2 text-xs font-extrabold text-white"
                 >
                     Encerrar J4 (ver avanço)
                 </button>
                 <button
                     onClick={() => setDados(porJ3AoVivo)}
-                    className="rounded-full bg-slate-800 px-4 py-2 text-xs font-black text-white"
+                    className="rounded-full bg-slate-800 px-4 py-2 text-xs font-extrabold text-white"
                 >
                     Pôr J3 ao vivo
                 </button>
                 <button
                     onClick={() => setDados(bracket)}
-                    className="rounded-full bg-slate-200 px-4 py-2 text-xs font-black text-slate-700"
+                    className="rounded-full bg-slate-200 px-4 py-2 text-xs font-extrabold text-slate-700"
                 >
                     Resetar
                 </button>

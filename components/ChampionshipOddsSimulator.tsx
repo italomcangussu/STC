@@ -45,7 +45,7 @@ export const ChampionshipOddsSimulator: React.FC<Props> = ({ matches, registrati
                         <button
                             key={className}
                             onClick={() => setSelectedClass(className)}
-                            className={`shrink-0 rounded-2xl px-4 py-2 text-xs font-black transition-all ${currentClass === className ? 'bg-saibro-600 text-white shadow-md' : 'text-stone-500 hover:bg-stone-50'}`}
+                            className={`shrink-0 rounded-2xl px-4 py-2 text-xs font-extrabold transition-all ${currentClass === className ? 'bg-saibro-600 text-white shadow-md' : 'text-stone-500 hover:bg-stone-50'}`}
                         >
                             {className}
                         </button>
@@ -59,7 +59,7 @@ export const ChampionshipOddsSimulator: React.FC<Props> = ({ matches, registrati
                         <Gauge size={20} />
                     </div>
                     <div>
-                        <h3 className="text-lg font-black text-stone-900">Simulador de odds</h3>
+                        <h3 className="text-lg font-extrabold text-stone-900">Simulador de odds</h3>
                         <p className="text-xs font-bold text-stone-400">Simulação informativa, sem aposta real.</p>
                     </div>
                 </div>
@@ -80,7 +80,7 @@ export const ChampionshipOddsSimulator: React.FC<Props> = ({ matches, registrati
                                 <OddCard stat={athleteA} side={odds.athleteA} favorite={odds.favoriteRegistrationId === athleteA.registrationId} />
                                 <OddCard stat={athleteB} side={odds.athleteB} favorite={odds.favoriteRegistrationId === athleteB.registrationId} />
                                 <div className="sm:col-span-2 rounded-2xl bg-stone-50 p-4 text-sm font-bold text-stone-500">
-                                    Favorito: <span className="font-black text-stone-900">{favorite?.name || 'Equilibrado'}</span> · {confidenceLabel[odds.confidence]}
+                                    Favorito: <span className="font-extrabold text-stone-900">{favorite?.name || 'Equilibrado'}</span> · {confidenceLabel[odds.confidence]}
                                 </div>
                             </div>
                         )}
@@ -98,12 +98,12 @@ const AthleteSelect: React.FC<{
     onChange: (value: string) => void;
 }> = ({ label, athletes, value, onChange }) => (
     <label className="block">
-        <span className="mb-2 block text-xs font-black uppercase tracking-widest text-stone-400">{label}</span>
+        <span className="mb-2 block text-xs font-extrabold uppercase tracking-widest text-stone-400">{label}</span>
         <div className="relative">
             <select
                 value={value || athletes[0]?.registrationId || ''}
                 onChange={event => onChange(event.target.value)}
-                className="w-full appearance-none rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm font-black text-stone-800 outline-hidden focus:border-saibro-500"
+                className="w-full appearance-none rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm font-extrabold text-stone-800 outline-hidden focus:border-saibro-500"
             >
                 {athletes.map(athlete => (
                     <option key={athlete.registrationId} value={athlete.registrationId}>{athlete.name}</option>
@@ -120,15 +120,15 @@ const OddCard: React.FC<{
     favorite: boolean;
 }> = ({ stat, side, favorite }) => (
     <div className={`rounded-2xl border p-4 ${favorite ? 'border-saibro-200 bg-saibro-50' : 'border-stone-100 bg-stone-50'}`}>
-        <p className="truncate text-sm font-black text-stone-900">{stat.name}</p>
+        <p className="truncate text-sm font-extrabold text-stone-900">{stat.name}</p>
         <div className="mt-3 flex items-end justify-between gap-3">
             <div>
-                <p className="text-xs font-black uppercase tracking-widest text-stone-400">Prob.</p>
-                <p className="text-xl font-black text-stone-900">{side.probability}%</p>
+                <p className="text-xs font-extrabold uppercase tracking-widest text-stone-400">Prob.</p>
+                <p className="text-xl font-extrabold text-stone-900">{side.probability}%</p>
             </div>
             <div className="text-right">
-                <p className="text-xs font-black uppercase tracking-widest text-stone-400">Odd</p>
-                <p className="text-3xl font-black text-saibro-600">{side.decimalOdd.toFixed(2)}</p>
+                <p className="text-xs font-extrabold uppercase tracking-widest text-stone-400">Odd</p>
+                <p className="text-3xl font-extrabold text-saibro-600">{side.decimalOdd.toFixed(2)}</p>
             </div>
         </div>
     </div>

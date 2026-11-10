@@ -278,7 +278,7 @@ export const AdminProfessors: React.FC = () => {
                                         aria-controls={panelId}
                                         className="flex min-h-16 min-w-0 flex-1 items-center gap-3 px-4 py-3 text-left"
                                     >
-                                        <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-lg font-black ${prof.isActive ? 'bg-saibro-100 text-saibro-700' : 'bg-stone-200 text-stone-500'}`} aria-hidden>
+                                        <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-lg font-extrabold ${prof.isActive ? 'bg-saibro-100 text-saibro-700' : 'bg-stone-200 text-stone-500'}`} aria-hidden>
                                             {prof.name.charAt(0).toUpperCase()}
                                         </span>
                                         <span className="min-w-0 flex-1">
@@ -309,7 +309,7 @@ export const AdminProfessors: React.FC = () => {
                                 {isExpanded && (
                                     <div id={panelId} className="space-y-3 border-t border-stone-100 bg-stone-50 p-4 animate-in slide-in-from-top-2 duration-200">
                                         {prof.bio && <p className="text-sm text-stone-500">{prof.bio}</p>}
-                                        <h4 className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-stone-400">
+                                        <h4 className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-stone-400">
                                             <Users size={14} /> Alunos
                                         </h4>
 

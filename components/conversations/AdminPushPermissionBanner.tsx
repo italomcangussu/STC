@@ -94,7 +94,7 @@ export const AdminPushPermissionBanner: React.FC<AdminPushPermissionBannerProps>
               <h2 className="text-sm font-semibold tracking-tight text-stone-900 sm:text-base">
                 Notificações de Mensagens
               </h2>
-              <span className="inline-flex items-center gap-1 rounded-md bg-stone-200/60 px-1.5 py-0.5 text-[10px] font-medium text-stone-600">
+              <span className="inline-flex items-center gap-1 rounded-md bg-stone-200/60 px-1.5 py-0.5 text-meta font-medium text-stone-600">
                 <ShieldCheck size={11} aria-hidden="true" />
                 Administração
               </span>

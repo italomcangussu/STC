@@ -161,7 +161,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
                             <AlertTriangle size={24} />
                         </div>
                         <div className="flex-1 min-w-0 pt-1">
-                            <h3 id={titleId} className="text-lg font-black text-stone-800 leading-tight">{title}</h3>
+                            <h3 id={titleId} className="text-lg font-extrabold text-stone-800 leading-tight">{title}</h3>
                             <p id={descriptionId} className="text-sm text-stone-500 leading-relaxed mt-1.5">{description}</p>
                         </div>
                         <button
@@ -186,7 +186,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
                     {requireTyped && (
                         <label className="block mt-4">
                             <span className="text-xs font-bold text-stone-500">
-                                Digite <span className="font-black text-stone-700">{requireTyped}</span> para confirmar
+                                Digite <span className="font-extrabold text-stone-700">{requireTyped}</span> para confirmar
                             </span>
                             <input
                                 ref={firstFieldRef as React.RefObject<HTMLInputElement>}
@@ -217,7 +217,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
                         type="button"
                         onClick={onConfirm}
                         disabled={!confirmEnabled}
-                        className={`flex-1 min-h-[44px] rounded-xl font-black transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${styles.confirm}`}
+                        className={`flex-1 min-h-[44px] rounded-xl font-extrabold transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${styles.confirm}`}
                     >
                         {busy ? 'Aguarde...' : confirmLabel}
                     </button>

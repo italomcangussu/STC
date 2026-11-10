@@ -201,12 +201,12 @@ export const AdminMatchCreator: React.FC<AdminMatchCreatorProps> = ({ isOpen, on
 
     return (
         <StandardModal isOpen={isOpen} onClose={onClose} verticalAlign="start">
-            <div className="bg-white w-full max-w-lg rounded-[32px] sm:rounded-[40px] shadow-2xl overflow-hidden flex flex-col max-h-[85vh] sm:max-h-[90vh]">
+            <div className="bg-white w-full max-w-lg rounded-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] sm:max-h-[90vh]">
 
                 {/* Header */}
                 <div className="px-8 py-6 border-b border-stone-100/50 bg-white/80 backdrop-blur-xl sticky top-0 z-10 flex justify-between items-center">
                     <div>
-                        <h2 className="text-xl font-black text-stone-800 tracking-tight flex items-center gap-2">
+                        <h2 className="text-xl font-extrabold text-stone-800 tracking-tight flex items-center gap-2">
                             <Trophy className="text-saibro-500" size={24} strokeWidth={2.5} />
                             Lançar {matchType} (Retro)
                         </h2>
@@ -225,7 +225,7 @@ export const AdminMatchCreator: React.FC<AdminMatchCreatorProps> = ({ isOpen, on
                     {/* Date & Time */}
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <label className="flex items-center gap-2 text-[10px] font-black text-stone-400 uppercase tracking-widest">
+                            <label className="flex items-center gap-2 text-meta font-extrabold text-stone-400 uppercase tracking-widest">
                                 <Calendar size={12} /> Data
                             </label>
                             <input
@@ -236,7 +236,7 @@ export const AdminMatchCreator: React.FC<AdminMatchCreatorProps> = ({ isOpen, on
                             />
                         </div>
                         <div className="space-y-2">
-                            <label className="flex items-center gap-2 text-[10px] font-black text-stone-400 uppercase tracking-widest">
+                            <label className="flex items-center gap-2 text-meta font-extrabold text-stone-400 uppercase tracking-widest">
                                 <Clock size={12} /> Hora
                             </label>
                             <input
@@ -250,7 +250,7 @@ export const AdminMatchCreator: React.FC<AdminMatchCreatorProps> = ({ isOpen, on
 
                     {/* Court Selector */}
                     <div className="bg-stone-50/50 p-4 rounded-2xl border border-stone-100">
-                        <label className="block text-[10px] font-black text-stone-400 uppercase tracking-widest mb-2">
+                        <label className="block text-meta font-extrabold text-stone-400 uppercase tracking-widest mb-2">
                             Onde ocorreu o jogo? (Opcional)
                         </label>
                         <select
@@ -264,11 +264,11 @@ export const AdminMatchCreator: React.FC<AdminMatchCreatorProps> = ({ isOpen, on
                     </div>
 
                     {/* Matchup & Score Card */}
-                    <div className="bg-stone-50 rounded-[32px] p-6 border border-stone-100">
+                    <div className="bg-stone-50 rounded-3xl p-6 border border-stone-100">
                         <div className="flex justify-between items-center mb-6">
                             {/* Player A */}
                             <div className="flex-1">
-                                <label className="block text-[10px] font-black text-blue-500 uppercase tracking-widest mb-2 text-center">Jogador A</label>
+                                <label className="block text-meta font-extrabold text-blue-500 uppercase tracking-widest mb-2 text-center">Jogador A</label>
                                 <select
                                     value={playerAId}
                                     onChange={e => setPlayerAId(e.target.value)}
@@ -280,12 +280,12 @@ export const AdminMatchCreator: React.FC<AdminMatchCreatorProps> = ({ isOpen, on
                             </div>
 
                             <div className="px-4 pb-6">
-                                <span className="text-2xl font-black text-stone-300 italic">VS</span>
+                                <span className="text-2xl font-extrabold text-stone-300 italic">VS</span>
                             </div>
 
                             {/* Player B */}
                             <div className="flex-1">
-                                <label className="block text-[10px] font-black text-red-500 uppercase tracking-widest mb-2 text-center">Jogador B</label>
+                                <label className="block text-meta font-extrabold text-red-500 uppercase tracking-widest mb-2 text-center">Jogador B</label>
                                 <select
                                     value={playerBId}
                                     onChange={e => setPlayerBId(e.target.value)}
@@ -307,14 +307,14 @@ export const AdminMatchCreator: React.FC<AdminMatchCreatorProps> = ({ isOpen, on
                                         <div className="flex flex-col items-center gap-2">
                                             <button
                                                 onClick={() => handleSetChange(0, 'a', Math.min((parseInt(sets[0].a) || 0) + 1, 7).toString())}
-                                                className="w-16 h-16 rounded-2xl bg-white border-2 border-blue-100 text-blue-600 flex items-center justify-center text-3xl font-black hover:bg-blue-500 hover:text-white transition-all active:scale-90 shadow-sm"
+                                                className="w-16 h-16 rounded-2xl bg-white border-2 border-blue-100 text-blue-600 flex items-center justify-center text-3xl font-extrabold hover:bg-blue-500 hover:text-white transition-all active:scale-90 shadow-sm"
                                             >+</button>
                                             <div className="relative">
                                                 <input
                                                     type="number"
                                                     value={sets[0].a}
                                                     readOnly
-                                                    className="w-24 h-24 text-center text-6xl font-black text-stone-800 bg-transparent border-none outline-hidden tabular-nums tracking-tighter [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                    className="w-24 h-24 text-center text-6xl font-extrabold text-stone-800 bg-transparent border-none outline-hidden tabular-nums tracking-tighter [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                                 />
                                                 {getSetWinner(parseInt(sets[0].a), parseInt(sets[0].b)) === 'A' && (
                                                     <div className="absolute -top-2 -right-2 bg-yellow-400 text-yellow-900 p-1.5 rounded-full shadow-lg animate-bounce border-2 border-white">
@@ -337,14 +337,14 @@ export const AdminMatchCreator: React.FC<AdminMatchCreatorProps> = ({ isOpen, on
                                         <div className="flex flex-col items-center gap-2">
                                             <button
                                                 onClick={() => handleSetChange(0, 'b', Math.min((parseInt(sets[0].b) || 0) + 1, 7).toString())}
-                                                className="w-16 h-16 rounded-2xl bg-white border-2 border-red-100 text-red-600 flex items-center justify-center text-3xl font-black hover:bg-red-500 hover:text-white transition-all active:scale-90 shadow-sm"
+                                                className="w-16 h-16 rounded-2xl bg-white border-2 border-red-100 text-red-600 flex items-center justify-center text-3xl font-extrabold hover:bg-red-500 hover:text-white transition-all active:scale-90 shadow-sm"
                                             >+</button>
                                             <div className="relative">
                                                 <input
                                                     type="number"
                                                     value={sets[0].b}
                                                     readOnly
-                                                    className="w-24 h-24 text-center text-6xl font-black text-stone-800 bg-transparent border-none outline-hidden tabular-nums tracking-tighter [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                    className="w-24 h-24 text-center text-6xl font-extrabold text-stone-800 bg-transparent border-none outline-hidden tabular-nums tracking-tighter [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                                 />
                                                 {getSetWinner(parseInt(sets[0].a), parseInt(sets[0].b)) === 'B' && (
                                                     <div className="absolute -top-2 -right-2 bg-yellow-400 text-yellow-900 p-1.5 rounded-full shadow-lg animate-bounce border-2 border-white">
@@ -368,10 +368,10 @@ export const AdminMatchCreator: React.FC<AdminMatchCreatorProps> = ({ isOpen, on
                                                 value={set.a}
                                                 onChange={e => handleSetChange(idx, 'a', e.target.value)}
                                                 placeholder="0"
-                                                className="w-16 h-16 text-center text-3xl font-black text-blue-600 bg-white rounded-2xl border-none shadow-sm focus:ring-4 focus:ring-blue-100 outline-hidden placeholder:text-stone-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                className="w-16 h-16 text-center text-3xl font-extrabold text-blue-600 bg-white rounded-2xl border-none shadow-sm focus:ring-4 focus:ring-blue-100 outline-hidden placeholder:text-stone-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                             />
                                             <div className="flex flex-col items-center gap-1">
-                                                <span className="text-[10px] font-black text-stone-300 uppercase tracking-wider">SET {idx + 1}</span>
+                                                <span className="text-meta font-extrabold text-stone-300 uppercase tracking-wider">SET {idx + 1}</span>
                                                 <div className="w-8 h-1 bg-stone-200 rounded-full"></div>
                                             </div>
                                             <input
@@ -379,7 +379,7 @@ export const AdminMatchCreator: React.FC<AdminMatchCreatorProps> = ({ isOpen, on
                                                 value={set.b}
                                                 onChange={e => handleSetChange(idx, 'b', e.target.value)}
                                                 placeholder="0"
-                                                className="w-16 h-16 text-center text-3xl font-black text-red-600 bg-white rounded-2xl border-none shadow-sm focus:ring-4 focus:ring-red-100 outline-hidden placeholder:text-stone-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                className="w-16 h-16 text-center text-3xl font-extrabold text-red-600 bg-white rounded-2xl border-none shadow-sm focus:ring-4 focus:ring-red-100 outline-hidden placeholder:text-stone-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                             />
                                             {idx > 0 && sets.length > 1 && (
                                                 <button onClick={() => removeSet(idx)} className="absolute right-8 text-red-300 hover:text-red-500 p-2">
@@ -416,7 +416,7 @@ export const AdminMatchCreator: React.FC<AdminMatchCreatorProps> = ({ isOpen, on
                     <button
                         onClick={handleSave}
                         disabled={loading}
-                        className="flex-2 py-4 bg-saibro-600 hover:bg-saibro-700 text-white rounded-2xl font-black flex items-center justify-center gap-2 shadow-xl shadow-saibro-100 hover:shadow-2xl transition-all active:scale-95 disabled:opacity-70 uppercase tracking-widest text-sm"
+                        className="flex-2 py-4 bg-saibro-600 hover:bg-saibro-700 text-white rounded-2xl font-extrabold flex items-center justify-center gap-2 shadow-xl hover:shadow-2xl transition-all active:scale-95 disabled:opacity-70 uppercase tracking-widest text-sm"
                     >
                         {loading ? <Loader2 className="animate-spin" size={20} /> : <CheckCircle size={20} />}
                         Confirmar Resultado

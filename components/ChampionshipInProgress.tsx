@@ -625,14 +625,14 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                 <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6 animate-pulse">
                     <Play size={40} className="text-green-600 ml-1" />
                 </div>
-                <h2 className="text-2xl font-black text-stone-800 mb-2">Pronto para Iniciar!</h2>
+                <h2 className="text-2xl font-extrabold text-stone-800 mb-2">Pronto para Iniciar!</h2>
                 <p className="text-stone-500 text-center max-w-md mb-8">
                     Os grupos foram sorteados. Ao iniciar, o sistema irá gerar automaticamente todas as rodadas e partidas da fase classificatória.
                 </p>
                 <button
                     onClick={handleStartChampionship}
                     disabled={processing}
-                    className="px-8 py-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl shadow-lg shadow-green-200 transition-all flex items-center gap-2 text-lg"
+                    className="px-8 py-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl shadow-lg transition-all flex items-center gap-2 text-lg"
                 >
                     {processing ? <Loader2 className="animate-spin" /> : <Play size={24} />}
                     Iniciar Campeonato Agora
@@ -646,12 +646,12 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
     return (
         <div className="space-y-6">
             {/* Scheduling Dashboard (Static Top) */}
-            <div className="bg-white rounded-[2.5rem] p-6 shadow-sm border border-stone-100 flex items-start gap-4">
+            <div className="bg-white rounded-3xl p-6 shadow-sm border border-stone-100 flex items-start gap-4">
                 <div className="bg-saibro-100 p-3 rounded-2xl text-saibro-600">
                     <Clock size={20} />
                 </div>
                 <div className="flex-1">
-                    <h3 className="text-sm font-black text-stone-800 uppercase tracking-tighter">Regras de Agendamento</h3>
+                    <h3 className="text-sm font-extrabold text-stone-800 uppercase tracking-tighter">Regras de Agendamento</h3>
                     <p className="text-xs text-stone-400 mt-1 leading-relaxed">
                         Jogos devem ser agendados via WhatsApp. Verifique as restrições:
                     </p>
@@ -665,8 +665,8 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
 
             {/* Match Management Actions (Admin Only) */}
             {currentUser?.role === 'admin' && (
-                <div className="bg-white rounded-[2.5rem] p-6 shadow-sm border border-stone-100">
-                    <h3 className="text-xs font-black text-stone-400 uppercase tracking-widest mb-4 px-2">Gerenciamento de Confrontos</h3>
+                <div className="bg-white rounded-3xl p-6 shadow-sm border border-stone-100">
+                    <h3 className="text-xs font-extrabold text-stone-400 uppercase tracking-widest mb-4 px-2">Gerenciamento de Confrontos</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <button
                             onClick={() => setShowGenModal(true)}
@@ -698,21 +698,21 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
             <div className="flex bg-stone-100 p-1.5 rounded-3xl shadow-inner">
                 <button
                     onClick={() => setActiveTab('matches')}
-                    className={`flex-1 py-3 rounded-2xl text-xs font-black tracking-widest transition-all ${activeTab === 'matches' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-400'}`}
+                    className={`flex-1 py-3 rounded-2xl text-xs font-extrabold tracking-widest transition-all ${activeTab === 'matches' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-400'}`}
                 >
                     RODADAS
                 </button>
                 {!isResenhaOpen && (
                     <button
                         onClick={() => setActiveTab('standings')}
-                        className={`flex-1 py-3 rounded-2xl text-xs font-black tracking-widest transition-all ${activeTab === 'standings' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-400'}`}
+                        className={`flex-1 py-3 rounded-2xl text-xs font-extrabold tracking-widest transition-all ${activeTab === 'standings' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-400'}`}
                     >
                         CLASSIFICAÇÃO
                     </button>
                 )}
                 <button
                     onClick={() => setActiveTab('bracket')}
-                    className={`flex-1 py-3 rounded-2xl text-xs font-black tracking-widest transition-all ${activeTab === 'bracket' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-400'}`}
+                    className={`flex-1 py-3 rounded-2xl text-xs font-extrabold tracking-widest transition-all ${activeTab === 'bracket' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-400'}`}
                 >
                     CHAVEAMENTO
                 </button>
@@ -725,7 +725,7 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                         const currentRound = rounds[selectedRoundIndex];
                         return (
                             <div className="space-y-6">
-                                <div className="flex items-center justify-between bg-white p-4 rounded-[2.5rem] border border-stone-100 shadow-sm">
+                                <div className="flex items-center justify-between bg-white p-4 rounded-3xl border border-stone-100 shadow-sm">
                                     <button
                                         onClick={() => setSelectedRoundIndex(prev => Math.max(0, prev - 1))}
                                         aria-label="Rodada anterior"
@@ -735,8 +735,8 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                                         <ChevronLeft size={24} />
                                     </button>
                                     <div className="text-center">
-                                        <h3 className="font-black text-stone-900 text-sm">{currentRound.name}</h3>
-                                        <p className="text-xs font-black text-saibro-600 uppercase tracking-widest mt-1">
+                                        <h3 className="font-extrabold text-stone-900 text-sm">{currentRound.name}</h3>
+                                        <p className="text-xs font-extrabold text-saibro-600 uppercase tracking-widest mt-1">
                                             {formatDateBr(currentRound.start_date)} - {formatDateBr(currentRound.end_date)}
                                         </p>
                                     </div>
@@ -754,7 +754,7 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                                 {currentUser?.role === 'admin' && currentRound.status === 'pending' && (
                                     <div className="bg-amber-50 border border-amber-100 p-5 rounded-4xl flex items-center justify-between gap-4 animate-in fade-in slide-in-from-top-2">
                                         <div className="flex-1">
-                                            <h4 className="text-sm font-black text-amber-900 leading-tight">Rodada em Rascunho</h4>
+                                            <h4 className="text-sm font-extrabold text-amber-900 leading-tight">Rodada em Rascunho</h4>
                                             <p className="text-xs text-amber-700 font-bold mt-1">Os matches não estão visíveis para os sócios.</p>
                                         </div>
                                         <button
@@ -784,7 +784,7 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                                                 setProcessing(false);
                                             }}
                                             disabled={processing}
-                                            className="px-6 py-3 bg-amber-500 text-white text-xs font-black uppercase rounded-xl hover:bg-amber-600 transition-all shadow-lg shadow-amber-200 flex items-center gap-2"
+                                            className="px-6 py-3 bg-amber-500 text-white text-xs font-extrabold uppercase rounded-xl hover:bg-amber-600 transition-all shadow-lg flex items-center gap-2"
                                         >
                                             {processing ? <Loader2 size={14} className="animate-spin" /> : <Play size={14} fill="white" />}
                                             Publicar Rodada
@@ -797,7 +797,7 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                                     <div className="flex bg-stone-100 p-1.5 rounded-3xl shadow-inner gap-1">
                                         <button
                                             onClick={() => setSelectedMatchClass('Todas')}
-                                            className={`flex-1 py-3 rounded-2xl text-xs font-black tracking-widest transition-all ${
+                                            className={`flex-1 py-3 rounded-2xl text-xs font-extrabold tracking-widest transition-all ${
                                                 selectedMatchClass === 'Todas'
                                                     ? 'bg-white text-stone-900 shadow-sm'
                                                     : 'text-stone-400 hover:text-stone-600'
@@ -809,7 +809,7 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                                             <button
                                                 key={cls}
                                                 onClick={() => setSelectedMatchClass(cls)}
-                                                className={`flex-1 py-3 rounded-2xl text-xs font-black tracking-widest transition-all ${
+                                                className={`flex-1 py-3 rounded-2xl text-xs font-extrabold tracking-widest transition-all ${
                                                     selectedMatchClass === cls
                                                         ? 'bg-white text-stone-900 shadow-sm'
                                                         : 'text-stone-400 hover:text-stone-600'
@@ -851,14 +851,14 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
 
                                             return (
                                                 <div key={match.id} className="bg-white rounded-4xl p-6 shadow-sm border border-stone-100 relative overflow-hidden transition-all hover:border-saibro-200">
-                                                    <div className="absolute top-0 left-0 bg-stone-50 px-3 py-1 rounded-br-2xl text-xs font-black text-stone-400 uppercase tracking-tighter">
+                                                    <div className="absolute top-0 left-0 bg-stone-50 px-3 py-1 rounded-br-2xl text-xs font-extrabold text-stone-400 uppercase tracking-tighter">
                                                         {regA?.class || 'N/A'}
                                                     </div>
 
                                                     <div className="flex items-center gap-6 mt-2">
                                                         <div className="flex-1 space-y-4">
                                                             <div className="flex items-center justify-between">
-                                                                <span className="text-xs uppercase tracking-widest font-black text-stone-400">
+                                                                <span className="text-xs uppercase tracking-widest font-extrabold text-stone-400">
                                                                     {resultLabel}
                                                                 </span>
                                                             </div>
@@ -867,7 +867,7 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                                                                 {isFinished && (
                                                                     <div className="flex gap-1">
                                                                         {match.score_a.map((s, i) => (
-                                                                            <span key={i} className={`w-7 h-7 flex items-center justify-center rounded-lg text-xs font-black ${match.score_a[i] > match.score_b[i] ? 'bg-saibro-600 text-white shadow-sm' : 'bg-stone-50 text-stone-300'}`}>{s}</span>
+                                                                            <span key={i} className={`w-7 h-7 flex items-center justify-center rounded-lg text-xs font-extrabold ${match.score_a[i] > match.score_b[i] ? 'bg-saibro-600 text-white shadow-sm' : 'bg-stone-50 text-stone-300'}`}>{s}</span>
                                                                         ))}
                                                                     </div>
                                                                 )}
@@ -877,7 +877,7 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                                                                 {isFinished && (
                                                                     <div className="flex gap-1">
                                                                         {match.score_b.map((s, i) => (
-                                                                            <span key={i} className={`w-7 h-7 flex items-center justify-center rounded-lg text-xs font-black ${match.score_b[i] > match.score_a[i] ? 'bg-saibro-600 text-white shadow-sm' : 'bg-stone-50 text-stone-300'}`}>{s}</span>
+                                                                            <span key={i} className={`w-7 h-7 flex items-center justify-center rounded-lg text-xs font-extrabold ${match.score_b[i] > match.score_a[i] ? 'bg-saibro-600 text-white shadow-sm' : 'bg-stone-50 text-stone-300'}`}>{s}</span>
                                                                         ))}
                                                                     </div>
                                                                 )}
@@ -893,7 +893,7 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                                                                     <div className="bg-saibro-50 p-2 rounded-xl text-saibro-600 group-hover:bg-saibro-100 transition-colors">
                                                                         <Clock size={16} />
                                                                     </div>
-                                                                    <p className="text-xs font-black text-stone-800 mt-1">{match.scheduled_time?.substring(0, 5)}</p>
+                                                                    <p className="text-xs font-extrabold text-stone-800 mt-1">{match.scheduled_time?.substring(0, 5)}</p>
                                                                 </button>
                                                             ) : (
                                                                 <button
@@ -964,7 +964,7 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                                 <button
                                     key={category}
                                     onClick={() => setSelectedBracketCategory(category)}
-                                    className={`flex-1 min-w-[100px] py-3 px-4 rounded-2xl text-xs font-black tracking-wider transition-all ${
+                                    className={`flex-1 min-w-[100px] py-3 px-4 rounded-2xl text-xs font-extrabold tracking-wider transition-all ${
                                         selectedBracketCategory === category
                                             ? 'bg-saibro-600 text-white shadow-md'
                                             : 'text-stone-400 hover:text-stone-600'
@@ -1051,7 +1051,7 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                         {/* CONTROLS */}
                         <div className="p-6 md:w-80 border-r border-stone-100 bg-stone-50 flex flex-col gap-6 overflow-y-auto">
                             <div className="flex items-center justify-between">
-                                <h3 className="font-black text-stone-800 text-lg tracking-tight">Exportar Agenda</h3>
+                                <h3 className="font-extrabold text-stone-800 text-lg tracking-tight">Exportar Agenda</h3>
                                 <button onClick={() => setShowExportModal(false)} className="text-stone-400 hover:text-stone-700">
                                     <X size={20} />
                                 </button>
@@ -1095,7 +1095,7 @@ export const ChampionshipInProgress: React.FC<Props> = ({ championship, currentU
                                 <button
                                     onClick={handleExportImage}
                                     disabled={!exportDate || exporting}
-                                    className="w-full py-4 bg-saibro-600 hover:bg-saibro-700 text-white rounded-xl font-black uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-saibro-200 transition-all active:scale-95 disabled:opacity-50 disabled:active:scale-100"
+                                    className="w-full py-4 bg-saibro-600 hover:bg-saibro-700 text-white rounded-xl font-extrabold uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95 disabled:opacity-50 disabled:active:scale-100"
                                 >
                                     {exporting ? <Loader2 className="animate-spin" /> : <Download size={20} />}
                                     Baixar Imagem
@@ -1169,7 +1169,7 @@ const AdminResultActionsModal: React.FC<{
         <StandardModal isOpen onClose={onClose} ariaLabel="Ações de resultado">
             <div className="w-full max-w-md bg-white rounded-3xl border border-stone-100 shadow-2xl overflow-hidden">
                 <div className="p-5 border-b border-stone-100">
-                    <h3 className="text-lg font-black text-stone-800">Ações de Resultado</h3>
+                    <h3 className="text-lg font-extrabold text-stone-800">Ações de Resultado</h3>
                     <p className="text-xs text-stone-500 mt-1">{nameA} x {nameB}</p>
                 </div>
 

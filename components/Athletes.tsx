@@ -228,7 +228,7 @@ const AthleteProfile: React.FC<AthleteProfileProps> = ({ userId, currentUser, us
                             alt={user.name}
                             className="w-24 h-24 rounded-full border-4 border-saibro-300 shadow-md bg-stone-200 object-cover"
                         />
-                        <div className={`absolute bottom-1 right-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border border-white ${user.role === 'admin' ? 'bg-purple-500' : 'bg-green-500'}`}>
+                        <div className={`absolute bottom-1 right-1 px-2 py-0.5 rounded-full text-meta font-bold uppercase border border-white ${user.role === 'admin' ? 'bg-purple-500' : 'bg-green-500'}`}>
                             {user.role}
                         </div>
                     </div>
@@ -275,30 +275,30 @@ const AthleteProfile: React.FC<AthleteProfileProps> = ({ userId, currentUser, us
                     <span className="text-xs font-bold text-stone-400 uppercase tracking-wider">Ranking</span>
                     <div className="flex items-center gap-1 mt-1">
                         <Trophy size={16} className="text-yellow-500" />
-                        <span className="text-2xl font-black text-stone-800">#{userRankStats?.categoryPosition || '-'}</span>
+                        <span className="text-2xl font-extrabold text-stone-800">#{userRankStats?.categoryPosition || '-'}</span>
                     </div>
-                    <span className="text-[9px] text-stone-400">{userRankStats?.category}</span>
+                    <span className="text-meta text-stone-400">{userRankStats?.category}</span>
                 </div>
 
                 <div className="bg-white p-3 rounded-xl shadow-md border border-stone-100 flex flex-col items-center text-center">
                     <span className="text-xs font-bold text-stone-400 uppercase tracking-wider">Pontos</span>
-                    <span className="text-2xl font-black text-saibro-600 mt-1">{userRankStats?.totalPoints || 0}</span>
-                    <span className="text-[9px] text-stone-400 leading-none">Total</span>
+                    <span className="text-2xl font-extrabold text-saibro-600 mt-1">{userRankStats?.totalPoints || 0}</span>
+                    <span className="text-meta text-stone-400 leading-none">Total</span>
                 </div>
 
                 <div className="bg-white p-3 rounded-xl shadow-md border border-stone-100 flex flex-col items-center text-center">
                     <span className="text-xs font-bold text-stone-400 uppercase tracking-wider">V / D</span>
-                    <span className="text-2xl font-black text-stone-800 mt-1">
+                    <span className="text-2xl font-extrabold text-stone-800 mt-1">
                         {userRankStats?.totalWins || 0} / {userRankStats?.totalLosses || 0}
                     </span>
-                    <span className="text-[9px] text-stone-400 leading-none">Vitórias / Derrotas</span>
+                    <span className="text-meta text-stone-400 leading-none">Vitórias / Derrotas</span>
                 </div>
 
                 <div className="bg-white p-3 rounded-xl shadow-md border border-stone-100 flex flex-col items-center text-center">
                     <span className="text-xs font-bold text-stone-400 uppercase tracking-wider">Presença</span>
-                    <span className="text-2xl font-black text-stone-800 mt-1">{userReservations.length}</span>
+                    <span className="text-2xl font-extrabold text-stone-800 mt-1">{userReservations.length}</span>
 
-                    <span className="text-[9px] text-stone-400 leading-none">Reservas</span>
+                    <span className="text-meta text-stone-400 leading-none">Reservas</span>
                 </div>
             </div>
 
@@ -355,12 +355,12 @@ const AthleteProfile: React.FC<AthleteProfileProps> = ({ userId, currentUser, us
                                 <div className="flex justify-between items-end">
                                     <div className="text-center">
                                         <span className="block text-xl font-bold text-green-600">{userRankStats?.totalSetsWon || 0}</span>
-                                        <span className="text-[10px] text-stone-400">Ganhos</span>
+                                        <span className="text-meta text-stone-400">Ganhos</span>
                                     </div>
                                     <div className="h-8 w-px bg-stone-100 mx-2" />
                                     <div className="text-center">
                                         <span className="block text-xl font-bold text-red-500">{userRankStats?.totalSetsLost || 0}</span>
-                                        <span className="text-[10px] text-stone-400">Perdidos</span>
+                                        <span className="text-meta text-stone-400">Perdidos</span>
                                     </div>
                                 </div>
                             </div>
@@ -371,12 +371,12 @@ const AthleteProfile: React.FC<AthleteProfileProps> = ({ userId, currentUser, us
                                 <div className="flex justify-between items-end">
                                     <div className="text-center">
                                         <span className="block text-xl font-bold text-green-600">{userRankStats?.totalGamesWon || 0}</span>
-                                        <span className="text-[10px] text-stone-400">Ganhos</span>
+                                        <span className="text-meta text-stone-400">Ganhos</span>
                                     </div>
                                     <div className="h-8 w-px bg-stone-100 mx-2" />
                                     <div className="text-center">
                                         <span className="block text-xl font-bold text-red-500">{userRankStats?.totalGamesLost || 0}</span>
-                                        <span className="text-[10px] text-stone-400">Perdidos</span>
+                                        <span className="text-meta text-stone-400">Perdidos</span>
                                     </div>
                                 </div>
                             </div>
@@ -389,15 +389,15 @@ const AthleteProfile: React.FC<AthleteProfileProps> = ({ userId, currentUser, us
                                 <div className="grid grid-cols-3 gap-2">
                                     <div className="text-center">
                                         <span className="block text-lg font-bold text-saibro-600">{userRankStats.championshipPoints}</span>
-                                        <span className="text-[10px] text-stone-500 leading-none">Campeonatos</span>
+                                        <span className="text-meta text-stone-500 leading-none">Campeonatos</span>
                                     </div>
                                     <div className="text-center border-x border-saibro-100">
                                         <span className="block text-lg font-bold text-saibro-600">{userRankStats.challengePoints}</span>
-                                        <span className="text-[10px] text-stone-500 leading-none">Desafios</span>
+                                        <span className="text-meta text-stone-500 leading-none">Desafios</span>
                                     </div>
                                     <div className="text-center">
                                         <span className="block text-lg font-bold text-saibro-600">{userRankStats.superSetPoints || 0}</span>
-                                        <span className="text-[10px] text-stone-500 leading-none">SuperSets</span>
+                                        <span className="text-meta text-stone-500 leading-none">SuperSets</span>
                                     </div>
                                 </div>
                                 <div className="mt-3 bg-white rounded-lg p-2">
@@ -449,7 +449,7 @@ const AthleteProfile: React.FC<AthleteProfileProps> = ({ userId, currentUser, us
                                 return (
                                     <div key={m.id} className="bg-white p-4 rounded-xl border border-stone-100 shadow-sm flex flex-col gap-2 hover:shadow-md transition-shadow animate-slide-in" style={{ animationDelay: `${mIndex * 50}ms` }}>
                                         <div className="flex justify-between items-start">
-                                            <span className="text-[10px] font-bold uppercase bg-stone-100 text-stone-500 px-2 py-0.5 rounded">
+                                            <span className="text-meta font-bold uppercase bg-stone-100 text-stone-500 px-2 py-0.5 rounded">
                                                 {m.type || 'Desafio'}
                                             </span>
                                             <span className={`text-xs font-bold px-2 py-0.5 rounded ${isWinner ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
@@ -471,7 +471,7 @@ const AthleteProfile: React.FC<AthleteProfileProps> = ({ userId, currentUser, us
                                                 ))}
                                             </div>
                                         </div>
-                                        <div className="text-[10px] text-stone-400 text-right">
+                                        <div className="text-meta text-stone-400 text-right">
                                             {m.date ? formatDateBr(m.date.split('T')[0]) : 'Data N/A'}
                                         </div>
                                     </div>
@@ -513,7 +513,7 @@ const AthleteProfile: React.FC<AthleteProfileProps> = ({ userId, currentUser, us
                                                 <div className="flex-1">
                                                     <div className="flex justify-between">
                                                         <span className="font-bold text-stone-800 text-sm">{court?.name}</span>
-                                                        <span className="text-[10px] uppercase font-bold text-stone-400">{r.type}</span>
+                                                        <span className="text-meta uppercase font-bold text-stone-400">{r.type}</span>
                                                     </div>
                                                     <p className="text-xs text-stone-500">
                                                         {formatDateBr(r.date)}
@@ -562,8 +562,8 @@ const AthleteProfile: React.FC<AthleteProfileProps> = ({ userId, currentUser, us
                                                     </p>
                                                 </div>
                                                 <div className="text-right">
-                                                    <span className="text-lg font-black text-saibro-700">{item.points}</span>
-                                                    <p className="text-[10px] text-stone-400 uppercase font-bold">pts</p>
+                                                    <span className="text-lg font-extrabold text-saibro-700">{item.points}</span>
+                                                    <p className="text-meta text-stone-400 uppercase font-bold">pts</p>
                                                 </div>
                                             </div>
                                         ))}
@@ -592,8 +592,8 @@ const AthleteProfile: React.FC<AthleteProfileProps> = ({ userId, currentUser, us
                                                     </p>
                                                 </div>
                                                 <div className="text-right">
-                                                    <span className="text-lg font-black text-saibro-700">{h.points}</span>
-                                                    <p className="text-[10px] text-stone-400 uppercase font-bold">pts</p>
+                                                    <span className="text-lg font-extrabold text-saibro-700">{h.points}</span>
+                                                    <p className="text-meta text-stone-400 uppercase font-bold">pts</p>
                                                 </div>
                                             </div>
                                         ))}
@@ -605,7 +605,7 @@ const AthleteProfile: React.FC<AthleteProfileProps> = ({ userId, currentUser, us
                         {(championshipDefensePoints.length > 0 || h2hPoints.filter(h => h.points > 0).length > 0) && (
                             <div className="p-4 bg-stone-50 border border-stone-200 rounded-xl flex justify-between items-center">
                                 <span className="text-sm font-bold text-stone-600">Total em defesa</span>
-                                <span className="text-xl font-black text-stone-800">
+                                <span className="text-xl font-extrabold text-stone-800">
                                     {championshipDefensePoints.reduce((s, i) => s + i.points, 0) +
                                         h2hPoints.filter(h => h.points > 0).reduce((s, h) => s + h.points, 0)} pts
                                 </span>
@@ -748,7 +748,7 @@ export const Athletes: React.FC<AthletesProps> = ({ initialUserId, currentUser, 
                         <div>
                             <h3 className="font-bold text-stone-800 flex items-center gap-1">
                                 {u.name}
-                                {u.id === currentUser.id && <span className="text-[10px] bg-stone-100 text-stone-500 px-1 rounded">Você</span>}
+                                {u.id === currentUser.id && <span className="text-meta bg-stone-100 text-stone-500 px-1 rounded">Você</span>}
                             </h3>
                             <div className="flex items-center gap-2 text-xs text-stone-500">
                                 {u.role === 'admin' && <span className="bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded uppercase font-bold">ADMIN</span>}

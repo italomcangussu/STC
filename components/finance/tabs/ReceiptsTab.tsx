@@ -55,7 +55,7 @@ const LinkChargesPanel: React.FC<{ submissionId: string; profileId: string; link
   if (!open) return <button className={btnGhost} onClick={() => setOpen(true)}><Link2 size={16} /> Ligar outra cobrança do sócio</button>;
   return (
     <div className="space-y-2 rounded-2xl border border-stone-200 p-3">
-      <p className="text-[11px] font-black uppercase tracking-wider text-stone-400">Ligar cobrança ao comprovante</p>
+      <p className="text-meta font-extrabold uppercase tracking-wider text-stone-400">Ligar cobrança ao comprovante</p>
       {linked.length === 0 && <Notice tone="warn">Este comprovante chegou sem cobrança ligada. Escolha a que ele paga para poder aprovar.</Notice>}
       {list.error ? <ErrorBlock error={list.error} onRetry={list.reload} /> : list.loading || !list.data ? <Spinner /> : list.data.length === 0 ? (
         <p className="text-sm text-stone-500">Este sócio não tem outra cobrança em aberto. Crie a pendência ou a mensalidade em Cobranças e volte aqui.</p>
@@ -68,7 +68,7 @@ const LinkChargesPanel: React.FC<{ submissionId: string; profileId: string; link
                   <input type="checkbox" className="h-5 w-5" checked={chosen.includes(c.charge_id)}
                     onChange={(e) => setChosen((x) => e.target.checked ? [...x, c.charge_id] : x.filter((y) => y !== c.charge_id))} />
                   <span className="flex-1"><b className="capitalize">{monthLabel(c.competence_month)}</b> <span className="text-xs text-stone-500">· vence {brDate(c.due_date)}</span></span>
-                  <span className="font-black tabular-nums">{formatBRL(c.total_due_cents)}</span>
+                  <span className="font-extrabold tabular-nums">{formatBRL(c.total_due_cents)}</span>
                 </label>
               </li>
             ))}
@@ -215,7 +215,7 @@ const ReviewSheet: React.FC<ReviewProps> = ({ id, queue, onClose, onDone }) => {
 
           {analysis && (
             <div className="space-y-2">
-              <p className="text-[11px] font-black uppercase tracking-wider text-stone-400">Conferência (apenas orienta)</p>
+              <p className="text-meta font-extrabold uppercase tracking-wider text-stone-400">Conferência (apenas orienta)</p>
               {analysis.flags.length === 0 && <Notice tone="info"><span className="flex items-center gap-1.5"><CheckCircle2 size={14} />Nada de estranho encontrado. Mesmo assim, confira o arquivo.</span></Notice>}
               {analysis.flags.map((f, i) => <Notice key={`${f.code}${i}`} tone={flagTone(f) === 'bad' ? 'bad' : flagTone(f) === 'warn' ? 'warn' : 'info'}>{f.message}</Notice>)}
             </div>
@@ -231,11 +231,11 @@ const ReviewSheet: React.FC<ReviewProps> = ({ id, queue, onClose, onDone }) => {
 
               {stm.loading ? <Spinner /> : (
                 <div className="space-y-2">
-                  <p className="text-[11px] font-black uppercase tracking-wider text-stone-400">Divisão do pagamento por cobrança</p>
+                  <p className="text-meta font-extrabold uppercase tracking-wider text-stone-400">Divisão do pagamento por cobrança</p>
                   {entries.map(({ c, amount, w }) => (
                     <Row key={c.charge_id}>
                       <div className="flex items-center justify-between gap-2 text-sm">
-                        <span className="font-black capitalize">{monthLabel(c.competence_month)}</span>
+                        <span className="font-extrabold capitalize">{monthLabel(c.competence_month)}</span>
                         <span className="text-xs text-stone-500">vence {brDate(c.due_date)} · {c.days_late > 0 ? `${c.days_late} dia(s) de atraso` : 'em dia'}</span>
                       </div>
                       <p className="mt-1 text-xs text-stone-500">Principal {formatBRL(c.principal_remaining_cents)}{c.fees_configured ? ` + encargos ${formatBRL(c.fees_due_cents)}` : ''} = <b>{formatBRL(c.total_due_cents)}</b> em {brDate(paidOn)}</p>
@@ -251,7 +251,7 @@ const ReviewSheet: React.FC<ReviewProps> = ({ id, queue, onClose, onDone }) => {
                       {w.on && <Field label="Justificativa da dispensa (obrigatória)" className="mt-2"><input className={inputCls} value={w.reason} onChange={(e) => setWaive((x) => ({ ...x, [c.charge_id]: { ...w, reason: e.target.value } }))} /></Field>}
                     </Row>
                   ))}
-                  <p className="text-sm font-black">Total lançado: {formatBRL(totalAlloc)}{analysis && analysis.amountCents !== null && analysis.amountCents !== totalAlloc && <span className="ml-2 text-xs font-bold text-amber-700">(comprovante: {formatBRL(analysis.amountCents)})</span>}</p>
+                  <p className="text-sm font-extrabold">Total lançado: {formatBRL(totalAlloc)}{analysis && analysis.amountCents !== null && analysis.amountCents !== totalAlloc && <span className="ml-2 text-xs font-bold text-amber-700">(comprovante: {formatBRL(analysis.amountCents)})</span>}</p>
                   {analysis && analysis.excessCents > 0 && <Notice tone="info">A sobra de {formatBRL(analysis.excessCents)} foi somada à última cobrança e ficará como <b>crédito do sócio</b>.</Notice>}
                 </div>
               )}
@@ -295,7 +295,7 @@ const ReceiptsTab: React.FC<{ onChanged?: () => void }> = ({ onChanged }) => {
       {filter === 'pending' && !q.error && !q.loading && rows.length > 0 && (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-saibro-200 bg-saibro-50/60 p-4">
           <div>
-            <p className="text-sm font-black text-stone-800">{rows.length} comprovante{rows.length === 1 ? '' : 's'} aguardando · {formatBRL(pendingTotal)} informados</p>
+            <p className="text-sm font-extrabold text-stone-800">{rows.length} comprovante{rows.length === 1 ? '' : 's'} aguardando · {formatBRL(pendingTotal)} informados</p>
             <p className="text-xs text-stone-500">Já conferiu o banco? Aprove todos os que bateram de uma vez.</p>
           </div>
           <button className={btnPrimary} onClick={() => setBatchOpen(true)}><CheckCheck size={16} /> Aprovar em lote</button>
@@ -311,10 +311,10 @@ const ReceiptsTab: React.FC<{ onChanged?: () => void }> = ({ onChanged }) => {
                 <Row onClick={() => setOpenId(r.id)}>
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-black text-stone-800">{r.profile_name}</p>
+                      <p className="truncate text-sm font-extrabold text-stone-800">{r.profile_name}</p>
                       <p className="text-xs text-stone-500">{r.charge_count} cobrança(s) · enviado em {brDate(r.created_at.slice(0, 10))}</p>
                     </div>
-                    <div className="text-right"><p className="text-sm font-black tabular-nums">{r.declared_amount_cents === null ? '—' : formatBRL(r.declared_amount_cents)}</p><p className="text-xs text-stone-500">{r.declared_paid_on ? brDate(r.declared_paid_on) : 'sem data'}</p></div>
+                    <div className="text-right"><p className="text-sm font-extrabold tabular-nums">{r.declared_amount_cents === null ? '—' : formatBRL(r.declared_amount_cents)}</p><p className="text-xs text-stone-500">{r.declared_paid_on ? brDate(r.declared_paid_on) : 'sem data'}</p></div>
                   </div>
                   <div className="mt-1.5 flex flex-wrap gap-1.5">
                     <Badge tone={r.status === 'approved' ? 'good' : r.status === 'rejected' ? 'bad' : r.status === 'in_review' ? 'warn' : 'info'}>{receiptStatusInfo(r.status).label}</Badge>

@@ -145,7 +145,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ currentUser, o
                     <button
                         type="submit"
                         disabled={saving}
-                        className="w-full py-4 bg-saibro-600 text-white font-bold rounded-xl shadow-lg shadow-saibro-200 hover:bg-saibro-700 flex items-center justify-center gap-2"
+                        className="w-full py-4 bg-saibro-600 text-white font-bold rounded-xl shadow-lg hover:bg-saibro-700 flex items-center justify-center gap-2"
                     >
                         {saving ? <Loader2 className="animate-spin" /> : <Save size={20} />}
                         Salvar e Continuar

@@ -111,9 +111,9 @@ export const FinanceHub: React.FC = () => {
       <div className="space-y-4">
         {!embedded && (
           <div className="flex items-center gap-3">
-            <div className="rounded-2xl bg-linear-to-br from-emerald-500 to-emerald-600 p-3 text-white shadow-lg shadow-emerald-200"><Landmark size={24} /></div>
+            <div className="rounded-2xl bg-linear-to-br from-emerald-500 to-emerald-600 p-3 text-white shadow-lg "><Landmark size={24} /></div>
             <div>
-              <h1 className="text-xl font-black tracking-tight text-stone-800 md:text-2xl">Financeiro do clube</h1>
+              <h1 className="text-xl font-extrabold tracking-tight text-stone-800 md:text-2xl">Financeiro do clube</h1>
               <p className="text-xs font-medium text-stone-500">Cobranças, pagamentos, contas, DRE e caixa</p>
             </div>
           </div>

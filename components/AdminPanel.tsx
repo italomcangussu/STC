@@ -215,7 +215,7 @@ const NewChallengeModal: React.FC<NewChallengeModalProps> = ({ onClose, onSave, 
                     <button
                         onClick={handleSave}
                         disabled={loading || checking}
-                        className="w-full py-3 bg-saibro-600 text-white font-bold rounded-xl hover:bg-saibro-700 disabled:opacity-50 flex justify-center items-center gap-2 shadow-lg shadow-orange-100"
+                        className="w-full py-3 bg-saibro-600 text-white font-bold rounded-xl hover:bg-saibro-700 disabled:opacity-50 flex justify-center items-center gap-2 shadow-lg "
                     >
                         {loading ? <Loader2 className="animate-spin" /> : 'Confirmar Desafio'}
                     </button>
@@ -879,7 +879,7 @@ const AnunciosTab: React.FC = () => {
                                 <div className="min-w-0 flex-1">
                                     <h3 className="font-bold text-stone-800">{ann.title}</h3>
                                     <p className="text-sm text-stone-500 mt-1 line-clamp-2">{ann.message}</p>
-                                    <div className="flex flex-wrap gap-2 mt-2 text-[10px] text-stone-400">
+                                    <div className="flex flex-wrap gap-2 mt-2 text-meta text-stone-400">
                                         {expired && <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded">Expirado — não aparece mais</span>}
                                         {ann.showOnce && <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded">Única vez</span>}
                                         {ann.expiresAt && <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded">Expira: {new Date(ann.expiresAt).toLocaleDateString('pt-BR', { timeZone: 'America/Fortaleza' })}</span>}
@@ -1068,7 +1068,7 @@ const SociosTab: React.FC = () => {
                                 <div className="min-w-0">
                                     <h3 className="truncate font-bold text-stone-800">{member.name}</h3>
                                     <p className="text-xs text-stone-400">+{member.phone}</p>
-                                    <p className="text-[10px] text-saibro-600 uppercase font-bold mt-1">
+                                    <p className="text-meta text-saibro-600 uppercase font-bold mt-1">
                                         {member.category || 'Sem classe'}
                                         {member.role === 'admin' && <span className="ml-2 bg-stone-800 text-white px-1.5 py-0.5 rounded">Admin</span>}
                                         {member.isProfessor && <span className="ml-2 bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded">Professor</span>}
@@ -1367,7 +1367,7 @@ const AcessosTab: React.FC = () => {
                                 <p className="text-sm font-bold text-stone-800">{req.name}</p>
                                 <p className="text-xs text-stone-500">Telefone: {req.phone}</p>
                                 <p className="text-xs text-stone-500">Email: {req.email || 'Não informado'}</p>
-                                <p className="text-[11px] text-stone-400">
+                                <p className="text-meta text-stone-400">
                                     Solicitado em {new Date(req.createdAt).toLocaleString('pt-BR', { timeZone: 'America/Fortaleza' })}
                                 </p>
                             </div>
@@ -1410,7 +1410,7 @@ const AcessosTab: React.FC = () => {
                                 <p className="text-xs text-red-500 mt-1">Motivo: {req.rejectionReason}</p>
                             )}
                             {req.decidedAt && (
-                                <p className="text-[11px] text-stone-400 mt-1">
+                                <p className="text-meta text-stone-400 mt-1">
                                     Decisão em {new Date(req.decidedAt).toLocaleString('pt-BR', { timeZone: 'America/Fortaleza' })}
                                 </p>
                             )}
@@ -1503,12 +1503,12 @@ const AcessosTab: React.FC = () => {
                                             {new Date(log.occurred_at).toLocaleString('pt-BR', { timeZone: 'America/Fortaleza' })}
                                         </p>
                                     </div>
-                                    <span className="self-start px-2 py-1 rounded-lg bg-white border border-stone-200 text-[10px] uppercase font-black text-stone-500">
+                                    <span className="self-start px-2 py-1 rounded-lg bg-white border border-stone-200 text-meta uppercase font-extrabold text-stone-500">
                                         {log.action}
                                     </span>
                                 </div>
                                 {log.table_name && (
-                                    <p className="text-[11px] text-stone-400 mt-2">
+                                    <p className="text-meta text-stone-400 mt-2">
                                         Tabela: {log.table_name}{log.record_id ? ` • Registro: ${log.record_id}` : ''}
                                     </p>
                                 )}
@@ -1659,8 +1659,8 @@ const LancamentosTab: React.FC = () => {
 
     return (
         <div className="space-y-8">
-            <div className="bg-saibro-50 p-6 rounded-[24px] border border-saibro-100">
-                <h3 className="text-xl font-black text-saibro-900 mb-2">Lançamento Histórico</h3>
+            <div className="bg-saibro-50 p-6 rounded-3xl border border-saibro-100">
+                <h3 className="text-xl font-extrabold text-saibro-900 mb-2">Lançamento Histórico</h3>
                 <p className="text-saibro-600 text-sm mb-6">Registre partidas que já aconteceram para pontuar o ranking retroativamente.</p>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1692,12 +1692,12 @@ const LancamentosTab: React.FC = () => {
                                 <p className="font-bold text-stone-800">{log.profiles?.name}</p>
                                 <p className="text-xs text-stone-500">{log.reason}</p>
                                 {log.created_at && (
-                                    <p className="text-[11px] text-stone-400">
+                                    <p className="text-meta text-stone-400">
                                         {new Date(log.created_at).toLocaleString('pt-BR', { timeZone: 'America/Fortaleza' })}
                                     </p>
                                 )}
                             </div>
-                            <div className={`font-black text-lg ${log.points > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            <div className={`font-extrabold text-lg ${log.points > 0 ? 'text-green-600' : 'text-red-600'}`}>
                                 {log.points > 0 ? '+' : ''}{log.points}
                             </div>
                         </div>
@@ -1709,9 +1709,9 @@ const LancamentosTab: React.FC = () => {
             <details className="group">
                 <summary className="cursor-pointer text-sm font-bold text-red-700">Zona de risco: reset do ranking</summary>
                 <div className="mt-3">
-            <div className="bg-red-50 p-6 rounded-[24px] border border-red-200 space-y-4">
+            <div className="bg-red-50 p-6 rounded-3xl border border-red-200 space-y-4">
                 <div>
-                    <h3 className="text-xl font-black text-red-800 mb-2">Reset Completo do Ranking</h3>
+                    <h3 className="text-xl font-extrabold text-red-800 mb-2">Reset Completo do Ranking</h3>
                     <p className="text-red-700 text-sm">
                         Zera completamente ranking atual de todos os atletas ativos, incluindo pontos, vitórias, sets e games.
                     </p>
@@ -1812,15 +1812,15 @@ export const AdminPanel: React.FC = () => {
             case 'financeiro': return <Suspense fallback={<div className="flex items-center justify-center py-16"><Loader2 className="animate-spin text-saibro-600" size={28} /></div>}><FinanceHub /></Suspense>;
             case 'conversas': return (
                 <div className="space-y-6">
-                    <div className="relative overflow-hidden rounded-3xl border border-emerald-100 bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-white p-6 shadow-lg shadow-emerald-900/5 md:p-8">
+                    <div className="relative overflow-hidden rounded-3xl border border-emerald-100 bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-white p-6 shadow-lg md:p-8">
                         <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
                             <div className="flex items-start gap-4">
-                                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/25">
+                                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg ">
                                     <MessagesSquare size={28} />
                                 </div>
                                 <div className="space-y-1">
                                     <div className="flex items-center gap-2">
-                                        <h2 className="text-xl font-black text-stone-900 md:text-2xl">Central de Conversas</h2>
+                                        <h2 className="text-xl font-extrabold text-stone-900 md:text-2xl">Central de Conversas</h2>
                                         <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-bold text-emerald-800">
                                             Nova Aba & Fullscreen
                                         </span>
@@ -1834,7 +1834,7 @@ export const AdminPanel: React.FC = () => {
                                 <a
                                     href="/conversas"
                                     {...(isInstalledPWA() ? {} : { target: '_blank', rel: 'noopener noreferrer' })}
-                                    className="inline-flex min-h-[46px] items-center gap-2 rounded-2xl bg-emerald-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-emerald-600/20 transition hover:bg-emerald-700 active:scale-95"
+                                    className="inline-flex min-h-[46px] items-center gap-2 rounded-2xl bg-emerald-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg transition hover:bg-emerald-700 active:scale-95"
                                 >
                                     <span>Abrir Mensageiro em Nova Aba</span>
                                     <ExternalLink size={16} />
@@ -1872,7 +1872,7 @@ export const AdminPanel: React.FC = () => {
                 <div className="relative mx-auto flex w-full max-w-7xl flex-col gap-3">
                     <div>
                         <p className="text-xs font-bold uppercase tracking-widest text-saibro-200">Administração</p>
-                        <p className="text-xl font-black tracking-tight text-white md:text-2xl">Centro de Comando</p>
+                        <p className="text-xl font-extrabold tracking-tight text-white md:text-2xl">Centro de Comando</p>
                     </div>
                     <AdminSearchBox onGo={go} />
                 </div>

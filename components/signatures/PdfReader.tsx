@@ -197,7 +197,7 @@ export const PdfReader: React.FC<PdfReaderProps> = ({ data, expectedPages, track
                 className="block h-full w-full"
                 aria-label={`Página ${i + 1} de ${handle.pageCount}`}
               />
-              <span className="pointer-events-none absolute bottom-1 right-2 rounded bg-black/40 px-1.5 text-[10px] font-bold text-white">{i + 1}/{handle.pageCount}</span>
+              <span className="pointer-events-none absolute bottom-1 right-2 rounded bg-black/40 px-1.5 text-meta font-bold text-white">{i + 1}/{handle.pageCount}</span>
             </div>
           ))}
           <div data-end className="h-2" aria-hidden />

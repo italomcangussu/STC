@@ -358,7 +358,7 @@ export const AdminForms: React.FC = () => {
               <ArrowLeft size={22} />
             </button>
             <div>
-              <h2 className="text-xl md:text-2xl font-black text-stone-900 tracking-tight">
+              <h2 className="text-xl md:text-2xl font-extrabold text-stone-900 tracking-tight">
                 {editingFormId ? 'Editar Formulário' : 'Novo Formulário & Votação'}
               </h2>
               <p className="text-xs md:text-sm text-stone-500">
@@ -377,7 +377,7 @@ export const AdminForms: React.FC = () => {
             <button
               onClick={handleSaveForm}
               disabled={saving}
-              className="px-5 py-2.5 rounded-xl text-sm font-bold bg-saibro-600 hover:bg-saibro-700 text-white shadow-md shadow-saibro-500/20 active:scale-95 transition-all flex items-center gap-2"
+              className="px-5 py-2.5 rounded-xl text-sm font-bold bg-saibro-600 hover:bg-saibro-700 text-white shadow-md active:scale-95 transition-all flex items-center gap-2"
             >
               {saving ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
               {saving ? 'Salvando...' : 'Salvar Formulário'}
@@ -437,7 +437,7 @@ export const AdminForms: React.FC = () => {
                   className="w-full px-3 py-3 focus:outline-none text-stone-800 font-mono text-xs bg-transparent"
                 />
               </div>
-              <p className="text-[11px] text-stone-400">
+              <p className="text-meta text-stone-400">
                 Este link será usado para compartilhar a votação pelo WhatsApp ou gerar QR Code.
               </p>
             </div>
@@ -697,7 +697,7 @@ export const AdminForms: React.FC = () => {
           <button
             onClick={handleSaveForm}
             disabled={saving}
-            className="px-6 py-3 rounded-xl text-sm font-bold bg-saibro-600 hover:bg-saibro-700 text-white shadow-lg shadow-saibro-500/25 active:scale-95 transition-all flex items-center gap-2"
+            className="px-6 py-3 rounded-xl text-sm font-bold bg-saibro-600 hover:bg-saibro-700 text-white shadow-lg active:scale-95 transition-all flex items-center gap-2"
           >
             {saving ? <Loader2 size={18} className="animate-spin" /> : <CheckCircle2 size={18} />}
             {saving ? 'Gravando Formulário...' : 'Finalizar & Salvar Formulário'}
@@ -763,7 +763,7 @@ export const AdminForms: React.FC = () => {
                 {/* Badges de Status & Configurações */}
                 <div className="flex flex-wrap items-center gap-2">
                   <span
-                    className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-meta font-bold ${
                       form.is_active
                         ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                         : 'bg-stone-100 text-stone-600 border border-stone-200'
@@ -774,19 +774,19 @@ export const AdminForms: React.FC = () => {
                   </span>
 
                   {form.is_secret_vote ? (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-meta font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
                       <Lock size={11} />
                       Voto Secreto
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-stone-100 text-stone-600 border border-stone-200">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-meta font-bold bg-stone-100 text-stone-600 border border-stone-200">
                       <Users size={11} />
                       Voto Aberto
                     </span>
                   )}
 
                   {form.show_live_results && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-saibro-50 text-saibro-700 border border-saibro-200">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-meta font-bold bg-saibro-50 text-saibro-700 border border-saibro-200">
                       <BarChart3 size={11} />
                       Ao Vivo
                     </span>
@@ -961,7 +961,7 @@ export const AdminForms: React.FC = () => {
             {/* Cabeçalho do Resultado */}
             <div className="flex items-center justify-between border-b border-stone-100 pb-3">
               <div>
-                <h4 className="font-black text-stone-900 text-lg">
+                <h4 className="font-extrabold text-stone-900 text-lg">
                   {resultsModalForm.title}
                 </h4>
                 <div className="flex items-center gap-2 mt-0.5">
@@ -969,7 +969,7 @@ export const AdminForms: React.FC = () => {
                     Total de participantes: <strong className="text-saibro-600 font-mono text-sm">{liveResults?.total_participants || 0}</strong>
                   </span>
                   {resultsModalForm.is_secret_vote && (
-                    <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                    <span className="text-meta font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
                       🔒 Voto Secreto (Urna Cega)
                     </span>
                   )}
@@ -1001,7 +1001,7 @@ export const AdminForms: React.FC = () => {
                         <h5 className="font-bold text-stone-800 text-sm">
                           {qIdx + 1}. {q.title}
                         </h5>
-                        <span className="text-[11px] font-mono text-stone-400">
+                        <span className="text-meta font-mono text-stone-400">
                           {totalQVotes} {totalQVotes === 1 ? 'voto' : 'votos'}
                         </span>
                       </div>
@@ -1017,7 +1017,7 @@ export const AdminForms: React.FC = () => {
                                   <span className="font-semibold text-stone-700">{opt.label}</span>
                                   <div className="flex items-center gap-2">
                                     <span className="font-mono font-bold text-stone-900">{percent}%</span>
-                                    <span className="text-stone-400 text-[10px]">({opt.votes})</span>
+                                    <span className="text-stone-400 text-meta">({opt.votes})</span>
                                   </div>
                                 </div>
                                 <div className="w-full h-3 bg-stone-200/80 rounded-full overflow-hidden">
@@ -1053,7 +1053,7 @@ export const AdminForms: React.FC = () => {
                                 openResponses.map((item, idx) => (
                                   <div key={idx} className="p-3 bg-white rounded-xl border border-stone-200 text-xs space-y-1">
                                     <p className="text-stone-800 whitespace-pre-wrap font-medium">"{item.text}"</p>
-                                    <div className="flex items-center justify-between text-[10px] text-stone-400 pt-1">
+                                    <div className="flex items-center justify-between text-meta text-stone-400 pt-1">
                                       <span>{item.authorName}</span>
                                       <span>{new Date(item.date).toLocaleString('pt-BR')}</span>
                                     </div>

@@ -170,7 +170,7 @@ export const EntrySheet: React.FC<{ entry: FinEntry | null; onClose: () => void;
         <div className="flex justify-between"><dt className="text-stone-500">Valor do documento</dt><dd className="font-bold tabular-nums">{formatBRL(e.amount_cents)}</dd></div>
         {isDoc && <div className="flex justify-between"><dt className="text-stone-500">{incoming ? 'Recebido' : 'Pago'}</dt><dd className="font-bold tabular-nums">{formatBRL(e.paid_cents)}</dd></div>}
         {isDoc && e.adjustment_cents !== 0 && <div className="flex justify-between"><dt className="text-stone-500">Juros (+) ou desconto (−)</dt><dd className="font-bold tabular-nums">{formatBRL(e.adjustment_cents)}</dd></div>}
-        {isDoc && <div className="flex justify-between border-t border-stone-200 pt-1 text-base font-black"><dt>Em aberto</dt><dd className="tabular-nums">{formatBRL(e.remaining_cents)}</dd></div>}
+        {isDoc && <div className="flex justify-between border-t border-stone-200 pt-1 text-base font-extrabold"><dt>Em aberto</dt><dd className="tabular-nums">{formatBRL(e.remaining_cents)}</dd></div>}
         {e.supplier && <div className="flex justify-between"><dt className="text-stone-500">{incoming ? 'Origem' : 'Fornecedor'}</dt><dd>{e.supplier}</dd></div>}
         {e.notes && <p className="border-t border-stone-200 pt-1 text-xs text-stone-600">{e.notes}</p>}
         {e.cancel_reason && <p className="border-t border-stone-200 pt-1 text-xs text-red-700">Cancelada: {e.cancel_reason}</p>}
@@ -219,7 +219,7 @@ export const EntrySheet: React.FC<{ entry: FinEntry | null; onClose: () => void;
 
       {mode === 'void' && (
         <div className="space-y-3 rounded-2xl border border-red-200 bg-red-50/40 p-3">
-          <p className="text-sm font-black text-red-700">Excluir lançamento incorreto</p>
+          <p className="text-sm font-extrabold text-red-700">Excluir lançamento incorreto</p>
           <Notice tone="warn">Esta exclusão tira o lançamento original e os estornos vinculados do fluxo de caixa e dos saldos. O comprovante e a auditoria permanecem arquivados; nenhuma transferência bancária será executada.</Notice>
           <p className="text-sm text-stone-700">Documento: <b>{formatBRL(e.amount_cents)}</b>. Valor contabilizado: <b>{formatBRL(e.paid_cents)}</b>.</p>
           <Field label="Por que este lançamento está errado? (obrigatório)">
@@ -247,7 +247,7 @@ export const EntrySheet: React.FC<{ entry: FinEntry | null; onClose: () => void;
 
       {mode === 'cancel' && (
         <div className="space-y-3 rounded-2xl border border-red-200 p-3">
-          <p className="text-sm font-black text-red-700">Cancelar lançamento</p>
+          <p className="text-sm font-extrabold text-red-700">Cancelar lançamento</p>
           <p className="text-xs text-stone-500">Só sem dinheiro movimentado. O histórico fica; o valor deixa de contar.</p>
           <Field label="Motivo (obrigatório)"><textarea className={inputCls} rows={2} value={reason} onChange={(ev) => setReason(ev.target.value)} /></Field>
           <div className="flex gap-2"><button className={btnGhost} onClick={() => setMode(null)}>Voltar</button>
@@ -257,7 +257,7 @@ export const EntrySheet: React.FC<{ entry: FinEntry | null; onClose: () => void;
 
       {(payments.data ?? []).length > 0 && (
         <div className="space-y-1.5 border-t border-stone-100 pt-3 text-xs">
-          <p className="text-[11px] font-black uppercase tracking-wider text-stone-400">{incoming ? 'Recebimentos' : 'Pagamentos'}</p>
+          <p className="text-meta font-extrabold uppercase tracking-wider text-stone-400">{incoming ? 'Recebimentos' : 'Pagamentos'}</p>
           {payments.data!.map((p) => (
             <div key={p.id} className="flex items-center justify-between gap-2">
               <span>{brDate(p.paid_on)} — {p.kind === 'reversal' ? <b className="text-red-600">Estorno</b> : incoming ? 'Recebimento' : 'Pagamento'}{p.note ? ` · ${p.note}` : ''}</span>
@@ -275,7 +275,7 @@ export const EntrySheet: React.FC<{ entry: FinEntry | null; onClose: () => void;
       )}
 
       <div className="space-y-2 border-t border-stone-100 pt-3">
-        <div className="flex items-center justify-between"><p className="text-[11px] font-black uppercase tracking-wider text-stone-400">Anexos (nota, boleto, recibo)</p>
+        <div className="flex items-center justify-between"><p className="text-meta font-extrabold uppercase tracking-wider text-stone-400">Anexos (nota, boleto, recibo)</p>
           {live && <button className={btnGhost} disabled={busy} onClick={() => fileRef.current?.click()}><Paperclip size={16} /> Anexar</button>}</div>
         <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp,image/heic,application/pdf" className="hidden" aria-label="Anexar arquivo" onChange={(ev) => upload(ev.target.files?.[0] ?? null)} />
         {(attachments.data ?? []).length === 0 ? <p className="text-xs text-stone-400">Nenhum anexo. Imagem ou PDF de até 10 MB, em armazenamento privado.</p> : (

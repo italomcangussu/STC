@@ -33,11 +33,11 @@ const DetailSheet: React.FC<{ category: { id: string; name: string } | null; per
           <ul className="space-y-2">
             {rows.slice(0, 400).map((r) => (
               <li key={`${r.source_type}-${r.source_id}-${r.occurred_on}`}>
-                <Row><div className="flex items-start justify-between gap-2"><div className="min-w-0"><p className="truncate text-sm font-bold">{r.description}</p><p className="text-xs text-stone-500">{brDate(r.occurred_on)} · {SOURCE_LABEL[r.source_type] ?? r.source_type}</p></div><Money cents={r.amount_cents} className="text-sm font-black" /></div></Row>
+                <Row><div className="flex items-start justify-between gap-2"><div className="min-w-0"><p className="truncate text-sm font-bold">{r.description}</p><p className="text-xs text-stone-500">{brDate(r.occurred_on)} · {SOURCE_LABEL[r.source_type] ?? r.source_type}</p></div><Money cents={r.amount_cents} className="text-sm font-extrabold" /></div></Row>
               </li>
             ))}
           </ul>
-          <p className="text-sm font-black">Total: {formatBRL(rows.reduce((s, r) => s + r.amount_cents, 0))}</p>
+          <p className="text-sm font-extrabold">Total: {formatBRL(rows.reduce((s, r) => s + r.amount_cents, 0))}</p>
           {rows.length > 400 && <p className="text-xs text-stone-400">Mostrando 400 de {rows.length}; o arquivo exportado leva todos.</p>}
         </>
       )}
@@ -84,10 +84,10 @@ const DreTab: React.FC = () => {
                   <li key={r.key} className={r.kind === 'line' ? '' : 'bg-stone-50/70'}>
                     <button className="flex min-h-12 w-full items-center gap-2 px-1 py-2 text-left disabled:cursor-default" disabled={!canOpen} aria-expanded={canOpen ? open : undefined} onClick={() => setExpanded(open ? null : r.key)}>
                       <span className="w-4 shrink-0 text-stone-300">{canOpen ? (open ? <ChevronDown size={16} /> : <ChevronRight size={16} />) : null}</span>
-                      <span className={`flex-1 text-sm ${r.kind === 'line' ? 'font-medium text-stone-700' : 'font-black text-stone-900'}`}>{r.label}</span>
+                      <span className={`flex-1 text-sm ${r.kind === 'line' ? 'font-medium text-stone-700' : 'font-extrabold text-stone-900'}`}>{r.label}</span>
                       <span className="text-right">
-                        <Money cents={signed(r, r.current)} className={`block text-sm ${r.kind === 'line' ? 'font-bold' : 'font-black'}`} />
-                        <span className="block text-[11px] text-stone-400">ant. {formatBRL(signed(r, r.previous))} · {pctText(r.deltaPct)}{r.share !== null && r.kind === 'line' ? ` · ${r.share.toLocaleString('pt-BR')}% da rec.` : ''}</span>
+                        <Money cents={signed(r, r.current)} className={`block text-sm ${r.kind === 'line' ? 'font-bold' : 'font-extrabold'}`} />
+                        <span className="block text-meta text-stone-400">ant. {formatBRL(signed(r, r.previous))} · {pctText(r.deltaPct)}{r.share !== null && r.kind === 'line' ? ` · ${r.share.toLocaleString('pt-BR')}% da rec.` : ''}</span>
                       </span>
                     </button>
                     {open && (
@@ -114,7 +114,7 @@ const DreTab: React.FC = () => {
               <div className="flex justify-between"><dt className="text-stone-500">Aportes no período</dt><dd className="font-bold tabular-nums">{formatBRL(data.data!.memo?.contributions_cents ?? 0)}</dd></div>
               <div className="flex justify-between"><dt className="text-stone-500">Retiradas no período</dt><dd className="font-bold tabular-nums">{formatBRL(data.data!.memo?.withdrawals_cents ?? 0)}</dd></div>
             </dl>
-            <p className="mt-2 text-[11px] text-stone-400">Transferências entre contas também ficam de fora.</p>
+            <p className="mt-2 text-meta text-stone-400">Transferências entre contas também ficam de fora.</p>
           </Card>
         </>
       )}

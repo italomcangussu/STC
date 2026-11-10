@@ -19,7 +19,7 @@ const currentDocumentId = () => (typeof window === 'undefined' ? null : parseDoc
 
 const HowItWorks: React.FC = () => (
   <details className="rounded-2xl border border-stone-100 bg-white p-3 text-xs text-stone-600">
-    <summary className="flex min-h-9 cursor-pointer items-center gap-2 text-sm font-black text-stone-700"><ListChecks size={16} aria-hidden /> Como funciona a assinatura?</summary>
+    <summary className="flex min-h-9 cursor-pointer items-center gap-2 text-sm font-extrabold text-stone-700"><ListChecks size={16} aria-hidden /> Como funciona a assinatura?</summary>
     <ol className="mt-2 list-decimal space-y-1 pl-6 leading-relaxed">
       <li>Abra o documento e <b>leia até o fim</b>.</li>
       <li>Marque <b>"Li e concordo"</b> e confirme o seu CPF.</li>
@@ -38,12 +38,12 @@ const DocumentCard: React.FC<{ doc: MyDocumentRow; onOpen: () => void }> = ({ do
         <FileText size={22} />
       </span>
       <span className="min-w-0 flex-1 space-y-1">
-        <span className="block truncate text-sm font-black text-stone-800">{doc.title}</span>
+        <span className="block truncate text-sm font-extrabold text-stone-800">{doc.title}</span>
         <span className="flex flex-wrap items-center gap-1.5">
           {signed ? <Badge tone="good">Assinado em {formatDate(doc.signed_at)}</Badge> : <Badge tone="warn">Pendente</Badge>}
           {due && <Badge tone={due.tone}>{due.label}</Badge>}
         </span>
-        <span className="block text-[11px] text-stone-400">{doc.page_count} {doc.page_count === 1 ? 'página' : 'páginas'} · versão {doc.version}</span>
+        <span className="block text-meta text-stone-400">{doc.page_count} {doc.page_count === 1 ? 'página' : 'páginas'} · versão {doc.version}</span>
       </span>
       <span className="flex shrink-0 items-center gap-1 text-xs font-bold text-saibro-700">{signed ? 'Ver' : 'Ler e assinar'}<ChevronRight size={16} aria-hidden /></span>
     </button>
@@ -93,7 +93,7 @@ export const DocumentsPage: React.FC<{ currentUser: User }> = ({ currentUser }) 
   return (
     <div className="space-y-4">
       <header className="space-y-1">
-        <h2 className="flex items-center gap-2 text-xl font-black text-stone-800"><FileSignature size={22} className="text-saibro-600" aria-hidden /> Documentos e Assinaturas</h2>
+        <h2 className="flex items-center gap-2 text-xl font-extrabold text-stone-800"><FileSignature size={22} className="text-saibro-600" aria-hidden /> Documentos e Assinaturas</h2>
         <p className="text-sm text-stone-500">Leia e assine, pelo celular, os documentos do clube.</p>
       </header>
 
@@ -118,14 +118,14 @@ export const DocumentsPage: React.FC<{ currentUser: User }> = ({ currentUser }) 
           )}
           {pending.length > 0 && (
             <section className="space-y-2" aria-label="Documentos pendentes">
-              <h3 className="text-[11px] font-black uppercase tracking-wider text-stone-400">Para assinar ({pending.length})</h3>
+              <h3 className="text-meta font-extrabold uppercase tracking-wider text-stone-400">Para assinar ({pending.length})</h3>
               {pending.map((d) => <DocumentCard key={d.document_id} doc={d} onOpen={() => open(d.document_id)} />)}
             </section>
           )}
           {docs.length > 0 && pending.length === 0 && <Notice tone="good">Tudo em dia: você não tem documentos pendentes.</Notice>}
           {done.length > 0 && (
             <section className="space-y-2" aria-label="Documentos assinados">
-              <h3 className="text-[11px] font-black uppercase tracking-wider text-stone-400">Já assinados ({done.length})</h3>
+              <h3 className="text-meta font-extrabold uppercase tracking-wider text-stone-400">Já assinados ({done.length})</h3>
               {done.map((d) => <DocumentCard key={d.document_id} doc={d} onOpen={() => open(d.document_id)} />)}
             </section>
           )}

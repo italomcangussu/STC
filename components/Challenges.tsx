@@ -280,7 +280,7 @@ const CreateChallengeModal: React.FC<{
                                                     <span className="font-bold text-stone-600 w-8">#{opp.globalPosition}</span>
                                                     <div className="text-left">
                                                         <p className="font-bold text-stone-800">{opp.name}</p>
-                                                        <span className="text-[10px] text-stone-500">{opp.category} • {opp.totalPoints} pts</span>
+                                                        <span className="text-meta text-stone-500">{opp.category} • {opp.totalPoints} pts</span>
                                                     </div>
                                                 </div>
                                                 {selectedOpponent === opp.id && <CheckCircle size={20} className="text-saibro-600" />}
@@ -714,21 +714,21 @@ export const ChallengesView: React.FC<{ currentUser: User }> = ({ currentUser })
                     </div>
                     <div className="flex flex-col items-end">
                         <div className="flex items-center gap-1">
-                            <span className="text-2xl font-black text-saibro-600">#{myRankEntry?.categoryPosition || '-'}</span>
+                            <span className="text-2xl font-extrabold text-saibro-600">#{myRankEntry?.categoryPosition || '-'}</span>
                         </div>
-                        <span className="text-[10px] uppercase font-bold text-stone-400">{myRankEntry?.category}</span>
+                        <span className="text-meta uppercase font-bold text-stone-400">{myRankEntry?.category}</span>
                     </div>
                 </div>
 
                 <div className="mt-4 grid grid-cols-2 gap-4 relative z-10">
                     <div className="bg-stone-50 p-2 rounded-lg border border-stone-100">
-                        <p className="text-[10px] text-stone-400 uppercase font-bold">Como Desafiante</p>
+                        <p className="text-meta text-stone-400 uppercase font-bold">Como Desafiante</p>
                         <p className={`font-bold ${monthlyStats.challenger > 0 ? 'text-red-500' : 'text-green-600'}`}>
                             {monthlyStats.challenger}/1
                         </p>
                     </div>
                     <div className="bg-stone-50 p-2 rounded-lg border border-stone-100">
-                        <p className="text-[10px] text-stone-400 uppercase font-bold">Como Desafiado</p>
+                        <p className="text-meta text-stone-400 uppercase font-bold">Como Desafiado</p>
                         <p className={`font-bold ${monthlyStats.challenged > 0 ? 'text-red-500' : 'text-green-600'}`}>
                             {monthlyStats.challenged}/1
                         </p>
@@ -845,7 +845,7 @@ export const ChallengesView: React.FC<{ currentUser: User }> = ({ currentUser })
                                             </p>
                                         </div>
                                     </div>
-                                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${c.status === 'proposed' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'}`}>
+                                    <span className={`px-2 py-0.5 rounded text-meta font-bold uppercase ${c.status === 'proposed' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'}`}>
                                         {c.status === 'proposed' ? 'Proposto' : c.status}
                                     </span>
                                 </div>
@@ -885,11 +885,11 @@ export const ChallengesView: React.FC<{ currentUser: User }> = ({ currentUser })
                                     <div className="flex items-center gap-2">
                                         <span className="text-xs font-bold text-stone-400">vs</span>
                                         <span className="font-bold text-stone-800">{challenged?.name}</span>
-                                        <span className="text-[10px] text-stone-400">
+                                        <span className="text-meta text-stone-400">
                                             #{challengedRank?.categoryPosition} • {challengedRank?.category}
                                         </span>
                                     </div>
-                                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${c.status === 'proposed' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}`}>
+                                    <span className={`px-2 py-0.5 rounded text-meta font-bold uppercase ${c.status === 'proposed' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}`}>
                                         {c.status === 'proposed' ? 'Aguardando' : c.status}
                                     </span>
                                 </div>
@@ -970,7 +970,7 @@ export const ChallengesView: React.FC<{ currentUser: User }> = ({ currentUser })
                                     )}
                                     {isFinished && <ChevronRight size={14} className="text-stone-300 shrink-0" />}
                                 </div>
-                                <span className={`text-[10px] font-bold uppercase shrink-0 ${c.status === 'finished' ? 'text-green-600' : 'text-red-500'}`}>
+                                <span className={`text-meta font-bold uppercase shrink-0 ${c.status === 'finished' ? 'text-green-600' : 'text-red-500'}`}>
                                     {c.status}
                                 </span>
                             </div>

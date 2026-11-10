@@ -39,7 +39,7 @@ function Transcricao({ t }: { t: AudioHeard }) {
   }
   return (
     <div className="rounded-lg bg-white/50 px-2 py-1.5">
-      <span className="block text-[11px] font-semibold uppercase tracking-wide text-emerald-900/60">
+      <span className="block text-meta font-semibold uppercase tracking-wide text-emerald-900/60">
         Transcrição{t.low_confidence ? ' · pode ter erros' : ''}
       </span>
       <p className="whitespace-pre-wrap break-words text-sm text-slate-800">{t.text}</p>
@@ -103,7 +103,7 @@ function Midia({ m, url, isOutbound, onOpenImage }: { m: ConversationMessage; ur
             isOutbound ? 'border-slate-200 bg-slate-50' : 'border-emerald-900/10 bg-white/50')}>
           <FileText size={22} className="shrink-0 text-slate-500" aria-hidden />
           <span className="min-w-0 flex-1 truncate font-medium">{m.mediaName || 'Documento'}</span>
-          {url ? <Download size={16} className="shrink-0 text-slate-500" aria-hidden /> : <span className="text-[10px] text-slate-500">baixando…</span>}
+          {url ? <Download size={16} className="shrink-0 text-slate-500" aria-hidden /> : <span className="text-meta text-slate-500">baixando…</span>}
         </a>
       );
     case 'location': {
@@ -187,7 +187,7 @@ function MessageBubble({ message: m, mediaUrl, highlight, canWrite, isGroup, ...
               ? 'border border-red-300 bg-red-50 text-slate-900 shadow-sm'
               : isOutbound
                 ? 'border border-slate-200 bg-white text-slate-900 shadow-sm'
-                : 'border border-[#b7e4b0] bg-[#dcf8c6] text-[#17301c] shadow-sm shadow-emerald-200/80',
+                : 'border border-[#b7e4b0] bg-[#dcf8c6] text-[#17301c] shadow-sm  ',
             m.pending && 'opacity-80',
             !apagada && !m.pending && 'pr-8',
           )}
@@ -231,12 +231,12 @@ function MessageBubble({ message: m, mediaUrl, highlight, canWrite, isGroup, ...
             <p className="mb-0.5 truncate text-xs font-bold text-saibro-700">{m.senderName}</p>
           )}
           {m.origin === 'ai' && !apagada && (
-            <span className="mb-1 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700">
+            <span className="mb-1 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-1.5 py-0.5 text-meta font-bold text-emerald-700">
               <Bot size={11} aria-hidden /> IA
             </span>
           )}
           {m.origin === 'automation' && !apagada && (
-            <span className="mb-1 inline-flex items-center gap-1 rounded-full bg-violet-50 px-1.5 py-0.5 text-[10px] font-bold text-violet-700">
+            <span className="mb-1 inline-flex items-center gap-1 rounded-full bg-violet-50 px-1.5 py-0.5 text-meta font-bold text-violet-700">
               <Send size={11} aria-hidden /> Automação
             </span>
           )}
@@ -248,7 +248,7 @@ function MessageBubble({ message: m, mediaUrl, highlight, canWrite, isGroup, ...
                 <Lock size={16} className="mt-0.5 shrink-0 text-amber-700" aria-hidden />
                 <div className="space-y-1">
                   <p className="font-semibold text-amber-950">Aguardando chave do WhatsApp</p>
-                  <p className="text-[11px] leading-relaxed text-amber-800">
+                  <p className="text-meta leading-relaxed text-amber-800">
                     Esta mensagem chegou cifrada antes do WhatsApp sincronizar as chaves. Abra o WhatsApp no celular e toque abaixo para sincronizar.
                   </p>
                 </div>
@@ -297,9 +297,9 @@ function MessageBubble({ message: m, mediaUrl, highlight, canWrite, isGroup, ...
           </div>
         )}
 
-        <div className={cx('mt-0.5 flex items-center gap-1 px-1 text-[11px] text-slate-500', isOutbound && 'justify-end')}>
+        <div className={cx('mt-0.5 flex items-center gap-1 px-1 text-meta text-slate-500', isOutbound && 'justify-end')}>
           {isGroup && !isOutbound && (
-            <span className={cx('inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-semibold', m.mentionDirect ? 'bg-emerald-100 text-emerald-800' : 'bg-stone-100 text-stone-500')}
+            <span className={cx('inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-meta font-semibold', m.mentionDirect ? 'bg-emerald-100 text-emerald-800' : 'bg-stone-100 text-stone-500')}
               title={m.mentionEvidence ? `Classificação: ${m.mentionEvidence}` : undefined}>
               <AtSign size={10} aria-hidden /> {m.mentionDirect ? 'chamou o STC' : 'sem menção direta'}
             </span>

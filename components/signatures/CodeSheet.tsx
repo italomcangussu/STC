@@ -105,7 +105,7 @@ export const CodeSheet: React.FC<CodeSheetProps> = ({ challenge, onClose, onRese
       </div>
 
       <label className="block space-y-1">
-        <span className="text-[11px] font-black uppercase tracking-wider text-stone-400">Código de 6 dígitos</span>
+        <span className="text-meta font-extrabold uppercase tracking-wider text-stone-400">Código de 6 dígitos</span>
         <input
           ref={input}
           value={code}
@@ -116,7 +116,7 @@ export const CodeSheet: React.FC<CodeSheetProps> = ({ challenge, onClose, onRese
           pattern="[0-9]*"
           placeholder="000000"
           aria-label="Código de 6 dígitos"
-          className={`${inputCls} text-center text-2xl font-black tracking-[0.5em] tabular-nums`}
+          className={`${inputCls} text-center text-2xl font-extrabold tracking-[0.5em] tabular-nums`}
           disabled={busy === 'confirm'}
         />
       </label>

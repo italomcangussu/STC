@@ -126,7 +126,7 @@ async function montar() {
             return () => window.removeEventListener('hashchange', on);
         }, []);
         const ir = (v: string) => { location.hash = v; };
-        if (view === 'vitrine') return <Vitrine />;
+        if (view === 'vitrine') return <><Toaster position="top-center" richColors /><Vitrine /></>;
         return (
             <ConfirmProvider>
                 <Toaster position="top-center" richColors />

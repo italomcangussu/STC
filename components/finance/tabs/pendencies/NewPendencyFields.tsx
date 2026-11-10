@@ -40,7 +40,7 @@ export const DayCardFields: React.FC<FieldsProps> = ({ draft, patch }) => {
   if (draft.kind !== 'day_card') return null;
   return (
     <div className="rounded-2xl border border-blue-100 bg-blue-50/60 p-3">
-      <p className="mb-2 text-xs font-black uppercase tracking-wide text-blue-700">Detalhes do Day Card — opcionais</p>
+      <p className="mb-2 text-xs font-extrabold uppercase tracking-wide text-blue-700">Detalhes do Day Card — opcionais</p>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Field label="Convidado"><input className={inputCls} value={draft.guestName} maxLength={120} onChange={(e) => patch({ guestName: e.target.value })} /></Field>
         <Field label="Data da visita"><input type="date" className={inputCls} value={draft.guestDate} onChange={(e) => patch({ guestDate: e.target.value })} /></Field>

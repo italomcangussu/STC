@@ -257,15 +257,15 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
                 {!embedded ? (
                     <div className="text-center sm:text-left">
-                        <h2 className="text-2xl sm:text-3xl font-black text-stone-800 tracking-tighter flex items-center justify-center sm:justify-start gap-2">
+                        <h2 className="text-2xl sm:text-3xl font-extrabold text-stone-800 tracking-tighter flex items-center justify-center sm:justify-start gap-2">
                             <Sparkles className="text-saibro-500" /> SuperSet
                         </h2>
-                        <p className="text-stone-500 font-bold text-[10px] sm:text-xs uppercase tracking-widest mt-1 opacity-70">
+                        <p className="text-stone-500 font-bold text-meta sm:text-xs uppercase tracking-widest mt-1 opacity-70">
                             1 Set • 10 Pontos no Ranking
                         </p>
                     </div>
                 ) : (
-                    <p className="text-stone-500 font-bold text-[10px] sm:text-xs uppercase tracking-widest opacity-70">
+                    <p className="text-stone-500 font-bold text-meta sm:text-xs uppercase tracking-widest opacity-70">
                         1 Set • 10 Pontos no Ranking
                     </p>
                 )}
@@ -273,12 +273,12 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
                 {stats.totalGames > 0 && (
                     <div className="flex items-center justify-center gap-2 bg-stone-100/50 p-1.5 rounded-2xl border border-stone-200/50 self-center sm:self-auto">
                         <div className="px-3 py-1.5 bg-white rounded-xl shadow-sm border border-stone-200/50">
-                            <span className="text-[9px] sm:text-[10px] font-black text-stone-400 block leading-none mb-1">JOGOS</span>
-                            <span className="text-base sm:text-lg font-black text-stone-800 leading-none tabular-nums">{stats.totalGames}</span>
+                            <span className="text-meta sm:text-meta font-extrabold text-stone-400 block leading-none mb-1">JOGOS</span>
+                            <span className="text-base sm:text-lg font-extrabold text-stone-800 leading-none tabular-nums">{stats.totalGames}</span>
                         </div>
                         <div className="px-3 py-1.5 bg-saibro-50 rounded-xl shadow-sm border border-saibro-100/50">
-                            <span className="text-[9px] sm:text-[10px] font-black text-saibro-500 block leading-none mb-1">TOP WINNER</span>
-                            <span className="text-xs sm:text-sm font-black text-saibro-700 leading-none truncate block max-w-[80px] sm:max-w-[100px]">
+                            <span className="text-meta sm:text-meta font-extrabold text-saibro-500 block leading-none mb-1">TOP WINNER</span>
+                            <span className="text-xs sm:text-sm font-extrabold text-saibro-700 leading-none truncate block max-w-[80px] sm:max-w-[100px]">
                                 {getPlayerName(stats.topWinner.name).split(' ')[0]}
                             </span>
                         </div>
@@ -288,8 +288,8 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
 
             {/* SELECTION AREA */}
             <div className="relative">
-                <div className="absolute -inset-1 bg-linear-to-r from-saibro-500/10 to-court-green/10 rounded-[40px] blur-2xl opacity-50"></div>
-                <div className="relative bg-white rounded-[40px] shadow-xl shadow-stone-200/50 border border-stone-100 overflow-hidden">
+                <div className="absolute -inset-1 bg-linear-to-r from-saibro-500/10 to-court-green/10 rounded-3xl blur-2xl opacity-50"></div>
+                <div className="relative bg-white rounded-3xl shadow-xl shadow-stone-200/50 border border-stone-100 overflow-hidden">
 
                     {/* Multi-step Selection Header */}
                     <div className="px-4 sm:px-8 py-8 sm:py-10 text-center space-y-6">
@@ -299,7 +299,7 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
                                 className={`flex flex-col items-center gap-2 sm:gap-3 flex-1 transition-all ${playerAId ? 'cursor-pointer active:scale-95' : ''}`}
                                 onClick={() => playerAId && setPlayerAId('')}
                             >
-                                <div className={`w-16 h-16 sm:w-24 sm:h-24 rounded-[20px] sm:rounded-[32px] border-2 sm:border-4 flex items-center justify-center transition-all duration-500 overflow-hidden shadow-xl sm:shadow-2xl ${playerAId ? 'border-saibro-500 hover:border-saibro-400' : 'border-stone-100 bg-stone-50'}`}>
+                                <div className={`w-16 h-16 sm:w-24 sm:h-24 rounded-2xl sm:rounded-3xl border-2 sm:border-4 flex items-center justify-center transition-all duration-500 overflow-hidden shadow-xl sm:shadow-2xl ${playerAId ? 'border-saibro-500 hover:border-saibro-400' : 'border-stone-100 bg-stone-50'}`}>
                                     {playerAId ? (
                                         <img src={players.find(p => p.id === playerAId)?.avatar} className="w-full h-full object-cover animate-in zoom-in duration-300" alt="" />
                                     ) : (
@@ -307,15 +307,15 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
                                     )}
                                 </div>
                                 <div className="space-y-0.5 sm:space-y-1">
-                                    <span className="text-[8px] sm:text-[10px] font-black text-stone-400 uppercase tracking-widest block">Atleta A</span>
-                                    <span className={`text-[11px] sm:text-sm font-black uppercase tracking-tight truncate max-w-[70px] sm:max-w-[100px] block ${playerAId ? 'text-stone-800' : 'text-stone-300'}`}>
+                                    <span className="text-meta sm:text-meta font-extrabold text-stone-400 uppercase tracking-widest block">Atleta A</span>
+                                    <span className={`text-meta sm:text-sm font-extrabold uppercase tracking-tight truncate max-w-[70px] sm:max-w-[100px] block ${playerAId ? 'text-stone-800' : 'text-stone-300'}`}>
                                         {playerAId ? getPlayerName(playerAId).split(' ')[0] : 'Pendente'}
                                     </span>
                                 </div>
                             </div>
 
                             <div className="flex flex-col items-center shrink-0">
-                                <span className="text-stone-200 font-black italic text-lg sm:text-2xl tracking-tighter opacity-50">VS</span>
+                                <span className="text-stone-200 font-extrabold italic text-lg sm:text-2xl tracking-tighter opacity-50">VS</span>
                                 <div className="h-8 sm:h-12 w-px bg-stone-100 my-1 sm:my-2"></div>
                             </div>
 
@@ -324,7 +324,7 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
                                 className={`flex flex-col items-center gap-2 sm:gap-3 flex-1 transition-all ${playerBId ? 'cursor-pointer active:scale-95' : ''}`}
                                 onClick={() => playerBId && setPlayerBId('')}
                             >
-                                <div className={`w-16 h-16 sm:w-24 sm:h-24 rounded-[20px] sm:rounded-[32px] border-2 sm:border-4 flex items-center justify-center transition-all duration-500 overflow-hidden shadow-xl sm:shadow-2xl ${playerBId ? 'border-court-green' : 'border-stone-100 bg-stone-50'}`}>
+                                <div className={`w-16 h-16 sm:w-24 sm:h-24 rounded-2xl sm:rounded-3xl border-2 sm:border-4 flex items-center justify-center transition-all duration-500 overflow-hidden shadow-xl sm:shadow-2xl ${playerBId ? 'border-court-green' : 'border-stone-100 bg-stone-50'}`}>
                                     {playerBId ? (
                                         <img src={players.find(p => p.id === playerBId)?.avatar} className="w-full h-full object-cover animate-in zoom-in duration-300" alt="" />
                                     ) : (
@@ -332,8 +332,8 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
                                     )}
                                 </div>
                                 <div className="space-y-0.5 sm:space-y-1">
-                                    <span className="text-[8px] sm:text-[10px] font-black text-stone-400 uppercase tracking-widest block">Atleta B</span>
-                                    <span className={`text-[11px] sm:text-sm font-black uppercase tracking-tight truncate max-w-[70px] sm:max-w-[100px] block ${playerBId ? 'text-stone-800' : 'text-stone-300'}`}>
+                                    <span className="text-meta sm:text-meta font-extrabold text-stone-400 uppercase tracking-widest block">Atleta B</span>
+                                    <span className={`text-meta sm:text-sm font-extrabold uppercase tracking-tight truncate max-w-[70px] sm:max-w-[100px] block ${playerBId ? 'text-stone-800' : 'text-stone-300'}`}>
                                         {playerBId ? getPlayerName(playerBId).split(' ')[0] : 'Pendente'}
                                     </span>
                                 </div>
@@ -356,7 +356,7 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
                                     {playersPresentToday.length > 0 && (
                                         <div className="hidden sm:flex absolute right-4 inset-y-0 items-center gap-1.5">
                                             <span className="flex h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
-                                            <span className="text-[10px] font-black text-stone-500 uppercase tracking-tight">Clube</span>
+                                            <span className="text-meta font-extrabold text-stone-500 uppercase tracking-tight">Clube</span>
                                         </div>
                                     )}
                                 </div>
@@ -364,7 +364,7 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
                                 {playersPresentToday.length > 0 && !searchTerm && (
                                     <div className="sm:hidden flex items-center justify-center gap-1.5 py-1">
                                         <span className="flex h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse"></span>
-                                        <span className="text-[9px] font-black text-stone-400 uppercase tracking-widest">Atletas presentes hoje</span>
+                                        <span className="text-meta font-extrabold text-stone-400 uppercase tracking-widest">Atletas presentes hoje</span>
                                     </div>
                                 )}
 
@@ -385,13 +385,13 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
                                                 className="group/btn flex flex-col items-center gap-2 p-3 bg-white border border-stone-100 rounded-2xl hover:border-saibro-200 hover:shadow-lg transition-all active:scale-95"
                                             >
                                                 <img src={p.avatar} className="w-12 h-12 rounded-full border-2 border-white shadow-sm object-cover group-hover/btn:scale-110 transition-transform" />
-                                                <span className="text-[10px] font-bold text-stone-600 uppercase truncate w-full text-center tracking-tight">
+                                                <span className="text-meta font-bold text-stone-600 uppercase truncate w-full text-center tracking-tight">
                                                     {p.name.split(' ')[0]}
                                                 </span>
                                             </button>
                                         )) : (
                                         <div className="col-span-full py-8 text-center bg-stone-50 rounded-2xl border-2 border-dashed border-stone-100">
-                                            <p className="text-xs font-black text-stone-400 uppercase tracking-widest">
+                                            <p className="text-xs font-extrabold text-stone-400 uppercase tracking-widest">
                                                 Nenhum atleta encontrado com reservas para hoje
                                             </p>
                                         </div>
@@ -410,10 +410,10 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
                                     <button
                                         disabled={!!winner}
                                         onClick={() => !winner && setScoreA(s => Math.min(s + 1, 7))}
-                                        className="w-12 h-12 sm:w-20 sm:h-20 rounded-[20px] sm:rounded-[28px] bg-white border-2 border-saibro-100 text-saibro-600 flex items-center justify-center text-2xl sm:text-4xl font-black hover:bg-saibro-500 hover:text-white transition-all active:scale-90 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="w-12 h-12 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl bg-white border-2 border-saibro-100 text-saibro-600 flex items-center justify-center text-2xl sm:text-4xl font-extrabold hover:bg-saibro-500 hover:text-white transition-all active:scale-90 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                                     >+</button>
                                     <div className="relative group">
-                                        <span className="text-7xl sm:text-[160px] font-black text-stone-800 tabular-nums leading-none tracking-tighter drop-shadow-sm transition-transform block">
+                                        <span className="text-7xl sm:text-[160px] font-extrabold text-stone-800 tabular-nums leading-none tracking-tighter drop-shadow-sm transition-transform block">
                                             {scoreA}
                                         </span>
                                         {winner === 'A' && (
@@ -429,7 +429,7 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
                                 </div>
 
                                 <div className="flex flex-col items-center gap-2 sm:gap-4 py-4 sm:py-8 shrink-0">
-                                    <div className="px-3 py-1 bg-stone-800 text-stone-300 rounded-full text-[8px] sm:text-[10px] font-black uppercase tracking-widest shadow-lg">SET</div>
+                                    <div className="px-3 py-1 bg-stone-800 text-stone-300 rounded-full text-meta sm:text-meta font-extrabold uppercase tracking-widest shadow-lg">SET</div>
                                     <div className="h-20 sm:h-40 w-0.5 sm:w-1 rounded-full bg-linear-to-b from-transparent via-stone-200 to-transparent"></div>
                                 </div>
 
@@ -438,10 +438,10 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
                                     <button
                                         disabled={!!winner}
                                         onClick={() => !winner && setScoreB(s => Math.min(s + 1, 7))}
-                                        className="w-12 h-12 sm:w-20 sm:h-20 rounded-[20px] sm:rounded-[28px] bg-white border-2 border-court-green/20 text-court-green flex items-center justify-center text-2xl sm:text-4xl font-black hover:bg-court-green hover:text-white transition-all active:scale-90 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="w-12 h-12 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl bg-white border-2 border-court-green/20 text-court-green flex items-center justify-center text-2xl sm:text-4xl font-extrabold hover:bg-court-green hover:text-white transition-all active:scale-90 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                                     >+</button>
                                     <div className="relative group">
-                                        <span className="text-7xl sm:text-[160px] font-black text-stone-800 tabular-nums leading-none tracking-tighter drop-shadow-sm transition-transform block">
+                                        <span className="text-7xl sm:text-[160px] font-extrabold text-stone-800 tabular-nums leading-none tracking-tighter drop-shadow-sm transition-transform block">
                                             {scoreB}
                                         </span>
                                         {winner === 'B' && (
@@ -460,23 +460,23 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
                             {/* Status & Save */}
                             <div className="w-full max-w-sm space-y-4">
                                 {winner ? (
-                                    <div className="bg-green-500 text-white px-6 py-4 rounded-[28px] shadow-xl shadow-green-100/50 flex items-center justify-between animate-in zoom-in-95 duration-300">
+                                    <div className="bg-green-500 text-white px-6 py-4 rounded-3xl shadow-xl flex items-center justify-between animate-in zoom-in-95 duration-300">
                                         <div className="flex items-center gap-3">
                                             <div className="p-2 bg-white/20 rounded-full">
                                                 <Zap size={20} className="fill-white" />
                                             </div>
                                             <div>
-                                                <p className="text-[10px] font-black uppercase tracking-tighter opacity-80 leading-none mb-1">Finalizado</p>
-                                                <p className="font-black text-sm uppercase tracking-tight">Partida Concluída!</p>
+                                                <p className="text-meta font-extrabold uppercase tracking-tighter opacity-80 leading-none mb-1">Finalizado</p>
+                                                <p className="font-extrabold text-sm uppercase tracking-tight">Partida Concluída!</p>
                                             </div>
                                         </div>
                                         <div className="text-right">
-                                            <p className="text-[10px] font-black uppercase opacity-80">+10 PTS</p>
-                                            <p className="font-black text-xs">RANKING</p>
+                                            <p className="text-meta font-extrabold uppercase opacity-80">+10 PTS</p>
+                                            <p className="font-extrabold text-xs">RANKING</p>
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className="flex items-center justify-center gap-2 text-stone-400 bg-white border border-stone-100 px-6 py-4 rounded-3xl text-xs font-black uppercase tracking-widest shadow-inner">
+                                    <div className="flex items-center justify-center gap-2 text-stone-400 bg-white border border-stone-100 px-6 py-4 rounded-3xl text-xs font-extrabold uppercase tracking-widest shadow-inner">
                                         <Zap size={16} /> Jogo em andamento...
                                     </div>
                                 )}
@@ -485,7 +485,7 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
                                     <button
                                         onClick={handleSave}
                                         disabled={saving}
-                                        className="w-full py-5 bg-stone-900 text-white rounded-[28px] font-black text-xl shadow-2xl transition-all active:scale-95 flex items-center justify-center gap-3 hover:bg-black group"
+                                        className="w-full py-5 bg-stone-900 text-white rounded-3xl font-extrabold text-xl shadow-2xl transition-all active:scale-95 flex items-center justify-center gap-3 hover:bg-black group"
                                     >
                                         {saving ? (
                                             <span className="flex items-center gap-3">
@@ -508,10 +508,10 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
             {/* History Feed */}
             <div className="space-y-6">
                 <div className="flex items-center justify-between px-2">
-                    <h3 className="font-black text-stone-800 text-xl tracking-tighter flex items-center gap-2">
+                    <h3 className="font-extrabold text-stone-800 text-xl tracking-tighter flex items-center gap-2">
                         <History className="text-saibro-500" /> Match Feed
                     </h3>
-                    <div className="flex items-center gap-1.5 text-[10px] font-black text-stone-400 uppercase tracking-widest bg-stone-100/80 px-3 py-1.5 rounded-full">
+                    <div className="flex items-center gap-1.5 text-meta font-extrabold text-stone-400 uppercase tracking-widest bg-stone-100/80 px-3 py-1.5 rounded-full">
                         <TrendingUp size={14} /> Recentes
                     </div>
                 </div>
@@ -523,30 +523,30 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
                         const isWinnerA = match.winner_id === match.player_a_id;
 
                         return (
-                            <div key={match.id} className="group/match bg-white p-5 rounded-[40px] border border-stone-100 shadow-sm hover:shadow-xl hover:scale-[1.01] transition-all duration-500">
+                            <div key={match.id} className="group/match bg-white p-5 rounded-3xl border border-stone-100 shadow-sm hover:shadow-xl hover:scale-[1.01] transition-all duration-500">
                                 <div className="flex items-center justify-between gap-4">
                                     <div className="flex items-center gap-3 sm:gap-8 flex-1">
                                         {/* Player A */}
                                         <div className="flex flex-col items-center gap-3 flex-1 min-w-0">
                                             <div className="relative">
-                                                <img src={playerA?.avatar} className={`w-14 h-14 sm:w-20 sm:h-20 rounded-[28px] object-cover border-4 shadow-sm transition-all duration-500 ${isWinnerA ? 'border-saibro-400 scale-105' : 'border-stone-50 opacity-40'}`} />
+                                                <img src={playerA?.avatar} className={`w-14 h-14 sm:w-20 sm:h-20 rounded-3xl object-cover border-4 shadow-sm transition-all duration-500 ${isWinnerA ? 'border-saibro-400 scale-105' : 'border-stone-50 opacity-40'}`} />
                                                 {isWinnerA && (
                                                     <div className="absolute -top-3 -right-3 bg-saibro-500 text-white p-1.5 rounded-full border-2 border-white shadow-lg animate-bounce">
                                                         <Trophy size={14} />
                                                     </div>
                                                 )}
                                             </div>
-                                            <span className={`text-[10px] font-black uppercase tracking-tight truncate w-full text-center ${isWinnerA ? 'text-stone-800' : 'text-stone-300'}`}>
+                                            <span className={`text-meta font-extrabold uppercase tracking-tight truncate w-full text-center ${isWinnerA ? 'text-stone-800' : 'text-stone-300'}`}>
                                                 {playerA?.name.split(' ')[0]}
                                             </span>
                                         </div>
 
                                         {/* Result Center */}
                                         <div className="flex flex-col items-center gap-2 px-2">
-                                            <div className="bg-stone-900 text-white px-5 py-2.5 rounded-[22px] font-black text-xl sm:text-3xl tabular-nums shadow-xl shadow-stone-200 border-2 border-stone-800">
+                                            <div className="bg-stone-900 text-white px-5 py-2.5 rounded-2xl font-extrabold text-xl sm:text-3xl tabular-nums shadow-xl shadow-stone-200 border-2 border-stone-800">
                                                 {match.score_a[0]}<span className="text-stone-500 mx-1.5 font-light">-</span>{match.score_b[0]}
                                             </div>
-                                            <span className="text-[9px] font-black text-stone-300 uppercase tracking-widest whitespace-nowrap">
+                                            <span className="text-meta font-extrabold text-stone-300 uppercase tracking-widest whitespace-nowrap">
                                                 {new Date(match.date + 'T12:00:00').toLocaleDateString('pt-BR', { timeZone: 'America/Fortaleza', day: '2-digit', month: 'short' })}
                                             </span>
                                         </div>
@@ -554,14 +554,14 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
                                         {/* Player B */}
                                         <div className="flex flex-col items-center gap-3 flex-1 min-w-0">
                                             <div className="relative">
-                                                <img src={playerB?.avatar} className={`w-14 h-14 sm:w-20 sm:h-20 rounded-[28px] object-cover border-4 shadow-sm transition-all duration-500 ${!isWinnerA ? 'border-court-green scale-105' : 'border-stone-50 opacity-40'}`} />
+                                                <img src={playerB?.avatar} className={`w-14 h-14 sm:w-20 sm:h-20 rounded-3xl object-cover border-4 shadow-sm transition-all duration-500 ${!isWinnerA ? 'border-court-green scale-105' : 'border-stone-50 opacity-40'}`} />
                                                 {!isWinnerA && (
                                                     <div className="absolute -top-3 -right-3 bg-court-green text-white p-1.5 rounded-full border-2 border-white shadow-lg animate-bounce">
                                                         <Trophy size={14} />
                                                     </div>
                                                 )}
                                             </div>
-                                            <span className={`text-[10px] font-black uppercase tracking-tight truncate w-full text-center ${!isWinnerA ? 'text-stone-800' : 'text-stone-300'}`}>
+                                            <span className={`text-meta font-extrabold uppercase tracking-tight truncate w-full text-center ${!isWinnerA ? 'text-stone-800' : 'text-stone-300'}`}>
                                                 {playerB?.name.split(' ')[0]}
                                             </span>
                                         </div>
@@ -573,10 +573,10 @@ export const SuperSet: React.FC<SuperSetProps> = () => {
 
                     {history.length === 0 && (
                         <div className="py-20 text-center space-y-4">
-                            <div className="w-20 h-20 bg-stone-100 rounded-[32px] flex items-center justify-center mx-auto text-stone-300">
+                            <div className="w-20 h-20 bg-stone-100 rounded-3xl flex items-center justify-center mx-auto text-stone-300">
                                 <History size={40} />
                             </div>
-                            <p className="text-stone-400 font-black text-[10px] uppercase tracking-widest">Aguardando estreias no Match Feed...</p>
+                            <p className="text-stone-400 font-extrabold text-meta uppercase tracking-widest">Aguardando estreias no Match Feed...</p>
                         </div>
                     )}
                 </div>

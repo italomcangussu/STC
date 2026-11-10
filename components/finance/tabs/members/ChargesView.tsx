@@ -44,8 +44,8 @@ const FiltersCard: React.FC<{ list: ChargesList; actions: React.ReactNode }> = (
 
 const Totals: React.FC<{ list: ChargesList }> = ({ list }) => (
   <div className="grid grid-cols-2 gap-3">
-    <div className="rounded-2xl bg-white p-3 shadow-sm"><p className="text-[11px] font-black uppercase tracking-wider text-stone-400">A receber</p><p className="text-xl font-black tabular-nums text-stone-800">{formatBRL(list.totals.due)}</p></div>
-    <div className="rounded-2xl bg-red-50 p-3"><p className="text-[11px] font-black uppercase tracking-wider text-red-400">Vencido</p><p className="text-xl font-black tabular-nums text-red-700">{formatBRL(list.totals.overdue)}</p></div>
+    <div className="rounded-2xl bg-white p-3 shadow-sm"><p className="text-meta font-extrabold uppercase tracking-wider text-stone-400">A receber</p><p className="text-xl font-extrabold tabular-nums text-stone-800">{formatBRL(list.totals.due)}</p></div>
+    <div className="rounded-2xl bg-red-50 p-3"><p className="text-meta font-extrabold uppercase tracking-wider text-red-400">Vencido</p><p className="text-xl font-extrabold tabular-nums text-red-700">{formatBRL(list.totals.overdue)}</p></div>
   </div>
 );
 
@@ -70,12 +70,12 @@ const ChargeRow: React.FC<{ charge: MemberChargeRow; onOpen: (charge: MemberChar
   <Row onClick={() => onOpen(r)}>
     <div className="flex items-start justify-between gap-2">
       <div className="min-w-0">
-        <p className="truncate text-sm font-black text-stone-800">{r.profile_name}</p>
+        <p className="truncate text-sm font-extrabold text-stone-800">{r.profile_name}</p>
         {r.meta && <p className="truncate text-sm text-stone-600">{r.meta.description}</p>}
         <p className="text-xs text-stone-500">{chargeSubtitle(r)}</p>
       </div>
       <div className="shrink-0 text-right">
-        <p className="text-sm font-black tabular-nums">{formatBRL(shownAmountCents(r))}</p>
+        <p className="text-sm font-extrabold tabular-nums">{formatBRL(shownAmountCents(r))}</p>
         <div className="mt-1 flex flex-col items-end gap-1"><ChargeStatusBadge status={r.display_status} />{r.meta && !r.meta.collection_enabled && <Badge tone="neutral">Pausada</Badge>}</div>
       </div>
     </div>

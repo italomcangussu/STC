@@ -87,7 +87,7 @@ export default function AudioPlayer({ src, isOutbound, voiceNote, seconds }: Pro
           {tocando ? <Pause size={18} fill="currentColor" aria-hidden /> : <Play size={18} className="ml-0.5" fill="currentColor" aria-hidden />}
         </button>
         <div className="min-w-0 flex-1">
-          <div className="mb-1.5 flex items-center justify-between text-[10px] font-medium text-slate-500">
+          <div className="mb-1.5 flex items-center justify-between text-meta font-medium text-slate-500">
             <span className="flex items-center gap-1">{voiceNote && <Mic size={10} aria-hidden />}{formatTime(atual)}</span>
             <span>{duracao ? formatTime(duracao) : src ? '…' : 'baixando…'}</span>
           </div>
@@ -104,12 +104,12 @@ export default function AudioPlayer({ src, isOutbound, voiceNote, seconds }: Pro
             <div className={cx('h-full rounded-full transition-[width] duration-75', isOutbound ? 'bg-saibro-600' : 'bg-emerald-600')} style={{ width: `${Math.round(progresso * 100)}%` }} />
           </div>
         </div>
-        <button type="button" onClick={trocarVelocidade} className="shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-bold text-slate-600 hover:bg-white" aria-label="Velocidade">
+        <button type="button" onClick={trocarVelocidade} className="shrink-0 rounded-full px-1.5 py-0.5 text-meta font-bold text-slate-600 hover:bg-white" aria-label="Velocidade">
           {velocidade}×
         </button>
       </div>
       {erro && (
-        <div className="mt-2 flex items-center justify-between gap-2 text-[10px] font-medium text-red-600">
+        <div className="mt-2 flex items-center justify-between gap-2 text-meta font-medium text-red-600">
           <span>Não foi possível tocar este áudio.</span>
           {src && (
             <a

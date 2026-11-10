@@ -10,12 +10,12 @@ import { Badge, Card, Spinner, btnGhost } from '../ui';
 
 /** O topo da tela: quanto o sócio deve hoje e o atalho para enviar o comprovante. */
 export const StatementHeader: React.FC<{ overdueCount: number; owedCents: number; canSend: boolean; pickedCount: number; onSend: () => void }> = ({ overdueCount, owedCents, canSend, pickedCount, onSend }) => (
-  <header className="rounded-3xl bg-linear-to-br from-saibro-600 to-orange-500 p-5 text-white shadow-lg shadow-saibro-200/50">
-    <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-saibro-100"><Wallet size={14} /> Meu financeiro</div>
+  <header className="rounded-3xl bg-linear-to-br from-saibro-600 to-orange-500 p-5 text-white shadow-lg ">
+    <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest text-saibro-100"><Wallet size={14} /> Meu financeiro</div>
     <p className="mt-2 text-sm text-saibro-100">{headerSentence(overdueCount, owedCents)}</p>
-    <p className="text-4xl font-black tabular-nums">{formatBRL(owedCents)}</p>
+    <p className="text-4xl font-extrabold tabular-nums">{formatBRL(owedCents)}</p>
     <p className="mt-1 text-xs text-saibro-100">Total atualizado de hoje, com encargos de atraso quando houver.</p>
-    <button className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-xl bg-white px-4 text-sm font-black text-saibro-700 shadow-sm active:scale-95 disabled:opacity-60" disabled={!canSend} onClick={onSend}>
+    <button className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-xl bg-white px-4 text-sm font-extrabold text-saibro-700 shadow-sm active:scale-95 disabled:opacity-60" disabled={!canSend} onClick={onSend}>
       <Receipt size={16} /> Enviar comprovante{pickedCount ? ` (${pickedCount})` : ''}
     </button>
   </header>
@@ -41,7 +41,7 @@ const CopyPixButton: React.FC<{ pix: string }> = ({ pix }) => {
 export const PendenciesCard: React.FC<{ cents: number; pixKey: string | null | undefined }> = ({ cents, pixKey }) => (
   <Card title="Pendências financeiras" subtitle="Pendências lançadas pelo clube ficam aqui até a quitação.">
     <div className="flex items-end justify-between gap-3 rounded-2xl bg-stone-50 p-3">
-      <div><p className="text-[10px] font-black uppercase tracking-wide text-stone-400">Saldo das pendências</p><p className="text-2xl font-black text-stone-900">{formatBRL(cents)}</p></div>
+      <div><p className="text-meta font-extrabold uppercase tracking-wide text-stone-400">Saldo das pendências</p><p className="text-2xl font-extrabold text-stone-900">{formatBRL(cents)}</p></div>
       {pixKey && <CopyPixButton pix={pixKey} />}
     </div>
     {pixKey && <p className="mt-2 break-all text-xs text-stone-500">PIX do clube: <b className="text-stone-700">{pixKey}</b></p>}
@@ -70,7 +70,7 @@ const ReceiptItem: React.FC<{ receipt: MyReceipt; onResend: (receipt: MyReceipt)
         <Badge tone={RECEIPT_TONE[info.tone as keyof typeof RECEIPT_TONE] ?? 'info'}>{info.label}</Badge>
       </div>
       <p className="mt-1 text-xs leading-relaxed text-stone-500">{info.nextStep}</p>
-      {r.possible_duplicate && <p className="mt-1 text-[11px] text-amber-700">Este arquivo já tinha sido enviado antes.</p>}
+      {r.possible_duplicate && <p className="mt-1 text-meta text-amber-700">Este arquivo já tinha sido enviado antes.</p>}
       {canResend && <button className={`${btnGhost} mt-2`} onClick={() => onResend(r)}>Enviar novo comprovante</button>}
     </div>
   );

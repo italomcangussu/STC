@@ -446,7 +446,7 @@ export function renderWhatsAppTextBlocks(
 
   const toneClasses = getToneClasses(options.tone);
   const textSizeClass = options.compact ? 'text-xs' : 'text-sm';
-  const codeBlockTextSizeClass = options.compact ? 'text-[11px]' : 'text-[13px]';
+  const codeBlockTextSizeClass = options.compact ? 'text-meta' : 'text-[13px]';
 
   return blocks.map((block, index) => {
     const key = `whatsapp-block-${index}`;

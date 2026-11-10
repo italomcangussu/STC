@@ -83,9 +83,9 @@ export const CashMovementActions:React.FC<Props>=({movement,onClose,onChanged})=
   return <Sheet open onClose={close} title="Corrigir ou excluir lançamento" subtitle={brDate(movement.occurred_on)} closeOnBackdrop={false}>
     <div className="space-y-4">
       <div className="rounded-2xl bg-stone-50 p-3">
-        <p className="text-sm font-black text-stone-800">{movement.description}</p>
+        <p className="text-sm font-extrabold text-stone-800">{movement.description}</p>
         <p className="mt-1 text-xs text-stone-500">{movement.account_name} · {brDate(movement.occurred_on)}</p>
-        <p className="mt-2 text-lg font-black tabular-nums">{formatBRL(movement.amount_cents)}</p>
+        <p className="mt-2 text-lg font-extrabold tabular-nums">{formatBRL(movement.amount_cents)}</p>
       </div>
 
       <Notice tone="warn" title="Excluir lançamento incorreto">
@@ -113,7 +113,7 @@ export const CashMovementActions:React.FC<Props>=({movement,onClose,onChanged})=
         </button>}
         <button className={btnGhost} disabled={busy} onClick={close}>Voltar</button>
       </div>
-      <p className="flex items-start gap-1 text-[11px] text-stone-500"><AlertTriangle size={14} className="shrink-0"/> A exclusão não executa Pix, reembolso bancário ou apaga comprovantes e registros de auditoria.</p>
+      <p className="flex items-start gap-1 text-meta text-stone-500"><AlertTriangle size={14} className="shrink-0"/> A exclusão não executa Pix, reembolso bancário ou apaga comprovantes e registros de auditoria.</p>
     </div>
   </Sheet>;
 };

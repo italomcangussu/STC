@@ -509,7 +509,7 @@ export const ChampionshipCreator: React.FC = () => {
                 <div className="flex items-center gap-3">
                     <Shuffle size={28} />
                     <div>
-                        <h1 className="text-2xl font-black">Criador de Campeonatos</h1>
+                        <h1 className="text-2xl font-extrabold">Criador de Campeonatos</h1>
                         <p className="text-saibro-100 text-sm">Painel exclusivo de administração</p>
                     </div>
                 </div>
@@ -520,7 +520,7 @@ export const ChampionshipCreator: React.FC = () => {
                 <div className="space-y-4">
                     {/* Class selector */}
                     <div className="bg-white rounded-2xl border border-stone-100 p-5 space-y-3">
-                        <h2 className="font-black text-stone-800">Classe</h2>
+                        <h2 className="font-extrabold text-stone-800">Classe</h2>
                         <div className="flex gap-3">
                             {(['4ª Classe', '5ª Classe'] as ResenhaClass[]).map(c => (
                                 <button
@@ -539,7 +539,7 @@ export const ChampionshipCreator: React.FC = () => {
                     {/* Select existing */}
                     {championships.length > 0 && (
                         <div className="bg-white rounded-2xl border border-stone-100 p-5 space-y-3">
-                            <h2 className="font-black text-stone-800">Campeonato existente</h2>
+                            <h2 className="font-extrabold text-stone-800">Campeonato existente</h2>
                             <select
                                 value={selectedChampId}
                                 onChange={async e => {
@@ -567,7 +567,7 @@ export const ChampionshipCreator: React.FC = () => {
                             </select>
                             {classesDoSelecionado.length > 0 && (
                                 <div className="space-y-2">
-                                    <p className="text-xs font-black text-stone-400 uppercase tracking-widest">
+                                    <p className="text-xs font-extrabold text-stone-400 uppercase tracking-widest">
                                         Retomar em qual classe
                                     </p>
                                     <div className="flex flex-wrap gap-2">
@@ -689,7 +689,7 @@ export const ChampionshipCreator: React.FC = () => {
                     {/* Athlete list */}
                     <div className="bg-white rounded-2xl border border-stone-100 p-5 space-y-3">
                         <div className="flex items-center justify-between">
-                            <h2 className="font-black text-stone-800">
+                            <h2 className="font-extrabold text-stone-800">
                                 Atletas inscritos
                                 <span className={`ml-2 text-sm font-bold px-2 py-0.5 rounded-full ${athletes.length === expectedCount ? 'bg-green-100 text-green-700' : 'bg-stone-100 text-stone-500'}`}>
                                     {athletes.length}/{expectedCount}
@@ -729,7 +729,7 @@ export const ChampionshipCreator: React.FC = () => {
 
                     {/* Add socio */}
                     <div className="bg-white rounded-2xl border border-stone-100 p-5 space-y-3">
-                        <h2 className="font-black text-stone-800 text-sm uppercase tracking-wide">Adicionar Sócio</h2>
+                        <h2 className="font-extrabold text-stone-800 text-sm uppercase tracking-wide">Adicionar Sócio</h2>
                         <div className="flex items-center gap-2">
                             {classe === '4ª Classe' && (
                                 <button
@@ -773,7 +773,7 @@ export const ChampionshipCreator: React.FC = () => {
 
                     {/* Add guest */}
                     <div className="bg-white rounded-2xl border border-stone-100 p-5 space-y-3">
-                        <h2 className="font-black text-stone-800 text-sm uppercase tracking-wide">Adicionar Convidado</h2>
+                        <h2 className="font-extrabold text-stone-800 text-sm uppercase tracking-wide">Adicionar Convidado</h2>
                         <div className="flex items-center gap-2">
                             {classe === '4ª Classe' && (
                                 <button
@@ -821,7 +821,7 @@ export const ChampionshipCreator: React.FC = () => {
                     <button
                         disabled={!canDraw}
                         onClick={goToDraw}
-                        className="w-full py-4 bg-saibro-600 text-white rounded-2xl font-black text-lg disabled:opacity-40 flex items-center justify-center gap-3 hover:bg-saibro-700 transition-colors shadow-lg"
+                        className="w-full py-4 bg-saibro-600 text-white rounded-2xl font-extrabold text-lg disabled:opacity-40 flex items-center justify-center gap-3 hover:bg-saibro-700 transition-colors shadow-lg"
                     >
                         <Shuffle size={22} />
                         {canDraw ? 'Ir para Sorteio' : `Faltam ${expectedCount - athletes.length} atleta(s)`}
@@ -887,13 +887,13 @@ export const ChampionshipCreator: React.FC = () => {
                     {/* 5ª Classe — simple draw */}
                     {classe === '5ª Classe' && (
                         <div className="bg-white rounded-2xl border border-stone-100 p-5 space-y-4">
-                            <h2 className="font-black text-stone-800 text-lg">Sorteio — 5ª Classe</h2>
+                            <h2 className="font-extrabold text-stone-800 text-lg">Sorteio — 5ª Classe</h2>
                             <p className="text-stone-500 text-sm">Clique em Sortear para gerar os 8 confrontos das Oitavas.</p>
 
                             <button
                                 disabled={animating5}
                                 onClick={runDraw5}
-                                className="w-full py-4 bg-saibro-600 text-white rounded-xl font-black flex items-center justify-center gap-3 hover:bg-saibro-700 disabled:opacity-60 transition-colors"
+                                className="w-full py-4 bg-saibro-600 text-white rounded-xl font-extrabold flex items-center justify-center gap-3 hover:bg-saibro-700 disabled:opacity-60 transition-colors"
                             >
                                 {animating5 ? <Loader2 className="animate-spin" size={20} /> : <Shuffle size={20} />}
                                 {animating5 ? 'Sorteando...' : display5.length ? 'Sortear novamente' : 'Sortear'}
@@ -921,7 +921,7 @@ export const ChampionshipCreator: React.FC = () => {
                                 estes são os confrontos da fase preliminar, os únicos com os
                                 dois nomes já definidos. O restante da chave depende deles. */}
                             <div className="bg-white rounded-2xl border border-stone-100 p-5 space-y-4">
-                                <h2 className="font-black text-stone-800">Sorteio — 4ª Classe</h2>
+                                <h2 className="font-extrabold text-stone-800">Sorteio — 4ª Classe</h2>
                                 <p className="text-stone-500 text-sm">
                                     Sorteia os 20 atletas no quadro oficial. Abaixo aparecem os Jogos 1 a 4,
                                     da fase preliminar; o resto da chave é montado a partir dos vencedores.
@@ -929,7 +929,7 @@ export const ChampionshipCreator: React.FC = () => {
                                 <button
                                     disabled={animating4}
                                     onClick={runDrawQualify}
-                                    className="w-full py-4 bg-saibro-600 text-white rounded-xl font-black flex items-center justify-center gap-3 hover:bg-saibro-700 disabled:opacity-60"
+                                    className="w-full py-4 bg-saibro-600 text-white rounded-xl font-extrabold flex items-center justify-center gap-3 hover:bg-saibro-700 disabled:opacity-60"
                                 >
                                     {animating4 ? <Loader2 className="animate-spin" size={20} /> : <Shuffle size={20} />}
                                     {animating4 ? 'Sorteando...' : displayQualify.length ? 'Sortear novamente' : 'Sortear'}
@@ -955,7 +955,7 @@ export const ChampionshipCreator: React.FC = () => {
                         <button
                             disabled={saving}
                             onClick={handleSaveBracket}
-                            className="w-full py-4 bg-green-600 text-white rounded-2xl font-black text-lg flex items-center justify-center gap-3 hover:bg-green-700 shadow-lg disabled:opacity-50"
+                            className="w-full py-4 bg-green-600 text-white rounded-2xl font-extrabold text-lg flex items-center justify-center gap-3 hover:bg-green-700 shadow-lg disabled:opacity-50"
                         >
                             {saving ? <Loader2 className="animate-spin" size={22} /> : <Save size={22} />}
                             Salvar Campeonato e Gerar Tabela
@@ -995,7 +995,7 @@ export const ChampionshipCreator: React.FC = () => {
             {step === 'bracket' && (
                 <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                        <h2 className="font-black text-stone-800 text-lg">Tabela de Confrontos</h2>
+                        <h2 className="font-extrabold text-stone-800 text-lg">Tabela de Confrontos</h2>
                         <div className="flex gap-2">
                             <button onClick={loadBracket} disabled={loadingBracket} className="hit-44 rounded-xl border border-stone-200 hover:bg-stone-50 text-stone-500">
                                 <RefreshCw size={16} className={loadingBracket ? 'animate-spin' : ''} />
@@ -1018,7 +1018,7 @@ export const ChampionshipCreator: React.FC = () => {
                             return (
                                 <div key={phase} className="bg-white rounded-2xl border border-stone-100 overflow-hidden">
                                     <div className="bg-stone-50 px-4 py-2 border-b border-stone-100">
-                                        <h3 className="font-black text-stone-700 text-sm uppercase tracking-wide">
+                                        <h3 className="font-extrabold text-stone-700 text-sm uppercase tracking-wide">
                                             {PHASE_LABELS[phase] ?? phase}
                                         </h3>
                                     </div>
@@ -1132,7 +1132,7 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, onWin, saving }) => {
 const PlayerLine: React.FC<{ label: string; regId: string | null; isWinner: boolean; isLoser: boolean }> = ({
     label, isWinner, isLoser,
 }) => (
-    <div className={`flex items-center gap-2 text-sm ${isWinner ? 'font-black text-saibro-700' : isLoser ? 'text-stone-400 line-through' : 'font-medium text-stone-700'}`}>
+    <div className={`flex items-center gap-2 text-sm ${isWinner ? 'font-extrabold text-saibro-700' : isLoser ? 'text-stone-400 line-through' : 'font-medium text-stone-700'}`}>
         {isWinner && <Trophy size={11} className="text-yellow-500 shrink-0" />}
         <span className="truncate">{label}</span>
     </div>

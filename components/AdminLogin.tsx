@@ -108,7 +108,7 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onSuccess, onClose }) =>
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full bg-linear-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white font-bold py-3 rounded-xl shadow-lg shadow-red-900/20 transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed mt-2"
+                            className="w-full bg-linear-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white font-bold py-3 rounded-xl shadow-lg transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed mt-2"
                         >
                             {loading ? 'Verificando...' : 'Autenticar'}
                         </button>
@@ -117,7 +117,7 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onSuccess, onClose }) =>
 
                 {/* Security Footer */}
                 <div className="bg-black/50 p-4 text-center border-t border-stone-800">
-                    <p className="text-[10px] text-stone-600 uppercase tracking-widest font-mono">
+                    <p className="text-meta text-stone-600 uppercase tracking-widest font-mono">
                         Secure Connection • Encrypted
                     </p>
                 </div>

@@ -14,7 +14,7 @@ Chão liso stone-50, superfícies brancas com borda de 1 px e sombra de contato,
 | Superfície | `bg-superficie` | #ffffff | |
 | Superfície 2 (campo, trilho) | `bg-superficie-2` | #f5f5f4 | |
 | Linha | `border-linha` | #e7e5e4 | |
-| Borda de campo | `border-linha-forte` | #a8a29e | 3:1 |
+| Borda de campo | `border-linha-forte` | #928a83 | 3,4:1 |
 | Texto | `text-texto` | #1c1917 | 17:1 |
 | Texto 2 | `text-texto-2` | #57534e | 7,6:1 |
 | Texto 3 (o mínimo) | `text-texto-3` | #78716c | 4,8:1 |

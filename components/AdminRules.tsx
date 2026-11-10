@@ -51,7 +51,7 @@ const RuleRow: React.FC<RuleRowProps> = ({ rule, draft, saving, justSaved, onCha
             <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
                     <p className="text-sm font-bold leading-snug text-stone-800">{label}</p>
-                    <p className="mt-0.5 truncate font-mono text-[11px] text-stone-400">{rule.rule_key}</p>
+                    <p className="mt-0.5 truncate font-mono text-meta text-stone-400">{rule.rule_key}</p>
                     {dirty && <p className="mt-1.5 text-xs font-bold text-amber-700">Era {rule.points} · alterado, falta salvar</p>}
                     {justSaved && (
                         <p className="mt-1.5 flex items-center gap-1 text-xs font-bold text-green-700" role="status">
@@ -68,13 +68,13 @@ const RuleRow: React.FC<RuleRowProps> = ({ rule, draft, saving, justSaved, onCha
                         onChange={e => onChange(rule.id, e.target.value)}
                         onKeyDown={onKeyDown}
                         aria-invalid={invalid}
-                        className={`h-12 w-24 rounded-xl border-2 text-center text-lg font-black outline-hidden transition-colors ${invalid
+                        className={`h-12 w-24 rounded-xl border-2 text-center text-lg font-extrabold outline-hidden transition-colors ${invalid
                             ? 'border-red-400 bg-white text-red-700 ring-4 ring-red-100'
                             : dirty
                                 ? 'border-amber-400 bg-white text-amber-700 ring-4 ring-amber-100'
                                 : 'border-stone-200 bg-stone-50 text-stone-800 focus:border-saibro-500 focus:ring-4 focus:ring-saibro-100'}`}
                     />
-                    <span className="mt-1 block text-center text-[10px] font-black uppercase tracking-wider text-stone-400">pontos</span>
+                    <span className="mt-1 block text-center text-meta font-extrabold uppercase tracking-wider text-stone-400">pontos</span>
                 </label>
             </div>
 
@@ -236,7 +236,7 @@ export const AdminRules: React.FC = () => {
             </div>
 
             {(dirtyRules.length > 1 || invalidCount > 0) && (
-                <div className="sticky top-2 z-10 flex flex-col gap-2 rounded-2xl border border-amber-200 bg-amber-50 p-3 shadow-lg shadow-amber-900/5 sm:flex-row sm:items-center sm:justify-between" role="region" aria-label="Alterações não salvas">
+                <div className="sticky top-2 z-10 flex flex-col gap-2 rounded-2xl border border-amber-200 bg-amber-50 p-3 shadow-lg sm:flex-row sm:items-center sm:justify-between" role="region" aria-label="Alterações não salvas">
                     <p className="text-sm font-bold text-amber-800">
                         {dirtyRules.length} {dirtyRules.length === 1 ? 'alteração não salva' : 'alterações não salvas'}
                         {invalidCount > 0 && <span className="font-medium text-red-600"> · {invalidCount} com valor inválido</span>}
@@ -261,7 +261,7 @@ export const AdminRules: React.FC = () => {
                             <div className="flex items-center gap-3 px-1">
                                 <div className={`rounded-lg p-2 ${cat.color}`}>{cat.icon}</div>
                                 <div className="min-w-0">
-                                    <h3 id={`rules-${cat.id}`} className="text-base font-black text-stone-800">{cat.title}</h3>
+                                    <h3 id={`rules-${cat.id}`} className="text-base font-extrabold text-stone-800">{cat.title}</h3>
                                     <p className="text-xs font-medium text-stone-500">{cat.hint} · {list.length} {list.length === 1 ? 'regra' : 'regras'}</p>
                                 </div>
                             </div>

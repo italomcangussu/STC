@@ -177,7 +177,7 @@ const ManageParticipantsModal: React.FC<{
                                         <img src={user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`} className="w-10 h-10 rounded-full border border-stone-100" />
                                         <div>
                                             <p className="font-bold text-stone-800 text-sm">{user.name}</p>
-                                            <p className="text-[10px] text-stone-400">{user.phone ? `+${user.phone}` : user.email}</p>
+                                            <p className="text-meta text-stone-400">{user.phone ? `+${user.phone}` : user.email}</p>
                                         </div>
                                     </div >
                                     <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 transition-colors ${isSelected ? 'bg-saibro-500 border-saibro-500 text-white' : 'border-stone-200'
@@ -287,7 +287,7 @@ const ManageGuestModal: React.FC<{
                     <button
                         onClick={handleSave}
                         disabled={!name.trim()}
-                        className="w-full py-3 bg-saibro-600 text-white font-bold rounded-2xl hover:bg-saibro-700 transition-colors shadow-lg shadow-orange-100 disabled:opacity-50"
+                        className="w-full py-3 bg-saibro-600 text-white font-bold rounded-2xl hover:bg-saibro-700 transition-colors shadow-lg disabled:opacity-50"
                     >
                         {res.guestName ? 'Salvar Alterações' : 'Confirmar Convidado'}
                     </button>
@@ -454,13 +454,13 @@ export const ReservationDetails: React.FC<{
     return (
         <StandardModal isOpen={true} onClose={onClose}>
             <>
-                <div className="bg-stone-50 w-full max-w-lg rounded-[40px] flex flex-col max-h-[92vh] overflow-hidden shadow-2xl">
+                <div className="bg-stone-50 w-full max-w-lg rounded-3xl flex flex-col max-h-[92vh] overflow-hidden shadow-2xl">
                 {/* 1. Header with Glass effect */}
                 <div className="bg-white/80 backdrop-blur-xl px-6 py-5 border-b border-stone-200/60 flex items-center justify-between sticky top-0 z-10">
                     <button onClick={onClose} className="p-2.5 -ml-2 text-stone-600 hover:bg-stone-100 rounded-full transition-all active:scale-90">
                         <ArrowLeft size={22} strokeWidth={2.5} />
                     </button>
-                    <h2 className="text-xl font-black text-stone-800 tracking-tight">Detalhes do {res.type}</h2>
+                    <h2 className="text-xl font-extrabold text-stone-800 tracking-tight">Detalhes do {res.type}</h2>
                     {canShare ? (
                         <button onClick={handleShareWhatsapp} className="p-2.5 -mr-2 text-green-600 hover:bg-green-50 rounded-full transition-all active:scale-90">
                             <Share2 size={22} strokeWidth={2.5} />
@@ -471,28 +471,28 @@ export const ReservationDetails: React.FC<{
                 <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
                     {/* 2. Main Info Card - High Visual Impact */}
                     <div className="relative group">
-                        <div className={`absolute -inset-1 bg-linear-to-r ${res.type === 'Play' ? 'from-court-green/30 to-saibro-500/30' : res.type === 'Campeonato' ? 'from-yellow-400/30 to-orange-500/30' : 'from-saibro-500/30 to-orange-400/30'} rounded-[32px] blur-xl opacity-50 group-hover:opacity-75 transition duration-1000 group-hover:duration-200`}></div>
-                        <div className={`relative bg-white rounded-[28px] p-6 shadow-xl border border-stone-100/50 overflow-hidden`}>
+                        <div className={`absolute -inset-1 bg-linear-to-r ${res.type === 'Play' ? 'from-court-green/30 to-saibro-500/30' : res.type === 'Campeonato' ? 'from-yellow-400/30 to-orange-500/30' : 'from-saibro-500/30 to-orange-400/30'} rounded-3xl blur-xl opacity-50 group-hover:opacity-75 transition duration-1000 group-hover:duration-200`}></div>
+                        <div className={`relative bg-white rounded-3xl p-6 shadow-xl border border-stone-100/50 overflow-hidden`}>
                             {/* Visual Stripe */}
                             <div className={`absolute top-0 right-0 w-32 h-32 -mr-16 -mt-16 rounded-full ${style.bg} opacity-20 blur-3xl`} />
 
                             <div className="flex justify-between items-start mb-6">
                                 <div className="space-y-1">
                                     <div className="flex items-center gap-2">
-                                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border-2 ${style.border} ${style.bg} ${style.text} shadow-sm`}>
+                                        <span className={`px-3 py-1 rounded-full text-meta font-extrabold uppercase tracking-widest border-2 ${style.border} ${style.bg} ${style.text} shadow-sm`}>
                                             {style.label}
                                         </span>
                                         {res.status === 'cancelled' ? (
-                                            <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-red-100 text-red-600 border-2 border-red-200 shadow-sm">Cancelada</span>
+                                            <span className="px-3 py-1 rounded-full text-meta font-extrabold uppercase tracking-widest bg-red-100 text-red-600 border-2 border-red-200 shadow-sm">Cancelada</span>
                                         ) : !isFuture ? (
-                                            <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-stone-100 text-stone-500 border-2 border-stone-200 shadow-sm">Finalizada</span>
+                                            <span className="px-3 py-1 rounded-full text-meta font-extrabold uppercase tracking-widest bg-stone-100 text-stone-500 border-2 border-stone-200 shadow-sm">Finalizada</span>
                                         ) : (
-                                            <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-green-50 text-green-600 border-2 border-green-100 shadow-sm">
+                                            <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-meta font-extrabold uppercase tracking-widest bg-green-50 text-green-600 border-2 border-green-100 shadow-sm">
                                                 <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" /> Ativa
                                             </span>
                                         )}
                                     </div>
-                                    <h1 className="text-4xl font-black text-stone-800 tracking-tighter pt-2 tabular-nums">
+                                    <h1 className="text-4xl font-extrabold text-stone-800 tracking-tighter pt-2 tabular-nums">
                                         {res.startTime} <span className="text-stone-300 font-light mx-1">/</span> <span className="text-2xl text-stone-400">{res.endTime}</span>
                                     </h1>
                                     <p className="text-stone-500 font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 opacity-80">
@@ -500,8 +500,8 @@ export const ReservationDetails: React.FC<{
                                     </p>
                                 </div>
                                 <div className="w-16 h-16 rounded-2xl bg-stone-50 border border-stone-100 flex flex-col items-center justify-center shadow-inner mt-2">
-                                    <span className="text-[10px] font-black text-stone-400 uppercase leading-none mb-1">Quadra</span>
-                                    <span className="text-xl font-black text-stone-800 leading-none">{court?.name.split(' ')[1] || '0'}</span>
+                                    <span className="text-meta font-extrabold text-stone-400 uppercase leading-none mb-1">Quadra</span>
+                                    <span className="text-xl font-extrabold text-stone-800 leading-none">{court?.name.split(' ')[1] || '0'}</span>
                                 </div>
                             </div>
 
@@ -510,8 +510,8 @@ export const ReservationDetails: React.FC<{
                                     <MapPin size={24} strokeWidth={2.5} />
                                 </div>
                                 <div>
-                                    <p className="font-black text-stone-800 text-lg tracking-tight leading-tight">{court?.name}</p>
-                                    <p className="text-[10px] text-stone-400 uppercase font-black tracking-widest">{court?.type}</p>
+                                    <p className="font-extrabold text-stone-800 text-lg tracking-tight leading-tight">{court?.name}</p>
+                                    <p className="text-meta text-stone-400 uppercase font-extrabold tracking-widest">{court?.type}</p>
                                 </div>
                             </div>
 
@@ -521,7 +521,7 @@ export const ReservationDetails: React.FC<{
                                     {canJoin && (
                                         <button
                                             onClick={() => onJoin(res.id)}
-                                            className="w-full py-4.5 bg-linear-to-r from-saibro-600 to-saibro-500 text-white font-black rounded-[20px] shadow-lg shadow-saibro-200 flex items-center justify-center gap-3 transition-all active:scale-[0.97] hover:brightness-110 uppercase tracking-widest text-sm"
+                                            className="w-full py-4.5 bg-linear-to-r from-saibro-600 to-saibro-500 text-white font-extrabold rounded-2xl shadow-lg flex items-center justify-center gap-3 transition-all active:scale-[0.97] hover:brightness-110 uppercase tracking-widest text-sm"
                                         >
                                             <UserPlus size={20} strokeWidth={3} /> Entrar no Jogo
                                         </button>
@@ -529,7 +529,7 @@ export const ReservationDetails: React.FC<{
                                     {canLeave && (
                                         <button
                                             onClick={() => onLeave(res.id)}
-                                            className="w-full py-4 bg-stone-100 text-stone-700 font-black rounded-[20px] hover:bg-red-50 hover:text-red-600 transition-all flex items-center justify-center gap-3 active:scale-[0.97] uppercase tracking-widest text-sm"
+                                            className="w-full py-4 bg-stone-100 text-stone-700 font-extrabold rounded-2xl hover:bg-red-50 hover:text-red-600 transition-all flex items-center justify-center gap-3 active:scale-[0.97] uppercase tracking-widest text-sm"
                                         >
                                             <LogOut size={20} strokeWidth={3} /> Sair do Jogo
                                         </button>
@@ -560,12 +560,12 @@ export const ReservationDetails: React.FC<{
                     {/* 4. Participants / Students Section */}
                     <div className="space-y-4">
                         <div className="flex justify-between items-center px-1">
-                            <h3 className="text-sm font-black text-stone-800 uppercase tracking-widest flex items-center gap-2.5">
+                            <h3 className="text-sm font-extrabold text-stone-800 uppercase tracking-widest flex items-center gap-2.5">
                                 <Users size={18} className="text-saibro-500" />
                                 {res.type === 'Aula' ? 'Alunos da Aula' : res.type === 'Campeonato' ? 'Jogadores' : 'Lista de Atletas'}
                             </h3>
                             {res.type === 'Play' && (
-                                <span className={`text-[10px] font-black px-3 py-1 rounded-full ${participants.length + (res.guestName ? 1 : 0) === 8 ? 'bg-orange-100 text-orange-600' : 'bg-stone-100 text-stone-500'}`}>
+                                <span className={`text-meta font-extrabold px-3 py-1 rounded-full ${participants.length + (res.guestName ? 1 : 0) === 8 ? 'bg-orange-100 text-orange-600' : 'bg-stone-100 text-stone-500'}`}>
                                     {participants.length + (res.guestName ? 1 : 0)} / 8 VAGAS
                                 </span>
                             )}
@@ -585,8 +585,8 @@ export const ReservationDetails: React.FC<{
                                                 )}
                                             </div>
                                             <div>
-                                                <p className="font-black text-stone-800 text-sm leading-tight group-hover/item:text-saibro-700 transition-colors uppercase tracking-tight">{p?.name}</p>
-                                                <p className="text-[10px] uppercase font-black text-stone-400 tracking-wider">Atleta Sócio</p>
+                                                <p className="font-extrabold text-stone-800 text-sm leading-tight group-hover/item:text-saibro-700 transition-colors uppercase tracking-tight">{p?.name}</p>
+                                                <p className="text-meta uppercase font-extrabold text-stone-400 tracking-wider">Atleta Sócio</p>
                                             </div>
                                         </div>
                                         {isAdmin && p?.id !== res.creatorId && (
@@ -601,14 +601,14 @@ export const ReservationDetails: React.FC<{
                                 ))}
 
                                 {res.guestName && (
-                                    <div className="flex items-center justify-between bg-white border-2 border-saibro-100 p-3.5 rounded-2xl shadow-saibro-50/50 shadow-lg">
+                                    <div className="flex items-center justify-between bg-white border-2 border-saibro-100 p-3.5 rounded-2xl shadow-lg">
                                         <div className="flex items-center gap-4">
                                             <div className="w-12 h-12 rounded-full bg-linear-to-br from-saibro-200 to-saibro-300 flex items-center justify-center text-saibro-700 font-extrabold text-xs shadow-inner uppercase">
                                                 GUEST
                                             </div>
                                             <div>
-                                                <p className="font-black text-stone-800 text-sm leading-tight uppercase tracking-tight">{res.guestName}</p>
-                                                <p className="text-[10px] uppercase font-black text-saibro-600 tracking-wider">
+                                                <p className="font-extrabold text-stone-800 text-sm leading-tight uppercase tracking-tight">{res.guestName}</p>
+                                                <p className="text-meta uppercase font-extrabold text-saibro-600 tracking-wider">
                                                     Convidado: {profiles.find(u => u.id === res.guestResponsibleId)?.name.split(' ')[0]}
                                                 </p>
                                             </div>
@@ -627,7 +627,7 @@ export const ReservationDetails: React.FC<{
                                 {canManageParticipants && participants.length + (res.guestName ? 1 : 0) < 8 && !res.guestName && (
                                     <button
                                         onClick={() => setShowGuestModal(true)}
-                                        className="w-full h-16 flex items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-stone-300 text-stone-500 hover:border-saibro-400 hover:text-saibro-600 hover:bg-saibro-50/50 transition-all text-xs font-black uppercase tracking-widest"
+                                        className="w-full h-16 flex items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-stone-300 text-stone-500 hover:border-saibro-400 hover:text-saibro-600 hover:bg-saibro-50/50 transition-all text-xs font-extrabold uppercase tracking-widest"
                                     >
                                         <div className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center text-stone-400 group-hover:bg-saibro-100 transition-colors">
                                             <UserPlus size={18} strokeWidth={2.5} />
@@ -667,15 +667,15 @@ export const ReservationDetails: React.FC<{
                                                         {isWinnerA && <div className="absolute -top-1 -right-1 bg-amber-500 text-white p-0.5 rounded-full shadow-lg"><Trophy size={10} fill="currentColor" /></div>}
                                                     </div>
                                                     <div className="flex flex-col">
-                                                        <span className={`font-black text-lg ${isWinnerA ? 'text-stone-900' : 'text-stone-600'}`}>{championshipPlayers[0].name}</span>
-                                                        {isWinnerA && <span className="text-[10px] font-black uppercase text-saibro-600 tracking-wider">Vencedor</span>}
+                                                        <span className={`font-extrabold text-lg ${isWinnerA ? 'text-stone-900' : 'text-stone-600'}`}>{championshipPlayers[0].name}</span>
+                                                        {isWinnerA && <span className="text-meta font-extrabold uppercase text-saibro-600 tracking-wider">Vencedor</span>}
                                                     </div>
                                                 </div>
                                                 <div className="flex gap-2">
                                                     {displayScoresA?.map((s, i) => (
-                                                        <span key={i} className={`w-10 h-10 flex items-center justify-center rounded-xl text-lg font-black shadow-sm transition-all ${
+                                                        <span key={i} className={`w-10 h-10 flex items-center justify-center rounded-xl text-lg font-extrabold shadow-sm transition-all ${
                                                             (i === 0 && set1Winner === 'A') || (i === 1 && set2Winner === 'A') || (i === 2 && set3Winner === 'A')
-                                                                ? 'bg-linear-to-br from-saibro-500 to-saibro-600 text-white shadow-saibro-200'
+                                                                ? 'bg-linear-to-br from-saibro-500 to-saibro-600 text-white  '
                                                                 : 'bg-stone-100 text-stone-400'
                                                         }`}>
                                                             {s}
@@ -692,15 +692,15 @@ export const ReservationDetails: React.FC<{
                                                         {isWinnerB && <div className="absolute -top-1 -right-1 bg-amber-500 text-white p-0.5 rounded-full shadow-lg"><Trophy size={10} fill="currentColor" /></div>}
                                                     </div>
                                                     <div className="flex flex-col">
-                                                        <span className={`font-black text-lg ${isWinnerB ? 'text-stone-900' : 'text-stone-600'}`}>{championshipPlayers[1].name}</span>
-                                                        {isWinnerB && <span className="text-[10px] font-black uppercase text-saibro-600 tracking-wider">Vencedor</span>}
+                                                        <span className={`font-extrabold text-lg ${isWinnerB ? 'text-stone-900' : 'text-stone-600'}`}>{championshipPlayers[1].name}</span>
+                                                        {isWinnerB && <span className="text-meta font-extrabold uppercase text-saibro-600 tracking-wider">Vencedor</span>}
                                                     </div>
                                                 </div>
                                                 <div className="flex gap-2">
                                                     {displayScoresB?.map((s, i) => (
-                                                        <span key={i} className={`w-10 h-10 flex items-center justify-center rounded-xl text-lg font-black shadow-sm transition-all ${
+                                                        <span key={i} className={`w-10 h-10 flex items-center justify-center rounded-xl text-lg font-extrabold shadow-sm transition-all ${
                                                             (i === 0 && set1Winner === 'B') || (i === 1 && set2Winner === 'B') || (i === 2 && set3Winner === 'B')
-                                                                ? 'bg-linear-to-br from-saibro-500 to-saibro-600 text-white shadow-saibro-200'
+                                                                ? 'bg-linear-to-br from-saibro-500 to-saibro-600 text-white  '
                                                                 : 'bg-stone-100 text-stone-400'
                                                         }`}>
                                                             {s}
@@ -711,8 +711,8 @@ export const ReservationDetails: React.FC<{
 
                                             <div className="w-full h-px bg-stone-100 mt-2"></div>
                                             <div className="text-center">
-                                                <p className="text-[10px] font-black text-yellow-600 uppercase tracking-widest">Campeonato</p>
-                                                <p className="font-black text-stone-800 text-lg uppercase tracking-tight">{res.observation?.split('|')[0]}</p>
+                                                <p className="text-meta font-extrabold text-yellow-600 uppercase tracking-widest">Campeonato</p>
+                                                <p className="font-extrabold text-stone-800 text-lg uppercase tracking-tight">{res.observation?.split('|')[0]}</p>
                                                 <p className="text-xs text-stone-500 font-bold mt-1">{res.observation?.split('|')[1]}</p>
                                             </div>
                                         </div>
@@ -726,18 +726,18 @@ export const ReservationDetails: React.FC<{
                                         <div className="flex items-center justify-center w-full gap-8">
                                             <div className="flex flex-col items-center gap-2">
                                                 <img src={championshipPlayers[0].avatar} className="w-20 h-20 rounded-full border-4 border-stone-100 shadow-lg object-cover" alt="" />
-                                                <span className="font-black text-stone-800 text-sm">{championshipPlayers[0].name}</span>
+                                                <span className="font-extrabold text-stone-800 text-sm">{championshipPlayers[0].name}</span>
                                             </div>
-                                            <div className="text-3xl font-black text-stone-300 italic">VS</div>
+                                            <div className="text-3xl font-extrabold text-stone-300 italic">VS</div>
                                             <div className="flex flex-col items-center gap-2">
                                                 <img src={championshipPlayers[1].avatar} className="w-20 h-20 rounded-full border-4 border-stone-100 shadow-lg object-cover" alt="" />
-                                                <span className="font-black text-stone-800 text-sm">{championshipPlayers[1].name}</span>
+                                                <span className="font-extrabold text-stone-800 text-sm">{championshipPlayers[1].name}</span>
                                             </div>
                                         </div>
                                         <div className="w-full h-px bg-stone-100"></div>
                                         <div className="text-center">
-                                            <p className="text-[10px] font-black text-yellow-600 uppercase tracking-widest">Campeonato</p>
-                                            <p className="font-black text-stone-800 text-lg uppercase tracking-tight">{res.observation?.split('|')[0]}</p>
+                                            <p className="text-meta font-extrabold text-yellow-600 uppercase tracking-widest">Campeonato</p>
+                                            <p className="font-extrabold text-stone-800 text-lg uppercase tracking-tight">{res.observation?.split('|')[0]}</p>
                                             <p className="text-xs text-stone-500 font-bold mt-1">{res.observation?.split('|')[1]}</p>
                                         </div>
                                     </div>
@@ -747,12 +747,12 @@ export const ReservationDetails: React.FC<{
                             /* AULA INFO Stylization */
                             <div className="space-y-3">
                                 <div className="bg-white rounded-2xl p-4 border border-stone-200/60 shadow-sm flex items-center gap-4">
-                                    <div className="w-14 h-14 rounded-2xl bg-saibro-600 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-saibro-100">
+                                    <div className="w-14 h-14 rounded-2xl bg-saibro-600 flex items-center justify-center text-white font-extrabold text-xl shadow-lg ">
                                         {professor?.name[0]}
                                     </div>
                                     <div>
-                                        <p className="text-[10px] font-black text-saibro-600 uppercase tracking-widest mb-0.5">Professor Titular</p>
-                                        <p className="font-black text-stone-800 text-lg uppercase leading-tight tracking-tight">{professor?.name}</p>
+                                        <p className="text-meta font-extrabold text-saibro-600 uppercase tracking-widest mb-0.5">Professor Titular</p>
+                                        <p className="font-extrabold text-stone-800 text-lg uppercase leading-tight tracking-tight">{professor?.name}</p>
                                     </div>
                                 </div>
 
@@ -764,8 +764,8 @@ export const ReservationDetails: React.FC<{
                                                     <div key={p?.id} className="bg-white rounded-2xl p-4 border border-stone-200/60 shadow-sm flex items-center gap-4">
                                                         <img src={p?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${p?.id}`} className="w-14 h-14 rounded-full border-4 border-saibro-50 p-0.5 object-cover" alt="" />
                                                         <div>
-                                                            <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest mb-0.5">Aluno Sócio</p>
-                                                            <p className="font-black text-stone-800 text-lg uppercase leading-tight tracking-tight">{p?.name}</p>
+                                                            <p className="text-meta font-extrabold text-stone-400 uppercase tracking-widest mb-0.5">Aluno Sócio</p>
+                                                            <p className="font-extrabold text-stone-800 text-lg uppercase leading-tight tracking-tight">{p?.name}</p>
                                                         </div>
                                                     </div>
                                                 ))}
@@ -778,21 +778,21 @@ export const ReservationDetails: React.FC<{
                                                     const isExpired = !isDependent && new Date(s.masterExpirationDate || '') < getNowInFortaleza();
                                                     return (
                                                         <div key={s.id} className="bg-white rounded-2xl p-4 border border-stone-200/60 shadow-sm flex items-center gap-4">
-                                                            <div className={`w-14 h-14 rounded-2xl ${isDependent ? 'bg-blue-500' : 'bg-blue-600'} flex items-center justify-center text-white shadow-lg shadow-blue-50`}>
+                                                            <div className={`w-14 h-14 rounded-2xl ${isDependent ? 'bg-blue-500' : 'bg-blue-600'} flex items-center justify-center text-white shadow-lg  `}>
                                                                 <Wallet size={28} />
                                                             </div>
                                                             <div>
                                                                 <div className="flex items-center gap-2 mb-0.5">
-                                                                    <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">
+                                                                    <span className="text-meta font-extrabold text-blue-600 uppercase tracking-widest">
                                                                         {isDependent ? 'Dependente' : s.planType}
                                                                     </span>
                                                                     {!isDependent && (
-                                                                        <span className={`text-[9px] px-1.5 py-0.5 rounded-md font-black border ${isExpired ? 'bg-red-50 text-red-600 border-red-100' : 'bg-green-50 text-green-600 border-green-100'}`}>
+                                                                        <span className={`text-meta px-1.5 py-0.5 rounded-md font-extrabold border ${isExpired ? 'bg-red-50 text-red-600 border-red-100' : 'bg-green-50 text-green-600 border-green-100'}`}>
                                                                             {isExpired ? 'VENCIDO' : 'ATIVO'}
                                                                         </span>
                                                                     )}
                                                                 </div>
-                                                                <p className="font-black text-stone-800 text-lg uppercase leading-tight tracking-tight">{s.name}</p>
+                                                                <p className="font-extrabold text-stone-800 text-lg uppercase leading-tight tracking-tight">{s.name}</p>
                                                             </div>
                                                         </div>
                                                     );
@@ -810,7 +810,7 @@ export const ReservationDetails: React.FC<{
                     {/* 4. Observations */}
                     {res.observation && (
                         <div className="bg-saibro-50/50 rounded-2xl p-5 border border-saibro-100/50">
-                            <h3 className="text-[10px] font-black text-saibro-600 uppercase tracking-widest mb-2 flex items-center gap-2">
+                            <h3 className="text-meta font-extrabold text-saibro-600 uppercase tracking-widest mb-2 flex items-center gap-2">
                                 <Info size={14} strokeWidth={2.5} /> Informações Adicionais
                             </h3>
                             <p className="text-stone-700 text-sm font-medium leading-relaxed italic caret-saibro-500">
@@ -821,10 +821,10 @@ export const ReservationDetails: React.FC<{
 
                     {/* 5. Meta Info */}
                     <div className="text-center pt-2 pb-8 border-t border-stone-100">
-                        <p className="text-[10px] text-stone-400 font-bold uppercase tracking-tighter">
+                        <p className="text-meta text-stone-400 font-bold uppercase tracking-tighter">
                             Protocolo: {res.id.slice(0, 8).toUpperCase()}
                         </p>
-                        <p className="text-[10px] text-stone-300 mt-0.5 font-medium">
+                        <p className="text-meta text-stone-300 mt-0.5 font-medium">
                             Criado por {creator?.name} • SCT Play Cloud
                         </p>
                     </div>
@@ -836,7 +836,7 @@ export const ReservationDetails: React.FC<{
                         {canManageParticipants && (
                             <button
                                 onClick={() => setShowManageParticipants(true)}
-                                className="flex-1 h-14 bg-stone-50 text-stone-800 font-black rounded-2xl hover:bg-stone-100 flex items-center justify-center gap-2.5 transition-all active:scale-95 border border-stone-200/50 text-xs uppercase tracking-widest"
+                                className="flex-1 h-14 bg-stone-50 text-stone-800 font-extrabold rounded-2xl hover:bg-stone-100 flex items-center justify-center gap-2.5 transition-all active:scale-95 border border-stone-200/50 text-xs uppercase tracking-widest"
                             >
                                 <UserCog size={20} /> <span className="hidden xs:inline">Atletas</span>
                             </button>
@@ -844,7 +844,7 @@ export const ReservationDetails: React.FC<{
                         {canEdit && (
                             <button
                                 onClick={() => onEdit(res)}
-                                className="flex-1 h-14 bg-stone-50 text-stone-800 font-black rounded-2xl hover:bg-saibro-50 hover:text-saibro-700 hover:border-saibro-100 flex items-center justify-center gap-2.5 transition-all active:scale-95 border border-stone-200/50 text-xs uppercase tracking-widest"
+                                className="flex-1 h-14 bg-stone-50 text-stone-800 font-extrabold rounded-2xl hover:bg-saibro-50 hover:text-saibro-700 hover:border-saibro-100 flex items-center justify-center gap-2.5 transition-all active:scale-95 border border-stone-200/50 text-xs uppercase tracking-widest"
                             >
                                 <Pencil size={20} /> <span className="hidden xs:inline">Editar</span>
                             </button>
@@ -852,7 +852,7 @@ export const ReservationDetails: React.FC<{
                         {canCancel && (
                             <button
                                 onClick={() => onCancel(res.id)}
-                                className="flex-1 h-14 bg-stone-50 text-red-500 font-black rounded-2xl hover:bg-red-50 hover:border-red-100 flex items-center justify-center gap-2.5 transition-all active:scale-95 border border-stone-200/50 text-xs uppercase tracking-widest"
+                                className="flex-1 h-14 bg-stone-50 text-red-500 font-extrabold rounded-2xl hover:bg-red-50 hover:border-red-100 flex items-center justify-center gap-2.5 transition-all active:scale-95 border border-stone-200/50 text-xs uppercase tracking-widest"
                             >
                                 <Trash2 size={20} /> <span className="hidden xs:inline">Cancelar</span>
                             </button>
@@ -937,10 +937,10 @@ const ReservationCard: React.FC<{
             <div className="relative z-10 flex justify-between items-start mb-3">
                 <div className="flex flex-col">
                     <div className="flex items-center gap-2 mb-1">
-                        <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border ${style.text} bg-white border-current shadow-sm`}>
+                        <span className={`text-meta font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border ${style.text} bg-white border-current shadow-sm`}>
                             {style.label}
                         </span>
-                        {res.status === 'cancelled' && <span className="text-[10px] font-bold text-red-500 uppercase bg-red-100 px-1.5 py-0.5 rounded-md">Cancelada</span>}
+                        {res.status === 'cancelled' && <span className="text-meta font-bold text-red-500 uppercase bg-red-100 px-1.5 py-0.5 rounded-md">Cancelada</span>}
                     </div>
                     <h4 className="font-bold text-stone-800 text-base leading-tight">
                         {court?.name} <span className="text-stone-400 font-normal text-xs block sm:inline">({court?.type})</span>
@@ -949,8 +949,8 @@ const ReservationCard: React.FC<{
                 <div className="text-right">
                     <div className="flex items-center gap-3 bg-stone-50/80 rounded-xl p-1.5 pl-3 border border-stone-100 shadow-sm backdrop-blur-sm">
                         <div className="flex flex-col items-center">
-                            <span className="text-[9px] text-stone-400 font-bold uppercase tracking-wider mb-0.5">Início</span>
-                            <span className="text-sm font-black text-stone-800 tabular-nums leading-none tracking-tight">{res.startTime.slice(0, 5)}</span>
+                            <span className="text-meta text-stone-400 font-bold uppercase tracking-wider mb-0.5">Início</span>
+                            <span className="text-sm font-extrabold text-stone-800 tabular-nums leading-none tracking-tight">{res.startTime.slice(0, 5)}</span>
                         </div>
 
                         <div className="relative h-6 w-px bg-stone-200">
@@ -960,7 +960,7 @@ const ReservationCard: React.FC<{
                         </div>
 
                         <div className="flex flex-col items-center">
-                            <span className="text-[9px] text-stone-400 font-bold uppercase tracking-wider mb-0.5">Fim</span>
+                            <span className="text-meta text-stone-400 font-bold uppercase tracking-wider mb-0.5">Fim</span>
                             <span className="text-sm font-bold text-stone-500 tabular-nums leading-none tracking-tight">{res.endTime.slice(0, 5)}</span>
                         </div>
                     </div>
@@ -987,7 +987,7 @@ const ReservationCard: React.FC<{
                                     {participants.length > 0 && (
                                         <div className="flex flex-wrap gap-1.5">
                                             {participants.map(p => (
-                                                <span key={p?.id} className="text-stone-700 font-bold bg-stone-100 border border-stone-200 px-2 py-0.5 rounded-md text-[11px] flex items-center gap-1 shadow-sm">
+                                                <span key={p?.id} className="text-stone-700 font-bold bg-stone-100 border border-stone-200 px-2 py-0.5 rounded-md text-meta flex items-center gap-1 shadow-sm">
                                                     {p?.name}
                                                 </span>
                                             ))}
@@ -998,10 +998,10 @@ const ReservationCard: React.FC<{
                                             {nonSocioStudentsList.map(s => {
                                                 const isDependent = s.studentType === 'dependent';
                                                 return (
-                                                    <span key={s.id} className="text-blue-700 font-bold bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-md text-[11px] flex items-center gap-1 shadow-sm">
+                                                    <span key={s.id} className="text-blue-700 font-bold bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-md text-meta flex items-center gap-1 shadow-sm">
                                                         {s.name}{isDependent ? ' (Dep.)' : ''}
                                                         {!isDependent && s.planType === 'Card Mensal' && (
-                                                            <span className="text-[9px] bg-purple-100 text-purple-700 w-4 h-4 flex items-center justify-center rounded-full ml-1">M</span>
+                                                            <span className="text-meta bg-purple-100 text-purple-700 w-4 h-4 flex items-center justify-center rounded-full ml-1">M</span>
                                                         )}
                                                     </span>
                                                 );
@@ -1030,7 +1030,7 @@ const ReservationCard: React.FC<{
                                     </div>
                                     <span className="text-xs font-bold text-stone-700 max-w-[70px] truncate">{championshipPlayerAName.split(' ')[0]}</span>
                                 </div>
-                                <span className={`px-1 tabular-nums ${championshipCardResult?.showSetScore ? 'text-sm font-black text-saibro-700' : 'text-[10px] font-black text-yellow-600 italic'}`}>
+                                <span className={`px-1 tabular-nums ${championshipCardResult?.showSetScore ? 'text-sm font-extrabold text-saibro-700' : 'text-meta font-extrabold text-yellow-600 italic'}`}>
                                     {championshipCardResult?.showSetScore
                                         ? `${championshipCardResult.setsA} x ${championshipCardResult.setsB}`
                                         : 'VS'}
@@ -1057,13 +1057,13 @@ const ReservationCard: React.FC<{
                                     <div
                                         key={p?.id || i}
                                         title={p?.name}
-                                        className="w-8 h-8 rounded-full bg-linear-to-br from-stone-100 to-stone-200 border-2 border-white flex items-center justify-center text-stone-600 text-[10px] font-black shadow-sm relative z-0 hover:z-10 transition-all hover:scale-110 hover:shadow-md cursor-help"
+                                        className="w-8 h-8 rounded-full bg-linear-to-br from-stone-100 to-stone-200 border-2 border-white flex items-center justify-center text-stone-600 text-meta font-extrabold shadow-sm relative z-0 hover:z-10 transition-all hover:scale-110 hover:shadow-md cursor-help"
                                     >
                                         {p?.avatar ? <img src={p.avatar} className="w-full h-full rounded-full object-cover" alt={p.name} /> : p?.name.charAt(0)}
                                     </div>
                                 ))}
                                 {res.guestName && (
-                                    <div title={res.guestName} className="w-8 h-8 rounded-full bg-linear-to-br from-yellow-100 to-amber-200 border-2 border-white flex items-center justify-center text-yellow-700 text-[10px] font-bold shadow-sm relative z-0 hover:z-10 transition-all hover:scale-110 cursor-help">
+                                    <div title={res.guestName} className="w-8 h-8 rounded-full bg-linear-to-br from-yellow-100 to-amber-200 border-2 border-white flex items-center justify-center text-yellow-700 text-meta font-bold shadow-sm relative z-0 hover:z-10 transition-all hover:scale-110 cursor-help">
                                         <Users size={12} />
                                     </div>
                                 )}
@@ -1146,7 +1146,7 @@ const ReservationCard: React.FC<{
                         if (!statusText) return null;
 
                         return (
-                            <div className={`flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-wider ${statusColor} bg-white/50 px-2.5 py-1 rounded-full border border-stone-100 shadow-sm mr-2`}>
+                            <div className={`flex items-center gap-1.5 text-meta uppercase font-bold tracking-wider ${statusColor} bg-white/50 px-2.5 py-1 rounded-full border border-stone-100 shadow-sm mr-2`}>
                                 <div className={`w-2 h-2 rounded-full ${dotColor} ${pulse ? 'animate-pulse shadow-[0_0_8px_currentColor]' : ''}`} />
                                 {statusText}
                             </div>
@@ -1169,7 +1169,7 @@ const ReservationCard: React.FC<{
                                             e.stopPropagation();
                                             onLaunchScore(challenge);
                                         }}
-                                        className="px-3 py-1.5 bg-saibro-500 text-white text-xs font-bold rounded-lg shadow-md shadow-orange-200 hover:bg-saibro-600 flex items-center gap-1.5 transition-all active:scale-95"
+                                        className="px-3 py-1.5 bg-saibro-500 text-white text-xs font-bold rounded-lg shadow-md hover:bg-saibro-600 flex items-center gap-1.5 transition-all active:scale-95"
                                     >
                                         <Trophy size={14} /> Lançar Placar
                                     </button>
@@ -1180,7 +1180,7 @@ const ReservationCard: React.FC<{
                     )}
                 </div>
 
-                <div className="flex items-center gap-1 text-[10px] font-bold text-stone-500 uppercase tracking-widest group-hover:text-saibro-600 transition-colors ml-auto">
+                <div className="flex items-center gap-1 text-meta font-bold text-stone-500 uppercase tracking-widest group-hover:text-saibro-600 transition-colors ml-auto">
                     VER DETALHES <ArrowRight size={12} className="opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all duration-300" />
                 </div>
             </div>
@@ -1923,7 +1923,7 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                         <div className="flex justify-between items-center">
                             <h2 className="text-2xl font-bold text-saibro-900">Agenda</h2>
                             {currentUser.role !== 'lanchonete' && (
-                                <button onClick={handleOpenAdd} className="bg-saibro-600 text-white px-3 py-2 rounded-xl shadow-lg shadow-orange-200 flex items-center gap-2 text-sm font-bold active:scale-95 transition-transform">
+                                <button onClick={handleOpenAdd} className="bg-saibro-600 text-white px-3 py-2 rounded-xl shadow-lg flex items-center gap-2 text-sm font-bold active:scale-95 transition-transform">
                                     <Plus size={18} /> <span className="hidden md:inline">Nova Reserva</span>
                                 </button>
                             )}
@@ -1957,14 +1957,14 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
 
                                 <div className="flex flex-col items-center cursor-pointer group" onClick={goToToday}>
                                     <div className="flex items-baseline gap-1.5 transition-transform group-active:scale-95">
-                                        <span className="text-2xl font-black text-stone-800 capitalize tracking-tight leading-none">
+                                        <span className="text-2xl font-extrabold text-stone-800 capitalize tracking-tight leading-none">
                                             {currentDate.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '')},
                                         </span>
-                                        <span className="text-2xl font-black text-saibro-600 leading-none">
+                                        <span className="text-2xl font-extrabold text-saibro-600 leading-none">
                                             {currentDate.getDate()}
                                         </span>
                                     </div>
-                                    <span className="text-xs font-black text-stone-500 uppercase tracking-widest group-hover:text-saibro-600 transition-colors mt-0.5">
+                                    <span className="text-xs font-extrabold text-stone-500 uppercase tracking-widest group-hover:text-saibro-600 transition-colors mt-0.5">
                                         {currentDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
                                     </span>
                                 </div>
@@ -1995,7 +1995,7 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                                             ${showCancelled ? 'translate-x-3' : 'translate-x-0'}
                                         `} />
                                     </div>
-                                    <span className={`text-[10px] uppercase font-bold tracking-wider ${showCancelled ? 'text-red-600' : 'text-stone-400'}`}>
+                                    <span className={`text-meta uppercase font-bold tracking-wider ${showCancelled ? 'text-red-600' : 'text-stone-400'}`}>
                                         Ver Canceladas
                                     </span>
                                 </div>
@@ -2580,7 +2580,7 @@ export const AddReservationModal: React.FC<{
                             {[1, 2, 3].map(s => (
                                 <div key={s} className={`h-1.5 rounded-full transition-all ${step >= s ? 'w-6 bg-saibro-500' : 'w-2 bg-stone-200'}`} />
                             ))}
-                            <span className="text-[10px] font-bold text-stone-400 uppercase ml-1">
+                            <span className="text-meta font-bold text-stone-400 uppercase ml-1">
                                 Passo {step} de 3
                             </span>
                         </div>
@@ -2615,12 +2615,12 @@ export const AddReservationModal: React.FC<{
                                 className={`w-full p-6 rounded-2xl border-2 text-left transition-all group ${type === 'Play' ? 'border-saibro-500 bg-saibro-50' : 'border-stone-100 bg-white hover:border-saibro-200 hover:bg-stone-50'}`}
                             >
                                 <div className="flex items-center justify-between mb-2">
-                                    <div className={`w-12 h-12 rounded-full flex items-center justify-center ${type === 'Play' ? 'bg-saibro-500 text-white shadow-lg shadow-saibro-200' : 'bg-stone-100 text-stone-400'}`}>
+                                    <div className={`w-12 h-12 rounded-full flex items-center justify-center ${type === 'Play' ? 'bg-saibro-500 text-white shadow-lg  ' : 'bg-stone-100 text-stone-400'}`}>
                                         <Trophy size={24} />
                                     </div>
                                     {type === 'Play' && <div className="w-6 h-6 rounded-full bg-saibro-500 text-white flex items-center justify-center"><Check size={14} strokeWidth={4} /></div>}
                                 </div>
-                                <h4 className="text-lg font-black text-stone-800">Play Amistoso</h4>
+                                <h4 className="text-lg font-extrabold text-stone-800">Play Amistoso</h4>
                                 <p className="text-xs text-stone-500 mt-1 font-medium">Reserve uma quadra para jogar com amigos. Permite convidados (Day Use).</p>
                             </button>
 
@@ -2638,12 +2638,12 @@ export const AddReservationModal: React.FC<{
                                     className={`w-full p-6 rounded-2xl border-2 text-left transition-all group ${type === 'Aula' ? 'border-saibro-500 bg-saibro-50' : 'border-stone-100 bg-white hover:border-saibro-200 hover:bg-stone-50'}`}
                                 >
                                     <div className="flex items-center justify-between mb-2">
-                                        <div className={`w-12 h-12 rounded-full flex items-center justify-center ${type === 'Aula' ? 'bg-saibro-500 text-white shadow-lg shadow-saibro-200' : 'bg-stone-100 text-stone-400'}`}>
+                                        <div className={`w-12 h-12 rounded-full flex items-center justify-center ${type === 'Aula' ? 'bg-saibro-500 text-white shadow-lg  ' : 'bg-stone-100 text-stone-400'}`}>
                                             <UserCog size={24} />
                                         </div>
                                         {type === 'Aula' && <div className="w-6 h-6 rounded-full bg-saibro-500 text-white flex items-center justify-center"><Check size={14} strokeWidth={4} /></div>}
                                     </div>
-                                    <h4 className="text-lg font-black text-stone-800">Aula</h4>
+                                    <h4 className="text-lg font-extrabold text-stone-800">Aula</h4>
                                     <p className="text-xs text-stone-500 mt-1 font-medium">Reserve horário para aulas com professor. Exclusivo para Quadra Rápida.</p>
                                 </button>
                             )}
@@ -2655,7 +2655,7 @@ export const AddReservationModal: React.FC<{
                         <div className="space-y-5">
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-[10px] font-bold text-stone-500 uppercase mb-1.5">Data</label>
+                                    <label className="block text-meta font-bold text-stone-500 uppercase mb-1.5">Data</label>
                                     <div className="relative">
                                         <input
                                             type="date"
@@ -2666,7 +2666,7 @@ export const AddReservationModal: React.FC<{
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="block text-[10px] font-bold text-stone-500 uppercase mb-1.5">Quadra</label>
+                                    <label className="block text-meta font-bold text-stone-500 uppercase mb-1.5">Quadra</label>
                                     {type === 'Aula' ? (
                                         <div className="w-full px-3 py-3 bg-stone-100 border-none rounded-xl text-sm font-bold text-stone-500 flex items-center gap-2 cursor-not-allowed">
                                             <Check size={16} className="text-saibro-500" /> Quadra Rápida (Automático)
@@ -2688,7 +2688,7 @@ export const AddReservationModal: React.FC<{
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-[10px] font-bold text-stone-500 uppercase mb-1.5">Duração</label>
+                                    <label className="block text-meta font-bold text-stone-500 uppercase mb-1.5">Duração</label>
                                     <div className="flex bg-stone-50 rounded-xl p-1 gap-1">
                                         {[30, 60, 90, 120].map(d => {
                                             if (type === 'Play' && d === 30) return null;
@@ -2706,7 +2706,7 @@ export const AddReservationModal: React.FC<{
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="block text-[10px] font-bold text-stone-500 uppercase mb-1.5">Horário de Início</label>
+                                    <label className="block text-meta font-bold text-stone-500 uppercase mb-1.5">Horário de Início</label>
                                     <select
                                         value={startTime}
                                         onChange={e => { setStartTime(e.target.value); setError(null); }}
@@ -2739,7 +2739,7 @@ export const AddReservationModal: React.FC<{
                             {type === 'Play' && (
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="block text-[10px] font-bold text-stone-500 uppercase mb-2">Quem vai jogar? (Sócios)</label>
+                                        <label className="block text-meta font-bold text-stone-500 uppercase mb-2">Quem vai jogar? (Sócios)</label>
                                         <div className="grid grid-cols-1 gap-2 max-h-[240px] overflow-y-auto pr-1">
                                             <button
                                                 onClick={() => toggleParticipant(currentUser.id)}
@@ -2809,7 +2809,7 @@ export const AddReservationModal: React.FC<{
                                 <div className="space-y-4">
                                     {currentUser.role === 'admin' && (
                                         <div>
-                                            <label className="block text-[10px] font-bold text-stone-500 uppercase mb-1.5">Professor</label>
+                                            <label className="block text-meta font-bold text-stone-500 uppercase mb-1.5">Professor</label>
                                             <select
                                                 className="w-full px-3 py-3 bg-stone-50 border-none rounded-xl outline-hidden focus:ring-2 focus:ring-saibro-500 text-sm font-bold text-stone-700"
                                                 value={selectedProfessorId}
@@ -2825,7 +2825,7 @@ export const AddReservationModal: React.FC<{
 
                                     <div>
                                         <div className="flex items-center justify-between mb-1.5">
-                                            <label className="block text-[10px] font-bold text-stone-500 uppercase">Alunos</label>
+                                            <label className="block text-meta font-bold text-stone-500 uppercase">Alunos</label>
                                             <button type="button" onClick={() => setShowNewStudent(true)} className="text-xs font-bold text-saibro-700 hover:text-saibro-900 flex items-center gap-1">
                                                 <UserPlus size={14} /> Novo aluno
                                             </button>
@@ -2890,7 +2890,7 @@ export const AddReservationModal: React.FC<{
                             {/* Observation - Only for Play or other types, NOT for Aula */}
                             {type !== 'Aula' && (
                                 <div className="pt-2">
-                                    <label className="block text-[10px] font-bold text-stone-500 uppercase mb-1.5">Observações</label>
+                                    <label className="block text-meta font-bold text-stone-500 uppercase mb-1.5">Observações</label>
                                     <textarea
                                         rows={2}
                                         value={observation}
@@ -2924,7 +2924,7 @@ export const AddReservationModal: React.FC<{
                         <button
                             onClick={handleConfirm}
                             disabled={saving}
-                            className={`flex-1 py-3 rounded-xl font-bold transition-colors shadow-lg shadow-orange-200 active:scale-95 flex items-center justify-center gap-2 ${saving ? 'bg-stone-300 text-stone-500 cursor-not-allowed shadow-none' : 'bg-saibro-600 text-white hover:bg-saibro-700'}`}
+                            className={`flex-1 py-3 rounded-xl font-bold transition-colors shadow-lg   active:scale-95 flex items-center justify-center gap-2 ${saving ? 'bg-stone-300 text-stone-500 cursor-not-allowed shadow-none' : 'bg-saibro-600 text-white hover:bg-saibro-700'}`}
                         >
                             {saving ? <Loader2 className="animate-spin" size={18} /> : <Check size={18} />}
                             {saving ? 'Salvando...' : 'Confirmar Reserva'}

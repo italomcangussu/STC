@@ -58,7 +58,7 @@ export const ScoreModal: React.FC<ScoreModalProps> = ({ challenge: _challenge, c
                         {sets.map((set, idx) => (
                             <div key={idx} className="bg-stone-50 p-4 rounded-2xl border border-stone-100 animate-in slide-in-from-left duration-300" style={{ animationDelay: `${idx * 50}ms` }}>
                                 <div className="flex items-center justify-between mb-3 border-b border-stone-100 pb-2">
-                                    <span className="text-xs font-black text-saibro-500 uppercase tracking-widest">Set {idx + 1}</span>
+                                    <span className="text-xs font-extrabold text-saibro-500 uppercase tracking-widest">Set {idx + 1}</span>
                                     {idx > 0 && (
                                         <button onClick={() => removeSet(idx)} className="text-red-400 hover:text-red-500 p-1 hover:bg-red-50 rounded-lg transition-colors">
                                             <Trash2 size={16} />
@@ -79,7 +79,7 @@ export const ScoreModal: React.FC<ScoreModalProps> = ({ challenge: _challenge, c
                                             type="number"
                                             value={set.a}
                                             onChange={(e) => handleSetChange(idx, 'a', e.target.value)}
-                                            className="w-14 h-14 text-center text-3xl font-black rounded-2xl border-2 border-stone-100 bg-white text-stone-800 focus:border-saibro-500 outline-hidden transition-all"
+                                            className="w-14 h-14 text-center text-3xl font-extrabold rounded-2xl border-2 border-stone-100 bg-white text-stone-800 focus:border-saibro-500 outline-hidden transition-all"
                                             placeholder="0"
                                         />
                                         <button
@@ -90,7 +90,7 @@ export const ScoreModal: React.FC<ScoreModalProps> = ({ challenge: _challenge, c
                                         </button>
                                     </div>
 
-                                    <span className="text-stone-300 font-black text-xl italic mx-1">vs</span>
+                                    <span className="text-stone-300 font-extrabold text-xl italic mx-1">vs</span>
 
                                     {/* Player B Controls */}
                                     <div className="flex items-center gap-2">
@@ -104,7 +104,7 @@ export const ScoreModal: React.FC<ScoreModalProps> = ({ challenge: _challenge, c
                                             type="number"
                                             value={set.b}
                                             onChange={(e) => handleSetChange(idx, 'b', e.target.value)}
-                                            className="w-14 h-14 text-center text-3xl font-black rounded-2xl border-2 border-stone-100 bg-white text-stone-800 focus:border-saibro-500 outline-hidden transition-all"
+                                            className="w-14 h-14 text-center text-3xl font-extrabold rounded-2xl border-2 border-stone-100 bg-white text-stone-800 focus:border-saibro-500 outline-hidden transition-all"
                                             placeholder="0"
                                         />
                                         <button

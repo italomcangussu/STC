@@ -145,15 +145,15 @@ export const MatchGenerationModal: React.FC<Props> = ({
             padding="p-0 sm:p-4"
             ariaLabel="Gerar confrontos"
         >
-            <div className="relative bg-white rounded-t-[2.5rem] sm:rounded-[2.5rem] w-full max-w-md overflow-hidden shadow-2xl max-h-[90vh] flex flex-col pt-safe pb-safe">
+            <div className="relative bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-md overflow-hidden shadow-2xl max-h-[90vh] flex flex-col pt-safe pb-safe">
                 {/* Header */}
                 <div className="p-6 border-b border-stone-100 flex justify-between items-center bg-saibro-50/50 flex-none">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-saibro-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-orange-200">
+                        <div className="w-10 h-10 bg-saibro-500 rounded-2xl flex items-center justify-center text-white shadow-lg ">
                             <Trophy size={20} />
                         </div>
                         <div>
-                            <h3 className="text-lg font-black text-stone-800">Gerar Confrontos</h3>
+                            <h3 className="text-lg font-extrabold text-stone-800">Gerar Confrontos</h3>
                             <p className="text-xs font-bold text-saibro-600 uppercase tracking-widest">Geração Manual por Rodada</p>
                         </div>
                     </div>
@@ -166,7 +166,7 @@ export const MatchGenerationModal: React.FC<Props> = ({
                     {step === 'selection' ? (
                         <div className="space-y-6">
                             <div>
-                                <label className="block text-xs font-black text-stone-400 uppercase tracking-widest mb-3 px-1">Selecione a Categoria</label>
+                                <label className="block text-xs font-extrabold text-stone-400 uppercase tracking-widest mb-3 px-1">Selecione a Categoria</label>
                                 <div className="grid grid-cols-2 gap-2">
                                     {CLASSES.map(cls => (
                                         <button
@@ -184,7 +184,7 @@ export const MatchGenerationModal: React.FC<Props> = ({
                             </div>
 
                             <div>
-                                <label className="block text-xs font-black text-stone-400 uppercase tracking-widest mb-3 px-1">Selecione a Rodada</label>
+                                <label className="block text-xs font-extrabold text-stone-400 uppercase tracking-widest mb-3 px-1">Selecione a Rodada</label>
                                 <div className="space-y-2">
                                     {rounds.map(round => (
                                         <button
@@ -211,19 +211,19 @@ export const MatchGenerationModal: React.FC<Props> = ({
                     ) : step === 'preview' ? (
                         <div className="space-y-6">
                             <div className="flex items-center justify-between pb-2">
-                                <h4 className="text-xs font-black text-stone-400 uppercase tracking-widest">Preview dos Confrontos</h4>
-                                <span className="bg-saibro-100 text-saibro-600 text-xs font-black px-2 py-0.5 rounded-full">{previewMatches.length} JOGOS</span>
+                                <h4 className="text-xs font-extrabold text-stone-400 uppercase tracking-widest">Preview dos Confrontos</h4>
+                                <span className="bg-saibro-100 text-saibro-600 text-xs font-extrabold px-2 py-0.5 rounded-full">{previewMatches.length} JOGOS</span>
                             </div>
                             <div className="space-y-3">
                                 {previewMatches.map((m, i) => (
                                     <div key={i} className="p-4 rounded-2xl bg-stone-50 border border-stone-100 flex items-center justify-between gap-4">
                                         <div className="flex-1 text-xs">
                                             <p className="font-bold text-stone-800">{m._nameA}</p>
-                                            <p className="text-xs text-stone-300 font-black my-1">VS</p>
+                                            <p className="text-xs text-stone-300 font-extrabold my-1">VS</p>
                                             <p className="font-bold text-stone-800">{m._nameB}</p>
                                         </div>
                                         <div className="text-right">
-                                            <span className="text-xs font-black text-stone-400 uppercase">Grupo {m._groupName}</span>
+                                            <span className="text-xs font-extrabold text-stone-400 uppercase">Grupo {m._groupName}</span>
                                         </div>
                                     </div>
                                 ))}
@@ -235,7 +235,7 @@ export const MatchGenerationModal: React.FC<Props> = ({
                                 <AlertTriangle size={40} className="text-amber-500" />
                             </div>
                             <div>
-                                <h4 className="text-xl font-black text-stone-800">Confirmar Geração</h4>
+                                <h4 className="text-xl font-extrabold text-stone-800">Confirmar Geração</h4>
                                 <p className="text-sm text-stone-500 mt-2 px-4">
                                     Gerar <strong>{previewMatches.length} confrontos</strong> para <strong>{selectedClass}</strong> na <strong>{rounds.find(r => r.id === selectedRoundId)?.name}</strong>.
                                 </p>
@@ -269,7 +269,7 @@ export const MatchGenerationModal: React.FC<Props> = ({
                             </button>
                             <button
                                 onClick={() => setStep('confirm')}
-                                className="flex-2 py-4 bg-saibro-600 text-white font-bold rounded-2xl hover:bg-saibro-700 shadow-lg shadow-orange-200 transition-all flex items-center justify-center gap-2 text-sm"
+                                className="flex-2 py-4 bg-saibro-600 text-white font-bold rounded-2xl hover:bg-saibro-700 shadow-lg transition-all flex items-center justify-center gap-2 text-sm"
                             >
                                 <Play size={16} fill="white" />
                                 Salvar Confrontos
@@ -287,7 +287,7 @@ export const MatchGenerationModal: React.FC<Props> = ({
                             <button
                                 onClick={handleGenerate}
                                 disabled={processing}
-                                className="flex-2 py-4 bg-saibro-600 text-white font-bold rounded-2xl hover:bg-saibro-700 shadow-lg shadow-orange-200 transition-all flex items-center justify-center gap-2 text-sm"
+                                className="flex-2 py-4 bg-saibro-600 text-white font-bold rounded-2xl hover:bg-saibro-700 shadow-lg transition-all flex items-center justify-center gap-2 text-sm"
                             >
                                 {processing ? <Loader2 className="animate-spin" size={20} /> : <Check size={20} />}
                                 {processing ? 'Salvando...' : 'Confirmar e Salvar'}

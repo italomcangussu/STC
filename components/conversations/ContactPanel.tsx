@@ -166,7 +166,7 @@ export default function ContactPanel({ conversation: c, staff, currentUserId, on
                 onChange={(e) => void salvar(() => setOptOut(c.contact_id as string, e.target.checked))} className="h-4 w-4 accent-saibro-600" />
               Não enviar mensagens automáticas a este contato
             </label>
-            <p className="text-[11px] text-stone-500">Marcado sozinho quando a pessoa pede para parar (“parar”, “não quero receber”).</p>
+            <p className="text-meta text-stone-500">Marcado sozinho quando a pessoa pede para parar (“parar”, “não quero receber”).</p>
           </Secao>
         )}
 
@@ -253,7 +253,7 @@ export default function ContactPanel({ conversation: c, staff, currentUserId, on
         </Secao>
 
         <Secao titulo="Notas internas" icone={StickyNote}>
-          <p className="-mt-1 mb-2 text-[11px] text-stone-500">Só administradores veem. Ficam assinadas e não podem ser editadas.</p>
+          <p className="-mt-1 mb-2 text-meta text-stone-500">Só administradores veem. Ficam assinadas e não podem ser editadas.</p>
           <form className="grid gap-2" onSubmit={(e) => { e.preventDefault(); if (novaNota.trim()) void salvar(async () => { await addNote(c.id, novaNota); setNovaNota(''); }); }}>
             <textarea value={novaNota} onChange={(e) => setNovaNota(e.target.value)} rows={2} maxLength={4000} placeholder="Prefere jogar à noite…"
               className={cx(fieldCls, 'py-1.5')} aria-label="Nova nota" />
@@ -263,7 +263,7 @@ export default function ContactPanel({ conversation: c, staff, currentUserId, on
             {notas.map((n) => (
               <li key={n.id} className="rounded-lg bg-amber-50 p-2 text-sm">
                 <p className="whitespace-pre-wrap">{n.body}</p>
-                <p className="mt-1 text-[11px] text-stone-500">{n.author?.name ?? 'Equipe'} · {dataHora.format(new Date(n.created_at))}</p>
+                <p className="mt-1 text-meta text-stone-500">{n.author?.name ?? 'Equipe'} · {dataHora.format(new Date(n.created_at))}</p>
               </li>
             ))}
           </ul>

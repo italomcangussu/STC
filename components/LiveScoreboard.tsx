@@ -206,7 +206,7 @@ export const LiveScoreboard: React.FC<LiveScoreboardProps> = ({
                     <span className={`font-bold text-sm sm:text-base truncate leading-tight ${isWinner ? 'text-stone-900' : 'text-stone-600'}`}>
                         {player?.name || 'Jogador'}
                     </span>
-                    {isWinner && <span className="text-[10px] text-saibro-600 font-bold uppercase tracking-wider">Vencedor</span>}
+                    {isWinner && <span className="text-meta text-saibro-600 font-bold uppercase tracking-wider">Vencedor</span>}
                 </div>
             </div>
 
@@ -254,11 +254,11 @@ export const LiveScoreboard: React.FC<LiveScoreboardProps> = ({
             <div className="relative z-10 bg-stone-50 p-4 flex items-center justify-between border-b border-stone-100 px-5">
                 <div className="flex items-center gap-3">
                     {isFinished ? (
-                        <div className="flex items-center gap-1.5 px-2 py-0.5 bg-stone-200 border border-stone-300 rounded text-[10px] font-bold text-stone-600 uppercase tracking-widest">
+                        <div className="flex items-center gap-1.5 px-2 py-0.5 bg-stone-200 border border-stone-300 rounded text-meta font-bold text-stone-600 uppercase tracking-widest">
                             Finalizado
                         </div>
                     ) : (
-                        <div className="flex items-center gap-1.5 px-2 py-0.5 bg-red-100 border border-red-200 rounded text-[10px] font-bold text-red-600 uppercase tracking-widest animate-pulse">
+                        <div className="flex items-center gap-1.5 px-2 py-0.5 bg-red-100 border border-red-200 rounded text-meta font-bold text-red-600 uppercase tracking-widest animate-pulse">
                             <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
                             Ao Vivo
                         </div>
@@ -279,9 +279,9 @@ export const LiveScoreboard: React.FC<LiveScoreboardProps> = ({
             <div className="relative z-10 p-5 space-y-2">
                 {/* Headers */}
                 <div className="flex justify-end px-3 gap-2 pb-1 pr-[9px]">
-                    <span className="w-10 text-[10px] text-stone-500 text-center font-extrabold uppercase tracking-wider">Set 1</span>
-                    <span className="w-10 text-[10px] text-stone-500 text-center font-extrabold uppercase tracking-wider">Set 2</span>
-                    {showThirdSet && <span className="w-10 text-[10px] text-saibro-600 text-center font-bold uppercase tracking-wider animate-pulse">Tie</span>}
+                    <span className="w-10 text-meta text-stone-500 text-center font-extrabold uppercase tracking-wider">Set 1</span>
+                    <span className="w-10 text-meta text-stone-500 text-center font-extrabold uppercase tracking-wider">Set 2</span>
+                    {showThirdSet && <span className="w-10 text-meta text-saibro-600 text-center font-bold uppercase tracking-wider animate-pulse">Tie</span>}
                 </div>
 
                 {renderPlayerRow(displayPlayerA, matchWinner === 'A', scoreA, (idx, d) => updateScore('A', idx, d), true)}
@@ -324,7 +324,7 @@ export const LiveScoreboard: React.FC<LiveScoreboardProps> = ({
                         )}
                     </button>
                     {!matchWinner && canEdit && (scoreA[0] > 0 || scoreB[0] > 0) && (
-                        <p className="text-[10px] uppercase tracking-widest text-stone-400 text-center mt-3 font-bold">
+                        <p className="text-meta uppercase tracking-widest text-stone-400 text-center mt-3 font-bold">
                             Defina um vencedor para salvar
                         </p>
                     )}

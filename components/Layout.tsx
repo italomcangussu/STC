@@ -31,7 +31,7 @@ interface LayoutProps {
 const NavBadge: React.FC<{ count?: number; active: boolean }> = ({ count, active }) => (
     count && count > 0 ? (
         <span
-            className={`ml-auto min-w-5 h-5 px-1.5 rounded-full text-[11px] font-black flex items-center justify-center ${active ? 'bg-white text-saibro-700' : 'bg-red-500 text-white'}`}
+            className={`ml-auto min-w-5 h-5 px-1.5 rounded-full text-meta font-extrabold flex items-center justify-center ${active ? 'bg-white text-saibro-700' : 'bg-red-500 text-white'}`}
             aria-label={`${count} pendente(s)`}
         >
             {count > 99 ? '99+' : count}
@@ -173,7 +173,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
                     />
                     <div className="flex flex-col">
                         <h1 className="text-lg font-extrabold text-saibro-700 tracking-tight leading-none">STC Play</h1>
-                        <span className="text-[10px] text-stone-400 font-semibold tracking-wider uppercase leading-none mt-0.5">Clube de Tênis</span>
+                        <span className="text-meta text-stone-400 font-semibold tracking-wider uppercase leading-none mt-0.5">Clube de Tênis</span>
                     </div>
                 </div>
 
@@ -242,11 +242,11 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
                                     <div className="overflow-hidden">
                                         <p className="font-bold text-sm text-stone-900 truncate group-hover:text-saibro-700">{currentUser.name}</p>
                                         <div className="flex items-center gap-1.5 mt-0.5">
-                                            <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-saibro-100 text-saibro-700 border border-saibro-200">
+                                            <span className="text-meta font-extrabold uppercase px-2 py-0.5 rounded-full bg-saibro-100 text-saibro-700 border border-saibro-200">
                                                 {currentUser.role}
                                             </span>
                                             {currentUser.isProfessor && (
-                                                <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-court-green/10 text-court-green border border-court-green/20">
+                                                <span className="text-meta font-bold uppercase px-1.5 py-0.5 rounded-full bg-court-green/10 text-court-green border border-court-green/20">
                                                     PROF
                                                 </span>
                                             )}
@@ -269,7 +269,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
                                         <p className="text-xs font-bold text-saibro-900">
                                             {(isInstalledPWA() || !isIOS()) ? 'Ativar Notificações' : 'Instalar App para Notificar'}
                                         </p>
-                                        <p className="text-[10px] text-stone-500 truncate">
+                                        <p className="text-meta text-stone-500 truncate">
                                             {(isInstalledPWA() || !isIOS()) ? 'Receba alertas de desafios' : 'Adicione à Tela de Início'}
                                         </p>
                                     </div>
@@ -281,14 +281,14 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
                         <div className="p-3 overflow-y-auto space-y-4 flex-1 custom-scrollbar">
                             {/* Regular Navigation Items */}
                             <div className="space-y-1">
-                                <p className="text-[10px] font-extrabold tracking-wider uppercase text-stone-400 px-3 mb-1">Menu Principal</p>
+                                <p className="text-meta font-extrabold tracking-wider uppercase text-stone-400 px-3 mb-1">Menu Principal</p>
                                 {filteredNav.filter(item => !item.id.startsWith('admin-') && item.id !== 'championship-admin' && item.id !== 'championship-creator' && item.id !== 'financeiro-admin' && item.id !== 'conversas').map(item => (
                                     <button
                                         key={item.id}
                                         onClick={() => { goTo(item.id); setIsMenuOpen(false); }}
                                         className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all active:scale-[0.98] ${
                                             view === item.id
-                                                ? 'bg-sunset-gradient text-white shadow-md shadow-orange-200/50 font-bold'
+                                                ? 'bg-sunset-gradient text-white shadow-md   font-bold'
                                                 : 'text-stone-700 hover:bg-saibro-50 hover:text-saibro-700'
                                         }`}
                                     >
@@ -305,8 +305,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
                             {currentUser.role === 'admin' && (
                                 <div className="space-y-1 pt-2 border-t border-stone-100">
                                     <div className="flex items-center justify-between px-3 mb-1">
-                                        <p className="text-[10px] font-extrabold tracking-wider uppercase text-saibro-700">Administração</p>
-                                        <span className="text-[9px] font-bold bg-saibro-100 text-saibro-800 px-1.5 py-0.5 rounded">PAINEL</span>
+                                        <p className="text-meta font-extrabold tracking-wider uppercase text-saibro-700">Administração</p>
+                                        <span className="text-meta font-bold bg-saibro-100 text-saibro-800 px-1.5 py-0.5 rounded">PAINEL</span>
                                     </div>
                                     {filteredNav.filter(item => item.id.startsWith('admin-') || item.id === 'championship-admin' || item.id === 'championship-creator' || item.id === 'financeiro-admin' || item.id === 'conversas').map(item => (
                                         <button
@@ -314,7 +314,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
                                             onClick={() => { goTo(item.id); setIsMenuOpen(false); }}
                                             className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all active:scale-[0.98] ${
                                                 view === item.id
-                                                    ? 'bg-sunset-gradient text-white shadow-md shadow-orange-200/50 font-bold'
+                                                    ? 'bg-sunset-gradient text-white shadow-md   font-bold'
                                                     : 'text-stone-700 hover:bg-saibro-50 hover:text-saibro-700'
                                             }`}
                                         >
@@ -366,11 +366,11 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
                             <p className="font-semibold text-sm text-stone-800 truncate group-hover:text-saibro-700">{currentUser.name}</p>
                             <p className="text-xs text-saibro-600 uppercase font-bold flex items-center gap-1">
                                 {currentUser.role}
-                                {currentUser.isProfessor && <span className="text-[9px] bg-saibro-200 px-1 rounded">PROF</span>}
+                                {currentUser.isProfessor && <span className="text-meta bg-saibro-200 px-1 rounded">PROF</span>}
                             </p>
                         </div>
                     </button>
-                    <p className="text-[10px] text-stone-400 text-center mt-1">Toque para ver/editar perfil</p>
+                    <p className="text-meta text-stone-400 text-center mt-1">Toque para ver/editar perfil</p>
 
                     {/* Push Notification Banner */}
                     {showPushBanner && (
@@ -385,7 +385,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
                                 <p className="text-xs font-bold text-saibro-800">
                                     {(isInstalledPWA() || !isIOS()) ? 'Ativar Notificações' : 'Instalar App para Notificar'}
                                 </p>
-                                <p className="text-[10px] text-saibro-600 truncate">
+                                <p className="text-meta text-saibro-600 truncate">
                                     {(isInstalledPWA() || !isIOS()) ? 'Receba alertas de desafios' : 'Adicione à Tela de Início primeiro'}
                                 </p>
                             </div>
@@ -399,7 +399,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
                             key={item.id}
                             onClick={() => goTo(item.id)}
                             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-smooth ${view === item.id
-                                ? 'bg-sunset-gradient text-white shadow-lg shadow-orange-200/50'
+                                ? 'bg-sunset-gradient text-white shadow-lg  '
                                 : 'text-stone-600 hover:bg-saibro-100 hover:text-saibro-700'
                                 }`}
                         >
@@ -435,7 +435,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
                         <div className={`transition-transform duration-300 ${view === item.id ? 'scale-110 drop-shadow-[0_0_8px_rgba(249,115,22,0.3)]' : ''}`}>
                             {React.cloneElement(item.icon as React.ReactElement<any>, { size: 22 })}
                         </div>
-                        <span className={`text-[9px] mt-1 font-bold uppercase tracking-tighter truncate w-full text-center transition-all ${view === item.id ? 'opacity-100 scale-105' : 'opacity-70'}`}>{item.label}</span>
+                        <span className={`text-meta mt-1 font-bold uppercase tracking-tighter truncate w-full text-center transition-all ${view === item.id ? 'opacity-100 scale-105' : 'opacity-70'}`}>{item.label}</span>
                     </button>
                 ))}
             </div>

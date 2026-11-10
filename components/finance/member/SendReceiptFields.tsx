@@ -67,7 +67,7 @@ export const HintsNotice: React.FC<{ flags: ReceiptFlag[] }> = ({ flags }) => {
   return (
     <Notice tone="warn" title="Confira antes de enviar">
       <ul className="list-disc space-y-0.5 pl-4">{flags.map((f, i) => <li key={`${f.code}-${i}`}>{f.message}</li>)}</ul>
-      <p className="mt-1 text-[11px] opacity-80">Isto é só uma orientação. Você pode enviar mesmo assim; o clube decide.</p>
+      <p className="mt-1 text-meta opacity-80">Isto é só uma orientação. Você pode enviar mesmo assim; o clube decide.</p>
     </Notice>
   );
 };

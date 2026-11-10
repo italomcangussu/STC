@@ -71,7 +71,7 @@ const DueSection: React.FC<{ s: FinSettings; holidays: FinHoliday[]; onSaved: ()
         <label className="flex min-h-11 items-center gap-2 self-end text-sm font-bold text-stone-700"><input type="checkbox" className="h-5 w-5" checked={saturday} onChange={(e) => setSaturday(e.target.checked)} />Sábado é dia útil</label>
       </div>
       <div className="mt-3 space-y-1 rounded-2xl bg-stone-50 p-3 text-xs text-stone-600">
-        <p className="font-black text-stone-500">Prévia (com os feriados ativos abaixo)</p>
+        <p className="font-extrabold text-stone-500">Prévia (com os feriados ativos abaixo)</p>
         {preview.map((p) => <p key={p.comp}>Mensalidade de <b className="capitalize">{monthLabel(p.comp)}</b> vence em <b>{brDate(p.due)}</b>{p.adjusted ? ` (dia ${brDate(p.nominal).slice(0, 5)} não é útil)` : ''}</p>)}
       </div>
       <div className="mt-3"><button className={btnPrimary} disabled={busy || !(Number(dueDay) >= 1 && Number(dueDay) <= 31)} onClick={save}>Salvar vencimento</button></div>
@@ -144,7 +144,7 @@ const FeesSection: React.FC<{ s: FinSettings; onSaved: () => void }> = ({ s, onS
       <div className="mt-3"><Notice tone="info" title="Como o cálculo funciona">Juros <b>simples</b> por dia de atraso, sobre o principal em aberto no início do dia. Multa e juros nunca entram na base de cálculo (sem juros sobre juros). Um pagamento abate primeiro a multa, depois os juros, depois o principal.</Notice></div>
 
       <div className="mt-3 space-y-2 rounded-2xl border border-stone-100 p-3">
-        <p className="text-[11px] font-black uppercase tracking-wider text-stone-400">Simulador (não grava nada)</p>
+        <p className="text-meta font-extrabold uppercase tracking-wider text-stone-400">Simulador (não grava nada)</p>
         <div className="grid grid-cols-2 gap-3">
           <Field label="Mensalidade (R$)"><MoneyInput value={simPrincipal} onChange={setSimPrincipal} /></Field>
           <Field label="Dias além da carência"><input inputMode="numeric" className={inputCls} value={simDays} onChange={(e) => setSimDays(e.target.value.replace(/\D/g, '').slice(0, 3))} /></Field>
@@ -220,7 +220,7 @@ const HolidaysSection: React.FC<{ holidays: FinHoliday[]; onChanged: () => void 
   return (
     <Card title="Calendário de feriados" subtitle="O vencimento só pula sábado e domingo. Marque um feriado para que ele também seja pulado." right={<CalendarDays size={18} className="text-stone-300" />}>
       <div className="mb-3 flex items-center gap-2">
-        <button className={btnGhost} aria-label="Ano anterior" onClick={() => setYear((y) => y - 1)}>‹</button><span className="min-w-14 text-center text-sm font-black">{year}</span><button className={btnGhost} aria-label="Próximo ano" onClick={() => setYear((y) => y + 1)}>›</button>
+        <button className={btnGhost} aria-label="Ano anterior" onClick={() => setYear((y) => y - 1)}>‹</button><span className="min-w-14 text-center text-sm font-extrabold">{year}</span><button className={btnGhost} aria-label="Próximo ano" onClick={() => setYear((y) => y + 1)}>›</button>
         <button className={btnGhost} disabled={busy} onClick={() => run(() => seedHolidays(year, key), `Feriados nacionais de ${year} carregados (desativados: ative os que o vencimento deve pular).`)}>Carregar nacionais de {year}</button>
       </div>
       {list.length === 0 ? <Empty title={`Sem feriados em ${year}`} hint="Carregue os nacionais para consultar e cadastre os municipais. Nenhum conta até você ativar." /> : (
@@ -229,7 +229,7 @@ const HolidaysSection: React.FC<{ holidays: FinHoliday[]; onChanged: () => void 
             <li key={h.id}>
               <Row>
                 <div className="flex items-center justify-between gap-2">
-                  <div className="min-w-0"><p className="truncate text-sm font-bold">{brDate(h.holiday_date)} · {h.name}</p><p className="text-[11px] text-stone-400">{h.scope === 'national' ? 'Nacional' : h.scope === 'state' ? 'Estadual' : h.scope === 'municipal' ? 'Municipal' : 'Do clube'}{h.kind === 'optional' ? ' · ponto facultativo' : ''}</p></div>
+                  <div className="min-w-0"><p className="truncate text-sm font-bold">{brDate(h.holiday_date)} · {h.name}</p><p className="text-meta text-stone-400">{h.scope === 'national' ? 'Nacional' : h.scope === 'state' ? 'Estadual' : h.scope === 'municipal' ? 'Municipal' : 'Do clube'}{h.kind === 'optional' ? ' · ponto facultativo' : ''}</p></div>
                   <label className="flex min-h-11 items-center gap-2 text-xs font-bold text-stone-600"><input type="checkbox" className="h-5 w-5" checked={h.active} disabled={busy} onChange={(e) => run(() => saveHoliday(h.id, { active: e.target.checked }, key), 'Feriado atualizado.')} />Conta como feriado</label>
                 </div>
               </Row>
@@ -238,7 +238,7 @@ const HolidaysSection: React.FC<{ holidays: FinHoliday[]; onChanged: () => void 
         </ul>
       )}
       <div className="mt-4 space-y-3 rounded-2xl border border-stone-100 p-3">
-        <p className="text-[11px] font-black uppercase tracking-wider text-stone-400">Adicionar feriado local</p>
+        <p className="text-meta font-extrabold uppercase tracking-wider text-stone-400">Adicionar feriado local</p>
         <div className="grid grid-cols-2 gap-3">
           <Field label="Data"><input type="date" className={inputCls} value={date} onChange={(e) => setDate(e.target.value)} /></Field>
           <Field label="Tipo"><select className={inputCls} value={scope} onChange={(e) => setScope(e.target.value as typeof scope)}><option value="municipal">Municipal</option><option value="state">Estadual</option><option value="club">Do clube</option></select></Field>
@@ -266,7 +266,7 @@ const AuditSection: React.FC = () => {
           {audit.data!.map((a) => (
             <li key={a.id}><Row>
               <p className="text-xs font-bold text-stone-700">{new Date(a.occurred_at).toLocaleString('pt-BR', { timeZone: 'America/Fortaleza', dateStyle: 'short', timeStyle: 'short' })} · {a.action}</p>
-              <p className="text-[11px] text-stone-500">{a.actor_name_snapshot ?? 'sistema'}{a.target_name_snapshot ? ` → ${a.target_name_snapshot}` : ''}{a.table_name ? ` · ${a.table_name}` : ''}{a.changed_fields?.length ? ` · campos: ${a.changed_fields.join(', ')}` : ''}</p>
+              <p className="text-meta text-stone-500">{a.actor_name_snapshot ?? 'sistema'}{a.target_name_snapshot ? ` → ${a.target_name_snapshot}` : ''}{a.table_name ? ` · ${a.table_name}` : ''}{a.changed_fields?.length ? ` · campos: ${a.changed_fields.join(', ')}` : ''}</p>
             </Row></li>
           ))}
         </ul>

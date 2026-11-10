@@ -48,7 +48,7 @@ const AccountSheet: React.FC<{ account: FinAccount | 'new' | null; onClose: () =
         <Field label="Data do saldo inicial"><input type="date" className={inputCls} value={openingDate} onChange={(e) => setOpeningDate(e.target.value)} /></Field>
       </div>
       <label className="flex min-h-11 items-center gap-2 text-sm font-bold text-stone-700"><input type="checkbox" className="h-5 w-5" checked={isDefault} disabled={!active} onChange={(e) => setIsDefault(e.target.checked)} />Conta padrão de recebimentos</label>
-      <p className="-mt-2 text-[11px] text-stone-400">Recebe os pagamentos de Card Mensal e Day Card feitos fora do módulo financeiro.</p>
+      <p className="-mt-2 text-meta text-stone-400">Recebe os pagamentos de Card Mensal e Day Card feitos fora do módulo financeiro.</p>
       {editing && <label className="flex min-h-11 items-center gap-2 text-sm font-bold text-stone-700"><input type="checkbox" className="h-5 w-5" checked={active} onChange={(e) => { setActive(e.target.checked); if (!e.target.checked) setIsDefault(false); }} />Conta ativa</label>}
       {editing && <Notice tone="warn">Mudar o saldo inicial ou a data reescreve o saldo de todo o histórico desta conta.</Notice>}
     </Sheet>
@@ -73,8 +73,8 @@ const AccountsTab: React.FC = () => {
               <li key={a.id}>
                 <Row onClick={() => setSheet(a)}>
                   <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0"><p className="truncate text-sm font-black">{a.name}</p><p className="text-xs text-stone-500">{KIND_LABEL[a.kind]} · saldo inicial {brDate(a.opening_date)}</p></div>
-                    <div className="text-right">{balanceOf(a.id) !== null ? <Money cents={balanceOf(a.id)!} className="text-sm font-black" /> : <span className="text-xs text-stone-300">—</span>}</div>
+                    <div className="min-w-0"><p className="truncate text-sm font-extrabold">{a.name}</p><p className="text-xs text-stone-500">{KIND_LABEL[a.kind]} · saldo inicial {brDate(a.opening_date)}</p></div>
+                    <div className="text-right">{balanceOf(a.id) !== null ? <Money cents={balanceOf(a.id)!} className="text-sm font-extrabold" /> : <span className="text-xs text-stone-300">—</span>}</div>
                   </div>
                   <div className="mt-1 flex flex-wrap gap-1.5">{a.is_default_receipts && <Badge tone="good"><Star size={10} className="mr-1" />Recebimentos</Badge>}{!a.active && <Badge tone="muted">Inativa</Badge>}</div>
                 </Row>

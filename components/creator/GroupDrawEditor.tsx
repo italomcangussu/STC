@@ -93,7 +93,7 @@ export const GroupDrawEditor: React.FC<Props> = ({
         <div className="space-y-4">
             <div className="bg-white rounded-2xl border border-stone-100 p-5 space-y-3">
                 <div className="flex items-center justify-between">
-                    <h2 className="font-black text-stone-800">
+                    <h2 className="font-extrabold text-stone-800">
                         {ehGrupos ? 'Fase de grupos' : 'Pontos corridos'} — {classe}
                     </h2>
                     <span className="text-xs font-bold text-stone-400">
@@ -119,7 +119,7 @@ export const GroupDrawEditor: React.FC<Props> = ({
                     {groups.map(group => (
                         <div key={group.name} className="bg-white rounded-2xl border border-stone-100 overflow-hidden">
                             <div className="px-4 py-3 bg-stone-50 border-b border-stone-100 flex justify-between items-center">
-                                <span className="font-black text-stone-700 text-sm">Grupo {group.name}</span>
+                                <span className="font-extrabold text-stone-700 text-sm">Grupo {group.name}</span>
                                 <span className="text-xs font-bold text-stone-400">{group.members.length}</span>
                             </div>
                             <ul className="p-3 space-y-2">

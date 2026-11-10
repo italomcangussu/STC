@@ -1,86 +1,15 @@
 # Medição em tela — STC
 
-> 2026-11-10 15:44 · http://localhost:3000/design-lab.html · Google Chrome. Evidência: emulação em Chromium (sem recorte do iPhone, sem zoom do Safari, sem gesto do sistema).
+> 2026-11-10 15:51 · http://localhost:3000/design-lab.html · Google Chrome. Evidência: emulação em Chromium (sem recorte do iPhone, sem zoom do Safari, sem gesto do sistema).
 
 | P | Lei | Onde | Problema | Correção | Regra |
 |---|---|---|---|---|---|
-| P1 | contraste | #agenda · iphone | 2.51:1 em div.flex.items-center:nth-of-type(1) > div.flex.flex-col > span.text-stone-400.font-semibold ("Clube de Tênis", 10px) | mínimo 4.5:1: escureça o texto ou clareie o fundo um degrau | `contraste-baixo` |
-| P1 | contraste | #agenda · iphone | 2.52:1 em div.flex.justify-end:nth-of-type(2) > div.flex.items-center > span.uppercase.font-bold ("Ver Canceladas", 10px) | mínimo 4.5:1: escureça o texto ou clareie o fundo um degrau | `contraste-baixo` |
-| P1 | contraste | #agenda · iphone | 2.52:1 em div.absolute.bottom-0 > button.flex.flex-col:nth-of-type(2) > span.mt-1.font-bold ("Ranking", 9px) | mínimo 4.5:1: escureça o texto ou clareie o fundo um degrau | `contraste-baixo` |
-| P1 | contraste | #agenda · iphone | 2.52:1 em div.absolute.bottom-0 > button.flex.flex-col:nth-of-type(3) > span.mt-1.font-bold ("Desafios", 9px) | mínimo 4.5:1: escureça o texto ou clareie o fundo um degrau | `contraste-baixo` |
-| P1 | contraste | #agenda · iphone | 2.52:1 em div.absolute.bottom-0 > button.flex.flex-col:nth-of-type(4) > span.mt-1.font-bold ("SuperSet", 9px) | mínimo 4.5:1: escureça o texto ou clareie o fundo um degrau | `contraste-baixo` |
-| P1 | legibilidade | #agenda · iphone | texto de 10px em div.flex.items-center:nth-of-type(1) > div.flex.flex-col > span.text-stone-400.font-semibold ("Clube de Tênis") | mínimo 12 px | `texto-pequeno` |
-| P1 | legibilidade | #agenda · iphone | texto de 10px em div.flex.justify-end:nth-of-type(2) > div.flex.items-center > span.uppercase.font-bold ("Ver Canceladas") | mínimo 12 px | `texto-pequeno` |
-| P1 | legibilidade | #agenda · iphone | texto de 10px em div.flex.flex-col:nth-of-type(1) > div.flex.items-center > span.font-bold.uppercase ("Play") | mínimo 12 px | `texto-pequeno` |
-| P1 | legibilidade | #agenda · iphone | texto de 9px em div.flex.items-center > div.flex.flex-col:nth-of-type(1) > span.text-stone-400.font-bold:nth-of-type(1) ("Início") | mínimo 12 px | `texto-pequeno` |
-| P1 | robustez | #agenda · iphone | imagem não carregou: button.flex.items-center > div.relative > img.w-7.h-7 | confira o caminho; dê um fundo e um alt para a falha não virar buraco | `imagem-quebrada` |
-| P1 | contraste | #ranking · iphone | 2.51:1 em div.flex.items-center:nth-of-type(1) > div.flex.flex-col > span.text-stone-400.font-semibold ("Clube de Tênis", 10px) | mínimo 4.5:1: escureça o texto ou clareie o fundo um degrau | `contraste-baixo` |
-| P1 | contraste | #ranking · iphone | 2.52:1 em div.absolute.bottom-0 > button.flex.flex-col:nth-of-type(1) > span.mt-1.font-bold ("Agenda", 9px) | mínimo 4.5:1: escureça o texto ou clareie o fundo um degrau | `contraste-baixo` |
-| P1 | contraste | #ranking · iphone | 2.52:1 em div.absolute.bottom-0 > button.flex.flex-col:nth-of-type(3) > span.mt-1.font-bold ("Desafios", 9px) | mínimo 4.5:1: escureça o texto ou clareie o fundo um degrau | `contraste-baixo` |
-| P1 | contraste | #ranking · iphone | 2.52:1 em div.absolute.bottom-0 > button.flex.flex-col:nth-of-type(4) > span.mt-1.font-bold ("SuperSet", 9px) | mínimo 4.5:1: escureça o texto ou clareie o fundo um degrau | `contraste-baixo` |
-| P1 | legibilidade | #ranking · iphone | texto de 10px em div.flex.items-center:nth-of-type(1) > div.flex.flex-col > span.text-stone-400.font-semibold ("Clube de Tênis") | mínimo 12 px | `texto-pequeno` |
-| P1 | legibilidade | #ranking · iphone | texto de 10px em div.flex.items-center:nth-of-type(2) > div.flex.flex-col:nth-of-type(1) > span.text-stone-400.font-bold:nth-of-type(1) ("Vit") | mínimo 12 px | `texto-pequeno` |
-| P1 | legibilidade | #ranking · iphone | texto de 10px em div.flex.items-center:nth-of-type(2) > div.flex.flex-col:nth-of-type(3) > span.text-stone-400.font-bold:nth-of-type(1) ("Jgs") | mínimo 12 px | `texto-pequeno` |
-| P1 | legibilidade | #ranking · iphone | texto de 10px em div.flex.items-center:nth-of-type(2) > div.flex.flex-col:nth-of-type(5) > span.text-stone-400.font-bold:nth-of-type(1) ("Aprv") | mínimo 12 px | `texto-pequeno` |
-| P1 | robustez | #ranking · iphone | imagem não carregou: button.flex.items-center > div.relative > img.w-7.h-7 | confira o caminho; dê um fundo e um alt para a falha não virar buraco | `imagem-quebrada` |
-| P1 | contraste | #campeonatos · iphone | 2.51:1 em div.flex.items-center:nth-of-type(1) > div.flex.flex-col > span.text-stone-400.font-semibold ("Clube de Tênis", 10px) | mínimo 4.5:1: escureça o texto ou clareie o fundo um degrau | `contraste-baixo` |
-| P1 | contraste | #campeonatos · iphone | 2.41:1 em div.mx-auto.min-w-0 > div.p-8.flex > p.text-stone-400.mt-2 ("Aguarde o próximo campeonato!", 16px) | mínimo 4.5:1: escureça o texto ou clareie o fundo um degrau | `contraste-baixo` |
-| P1 | contraste | #campeonatos · iphone | 2.52:1 em div.absolute.bottom-0 > button.flex.flex-col:nth-of-type(1) > span.mt-1.font-bold ("Agenda", 9px) | mínimo 4.5:1: escureça o texto ou clareie o fundo um degrau | `contraste-baixo` |
-| P1 | contraste | #campeonatos · iphone | 2.52:1 em div.absolute.bottom-0 > button.flex.flex-col:nth-of-type(2) > span.mt-1.font-bold ("Ranking", 9px) | mínimo 4.5:1: escureça o texto ou clareie o fundo um degrau | `contraste-baixo` |
-| P1 | contraste | #campeonatos · iphone | 2.52:1 em div.absolute.bottom-0 > button.flex.flex-col:nth-of-type(3) > span.mt-1.font-bold ("Desafios", 9px) | mínimo 4.5:1: escureça o texto ou clareie o fundo um degrau | `contraste-baixo` |
-| P1 | contraste | #campeonatos · iphone | 2.52:1 em div.absolute.bottom-0 > button.flex.flex-col:nth-of-type(4) > span.mt-1.font-bold ("SuperSet", 9px) | mínimo 4.5:1: escureça o texto ou clareie o fundo um degrau | `contraste-baixo` |
-| P1 | legibilidade | #campeonatos · iphone | texto de 10px em div.flex.items-center:nth-of-type(1) > div.flex.flex-col > span.text-stone-400.font-semibold ("Clube de Tênis") | mínimo 12 px | `texto-pequeno` |
-| P1 | legibilidade | #campeonatos · iphone | texto de 9px em div.absolute.bottom-0 > button.flex.flex-col:nth-of-type(1) > span.mt-1.font-bold ("Agenda") | mínimo 12 px | `texto-pequeno` |
-| P1 | legibilidade | #campeonatos · iphone | texto de 9px em div.absolute.bottom-0 > button.flex.flex-col:nth-of-type(2) > span.mt-1.font-bold ("Ranking") | mínimo 12 px | `texto-pequeno` |
-| P1 | legibilidade | #campeonatos · iphone | texto de 9px em div.absolute.bottom-0 > button.flex.flex-col:nth-of-type(3) > span.mt-1.font-bold ("Desafios") | mínimo 12 px | `texto-pequeno` |
-| P1 | robustez | #campeonatos · iphone | imagem não carregou: button.flex.items-center > div.relative > img.w-7.h-7 | confira o caminho; dê um fundo e um alt para a falha não virar buraco | `imagem-quebrada` |
-| P1 | contraste | #meu-financeiro · iphone | 2.51:1 em div.flex.items-center:nth-of-type(1) > div.flex.flex-col > span.text-stone-400.font-semibold ("Clube de Tênis", 10px) | mínimo 4.5:1: escureça o texto ou clareie o fundo um degrau | `contraste-baixo` |
-| P1 | contraste | #meu-financeiro · iphone | 2.41:1 em div.space-y-4.pb-6 > div.flex.flex-col:nth-of-type(2) > p.max-w-sm.text-xs:nth-of-type(2) ("Mensalidades e pendências apar", 12px) | mínimo 4.5:1: escureça o texto ou clareie o fundo um degrau | `contraste-baixo` |
-| P1 | contraste | #meu-financeiro · iphone | 2.52:1 em div.space-y-4.pb-6 > section.rounded-3xl.border > p.text-sm.text-stone-400 ("Você ainda não enviou comprova", 14px) | mínimo 4.5:1: escureça o texto ou clareie o fundo um degrau | `contraste-baixo` |
-| P1 | contraste | #meu-financeiro · iphone | 2.52:1 em div.absolute.bottom-0 > button.flex.flex-col:nth-of-type(1) > span.mt-1.font-bold ("Agenda", 9px) | mínimo 4.5:1: escureça o texto ou clareie o fundo um degrau | `contraste-baixo` |
-| P1 | contraste | #meu-financeiro · iphone | 2.52:1 em div.absolute.bottom-0 > button.flex.flex-col:nth-of-type(2) > span.mt-1.font-bold ("Ranking", 9px) | mínimo 4.5:1: escureça o texto ou clareie o fundo um degrau | `contraste-baixo` |
-| P1 | contraste | #meu-financeiro · iphone | 2.52:1 em div.absolute.bottom-0 > button.flex.flex-col:nth-of-type(3) > span.mt-1.font-bold ("Desafios", 9px) | mínimo 4.5:1: escureça o texto ou clareie o fundo um degrau | `contraste-baixo` |
-| P1 | contraste | #meu-financeiro · iphone | 2.52:1 em div.absolute.bottom-0 > button.flex.flex-col:nth-of-type(4) > span.mt-1.font-bold ("SuperSet", 9px) | mínimo 4.5:1: escureça o texto ou clareie o fundo um degrau | `contraste-baixo` |
-| P1 | contraste | #meu-financeiro · iphone | 2.52:1 em div.absolute.bottom-0 > button.flex.flex-col:nth-of-type(5) > span.mt-1.font-bold ("Campeonatos", 9px) | mínimo 4.5:1: escureça o texto ou clareie o fundo um degrau | `contraste-baixo` |
-| P1 | legibilidade | #meu-financeiro · iphone | texto de 10px em div.flex.items-center:nth-of-type(1) > div.flex.flex-col > span.text-stone-400.font-semibold ("Clube de Tênis") | mínimo 12 px | `texto-pequeno` |
-| P1 | legibilidade | #meu-financeiro · iphone | texto de 9px em div.absolute.bottom-0 > button.flex.flex-col:nth-of-type(1) > span.mt-1.font-bold ("Agenda") | mínimo 12 px | `texto-pequeno` |
-| P1 | legibilidade | #meu-financeiro · iphone | texto de 9px em div.absolute.bottom-0 > button.flex.flex-col:nth-of-type(2) > span.mt-1.font-bold ("Ranking") | mínimo 12 px | `texto-pequeno` |
-| P1 | legibilidade | #meu-financeiro · iphone | texto de 9px em div.absolute.bottom-0 > button.flex.flex-col:nth-of-type(3) > span.mt-1.font-bold ("Desafios") | mínimo 12 px | `texto-pequeno` |
-| P1 | robustez | #meu-financeiro · iphone | imagem não carregou: button.flex.items-center > div.relative > img.w-7.h-7 | confira o caminho; dê um fundo e um alt para a falha não virar buraco | `imagem-quebrada` |
-| P2 | Fitts | #agenda · iphone | alvo de 68×38 em header.flex-none.backdrop-blur-xl > div.flex.items-center:nth-of-type(2) > button.flex.items-center ("Menu Principal") | mínimo 44×44; a área de toque pode ser maior que o desenho | `alvo-pequeno` |
-| P2 | Fitts | #agenda · iphone | alvo de 42×34 em div.flex.flex-col:nth-of-type(1) > div.flex.justify-between:nth-of-type(1) > button.bg-saibro-600.text-white | mínimo 44×44; a área de toque pode ser maior que o desenho | `alvo-pequeno` |
-| P2 | Fitts | #agenda · iphone | alvo de 107×32 em div.flex.flex-col:nth-of-type(1) > div.bg-stone-100.p-1:nth-of-type(2) > button.flex-1.py-1.5:nth-of-type(1) ("Dia") | mínimo 44×44; a área de toque pode ser maior que o desenho | `alvo-pequeno` |
-| P2 | Fitts | #agenda · iphone | alvo de 107×32 em div.flex.flex-col:nth-of-type(1) > div.bg-stone-100.p-1:nth-of-type(2) > button.flex-1.py-1.5:nth-of-type(2) ("Semana") | mínimo 44×44; a área de toque pode ser maior que o desenho | `alvo-pequeno` |
-| P2 | Fitts | #agenda · iphone | alvo de 107×32 em div.flex.flex-col:nth-of-type(1) > div.bg-stone-100.p-1:nth-of-type(2) > button.flex-1.py-1.5:nth-of-type(3) ("Mês") | mínimo 44×44; a área de toque pode ser maior que o desenho | `alvo-pequeno` |
-| P2 | Fitts | #agenda · iphone | alvo de 40×40 em div.flex.flex-col:nth-of-type(3) > div.flex.items-center:nth-of-type(1) > button.w-10.h-10:nth-of-type(1) | mínimo 44×44; a área de toque pode ser maior que o desenho | `alvo-pequeno` |
-| P2 | Fitts | #agenda · iphone | alvo de 40×40 em div.flex.flex-col:nth-of-type(3) > div.flex.items-center:nth-of-type(1) > button.w-10.h-10:nth-of-type(2) | mínimo 44×44; a área de toque pode ser maior que o desenho | `alvo-pequeno` |
-| P2 | contraste | #agenda · iphone | 4.4:1 em div.flex.flex-col:nth-of-type(1) > div.bg-stone-100.p-1:nth-of-type(2) > button.flex-1.py-1.5:nth-of-type(2) ("Semana", 14px) | mínimo 4.5:1: escureça o texto ou clareie o fundo um degrau | `contraste-baixo` |
-| P2 | contraste | #agenda · iphone | 4.4:1 em div.flex.flex-col:nth-of-type(1) > div.bg-stone-100.p-1:nth-of-type(2) > button.flex-1.py-1.5:nth-of-type(3) ("Mês", 14px) | mínimo 4.5:1: escureça o texto ou clareie o fundo um degrau | `contraste-baixo` |
-| P2 | contraste | #agenda · iphone | 3.43:1 em div.absolute.bottom-0 > button.flex.flex-col:nth-of-type(1) > span.mt-1.font-bold ("Agenda", 9px) | mínimo 4.5:1: escureça o texto ou clareie o fundo um degrau | `contraste-baixo` |
-| P2 | contraste | #agenda · iphone | +1 textos com contraste baixo | ver captura | `contraste-baixo` |
-| P2 | contraste | #agenda · iphone | ícone com 2.41:1 em div.flex.flex-col:nth-of-type(3) > div.flex.items-center:nth-of-type(1) > button.w-10.h-10:nth-of-type(1) | mínimo 3:1 contra o fundo (borda de campo, ícone sem texto ao lado) | `contraste-nao-texto` |
-| P2 | contraste | #agenda · iphone | ícone com 2.41:1 em div.flex.flex-col:nth-of-type(3) > div.flex.items-center:nth-of-type(1) > button.w-10.h-10:nth-of-type(2) | mínimo 3:1 contra o fundo (borda de campo, ícone sem texto ao lado) | `contraste-nao-texto` |
-| P2 | Fitts | #ranking · iphone | alvo de 68×38 em header.flex-none.backdrop-blur-xl > div.flex.items-center:nth-of-type(2) > button.flex.items-center ("Menu Principal") | mínimo 44×44; a área de toque pode ser maior que o desenho | `alvo-pequeno` |
-| P2 | Fitts | #ranking · iphone | alvo de 80×36 em div.p-4.pb-40 > div.flex.gap-1:nth-of-type(2) > button.flex-1.py-2:nth-of-type(1) ("4ªª") | mínimo 44×44; a área de toque pode ser maior que o desenho | `alvo-pequeno` |
-| P2 | Fitts | #ranking · iphone | alvo de 80×36 em div.p-4.pb-40 > div.flex.gap-1:nth-of-type(2) > button.flex-1.py-2:nth-of-type(2) ("5ªª") | mínimo 44×44; a área de toque pode ser maior que o desenho | `alvo-pequeno` |
-| P2 | Fitts | #ranking · iphone | alvo de 80×36 em div.p-4.pb-40 > div.flex.gap-1:nth-of-type(2) > button.flex-1.py-2:nth-of-type(3) ("6ªª") | mínimo 44×44; a área de toque pode ser maior que o desenho | `alvo-pequeno` |
-| P2 | Fitts | #ranking · iphone | alvo de 80×36 em div.p-4.pb-40 > div.flex.gap-1:nth-of-type(2) > button.flex-1.py-2:nth-of-type(4) ("🏆 Geral") | mínimo 44×44; a área de toque pode ser maior que o desenho | `alvo-pequeno` |
-| P2 | contraste | #ranking · iphone | 4.4:1 em div.p-4.pb-40 > div.flex.gap-1:nth-of-type(2) > button.flex-1.py-2:nth-of-type(2) ("5ªª", 14px) | mínimo 4.5:1: escureça o texto ou clareie o fundo um degrau | `contraste-baixo` |
-| P2 | contraste | #ranking · iphone | 4.4:1 em div.p-4.pb-40 > div.flex.gap-1:nth-of-type(2) > button.flex-1.py-2:nth-of-type(3) ("6ªª", 14px) | mínimo 4.5:1: escureça o texto ou clareie o fundo um degrau | `contraste-baixo` |
-| P2 | contraste | #ranking · iphone | 4.4:1 em div.p-4.pb-40 > div.flex.gap-1:nth-of-type(2) > button.flex-1.py-2:nth-of-type(4) ("🏆 Geral", 14px) | mínimo 4.5:1: escureça o texto ou clareie o fundo um degrau | `contraste-baixo` |
-| P2 | contraste | #ranking · iphone | 3.43:1 em div.absolute.bottom-0 > button.flex.flex-col:nth-of-type(2) > span.mt-1.font-bold ("Ranking", 9px) | mínimo 4.5:1: escureça o texto ou clareie o fundo um degrau | `contraste-baixo` |
-| P2 | contraste | #ranking · iphone | +1 textos com contraste baixo | ver captura | `contraste-baixo` |
-| P2 | mobile | #ranking · iphone | faixa que rola de lado sem overscroll-behavior-x em div.mx-auto.min-w-0 > div.p-4.pb-40 > div.flex.gap-1:nth-of-type(2) (elástico do iPhone / voltar do Android pegam o arrasto) | `overflow-y: hidden` + `overscroll-behavior-x: none` numa utilidade única do design system; nada com margem negativa sobrando embaixo | `faixa-solta` |
-| P2 | Fitts | #campeonatos · iphone | alvo de 68×38 em header.flex-none.backdrop-blur-xl > div.flex.items-center:nth-of-type(2) > button.flex.items-center ("Menu Principal") | mínimo 44×44; a área de toque pode ser maior que o desenho | `alvo-pequeno` |
-| P2 | contraste | #campeonatos · iphone | 3.43:1 em div.absolute.bottom-0 > button.flex.flex-col:nth-of-type(5) > span.mt-1.font-bold ("Campeonatos", 9px) | mínimo 4.5:1: escureça o texto ou clareie o fundo um degrau | `contraste-baixo` |
-| P2 | Fitts | #meu-financeiro · iphone | alvo de 68×38 em header.flex-none.backdrop-blur-xl > div.flex.items-center:nth-of-type(2) > button.flex.items-center ("Menu Principal") | mínimo 44×44; a área de toque pode ser maior que o desenho | `alvo-pequeno` |
-| P3 | acessibilidade | #meu-financeiro · iphone | títulos pulam nível: h1 → h3 ("Meus comprovantes") | siga a ordem (h1 → h2 → h3); o tamanho visual se ajusta por classe, não pelo nível | `titulo-pula-nivel` |
-| P3 | contraste | #agenda · iphone | 9 texto(s) sobre imagem/gradiente ou cor ilegível: contraste não medido | confira na captura | `contraste-baixo` |
-| P3 | contraste | #ranking · iphone | 7 texto(s) sobre imagem/gradiente ou cor ilegível: contraste não medido | confira na captura | `contraste-baixo` |
-| P3 | contraste | #meu-financeiro · iphone | 4 texto(s) sobre imagem/gradiente ou cor ilegível: contraste não medido | confira na captura | `contraste-baixo` |
+| P2 | contraste | #vitrine · iphone | borda do campo com 2.41:1 em #_r_0_ | mínimo 3:1 contra o fundo (borda de campo, ícone sem texto ao lado) | `contraste-nao-texto` |
+| P2 | contraste | #vitrine · iphone | borda do campo com 2.41:1 em #_r_2_ | mínimo 3:1 contra o fundo (borda de campo, ícone sem texto ao lado) | `contraste-nao-texto` |
+| P2 | contraste | #vitrine · iphone | borda do campo com 2.41:1 em #_r_3_ | mínimo 3:1 contra o fundo (borda de campo, ícone sem texto ao lado) | `contraste-nao-texto` |
+| P2 | contraste | #vitrine · iphone | borda do campo com 2.41:1 em #_r_4_ | mínimo 3:1 contra o fundo (borda de campo, ícone sem texto ao lado) | `contraste-nao-texto` |
+| P2 | robustez | #vitrine · iphone | texto cortado em div.flex.min-h-14 > span.min-w-0.flex-1:nth-of-type(1) > span.block.truncate:nth-of-type(1) ("Gabriela Demo Nome Bem Comprid") | deixe quebrar em duas linhas; se o corte é intencional (nome longo numa lista), mostre o texto inteiro no detalhe ou no title | `texto-cortado` |
+| P2 | Hick / Von Restorff | #vitrine · iphone | 5 ações com cor de destaque na primeira dobra ("Reservar", "Excluir", "Enviar comprovante", "Desabilitado") | uma primária; as outras em contorno ou texto | `primarias-demais` |
 
 ## Capturas
-- #agenda · iphone · claro: `.fabuloso/design/capturas/_agenda-iphone.png`
-- #ranking · iphone · claro: `.fabuloso/design/capturas/_ranking-iphone.png`
-- #campeonatos · iphone · claro: `.fabuloso/design/capturas/_campeonatos-iphone.png`
-- #meu-financeiro · iphone · claro: `.fabuloso/design/capturas/_meu-financeiro-iphone.png`
+- #vitrine · iphone · claro: `.fabuloso/design/capturas/_vitrine-iphone.png`

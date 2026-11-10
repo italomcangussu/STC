@@ -35,7 +35,7 @@ export default function ChannelTab() {
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="text-lg font-black text-stone-800">Canal do WhatsApp</h2>
+        <h2 className="text-lg font-extrabold text-stone-800">Canal do WhatsApp</h2>
         <p className="text-xs text-stone-500">Uma única conexão alimenta o chat, as automações e a IA.</p>
       </div>
       <InstanceCard configured={saude.data?.whatsappConfigured} />
@@ -204,7 +204,7 @@ function MentionCard({ canal, amostras, onChanged, onRefresh }: {
         {!verificada && !temIdentidade && <span className="text-xs text-amber-700">Informe o telefone ou LID da conta primeiro.</span>}
         {verificada && canal.mention_verified_at && <span className="text-xs text-stone-500">desde {dataHora.format(new Date(canal.mention_verified_at))}</span>}
       </div>
-      <h4 className="mt-4 text-[11px] font-black uppercase tracking-wider text-stone-400">Últimas mensagens de grupo e como foram classificadas</h4>
+      <h4 className="mt-4 text-meta font-extrabold uppercase tracking-wider text-stone-400">Últimas mensagens de grupo e como foram classificadas</h4>
       {amostras.length === 0 ? (
         <p className="mt-1 text-xs text-stone-500">Nenhuma mensagem de grupo gravada ainda (grupos só são gravados depois de permitidos).</p>
       ) : (
@@ -213,9 +213,9 @@ function MentionCard({ canal, amostras, onChanged, onRefresh }: {
             <li key={m.id} className="flex items-start justify-between gap-2 rounded-xl border border-stone-100 px-3 py-2 text-xs">
               <span className="min-w-0">
                 <span className="block truncate text-stone-700">{m.body ?? '(sem texto)'}</span>
-                <span className="text-[10px] text-stone-400">{dataHora.format(new Date(m.created_at))}{m.mention_evidence ? ` · evidência: ${m.mention_evidence}` : ''}</span>
+                <span className="text-meta text-stone-400">{dataHora.format(new Date(m.created_at))}{m.mention_evidence ? ` · evidência: ${m.mention_evidence}` : ''}</span>
               </span>
-              <span className={cx('inline-flex shrink-0 items-center gap-0.5 rounded-full px-2 py-0.5 text-[10px] font-bold', m.mention_direct ? 'bg-emerald-100 text-emerald-800' : 'bg-stone-100 text-stone-500')}>
+              <span className={cx('inline-flex shrink-0 items-center gap-0.5 rounded-full px-2 py-0.5 text-meta font-bold', m.mention_direct ? 'bg-emerald-100 text-emerald-800' : 'bg-stone-100 text-stone-500')}>
                 <AtSign size={10} aria-hidden /> {m.mention_direct ? 'chamou o STC' : 'sem menção direta'}
               </span>
             </li>
@@ -282,14 +282,14 @@ function GroupsCard({ canal, grupos, loading, onChanged }: { canal: Channel; gru
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <p className="truncate text-sm font-bold text-stone-800">{g.name ?? 'Grupo sem nome'}</p>
-                    <p className="text-[11px] text-stone-400">{g.events_seen} evento{g.events_seen === 1 ? '' : 's'} · último {dataHora.format(new Date(g.last_seen_at))}</p>
+                    <p className="text-meta text-stone-400">{g.events_seen} evento{g.events_seen === 1 ? '' : 's'} · último {dataHora.format(new Date(g.last_seen_at))}</p>
                   </div>
                   <Badge tone={tom}>{rotulo}</Badge>
                 </div>
                 {g.last_payload_shape && (
                   <details className="mt-2 text-xs text-stone-500">
                     <summary className="cursor-pointer font-semibold">Campos que o provedor entregou no último evento</summary>
-                    <pre className="mt-1 max-h-40 overflow-auto rounded-lg bg-stone-50 p-2 text-[10px]">{JSON.stringify(g.last_payload_shape, null, 1)}</pre>
+                    <pre className="mt-1 max-h-40 overflow-auto rounded-lg bg-stone-50 p-2 text-meta">{JSON.stringify(g.last_payload_shape, null, 1)}</pre>
                     <p className="mt-1">Só nomes de campos (nunca o conteúdo): serve para conferir se a lista de menções existe no payload.</p>
                   </details>
                 )}

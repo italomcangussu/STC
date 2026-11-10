@@ -96,15 +96,15 @@ export const MatchScheduleModal: React.FC<Props> = ({
 
     return (
         <StandardModal isOpen={true} onClose={onClose}>
-            <div className="bg-white rounded-t-[2.5rem] sm:rounded-[2.5rem] w-full max-w-md overflow-hidden shadow-2xl flex flex-col pt-safe pb-safe max-h-[90vh]">
+            <div className="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-md overflow-hidden shadow-2xl flex flex-col pt-safe pb-safe max-h-[90vh]">
                 {/* Header */}
                 <div className="p-6 border-b border-stone-100 flex justify-between items-center gap-3 bg-saibro-50/50 flex-none">
                     <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-10 h-10 bg-saibro-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-orange-200">
+                        <div className="w-10 h-10 bg-saibro-500 rounded-2xl flex items-center justify-center text-white shadow-lg ">
                             <Calendar size={20} />
                         </div>
                         <div>
-                            <h3 className="text-lg font-black text-stone-800">
+                            <h3 className="text-lg font-extrabold text-stone-800">
                                 {isSuggestedTimeMode ? 'Editar horário sugerido' : 'Agendar Partida'}
                             </h3>
                             <p className="text-xs font-bold text-saibro-600 uppercase tracking-widest">{roundName}</p>
@@ -128,7 +128,7 @@ export const MatchScheduleModal: React.FC<Props> = ({
                     <form onSubmit={handleSubmit} className="space-y-6">
                         {/* Date Selection */}
                         <div>
-                            <label className="text-xs font-black text-stone-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                            <label className="text-xs font-extrabold text-stone-400 uppercase tracking-widest mb-3 flex items-center gap-2">
                                 <Calendar size={14} className="text-saibro-500" /> {isSuggestedTimeMode ? 'Data sugerida' : 'Data do Confronto'}
                             </label>
                             <input
@@ -146,7 +146,7 @@ export const MatchScheduleModal: React.FC<Props> = ({
 
                         {/* Time Selection */}
                         <div>
-                            <label className="text-xs font-black text-stone-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                            <label className="text-xs font-extrabold text-stone-400 uppercase tracking-widest mb-3 flex items-center gap-2">
                                 <Clock size={14} className="text-saibro-500" /> {isSuggestedTimeMode ? 'Horário informativo' : 'Horários Sugeridos'}
                             </label>
 
@@ -158,7 +158,7 @@ export const MatchScheduleModal: React.FC<Props> = ({
                                         onChange={(e) => setTime(e.target.value)}
                                         className="w-full p-4 bg-stone-50 border border-stone-100 rounded-2xl focus:ring-2 focus:ring-saibro-500 outline-hidden transition-all font-bold text-stone-800"
                                     />
-                                    <p className="text-xs text-green-600 font-black mt-1 pl-1 flex items-center gap-1 uppercase tracking-tighter">
+                                    <p className="text-xs text-green-600 font-extrabold mt-1 pl-1 flex items-center gap-1 uppercase tracking-tighter">
                                         <Check size={10} /> Sexta-feira: Horário livre disponível!
                                     </p>
                                 </div>
@@ -166,7 +166,7 @@ export const MatchScheduleModal: React.FC<Props> = ({
                                 <div className="space-y-4">
                                     {TIME_PERIODS.map(period => (
                                         <div key={period.label}>
-                                            <p className="mb-2 text-[11px] font-black uppercase tracking-widest text-stone-400">{period.label}</p>
+                                            <p className="mb-2 text-meta font-extrabold uppercase tracking-widest text-stone-400">{period.label}</p>
                                             <div className="grid grid-cols-3 gap-2">
                                                 {period.slots.map(slot => (
                                                     <button
@@ -174,7 +174,7 @@ export const MatchScheduleModal: React.FC<Props> = ({
                                                         type="button"
                                                         aria-pressed={time === slot}
                                                         onClick={() => setTime(slot)}
-                                                        className={`hit-target-44 rounded-xl text-sm font-black transition-colors border ${time === slot
+                                                        className={`hit-target-44 rounded-xl text-sm font-extrabold transition-colors border ${time === slot
                                                             ? 'bg-saibro-600 text-white border-saibro-600 shadow-md'
                                                             : 'bg-white text-stone-600 border-stone-100 hover:border-saibro-200'
                                                             }`}
@@ -202,7 +202,7 @@ export const MatchScheduleModal: React.FC<Props> = ({
 
                         {!isSuggestedTimeMode && (
                             <div>
-                                <label className="text-xs font-black text-stone-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                <label className="text-xs font-extrabold text-stone-400 uppercase tracking-widest mb-3 flex items-center gap-2">
                                     <MapPin size={14} className="text-saibro-500" /> Quadras Disponíveis ({className})
                                 </label>
                                 {availableCourts.length === 0 ? (
@@ -225,7 +225,7 @@ export const MatchScheduleModal: React.FC<Props> = ({
                                                 <div className="flex items-center gap-3">
                                                     <div className={`w-2 h-2 rounded-full ${selectedCourtId === court.id ? 'bg-saibro-600' : 'bg-stone-200'}`} />
                                                     <div>
-                                                        <div className="font-black text-stone-800 text-sm tracking-tight">{court.name}</div>
+                                                        <div className="font-extrabold text-stone-800 text-sm tracking-tight">{court.name}</div>
                                                         <div className="text-xs font-bold text-stone-400 uppercase tracking-tighter">{court.type}</div>
                                                     </div>
                                                 </div>
@@ -238,7 +238,7 @@ export const MatchScheduleModal: React.FC<Props> = ({
                         )}
 
                         {error && (
-                            <div className="p-4 bg-red-50 border border-red-100 rounded-2xl text-red-600 text-xs font-black flex items-center gap-3 animate-in fade-in zoom-in-95">
+                            <div className="p-4 bg-red-50 border border-red-100 rounded-2xl text-red-600 text-xs font-extrabold flex items-center gap-3 animate-in fade-in zoom-in-95">
                                 <AlertCircle size={18} className="shrink-0" />
                                 {error}
                             </div>
@@ -251,7 +251,7 @@ export const MatchScheduleModal: React.FC<Props> = ({
                     <button
                         onClick={handleSubmit}
                         disabled={isSubmitting}
-                        className="w-full py-4 bg-saibro-600 text-white text-sm font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-saibro-100 hover:bg-saibro-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-3"
+                        className="w-full py-4 bg-saibro-600 text-white text-sm font-extrabold uppercase tracking-widest rounded-2xl shadow-xl hover:bg-saibro-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-3"
                     >
                         {isSubmitting ? (
                             <>

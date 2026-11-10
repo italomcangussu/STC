@@ -177,7 +177,7 @@ export const Auth: React.FC = () => {
                                     <button
                                         type="submit"
                                         disabled={loading}
-                                        className="w-full py-4 bg-saibro-600 hover:bg-saibro-700 disabled:bg-saibro-400 text-white font-bold rounded-xl shadow-lg shadow-orange-200 transition-all flex items-center justify-center gap-2"
+                                        className="w-full py-4 bg-saibro-600 hover:bg-saibro-700 disabled:bg-saibro-400 text-white font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2"
                                     >
                                         {loading ? <Loader2 className="animate-spin" size={20} /> : 'Entrar'}
                                     </button>
@@ -238,7 +238,7 @@ export const Auth: React.FC = () => {
                                     <button
                                         type="submit"
                                         disabled={loading}
-                                        className="w-full py-4 bg-saibro-600 hover:bg-saibro-700 disabled:bg-saibro-400 text-white font-bold rounded-xl shadow-lg shadow-orange-200 transition-all flex items-center justify-center gap-2"
+                                        className="w-full py-4 bg-saibro-600 hover:bg-saibro-700 disabled:bg-saibro-400 text-white font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2"
                                     >
                                         {loading ? <Loader2 className="animate-spin" size={20} /> : 'Enviar solicitação'}
                                     </button>

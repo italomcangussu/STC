@@ -21,11 +21,11 @@ export const HUD: React.FC<HUDProps> = ({ score, pointsDisplay, isLandscape }) =
           {/* Player labels */}
           <div className="flex items-center gap-1">
             {score.server === 1 && <div className="w-1 h-1 rounded-full bg-green-400 animate-pulse" />}
-            <span className="text-blue-400 font-bold text-[10px] tracking-wide">VOCÊ</span>
+            <span className="text-blue-400 font-bold text-meta tracking-wide">VOCÊ</span>
           </div>
 
           {/* Set scores */}
-          <div className="flex items-center gap-1.5 text-[10px] font-mono">
+          <div className="flex items-center gap-1.5 text-meta font-mono">
             {score.setHistory.map(([g1, g2], i) => (
               <span key={i} className="text-white/60">{g1}-{g2}</span>
             ))}
@@ -33,14 +33,14 @@ export const HUD: React.FC<HUDProps> = ({ score, pointsDisplay, isLandscape }) =
           </div>
 
           {/* Points */}
-          <div className="text-white font-black text-xs tracking-wider border-l border-white/10 pl-3">
+          <div className="text-white font-extrabold text-xs tracking-wider border-l border-white/10 pl-3">
             {pointsDisplay}
           </div>
 
           {/* AI label */}
           <div className="flex items-center gap-1 border-l border-white/10 pl-3">
             {score.server === 2 && <div className="w-1 h-1 rounded-full bg-green-400 animate-pulse" />}
-            <span className="text-red-400 font-bold text-[10px] tracking-wide">IA</span>
+            <span className="text-red-400 font-bold text-meta tracking-wide">IA</span>
           </div>
         </div>
       </div>
@@ -51,13 +51,13 @@ export const HUD: React.FC<HUDProps> = ({ score, pointsDisplay, isLandscape }) =
   return (
     <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10 pointer-events-none select-none">
       <div className="bg-black/60 backdrop-blur-xl rounded-2xl px-4 py-2.5 min-w-[260px] border border-white/10 shadow-2xl">
-        <div className="grid grid-cols-[1fr_auto_auto_auto] gap-x-3 items-center text-[11px] font-mono">
+        <div className="grid grid-cols-[1fr_auto_auto_auto] gap-x-3 items-center text-meta font-mono">
           {/* Header row */}
           <div />
           {score.setHistory.map((_, i) => (
-            <div key={i} className="text-stone-500 text-center font-bold text-[9px]">S{i + 1}</div>
+            <div key={i} className="text-stone-500 text-center font-bold text-meta">S{i + 1}</div>
           ))}
-          <div className="text-amber-400 text-center font-bold text-[9px]">
+          <div className="text-amber-400 text-center font-bold text-meta">
             {score.tieBreak ? 'TB' : `S${score.currentSet}`}
           </div>
 
@@ -84,7 +84,7 @@ export const HUD: React.FC<HUDProps> = ({ score, pointsDisplay, isLandscape }) =
 
         {/* Points display */}
         <div className="text-center mt-1.5 pt-1.5 border-t border-white/10">
-          <span className="text-white font-black text-sm tracking-wider">{pointsDisplay}</span>
+          <span className="text-white font-extrabold text-sm tracking-wider">{pointsDisplay}</span>
         </div>
       </div>
     </div>

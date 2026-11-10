@@ -283,34 +283,34 @@ export const Dashboard: React.FC<DashboardProps> = () => {
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="card-kpi border-l-[6px] border-l-saibro-500">
-          <p className="text-[11px] text-stone-500 uppercase font-extrabold tracking-wider">Total Reservas</p>
-          <p className="text-3xl font-black text-stone-900 mt-1">{filteredReservations.length}</p>
-          <p className="text-[10px] text-saibro-600 font-bold uppercase mt-1">
+          <p className="text-meta text-stone-500 uppercase font-extrabold tracking-wider">Total Reservas</p>
+          <p className="text-3xl font-extrabold text-stone-900 mt-1">{filteredReservations.length}</p>
+          <p className="text-meta text-saibro-600 font-bold uppercase mt-1">
             {selectedYear === 'all' ? 'Todo o período' : selectedMonth === 'all' ? `Em ${selectedYear}` : `Em ${months.find(m => m.val === selectedMonth)?.label}/${selectedYear}`}
           </p>
         </div>
         <div className="card-kpi border-l-[6px] border-l-blue-500">
-          <p className="text-[11px] text-stone-500 uppercase font-extrabold tracking-wider">Quadra Favorita</p>
-          <p className="text-lg font-black text-stone-900 truncate mt-2 leading-tight" title={mostUsedCourt}>{mostUsedCourt}</p>
-          <p className="text-[10px] text-blue-600 font-bold uppercase mt-1">Mais utilizada</p>
+          <p className="text-meta text-stone-500 uppercase font-extrabold tracking-wider">Quadra Favorita</p>
+          <p className="text-lg font-extrabold text-stone-900 truncate mt-2 leading-tight" title={mostUsedCourt}>{mostUsedCourt}</p>
+          <p className="text-meta text-blue-600 font-bold uppercase mt-1">Mais utilizada</p>
         </div>
         <div className="card-kpi border-l-[6px] border-l-green-500">
-          <p className="text-[11px] text-stone-500 uppercase font-extrabold tracking-wider">Dia de Pico</p>
+          <p className="text-meta text-stone-500 uppercase font-extrabold tracking-wider">Dia de Pico</p>
           <div className="flex items-center gap-2 mt-2">
             <Calendar className="text-green-600 animate-float shrink-0" size={24} />
             <div className="overflow-hidden">
-              <p className="text-lg font-black text-stone-900 leading-none">{busyDay?.day || '-'}</p>
-              <span className="text-[10px] text-green-700 font-bold uppercase">{busyDay?.count || 0} reservas</span>
+              <p className="text-lg font-extrabold text-stone-900 leading-none">{busyDay?.day || '-'}</p>
+              <span className="text-meta text-green-700 font-bold uppercase">{busyDay?.count || 0} reservas</span>
             </div>
           </div>
         </div>
         <div className="card-kpi border-l-[6px] border-l-orange-500">
-          <p className="text-[11px] text-stone-500 uppercase font-extrabold tracking-wider">Hora de Pico</p>
+          <p className="text-meta text-stone-500 uppercase font-extrabold tracking-wider">Hora de Pico</p>
           <div className="flex items-center gap-2 mt-2">
             <Clock className="text-orange-600 animate-float shrink-0" size={24} />
             <div className="overflow-hidden">
-              <p className="text-lg font-black text-stone-900 leading-none">{busyHour ? `${busyHour.hour}:00` : '-'}</p>
-              <span className="text-[10px] text-orange-700 font-bold uppercase">{busyHour?.count || 0} reservas</span>
+              <p className="text-lg font-extrabold text-stone-900 leading-none">{busyHour ? `${busyHour.hour}:00` : '-'}</p>
+              <span className="text-meta text-orange-700 font-bold uppercase">{busyHour?.count || 0} reservas</span>
             </div>
           </div>
         </div>

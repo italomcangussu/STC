@@ -129,7 +129,7 @@ export const BatchApproveSheet: React.FC<{ open: boolean; queue: ReceiptQueueRow
       subtitle="Confira no extrato do banco, marque os que bateram e aprove de uma vez."
       footer={(
         <>
-          <p className="self-center text-sm font-black text-stone-700 sm:mr-auto" aria-live="polite">
+          <p className="self-center text-sm font-extrabold text-stone-700 sm:mr-auto" aria-live="polite">
             {chosen.length === 0 ? 'Nenhum selecionado' : `${chosen.length} selecionado${chosen.length === 1 ? '' : 's'} · ${formatBRL(total)}`}
           </p>
           <button className={btnGhost} onClick={onClose} disabled={busy}>Fechar</button>
@@ -153,7 +153,7 @@ export const BatchApproveSheet: React.FC<{ open: boolean; queue: ReceiptQueueRow
             <Empty title="Nenhum comprovante pronto para o lote" hint={others.length ? 'Os que aguardam estão logo abaixo, para conferência individual.' : 'Quando os sócios enviarem, eles aparecem aqui.'} icon={<FileText size={28} />} />
           ) : (
             <div className="space-y-2">
-              <label className="flex min-h-11 items-center gap-3 rounded-2xl border border-saibro-200 bg-saibro-50/60 px-3 text-sm font-black text-stone-800">
+              <label className="flex min-h-11 items-center gap-3 rounded-2xl border border-saibro-200 bg-saibro-50/60 px-3 text-sm font-extrabold text-stone-800">
                 <input type="checkbox" className="h-5 w-5" checked={allSelected} onChange={toggleAll} disabled={busy} />
                 Selecionar todos os prontos ({ready.length}) · {formatBRL(ready.reduce((s, i) => s + (i.analysis.amountCents ?? 0), 0))}
               </label>
@@ -166,10 +166,10 @@ export const BatchApproveSheet: React.FC<{ open: boolean; queue: ReceiptQueueRow
                         <div className="min-w-0 flex-1">
                           <div className="flex items-start justify-between gap-2">
                             <div className="min-w-0">
-                              <p className="truncate text-sm font-black text-stone-800">{it.row.profile_name}</p>
+                              <p className="truncate text-sm font-extrabold text-stone-800">{it.row.profile_name}</p>
                               <p className="text-xs capitalize text-stone-500">{it.months.join(', ')}</p>
                             </div>
-                            <div className="text-right"><p className="text-sm font-black tabular-nums">{formatBRL(it.analysis.amountCents ?? 0)}</p><p className="text-xs text-stone-500">{it.analysis.paidOn ? brDate(it.analysis.paidOn) : '—'}</p></div>
+                            <div className="text-right"><p className="text-sm font-extrabold tabular-nums">{formatBRL(it.analysis.amountCents ?? 0)}</p><p className="text-xs text-stone-500">{it.analysis.paidOn ? brDate(it.analysis.paidOn) : '—'}</p></div>
                           </div>
                           <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                             <Badge tone="good">Valor confere</Badge>
@@ -192,11 +192,11 @@ export const BatchApproveSheet: React.FC<{ open: boolean; queue: ReceiptQueueRow
 
           {(others.length > 0 || failedReads.length > 0) && (
             <div className="space-y-2">
-              <p className="text-[11px] font-black uppercase tracking-wider text-stone-400">Conferir individualmente ({others.length + failedReads.length})</p>
+              <p className="text-meta font-extrabold uppercase tracking-wider text-stone-400">Conferir individualmente ({others.length + failedReads.length})</p>
               {others.map((it) => (
                 <Row key={it.row.id} onClick={() => { onClose(); onOpenOne(it.row.id); }}>
                   <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0"><p className="truncate text-sm font-black text-stone-800">{it.row.profile_name}</p><p className="text-xs text-stone-500">{it.row.declared_amount_cents === null ? 'sem valor informado' : formatBRL(it.row.declared_amount_cents)}</p></div>
+                    <div className="min-w-0"><p className="truncate text-sm font-extrabold text-stone-800">{it.row.profile_name}</p><p className="text-xs text-stone-500">{it.row.declared_amount_cents === null ? 'sem valor informado' : formatBRL(it.row.declared_amount_cents)}</p></div>
                     <Badge tone={it.readiness.status === 'blocked' ? 'bad' : 'warn'}>{it.readiness.status === 'blocked' ? 'Bloqueado' : 'Conferir'}</Badge>
                   </div>
                   {it.readiness.reason && <p className="mt-1 flex items-start gap-1 text-xs text-stone-600">{it.readiness.status === 'blocked' && <ShieldAlert size={14} className="mt-0.5 shrink-0 text-red-600" />}{it.readiness.reason}</p>}
@@ -204,7 +204,7 @@ export const BatchApproveSheet: React.FC<{ open: boolean; queue: ReceiptQueueRow
               ))}
               {failedReads.map((r) => (
                 <Row key={r.id} onClick={() => { onClose(); onOpenOne(r.id); }}>
-                  <p className="text-sm font-black text-stone-800">{r.profile_name}</p>
+                  <p className="text-sm font-extrabold text-stone-800">{r.profile_name}</p>
                   <p className="text-xs text-stone-600">Não foi possível conferir agora. Abra o comprovante para decidir.</p>
                 </Row>
               ))}

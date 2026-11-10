@@ -26,7 +26,7 @@ const PlanHeader: React.FC<{ plan: PlanWithMember }> = ({ plan }) => {
   return (
     <div className="flex items-start justify-between gap-2">
       <div className="min-w-0">
-        <p className="truncate text-sm font-black text-stone-800">{plan.profile?.name ?? 'Sócio'}</p>
+        <p className="truncate text-sm font-extrabold text-stone-800">{plan.profile?.name ?? 'Sócio'}</p>
         <p className="text-xs text-stone-500">Desde {brDate(plan.start_on)} · {period}{plan.ended_on ? ` · encerrada em ${brDate(plan.ended_on)}` : ''}</p>
       </div>
       <Badge tone={badge.tone}>{badge.label}</Badge>
@@ -38,7 +38,7 @@ const PlanHeader: React.FC<{ plan: PlanWithMember }> = ({ plan }) => {
 const CurrentPrice: React.FC<{ prices: PlanPriceRow[] | null }> = ({ prices }) => {
   const today = useToday();
   const cents = prices ? priceFor(prices.map((p) => ({ effectiveFrom: p.effective_from, amountCents: p.amount_cents })), firstOfMonth(today)) : null;
-  return <p className="mt-2 text-lg font-black tabular-nums">{cents !== null ? formatBRL(cents) : '—'}<span className="text-xs font-medium text-stone-400"> vigente hoje</span></p>;
+  return <p className="mt-2 text-lg font-extrabold tabular-nums">{cents !== null ? formatBRL(cents) : '—'}<span className="text-xs font-medium text-stone-400"> vigente hoje</span></p>;
 };
 
 interface ActionsProps { plan: PlanWithMember; busy: boolean; onChoose: (mode: PlanMode) => void; onToggleStatus: () => void }

@@ -16,7 +16,7 @@ const CreditList: React.FC<{ credits: MemberCreditRow[]; nameOf: (profileId: str
   <div className="space-y-2">
     {credits.map((c) => (
       <Row key={c.id} onClick={() => onSelect(c)}>
-        <div className="flex items-center justify-between"><span className="text-sm font-bold">{nameOf(c.profile_id)}</span><span className="font-black tabular-nums">{formatBRL(c.remaining_cents)}</span></div>
+        <div className="flex items-center justify-between"><span className="text-sm font-bold">{nameOf(c.profile_id)}</span><span className="font-extrabold tabular-nums">{formatBRL(c.remaining_cents)}</span></div>
         <p className="text-xs text-stone-500">{REASON_LABEL[c.reason]} · {brDate(c.created_at.slice(0, 10))}</p>
       </Row>
     ))}

@@ -32,7 +32,7 @@ const Section: React.FC<{ title: string; tone?: 'neutral' | 'danger' | 'warn'; c
     const titleCls = { neutral: 'text-stone-700', danger: 'text-red-800', warn: 'text-amber-800' }[tone];
     return (
         <section className={`space-y-3 rounded-2xl border p-4 ${cls}`}>
-            <h3 className={`text-sm font-black uppercase tracking-wider ${titleCls}`}>{title}</h3>
+            <h3 className={`text-sm font-extrabold uppercase tracking-wider ${titleCls}`}>{title}</h3>
             {children}
         </section>
     );
@@ -45,7 +45,7 @@ const AvatarPreview: React.FC<{ url: string; name: string }> = ({ url, name }) =
     return showImage ? (
         <img src={url} alt="" onError={() => setFailedUrl(url)} className="h-16 w-16 shrink-0 rounded-2xl border-2 border-white object-cover shadow-md" />
     ) : (
-        <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-saibro-100 text-2xl font-black text-saibro-700 shadow-md" aria-hidden>
+        <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-saibro-100 text-2xl font-extrabold text-saibro-700 shadow-md" aria-hidden>
             {(name.trim().charAt(0) || '?').toUpperCase()}
         </span>
     );
@@ -264,7 +264,7 @@ export const AdminUserEditor: React.FC<AdminUserEditorProps> = ({ user, onClose,
                             value={pointsAdjustment}
                             onChange={e => setPointsAdjustment(e.target.value)}
                             placeholder="+100"
-                            className={`${adminInputCls} text-lg font-black`}
+                            className={`${adminInputCls} text-lg font-extrabold`}
                         />
                     </AdminField>
                     <AdminField label="Motivo" error={show(errors.reason)}>

@@ -167,7 +167,7 @@ const AnnouncementPopup: React.FC<{ user: User, onClose: () => void }> = ({ user
         <div className="p-6 text-center space-y-4">
           <h3 className="text-2xl font-bold text-saibro-900">{announcement.title}</h3>
           <p className="text-stone-600 whitespace-pre-wrap">{announcement.message}</p>
-          <button onClick={handleClose} className="w-full py-3 bg-saibro-600 hover:bg-saibro-700 text-white font-bold rounded-xl shadow-lg shadow-orange-200 transition-all">
+          <button onClick={handleClose} className="w-full py-3 bg-saibro-600 hover:bg-saibro-700 text-white font-bold rounded-xl shadow-lg transition-all">
             Entendi
           </button>
         </div>

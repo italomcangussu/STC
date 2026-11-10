@@ -566,11 +566,11 @@ export const AdminStudents: React.FC = () => {
                                 <div className="pt-4 border-t border-stone-100">
                                     <div className="flex justify-between items-center mb-3">
                                         <span className="flex items-center gap-1.5">
-                                            <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded ${getStatusColor(student, isActive)}`}>
+                                            <span className={`text-meta font-bold uppercase px-2 py-0.5 rounded ${getStatusColor(student, isActive)}`}>
                                                 {getStatusLabel(student, isActive, isExpired)}
                                             </span>
                                             {isCardMensal && student.cardTier === 'kids' && (
-                                                <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-saibro-100 text-saibro-700">Kids</span>
+                                                <span className="text-meta font-bold uppercase px-2 py-0.5 rounded bg-saibro-100 text-saibro-700">Kids</span>
                                             )}
                                         </span>
                                         {student.masterExpirationDate && isCardMensal && (
@@ -588,7 +588,7 @@ export const AdminStudents: React.FC = () => {
                                                     onClick={() => handleOpenPayment(student)}
                                                     className={`w-full py-2.5 rounded-xl font-bold text-sm flex justify-center items-center gap-2 transition-colors ${isActive
                                                         ? 'bg-stone-100 text-stone-600 hover:bg-stone-200'
-                                                        : 'bg-green-500 text-white hover:bg-green-600 shadow-md shadow-green-100'
+                                                        : 'bg-green-500 text-white hover:bg-green-600 shadow-md  '
                                                     }`}
                                                 >
                                                     <DollarSign size={16} />
@@ -614,12 +614,12 @@ export const AdminStudents: React.FC = () => {
                                             {canConvertToMensal(student) && (
                                                 <button
                                                     onClick={() => handleOpenConvert(student)}
-                                                    className="w-full py-2.5 rounded-xl font-bold text-sm flex justify-center items-center gap-2 bg-purple-500 text-white hover:bg-purple-600 shadow-md shadow-purple-100 transition-colors"
+                                                    className="w-full py-2.5 rounded-xl font-bold text-sm flex justify-center items-center gap-2 bg-purple-500 text-white hover:bg-purple-600 shadow-md transition-colors"
                                                 >
                                                     <ArrowUpCircle size={16} />
                                                     Converter para Card Mensal
                                                     {student.planType === 'Day Card Experimental' && (
-                                                        <span className="text-[10px] bg-purple-400 px-1.5 py-0.5 rounded ml-1">ESTORNO R$50</span>
+                                                        <span className="text-meta bg-purple-400 px-1.5 py-0.5 rounded ml-1">ESTORNO R$50</span>
                                                     )}
                                                 </button>
                                             )}
@@ -884,7 +884,7 @@ export const AdminStudents: React.FC = () => {
                     <button
                         onClick={handleConfirmPayment}
                         disabled={processing}
-                        className="w-full py-4 bg-green-500 hover:bg-green-600 text-white rounded-xl font-bold shadow-lg shadow-green-100 flex justify-center items-center gap-2"
+                        className="w-full py-4 bg-green-500 hover:bg-green-600 text-white rounded-xl font-bold shadow-lg flex justify-center items-center gap-2"
                     >
                         {processing ? <Loader2 className="animate-spin" /> : <>
                             <CheckCircle size={20} /> Confirmar Pagamento
@@ -951,7 +951,7 @@ export const AdminStudents: React.FC = () => {
                     <button
                         onClick={handleConfirmConvert}
                         disabled={processing}
-                        className="w-full py-4 bg-purple-500 hover:bg-purple-600 text-white rounded-xl font-bold shadow-lg shadow-purple-100 flex justify-center items-center gap-2"
+                        className="w-full py-4 bg-purple-500 hover:bg-purple-600 text-white rounded-xl font-bold shadow-lg flex justify-center items-center gap-2"
                     >
                         {processing ? <Loader2 className="animate-spin" /> : <>
                             <ArrowUpCircle size={20} /> Confirmar Conversão

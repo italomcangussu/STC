@@ -36,7 +36,7 @@ const ChargeSummary: React.FC<{ charge: ChargeStatementRow }> = ({ charge: c }) 
         <AmountLine label="Encargos pagos / dispensados" value={`${formatBRL(c.fees_paid_cents)} / ${formatBRL(c.fees_waived_cents)}`} />
       </>
     ) : <p className="text-xs text-amber-700">Encargos de atraso não configurados (Cadastros › Configurações).</p>}
-    <div className="flex justify-between border-t border-stone-200 pt-1.5 text-base font-black"><dt>Total a pagar</dt><dd className="tabular-nums">{formatBRL(c.total_due_cents)}</dd></div>
+    <div className="flex justify-between border-t border-stone-200 pt-1.5 text-base font-extrabold"><dt>Total a pagar</dt><dd className="tabular-nums">{formatBRL(c.total_due_cents)}</dd></div>
   </dl>
 );
 

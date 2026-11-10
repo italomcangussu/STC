@@ -63,9 +63,9 @@ export const ConversationsHub: React.FC<{ currentUserId?: string }> = ({ current
     <div className="space-y-4">
       {!embedded && (
         <div className="flex items-center gap-3">
-          <div className="rounded-2xl bg-linear-to-br from-emerald-500 to-emerald-600 p-3 text-white shadow-lg shadow-emerald-200"><MessagesSquare size={24} /></div>
+          <div className="rounded-2xl bg-linear-to-br from-emerald-500 to-emerald-600 p-3 text-white shadow-lg "><MessagesSquare size={24} /></div>
           <div>
-            <h1 className="text-xl font-black tracking-tight text-stone-800 md:text-2xl">Conversas e WhatsApp</h1>
+            <h1 className="text-xl font-extrabold tracking-tight text-stone-800 md:text-2xl">Conversas e WhatsApp</h1>
             <p className="text-xs font-medium text-stone-500">Atendimento, automações e IA no mesmo número do clube</p>
           </div>
         </div>

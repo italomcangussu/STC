@@ -1,6 +1,7 @@
 import React from 'react';
 import { Search, X } from 'lucide-react';
 import { useAdminEmbedded } from './AdminEmbedContext';
+import { EmptyState } from '../ui/EmptyState';
 
 /**
  * Peças comuns das telas do painel admin. Existem para que a mesma coisa
@@ -10,7 +11,7 @@ import { useAdminEmbedded } from './AdminEmbedContext';
 
 /** Botão de ação principal (Novo aluno, Novo aviso…). Largura total no celular: o polegar acerta sem mirar. */
 export const adminBtnPrimary =
-    'inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-saibro-600 px-4 py-2 text-sm font-bold text-white shadow-sm shadow-saibro-200 transition active:scale-95 hover:bg-saibro-700 disabled:opacity-50 sm:w-auto';
+    'inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-saibro-600 px-4 py-2 text-sm font-bold text-white shadow-sm   transition active:scale-95 hover:bg-saibro-700 disabled:opacity-50 sm:w-auto';
 
 export const adminBtnGhost =
     'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-stone-200 bg-white px-4 py-2 text-sm font-bold text-stone-600 transition active:scale-95 hover:bg-stone-50 disabled:opacity-50';
@@ -32,7 +33,7 @@ export const AdminPageHeader: React.FC<{
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             {!embedded && (
                 <div className="min-w-0">
-                    <h1 className="flex items-center gap-2 text-xl font-black tracking-tight text-stone-800 md:text-2xl">
+                    <h1 className="flex items-center gap-2 text-xl font-extrabold tracking-tight text-stone-800 md:text-2xl">
                         {icon}<span className="min-w-0">{title}</span>
                     </h1>
                     {subtitle && <p className="mt-0.5 text-sm text-stone-500">{subtitle}</p>}
@@ -110,13 +111,9 @@ export function ChipGroup<T extends string>({ items, value, onChange, label, cla
     );
 }
 
-/** Estado vazio padrão das listas do painel. */
+/** Estado vazio padrão das listas do painel (o `EmptyState` do sistema). */
 export const AdminEmpty: React.FC<{ title: string; hint?: string; icon?: React.ReactNode }> = ({ title, hint, icon }) => (
-    <div className="flex flex-col items-center gap-1.5 rounded-2xl border border-dashed border-stone-200 px-4 py-10 text-center">
-        {icon && <div className="text-stone-300" aria-hidden>{icon}</div>}
-        <p className="text-sm font-bold text-stone-600">{title}</p>
-        {hint && <p className="max-w-sm text-xs text-stone-400">{hint}</p>}
-    </div>
+    <EmptyState kind="primeira-vez" title={title} hint={hint} icon={icon} />
 );
 
 /** Campo de formulário do painel: 44 px de altura, `min-w-0` para nunca estourar a coluna do grid. */
@@ -135,7 +132,7 @@ export const AdminField: React.FC<{
     className?: string;
 }> = ({ label, hint, error, children, className = '' }) => (
     <label className={`block min-w-0 space-y-1 ${className}`}>
-        <span className="text-[11px] font-black uppercase tracking-wider text-stone-400">{label}</span>
+        <span className="text-meta font-extrabold uppercase tracking-wider text-stone-400">{label}</span>
         {children}
         {error ? (
             <span role="alert" className="block text-xs font-medium text-red-600">{error}</span>
@@ -145,17 +142,14 @@ export const AdminField: React.FC<{
     </label>
 );
 
-/** Selo de estado (Ativo/Inativo, Pago…). Cor + texto: nunca só cor. */
-export const StatusPill: React.FC<{ tone: 'good' | 'bad' | 'muted' | 'warn'; children: React.ReactNode }> = ({ tone, children }) => {
-    const cls = { good: 'bg-emerald-100 text-emerald-700', bad: 'bg-red-100 text-red-700', muted: 'bg-stone-100 text-stone-500', warn: 'bg-amber-100 text-amber-800' }[tone];
-    return <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-black uppercase tracking-wide ${cls}`}>{children}</span>;
-};
+/** Selo de estado (Ativo/Inativo, Pago…): promovido para `components/ui/StatusPill`. */
+export { StatusPill } from '../ui/StatusPill';
 
 /** Bloco de número no topo de uma tela: grande, com legenda curta. */
 export const StatTile: React.FC<{ label: string; value: React.ReactNode; hint?: string }> = ({ label, value, hint }) => (
     <div className="min-w-0 rounded-2xl border border-stone-100 bg-stone-50/70 p-3">
-        <p className="truncate text-[11px] font-black uppercase tracking-wider text-stone-400">{label}</p>
-        <p className="text-2xl font-black tabular-nums text-stone-800">{value}</p>
+        <p className="truncate text-meta font-extrabold uppercase tracking-wider text-stone-400">{label}</p>
+        <p className="text-2xl font-extrabold tabular-nums text-stone-800">{value}</p>
         {hint && <p className="truncate text-xs text-stone-400">{hint}</p>}
     </div>
 );

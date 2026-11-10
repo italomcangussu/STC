@@ -538,7 +538,7 @@ export default function InboxTab({ currentUserId, standalone = false }: { curren
               <div className="grid min-w-0 flex-1 grid-cols-3 gap-0.5 rounded-xl bg-stone-100 p-0.5" role="group" aria-label="Filtro">
                 {FILTROS_PRINCIPAIS.map((f) => (
                   <button key={f.id} type="button" aria-pressed={filtro === f.id} onClick={() => setFiltro(f.id)}
-                    className={cx('min-h-9 truncate rounded-[10px] px-1 text-xs font-semibold outline-hidden transition-colors focus-visible:ring-2 focus-visible:ring-saibro-300',
+                    className={cx('min-h-9 truncate rounded-lg px-1 text-xs font-semibold outline-hidden transition-colors focus-visible:ring-2 focus-visible:ring-saibro-300',
                       filtro === f.id ? 'bg-white text-stone-900 shadow-xs' : 'text-stone-500 active:bg-stone-200')}>
                     {f.label}
                   </button>
@@ -584,7 +584,7 @@ export default function InboxTab({ currentUserId, standalone = false }: { curren
         >
           {!atual ? (
             <div className="m-auto max-w-sm px-6 py-12 text-center select-none">
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-linear-to-br from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/20">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-linear-to-br from-emerald-500 to-teal-600 text-white shadow-lg ">
                 <MessageCircle size={32} aria-hidden />
               </div>
               <h3 className="text-base font-bold text-stone-800 md:text-lg">STC Conversas & WhatsApp</h3>
@@ -592,7 +592,7 @@ export default function InboxTab({ currentUserId, standalone = false }: { curren
                 Selecione uma conversa ao lado para visualizar as mensagens, responder aos sócios e interagir em tempo real pelo canal do clube.
               </p>
               <div className="mt-4 flex items-center justify-center gap-2">
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50/80 px-3 py-1 text-[11px] font-semibold text-emerald-800">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50/80 px-3 py-1 text-meta font-semibold text-emerald-800">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" aria-hidden />
                   WhatsApp Integrado
                 </span>
@@ -624,14 +624,14 @@ export default function InboxTab({ currentUserId, standalone = false }: { curren
                   <div className="grid gap-1.5">
                     {itens.map((item) => item.type === 'day-divider' ? (
                       <div key={item.key} className="my-2 flex justify-center">
-                        <span className="rounded-lg bg-white/90 px-3 py-1 text-[11px] font-semibold text-stone-600 shadow-sm">{item.label}</span>
+                        <span className="rounded-lg bg-white/90 px-3 py-1 text-meta font-semibold text-stone-600 shadow-sm">{item.label}</span>
                       </div>
                     ) : (
                       <div key={item.key} id={`msg-${item.message.id}`}>
                         {item.message.id === primeiraNaoLida && (
                           <div className="my-2 flex items-center gap-2" role="separator" aria-label="Mensagens não lidas">
                             <span className="h-px flex-1 bg-emerald-400" />
-                            <span className="rounded-full bg-emerald-500 px-2.5 py-0.5 text-[11px] font-bold text-white">{naoLidasAoAbrir} não lida{naoLidasAoAbrir > 1 ? 's' : ''}</span>
+                            <span className="rounded-full bg-emerald-500 px-2.5 py-0.5 text-meta font-bold text-white">{naoLidasAoAbrir} não lida{naoLidasAoAbrir > 1 ? 's' : ''}</span>
                             <span className="h-px flex-1 bg-emerald-400" />
                           </div>
                         )}
@@ -670,7 +670,7 @@ export default function InboxTab({ currentUserId, standalone = false }: { curren
 
               <div className="chat-overlay-footer bg-white">
                 {grupo && (
-                  <p className="border-t border-stone-200 bg-sky-50 px-3 py-1.5 text-[11px] text-sky-900">
+                  <p className="border-t border-stone-200 bg-sky-50 px-3 py-1.5 text-meta text-sky-900">
                     Você está respondendo no grupo: todos os participantes veem.
                   </p>
                 )}

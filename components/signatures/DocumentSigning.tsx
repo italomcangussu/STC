@@ -195,7 +195,7 @@ export const DocumentSigning: React.FC<DocumentSigningProps> = ({ doc, currentUs
           {finished ? <Badge tone="good">Assinado</Badge> : <Badge tone="warn">Pendente</Badge>}
           {due && <Badge tone={due.tone}>{due.label}</Badge>}
         </div>
-        <h2 className="text-xl font-black leading-tight text-stone-800">{doc.title}</h2>
+        <h2 className="text-xl font-extrabold leading-tight text-stone-800">{doc.title}</h2>
         {doc.description && <p className="text-sm text-stone-500">{doc.description}</p>}
         <p className="text-xs text-stone-400">Versão {doc.version} · {doc.page_count} {doc.page_count === 1 ? 'página' : 'páginas'}</p>
       </header>
@@ -219,7 +219,7 @@ export const DocumentSigning: React.FC<DocumentSigningProps> = ({ doc, currentUs
         <div className="space-y-2">
           {!finished && reading && (
             <div aria-label="Progresso da leitura">
-              <div className="flex items-center justify-between text-[11px] font-bold text-stone-500">
+              <div className="flex items-center justify-between text-meta font-bold text-stone-500">
                 <span>{reading.complete ? 'Você leu até o fim' : 'Role até o fim do documento'}</span>
                 <span>{reading.pagesSeen}/{reading.pagesTotal} páginas</span>
               </div>
@@ -266,9 +266,9 @@ export const DocumentSigning: React.FC<DocumentSigningProps> = ({ doc, currentUs
                 disabled={readState !== 'done' || consentBusy}
                 onChange={(e) => void toggleConsent(e.target.checked)}
               />
-              <span>{doc.consent_text}{consentBusy && <span className="ml-1 text-[11px] text-stone-400">Registrando…</span>}</span>
+              <span>{doc.consent_text}{consentBusy && <span className="ml-1 text-meta text-stone-400">Registrando…</span>}</span>
             </label>
-            {readState !== 'done' && <p className="text-[11px] text-stone-400">Disponível depois que você ler o documento até o fim.</p>}
+            {readState !== 'done' && <p className="text-meta text-stone-400">Disponível depois que você ler o documento até o fim.</p>}
             {consentError && <Notice tone="bad">{consentError}</Notice>}
           </Step>
 
@@ -288,7 +288,7 @@ export const DocumentSigning: React.FC<DocumentSigningProps> = ({ doc, currentUs
                 {cpfBusy ? 'Salvando…' : cpfConfirmed ? 'CPF confirmado' : 'Confirmar CPF'}
               </button>
             </div>
-            {cpfConfirmed && <p className="text-[11px] text-emerald-700">CPF {maskCpf(typedCpf)} registrado para a sua assinatura.</p>}
+            {cpfConfirmed && <p className="text-meta text-emerald-700">CPF {maskCpf(typedCpf)} registrado para a sua assinatura.</p>}
             {cpfError && <Notice tone="bad">{cpfError}</Notice>}
           </Step>
 
@@ -296,7 +296,7 @@ export const DocumentSigning: React.FC<DocumentSigningProps> = ({ doc, currentUs
             <p className="text-xs leading-relaxed text-stone-600">
               Vamos enviar um código de 6 dígitos para o <b>WhatsApp do seu cadastro</b>. Você o digita no app e a assinatura é registrada.
             </p>
-            <p className="flex items-start gap-1.5 text-[11px] leading-relaxed text-stone-500"><ShieldCheck size={14} className="mt-0.5 shrink-0" aria-hidden />{LOCATION_NOTICE}</p>
+            <p className="flex items-start gap-1.5 text-meta leading-relaxed text-stone-500"><ShieldCheck size={14} className="mt-0.5 shrink-0" aria-hidden />{LOCATION_NOTICE}</p>
             <button type="button" className={`${btnPrimary} w-full`} onClick={sign} disabled={!canSign}>
               <FileText size={16} /> {signBusy ? 'Preparando a assinatura…' : 'Assinar digitalmente'}
             </button>

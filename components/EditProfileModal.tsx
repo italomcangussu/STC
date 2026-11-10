@@ -189,7 +189,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ currentUser,
                         <button
                             type="submit"
                             disabled={saving || uploading}
-                            className="flex-2 py-3 bg-saibro-600 hover:bg-saibro-700 text-white font-bold rounded-xl shadow-lg shadow-saibro-200 flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
+                            className="flex-2 py-3 bg-saibro-600 hover:bg-saibro-700 text-white font-bold rounded-xl shadow-lg flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
                         >
                             {saving ? <Loader2 className="animate-spin" size={20} /> : <><Save size={20} /> Salvar Alterações</>}
                         </button>

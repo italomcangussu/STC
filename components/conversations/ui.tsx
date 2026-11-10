@@ -13,7 +13,7 @@ export { inputCls, btnPrimary, btnGhost, btnDanger, Card, Badge, Spinner, Empty,
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger';
 
 const VARIANT: Record<Variant, string> = {
-  primary: 'bg-saibro-600 text-white shadow-sm shadow-saibro-200 hover:bg-saibro-700',
+  primary: 'bg-saibro-600 text-white shadow-sm   hover:bg-saibro-700',
   secondary: 'border border-stone-200 bg-white text-stone-700 hover:bg-stone-50',
   ghost: 'text-stone-600 hover:bg-stone-100',
   danger: 'border border-red-200 bg-red-50 text-red-700 hover:bg-red-100',

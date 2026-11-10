@@ -130,10 +130,10 @@ const RecurrencesTab: React.FC = () => {
               <li key={r.id}>
                 <Row onClick={() => setSheet(r)}>
                   <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0"><p className="truncate text-sm font-black">{r.description}</p>
+                    <div className="min-w-0"><p className="truncate text-sm font-extrabold">{r.description}</p>
                       <p className="text-xs text-stone-500">{FREQ_LABEL[r.frequency]} · dia {r.due_day}{r.due_month_offset ? ` do ${r.due_month_offset === 1 ? 'mês seguinte' : '2º mês seguinte'}` : ''} · {categoryLabel(r.category_id, categories)}</p>
                       <p className="text-xs text-stone-400">desde {monthLabel(r.start_month)}{r.end_month ? ` até ${monthLabel(r.end_month)}` : ''}</p></div>
-                    <div className="text-right"><p className="text-sm font-black tabular-nums">{formatBRL(r.amount_cents)}</p><Badge tone={r.active ? 'good' : 'muted'}>{r.active ? 'Ativa' : 'Pausada'}</Badge></div>
+                    <div className="text-right"><p className="text-sm font-extrabold tabular-nums">{formatBRL(r.amount_cents)}</p><Badge tone={r.active ? 'good' : 'muted'}>{r.active ? 'Ativa' : 'Pausada'}</Badge></div>
                   </div>
                 </Row>
               </li>

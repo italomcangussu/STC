@@ -182,7 +182,7 @@ export const BracketEditor: React.FC<Props> = ({
         <div className="space-y-4">
             <div className="bg-white rounded-2xl border border-stone-100 p-5 space-y-3">
                 <div className="flex items-center justify-between">
-                    <h2 className="font-black text-stone-800">Chave{classe ? ` — ${classe}` : ''}</h2>
+                    <h2 className="font-extrabold text-stone-800">Chave{classe ? ` — ${classe}` : ''}</h2>
                     <span className="text-xs font-bold text-stone-400">
                         {alocados.size}/{athletes.length} alocados
                     </span>
@@ -204,7 +204,7 @@ export const BracketEditor: React.FC<Props> = ({
                     <div className="flex gap-4 min-w-max">
                         {fases.map(({ phase, slots: fasesSlots }) => (
                             <div key={phase} className="w-44 shrink-0 space-y-3">
-                                <p className="text-xs font-black text-stone-400 uppercase tracking-widest">
+                                <p className="text-xs font-extrabold text-stone-400 uppercase tracking-widest">
                                     {PHASE_LABELS[phase] ?? phase}
                                 </p>
                                 {fasesSlots.map(slot => (
@@ -222,7 +222,7 @@ export const BracketEditor: React.FC<Props> = ({
 
             {picking && (
                 <div className="bg-white rounded-2xl border border-blue-200 p-5 space-y-2">
-                    <h3 className="font-black text-stone-800 text-sm">
+                    <h3 className="font-extrabold text-stone-800 text-sm">
                         Quem entra no jogo {picking.matchNumber}, vaga {picking.side.toUpperCase()}?
                     </h3>
                     {disponiveis.length === 0 ? (

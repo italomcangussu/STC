@@ -79,7 +79,7 @@ export const PointOverlay: React.FC<PointOverlayProps> = ({
           }`}
         >
           <div className="text-5xl mb-4">{winner === 1 ? '🏆' : '😤'}</div>
-          <h2 className="text-3xl font-black text-white mb-2">
+          <h2 className="text-3xl font-extrabold text-white mb-2">
             {winner === 1 ? (
               <span className="bg-linear-to-r from-amber-400 to-yellow-300 bg-clip-text text-transparent">VITÓRIA!</span>
             ) : (
@@ -89,14 +89,14 @@ export const PointOverlay: React.FC<PointOverlayProps> = ({
           <div className="flex justify-center gap-4 mt-4 mb-6">
             {setHistory.map(([g1, g2], i) => (
               <div key={i} className="text-center">
-                <div className="text-stone-500 text-[10px] font-bold">SET {i + 1}</div>
-                <div className="text-white font-black text-lg">{g1}-{g2}</div>
+                <div className="text-stone-500 text-meta font-bold">SET {i + 1}</div>
+                <div className="text-white font-extrabold text-lg">{g1}-{g2}</div>
               </div>
             ))}
           </div>
           <button
             onClick={onBackToMenu}
-            className="px-8 py-3 bg-saibro-600 hover:bg-saibro-700 text-white rounded-xl font-bold text-sm uppercase tracking-wider transition-all active:scale-95 shadow-lg shadow-saibro-500/30"
+            className="px-8 py-3 bg-saibro-600 hover:bg-saibro-700 text-white rounded-xl font-bold text-sm uppercase tracking-wider transition-all active:scale-95 shadow-lg "
           >
             Voltar ao Menu
           </button>
@@ -114,7 +114,7 @@ export const PointOverlay: React.FC<PointOverlayProps> = ({
           show ? 'scale-100 opacity-100 translate-y-0' : 'scale-90 opacity-0 -translate-y-4'
         }`}
       >
-        <p className="text-white font-black text-center text-base tracking-wide">{message}</p>
+        <p className="text-white font-extrabold text-center text-base tracking-wide">{message}</p>
       </div>
     </div>
   );

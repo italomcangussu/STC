@@ -88,8 +88,8 @@ export const EntriesTab: React.FC<{ direction: EntryDirection }> = ({ direction 
               <li key={r.id}>
                 <Row onClick={() => setOpenId(r.id)}>
                   <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0"><p className="truncate text-sm font-black text-stone-800">{r.description}</p><p className="text-xs text-stone-500">{ENTRY_KIND_LABEL[r.kind]}{r.due_date ? ` · vence ${brDate(r.due_date)}` : ''}{r.recurrence_id ? ' · recorrente' : ''}</p></div>
-                    <div className="text-right"><p className="text-sm font-black tabular-nums">{formatBRL(r.amount_cents)}</p>{r.remaining_cents > 0 && r.paid_cents > 0 && <p className="text-[11px] text-stone-400">faltam {formatBRL(r.remaining_cents)}</p>}</div>
+                    <div className="min-w-0"><p className="truncate text-sm font-extrabold text-stone-800">{r.description}</p><p className="text-xs text-stone-500">{ENTRY_KIND_LABEL[r.kind]}{r.due_date ? ` · vence ${brDate(r.due_date)}` : ''}{r.recurrence_id ? ' · recorrente' : ''}</p></div>
+                    <div className="text-right"><p className="text-sm font-extrabold tabular-nums">{formatBRL(r.amount_cents)}</p>{r.remaining_cents > 0 && r.paid_cents > 0 && <p className="text-meta text-stone-400">faltam {formatBRL(r.remaining_cents)}</p>}</div>
                   </div>
                   <div className="mt-1"><Badge tone={STATUS_TONE[r.display_status]}>{entryStatusLabel(r.display_status, r.kind)}</Badge></div>
                 </Row>

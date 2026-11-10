@@ -91,7 +91,7 @@ export default function AutomationsTab() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h2 className="text-lg font-black text-stone-800">Automações</h2>
+          <h2 className="text-lg font-extrabold text-stone-800">Automações</h2>
           <p className="text-xs text-stone-500">Mensalidades, Card Mensal e campeonatos, com os dados reais do STC.</p>
         </div>
         <div className="flex gap-2">
@@ -116,7 +116,7 @@ export default function AutomationsTab() {
               <Card className={cx(a.status === 'ended' && 'opacity-70')}>
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <h3 className="truncate text-base font-black text-stone-800">{a.name}</h3>
+                    <h3 className="truncate text-base font-extrabold text-stone-800">{a.name}</h3>
                     <p className="text-xs text-stone-500">{SOURCE_LABEL[a.source]} · {TRIGGER_LABEL[a.trigger_type].split(' (')[0]}</p>
                   </div>
                   <Badge tone={STATUS_TONE[a.status]}>{STATUS_LABEL[a.status]}</Badge>
@@ -136,7 +136,7 @@ export default function AutomationsTab() {
                   <Count label="Falhas" value={a.failed} tone={a.failed ? 'bad' : undefined} />
                   <Count label="Puladas" value={a.skipped} />
                 </dl>
-                <p className="mt-2 text-[11px] text-stone-400">Versão {a.version} · {a.last_run_at ? `última execução ${dataHora.format(new Date(a.last_run_at))}` : 'ainda não executou'}</p>
+                <p className="mt-2 text-meta text-stone-400">Versão {a.version} · {a.last_run_at ? `última execução ${dataHora.format(new Date(a.last_run_at))}` : 'ainda não executou'}</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {a.status !== 'ended' && <Button size="sm" variant="secondary" onClick={() => setEditor({ id: a.id, draft: toDraft(a) })}><Pencil size={13} aria-hidden /> Editar</Button>}
                   <Button size="sm" variant="secondary" onClick={() => setPrevia(a)}><Eye size={13} aria-hidden /> Prévia</Button>
@@ -172,8 +172,8 @@ function incompleteText(message: string): string {
 
 const Count = ({ label, value, tone }: { label: string; value: number; tone?: 'good' | 'bad' }) => (
   <div className="rounded-xl bg-stone-50 px-1 py-1.5">
-    <dt className="text-[10px] font-semibold uppercase tracking-wide text-stone-500">{label}</dt>
-    <dd className={cx('text-base font-black tabular-nums', tone === 'good' ? 'text-emerald-700' : tone === 'bad' ? 'text-red-600' : 'text-stone-800')}>{value}</dd>
+    <dt className="text-meta font-semibold uppercase tracking-wide text-stone-500">{label}</dt>
+    <dd className={cx('text-base font-extrabold tabular-nums', tone === 'good' ? 'text-emerald-700' : tone === 'bad' ? 'text-red-600' : 'text-stone-800')}>{value}</dd>
   </div>
 );
 
@@ -327,7 +327,7 @@ function EditorSheet({ initial, onClose, onSaved }: { initial: { id: string | nu
         <div className="grid gap-3 rounded-2xl border border-stone-100 p-3">
           <Field label="Horário (Fortaleza)"><input type="time" className={fieldCls} value={draft.schedule.time ?? ''} onChange={(e) => horario({ time: e.target.value })} aria-label="Horário" /></Field>
           <div>
-            <span className="text-[11px] font-black uppercase tracking-wider text-stone-400">Dias da semana</span>
+            <span className="text-meta font-extrabold uppercase tracking-wider text-stone-400">Dias da semana</span>
             <div className="mt-1 flex flex-wrap gap-1.5" role="group" aria-label="Dias da semana">
               {WEEKDAYS.map((nome, i) => {
                 const on = (draft.schedule.weekdays ?? []).includes(i);
@@ -353,11 +353,11 @@ function EditorSheet({ initial, onClose, onSaved }: { initial: { id: string | nu
       <div className="flex flex-wrap gap-1.5" aria-label="Variáveis">
         {VARS_BY_SOURCE[draft.source].map((v) => (
           <button key={v} type="button" title={VAR_HELP[v]} onClick={() => set({ message_body: `${draft.message_body}{{${v}}}`.slice(0, 1000) })}
-            className="min-h-8 rounded-full border border-stone-200 bg-white px-2.5 font-mono text-[11px] text-stone-600 hover:bg-stone-50">{`{{${v}}}`}</button>
+            className="min-h-8 rounded-full border border-stone-200 bg-white px-2.5 font-mono text-meta text-stone-600 hover:bg-stone-50">{`{{${v}}}`}</button>
         ))}
       </div>
       <div className="rounded-2xl bg-[#dcf8c6] p-3 text-sm text-[#17301c]">
-        <p className="mb-1 text-[10px] font-black uppercase tracking-wider text-emerald-800">Exemplo com valores fictícios</p>
+        <p className="mb-1 text-meta font-extrabold uppercase tracking-wider text-emerald-800">Exemplo com valores fictícios</p>
         <p className="whitespace-pre-wrap">{exemplo || '…'}</p>
       </div>
 
@@ -397,17 +397,17 @@ function PreviewSheet({ automation, onClose }: { automation: Automation; onClose
           {p.sample.length > 0 && <p className="text-xs text-stone-500">Exemplos: {p.sample.join(', ')}</p>}
           {Object.keys(p.excluded_by_reason).length > 0 && (
             <div>
-              <p className="text-[11px] font-black uppercase tracking-wider text-stone-400">Fora do público</p>
+              <p className="text-meta font-extrabold uppercase tracking-wider text-stone-400">Fora do público</p>
               <ul className="mt-1 grid gap-1 text-xs text-stone-600">
                 {Object.entries(p.excluded_by_reason).map(([k, n]) => <li key={k} className="flex justify-between gap-2"><span>{describeReason(k)}</span><span className="tabular-nums">{n}</span></li>)}
               </ul>
             </div>
           )}
           <div className="rounded-2xl bg-[#dcf8c6] p-3 text-sm text-[#17301c]">
-            <p className="mb-1 text-[10px] font-black uppercase tracking-wider text-emerald-800">Mensagem montada com os dados de {p.rendered_for ?? 'um destinatário real'}</p>
+            <p className="mb-1 text-meta font-extrabold uppercase tracking-wider text-emerald-800">Mensagem montada com os dados de {p.rendered_for ?? 'um destinatário real'}</p>
             <p className="whitespace-pre-wrap">{p.rendered_example ?? 'Ninguém no público agora, ou faltou algum dado para montar a mensagem.'}</p>
           </div>
-          <p className="text-[11px] text-stone-400">O teste vai só para o telefone do seu perfil, com a marca “[TESTE]”.</p>
+          <p className="text-meta text-stone-400">O teste vai só para o telefone do seu perfil, com a marca “[TESTE]”.</p>
         </>
       )}
     </Sheet>
@@ -490,7 +490,7 @@ function RunsSheet({ automation, onClose }: { automation: Automation; onClose: (
                   </span>
                   <span className="shrink-0 text-right">
                     <Badge tone={r.status === 'sent' ? 'good' : r.status === 'failed' ? 'bad' : r.status === 'skipped' || r.status === 'canceled' ? 'muted' : 'info'}>{REC_LABEL[r.status]}</Badge>
-                    {r.sent_at && <span className="block text-[10px] text-stone-400">{dataHora.format(new Date(r.sent_at))}</span>}
+                    {r.sent_at && <span className="block text-meta text-stone-400">{dataHora.format(new Date(r.sent_at))}</span>}
                   </span>
                 </li>
               ))}
@@ -536,7 +536,7 @@ function RulesSheet({ settings, onClose, onSaved }: { settings: AutomationSettin
         <Field label="Não enviar depois de"><input type="time" className={fieldCls} value={s.window_end} onChange={(e) => setS({ ...s, window_end: e.target.value })} /></Field>
       </div>
       <div>
-        <span className="text-[11px] font-black uppercase tracking-wider text-stone-400">Dias em que pode enviar</span>
+        <span className="text-meta font-extrabold uppercase tracking-wider text-stone-400">Dias em que pode enviar</span>
         <div className="mt-1 flex flex-wrap gap-1.5" role="group" aria-label="Dias de envio">
           {WEEKDAYS.map((nome, i) => {
             const on = s.days.includes(i);

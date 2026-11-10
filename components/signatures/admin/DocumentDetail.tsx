@@ -149,8 +149,8 @@ export const DocumentDetail: React.FC<Props> = ({ doc, onBack, onChanged, onNewV
     <div className="space-y-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 space-y-1">
-          <button type="button" className="min-h-9 text-xs font-black text-saibro-700" onClick={onBack}>← Todos os documentos</button>
-          <h2 className="text-lg font-black leading-tight text-stone-800">{doc.title}</h2>
+          <button type="button" className="min-h-9 text-xs font-extrabold text-saibro-700" onClick={onBack}>← Todos os documentos</button>
+          <h2 className="text-lg font-extrabold leading-tight text-stone-800">{doc.title}</h2>
           <p className="flex flex-wrap items-center gap-1.5 text-xs text-stone-500">
             <Badge tone={published ? 'good' : 'neutral'}>{published ? 'Publicado' : 'Arquivado'}</Badge>
             versão {doc.version} · {doc.page_count} {doc.page_count === 1 ? 'página' : 'páginas'}
@@ -161,8 +161,8 @@ export const DocumentDetail: React.FC<Props> = ({ doc, onBack, onChanged, onNewV
 
       <section className="space-y-2 rounded-3xl border border-stone-100 bg-white p-4 shadow-sm" aria-label="Resumo">
         <div className="flex items-end justify-between">
-          <p className="text-2xl font-black text-stone-800">{signed}<span className="text-base font-bold text-stone-400"> de {total} assinaram</span></p>
-          {total > 0 && <span className="text-sm font-black text-saibro-700">{Math.round((signed / total) * 100)}%</span>}
+          <p className="text-2xl font-extrabold text-stone-800">{signed}<span className="text-base font-bold text-stone-400"> de {total} assinaram</span></p>
+          {total > 0 && <span className="text-sm font-extrabold text-saibro-700">{Math.round((signed / total) * 100)}%</span>}
         </div>
         <div className="h-2 overflow-hidden rounded-full bg-stone-100" role="progressbar" aria-valuemin={0} aria-valuemax={total} aria-valuenow={signed} aria-label="Assinaturas">
           <div className="h-full rounded-full bg-emerald-500 transition-all" style={{ width: `${total ? (signed / total) * 100 : 0}%` }} />
@@ -207,7 +207,7 @@ export const DocumentDetail: React.FC<Props> = ({ doc, onBack, onChanged, onNewV
 
       {adding && (
         <section className="space-y-2 rounded-3xl border border-stone-100 bg-white p-4" aria-label="Incluir sócios">
-          <p className="text-sm font-black text-stone-700">Quem mais deve assinar?</p>
+          <p className="text-sm font-extrabold text-stone-700">Quem mais deve assinar?</p>
           {candidates.length === 0 ? <p className="text-xs text-stone-500">Todos os sócios ativos já estão na lista.</p> : (
             <ul className="max-h-60 divide-y divide-stone-100 overflow-y-auto rounded-2xl border border-stone-100">
               {candidates.map((m) => (
@@ -216,7 +216,7 @@ export const DocumentDetail: React.FC<Props> = ({ doc, onBack, onChanged, onNewV
                     <input type="checkbox" className="h-4 w-4 accent-saibro-600" checked={toAdd.has(m.id)}
                       onChange={() => setToAdd((p) => { const n = new Set(p); if (n.has(m.id)) n.delete(m.id); else n.add(m.id); return n; })} />
                     <span className="min-w-0 flex-1 truncate font-bold">{m.name}</span>
-                    {!m.phone?.trim() && <span className="text-[11px] font-bold text-amber-700">sem telefone</span>}
+                    {!m.phone?.trim() && <span className="text-meta font-bold text-amber-700">sem telefone</span>}
                   </label>
                 </li>
               ))}
@@ -233,7 +233,7 @@ export const DocumentDetail: React.FC<Props> = ({ doc, onBack, onChanged, onNewV
         <div className="flex gap-1.5" role="tablist" aria-label="Filtrar destinatários">
           {([['all', `Todos (${total})`], ['missing', `Faltam (${total - signed})`], ['signed', `Assinaram (${signed})`]] as const).map(([id, label]) => (
             <button key={id} type="button" role="tab" aria-selected={filter === id} onClick={() => setFilter(id)}
-              className={`min-h-10 rounded-full px-3 text-xs font-black transition ${filter === id ? 'bg-saibro-600 text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'}`}>{label}</button>
+              className={`min-h-10 rounded-full px-3 text-xs font-extrabold transition ${filter === id ? 'bg-saibro-600 text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'}`}>{label}</button>
           ))}
         </div>
         {loadError ? <Notice tone="bad" action={<button type="button" className={btnGhost} onClick={() => void load()}>Tentar de novo</button>}>{loadError}</Notice>
@@ -244,15 +244,15 @@ export const DocumentDetail: React.FC<Props> = ({ doc, onBack, onChanged, onNewV
                 return (
                   <li key={r.profile_id} className="flex items-center gap-3 rounded-2xl border border-stone-100 bg-white p-3">
                     <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${r.signed_at ? 'bg-emerald-50 text-emerald-600' : 'bg-stone-100 text-stone-400'}`} aria-hidden>
-                      {r.signed_at ? <CheckCircle2 size={18} /> : <span className="text-xs font-black">{r.name.slice(0, 1).toUpperCase()}</span>}
+                      {r.signed_at ? <CheckCircle2 size={18} /> : <span className="text-xs font-extrabold">{r.name.slice(0, 1).toUpperCase()}</span>}
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-black text-stone-800">{r.name}</span>
+                      <span className="block truncate text-sm font-extrabold text-stone-800">{r.name}</span>
                       <span className="block text-xs text-stone-500">
                         {r.signed_at ? `Assinou em ${formatDateTime(r.signed_at)}`
                           : <>{n.text}{r.last_notified_at && ` em ${formatDateTime(r.last_notified_at)}`}{r.reminders_sent > 0 && ` · ${r.reminders_sent} ${r.reminders_sent === 1 ? 'lembrete' : 'lembretes'}`}</>}
                       </span>
-                      {!r.signed_at && r.notification_status === 'failed' && r.notification_error && <span className="block truncate text-[11px] text-red-700">{r.notification_error}</span>}
+                      {!r.signed_at && r.notification_status === 'failed' && r.notification_error && <span className="block truncate text-meta text-red-700">{r.notification_error}</span>}
                     </span>
                     {r.signed_at ? <Badge tone="good">Assinou</Badge> : <Badge tone={n.tone}>{n.tone === 'good' ? 'Pendente' : n.text}</Badge>}
                     {r.signed_at && r.signature_id && <ReceiptButton signatureId={r.signature_id} full compact label="Comprovante" ariaLabel={`Comprovante de ${r.name}`} />}

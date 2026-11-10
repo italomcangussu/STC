@@ -135,7 +135,7 @@ export const TouchControls: React.FC<TouchControlsProps> = ({
         )}
 
         <span
-          className="absolute text-white/20 text-[10px] font-bold tracking-widest"
+          className="absolute text-white/20 text-meta font-bold tracking-widest"
           style={{ left: isLandscape ? '25%' : '20%', bottom: isLandscape ? '12%' : '8%' }}
         >
           MOVER
@@ -148,16 +148,16 @@ export const TouchControls: React.FC<TouchControlsProps> = ({
         <div
           className={`${secSize} rounded-full border-2 flex items-center justify-center transition-all duration-100 shadow-lg ${
             activeShots.lob
-              ? 'bg-blue-500/50 border-blue-300/70 scale-110 shadow-blue-500/30'
-              : 'bg-blue-500/20 border-blue-400/40 shadow-blue-500/10'
+              ? 'bg-blue-500/50 border-blue-300/70 scale-110  '
+              : 'bg-blue-500/20 border-blue-400/40  '
           }`}
           onTouchStart={handleShotTouch('lob')}
           onTouchEnd={handleShotTouch('lob')}
           onTouchCancel={handleShotTouch('lob')}
         >
           <div className="text-center">
-            <div className="text-blue-300 text-[10px] font-black">LOB</div>
-            <div className="text-blue-300/60 text-[8px]">↑</div>
+            <div className="text-blue-300 text-meta font-extrabold">LOB</div>
+            <div className="text-blue-300/60 text-meta">↑</div>
           </div>
           {/* Glow ring */}
           {activeShots.lob && (
@@ -169,14 +169,14 @@ export const TouchControls: React.FC<TouchControlsProps> = ({
         <div
           className={`${hitSize} rounded-full border-2 flex items-center justify-center transition-all duration-100 shadow-lg ${
             activeShots.normal
-              ? 'bg-green-500/50 border-green-300/70 scale-110 shadow-green-500/40'
-              : 'bg-green-500/25 border-green-400/50 shadow-green-500/20'
+              ? 'bg-green-500/50 border-green-300/70 scale-110  '
+              : 'bg-green-500/25 border-green-400/50  '
           }`}
           onTouchStart={handleShotTouch('normal')}
           onTouchEnd={handleShotTouch('normal')}
           onTouchCancel={handleShotTouch('normal')}
         >
-          <span className="text-green-300 text-sm font-black">HIT</span>
+          <span className="text-green-300 text-sm font-extrabold">HIT</span>
           {activeShots.normal && (
             <div className="absolute inset-0 rounded-full border-2 border-green-300/50 animate-ping" />
           )}
@@ -186,16 +186,16 @@ export const TouchControls: React.FC<TouchControlsProps> = ({
         <div
           className={`${secSize} rounded-full border-2 flex items-center justify-center transition-all duration-100 shadow-lg ${
             activeShots.slice
-              ? 'bg-orange-500/50 border-orange-300/70 scale-110 shadow-orange-500/30'
-              : 'bg-orange-500/20 border-orange-400/40 shadow-orange-500/10'
+              ? 'bg-orange-500/50 border-orange-300/70 scale-110  '
+              : 'bg-orange-500/20 border-orange-400/40  '
           }`}
           onTouchStart={handleShotTouch('slice')}
           onTouchEnd={handleShotTouch('slice')}
           onTouchCancel={handleShotTouch('slice')}
         >
           <div className="text-center">
-            <div className="text-orange-300 text-[10px] font-black">SLICE</div>
-            <div className="text-orange-300/60 text-[8px]">↘</div>
+            <div className="text-orange-300 text-meta font-extrabold">SLICE</div>
+            <div className="text-orange-300/60 text-meta">↘</div>
           </div>
           {activeShots.slice && (
             <div className="absolute inset-0 rounded-full border-2 border-orange-300/50 animate-ping" />

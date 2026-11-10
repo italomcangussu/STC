@@ -29,8 +29,8 @@ const SHOWN = 300;
 
 const Tile: React.FC<{ label: string; value: string; sub: string }> = ({ label, value, sub }) => (
   <div className="rounded-3xl border border-stone-100 bg-white p-4 shadow-sm">
-    <p className="text-[11px] font-black uppercase tracking-wider text-stone-400">{label}</p>
-    <p className="text-2xl font-black tabular-nums text-stone-800">{value}</p>
+    <p className="text-meta font-extrabold uppercase tracking-wider text-stone-400">{label}</p>
+    <p className="text-2xl font-extrabold tabular-nums text-stone-800">{value}</p>
     <p className="mt-0.5 text-xs text-stone-500">{sub}</p>
   </div>
 );
@@ -48,10 +48,10 @@ const DayCardItem: React.FC<{ row: DayCardRow; onChanged: () => void }> = ({ row
     <Row>
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="truncate text-sm font-black text-stone-800">{row.guest_name}</p>
+          <p className="truncate text-sm font-extrabold text-stone-800">{row.guest_name}</p>
           <p className="text-xs text-stone-500">{brDate(row.occurred_on)}{row.booked_by ? ` · convidado de ${row.booked_by}` : ''}</p>
         </div>
-        <p className="shrink-0 text-sm font-black tabular-nums">{formatBRL(row.charged_cents)}</p>
+        <p className="shrink-0 text-sm font-extrabold tabular-nums">{formatBRL(row.charged_cents)}</p>
       </div>
       <div className="mt-1 flex items-center justify-between gap-2">
         <Badge tone={row.exempt ? 'muted' : 'warn'}>{row.exempt ? 'Isento' : 'Cobrado'}</Badge>
@@ -82,12 +82,12 @@ const PaymentItem: React.FC<{ payment: StudentPaymentRow; onChanged: () => void 
     <Row className={p.canceled ? 'border-dashed opacity-70' : ''}>
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className={`truncate text-sm font-black ${p.canceled ? 'text-stone-500 line-through' : 'text-stone-800'}`}>{p.studentName}</p>
+          <p className={`truncate text-sm font-extrabold ${p.canceled ? 'text-stone-500 line-through' : 'text-stone-800'}`}>{p.studentName}</p>
           <p className="text-xs text-stone-500">{p.canceled ? p.canceledReason || 'Pagamento estornado' : `Pago em ${brDate(p.paidOn)}`}</p>
         </div>
         <div className="flex shrink-0 items-center gap-1">
           <div className="text-right">
-            <p className={`text-sm font-black tabular-nums ${p.canceled ? 'text-stone-400 line-through' : ''}`}>{formatBRL(p.amountCents)}</p>
+            <p className={`text-sm font-extrabold tabular-nums ${p.canceled ? 'text-stone-400 line-through' : ''}`}>{formatBRL(p.amountCents)}</p>
             {p.canceled && <Badge tone="muted">Estornado</Badge>}
           </div>
           {!p.canceled && <button className="hit-44 rounded-xl text-stone-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-50" disabled={busy} onClick={remove} aria-label={`Excluir pagamento de ${p.studentName}`}><Trash2 size={16} /></button>}
@@ -127,7 +127,7 @@ const StudentsTab: React.FC = () => {
           </div>
           <DayCardCard rows={data.data.dayCards} period={period} onChanged={data.reload} />
           <PaymentsCard rows={data.data.payments} onChanged={data.reload} />
-          <p className="px-1 text-[11px] text-stone-400">O professor é pago pelo próprio aluno, por hora/aula: isso não entra no financeiro do clube.</p>
+          <p className="px-1 text-meta text-stone-400">O professor é pago pelo próprio aluno, por hora/aula: isso não entra no financeiro do clube.</p>
         </>
       )}
     </div>

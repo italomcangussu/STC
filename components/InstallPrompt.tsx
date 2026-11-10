@@ -71,7 +71,7 @@ export const InstallPrompt: React.FC = () => {
                         <Download size={18} className="text-white" />
                     </div>
                     <div className="text-left">
-                        <p className="text-[10px] font-medium text-saibro-100 uppercase tracking-wider leading-none mb-0.5">App Disponível</p>
+                        <p className="text-meta font-medium text-saibro-100 uppercase tracking-wider leading-none mb-0.5">App Disponível</p>
                         <p className="text-sm font-bold leading-none">Instalar App</p>
                     </div>
                     <button

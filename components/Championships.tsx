@@ -68,10 +68,10 @@ const isResenhaOpenChampionship = (championship?: any): boolean => {
 const tabClass = (active: boolean) => [
     'flex-1 min-w-0 flex items-center justify-center gap-1 sm:gap-2',
     'py-3 px-2 sm:py-3.5 sm:px-4 rounded-2xl',
-    'text-xs font-black uppercase tracking-normal sm:tracking-wider',
+    'text-xs font-extrabold uppercase tracking-normal sm:tracking-wider',
     'transition-all duration-300',
     active
-        ? 'bg-linear-to-br from-saibro-600 to-saibro-700 text-white shadow-lg shadow-saibro-200 sm:scale-105'
+        ? 'bg-linear-to-br from-saibro-600 to-saibro-700 text-white shadow-lg   sm:scale-105'
         : 'text-stone-500 hover:text-stone-700 hover:bg-stone-50',
 ].join(' ');
 
@@ -1004,10 +1004,10 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                         <Trophy size={160} />
                     </div>
                     <div className="relative z-10">
-                        <span className="text-xs font-black uppercase tracking-widest bg-white/20 px-2 py-0.5 rounded-full animate-pulse">
+                        <span className="text-xs font-extrabold uppercase tracking-widest bg-white/20 px-2 py-0.5 rounded-full animate-pulse">
                             📝 Inscrições Abertas
                         </span>
-                        <h1 className="text-2xl font-black mt-2">{registrationChamp.name}</h1>
+                        <h1 className="text-2xl font-extrabold mt-2">{registrationChamp.name}</h1>
                         <p className="text-saibro-100 text-sm mt-1">
                             <Users size={14} className="inline mr-1" />
                             {registrations.length} inscritos
@@ -1086,7 +1086,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
         <>
         <div className="p-4 space-y-6 pb-24">
             {/* 1. HEADER PREMIUM */}
-            <div className="bg-linear-to-br from-saibro-600 via-saibro-500 to-orange-500 p-8 rounded-4xl shadow-2xl shadow-saibro-300/30 text-white relative overflow-hidden border-2 border-white/10">
+            <div className="bg-linear-to-br from-saibro-600 via-saibro-500 to-orange-500 p-8 rounded-4xl shadow-2xl text-white relative overflow-hidden border-2 border-white/10">
                 {/* Decorative Trophy Icon */}
                 <div className="absolute -right-5 -top-5 opacity-[0.08] rotate-12">
                     <Trophy size={200} strokeWidth={1.5} />
@@ -1097,7 +1097,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
 
                 <div className="relative z-10">
                     <div className="flex items-center gap-3 mb-4">
-                        <span className="text-xs font-black uppercase tracking-widest bg-white/20 backdrop-blur-sm px-4 py-1.5 rounded-full border-2 border-white/30 shadow-lg flex items-center gap-2">
+                        <span className="text-xs font-extrabold uppercase tracking-widest bg-white/20 backdrop-blur-sm px-4 py-1.5 rounded-full border-2 border-white/30 shadow-lg flex items-center gap-2">
                             <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
                             Em andamento
                         </span>
@@ -1105,7 +1105,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                             <div className="relative" ref={selectorRef}>
                                 <button
                                     onClick={() => setShowChampSelector(!showChampSelector)}
-                                    className="flex items-center gap-2 text-xs font-black bg-white/15 backdrop-blur-sm px-4 py-1.5 rounded-full hover:bg-white/25 transition-all duration-200 border-2 border-white/20 shadow-lg hover:scale-105"
+                                    className="flex items-center gap-2 text-xs font-extrabold bg-white/15 backdrop-blur-sm px-4 py-1.5 rounded-full hover:bg-white/25 transition-all duration-200 border-2 border-white/20 shadow-lg hover:scale-105"
                                 >
                                     Trocar <ChevronDown size={14} className={`transition-transform duration-300 ${showChampSelector ? 'rotate-180' : ''}`} />
                                 </button>
@@ -1120,9 +1120,9 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                                                         setSelectedChampId(c.id);
                                                         setShowChampSelector(false);
                                                     }}
-                                                    className={`w-full text-left px-5 py-3.5 rounded-2xl text-sm font-black transition-all duration-200 flex items-center justify-between ${
+                                                    className={`w-full text-left px-5 py-3.5 rounded-2xl text-sm font-extrabold transition-all duration-200 flex items-center justify-between ${
                                                         selectedChampId === c.id 
-                                                            ? 'bg-linear-to-br from-saibro-600 to-saibro-700 text-white shadow-lg shadow-saibro-200 scale-[1.02]' 
+                                                            ? 'bg-linear-to-br from-saibro-600 to-saibro-700 text-white shadow-lg   scale-[1.02]' 
                                                             : 'text-stone-700 hover:bg-stone-50'
                                                     }`}
                                                 >
@@ -1140,7 +1140,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                         )}
                     </div>
 
-                    <h2 className="text-3xl font-black uppercase tracking-tight drop-shadow-lg">{selectedChamp.name}</h2>
+                    <h2 className="text-3xl font-extrabold uppercase tracking-tight drop-shadow-lg">{selectedChamp.name}</h2>
                     <p className="text-white/90 text-sm font-bold flex items-center gap-2 mt-3 drop-shadow-md">
                         <Calendar size={16} className="drop-shadow" />
                         {selectedChamp.endDate ? `Finais em ${formatDateBr(selectedChamp.endDate)}` : 'Finais em breve'}
@@ -1152,7 +1152,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                  quais abas existem. Só aparece quando as classes divergem. */}
             {formatoPorClasse && (
                 <div className="bg-white rounded-3xl shadow-lg shadow-stone-200/50 border-2 border-stone-100 p-3 space-y-2">
-                    <p className="text-xs font-black text-stone-400 uppercase tracking-widest">
+                    <p className="text-xs font-extrabold text-stone-400 uppercase tracking-widest">
                         Classe — formatos diferentes neste campeonato
                     </p>
                     <div className="flex gap-2 overflow-x-auto scrollbar-hide">
@@ -1251,12 +1251,12 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                         <div className="space-y-6">
                             {/* Rounds Header & Toggle */}
                             <div className="flex items-center justify-between px-2">
-                                <h3 className="text-xs font-black text-stone-400 uppercase tracking-widest leading-none">
+                                <h3 className="text-xs font-extrabold text-stone-400 uppercase tracking-widest leading-none">
                                     {showAllRounds ? 'Todos os Confrontos' : 'Confrontos por Rodada'}
                                 </h3>
                                 <button
                                     onClick={() => setShowAllRounds(!showAllRounds)}
-                                    className={`text-xs font-black uppercase px-3 py-1.5 rounded-full border transition-all ${showAllRounds ? 'bg-stone-900 text-white border-stone-900' : 'bg-white text-stone-500 border-stone-200'}`}
+                                    className={`text-xs font-extrabold uppercase px-3 py-1.5 rounded-full border transition-all ${showAllRounds ? 'bg-stone-900 text-white border-stone-900' : 'bg-white text-stone-500 border-stone-200'}`}
                                 >
                                     {showAllRounds ? 'Ver por Rodada' : 'Ver Todos'}
                                 </button>
@@ -1264,7 +1264,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
 
                             {/* Round Navigator (Only if not showing all) */}
                             {!showAllRounds && (
-                                <div className="flex items-center justify-between bg-white p-4 rounded-[2.5rem] border border-stone-100 shadow-sm sticky top-2 z-20">
+                                <div className="flex items-center justify-between bg-white p-4 rounded-3xl border border-stone-100 shadow-sm sticky top-2 z-20">
                                     <button
                                         onClick={() => setSelectedRoundIndex(prev => Math.max(0, prev - 1))}
                                         className={`p-2 rounded-xl transition-colors ${selectedRoundIndex > 0 ? 'text-saibro-600 bg-saibro-50' : 'text-stone-200 cursor-not-allowed'}`}
@@ -1273,7 +1273,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                                         <ChevronLeft size={24} />
                                     </button>
                                     <div className="text-center">
-                                        <h3 className="font-black text-stone-800 text-sm">{currentRound.name}</h3>
+                                        <h3 className="font-extrabold text-stone-800 text-sm">{currentRound.name}</h3>
                                         <p className="text-xs font-bold text-stone-400 uppercase tracking-widest mt-0.5">
                                             {formatDateBr(currentRound.start_date)} - {formatDateBr(currentRound.end_date)}
                                         </p>
@@ -1404,7 +1404,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                                         onClick={() => setSelectedRoundIndexJogos(prev => Math.max(0, prev - 1))}
                                         className={`p-3 rounded-2xl transition-all duration-200 ${
                                             selectedRoundIndexJogos > 0 
-                                                ? 'text-white bg-linear-to-br from-saibro-600 to-saibro-700 shadow-lg shadow-saibro-200 hover:scale-110' 
+                                                ? 'text-white bg-linear-to-br from-saibro-600 to-saibro-700 shadow-lg   hover:scale-110' 
                                                 : 'text-stone-300 bg-stone-50 cursor-not-allowed'
                                         }`}
                                         disabled={selectedRoundIndexJogos === 0}
@@ -1412,7 +1412,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                                         <ChevronLeft size={24} strokeWidth={3} />
                                     </button>
                                     <div className="text-center">
-                                        <h3 className="font-black text-stone-900 text-lg uppercase tracking-tight">{selectedRound?.name || 'Todas as Rodadas'}</h3>
+                                        <h3 className="font-extrabold text-stone-900 text-lg uppercase tracking-tight">{selectedRound?.name || 'Todas as Rodadas'}</h3>
                                         {selectedRound && (
                                             <p className="text-xs font-bold text-stone-500 uppercase tracking-wide mt-1 flex items-center justify-center gap-1.5">
                                                 <Calendar size={12} />
@@ -1424,7 +1424,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                                         onClick={() => setSelectedRoundIndexJogos(prev => Math.min(rounds.length - 1, prev + 1))}
                                         className={`p-3 rounded-2xl transition-all duration-200 ${
                                             selectedRoundIndexJogos < rounds.length - 1 
-                                                ? 'text-white bg-linear-to-br from-saibro-600 to-saibro-700 shadow-lg shadow-saibro-200 hover:scale-110' 
+                                                ? 'text-white bg-linear-to-br from-saibro-600 to-saibro-700 shadow-lg   hover:scale-110' 
                                                 : 'text-stone-300 bg-stone-50 cursor-not-allowed'
                                         }`}
                                         disabled={selectedRoundIndexJogos === rounds.length - 1}
@@ -1438,8 +1438,8 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                                 CLASSES.filter(cls => matchesByClass[cls]).map(className => (
                                     <div key={className} className="space-y-4">
                                         {/* Class Header */}
-                                        <div className="sticky top-0 z-10 bg-linear-to-br from-saibro-600 via-saibro-500 to-orange-500 text-white px-6 py-4 rounded-3xl shadow-xl shadow-saibro-300/30 border-2 border-white/10">
-                                            <h3 className="text-base font-black uppercase tracking-tight flex items-center gap-2">
+                                        <div className="sticky top-0 z-10 bg-linear-to-br from-saibro-600 via-saibro-500 to-orange-500 text-white px-6 py-4 rounded-3xl shadow-xl border-2 border-white/10">
+                                            <h3 className="text-base font-extrabold uppercase tracking-tight flex items-center gap-2">
                                                 <Trophy size={18} className="drop-shadow" />
                                                 {className}
                                             </h3>
@@ -1462,7 +1462,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                                                     <div key={roundName} className="bg-white rounded-3xl shadow-lg shadow-stone-200/50 border-2 border-stone-100 overflow-hidden">
                                                         {/* Round Header */}
                                                         <div className="px-5 py-3.5 bg-linear-to-r from-stone-50 to-stone-100 border-b-2 border-stone-200 flex items-center justify-between">
-                                                            <h4 className="text-sm font-black text-stone-800 uppercase tracking-tight flex items-center gap-2">
+                                                            <h4 className="text-sm font-extrabold text-stone-800 uppercase tracking-tight flex items-center gap-2">
                                                                 <CalendarCheck size={16} className="text-saibro-600" />
                                                                 {roundName}
                                                             </h4>
@@ -1514,11 +1514,11 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                                                                                             src={avatarA} 
                                                                                             className={`w-10 h-10 rounded-full object-cover border-3 transition-all ${
                                                                                                 isWinnerSide(match, 'A') 
-                                                                                                    ? 'border-saibro-500 shadow-lg shadow-saibro-200 ring-2 ring-saibro-100' 
+                                                                                                    ? 'border-saibro-500 shadow-lg   ring-2 ring-saibro-100' 
                                                                                                     : 'border-stone-200'
                                                                                             }`} 
                                                                                         />
-                                                                                        <p className={`text-sm font-black transition-colors ${
+                                                                                        <p className={`text-sm font-extrabold transition-colors ${
                                                                                             isWinnerSide(match, 'A') ? 'text-stone-900' : 'text-stone-700'
                                                                                         }`}>
                                                                                             {nameA}
@@ -1532,11 +1532,11 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                                                                                             src={avatarB} 
                                                                                             className={`w-10 h-10 rounded-full object-cover border-3 transition-all ${
                                                                                                 isWinnerSide(match, 'B') 
-                                                                                                    ? 'border-saibro-500 shadow-lg shadow-saibro-200 ring-2 ring-saibro-100' 
+                                                                                                    ? 'border-saibro-500 shadow-lg   ring-2 ring-saibro-100' 
                                                                                                     : 'border-stone-200'
                                                                                             }`} 
                                                                                         />
-                                                                                        <p className={`text-sm font-black transition-colors ${
+                                                                                        <p className={`text-sm font-extrabold transition-colors ${
                                                                                             isWinnerSide(match, 'B') ? 'text-stone-900' : 'text-stone-700'
                                                                                         }`}>
                                                                                             {nameB}
@@ -1555,16 +1555,16 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                                                                                                 <div className="flex gap-2">
                                                                                                     {match.scoreA.map((s, i) => (
                                                                                                         <div key={i} className="flex flex-col items-center gap-1">
-                                                                                                            <span className={`w-9 h-9 flex items-center justify-center rounded-xl text-sm font-black shadow-sm transition-all ${
+                                                                                                            <span className={`w-9 h-9 flex items-center justify-center rounded-xl text-sm font-extrabold shadow-sm transition-all ${
                                                                                                                 match.scoreA[i] > match.scoreB[i] 
-                                                                                                                    ? 'bg-linear-to-br from-saibro-500 to-saibro-600 text-white shadow-saibro-200' 
+                                                                                                                    ? 'bg-linear-to-br from-saibro-500 to-saibro-600 text-white  ' 
                                                                                                                     : 'bg-stone-100 text-stone-400'
                                                                                                             }`}>
                                                                                                                 {s}
                                                                                                             </span>
-                                                                                                            <span className={`w-9 h-9 flex items-center justify-center rounded-xl text-sm font-black shadow-sm transition-all ${
+                                                                                                            <span className={`w-9 h-9 flex items-center justify-center rounded-xl text-sm font-extrabold shadow-sm transition-all ${
                                                                                                                 match.scoreB[i] > match.scoreA[i] 
-                                                                                                                    ? 'bg-linear-to-br from-saibro-500 to-saibro-600 text-white shadow-saibro-200' 
+                                                                                                                    ? 'bg-linear-to-br from-saibro-500 to-saibro-600 text-white  ' 
                                                                                                                     : 'bg-stone-100 text-stone-400'
                                                                                                             }`}>
                                                                                                                 {match.scoreB[i]}
@@ -1573,7 +1573,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                                                                                                     ))}
                                                                                                 </div>
                                                                                             )}
-                                                                                            <span className={`text-xs font-black uppercase px-3 py-1.5 rounded-xl border-2 ${
+                                                                                            <span className={`text-xs font-extrabold uppercase px-3 py-1.5 rounded-xl border-2 ${
                                                                                                 isTechnicalDraw
                                                                                                     ? 'text-blue-700 bg-blue-50 border-blue-200'
                                                                                                     : match.is_walkover
@@ -1587,25 +1587,25 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                                                                                         <div className="flex flex-col items-end gap-2">
                                                                                             {match.scheduled_date ? (
                                                                                                 <>
-                                                                                                    <span className="text-xs font-black uppercase tracking-widest text-stone-400">
+                                                                                                    <span className="text-xs font-extrabold uppercase tracking-widest text-stone-400">
                                                                                                         {selectedChampIsResenhaOpen ? 'Sugerido' : 'Agendado'}
                                                                                                     </span>
                                                                                                     <div className="flex items-center gap-2 text-sm bg-saibro-50 px-3 py-1.5 rounded-xl border-2 border-saibro-200">
                                                                                                         <Calendar size={14} className="text-saibro-600" strokeWidth={2.5} />
-                                                                                                        <span className="font-black text-saibro-700">
+                                                                                                        <span className="font-extrabold text-saibro-700">
                                                                                                             {new Date(match.scheduled_date + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
                                                                                                         </span>
                                                                                                     </div>
                                                                                                     {match.scheduled_time && (
                                                                                                         <div className="flex items-center gap-2 text-sm bg-blue-50 px-3 py-1.5 rounded-xl border-2 border-blue-200">
                                                                                                             <Clock size={14} className="text-blue-600" strokeWidth={2.5} />
-                                                                                                            <span className="font-black text-blue-700">{match.scheduled_time}</span>
+                                                                                                            <span className="font-extrabold text-blue-700">{match.scheduled_time}</span>
                                                                                                         </div>
                                                                                                     )}
                                                                                                     {court && !selectedChampIsResenhaOpen && (
                                                                                                         <div className="flex items-center gap-2 text-sm bg-stone-800 px-3 py-1.5 rounded-xl shadow-md">
                                                                                                             <MapPin size={14} className="text-white" strokeWidth={2.5} />
-                                                                                                            <span className="font-black text-white">{court.name}</span>
+                                                                                                            <span className="font-extrabold text-white">{court.name}</span>
                                                                                                         </div>
                                                                                                     )}
                                                                                                 </>
@@ -1613,13 +1613,13 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                                                                                                 canDefineResult ? (
                                                                                                     <button
                                                                                                         onClick={() => setAdminResultMatch(match)}
-                                                                                                        className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wide text-amber-800 bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-200 hover:bg-amber-100 whitespace-nowrap transition-colors"
+                                                                                                        className="inline-flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wide text-amber-800 bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-200 hover:bg-amber-100 whitespace-nowrap transition-colors"
                                                                                                     >
                                                                                                         <AlertTriangle size={12} className="text-amber-600" />
                                                                                                         Definir Resultado
                                                                                                     </button>
                                                                                                 ) : (
-                                                                                                    <span className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wide text-stone-500 bg-stone-100 px-3 py-1.5 rounded-lg border border-dashed border-stone-300 whitespace-nowrap">
+                                                                                                    <span className="inline-flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wide text-stone-500 bg-stone-100 px-3 py-1.5 rounded-lg border border-dashed border-stone-300 whitespace-nowrap">
                                                                                                         <Calendar size={12} className="text-stone-400" />
                                                                                                         {selectedChampIsResenhaOpen ? 'Sem horário sugerido' : 'Sem agendamento'}
                                                                                                     </span>
@@ -1745,7 +1745,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                                                     <button
                                                         key={category}
                                                         onClick={() => setSelectedBracketCategory(category)}
-                                                        className={`flex-1 min-w-25 py-3 px-4 rounded-2xl text-xs font-black tracking-wider transition-all ${
+                                                        className={`flex-1 min-w-25 py-3 px-4 rounded-2xl text-xs font-extrabold tracking-wider transition-all ${
                                                             selectedBracketCategory === category
                                                                 ? 'bg-saibro-600 text-white shadow-md'
                                                                 : 'text-stone-400 hover:text-stone-600'
@@ -1817,7 +1817,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
 
                                                 return (
                                                     <div key={phase} className="space-y-4">
-                                                        <h4 className="text-xs font-black text-saibro-600 uppercase tracking-widest ml-1 border-l-2 border-saibro-500 pl-2">
+                                                        <h4 className="text-xs font-extrabold text-saibro-600 uppercase tracking-widest ml-1 border-l-2 border-saibro-500 pl-2">
                                                             {phase}
                                                         </h4>
                                                         <div className="space-y-3">
@@ -1840,7 +1840,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                                                     <button
                                                         key={classe}
                                                         onClick={() => setSelectedBracketCategory(classe)}
-                                                        className={`flex-1 min-w-25 py-3 px-4 rounded-2xl text-xs font-black tracking-wider transition-all ${
+                                                        className={`flex-1 min-w-25 py-3 px-4 rounded-2xl text-xs font-extrabold tracking-wider transition-all ${
                                                             classeAtiva === classe
                                                                 ? 'bg-saibro-600 text-white shadow-md'
                                                                 : 'text-stone-400 hover:text-stone-600'
@@ -1855,7 +1855,7 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                                         <div className="space-y-8">
                                             {rodadasComJogos.map(({ round, partidas }) => (
                                                 <div key={round.id} className="space-y-4">
-                                                    <h4 className="text-xs font-black text-saibro-600 uppercase tracking-widest ml-1 border-l-2 border-saibro-500 pl-2">
+                                                    <h4 className="text-xs font-extrabold text-saibro-600 uppercase tracking-widest ml-1 border-l-2 border-saibro-500 pl-2">
                                                         {round.name}
                                                     </h4>
                                                     <div className="space-y-3">
@@ -2081,7 +2081,7 @@ export const ResultModal: React.FC<{ match: Match; profiles: User[]; registratio
 
     return (
         <StandardModal isOpen onClose={onClose} ariaLabel="Lançar placar">
-            <div className="bg-white rounded-[2.5rem] w-full max-w-sm overflow-visible shadow-2xl relative">
+            <div className="bg-white rounded-3xl w-full max-w-sm overflow-visible shadow-2xl relative">
                 <button
                     onClick={onClose}
                     className="hit-44 absolute -top-12 right-0 bg-white/10 rounded-full hover:bg-white/20 transition-colors text-white"
@@ -2089,9 +2089,9 @@ export const ResultModal: React.FC<{ match: Match; profiles: User[]; registratio
                     <ChevronDown size={24} />
                 </button>
 
-                <div className="px-6 py-5 bg-stone-900 text-white flex justify-between items-center rounded-t-[2.5rem]">
+                <div className="px-6 py-5 bg-stone-900 text-white flex justify-between items-center rounded-t-3xl">
                     <div>
-                        <h3 className="text-lg font-black tracking-tight">Resultado</h3>
+                        <h3 className="text-lg font-extrabold tracking-tight">Resultado</h3>
                         <p className="text-xs text-stone-400 uppercase tracking-widest font-bold">Lançamento Oficial</p>
                     </div>
                 </div>
@@ -2100,22 +2100,22 @@ export const ResultModal: React.FC<{ match: Match; profiles: User[]; registratio
                     <div className="flex items-center justify-between gap-2">
                         <div className="flex flex-col items-center w-24">
                             <div className={`relative mb-2 ${matchWinner === 'A' ? 'scale-110' : 'opacity-80'} transition-all duration-300`}>
-                                <img src={playerAAvatar} className={`w-16 h-16 rounded-full object-cover border-4 ${matchWinner === 'A' ? 'border-saibro-500 shadow-xl shadow-saibro-200' : 'border-stone-100'}`} />
+                                <img src={playerAAvatar} className={`w-16 h-16 rounded-full object-cover border-4 ${matchWinner === 'A' ? 'border-saibro-500 shadow-xl  ' : 'border-stone-100'}`} />
                                 {matchWinner === 'A' && <div className="absolute -bottom-2 right-0 bg-saibro-500 text-white p-1 rounded-full border-2 border-white"><Trophy size={12} /></div>}
                             </div>
-                            <p className="text-sm font-black text-center leading-tight text-stone-800">{playerAName}</p>
+                            <p className="text-sm font-extrabold text-center leading-tight text-stone-800">{playerAName}</p>
                         </div>
 
                         <div className="flex flex-col items-center gap-1">
-                            <span className="text-xs font-black text-stone-300">VS</span>
+                            <span className="text-xs font-extrabold text-stone-300">VS</span>
                         </div>
 
                         <div className="flex flex-col items-center w-24">
                             <div className={`relative mb-2 ${matchWinner === 'B' ? 'scale-110' : 'opacity-80'} transition-all duration-300`}>
-                                <img src={playerBAvatar} className={`w-16 h-16 rounded-full object-cover border-4 ${matchWinner === 'B' ? 'border-saibro-500 shadow-xl shadow-saibro-200' : 'border-stone-100'}`} />
+                                <img src={playerBAvatar} className={`w-16 h-16 rounded-full object-cover border-4 ${matchWinner === 'B' ? 'border-saibro-500 shadow-xl  ' : 'border-stone-100'}`} />
                                 {matchWinner === 'B' && <div className="absolute -bottom-2 right-0 bg-saibro-500 text-white p-1 rounded-full border-2 border-white"><Trophy size={12} /></div>}
                             </div>
-                            <p className="text-sm font-black text-center leading-tight text-stone-800">{playerBName}</p>
+                            <p className="text-sm font-extrabold text-center leading-tight text-stone-800">{playerBName}</p>
                         </div>
                     </div>
 
@@ -2130,10 +2130,10 @@ export const ResultModal: React.FC<{ match: Match; profiles: User[]; registratio
                             return (
                                 <div key={idx} className={`flex items-center justify-between ${idx > 0 ? 'pt-4 border-t border-stone-100' : ''}`}>
                                     <div className="w-12 text-center">
-                                        <p className="text-xs font-black text-stone-400 uppercase tracking-widest leading-none">
+                                        <p className="text-xs font-extrabold text-stone-400 uppercase tracking-widest leading-none">
                                             {isSuperTie ? 'Super' : 'Set'}
                                         </p>
-                                        <p className="text-xs font-black text-saibro-600 mt-1">
+                                        <p className="text-xs font-extrabold text-saibro-600 mt-1">
                                             {isSuperTie ? 'Tie' : idx + 1}
                                         </p>
                                     </div>
@@ -2147,7 +2147,7 @@ export const ResultModal: React.FC<{ match: Match; profiles: User[]; registratio
                                             >
                                                 <Plus size={12} strokeWidth={3} />
                                             </button>
-                                            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl font-black border-2 transition-all ${getInputBorderClass(isValid, winner === 'A')}`}>
+                                            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl font-extrabold border-2 transition-all ${getInputBorderClass(isValid, winner === 'A')}`}>
                                                 {scoreA[idx]}
                                             </div>
                                             <button
@@ -2166,7 +2166,7 @@ export const ResultModal: React.FC<{ match: Match; profiles: User[]; registratio
                                             >
                                                 <Plus size={12} strokeWidth={3} />
                                             </button>
-                                            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl font-black border-2 transition-all ${getInputBorderClass(isValid, winner === 'B')}`}>
+                                            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl font-extrabold border-2 transition-all ${getInputBorderClass(isValid, winner === 'B')}`}>
                                                 {scoreB[idx]}
                                             </div>
                                             <button
@@ -2221,10 +2221,10 @@ const AdminMatchResultModal: React.FC<{
 
     return (
         <StandardModal isOpen onClose={onClose} ariaLabel="Definir resultado">
-            <div className="bg-white rounded-[2.5rem] w-full max-w-md overflow-hidden shadow-2xl">
+            <div className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl">
                 <div className="p-5 border-b border-stone-100 flex items-center justify-between">
                     <div>
-                        <h3 className="text-lg font-black text-stone-800">Definir Resultado</h3>
+                        <h3 className="text-lg font-extrabold text-stone-800">Definir Resultado</h3>
                         <p className="text-xs uppercase tracking-widest font-bold text-stone-400">Administração</p>
                     </div>
                     <button
@@ -2239,39 +2239,39 @@ const AdminMatchResultModal: React.FC<{
                     <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-3 min-w-0">
                             <img src={avatarA} className="w-12 h-12 rounded-full border-2 border-stone-100 object-cover" />
-                            <p className="text-sm font-black text-stone-800 truncate">{nameA}</p>
+                            <p className="text-sm font-extrabold text-stone-800 truncate">{nameA}</p>
                         </div>
-                        <span className="text-xs font-black text-stone-300">VS</span>
+                        <span className="text-xs font-extrabold text-stone-300">VS</span>
                         <div className="flex items-center gap-3 min-w-0">
-                            <p className="text-sm font-black text-stone-800 truncate">{nameB}</p>
+                            <p className="text-sm font-extrabold text-stone-800 truncate">{nameB}</p>
                             <img src={avatarB} className="w-12 h-12 rounded-full border-2 border-stone-100 object-cover" />
                         </div>
                     </div>
 
                     <div className="space-y-3">
-                        <p className="text-xs font-black uppercase tracking-widest text-amber-600">Marcar W.O.</p>
+                        <p className="text-xs font-extrabold uppercase tracking-widest text-amber-600">Marcar W.O.</p>
                         <button
                             onClick={() => onWalkover('A')}
                             disabled={saving}
-                            className="w-full py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-800 font-black text-sm hover:bg-amber-100 transition-all disabled:opacity-50"
+                            className="w-full py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-800 font-extrabold text-sm hover:bg-amber-100 transition-all disabled:opacity-50"
                         >
                             W.O. para {nameA}
                         </button>
                         <button
                             onClick={() => onWalkover('B')}
                             disabled={saving}
-                            className="w-full py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-800 font-black text-sm hover:bg-amber-100 transition-all disabled:opacity-50"
+                            className="w-full py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-800 font-extrabold text-sm hover:bg-amber-100 transition-all disabled:opacity-50"
                         >
                             W.O. para {nameB}
                         </button>
                     </div>
 
                     <div className="pt-4 border-t border-stone-100 space-y-3">
-                        <p className="text-xs font-black uppercase tracking-widest text-red-500">Cancelar Partida</p>
+                        <p className="text-xs font-extrabold uppercase tracking-widest text-red-500">Cancelar Partida</p>
                         <button
                             onClick={onCancel}
                             disabled={saving}
-                            className="w-full py-3 rounded-xl border border-red-200 bg-red-50 text-red-700 font-black text-sm hover:bg-red-100 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                            className="w-full py-3 rounded-xl border border-red-200 bg-red-50 text-red-700 font-extrabold text-sm hover:bg-red-100 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                         >
                             <AlertTriangle size={16} />
                             Marcar como cancelada
@@ -2410,9 +2410,9 @@ const MatchCard: React.FC<{
     const displayScoresB = showThirdSet ? match.scoreB : match.scoreB.slice(0, 2);
 
     return (
-        <div className="bg-white rounded-3xl p-4 sm:p-6 shadow-lg shadow-stone-200/50 border-2 border-stone-100 relative overflow-hidden group transition-all duration-300 hover:shadow-xl hover:shadow-saibro-100/30 hover:border-saibro-300 hover:scale-[1.01]">
+        <div className="bg-white rounded-3xl p-4 sm:p-6 shadow-lg shadow-stone-200/50 border-2 border-stone-100 relative overflow-hidden group transition-all duration-300 hover:shadow-xl hover:border-saibro-300 hover:scale-[1.01]">
             {/* Class Tag */}
-            <div className="absolute top-0 left-0 bg-linear-to-br from-stone-800 to-stone-900 px-4 py-1.5 rounded-br-3xl text-xs font-black text-white uppercase tracking-wider shadow-md">
+            <div className="absolute top-0 left-0 bg-linear-to-br from-stone-800 to-stone-900 px-4 py-1.5 rounded-br-3xl text-xs font-extrabold text-white uppercase tracking-wider shadow-md">
                 {regA?.class || 'S/C'}
             </div>
 
@@ -2423,7 +2423,7 @@ const MatchCard: React.FC<{
                     <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-3 min-w-0">
                             <div className="relative">
-                                <img src={avatarA} className={`w-12 h-12 rounded-full border-3 object-cover transition-all duration-300 ${isWinnerSide(match, 'A') ? 'border-saibro-500 shadow-lg shadow-saibro-200 ring-2 ring-saibro-100' : 'border-stone-200 group-hover:border-stone-300'}`} />
+                                <img src={avatarA} className={`w-12 h-12 rounded-full border-3 object-cover transition-all duration-300 ${isWinnerSide(match, 'A') ? 'border-saibro-500 shadow-lg   ring-2 ring-saibro-100' : 'border-stone-200 group-hover:border-stone-300'}`} />
                                 {isWinnerSide(match, 'A') && (
                                     <div className="absolute -top-1 -right-1 bg-linear-to-br from-saibro-500 to-saibro-600 text-white rounded-full p-1 border-2 border-white shadow-lg">
                                         <Trophy size={8} />
@@ -2431,7 +2431,7 @@ const MatchCard: React.FC<{
                                 )}
                             </div>
                             <div className="min-w-0">
-                                <p className={`text-base font-black transition-colors leading-tight wrap-break-word ${isWinnerSide(match, 'A') ? 'text-stone-900' : 'text-stone-600'}`}>
+                                <p className={`text-base font-extrabold transition-colors leading-tight wrap-break-word ${isWinnerSide(match, 'A') ? 'text-stone-900' : 'text-stone-600'}`}>
                                     {nameA}
                                 </p>
                                 <p className="text-xs text-stone-500 font-bold uppercase tracking-wide">{regA?.participant_type === 'guest' ? '🎫 Convidado' : '⭐ Sócio'}</p>
@@ -2444,9 +2444,9 @@ const MatchCard: React.FC<{
                                                        (i === 1 && set2Winner === 'A') ||
                                                        (i === 2 && set3Winner === 'A');
                                     return (
-                                        <span key={i} className={`w-9 h-9 flex items-center justify-center rounded-xl text-sm font-black shadow-sm transition-all ${
+                                        <span key={i} className={`w-9 h-9 flex items-center justify-center rounded-xl text-sm font-extrabold shadow-sm transition-all ${
                                             isSetWinner
-                                                ? 'bg-linear-to-br from-saibro-500 to-saibro-600 text-white shadow-saibro-200' 
+                                                ? 'bg-linear-to-br from-saibro-500 to-saibro-600 text-white  ' 
                                                 : 'bg-stone-100 text-stone-400'
                                         }`}>
                                             {s}
@@ -2461,7 +2461,7 @@ const MatchCard: React.FC<{
                     <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-3 min-w-0">
                             <div className="relative">
-                                <img src={avatarB} className={`w-12 h-12 rounded-full border-3 object-cover transition-all duration-300 ${isWinnerSide(match, 'B') ? 'border-saibro-500 shadow-lg shadow-saibro-200 ring-2 ring-saibro-100' : 'border-stone-200 group-hover:border-stone-300'}`} />
+                                <img src={avatarB} className={`w-12 h-12 rounded-full border-3 object-cover transition-all duration-300 ${isWinnerSide(match, 'B') ? 'border-saibro-500 shadow-lg   ring-2 ring-saibro-100' : 'border-stone-200 group-hover:border-stone-300'}`} />
                                 {isWinnerSide(match, 'B') && (
                                     <div className="absolute -top-1 -right-1 bg-linear-to-br from-saibro-500 to-saibro-600 text-white rounded-full p-1 border-2 border-white shadow-lg">
                                         <Trophy size={8} />
@@ -2469,7 +2469,7 @@ const MatchCard: React.FC<{
                                 )}
                             </div>
                             <div className="min-w-0">
-                                <p className={`text-base font-black transition-colors leading-tight wrap-break-word ${isWinnerSide(match, 'B') ? 'text-stone-900' : 'text-stone-600'}`}>
+                                <p className={`text-base font-extrabold transition-colors leading-tight wrap-break-word ${isWinnerSide(match, 'B') ? 'text-stone-900' : 'text-stone-600'}`}>
                                     {nameB}
                                 </p>
                                 <p className="text-xs text-stone-500 font-bold uppercase tracking-wide">{regB?.participant_type === 'guest' ? '🎫 Convidado' : '⭐ Sócio'}</p>
@@ -2482,9 +2482,9 @@ const MatchCard: React.FC<{
                                                        (i === 1 && set2Winner === 'B') ||
                                                        (i === 2 && set3Winner === 'B');
                                     return (
-                                        <span key={i} className={`w-9 h-9 flex items-center justify-center rounded-xl text-sm font-black shadow-sm transition-all ${
+                                        <span key={i} className={`w-9 h-9 flex items-center justify-center rounded-xl text-sm font-extrabold shadow-sm transition-all ${
                                             isSetWinner
-                                                ? 'bg-linear-to-br from-saibro-500 to-saibro-600 text-white shadow-saibro-200' 
+                                                ? 'bg-linear-to-br from-saibro-500 to-saibro-600 text-white  ' 
                                                 : 'bg-stone-100 text-stone-400'
                                         }`}>
                                             {s}
@@ -2506,7 +2506,7 @@ const MatchCard: React.FC<{
                                     ? 'bg-amber-50 border-amber-200'
                                     : 'bg-linear-to-br from-emerald-50 to-green-50 border-emerald-200'
                         }`}>
-                            <p className={`text-xs font-black uppercase tracking-wider mb-0.5 ${
+                            <p className={`text-xs font-extrabold uppercase tracking-wider mb-0.5 ${
                                 isTechnicalDraw
                                     ? 'text-blue-600'
                                     : match.is_walkover || !hasScores
@@ -2515,7 +2515,7 @@ const MatchCard: React.FC<{
                             }`}>
                                 {isTechnicalDraw ? 'Empate técnico' : 'Finalizado'}
                             </p>
-                            <span className={`text-sm font-black ${
+                            <span className={`text-sm font-extrabold ${
                                 isTechnicalDraw
                                     ? 'text-blue-700'
                                     : match.is_walkover || !hasScores
@@ -2527,7 +2527,7 @@ const MatchCard: React.FC<{
                         </div>
                     ) : match.scheduledDate ? (
                         <div className="bg-linear-to-br from-saibro-50 to-orange-50 px-4 py-2.5 rounded-2xl border-2 border-saibro-200 shadow-md md:w-auto">
-                            <p className="text-xs font-black text-saibro-700 uppercase tracking-wider mb-1.5">
+                            <p className="text-xs font-extrabold text-saibro-700 uppercase tracking-wider mb-1.5">
                                 {isSuggestedSchedule ? 'Horário sugerido' : 'Agendado'}
                             </p>
                             <div className="flex items-center gap-1.5 text-xs font-bold text-saibro-800 mb-0.5">
@@ -2542,7 +2542,7 @@ const MatchCard: React.FC<{
                             <div className="w-10 h-10 bg-stone-100 rounded-full flex items-center justify-center text-stone-300 mb-2 mx-auto">
                                 <Calendar size={18} />
                             </div>
-                            <p className="text-xs font-black text-stone-400 uppercase tracking-wider">
+                            <p className="text-xs font-extrabold text-stone-400 uppercase tracking-wider">
                                 {isSuggestedSchedule ? 'Sem horário sugerido' : 'Pendente'}
                             </p>
                         </div>
@@ -2552,7 +2552,7 @@ const MatchCard: React.FC<{
                     {!isFinished && (isAdmin || canLaunchScore(match, currentUserId)) && (
                         <button
                             onClick={onEdit}
-                            className="w-full md:w-auto bg-linear-to-br from-saibro-600 to-saibro-700 text-white text-xs font-black uppercase px-5 py-2.5 rounded-xl shadow-lg shadow-saibro-200 hover:shadow-xl hover:scale-105 transition-all duration-200"
+                            className="w-full md:w-auto bg-linear-to-br from-saibro-600 to-saibro-700 text-white text-xs font-extrabold uppercase px-5 py-2.5 rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200"
                         >
                             Lançar
                         </button>
@@ -2562,7 +2562,7 @@ const MatchCard: React.FC<{
                     {!isFinished && !match.scheduledDate && canEditSchedule && (
                         <button
                             onClick={onSchedule}
-                            className="w-full md:w-auto bg-linear-to-br from-stone-800 to-stone-900 text-white text-xs font-black uppercase px-5 py-2.5 rounded-xl shadow-lg shadow-stone-300 hover:shadow-xl hover:scale-105 transition-all duration-200 flex items-center justify-center gap-2"
+                            className="w-full md:w-auto bg-linear-to-br from-stone-800 to-stone-900 text-white text-xs font-extrabold uppercase px-5 py-2.5 rounded-xl shadow-lg shadow-stone-300 hover:shadow-xl hover:scale-105 transition-all duration-200 flex items-center justify-center gap-2"
                         >
                             <Calendar size={12} />
                             {isSuggestedSchedule ? 'Editar horário' : 'Agendar'}
@@ -2573,7 +2573,7 @@ const MatchCard: React.FC<{
                     {!isFinished && match.scheduledDate && canEditSchedule && (
                         <button
                             onClick={onSchedule}
-                            className="w-full md:w-auto bg-linear-to-br from-blue-600 to-blue-700 text-white text-xs font-black uppercase px-5 py-2.5 rounded-xl shadow-lg shadow-blue-200 hover:shadow-xl hover:scale-105 transition-all duration-200 flex items-center justify-center gap-2"
+                            className="w-full md:w-auto bg-linear-to-br from-blue-600 to-blue-700 text-white text-xs font-extrabold uppercase px-5 py-2.5 rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 flex items-center justify-center gap-2"
                         >
                             <Clock size={12} />
                             {isSuggestedSchedule ? 'Editar horário' : 'Reagendar'}
@@ -2594,7 +2594,7 @@ const BracketMatchCard: React.FC<{ match: Match; profiles: User[]; isAdmin?: boo
             {match.status === 'pending' && isAdmin && (
                 <button
                     onClick={onEdit}
-                    className="absolute z-10 top-3 right-3 p-2.5 bg-linear-to-br from-saibro-600 to-saibro-700 hover:from-saibro-700 hover:to-saibro-800 text-white rounded-xl transition-all duration-200 hover:scale-110 shadow-lg shadow-saibro-200"
+                    className="absolute z-10 top-3 right-3 p-2.5 bg-linear-to-br from-saibro-600 to-saibro-700 hover:from-saibro-700 hover:to-saibro-800 text-white rounded-xl transition-all duration-200 hover:scale-110 shadow-lg "
                 >
                     <Trophy size={14} />
                 </button>
@@ -2603,41 +2603,41 @@ const BracketMatchCard: React.FC<{ match: Match; profiles: User[]; isAdmin?: boo
             {/* Player A */}
             <div className={`flex justify-between items-center px-5 py-4 border-b-2 transition-colors ${isWinnerSide(match, 'A') ? 'bg-linear-to-r from-saibro-50/40 to-orange-50/20 border-saibro-200' : 'border-stone-100'}`}>
                 <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <img src={pA?.avatar || 'https://ui-avatars.com/api/?background=random'} className={`w-10 h-10 rounded-full object-cover border-3 shrink-0 transition-all ${isWinnerSide(match, 'A') ? 'border-saibro-500 shadow-lg shadow-saibro-200 ring-2 ring-saibro-100' : 'border-stone-200'}`} />
-                    <span className={`text-sm font-black truncate transition-colors ${isWinnerSide(match, 'A') ? 'text-stone-900' : 'text-stone-600'}`}>
+                    <img src={pA?.avatar || 'https://ui-avatars.com/api/?background=random'} className={`w-10 h-10 rounded-full object-cover border-3 shrink-0 transition-all ${isWinnerSide(match, 'A') ? 'border-saibro-500 shadow-lg   ring-2 ring-saibro-100' : 'border-stone-200'}`} />
+                    <span className={`text-sm font-extrabold truncate transition-colors ${isWinnerSide(match, 'A') ? 'text-stone-900' : 'text-stone-600'}`}>
                         {pA?.name || 'Aguardando...'}
                     </span>
                 </div>
                 <div className="flex gap-1.5 ml-2 shrink-0">
                     {match.scoreA && match.scoreA.length > 0 ? match.scoreA.map((s, i) => (
-                        <span key={i} className={`w-8 h-8 flex items-center justify-center rounded-xl text-xs font-black shadow-sm transition-all ${
+                        <span key={i} className={`w-8 h-8 flex items-center justify-center rounded-xl text-xs font-extrabold shadow-sm transition-all ${
                             match.scoreA[i] > match.scoreB[i] 
-                                ? 'bg-linear-to-br from-saibro-500 to-saibro-600 text-white shadow-saibro-200' 
+                                ? 'bg-linear-to-br from-saibro-500 to-saibro-600 text-white  ' 
                                 : 'bg-stone-100 text-stone-400'
                         }`}>
                             {s}
                         </span>
-                    )) : [1, 2].map(i => <span key={i} className="w-8 h-8 flex items-center justify-center bg-stone-50 border-2 border-dashed border-stone-200 rounded-xl text-xs text-stone-300 font-black">-</span>)}
+                    )) : [1, 2].map(i => <span key={i} className="w-8 h-8 flex items-center justify-center bg-stone-50 border-2 border-dashed border-stone-200 rounded-xl text-xs text-stone-300 font-extrabold">-</span>)}
                 </div>
             </div>
             {/* Player B */}
             <div className={`flex justify-between items-center px-5 py-4 transition-colors ${isWinnerSide(match, 'B') ? 'bg-linear-to-r from-saibro-50/40 to-orange-50/20' : ''}`}>
                 <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <img src={pB?.avatar || 'https://ui-avatars.com/api/?background=random'} className={`w-10 h-10 rounded-full object-cover border-3 shrink-0 transition-all ${isWinnerSide(match, 'B') ? 'border-saibro-500 shadow-lg shadow-saibro-200 ring-2 ring-saibro-100' : 'border-stone-200'}`} />
-                    <span className={`text-sm font-black truncate transition-colors ${isWinnerSide(match, 'B') ? 'text-stone-900' : 'text-stone-600'}`}>
+                    <img src={pB?.avatar || 'https://ui-avatars.com/api/?background=random'} className={`w-10 h-10 rounded-full object-cover border-3 shrink-0 transition-all ${isWinnerSide(match, 'B') ? 'border-saibro-500 shadow-lg   ring-2 ring-saibro-100' : 'border-stone-200'}`} />
+                    <span className={`text-sm font-extrabold truncate transition-colors ${isWinnerSide(match, 'B') ? 'text-stone-900' : 'text-stone-600'}`}>
                         {pB?.name || 'Aguardando...'}
                     </span>
                 </div>
                 <div className="flex gap-1.5 ml-2 shrink-0">
                     {match.scoreB && match.scoreB.length > 0 ? match.scoreB.map((s, i) => (
-                        <span key={i} className={`w-8 h-8 flex items-center justify-center rounded-xl text-xs font-black shadow-sm transition-all ${
+                        <span key={i} className={`w-8 h-8 flex items-center justify-center rounded-xl text-xs font-extrabold shadow-sm transition-all ${
                             match.scoreB[i] > match.scoreA[i] 
-                                ? 'bg-linear-to-br from-saibro-500 to-saibro-600 text-white shadow-saibro-200' 
+                                ? 'bg-linear-to-br from-saibro-500 to-saibro-600 text-white  ' 
                                 : 'bg-stone-100 text-stone-400'
                         }`}>
                             {s}
                         </span>
-                    )) : [1, 2].map(i => <span key={i} className="w-8 h-8 flex items-center justify-center bg-stone-50 border-2 border-dashed border-stone-200 rounded-xl text-xs text-stone-300 font-black">-</span>)}
+                    )) : [1, 2].map(i => <span key={i} className="w-8 h-8 flex items-center justify-center bg-stone-50 border-2 border-dashed border-stone-200 rounded-xl text-xs text-stone-300 font-extrabold">-</span>)}
                 </div>
             </div>
         </div>

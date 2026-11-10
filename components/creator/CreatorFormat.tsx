@@ -182,7 +182,7 @@ export const CreatorFormat: React.FC<Props> = ({ classes, classFormats, onChange
         <div className="space-y-4">
             {classes.length > 1 && (
                 <div className="bg-white rounded-2xl border border-stone-100 p-5 space-y-3">
-                    <h2 className="font-black text-stone-800">Classe</h2>
+                    <h2 className="font-extrabold text-stone-800">Classe</h2>
                     <p className="text-xs text-stone-500">
                         Cada classe tem formato, número de inscritos e fases próprios.
                     </p>
@@ -210,7 +210,7 @@ export const CreatorFormat: React.FC<Props> = ({ classes, classFormats, onChange
             )}
 
             <div className="bg-white rounded-2xl border border-stone-100 p-5 space-y-4">
-                <h2 className="font-black text-stone-800 flex items-center gap-2">
+                <h2 className="font-extrabold text-stone-800 flex items-center gap-2">
                     <Trophy size={18} className="text-saibro-600" />
                     Formato {classes.length > 1 ? `da ${classeAtiva}` : 'do campeonato'}
                 </h2>
@@ -256,7 +256,7 @@ export const CreatorFormat: React.FC<Props> = ({ classes, classFormats, onChange
 
             {confirmarRepetir && (
                 <div className="bg-white rounded-2xl border-2 border-saibro-200 p-5 space-y-3">
-                    <h3 className="font-black text-stone-800">
+                    <h3 className="font-extrabold text-stone-800">
                         {naoPersonalizadas.length === 1 ? 'Uma classe' : `${naoPersonalizadas.length} classes`} sem
                         configuração própria
                     </h3>

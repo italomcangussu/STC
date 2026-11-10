@@ -7,7 +7,7 @@ const countOfGroup = (g: AdminGroup, pending: PendingBySection) =>
     g.sections.reduce((n, s) => n + (pending[s.id] ?? 0), 0);
 
 const Badge: React.FC<{ n: number; className?: string }> = ({ n, className = '' }) => (
-    <span className={`inline-flex min-w-5 items-center justify-center rounded-full bg-saibro-600 px-1.5 text-[10px] font-black leading-5 text-white ${className}`}>
+    <span className={`inline-flex min-w-5 items-center justify-center rounded-full bg-saibro-600 px-1.5 text-meta font-extrabold leading-5 text-white ${className}`}>
         {n > 99 ? '99+' : n}<span className="sr-only"> pendentes</span>
     </span>
 );
@@ -43,10 +43,10 @@ export const AdminNav: React.FC<{ active: AdminTabId; onGo: (id: AdminTabId) => 
                             role="tab"
                             aria-selected={on}
                             onClick={() => onGo(on ? active : g.sections[0].id)}
-                            className={`relative flex min-h-14 min-w-0 flex-col items-center justify-center gap-0.5 rounded-2xl px-0.5 py-1.5 transition-colors active:scale-95 ${on ? 'bg-saibro-600 text-white shadow-md shadow-saibro-200' : 'text-stone-500 hover:bg-stone-100'}`}
+                            className={`relative flex min-h-14 min-w-0 flex-col items-center justify-center gap-0.5 rounded-2xl px-0.5 py-1.5 transition-colors active:scale-95 ${on ? 'bg-saibro-600 text-white shadow-md  ' : 'text-stone-500 hover:bg-stone-100'}`}
                         >
                             <Icon size={20} aria-hidden />
-                            <span className="w-full truncate text-center text-[10px] font-bold leading-tight tracking-tight min-[420px]:text-[11px]">{g.label}</span>
+                            <span className="w-full truncate text-center text-meta font-bold leading-tight tracking-tight min-[420px]:text-meta">{g.label}</span>
                             {n > 0 && !on && <Badge n={n} className="absolute right-1 top-0.5 scale-90" />}
                         </button>
                     );
@@ -88,7 +88,7 @@ export const AdminSectionHeading: React.FC<{ section: AdminSection }> = ({ secti
         <div className="flex items-center gap-3 px-1 pb-3 pt-5">
             <div className="shrink-0 rounded-2xl bg-saibro-100 p-2.5 text-saibro-700"><Icon size={22} aria-hidden /></div>
             <div className="min-w-0">
-                <h1 className="truncate text-xl font-black tracking-tight text-stone-800 md:text-2xl">{section.label}</h1>
+                <h1 className="truncate text-xl font-extrabold tracking-tight text-stone-800 md:text-2xl">{section.label}</h1>
                 <p className="text-sm text-stone-500">{section.hint}</p>
             </div>
         </div>

@@ -26,7 +26,7 @@ const PlayerCard: React.FC<{
   let avatarBorder = "border-transparent";
 
   if (rank === 1) {
-    cardStyle = "bg-linear-to-r from-yellow-50/80 to-amber-50/50 border-yellow-400 hover:border-yellow-500 shadow-yellow-100 animate-shimmer";
+    cardStyle = "bg-linear-to-r from-yellow-50/80 to-amber-50/50 border-yellow-400 hover:border-yellow-500   animate-shimmer";
     rankColor = "text-yellow-600";
     pointColor = "text-yellow-700";
     avatarBorder = "border-yellow-200";
@@ -36,7 +36,7 @@ const PlayerCard: React.FC<{
     pointColor = "text-stone-600";
     avatarBorder = "border-stone-300";
   } else if (rank === 3) {
-    cardStyle = "bg-linear-to-r from-orange-50/80 to-orange-50/30 border-orange-400 hover:border-orange-500 shadow-orange-100";
+    cardStyle = "bg-linear-to-r from-orange-50/80 to-orange-50/30 border-orange-400 hover:border-orange-500  ";
     rankColor = "text-orange-600";
     pointColor = "text-orange-700";
     avatarBorder = "border-orange-200";
@@ -51,7 +51,7 @@ const PlayerCard: React.FC<{
       <div className="flex items-center gap-3 shrink-0 relative">
         <div className={`flex flex-col items-center justify-center w-8 sm:w-10 ${rankColor}`}>
           {rank <= 3 ? <Crown size={rank === 1 ? 24 : 20} className="fill-current mb-[-4px]" /> : <span className="font-bold text-stone-300 font-mono text-xs">#</span>}
-          <span className={`font-black ${rank === 1 ? 'text-2xl sm:text-3xl' : 'text-xl sm:text-2xl'} leading-none tracking-tighter`}>{rank}</span>
+          <span className={`font-extrabold ${rank === 1 ? 'text-2xl sm:text-3xl' : 'text-xl sm:text-2xl'} leading-none tracking-tighter`}>{rank}</span>
         </div>
 
         <div className="relative">
@@ -63,7 +63,7 @@ const PlayerCard: React.FC<{
             </div>
           )}
           {showCategory && player.category && (
-            <div className="absolute -bottom-1 -right-1 bg-stone-800 text-white text-[9px] font-bold px-1.5 py-0.5 rounded border border-white shadow-sm">
+            <div className="absolute -bottom-1 -right-1 bg-stone-800 text-white text-meta font-bold px-1.5 py-0.5 rounded border border-white shadow-sm">
               {player.category}
             </div>
           )}
@@ -73,7 +73,7 @@ const PlayerCard: React.FC<{
       {/* Info */}
       <div className="flex-1 min-w-0 flex flex-col justify-center">
         <div className="flex items-center gap-2 mb-1">
-          <h3 className={`font-black text-stone-800 leading-tight truncate text-sm sm:text-base group-hover:text-saibro-700 transition-colors`}>{player.name}</h3>
+          <h3 className={`font-extrabold text-stone-800 leading-tight truncate text-sm sm:text-base group-hover:text-saibro-700 transition-colors`}>{player.name}</h3>
           
           {/* Form Guide - Recent Trend Dots */}
           <div className="hidden sm:flex items-center gap-0.5 shrink-0" title="Forma recente">
@@ -108,17 +108,17 @@ const PlayerCard: React.FC<{
         {/* Compact Stats Grid inline */}
         <div className="flex items-center gap-2 sm:gap-3 opacity-90">
           <div className="flex flex-col leading-none">
-            <span className="text-[10px] text-stone-400 font-bold uppercase tracking-wider scale-90 origin-left">Vit</span>
+            <span className="text-meta text-stone-400 font-bold uppercase tracking-wider scale-90 origin-left">Vit</span>
             <span className="font-bold text-stone-600 text-xs sm:text-sm">{player.totalWins}</span>
           </div>
           <div className="w-px h-5 bg-black/5" />
           <div className="flex flex-col leading-none">
-            <span className="text-[10px] text-stone-400 font-bold uppercase tracking-wider scale-90 origin-left">Jgs</span>
+            <span className="text-meta text-stone-400 font-bold uppercase tracking-wider scale-90 origin-left">Jgs</span>
             <span className="font-bold text-stone-600 text-xs sm:text-sm">{player.legacyMatchesPlayed + player.challengeMatchesPlayed}</span>
           </div>
           <div className="w-px h-5 bg-black/5" />
           <div className="flex flex-col leading-none">
-            <span className="text-[10px] text-stone-400 font-bold uppercase tracking-wider scale-90 origin-left">Aprv</span>
+            <span className="text-meta text-stone-400 font-bold uppercase tracking-wider scale-90 origin-left">Aprv</span>
             <span className={`font-bold text-xs sm:text-sm ${(player.totalWins / (player.legacyMatchesPlayed + player.challengeMatchesPlayed || 1)) >= 0.5 ? 'text-green-600' : 'text-stone-500'}`}>
               {Math.round((player.totalWins / (player.legacyMatchesPlayed + player.challengeMatchesPlayed || 1)) * 100)}%
             </span>
@@ -129,8 +129,8 @@ const PlayerCard: React.FC<{
       {/* Points - conditionally shown */}
       {showPoints && (
         <div className="flex flex-col items-end justify-center pl-2 border-l border-black/5">
-          <span className={`text-2xl sm:text-4xl font-black ${pointColor} leading-none tracking-tighter`}>{player.totalPoints}</span>
-          <span className={`text-[8px] sm:text-[10px] font-bold uppercase tracking-widest ${rankColor}`}>Pontos</span>
+          <span className={`text-2xl sm:text-4xl font-extrabold ${pointColor} leading-none tracking-tighter`}>{player.totalPoints}</span>
+          <span className={`text-meta sm:text-meta font-bold uppercase tracking-widest ${rankColor}`}>Pontos</span>
         </div>
       )}
 

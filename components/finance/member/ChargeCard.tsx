@@ -30,7 +30,7 @@ const Amounts: React.FC<{ charge: ChargeStatementRow; payable: boolean }> = ({ c
     {c.principal_paid_cents > 0 && <Line label="Já pago" value={`− ${formatBRL(c.principal_paid_cents)}`} valueClass="font-bold tabular-nums text-emerald-600" />}
     {payable && c.days_late > 0 && <LateRows charge={c} />}
     {payable && (
-      <div className="flex justify-between border-t border-stone-100 pt-1.5 text-base"><dt className="font-black text-stone-700">Total atualizado hoje</dt><dd className="font-black tabular-nums text-stone-900">{formatBRL(c.total_due_cents)}</dd></div>
+      <div className="flex justify-between border-t border-stone-100 pt-1.5 text-base"><dt className="font-extrabold text-stone-700">Total atualizado hoje</dt><dd className="font-extrabold tabular-nums text-stone-900">{formatBRL(c.total_due_cents)}</dd></div>
     )}
   </dl>
 );
@@ -40,7 +40,7 @@ const Heading: React.FC<{ charge: ChargeStatementRow; meta: MemberPendencyMeta |
   return (
     <div className="flex items-start justify-between gap-3">
       <div className="min-w-0">
-        <p className="text-sm font-black text-stone-800">{chargeTitle(charge, meta)}</p>
+        <p className="text-sm font-extrabold text-stone-800">{chargeTitle(charge, meta)}</p>
         <p className="text-xs text-stone-500">{chargeSubtitle(charge, meta)}</p>
         {guest && <p className="mt-1 text-xs text-stone-400">{guest}</p>}
       </div>

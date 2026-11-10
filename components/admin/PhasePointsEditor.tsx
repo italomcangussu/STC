@@ -91,7 +91,7 @@ export const PhasePointsEditor: React.FC = () => {
             )}
 
             <div className="bg-white rounded-2xl border border-stone-100 p-5 space-y-3">
-                <h3 className="font-black text-stone-800">Pontuação por fase alcançada</h3>
+                <h3 className="font-extrabold text-stone-800">Pontuação por fase alcançada</h3>
                 <ul className="space-y-2">
                     {rows.map(row => (
                         <li key={row.phase} className="flex items-center justify-between gap-3 p-3 rounded-xl border border-stone-100">
@@ -117,7 +117,7 @@ export const PhasePointsEditor: React.FC = () => {
 
             {semPontuacao.length > 0 && (
                 <div className="bg-white rounded-2xl border border-stone-100 p-5 space-y-3">
-                    <h3 className="font-black text-stone-800">Sem pontuação definida</h3>
+                    <h3 className="font-extrabold text-stone-800">Sem pontuação definida</h3>
                     <p className="text-xs text-stone-500">
                         Estas fases valem {FALLBACK_POINTS} pontos por padrão, o mesmo que participação.
                         Defina um valor para diferenciá-las.

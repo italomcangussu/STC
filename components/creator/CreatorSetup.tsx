@@ -59,7 +59,7 @@ export const CreatorSetup: React.FC<Props> = ({ value, onChange, onNext }) => {
     return (
         <div className="space-y-4">
             <div className="bg-white rounded-2xl border border-stone-100 p-5 space-y-4">
-                <h2 className="font-black text-stone-800 flex items-center gap-2">
+                <h2 className="font-extrabold text-stone-800 flex items-center gap-2">
                     <Trophy size={18} className="text-saibro-600" /> Dados do campeonato
                 </h2>
 
@@ -145,7 +145,7 @@ export const CreatorSetup: React.FC<Props> = ({ value, onChange, onNext }) => {
                     type="button"
                     onClick={() => setShowAdvanced(v => !v)}
                     aria-expanded={showAdvanced}
-                    className="w-full flex items-center justify-between font-black text-stone-800"
+                    className="w-full flex items-center justify-between font-extrabold text-stone-800"
                 >
                     <span className="flex items-center gap-2"><Settings size={16} className="text-stone-400" /> Avançado — pontuação</span>
                     <span className="text-xs font-bold text-stone-400">{showAdvanced ? 'ocultar' : 'usando padrão'}</span>
