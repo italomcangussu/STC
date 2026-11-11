@@ -29,7 +29,7 @@ Chão liso stone-50, superfícies brancas com borda de 1 px e sombra de contato,
 
 ## Tema escuro
 
-`<html data-tema="escuro">`, escolhido em Configurações → Aparência (Claro, Escuro, Do aparelho; padrão Claro). `lib/tema.ts` aplica antes do React montar e troca o `theme-color` para #140c07.
+`<html data-tema="escuro">`, escolhido em Configurações → Aparência (Claro, Escuro, Do aparelho; padrão Escuro desde 11/11/2026). `lib/tema.ts` aplica antes do React montar e troca o `theme-color` para #140c07.
 
 | Papel | Escuro | Contraste |
 |---|---|---|

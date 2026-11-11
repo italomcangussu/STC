@@ -12,11 +12,11 @@ describe('tema do app', () => {
         sistema(false);
     });
 
-    it('começa claro, mesmo com o aparelho no escuro', () => {
-        sistema(true);
-        expect(lerTema()).toBe('claro');
+    it('começa escuro, mesmo com o aparelho no claro', () => {
+        sistema(false);
+        expect(lerTema()).toBe('escuro');
         aplicarTema();
-        expect(document.documentElement.dataset.tema).toBeUndefined();
+        expect(document.documentElement.dataset.tema).toBe('escuro');
     });
 
     it('a escolha salva vale e marca o <html>', () => {

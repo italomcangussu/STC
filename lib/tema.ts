@@ -1,13 +1,14 @@
 // Tema do app: claro, escuro ou o do aparelho. Fica no aparelho (localStorage)
 // e é aplicado antes do React montar, para a tela não piscar no tema errado.
-// O padrão é claro: o escuro é escolha de quem pede, até cobrir todas as telas.
+// O padrão é escuro (o chão de saibro à noite); quem já escolheu Claro ou
+// Do aparelho em Configurações continua com a própria escolha.
 
 export type Tema = 'claro' | 'escuro' | 'auto';
 
 const CHAVE = 'stc_tema_v1';
 const COR_BARRA = { claro: '#fafaf9', escuro: '#140c07' } as const;
 
-let padrao: Tema = 'claro';
+let padrao: Tema = 'escuro';
 let ouvindoSistema = false;
 
 export function lerTema(): Tema {
