@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     Calendar, Trophy, LayoutDashboard,
     Sandwich, Menu, X, LogOut, GraduationCap, Swords, Settings, Bell, Gamepad2, Shuffle, ChevronRight, Wallet, MessagesSquare, ShieldCheck, FileSignature, ListOrdered, Zap
@@ -8,6 +8,7 @@ import { supabase } from '../lib/supabase';
 import { isPushSupported, isInstalledPWA, isIOS, getPermissionStatus, subscribeToPush, isSubscribed } from '../lib/pushNotifications';
 import { PushPermissionPrompt } from './PushPermissionPrompt';
 import { AdminLogin } from './AdminLogin';
+import { ChaoSaibro } from './ui/ChaoSaibro';
 import { usePendingSignatures } from '../lib/signatures/usePendingSignatures';
 
 interface NavItem {
@@ -173,6 +174,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
     // Barra de baixo: as quatro tarefas de toda semana, fixas; o resto mora em "Mais".
     // Perfis sem elas (lanchonete) ficam com os seus próprios itens.
     const fixas = filteredNav.filter(item => ABAS_FIXAS.includes(item.id));
+    const areaRolagem = useRef<HTMLElement>(null);
     const abas = fixas.length > 0 ? fixas : filteredNav.slice(0, 4);
     const idsAbas = new Set(abas.map(a => a.id));
     const maisAtivo = isMenuOpen || !idsAbas.has(view);
@@ -180,6 +182,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
 
     return (
         <div className="relative h-full flex flex-col md:flex-row w-full max-w-full min-w-0 overflow-hidden bg-clay-pattern">
+            <ChaoSaibro rolagem={areaRolagem} />
             {/* Mobile Header Bar (HIG Standard Navigation Bar) */}
             <header className="flex-none md:hidden bg-superficie border-b border-linha px-4 py-3 flex justify-between items-center z-50 pt-safe sticky top-0 shadow-xs">
                 <div className="flex items-center gap-2.5">
@@ -437,7 +440,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, view, setView, current
             </aside>
 
             {/* Main Content Area */}
-            <main className="app-scroll flex-1 min-h-0 min-w-0 overflow-y-auto overflow-x-hidden overscroll-contain relative custom-scrollbar">
+            <main className="app-scroll flex-1 min-h-0 min-w-0 overflow-y-auto overflow-x-hidden overscroll-contain relative custom-scrollbar" ref={areaRolagem}>
                 <div className={`mx-auto min-w-0 ${view === 'admin-panel' ? 'w-full pb-main-content md:pb-4' : 'max-w-4xl p-4 md:p-6 pb-main-content md:pb-12'}`}>
                     {children}
                 </div>

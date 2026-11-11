@@ -8,6 +8,7 @@ import { loadAgendaReservations } from '../lib/agenda/loadAgendaReservations';
 import { defaultHistoryStart, extendedHistoryStart, firstDayShown } from '../lib/agenda/reservationWindow';
 import { AgendaLoadError } from './agenda/AgendaLoadError';
 import { SeuAgora } from './agenda/SeuAgora';
+import { soprarChao } from '../lib/chaoSaibro';
 import { notify } from '../lib/notifications';
 import { matchesSearch } from '../lib/searchText';
 import { useConfirm } from '../hooks/useConfirm';
@@ -908,6 +909,10 @@ const ReservationCard: React.FC<{
 }> = ({ res, currentUser: _currentUser, profiles, courts, professors, nonSocioStudents, onSelect, challenges, onLaunchScore }) => {
     const court = courts.find(c => c.id === res.courtId);
     const style = TYPE_STYLES[res.type] || TYPE_STYLES['Play'];
+    const encerrada = (res.type === 'Campeonato' && res.matchStatus === 'finished')
+        || getNowInFortaleza() > new Date(`${res.date}T${res.endTime}`);
+    // "Quadra Saibro (Saibro)" repete o piso: só mostra quando o nome não diz.
+    const mostrarPiso = !!court?.type && !court.name.toLowerCase().includes(court.type.toLowerCase());
 
     // Participants logic
     const socioParticipantIds = res.type === 'Aula' ? getClassSocioIds(res) : res.participantIds;
@@ -935,37 +940,23 @@ const ReservationCard: React.FC<{
             {/* ANIMAÇÃO DE QUADRA (apenas para Campeonatos) */}
             {res.type === 'Campeonato' && <TennisCourtAnimation />}
 
-            {/* Header */}
-            <div className="relative z-10 flex justify-between items-start mb-3">
-                <div className="flex flex-col">
-                    <div className="flex items-center gap-2 mb-1">
-                        <span className={`text-meta font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border ${style.text} bg-white border-current shadow-sm`}>
-                            {style.label}
-                        </span>
-                        {res.status === 'cancelled' && <span className="text-meta font-bold text-red-500 uppercase bg-red-100 px-1.5 py-0.5 rounded-md">Cancelada</span>}
+            {/* Header: o horário é o que a pessoa procura; o resto apoia. */}
+            <div className="relative z-10 flex justify-between items-start gap-3 mb-3">
+                <div className="flex flex-col min-w-0">
+                    <div className={`flex items-baseline gap-2 ${encerrada ? 'text-texto-3' : 'text-texto'}`}>
+                        <span className="text-3xl font-extrabold tabular-nums leading-none tracking-tight">{res.startTime.slice(0, 5)}</span>
+                        <span className={`text-base font-semibold tabular-nums ${encerrada ? '' : 'text-texto-2'}`}>até {res.endTime.slice(0, 5)}</span>
                     </div>
-                    <h4 className="font-bold text-stone-800 text-base leading-tight">
-                        {court?.name} <span className="text-texto-3 font-normal text-xs block sm:inline">({court?.type})</span>
+                    <h4 className={`mt-1.5 font-bold text-base leading-tight ${encerrada ? 'text-texto-2' : 'text-texto'}`}>
+                        {court?.name}
+                        {mostrarPiso && <span className="text-texto-3 font-normal text-xs"> ({court?.type})</span>}
                     </h4>
                 </div>
-                <div className="text-right">
-                    <div className="flex items-center gap-3 bg-stone-50/80 rounded-xl p-1.5 pl-3 border border-stone-100 shadow-sm backdrop-blur-sm">
-                        <div className="flex flex-col items-center">
-                            <span className="text-meta text-texto-3 font-bold uppercase tracking-wider mb-0.5">Início</span>
-                            <span className="text-sm font-extrabold text-stone-800 tabular-nums leading-none tracking-tight">{res.startTime.slice(0, 5)}</span>
-                        </div>
-
-                        <div className="relative h-6 w-px bg-stone-200">
-                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-white border border-stone-200 flex items-center justify-center shadow-sm z-10">
-                                <ArrowRight size={10} className="text-texto-3" />
-                            </div>
-                        </div>
-
-                        <div className="flex flex-col items-center">
-                            <span className="text-meta text-texto-3 font-bold uppercase tracking-wider mb-0.5">Fim</span>
-                            <span className="text-sm font-bold text-stone-500 tabular-nums leading-none tracking-tight">{res.endTime.slice(0, 5)}</span>
-                        </div>
-                    </div>
+                <div className="flex flex-col items-end gap-1 shrink-0">
+                    <span className={`text-meta font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border ${style.text} bg-white border-current shadow-sm`}>
+                        {style.label}
+                    </span>
+                    {res.status === 'cancelled' && <span className="text-meta font-bold text-red-500 uppercase bg-red-100 px-1.5 py-0.5 rounded-md">Cancelada</span>}
                 </div>
             </div>
 
@@ -1130,8 +1121,8 @@ const ReservationCard: React.FC<{
                                     pulse = true;
                                 } else {
                                     statusText = 'Inicia hoje';
-                                    statusColor = 'text-acao';
-                                    dotColor = 'bg-saibro-500';
+                                    statusColor = 'text-agora';
+                                    dotColor = 'bg-agora';
                                 }
                             } else if (isTomorrow) {
                                 statusText = 'Começa amanhã';
@@ -1182,8 +1173,8 @@ const ReservationCard: React.FC<{
                     )}
                 </div>
 
-                <div className="flex items-center gap-1 text-meta font-bold text-stone-500 uppercase tracking-widest group-hover:text-saibro-600 transition-colors ml-auto">
-                    VER DETALHES <ArrowRight size={12} className="opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all duration-300" />
+                <div className="flex items-center gap-0.5 text-meta font-bold text-texto-2 uppercase tracking-widest ml-auto">
+                    Detalhes <ChevronRight size={16} aria-hidden />
                 </div>
             </div>
         </div>
@@ -1745,6 +1736,7 @@ export const Agenda: React.FC<{ currentUser: User }> = ({ currentUser }) => {
     const navigate = (direction: 'prev' | 'next') => {
         const diff = view === 'week' ? 7 : 1;
         setCurrentDate(addDays(currentDate, direction === 'next' ? diff : -diff));
+        soprarChao(direction === 'next' ? -1 : 1);
     };
 
     // --- Filter Data ---

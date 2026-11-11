@@ -29,16 +29,21 @@ Chão liso stone-50, superfícies brancas com borda de 1 px e sombra de contato,
 
 ## Tema escuro
 
-`<html data-tema="escuro">`, escolhido em Configurações → Aparência (Claro, Escuro, Do aparelho; padrão Claro). `lib/tema.ts` aplica antes do React montar e troca o `theme-color` para #0c0a09.
+`<html data-tema="escuro">`, escolhido em Configurações → Aparência (Claro, Escuro, Do aparelho; padrão Claro). `lib/tema.ts` aplica antes do React montar e troca o `theme-color` para #140c07.
 
 | Papel | Escuro | Contraste |
 |---|---|---|
-| Chão · Superfície · Superfície 2 | #0c0a09 · #1c1917 · #292524 | |
+| Chão · Superfície · Superfície 2 | #140c07 (saibro à noite) · #1c1917 · #292524 | |
 | Linha · Borda de campo | #3a3532 · #78716c | 3,6:1 |
 | Texto · 2 · 3 | #f5f5f4 · #d6d3d1 · #a8a29e | 16 · 11 · 6,9:1 |
-| Ação (texto escuro por cima) | #f97316 | 6,2:1 |
-| Ação forte · suave | #fdba74 · #2b1a10 | |
+| Ação (texto carvão por cima) | #d4ef3c amarelo bola | 13,5:1 |
+| Ação forte · suave | #e6f98a · #262b0f | |
+| Agora · forte · suave | #f97316 · #fdba74 · #2b1a10 | 6,2:1 |
 | Sucesso · aviso · erro · info | #4ade80 · #fbbf24 · #f87171 · #7fb0dc | ≥ 6:1 |
+
+**Chão de saibro (só no escuro).** `components/ui/ChaoSaibro.tsx` monta um `<canvas>` atrás do conteúdo no `Layout`; o motor é `lib/chaoSaibro.ts` (grãos em três profundidades, refletor, rajadas, marca da bola, rastelo; ~30 quadros/s, pausa em segundo plano, um quadro parado com movimento reduzido). É a exceção ao "chão liso" e aos "seis movimentos": vale só para o chão, nunca para componente. Texto só em superfície opaca ou direto no chão com ≥ 4,5:1 contra `#140c07`. Contrato: `direcoes/chao-saibro.md`.
+
+**Agora ≠ ação.** `text-agora`, `bg-agora`, `bg-agora-suave`, `text-agora-forte` marcam o que acontece hoje ou neste instante. No claro valem o mesmo saibro da ação; no escuro a ação é amarelo bola e o agora continua saibro. `soprarChao(dir)` pede uma rajada ao trocar de dia.
 
 Telas no cardápio trocam sozinhas. As classes antigas (`bg-white`, `stone-*`, tons `-50…-300`, textos `-600…-900`, gradientes e variantes `/alfa`) são mapeadas no fim do `index.css` por um bloco gerado das classes em uso. Seções já escuras (`bg-stone-800/900`, `text-white`, botões `saibro-600`) e branco translúcido abaixo de 50% ficam como estão. Tela nova: use os papéis, e o escuro vem de graça.
 
@@ -64,7 +69,7 @@ Proibidos: `animate-bounce`, texto em gradiente (`bg-clip-text`), brilho colorid
 
 ## Navegador
 
-Viewport sem bloqueio de zoom; campo com 16 px no toque; `accent-color`, `caret-color`, `::selection` e `:focus-visible` em saibro; `theme-color` #fafaf9 (escuro #0c0a09); ícone maskable no manifest.
+Viewport sem bloqueio de zoom; campo com 16 px no toque; `accent-color`, `caret-color`, `::selection` e `:focus-visible` em saibro; `theme-color` #fafaf9 (escuro #140c07); ícone maskable no manifest.
 
 ---
 

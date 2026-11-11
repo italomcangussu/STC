@@ -37,13 +37,13 @@ export const SeuAgora: React.FC<{
         <button
             type="button"
             onClick={() => onAbrir(reserva)}
-            className="animate-in fade-in flex w-full min-h-16 items-center gap-3 rounded-card border border-acao/20 bg-acao-suave p-4 text-left active:scale-[0.99] transition-transform"
+            className="animate-in fade-in flex w-full min-h-16 items-center gap-3 rounded-card border border-agora/20 bg-agora-suave p-4 text-left active:scale-[0.99] transition-transform"
         >
-            <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full ${quando === 'agora' ? 'bg-acao text-acao-texto' : 'bg-superficie text-acao'}`}>
+            <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full ${quando === 'agora' ? 'bg-agora text-acao-texto' : 'bg-superficie text-agora'}`}>
                 <Clock size={20} aria-hidden />
             </span>
             <span className="min-w-0 flex-1">
-                <span className="block text-meta font-bold uppercase tracking-wider text-acao-forte">{rotulo}</span>
+                <span className="block text-meta font-bold uppercase tracking-wider text-agora-forte">{rotulo}</span>
                 <span className="block text-base font-bold text-texto tabular-nums">
                     {reserva.startTime}–{reserva.endTime} · {quadra}
                 </span>

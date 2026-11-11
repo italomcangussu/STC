@@ -5,7 +5,7 @@
 export type Tema = 'claro' | 'escuro' | 'auto';
 
 const CHAVE = 'stc_tema_v1';
-const COR_BARRA = { claro: '#fafaf9', escuro: '#0c0a09' } as const;
+const COR_BARRA = { claro: '#fafaf9', escuro: '#140c07' } as const;
 
 let padrao: Tema = 'claro';
 let ouvindoSistema = false;

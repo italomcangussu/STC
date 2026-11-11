@@ -114,6 +114,11 @@
     --color-acao-forte: #9a3412;      /* saibro-800: hover e pressionado */
     --color-acao-suave: #fff7ed;      /* saibro-50: seleção, "agora" */
     --color-acao-texto: #ffffff;
+    /* "Agora": o que acontece hoje ou neste instante. No claro é o mesmo saibro
+       da ação; no escuro a ação vira amarelo bola e o agora continua saibro. */
+    --color-agora: #c2410c;
+    --color-agora-forte: #9a3412;
+    --color-agora-suave: #fff7ed;
     --color-sucesso: #15803d;         /* green-700 · 5,0:1 */
     --color-sucesso-suave: #f0fdf4;
     --color-aviso: #b45309;           /* âmbar 700 · 5,0:1 */
@@ -1933,7 +1938,7 @@ input[type="datetime-local"] {
 
 [data-tema="escuro"] {
     color-scheme: dark;
-    --color-chao: #0c0a09;            /* stone-950 */
+    --color-chao: #140c07;            /* saibro à noite; o <canvas> do ChaoSaibro desenha por cima */
     --color-superficie: #1c1917;      /* stone-900 */
     --color-superficie-2: #292524;    /* stone-800 */
     --color-linha: #3a3532;
@@ -1941,10 +1946,13 @@ input[type="datetime-local"] {
     --color-texto: #f5f5f4;           /* 16:1 */
     --color-texto-2: #d6d3d1;         /* 11:1 */
     --color-texto-3: #a8a29e;         /* 6,9:1 */
-    --color-acao: #f97316;            /* saibro-500 · texto escuro 6,2:1; como texto na superfície 6,2:1 */
-    --color-acao-forte: #fdba74;      /* saibro-300 */
-    --color-acao-suave: #2b1a10;
+    --color-acao: #d4ef3c;            /* amarelo bola · texto carvão 13,5:1; como texto na superfície 13,5:1 */
+    --color-acao-forte: #e6f98a;      /* hover e pressionado; texto sobre acao-suave */
+    --color-acao-suave: #262b0f;      /* seleção */
     --color-acao-texto: #1c1917;
+    --color-agora: #f97316;           /* saibro-500 · 6,2:1 na superfície */
+    --color-agora-forte: #fdba74;     /* saibro-300 */
+    --color-agora-suave: #2b1a10;
     --color-sucesso: #4ade80;
     --color-sucesso-suave: #10241a;
     --color-aviso: #fbbf24;
