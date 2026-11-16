@@ -58,7 +58,13 @@ function categoryNote(s: Ctx): string {
   return `categoria ${s.category_name}`;
 }
 
+/** Comprovante de conta que já estava pendente: a proposta é a baixa nela, não um lançamento novo (caso de 05/11). */
+function entrySettleProposal(s: Ctx): string {
+  return `Essa conta já estava lançada como pendente: ${s.settles_description} (venc. ${dateBR(s.settles_due_date)}), ${centsBR(s.amount_cents)}. Vou dar baixa nela, paga em ${dateBR(s.paid_on)}, conta ${s.account_name}${receiptNote(s, 'com o comprovante que você mandou anexado')}, sem lançar despesa nova.`;
+}
+
 function entryCreateProposal(s: Ctx): string {
+  if (s.settles_entry_id) return entrySettleProposal(s);
   const quando = s.entry_status === 'pending' ? `a pagar até ${dateBR(s.due_date)}` : `paga em ${dateBR(s.paid_on)}`;
   return `Vou lançar a ${entryKind(s)}: ${s.description}, ${centsBR(s.amount_cents)}, ${categoryNote(s)}, conta ${s.account_name}, ${quando}${receiptNote(s, 'com o comprovante que você mandou anexado')}.`;
 }
@@ -126,7 +132,9 @@ export const FIN_SUCCESS: Record<FinTextAction, Render> = {
   fin_receipt_approve: (s) => `Pronto: comprovante de ${s.member_name} aprovado, ${centsBR(s.amount_cents)} baixados.`,
   fin_charges_generate: chargesGeneratedSuccess,
   fin_receipt_reject: (s) => `Pronto: comprovante de ${s.member_name} recusado.`,
-  fin_entry_create: (s) => `Pronto: ${entryKind(s)} lançada: ${s.description}, ${centsBR(s.amount_cents)}${receiptNote(s, 'comprovante anexado')}.${championshipNote(s.championship as Ctx | undefined)}`,
+  fin_entry_create: (s) => s.settles_entry_id
+    ? `Pronto: baixa dada em ${s.settles_description}, ${centsBR(s.amount_cents)}${receiptNote(s, 'comprovante anexado')}.`
+    : `Pronto: ${entryKind(s)} lançada: ${s.description}, ${centsBR(s.amount_cents)}${receiptNote(s, 'comprovante anexado')}.${championshipNote(s.championship as Ctx | undefined)}`,
   fin_pendency_create: (s) => `Pronto: pendência lançada para ${s.member_name}, ${s.description}, ${centsBR(s.amount_cents)}.${result(s).automation_recipient_id ? ' A cobrança já está na fila de envio.' : ''}`,
   fin_pendency_send: pendencySendSuccess,
   fin_pendency_collection: (s) => `Pronto: cobrança de ${s.member_name} (${s.description}) ${s.enabled ? 'retomada' : 'pausada'}.`,

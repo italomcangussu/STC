@@ -14,4 +14,14 @@ describe('João: comprovante anexado ao lançamento', () => {
     expect(adminProposalMessage('fin_entry_create', despesa)).not.toMatch(/comprovante/);
     expect(adminSuccessMessage('fin_entry_create', despesa)).toBe('Pronto: despesa lançada: Mão de obra do bombeiro, R$ 150,00.');
   });
+  it('comprovante de conta já pendente: propõe a baixa nela, não despesa nova (Henrique, 05/11)', () => {
+    const s = { ...despesa, description: 'Pagamento do aluguel', amount_cents: 324200, paid_on: '2026-11-05', receipt_id: 'r1',
+      settles_entry_id: 'e1', settles_description: 'Aluguel do Espaço', settles_due_date: '2026-11-05' };
+    const prop = adminProposalMessage('fin_entry_create', s);
+    expect(prop).toContain('já estava lançada como pendente: Aluguel do Espaço (venc. 05/11/2026), R$ 3.242,00');
+    expect(prop).toContain('Vou dar baixa nela');
+    expect(prop).toContain('sem lançar despesa nova');
+    expect(prop).not.toContain('Vou lançar a despesa');
+    expect(adminSuccessMessage('fin_entry_create', s)).toBe('Pronto: baixa dada em Aluguel do Espaço, R$ 3.242,00, comprovante anexado.');
+  });
 });
