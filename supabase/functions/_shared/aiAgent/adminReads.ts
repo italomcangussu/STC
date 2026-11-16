@@ -175,10 +175,22 @@ function offsetsLine(itens: Row[]): string {
   return `\n- Abatido da mensalidade todo mês: ${itens.map((i) => `${i.description} ${brl(i.amount_cents)}`).join(' + ')} = ${brl(total)}. O Pix dele vem com esse desconto e quita a mensalidade.`;
 }
 
+const vencimentoLine = (i: Row) => `- ${dia(i.due_date)}${i.late ? ' (atrasado)' : ''}: ${i.kind === 'revenue' ? 'a receber' : 'a pagar'} ${brl(i.amount_cents)} — ${i.description}${i.supplier ? ` (${i.supplier})` : ''}`;
+
+/**
+ * Item por item do que está em aberto (vencido e dos próximos dias), embaixo dos totais de "a receber/a pagar".
+ * Sem isso, "quais são as 5 contas vencidas?" voltava só os totais, três vezes seguidas (Thieslley, 16/11).
+ */
+export function renderContasEmAberto(d: Row): string {
+  const itens = arr(d.items);
+  if (!itens.length) return '';
+  return `\nConta por conta (vencidas e as que vencem até ${dia(d.until)}):\n${itens.map(vencimentoLine).join('\n')}`;
+}
+
 function renderVencimentos(d: Row): string {
   const itens = arr(d.items);
   if (!itens.length) return `Nada a vencer até ${dia(d.until)}.`;
-  const lista = itens.map((i) => `- ${dia(i.due_date)}${i.late ? ' (atrasado)' : ''}: ${i.kind === 'revenue' ? 'a receber' : 'a pagar'} ${brl(i.amount_cents)} — ${i.description}${i.supplier ? ` (${i.supplier})` : ''}`).join('\n');
+  const lista = itens.map(vencimentoLine).join('\n');
   return `Até ${dia(d.until)}: a pagar ${brl(d.payable_cents)}${n(d.receivable_cents) ? `, a receber ${brl(d.receivable_cents)}` : ''}.\n${lista}`;
 }
 

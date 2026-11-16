@@ -1,6 +1,6 @@
 // Assessor administrativo: propostas e execução de ações do financeiro, cadastros, consultas e arquivos.
 
-import { type AdminReadDomain, FORMS_DOMAINS, renderAdminRead } from './adminReads.ts';
+import { type AdminReadDomain, FORMS_DOMAINS, renderAdminRead, renderContasEmAberto } from './adminReads.ts';
 import { isAdminAssistant } from './promptAdmin.ts';
 import type { Ctx } from './promptTypes.ts';
 import type { DecideInput } from './decide.ts';
@@ -78,5 +78,12 @@ export async function adminConsulta(i: DecideInput, memory: Memory): Promise<Dec
   if ('ask' in extra) return ask(String(extra.ask));
   const res = await readAdmin(i, domain, { ...periodArgs(i), ...extra });
   if (!res?.ok) return ask(res?.message ?? READ_FAILED, false);
-  return { bubbles: [renderAdminRead(domain, res.data)], awaiting: false, close: false, action: `admin_read:${domain}`, memory, verbatim: true };
+  const detalhe = domain === 'receber_pagar' ? await contasEmAberto(i) : '';
+  return { bubbles: [renderAdminRead(domain, res.data) + detalhe], awaiting: false, close: false, action: `admin_read:${domain}`, memory, verbatim: true };
+}
+
+/** A lista das contas abertas (vencidas e dos próximos 7 dias); falhou a leitura, os totais saem sozinhos. */
+async function contasEmAberto(i: DecideInput): Promise<string> {
+  const r = await readAdmin(i, 'vencimentos', { days: 7 });
+  return r?.ok ? renderContasEmAberto((r.data ?? {}) as Ctx) : '';
 }

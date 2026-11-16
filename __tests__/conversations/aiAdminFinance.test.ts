@@ -143,6 +143,22 @@ describe('assessor administrativo do João (turno completo)', () => {
     }
   }, 90000);
 
+  it('a receber/a pagar traz conta por conta embaixo dos totais (Thieslley, 16/11: "quais são as 5 contas vencidas?")', async () => {
+    const w = await setup();
+    await w.db.exec(`insert into public.fin_categories (id, name, kind, dre_line, active) values ('00000000-0000-0000-0000-00000000ca01', 'Despesas', 'expense', 'administrative', true);
+      insert into public.fin_categories (id, name, kind, dre_line, active, parent_id) values ('00000000-0000-0000-0000-00000000ca02', 'Aluguel', 'expense', 'administrative', true, '00000000-0000-0000-0000-00000000ca01');
+      insert into public.fin_entries (kind, status, description, category_id, amount_cents, competence_date, due_date, request_id)
+      values ('expense', 'pending', 'Aluguel do Espaço', '00000000-0000-0000-0000-00000000ca02', 324200, '2026-01-01', '2026-01-05', gen_random_uuid())`);
+    const p = provider();
+    const m = await direct(w, 'quais são as contas vencidas?');
+    const r = await turn(w, m.message_id, script(answer({ intent: 'admin_consulta', ready: true, slots: { read_domain: 'receber_pagar' } })).chat, p.uaz);
+    expect(r.action).toBe('admin_read:receber_pagar');
+    const texto = p.sent.at(-1)!.text;
+    expect(texto).toMatch(/\nA pagar: R\$ 3\.242,00 em aberto; vencido R\$ 3\.242,00 \(1 contas\)/);
+    expect(texto).toContain('Conta por conta (vencidas e as que vencem até');
+    expect(texto).toContain('- 05/01/2026 (atrasado): a pagar R$ 3.242,00 — Aluguel do Espaço');
+  }, 90000);
+
   it('consulta sem domínio pergunta o que ver; período inválido é recusado pelo banco', async () => {
     const w = await setup();
     const p = provider();
