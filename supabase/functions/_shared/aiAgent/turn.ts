@@ -186,19 +186,25 @@ function limitationNote(t: Turn, d: Decision, fallback: 'reformulada' | 'pronta'
   return limitado ? { fallback: fallback ?? 'limitacao', limitation: true, asked: t.buffered.slice(0, 200) } : {};
 }
 
+/** O que o servidor já fez ou deixou aberto esperando o "sim" não pode ser cortado por mensagem nova. */
+export const mustDeliver = (d: Pick<Decision, 'forward' | 'action'>): boolean =>
+  Boolean(d.forward) || EXECUTED.has(d.action ?? '') || (d.action ?? '').startsWith('proposed');
+
 /** Fala o que foi decidido (texto e arquivos) e salva o turno. */
 async function finishTurn(t: Turn, answer: Answer, { d, closeSession }: { d: Decision; closeSession: boolean }, fallback: 'reformulada' | 'pronta' | null): Promise<TurnResult> {
   if (d.handoff) return t.handoff(d.bubbles, d.handoff, d.memory, d.action);
   let enviadas = await t.entregar(d.verbatim ? [{ text: d.bubbles.join('\n\n'), delayMs: 900 }] : cadence(d.bubbles),
     // Ação feita (despesa lançada, reserva confirmada) sempre avisa, mesmo se ele já mandou o próximo pedido (Henrique, 05/11).
-    { firme: Boolean(d.forward) || EXECUTED.has(d.action ?? '') });
+    // Proposta também: ficou aberta no banco, então a pessoa precisa vê-la. Caso do Thiago (grupo, 15/11): a proposta
+    // dos parceiros foi cortada por "Tá dormindo…" e o próximo pedido virou "Não entendi se é para seguir com o que descrevi acima".
+    { firme: mustDeliver(d) });
   if (d.files?.length) enviadas += await t.entregarArquivos(d.files);
   if (d.forward && d.forward.admin_conversation_id !== t.conversation) await deliverForward(d.forward, { db: t.deps.db, uaz: t.deps.uaz, signedUrl: t.deps.files?.signedUrl });
   if (answer.transfer && !t.isGroup) {
     await t.deps.db('conv_svc_ai_handoff', { p_session: t.session, p_kind: answer.handoff_kind ?? 'hard', p_note: answer.handoff_note || 'Transferida pela IA' });
   }
   const decision = answer.transfer ? `handoff_${answer.handoff_kind}` : d.close ? 'close' : d.action ?? 'reply';
-  await t.save(d.memory, decision, { action: d.action, intent: answer.intent, bubbles: enviadas, ...limitationNote(t, d, fallback) },
+  await t.save(d.memory, decision, { action: d.action, intent: answer.intent, bubbles: enviadas, ...(d.cut ? { cut: d.cut } : {}), ...limitationNote(t, d, fallback) },
     { awaiting: d.awaiting, close: closeSession || (answer.transfer && answer.handoff_kind === 'hard') });
   return { status: 'replied', bubbles: enviadas, handoff: answer.transfer ? answer.handoff_kind : null, action: d.action };
 }

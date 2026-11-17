@@ -98,6 +98,20 @@ export function claimsSuccess(text: string): boolean {
   return affirms(text, SUCCESS_STATE, true) && !AGENDA_REPORT.test(text);
 }
 
+/**
+ * Tira da bolha só as frases que anunciam algo feito; o resto da resposta fica. Sobra curta demais (menos de 4
+ * palavras) some junto, porque costuma ser o "Te vejo lá!" do anúncio cortado. Antes a bolha inteira caía:
+ * "Valor?" do Bruno (04/11) virou "Ainda não registrei nada" porque a resposta também dizia "confirmado".
+ */
+export function withoutClaims(text: string, anuncia: (t: string) => boolean): string | null {
+  if (!anuncia(text)) return text;
+  // Cartão ("👤 *Atleta:* …") é tudo ou nada: sem a linha do status ele mente por omissão.
+  if (/\*[^*\n]+:\*/.test(text)) return null;
+  const ficam = text.split(/(?<=[.!?…])\s+|\n+/).filter((frase) => frase.trim() && !anuncia(frase));
+  const resto = ficam.join(' ').trim();
+  return resto.split(/\s+/).filter(Boolean).length >= 4 ? resto : null;
+}
+
 /** Só o "eu fiz" (confirmei, coloquei…). Em papo sem ação possível, "cabeças confirmados" é relato, não anúncio. */
 export const claimsOwnAction = (text: string): boolean => affirms(text, SUCCESS_BY_ME, false);
 

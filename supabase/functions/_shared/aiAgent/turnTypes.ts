@@ -200,7 +200,8 @@ export type Decision = { bubbles: string[]; awaiting: boolean; close: boolean; a
   /** Dados do assunto depois do turno, quando o servidor os muda (passo do plano). */ slots?: Slots;
   /** Relatório do servidor: vai numa mensagem só, com as quebras de linha (sem picotar em microbolhas). */ verbatim?: boolean;
   /** Arquivos para o administrador (já copiados para a mídia da conversa): saem como documento depois da fala. */ files?: OutFile[];
-  /** Pix conferido no turno (inscrição com comprovante guardado): a fala sai firme e o financeiro recebe o aviso. */ forward?: ReceiptForward };
+  /** Pix conferido no turno (inscrição com comprovante guardado): a fala sai firme e o financeiro recebe o aviso. */ forward?: ReceiptForward;
+  /** Bolhas do modelo que a trava cortou por anunciar algo não feito: vão para o trace (diagnóstico sem adivinhar). */ cut?: string[] };
 
 /** `kind` image sai como foto (a camisa do campeonato); sem ele, como documento. */
 export type OutFile = { path: string; name: string; mime: string; caption: string; kind?: 'image' | 'document' };

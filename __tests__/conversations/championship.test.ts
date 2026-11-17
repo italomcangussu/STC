@@ -381,7 +381,8 @@ describe('inscrição paga pode ser dita como confirmada', () => {
     const comPago = await decide({ ...base, ctx: { requester: admin, championship: pago } } as never);
     expect(comPago.bubbles).toEqual([cartao]);
     const semPago = await decide({ ...base, ctx: { requester: admin, championship: pack() } } as never);
-    expect(semPago.bubbles[0]).toContain('Ainda não registrei nada');
+    expect(semPago.bubbles).toHaveLength(1);
+    expect(semPago.bubbles[0]).not.toMatch(/confirmad/i);
   });
 });
 

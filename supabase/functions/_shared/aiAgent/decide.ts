@@ -11,7 +11,7 @@ import type { ProvisionResult } from '../athleteProvision.ts';
 import { type TopicSnapshot, domainOf } from './topicState.ts';
 import { adminAcao, adminConsulta } from './adminAssistant.ts';
 import { adminFinanceiro } from './adminFinance.ts';
-import { claimsOwnAction, claimsSuccess, norm } from './serverRules.ts';
+import { claimsOwnAction, claimsSuccess, norm, withoutClaims } from './serverRules.ts';
 import { groupChampionship } from './groupChampionship.ts';
 import { failure, resolve } from './turnOutcome.ts';
 import { isAdminAssistant } from './promptAdmin.ts';
@@ -86,6 +86,17 @@ export function isOpinionTalk(ctx: Ctx, answer: Answer, hasProposal: boolean): b
 
 /* ------------------------------- Decisão: o que o servidor executa ------------------------------- */
 
+/**
+ * Tudo que o modelo disse era anúncio de algo que o servidor não fez. Em pedido de ação, a frase de sempre; em conversa
+ * sem ação (pergunta, comentário, grupo), nada de "monto o resumo": caso do Mario no grupo (07/11, "esqueceu de
+ * divulgar o jogão") e do Bruno ("Valor?").
+ */
+export function nadaFeito(answer: Pick<Answer, 'intent'>): string {
+  return ACTIONABLE.includes(answer.intent)
+    ? 'Ainda não registrei nada. Me diga o que falta e eu monto o resumo para você confirmar.'
+    : 'Isso eu não consigo confirmar daqui. Se quiser, me diz o que você precisa que eu veja.';
+}
+
 export type DecideInput = { deps: TurnDeps; ctx: Ctx; answer: Answer; slots: Slots; memory: Memory; session: string; ultimaId?: string; today: string;
   /** Conversa do turno: a inscrição nova confere o comprovante que ficou guardado nela. */ conversation?: string };
 
@@ -104,13 +115,13 @@ export async function decide(i: DecideInput): Promise<Decision> {
     // Status de inscrição sem pagamento no sistema continua na trava cheia, mesmo em consulta do admin.
     const relato = isOpinionTalk(ctx, answer, hasProposal) && !(falaDaInscricao && !groupChampionship(ctx));
     const anuncia = relato ? claimsOwnAction : claimsSuccess;
-    const semAnuncio = podeAfirmar ? answer.messages : answer.messages.filter((m) => !anuncia(m));
-    const seguro = semAnuncio.length < answer.messages.length && !semAnuncio.length
-      ? ['Ainda não registrei nada. Me diga o que falta e eu monto o resumo para você confirmar.']
-      : semAnuncio;
+    const semAnuncio = podeAfirmar ? answer.messages : answer.messages.map((m) => withoutClaims(m, anuncia)).filter((m): m is string => m !== null);
+    const cortadas = podeAfirmar ? [] : answer.messages.filter((m) => anuncia(m));
+    const seguro = cortadas.length && !semAnuncio.length ? [nadaFeito(answer)] : semAnuncio;
     // Sem texto e sem transferência, o modelo falhou em dizer algo: nunca fica silêncio.
     const bubbles = seguro.length || answer.transfer || answer.close ? seguro : ['Não entendi bem. Pode me explicar de outro jeito?'];
-    return { bubbles, awaiting: answer.awaiting || (!seguro.length && !answer.transfer && !answer.close), close: answer.close, action: null, memory, ...extra };
+    return { bubbles, awaiting: answer.awaiting || (!seguro.length && !answer.transfer && !answer.close), close: answer.close, action: null, memory,
+      ...(cortadas.length ? { cut: cortadas.map((m) => m.slice(0, 300)) } : {}), ...extra };
   };
 
   // 1) Desistência da proposta.
