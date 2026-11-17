@@ -9,6 +9,4 @@
 - **Comprovante de convidado sem cadastro numa conversa de inscrição**: continua guardado até a pré-inscrição nascer
   (caso Bruno). Se a pessoa já estiver inscrita pelo app sem perfil vinculado, o modelo ainda conduz: medir.
 - **Recusa de comprovante de quem não tem perfil de sócio**: segue sem achar (a recusa exige profile_id).
-- **Comprovantes parados em produção**: Ronaldo, R$ 7,50, repassado em 12/11 (o Henrique pediu para desconsiderar);
-  Diego, R$ 130, de 10/11, ainda esperando finalidade (a inscrição foi confirmada em 13/11 por outro caminho).
 - **Suítes que já falhavam**: automations e topics (dependem da data); adminAutomations estoura 5 s com a fila cheia.
