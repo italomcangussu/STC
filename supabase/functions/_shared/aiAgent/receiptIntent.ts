@@ -21,7 +21,7 @@ const campaign=/\b(campanha|criancas|dia das criancas|doacao|contribuicao|brinqu
 // conversa decide qual conferir primeiro; cada conferência só baixa quando o valor bate exatamente.
 async function autoPay(t:Turn):Promise<Response>{
  const topic=receiptTopic(t.transcript);
- if(topic==='campeonato')return tryChampionshipPay(t.db,t.stage.id,topic);
+ if(topic==='campeonato'){const c=await tryChampionshipPay(t.db,t.stage.id,topic);return c?.action===HOLD&&t.ownName?.trim()?signupToFinance(t):c;}
  if(topic==='mensalidade'){
    if(membershipIsForAnother(t.transcript,t.ownName??''))return null;
    const reference=membershipReference(t.transcript,t.today??new Date().toLocaleDateString('en-CA',{timeZone:'America/Fortaleza'}));
@@ -37,8 +37,14 @@ async function signupFirst(t:Turn,stageId:string):Promise<Response|undefined>{
  if(receiptTopic(t.transcript)!=='campeonato')return undefined;
  const c=await tryChampionshipPay(t.db,stageId,'campeonato');
  // Só fala se confirmou: aviso de comprovante ilegível ou com outro valor já saiu com a mídia (caso Gustavo, 28/10: repetia a cada "Ok").
- if(c?.action===HOLD)return null;
+ if(c?.action===HOLD)return t.ownName?.trim()?signupToFinance(t):null;
  return c?.action==='receipt_championship_paid'?c:undefined;
+}
+
+// Sócio sem pré-inscrição pelo WhatsApp (caso Diego, 10/11: inscrito pelo app): não há o que conferir aqui, então o
+// comprovante vai ao financeiro na hora, em vez de o modelo prometer uma conferência que ninguém recebe.
+function signupToFinance(t:Turn):Promise<Response>{
+ return savePurpose(t,{action:'purpose',purpose_kind:'other',purpose_detail:'inscrição no campeonato'});
 }
 
 async function mediaReceipt(t:Turn):Promise<Response>{
@@ -156,7 +162,8 @@ async function classifyReceipt(t:Turn):Promise<Response>{
  // A pessoa pode explicar a competência em texto logo depois de enviar o arquivo.
  const current={...t,transcript:[...t.transcript,{direction:'inbound',kind:'text',body:clean}]};
  if(isMembershipClarification(t)&&receiptTopic(current.transcript)==='mensalidade') {const paid=await autoPay(current);if(paid)return paid;}
- const inscricao=await signupFirst(t,s.id);if(inscricao!==undefined)return inscricao;
+ // O que a pessoa acabou de dizer ("Inscrição") conta como evidência, à frente da pergunta errada do João.
+ const inscricao=await signupFirst(current,s.id);if(inscricao!==undefined)return inscricao;
  if(!t.chat||!t.model)return {action:'receipt_purpose_requested',messages:['Qual é a finalidade desse comprovante? Preciso que me diga antes de montar o resumo para confirmação.']};
  return savePurpose(t,await askPurpose(t));
 }

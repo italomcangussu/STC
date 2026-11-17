@@ -62,7 +62,23 @@ export function receiptEvidence(transcript: Ctx[], stage: { source_message_id: s
     if (transcript[i].id && (transcript[i].kind === 'image' || transcript[i].kind === 'document')) start = i + 1;
   }
   const since = stage.created_at ? Date.parse(stage.created_at) - 24 * 60 * 60 * 1000 : NaN;
-  return transcript.slice(start).filter(m => !Number.isFinite(since) || !m.created_at || Date.parse(String(m.created_at)) >= since);
+  const recentes = transcript.slice(start).filter(m => !Number.isFinite(since) || !m.created_at || Date.parse(String(m.created_at)) >= since);
+  return recentes.slice(newEpisode(recentes, current < 0 ? recentes.length : recentes.findIndex(m => m.id === stage.source_message_id)));
+}
+
+const EPISODE_GAP_MS = 6 * 60 * 60 * 1000;
+
+/**
+ * Mensagem do clube depois de horas de silêncio abre assunto novo (caso Diego, 10/11): o "pagamento mensalidade
+ * novembro" da véspera não vale mais que a cobrança da inscrição que o clube mandou um minuto antes do comprovante.
+ */
+function newEpisode(msgs: Ctx[], until: number): number {
+  let start = 0;
+  for (let i = 1; i < (until < 0 ? msgs.length : until); i++) {
+    const gap = Date.parse(String(msgs[i].created_at ?? '')) - Date.parse(String(msgs[i - 1].created_at ?? ''));
+    if (msgs[i].direction !== 'inbound' && gap > EPISODE_GAP_MS) start = i;
+  }
+  return start;
 }
 
 /**
