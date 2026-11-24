@@ -67,3 +67,27 @@ export const ownMembershipQuestion = (month: unknown) =>
 const whatIsItFor = (topic?: string | null) => (topic === 'mensalidade'
   ? 'Não bateu com a mensalidade em aberto que conferi. É a mensalidade de qual sócio e de qual mês?'
   : 'É para renovar o Card de qual aluno? Se for outra coisa, me diz o que é.');
+
+const fold = (v: string) => v.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+
+/** Palavras que aparecem na descrição de receita de aluno e nunca são nome ("Mensalidades de Matheus e José"). */
+const NOT_A_NAME = new Set(['mensalidade', 'mensalidades', 'mensal', 'aula', 'aulas', 'card', 'cards', 'aluno', 'alunos', 'aluna', 'alunas',
+  'pagamento', 'pagamentos', 'referente', 'renovacao', 'receita', 'pix', 'kids', 'dos', 'das', 'para', 'com', 'professor', 'mes',
+  'janeiro', 'fevereiro', 'marco', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro']);
+
+/** Palavras da descrição que podem ser primeiro nome de aluno (3+ letras, fora das palavras de pagamento). */
+export function studentNameWords(text: string): string[] {
+  const words = text.split(/[^\p{L}]+/u).filter((w) => w.length >= 3 && !NOT_A_NAME.has(fold(w)));
+  return [...new Map(words.map((w) => [fold(w), w])).values()];
+}
+
+/** Primeiro nome do cadastro, sem o que vem depois de "/" ou "(" ("José/Irmão do Matheus" → "jose"). */
+export const studentFirstName = (name: string) => fold(name.split(/[/(]/)[0].trim()).split(/\s+/)[0];
+
+/** Receita citando aluno com Card: pergunta antes, porque a receita solta não renova o Card e o caixa conta em dobro. */
+export function cardInsteadOfRevenueQuestion(names: string[]): string {
+  const quem = names.length > 1 ? `${names.slice(0, -1).join(', ')} e ${names.at(-1)} têm` : `${names[0]} tem`;
+  return `${quem} Card Mensal. Esse dinheiro é a renovação do Card? Se for, eu renovo o Card${names.length > 1 ? ', um aluno de cada vez,' : ''} em vez de lançar receita: `
+    + 'a receita solta não renova a validade e, se o Card for registrado depois no painel, o caixa conta em dobro. '
+    + 'Responda "renovar Card" ou "receita mesmo".';
+}

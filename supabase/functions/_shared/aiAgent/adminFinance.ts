@@ -6,6 +6,8 @@ import type { DecideInput } from './decide.ts';
 import type { Decision, Memory, Slots } from './turnTypes.ts';
 import { type AdminAction, adminProposalMessage, toCents } from './adminMessages.ts';
 import { resolve } from './turnOutcome.ts';
+import { cardInsteadOfRevenueQuestion, studentFirstName, studentNameWords } from './studentCard.ts';
+import type { Db } from './turnTypes.ts';
 
 async function adminRenovarCard(i: DecideInput, memory: Memory): Promise<Decision> {
   const { deps, slots, session } = i;
@@ -21,6 +23,24 @@ async function adminRenovarCard(i: DecideInput, memory: Memory): Promise<Decisio
     { ok: boolean; message?: string; summary?: Ctx } | null;
   if (!res?.ok || !res.summary) return ask(res?.message ?? 'Não consegui montar essa renovação. Pode repetir os dados?');
   return { bubbles: [adminProposalMessage('student_card_renew', res.summary)], awaiting: true, close: false, action: 'proposed_admin', memory };
+}
+
+type Person = { query: string; status: string; matches: { id: string; name: string; kind: string; hint?: string | null }[] };
+
+/**
+ * Alunos com Card Mensal citados pelo primeiro nome na descrição de uma receita. Receita de aluno com Card é
+ * renovação: lançada solta, não renova a validade, e o Card registrado depois no painel conta o dinheiro em dobro
+ * (Matheus e José, 16/11 e 23/11).
+ */
+async function cardStudentsNamed(db: Db, description: string): Promise<string[]> {
+  const words = studentNameWords(description);
+  if (words.length === 0) return [];
+  const found = ((await db('conv_svc_ai_resolve_people', { p_names: words, p_scope: 'student' })).data ?? []) as Person[];
+  return found
+    .filter((r) => r.status === 'unique')
+    .map((r) => ({ query: r.query, aluno: r.matches[0] }))
+    .filter(({ query, aluno }) => aluno.kind === 'non_socio' && aluno.hint === 'Card Mensal' && studentFirstName(aluno.name) === studentFirstName(query))
+    .map(({ aluno }) => aluno.name);
 }
 
 /** Ações que agem sobre UMA pendência; nas outras (receita, despesa…) o pendency_ref que sobrou de outro passo não vale. */
@@ -120,6 +140,14 @@ export async function adminFinanceiro(i: DecideInput, memory: Memory): Promise<D
     if (!slots.description) return ask(`Qual a descrição da ${slots.fin_action}?`);
     const cents = toCents(slots.amount);
     if (!cents) return ask('Qual o valor?');
+    const checked = norm(slots.description);
+    if (slots.fin_action === 'receita' && memory.revenue_card_checked !== checked) {
+      const alunos = await cardStudentsNamed(deps.db, slots.description);
+      if (alunos.length > 0) {
+        const comAlunos = { ...slots, student_names: alunos };
+        return { ...ask(cardInsteadOfRevenueQuestion(alunos)), slots: comAlunos, memory: { ...memory, slots: comAlunos, revenue_card_checked: checked } };
+      }
+    }
     p = { action: 'fin_entry_create', entry_kind: slots.fin_action === 'despesa' ? 'expense' : 'revenue', description: slots.description, amount_cents: cents,
       entry_status: slots.entry_status ?? null, due_date: slots.due_date ?? null, paid_on: slots.paid_on ?? null,
       category_name: slots.category_name ?? null, category_new: slots.category_new === true || null, account_name: slots.account_name ?? null };

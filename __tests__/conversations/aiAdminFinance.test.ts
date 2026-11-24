@@ -256,6 +256,28 @@ describe('assessor administrativo do João (turno completo)', () => {
       expect(p.sent.at(-1)!.text).toMatch(/Em qual categoria\?/);
     }, 90000);
 
+    // Eval henrique-16-11-receita-de-aluno (evals/joao-admin.eval.jsonl): o Pix dos Cards do Matheus e do José virou
+    // receita solta e, quando os Cards entraram pelo painel em 23/11, o caixa ficou com R$ 300 a mais.
+    it('receita que cita aluno com Card pergunta se é renovação antes de lançar; "receita mesmo" segue', async () => {
+      const w = await setup(); const p = provider();
+      await q(w.db, `insert into public.non_socio_students(name, plan_type, plan_status) values
+        ('Matheus', 'Card Mensal', 'active'), ('José/Irmão do Matheus', 'Card Mensal', 'active'), ('Aluguel Day', 'Day Card', 'active')`);
+      const receita = { ready: true, slots: { fin_action: 'receita', description: 'Mensalidades de Matheus e José', amount: 300, category_name: 'outras receitas' } };
+      const r1 = await dizer(w, p, 'Receita', receita);
+      expect(r1.action).toBe('ask');
+      expect(p.sent.at(-1)!.text).toMatch(/^Matheus e José\/Irmão do Matheus têm Card Mensal\. Esse dinheiro é a renovação do Card\?/);
+      expect(p.sent.at(-1)!.text).toMatch(/caixa conta em dobro/);
+      expect(await q(w.db, `select 1 from public.fin_entries`)).toHaveLength(0);
+
+      const r2 = await dizer(w, p, 'receita mesmo', receita);
+      expect(r2.action).toBe('proposed_admin');
+      expect(p.sent.at(-1)!.text).toMatch(/^Vou lançar a receita: Mensalidades de Matheus e José, R\$ 300,00/);
+
+      // Receita sem aluno não pergunta nada (e "Day" do aluguel não é nome de aluno com Card).
+      await dizer(w, p, 'lança receita de 80 do aluguel day', { ready: true, slots: { fin_action: 'receita', description: 'Aluguel day de quadra', amount: 80, category_name: 'outras receitas' } });
+      expect(p.sent.at(-1)!.text).toMatch(/^Vou lançar a receita: Aluguel day de quadra/);
+    }, 90000);
+
     it('valor alto não pede segundo passo nas ações novas (despesa de R$ 500)', async () => {
       const w = await setup(); const p = provider();
       await dizer(w, p, 'lança despesa de 500', { ready: true, slots: { fin_action: 'despesa', description: 'Manutenção da quadra', amount: 500, category_name: 'energia' } });
