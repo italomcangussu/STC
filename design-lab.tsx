@@ -141,9 +141,10 @@ async function montar() {
             </ConfirmProvider>
         );
     };
-    // No laboratório o tema segue o aparelho, para o `capturar --escuro` medir o escuro.
-    const { instalarTema } = await import('./lib/tema');
+    // ?tema=escuro força o escuro; sem ele o tema segue o aparelho (o `capturar --escuro` mede assim).
+    const { instalarTema, aplicarTema } = await import('./lib/tema');
     instalarTema({ padrao: 'auto' });
+    if (params.get('tema') === 'escuro') aplicarTema('escuro');
     createRoot(document.getElementById('root')!).render(<Lab />);
 }
 montar();
