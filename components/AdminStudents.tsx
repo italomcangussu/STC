@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { getNowInFortaleza, formatDate, formatDateBr, MEMBER_ROLES } from '../utils';
 import { StandardModal } from './StandardModal';
+import { RevenueOverlapNotice } from './students/RevenueOverlapNotice';
 import { AdminPageHeader, AdminSearch, ChipGroup, adminBtnPrimary } from './admin/ui';
 import { useAdminEmbedded } from './admin/AdminEmbedContext';
 
@@ -864,6 +865,10 @@ export const AdminStudents: React.FC = () => {
                         </div>
                     </div>
 
+                    {paymentStudent && paymentDate && (
+                        <RevenueOverlapNotice studentName={paymentStudent.name} paymentDate={paymentDate} today={formatDate(getNowInFortaleza())} />
+                    )}
+
                     <div className="mb-6">
                         <label className="block text-xs font-bold text-stone-500 uppercase mb-2">Data do Pagamento</label>
                         <input
@@ -932,6 +937,10 @@ export const AdminStudents: React.FC = () => {
                             <span className="font-bold text-xl text-green-600">{brl(cardPriceReais(convertStudent?.cardTier, cardPrices))}</span>
                         </div>
                     </div>
+
+                    {convertStudent && convertDate && (
+                        <RevenueOverlapNotice studentName={convertStudent.name} paymentDate={convertDate} today={formatDate(getNowInFortaleza())} />
+                    )}
 
                     <div className="mb-6">
                         <label className="block text-xs font-bold text-stone-500 uppercase mb-2">Data do Pagamento</label>

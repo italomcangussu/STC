@@ -120,6 +120,16 @@ export async function listEntries(f: EntryFilters = {}): Promise<FinEntry[]> {
   return (data ?? []) as FinEntry[];
 }
 
+/** Receitas ativas a partir de `from` (pelo dia do dinheiro, vencimento ou competência), para conferir duplicidade. */
+export async function listRecentRevenues(from: IsoDate): Promise<FinEntry[]> {
+  const { data, error } = await supabase.from('fin_entries_v').select('*')
+    .eq('kind', 'revenue').neq('status', 'canceled')
+    .or(`settled_on.gte.${from},due_date.gte.${from},competence_date.gte.${from}`)
+    .limit(300);
+  if (error) throw error;
+  return (data ?? []) as FinEntry[];
+}
+
 export interface EntryPaymentRow { id: string; entry_id: string; kind: 'payment' | 'reversal'; amount_cents: number; paid_on: string; account_id: string; note: string | null; reverses_payment_id: string | null }
 export async function listEntryPayments(entryId: string): Promise<EntryPaymentRow[]> {
   const { data, error } = await supabase.from('fin_entry_payments').select('*').eq('entry_id', entryId).order('created_at');
