@@ -1,7 +1,7 @@
 {
   "versao": 3,
-  "geradoEm": "2026-11-03T12:42:04.243Z",
-  "commit": "af2e41a0",
+  "geradoEm": "2026-11-24T15:53:39.712Z",
+  "commit": "12331c5d",
   "pastas": [
     "__tests__",
     "__tests__/admin",
@@ -18,6 +18,7 @@
     "components/dashboard",
     "components/finance",
     "components/signatures",
+    "components/students",
     "components/ui",
     "contexts",
     "design",
@@ -29,6 +30,7 @@
     "docs/financeiro",
     "docs/joao-assessor",
     "docs/superpowers",
+    "evals",
     "hooks",
     "lib",
     "lib/agenda",
@@ -47,8 +49,8 @@
     "tasks"
   ],
   "agentmap": {
-    "arquivos": 667,
-    "sha": "af2e41a",
+    "arquivos": 708,
+    "sha": "12331c5",
     "hubs": [
       "lib/supabase.ts",
       "supabase/functions/_shared/aiAgent/promptAdmin.ts",
@@ -57,7 +59,7 @@
       "lib/finance/dates.ts",
       "types.ts",
       "__tests__/finance/sql/harness.ts",
-      "dist/assets/icons-vendor-Bd_-vDZl.js",
+      "dist/assets/icons-vendor-DDPbJAFU.js",
       "components/finance/ui.tsx",
       "__tests__/conversations/sql/harness.ts"
     ]
@@ -417,6 +419,26 @@
         "hash": "8b0d8a1e0200"
       },
       {
+        "name": "account-context",
+        "origem": "plugin",
+        "hash": "121098969526"
+      },
+      {
+        "name": "account-plan",
+        "origem": "plugin",
+        "hash": "5924b7bd19e1"
+      },
+      {
+        "name": "account-research",
+        "origem": "plugin",
+        "hash": "181bfeaa4d07"
+      },
+      {
+        "name": "account-tiering",
+        "origem": "plugin",
+        "hash": "c2a135931558"
+      },
+      {
         "name": "adobe",
         "origem": "plugin",
         "hash": "c03c91a0a396"
@@ -492,6 +514,31 @@
         "hash": "fe959a8583ed"
       },
       {
+        "name": "adopt-c-bounds-safety",
+        "origem": "global",
+        "hash": "64473961f316"
+      },
+      {
+        "name": "analyze",
+        "origem": "plugin",
+        "hash": "36ea29c018fe"
+      },
+      {
+        "name": "app-intents-specialist",
+        "origem": "global",
+        "hash": "d8029de1f903"
+      },
+      {
+        "name": "app-intents-whats-new-27",
+        "origem": "global",
+        "hash": "5f2a59b2e163"
+      },
+      {
+        "name": "app-resizability",
+        "origem": "global",
+        "hash": "717475e694b1"
+      },
+      {
         "name": "architecture",
         "origem": "plugin",
         "hash": "dc1adc5cbe10"
@@ -500,6 +547,11 @@
         "name": "audit-support",
         "origem": "plugin",
         "hash": "2f8810d6a06c"
+      },
+      {
+        "name": "audit-xcode-security-settings",
+        "origem": "global",
+        "hash": "56dc4a719803"
       },
       {
         "name": "auth0",
@@ -532,14 +584,39 @@
         "hash": "a43de8c4c1a6"
       },
       {
+        "name": "build-dashboard",
+        "origem": "plugin",
+        "hash": "c7e9c6c06923"
+      },
+      {
+        "name": "building-document-based-swiftui-applications",
+        "origem": "global",
+        "hash": "3885412543eb"
+      },
+      {
         "name": "built-in-browser",
         "origem": "global",
         "hash": "82cf0526b176"
       },
       {
+        "name": "call-prep",
+        "origem": "plugin",
+        "hash": "5dce221b4050"
+      },
+      {
+        "name": "call-summary",
+        "origem": "plugin",
+        "hash": "45f177fd5a7a"
+      },
+      {
         "name": "campaign-plan",
         "origem": "plugin",
         "hash": "96836aca2eee"
+      },
+      {
+        "name": "canvas-design",
+        "origem": "global",
+        "hash": "306d1b7e82ad"
       },
       {
         "name": "capacity-plan",
@@ -562,9 +639,19 @@
         "hash": "eb21888039a8"
       },
       {
+        "name": "cinetic",
+        "origem": "global",
+        "hash": "d14d8388b536"
+      },
+      {
         "name": "close-management",
         "origem": "plugin",
         "hash": "697d58e3195f"
+      },
+      {
+        "name": "close-plan",
+        "origem": "plugin",
+        "hash": "ffc1e2c07c86"
       },
       {
         "name": "code-review",
@@ -575,6 +662,11 @@
         "name": "competitive-brief",
         "origem": "plugin",
         "hash": "05c291dbf042"
+      },
+      {
+        "name": "competitive-intelligence",
+        "origem": "plugin",
+        "hash": "2df10d5b4d95"
       },
       {
         "name": "compliance-check",
@@ -602,9 +694,89 @@
         "hash": "393b186bbc34"
       },
       {
+        "name": "cowork-plugin-customizer",
+        "origem": "plugin",
+        "hash": "449d404934e6"
+      },
+      {
+        "name": "create-an-asset",
+        "origem": "plugin",
+        "hash": "868c561e5fae"
+      },
+      {
+        "name": "create-cowork-plugin",
+        "origem": "plugin",
+        "hash": "04047579eb6a"
+      },
+      {
+        "name": "create-viz",
+        "origem": "plugin",
+        "hash": "daa1ef1a1d48"
+      },
+      {
+        "name": "crm-hygiene-check",
+        "origem": "plugin",
+        "hash": "295677700772"
+      },
+      {
+        "name": "customer-escalation",
+        "origem": "plugin",
+        "hash": "538017646239"
+      },
+      {
+        "name": "customer-health",
+        "origem": "plugin",
+        "hash": "a65b0bf585bc"
+      },
+      {
+        "name": "customer-research",
+        "origem": "plugin",
+        "hash": "7bf20fee970f"
+      },
+      {
+        "name": "customer-voice",
+        "origem": "plugin",
+        "hash": "39305fdb8c44"
+      },
+      {
+        "name": "daily-briefing",
+        "origem": "plugin",
+        "hash": "936b1799578d"
+      },
+      {
         "name": "dark-mode-design-expert",
         "origem": "global",
         "hash": "1d409d06f865"
+      },
+      {
+        "name": "data-context-extractor",
+        "origem": "plugin",
+        "hash": "d5dc5ce73339"
+      },
+      {
+        "name": "data-visualization",
+        "origem": "plugin",
+        "hash": "f76b047a8653"
+      },
+      {
+        "name": "deal-advance-gap",
+        "origem": "plugin",
+        "hash": "b6bc32682303"
+      },
+      {
+        "name": "deal-review",
+        "origem": "plugin",
+        "hash": "4cfdd5cf3564"
+      },
+      {
+        "name": "deal-signals",
+        "origem": "plugin",
+        "hash": "016e6ad255fa"
+      },
+      {
+        "name": "deal-slip-scenario",
+        "origem": "plugin",
+        "hash": "f5fa52d03850"
       },
       {
         "name": "debug",
@@ -652,6 +824,11 @@
         "hash": "f099b0e743e7"
       },
       {
+        "name": "device-interaction",
+        "origem": "global",
+        "hash": "18a217e869e6"
+      },
+      {
         "name": "dispatching-parallel-agents",
         "origem": "global",
         "hash": "0f55be8a3617"
@@ -682,14 +859,69 @@
         "hash": "465042f053f5"
       },
       {
+        "name": "draft-outreach",
+        "origem": "plugin",
+        "hash": "3a434cdad2a1"
+      },
+      {
+        "name": "draft-response",
+        "origem": "plugin",
+        "hash": "34e8e3644e9c"
+      },
+      {
+        "name": "earshot",
+        "origem": "global",
+        "hash": "c52b92910bbc"
+      },
+      {
         "name": "email-sequence",
         "origem": "plugin",
         "hash": "c18ebf4b3da4"
       },
       {
+        "name": "end-of-day",
+        "origem": "plugin",
+        "hash": "023706b0c795"
+      },
+      {
+        "name": "eval-genius",
+        "origem": "plugin",
+        "hash": "0a75ede3d9be"
+      },
+      {
+        "name": "evolver:deploy",
+        "origem": "plugin",
+        "hash": "4a6658e2b414"
+      },
+      {
+        "name": "evolver:evolve",
+        "origem": "plugin",
+        "hash": "1823d554c016"
+      },
+      {
+        "name": "evolver:setup",
+        "origem": "plugin",
+        "hash": "dddf5282be10"
+      },
+      {
+        "name": "evolver:status",
+        "origem": "plugin",
+        "hash": "4ea593b65dd3"
+      },
+      {
         "name": "executing-plans",
         "origem": "global",
         "hash": "a8cd575556bb"
+      },
+      {
+        "name": "expansion-whitespace",
+        "origem": "plugin",
+        "hash": "abe4fe55fc5b"
+      },
+      {
+        "name": "explore-data",
+        "origem": "plugin",
+        "hash": "92b2229cca99"
       },
       {
         "name": "fabuloso",
@@ -699,17 +931,12 @@
       {
         "name": "fabuloso-agente",
         "origem": "global",
-        "hash": "58cfe1eefac7"
-      },
-      {
-        "name": "fabuloso-codex",
-        "origem": "global",
-        "hash": "d28238a7ab33"
+        "hash": "bef003a05586"
       },
       {
         "name": "fabuloso-crm",
         "origem": "global",
-        "hash": "f3a9341108f8"
+        "hash": "93a69374fc5f"
       },
       {
         "name": "fabuloso-design",
@@ -717,14 +944,34 @@
         "hash": "0b52dcddf569"
       },
       {
+        "name": "fabuloso-diretor",
+        "origem": "global",
+        "hash": "b4fc9ff54830"
+      },
+      {
+        "name": "fabuloso-qa",
+        "origem": "global",
+        "hash": "3159d612cf44"
+      },
+      {
+        "name": "fabuloso-reels",
+        "origem": "global",
+        "hash": "84acf5d7b23d"
+      },
+      {
         "name": "fabuloso-security",
         "origem": "global",
         "hash": "3592bd648f70"
       },
       {
+        "name": "fabuloso-shield",
+        "origem": "global",
+        "hash": "2581534fa926"
+      },
+      {
         "name": "fabuloso-uncle-bob",
         "origem": "global",
-        "hash": "6e5ab055d286"
+        "hash": "14320b22d827"
       },
       {
         "name": "fechar-mes",
@@ -747,6 +994,11 @@
         "hash": "96c1ce5a8aa1"
       },
       {
+        "name": "forecast",
+        "origem": "plugin",
+        "hash": "3cfcfb555645"
+      },
+      {
         "name": "frontend-design",
         "origem": "global",
         "hash": "e4971c4ff27b"
@@ -762,6 +1014,11 @@
         "hash": "c12a3654ef75"
       },
       {
+        "name": "generative-film",
+        "origem": "global",
+        "hash": "a79ef0617096"
+      },
+      {
         "name": "google-workspace",
         "origem": "global",
         "hash": "d3af0e8fa65a"
@@ -770,6 +1027,11 @@
         "name": "gpt-taste",
         "origem": "global",
         "hash": "484015bc0216"
+      },
+      {
+        "name": "handle-objection",
+        "origem": "plugin",
+        "hash": "397fc27b4c34"
       },
       {
         "name": "hig",
@@ -809,7 +1071,7 @@
       {
         "name": "imagegen",
         "origem": "global",
-        "hash": "a947514072cf"
+        "hash": "f549d16f276a"
       },
       {
         "name": "imagegen-frontend-mobile",
@@ -837,6 +1099,11 @@
         "hash": "66ea031f99ed"
       },
       {
+        "name": "inbox-sweep",
+        "origem": "plugin",
+        "hash": "c55243957300"
+      },
+      {
         "name": "incident-response",
         "origem": "plugin",
         "hash": "0229680093f3"
@@ -862,9 +1129,19 @@
         "hash": "ecea16804429"
       },
       {
+        "name": "kb-article",
+        "origem": "plugin",
+        "hash": "d6f543c28d95"
+      },
+      {
         "name": "lancar-gasto",
         "origem": "plugin",
         "hash": "574787040252"
+      },
+      {
+        "name": "lead-triage",
+        "origem": "plugin",
+        "hash": "4997b06d8c6e"
       },
       {
         "name": "legal-response",
@@ -875,6 +1152,11 @@
         "name": "legal-risk-assessment",
         "origem": "plugin",
         "hash": "c2b34de685c6"
+      },
+      {
+        "name": "log-activity",
+        "origem": "plugin",
+        "hash": "4763642baa4f"
       },
       {
         "name": "media-use",
@@ -892,9 +1174,19 @@
         "hash": "002a0f8b04dc"
       },
       {
+        "name": "metrics-review",
+        "origem": "plugin",
+        "hash": "88508a23a7e4"
+      },
+      {
         "name": "minimalist-ui",
         "origem": "global",
         "hash": "1ae4d8676d5b"
+      },
+      {
+        "name": "modernize-tests",
+        "origem": "global",
+        "hash": "ab925ad80ace"
       },
       {
         "name": "morning",
@@ -944,7 +1236,12 @@
       {
         "name": "openai-docs",
         "origem": "global",
-        "hash": "cc539af365c7"
+        "hash": "2a860a157e27"
+      },
+      {
+        "name": "openchatcut",
+        "origem": "global",
+        "hash": "0f7e69e516b2"
       },
       {
         "name": "pdf",
@@ -962,6 +1259,11 @@
         "hash": "91ec7fecc265"
       },
       {
+        "name": "pipeline-review",
+        "origem": "plugin",
+        "hash": "0700cd81d1d2"
+      },
+      {
         "name": "planejar-mes",
         "origem": "plugin",
         "hash": "ca368f099b98"
@@ -970,11 +1272,6 @@
         "name": "playwright",
         "origem": "global",
         "hash": "4ece24b77ba8"
-      },
-      {
-        "name": "plugin-creator",
-        "origem": "global",
-        "hash": "329d2e945e2e"
       },
       {
         "name": "pptx",
@@ -992,6 +1289,16 @@
         "hash": "e75ed90d073f"
       },
       {
+        "name": "product-brainstorming",
+        "origem": "plugin",
+        "hash": "d9fb8a49f623"
+      },
+      {
+        "name": "product-film",
+        "origem": "global",
+        "hash": "15b58dbb18af"
+      },
+      {
         "name": "push-validator",
         "origem": "global",
         "hash": "427e9a390c35"
@@ -1000,6 +1307,16 @@
         "name": "pwa-design-debug",
         "origem": "global",
         "hash": "197b79fcbf0c"
+      },
+      {
+        "name": "real-sfx",
+        "origem": "global",
+        "hash": "051af5dd80c0"
+      },
+      {
+        "name": "real-sound",
+        "origem": "global",
+        "hash": "104c8d79d0fd"
       },
       {
         "name": "receiving-code-review",
@@ -1022,9 +1339,84 @@
         "hash": "466d76ee483e"
       },
       {
+        "name": "remotion-best-practices",
+        "origem": "global",
+        "hash": "559bc4643702"
+      },
+      {
+        "name": "remotion-captions",
+        "origem": "global",
+        "hash": "244936344d49"
+      },
+      {
+        "name": "remotion-create",
+        "origem": "global",
+        "hash": "3517b8ee6150"
+      },
+      {
+        "name": "remotion-docs",
+        "origem": "global",
+        "hash": "29267c0b33e3"
+      },
+      {
+        "name": "remotion-interactivity",
+        "origem": "global",
+        "hash": "8807e03bfde7"
+      },
+      {
+        "name": "remotion-license",
+        "origem": "global",
+        "hash": "82fa4a09324c"
+      },
+      {
+        "name": "remotion-maps",
+        "origem": "global",
+        "hash": "eb85d8dded1d"
+      },
+      {
+        "name": "remotion-markup",
+        "origem": "global",
+        "hash": "0bb838ba0e22"
+      },
+      {
+        "name": "remotion-multimedia",
+        "origem": "global",
+        "hash": "4f06db76cb2e"
+      },
+      {
+        "name": "remotion-render",
+        "origem": "global",
+        "hash": "90f6add56245"
+      },
+      {
+        "name": "remotion-saas",
+        "origem": "global",
+        "hash": "bbbe7b250c5e"
+      },
+      {
+        "name": "remotion-studio",
+        "origem": "global",
+        "hash": "836e6f3ad3fd"
+      },
+      {
         "name": "remotion-to-hyperframes",
         "origem": "global",
         "hash": "1b712e42fb41"
+      },
+      {
+        "name": "remotion-upgrade",
+        "origem": "global",
+        "hash": "22600e33638b"
+      },
+      {
+        "name": "renewal-radar",
+        "origem": "plugin",
+        "hash": "583c7218a5cf"
+      },
+      {
+        "name": "rep-context",
+        "origem": "plugin",
+        "hash": "a339f5eed0c4"
       },
       {
         "name": "requesting-code-review",
@@ -1037,6 +1429,11 @@
         "hash": "c2ce185aceb1"
       },
       {
+        "name": "review-agent",
+        "origem": "global",
+        "hash": "f53558561e05"
+      },
+      {
         "name": "review-contract",
         "origem": "plugin",
         "hash": "9035b341c97c"
@@ -1047,14 +1444,39 @@
         "hash": "af09a37328ba"
       },
       {
+        "name": "roadmap-update",
+        "origem": "plugin",
+        "hash": "71fbb6275bd5"
+      },
+      {
+        "name": "route-lead",
+        "origem": "plugin",
+        "hash": "ee4690ea1619"
+      },
+      {
         "name": "runbook",
         "origem": "plugin",
         "hash": "d0d12c906259"
       },
       {
+        "name": "schedule-meeting",
+        "origem": "plugin",
+        "hash": "2c469c9b687d"
+      },
+      {
         "name": "seo-audit",
         "origem": "plugin",
         "hash": "77766595638c"
+      },
+      {
+        "name": "session-story",
+        "origem": "global",
+        "hash": "c42ddbf80f29"
+      },
+      {
+        "name": "setup",
+        "origem": "plugin",
+        "hash": "38164b14d82d"
       },
       {
         "name": "signature-request",
@@ -1087,9 +1509,34 @@
         "hash": "0a556cb46614"
       },
       {
+        "name": "sprint-planning",
+        "origem": "plugin",
+        "hash": "a1e4ae67bdf9"
+      },
+      {
+        "name": "sql-queries",
+        "origem": "plugin",
+        "hash": "ce231be3a6f9"
+      },
+      {
+        "name": "stakeholder-map",
+        "origem": "plugin",
+        "hash": "dfaa66b30238"
+      },
+      {
+        "name": "stakeholder-update",
+        "origem": "plugin",
+        "hash": "688ba6f76ec5"
+      },
+      {
         "name": "standup",
         "origem": "plugin",
         "hash": "5d15df316712"
+      },
+      {
+        "name": "statistical-analysis",
+        "origem": "plugin",
+        "hash": "80fa567e0311"
       },
       {
         "name": "status-report",
@@ -1117,6 +1564,21 @@
         "hash": "3e015d0d931b"
       },
       {
+        "name": "swiftui-specialist",
+        "origem": "global",
+        "hash": "4b0be225c26c"
+      },
+      {
+        "name": "swiftui-whats-new-27",
+        "origem": "global",
+        "hash": "4a080c6d2a66"
+      },
+      {
+        "name": "synthesize-research",
+        "origem": "plugin",
+        "hash": "4ba7188eb58d"
+      },
+      {
         "name": "system-design",
         "origem": "plugin",
         "hash": "27c137e87d78"
@@ -1125,6 +1587,11 @@
         "name": "systematic-debugging",
         "origem": "global",
         "hash": "3f62d80ed6a2"
+      },
+      {
+        "name": "team-pipeline",
+        "origem": "plugin",
+        "hash": "e258812a2a54"
       },
       {
         "name": "tech-debt",
@@ -1142,6 +1609,11 @@
         "hash": "ebfdb1c894cd"
       },
       {
+        "name": "ticket-triage",
+        "origem": "plugin",
+        "hash": "b9f89334f107"
+      },
+      {
         "name": "triage-nda",
         "origem": "plugin",
         "hash": "b03c87f00a43"
@@ -1152,9 +1624,9 @@
         "hash": "96a9a27bfe55"
       },
       {
-        "name": "uncle-bob",
-        "origem": "global",
-        "hash": "22d582b74de4"
+        "name": "update-opportunity",
+        "origem": "plugin",
+        "hash": "d2f422b05b5b"
       },
       {
         "name": "user-research",
@@ -1175,6 +1647,11 @@
         "name": "ux-copy",
         "origem": "plugin",
         "hash": "cad43b1f760b"
+      },
+      {
+        "name": "validate-data",
+        "origem": "plugin",
+        "hash": "90f83338ae75"
       },
       {
         "name": "variance-analysis",
@@ -1212,6 +1689,26 @@
         "hash": "fc5d078b8b85"
       },
       {
+        "name": "weekly-wrap",
+        "origem": "plugin",
+        "hash": "89614f486a21"
+      },
+      {
+        "name": "win-loss-review",
+        "origem": "plugin",
+        "hash": "b2f05724af1e"
+      },
+      {
+        "name": "write-query",
+        "origem": "plugin",
+        "hash": "1454847bc1b1"
+      },
+      {
+        "name": "write-spec",
+        "origem": "plugin",
+        "hash": "2ea435510e8e"
+      },
+      {
         "name": "writing-plans",
         "origem": "global",
         "hash": "74753b16450b"
@@ -1220,6 +1717,11 @@
         "name": "writing-skills",
         "origem": "global",
         "hash": "415af45c3baa"
+      },
+      {
+        "name": "xctrace",
+        "origem": "global",
+        "hash": "fbd057912e61"
       },
       {
         "name": "xlsx",

@@ -325,3 +325,8 @@ Finalidade exclusiva; titularidade sem coincidência de primeiro nome; contexto 
 - Contexto: `.fabuloso/conhecimento/comprovantes.md` (seção Comprovante já usado) e fluxo em `arquitetura.md`. Não há CLAUDE.md.
 - Entrega: migration 20261104210000 aplicada; `whatsapp-webhook` v123 deployada.
 - Observação: fluxo antigo sem financeiro (`conv_svc_receipt_purpose`) ainda não acusa reenvio; alertas de RLS antigos seguem em `.fabuloso/db/alertas.md`.
+
+- 2026-11-24 (Opus 5.5, fabuloso): receita dobrada de Matheus e José: aviso no painel ao registrar Card e pergunta do João antes de lançar receita de aluno com Card. Commits c48daf2..12331c5.
+- Contexto: `.fabuloso/conhecimento/caixa.md` (novo) e módulo/fluxo em `arquitetura.md`. Não há CLAUDE.md.
+- Entrega: sem migration; `whatsapp-webhook` deployada. Roteiro de correção da produção (`docs/auditorias/2026-11-24-cards-matheus-jose.sql`) espera o "sim" do Ítalo.
+- Observação: deriva no remoto em `whatsapp_receipt_intents`, `conv_ai_decisions`, `conv_ai_topics`, `conv_booking_proposals`, `fin_attachments`, `fin_charge_payments`, `fin_entries`, `reservations`.
