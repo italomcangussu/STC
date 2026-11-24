@@ -8,12 +8,18 @@
 
 export const EVENTO_RAJADA = 'stc:rajada';
 
-// Barro à noite. O pó (grãos e nuvens) é o mesmo saibro solto: vermelho mais
-// fechado e sempre mais escuro que a quadra, nunca um brilho claro por cima.
-const CHAO = '#572312';
-const TEXTURA = ['#6a2c17', '#7a3520', '#451a0c', '#5e2614', '#3c160a'];
-const GRAOS = ['#4a0f06', '#5a1307', '#3a0c05', '#2c0904', '#511509'];
-const PO = '#3a0e06';
+// Barro à noite, tirado da foto de referência. O pó (grãos e nuvens) é o mesmo
+// saibro solto: um tom só um pouco mais fechado que a quadra, nunca mais claro.
+const CHAO = '#9a3a14';
+const TEXTURA = ['#b04a1c', '#c25c1e', '#86300e', '#a3401a', '#7a2a0c'];
+const GRAOS = ['#8c3311', '#7f2c0e', '#94381a', '#7a2a0f', '#863012'];
+const PO = '#8a3112';
+// Topo aceso de um torrão: no máximo o tom da quadra.
+const TOPO_DO_TORRAO = '#9a3a14';
+// Linhas da quadra: fita branca gasta, com pó de saibro por cima e trincas.
+const LINHA = '#efe5d8';
+const LARGURA_LINHA = 6;
+const PO_NA_LINHA = ['#c4693e', '#a9481f', '#d99a74', '#b5552a'];
 const GIZ = '#f2c4a2';
 const VENTO = 0.22;
 const SOBRA = 400; // altura a mais da textura, para a paralaxe da rolagem
@@ -22,7 +28,7 @@ const RASTELO_DURACAO = 3200;
 const QUADRO_MS = 30; // ~30 quadros por segundo: o pó é lento, a bateria agradece
 
 export function contarGraos(largura: number, altura: number): number {
-    return Math.max(300, Math.min(1400, Math.round((largura * altura) / 410)));
+    return Math.max(500, Math.min(2200, Math.round((largura * altura) / 260)));
 }
 
 /** 0 → 1 em 900 ms, com uma oscilação de lâmpada acendendo; depois respira ±3%. */
@@ -64,6 +70,90 @@ function profundidade(): number {
     return 0.85 + Math.random() * 0.3;
 }
 
+const MARGEM_LINHA = 14;
+
+/** Ruído suave que emenda nas bordas: grade aleatória com interpolação bilinear, 0–1 por pixel. */
+function ruidoPeriodico(lado: number, celulas: number): Float32Array {
+    const grade = new Float32Array(celulas * celulas).map(() => Math.random());
+    const saida = new Float32Array(lado * lado), passo = celulas / lado;
+    for (let y = 0; y < lado; y++) {
+        const gy = y * passo, y0 = gy | 0, fy = gy - y0, y1 = (y0 + 1) % celulas;
+        for (let x = 0; x < lado; x++) {
+            const gx = x * passo, x0 = gx | 0, fx = gx - x0, x1 = (x0 + 1) % celulas;
+            const a = grade[y0 * celulas + x0], b = grade[y0 * celulas + x1], c = grade[y1 * celulas + x0], e = grade[y1 * celulas + x1];
+            saida[y * lado + x] = (a + (b - a) * fx) * (1 - fy) + (c + (e - c) * fx) * fy;
+        }
+    }
+    return saida;
+}
+
+const LADRILHO_CSS = 256;
+const ladrilhos = new Map<number, HTMLCanvasElement>();
+
+/**
+ * O saibro da foto num ladrilho que se repete sem costura: torrões miúdos com
+ * o topo aceso e a sombra embaixo (relevo = altura menos a do vizinho de cima,
+ * a luz do refletor vem de cima). Gerado uma vez por densidade de tela.
+ */
+function ladrilhoDeSaibro(d: number): HTMLCanvasElement {
+    const pronto = ladrilhos.get(d);
+    if (pronto) return pronto;
+    const lado = Math.round(LADRILHO_CSS * d);
+    const graos = ruidoPeriodico(lado, Math.round(LADRILHO_CSS / 2.2)), torroes = ruidoPeriodico(lado, Math.round(LADRILHO_CSS / 6)), manchas = ruidoPeriodico(lado, 4);
+    const base = [0x9a, 0x3a, 0x14], passo = Math.max(1, Math.round(1.2 * d)) * lado;
+    const c = document.createElement('canvas'); c.width = lado; c.height = lado;
+    const g = c.getContext('2d')!; const img = g.createImageData(lado, lado), px = img.data;
+    for (let i = 0; i < lado * lado; i++) {
+        const alt = graos[i] * 0.6 + torroes[i] * 0.4;
+        const k = (i - passo + lado * lado) % (lado * lado);
+        const cima = graos[k] * 0.6 + torroes[k] * 0.4;
+        let v = 0.92 + (alt - 0.5) * 0.2 + (alt - cima) * 1.05 + (manchas[i] - 0.5) * 0.18 + (Math.random() - 0.5) * 0.08;
+        if (alt < 0.3) v *= 0.88; // vão entre os grãos
+        const quente = 1 + (alt - 0.5) * 0.12; // topo do grão puxa para o laranja
+        px[i * 4] = Math.min(255, base[0] * v * quente);
+        px[i * 4 + 1] = Math.min(255, base[1] * v * quente * quente);
+        px[i * 4 + 2] = Math.min(255, base[2] * v);
+        px[i * 4 + 3] = 255;
+    }
+    g.putImageData(img, 0, 0);
+    ladrilhos.set(d, c);
+    return c;
+}
+
+function pintarGranulado(t: CanvasRenderingContext2D, w: number, h: number, d: number): void {
+    t.save(); t.setTransform(1, 0, 0, 1, 0, 0);
+    t.fillStyle = t.createPattern(ladrilhoDeSaibro(d), 'repeat') ?? CHAO;
+    t.fillRect(0, 0, w, h); t.restore();
+}
+
+/** Fita de linha de quadra gasta, já com pó por cima. `comprimento` em px CSS. */
+function linhaGasta(comprimento: number, vertical: boolean, d: number): HTMLCanvasElement {
+    const larg = LARGURA_LINHA + 2;
+    const c = document.createElement('canvas');
+    c.width = Math.round((vertical ? larg : comprimento) * d); c.height = Math.round((vertical ? comprimento : larg) * d);
+    const g = c.getContext('2d')!; g.setTransform(d, 0, 0, d, 0, 0);
+    const ret = (u: number, v: number, a: number, b: number) => (vertical ? g.fillRect(v, u, b, a) : g.fillRect(u, v, a, b));
+    // Faixa branca com a tinta variando ao longo dela.
+    g.fillStyle = LINHA;
+    for (let u = 0; u < comprimento; u += 6) { g.globalAlpha = 0.82 + Math.random() * 0.16; ret(u, 1, 6, LARGURA_LINHA); }
+    // Bordas comidas pelo saibro.
+    g.fillStyle = CHAO;
+    for (let u = 0; u < comprimento; u += 1.5) {
+        if (Math.random() < 0.18) { g.globalAlpha = 0.4 + Math.random() * 0.5; ret(u, 1, 1.5, 0.5 + Math.random() * 0.9); }
+        if (Math.random() < 0.18) { g.globalAlpha = 0.5 + Math.random() * 0.5; const e = 0.6 + Math.random() * 1.1; ret(u, 1 + LARGURA_LINHA - e, 1.5, e); }
+    }
+    // Pó de saibro assentado na tinta.
+    for (let i = 0; i < comprimento * 0.6; i++) {
+        g.globalAlpha = 0.2 + Math.random() * 0.35; g.fillStyle = PO_NA_LINHA[(Math.random() * 4) | 0];
+        const s = 0.6 + Math.random() * 1.3; ret(Math.random() * comprimento, 1 + Math.random() * (LARGURA_LINHA - s), s, s);
+    }
+    // Trincas da fita, de tempos em tempos.
+    g.fillStyle = '#7a3a22';
+    for (let u = 10 + Math.random() * 40; u < comprimento; u += 24 + Math.random() * 46) { g.globalAlpha = 0.35 + Math.random() * 0.3; ret(u, 1, 0.9, LARGURA_LINHA); }
+    g.globalAlpha = 1;
+    return c;
+}
+
 export function criarChaoSaibro(canvas: HTMLCanvasElement): ChaoSaibro | null {
     const x = canvas.getContext('2d');
     if (!x) return null;
@@ -72,6 +162,7 @@ export function criarChaoSaibro(canvas: HTMLCanvasElement): ChaoSaibro | null {
     let W = 0, H = 0, d = 1, LX = 0, LR = 640;
     const LY = -60;
     let textura: HTMLCanvasElement | null = null;
+    let linhaLateral: HTMLCanvasElement | null = null, linhaDeSaque: HTMLCanvasElement | null = null, linhaCentral: HTMLCanvasElement | null = null;
     let rastro: CanvasRenderingContext2D | null = null;
     let rastroTela: HTMLCanvasElement | null = null;
     let luz: CanvasGradient | null = null;
@@ -98,16 +189,16 @@ export function criarChaoSaibro(canvas: HTMLCanvasElement): ChaoSaibro | null {
         textura.width = canvas.width; textura.height = Math.round(TH * d);
         const t = textura.getContext('2d')!;
         t.setTransform(d, 0, 0, d, 0, 0);
-        t.fillStyle = CHAO; t.fillRect(0, 0, W, TH);
+        pintarGranulado(t, textura.width, textura.height, d);
         const area = W * TH;
         for (let i = 0; i < area / 6800; i++) {
-            t.globalAlpha = 0.11; t.fillStyle = TEXTURA[i % 5];
+            t.globalAlpha = 0.07; t.fillStyle = TEXTURA[i % 5];
             t.beginPath(); t.ellipse(Math.random() * W, Math.random() * TH, 12 + Math.random() * 46, 4 + Math.random() * 14, Math.random() * 3, 0, 7); t.fill();
         }
-        for (let i = 0; i < Math.min(40000, area / 30); i++) {
-            t.globalAlpha = 0.5 * (0.3 + Math.random() * 0.7); t.fillStyle = TEXTURA[(Math.random() * 5) | 0];
-            const s = 0.4 + Math.random() * 1.3; t.fillRect(Math.random() * W, Math.random() * TH, s, s);
-        }
+        t.globalAlpha = 1;
+        linhaLateral = linhaGasta(TH, true, d);
+        linhaDeSaque = linhaGasta(W - 2 * MARGEM_LINHA, false, d);
+        linhaCentral = linhaGasta(H + 200, true, d);
 
         rastroTela = document.createElement('canvas');
         rastroTela.width = canvas.width; rastroTela.height = canvas.height;
@@ -115,7 +206,7 @@ export function criarChaoSaibro(canvas: HTMLCanvasElement): ChaoSaibro | null {
         rastro.setTransform(d, 0, 0, d, 0, 0);
 
         luz = x!.createRadialGradient(LX, LY, 20, LX, LY, LR);
-        luz.addColorStop(0, 'rgba(196,92,52,0.22)'); luz.addColorStop(0.45, 'rgba(140,56,28,0.08)'); luz.addColorStop(1, 'rgba(87,35,18,0)');
+        luz.addColorStop(0, 'rgba(226,118,50,0.22)'); luz.addColorStop(0.45, 'rgba(194,92,30,0.08)'); luz.addColorStop(1, 'rgba(154,58,20,0)');
 
         graos = [];
         const n = contarGraos(W, H);
@@ -149,11 +240,19 @@ export function criarChaoSaibro(canvas: HTMLCanvasElement): ChaoSaibro | null {
         x!.drawImage(textura, 0, desvio * d, W * d, H * d, 0, 0, W, H);
         x!.globalAlpha = L; x!.fillStyle = luz; x!.fillRect(0, 0, W, H);
 
-        // Linhas de giz: laterais e a linha de saque, que sobe com a rolagem.
+        // Linhas da quadra: laterais (andam com a textura) e a de saque, que sobe com a rolagem.
         const ly = H * 0.62 - rolagem * 0.5;
-        x!.save(); x!.globalAlpha = 0.05 + 0.09 * L; x!.strokeStyle = GIZ; x!.lineWidth = 2; x!.beginPath();
-        x!.moveTo(10, -10); x!.lineTo(10, H + 10); x!.moveTo(W - 10, -10); x!.lineTo(W - 10, H + 10);
-        x!.moveTo(10, ly); x!.lineTo(W - 10, ly); x!.moveTo(W / 2, ly); x!.lineTo(W / 2, ly + H + 100); x!.stroke(); x!.restore();
+        if (linhaLateral && linhaDeSaque && linhaCentral) {
+            x!.globalAlpha = 0.55 + 0.4 * L;
+            const lw = LARGURA_LINHA + 2;
+            x!.drawImage(linhaLateral, 0, desvio * d, lw * d, H * d, MARGEM_LINHA - 1, 0, lw, H);
+            x!.drawImage(linhaLateral, 0, desvio * d, lw * d, H * d, W - MARGEM_LINHA - lw + 1, 0, lw, H);
+            if (ly < H + 10) {
+                x!.drawImage(linhaCentral, W / 2 - lw / 2, ly + LARGURA_LINHA / 2, lw, H + 200);
+                x!.drawImage(linhaDeSaque, MARGEM_LINHA, ly - lw / 2, W - 2 * MARGEM_LINHA, lw);
+            }
+            x!.globalAlpha = 1;
+        }
 
         // As marcas somem devagar (e mais rápido enquanto a tela rola).
         // Em pulsos: um apagar fraco a cada quadro não vence o arredondamento do canal alfa.
@@ -204,11 +303,15 @@ export function criarChaoSaibro(canvas: HTMLCanvasElement): ChaoSaibro | null {
             }
             const lx = p.x - LX, lyy = p.y - LY, aceso = Math.max(0, 1 - Math.sqrt(lx * lx + lyy * lyy) / LR);
             // O pó é escuro: o refletor só o deixa um pouco mais nítido, nunca mais claro.
-            let al = p.a * (0.75 + aceso * 0.5 * L);
+            let al = p.a * (0.6 + aceso * 0.5 * L);
             if (p.brilha) al *= 0.55 + 0.9 * Math.max(0, Math.sin(T * 0.003 + p.fase)) * (0.3 + aceso);
             x!.globalAlpha = Math.min(1, al);
             if (p.vx * p.vx + p.vy * p.vy > 1.1) { x!.strokeStyle = p.c; x!.lineWidth = p.s; x!.beginPath(); x!.moveTo(p.x, p.y); x!.lineTo(p.x - p.vx * 2.6, p.y - p.vy * 2.6); x!.stroke(); }
-            else { x!.fillStyle = p.c; x!.fillRect(p.x, p.y, p.s, p.s); }
+            else {
+                // Torrão: corpo escuro e, nos maiores, um topo um pouco aceso, como na quadra de dia.
+                x!.fillStyle = p.c; x!.fillRect(p.x, p.y, p.s, p.s);
+                if (p.s > 1.4) { x!.fillRect(p.x + p.s * 0.5, p.y - p.s * 0.3, p.s * 0.8, p.s * 0.8); x!.fillStyle = TOPO_DO_TORRAO; x!.fillRect(p.x, p.y, p.s * 0.6, p.s * 0.45); }
+            }
         }
 
         const vivos: Po[] = [];

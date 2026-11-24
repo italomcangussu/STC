@@ -1938,7 +1938,7 @@ input[type="datetime-local"] {
 
 [data-tema="escuro"] {
     color-scheme: dark;
-    --color-chao: #572312;            /* saibro à noite; o <canvas> do ChaoSaibro desenha por cima */
+    --color-chao: #9a3a14;            /* saibro à noite; o <canvas> do ChaoSaibro desenha por cima */
     --color-superficie: #1c1917;      /* stone-900 */
     --color-superficie-2: #292524;    /* stone-800 */
     --color-linha: #3a3532;
@@ -1966,6 +1966,20 @@ input[type="datetime-local"] {
     --shadow-e2: 0 2px 4px rgb(0 0 0 / 0.35), 0 6px 16px rgb(0 0 0 / 0.4);
     --shadow-e3: 0 4px 8px rgb(0 0 0 / 0.35), 0 16px 40px rgb(0 0 0 / 0.5);
     --shadow-e4: 0 8px 16px rgb(0 0 0 / 0.4), 0 24px 64px rgb(0 0 0 / 0.6);
+}
+
+/* Texto direto no barro: o chão é claro demais para o cinza dos cards.
+   Sobre o chão, os papéis secundários ficam claros e quentes (≥ 4,9:1 contra #9a3a14);
+   dentro de qualquer superfície com fundo, voltam ao valor do cartão. */
+[data-tema="escuro"] .bg-clay-pattern {
+    --color-texto-2: #f8e6da;   /* 5,8:1 no barro */
+    --color-texto-3: #efd2c0;   /* 4,9:1 no barro */
+    --color-erro: #fecaca;      /* 4,9:1 no barro */
+}
+[data-tema="escuro"] .bg-clay-pattern :is([class*="bg-"]:not(.bg-transparent), .card-court) {
+    --color-texto-2: #d6d3d1;
+    --color-texto-3: #a8a29e;
+    --color-erro: #f87171;
 }
 
 [data-tema="escuro"] ::selection {
@@ -2178,7 +2192,7 @@ input[type="datetime-local"] {
 [data-tema="escuro"] .text-slate-700 { color: #d6d3d1; }
 [data-tema="escuro"] .text-slate-800 { color: #f5f5f4; }
 [data-tema="escuro"] .text-slate-900 { color: #f5f5f4; }
-[data-tema="escuro"] .text-stone-500 { color: #a8a29e; }
+[data-tema="escuro"] .text-stone-500 { color: var(--color-texto-3); }
 [data-tema="escuro"] .text-stone-600 { color: #d6d3d1; }
 [data-tema="escuro"] .text-stone-700 { color: #d6d3d1; }
 [data-tema="escuro"] .text-stone-800 { color: #f5f5f4; }

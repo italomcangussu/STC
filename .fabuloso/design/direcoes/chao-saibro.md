@@ -10,21 +10,22 @@ O app é a quadra de saibro à noite, sob o refletor: o chão é pó de saibro v
 
 ## 2. Mundo
 
-- **Trava:** Inter 400–800, chão `#572312`, cards `#1c1917` opacos com borda de 1 px, raio 8 / 14 / 24, alvo de 48 px, nenhum texto abaixo de 12 px, nenhum texto direto sobre grão em movimento sem contraste ≥ 4,5:1 contra o chão base.
+- **Trava:** Inter 400–800, chão `#9a3a14`, cards `#1c1917` opacos com borda de 1 px, raio 8 / 14 / 24, alvo de 48 px, nenhum texto abaixo de 12 px, nenhum texto direto sobre grão em movimento sem contraste ≥ 4,5:1 contra o chão base.
 - **Cor (papéis):**
 
 | Papel | Valor | Contraste |
 |---|---|---|
-| Chão | `#572312` | |
+| Chão | `#9a3a14` | |
 | Superfície (card, trilho) | `#1c1917` | |
 | Linha · borda do card em destaque | `#3a3532` · `#57534e` | |
 | Texto · 2 · 3 | `#f5f5f4` · `#d6d3d1` · `#a8a29e` | 13:1 no chão (texto 2) · 6,9:1 no card (texto 3) |
 | Ação (botão, aba ativa) | `#d4ef3c` amarelo bola, texto `#1c1917` | 13,5:1 |
 | Agora | `#f97316` sobre `#2b1a10` | ≥ 6:1 |
 | Play | `#4ade80` sobre `#052e16` | |
-| Grãos e pó | `#4a0f06` `#5a1307` `#3a0c05` `#2c0904` `#511509` · nuvem `#3a0e06` | vermelho fechado, sempre mais escuro que o chão (o pó é o próprio saibro solto); só decoração, atrás dos cards |
+| Grãos e pó | `#8c3311` `#7f2c0e` `#94381a` `#7a2a0f` `#863012` · nuvem `#8a3112` | só um pouco mais fechado que o chão, nunca mais claro (o pó é o próprio saibro solto); o refletor deixa mais nítido, não mais claro; só decoração, atrás dos cards |
 
-- **Material:** textura de saibro gerada em canvas (sem foto), luz radial quente no canto superior direito, linhas de giz a 8–22% de opacidade.
+- **Material:** textura de saibro gerada em canvas (sem foto): ladrilho de 256 px sem emenda (ruído periódico de grão e torrão com relevo de luz por cima), em cache por densidade de pixel; luz radial quente no canto superior direito. Linhas da quadra em fita branca gasta de 6 px (`#efe5d8`), bordas comidas, pó de saibro por cima e trincas, a 55–95% de opacidade conforme a luz.
+- **Texto direto no chão:** `.bg-clay-pattern` redefine `--color-texto-2` `#f8e6da`, `--color-texto-3` `#efd2c0` e `--color-erro` `#fecaca` (≥ 4,5:1 no barro); dentro de superfície opaca voltam ao normal.
 - Saibro deixa de ser a cor de ação: vira o chão e o "agora". A ação é o amarelo bola.
 
 ## 3. História

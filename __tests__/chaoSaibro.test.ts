@@ -2,10 +2,10 @@ import { describe, expect, it, vi } from 'vitest';
 import { contarGraos, frenteDaRajada, intensidadeDaLuz, soprarChao, EVENTO_RAJADA } from '../lib/chaoSaibro';
 
 describe('chão de saibro · contas puras', () => {
-    it('conta os grãos pela área, entre 300 e 1400', () => {
-        expect(contarGraos(390, 844)).toBe(803);
-        expect(contarGraos(100, 100)).toBe(300);
-        expect(contarGraos(1920, 1200)).toBe(1400);
+    it('conta os grãos pela área, entre 500 e 2200', () => {
+        expect(contarGraos(390, 844)).toBe(1266);
+        expect(contarGraos(100, 100)).toBe(500);
+        expect(contarGraos(1920, 1200)).toBe(2200);
     });
 
     it('o refletor começa apagado e acende até perto de 1', () => {
