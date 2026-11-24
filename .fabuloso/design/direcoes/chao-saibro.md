@@ -10,19 +10,19 @@ O app é a quadra de saibro à noite, sob o refletor: o chão é pó de saibro v
 
 ## 2. Mundo
 
-- **Trava:** Inter 400–800, chão `#140c07`, cards `#1c1917` opacos com borda de 1 px, raio 8 / 14 / 24, alvo de 48 px, nenhum texto abaixo de 12 px, nenhum texto direto sobre grão em movimento sem contraste ≥ 4,5:1 contra o chão base.
+- **Trava:** Inter 400–800, chão `#572312`, cards `#1c1917` opacos com borda de 1 px, raio 8 / 14 / 24, alvo de 48 px, nenhum texto abaixo de 12 px, nenhum texto direto sobre grão em movimento sem contraste ≥ 4,5:1 contra o chão base.
 - **Cor (papéis):**
 
 | Papel | Valor | Contraste |
 |---|---|---|
-| Chão | `#140c07` | |
+| Chão | `#572312` | |
 | Superfície (card, trilho) | `#1c1917` | |
 | Linha · borda do card em destaque | `#3a3532` · `#57534e` | |
 | Texto · 2 · 3 | `#f5f5f4` · `#d6d3d1` · `#a8a29e` | 13:1 no chão (texto 2) · 6,9:1 no card (texto 3) |
 | Ação (botão, aba ativa) | `#d4ef3c` amarelo bola, texto `#1c1917` | 13,5:1 |
 | Agora | `#f97316` sobre `#2b1a10` | ≥ 6:1 |
 | Play | `#4ade80` sobre `#052e16` | |
-| Grãos | `#d97a45` `#9c4221` `#f2c4a2` `#c2683c` `#6a2710` | só decoração, atrás dos cards |
+| Grãos e pó | `#4a0f06` `#5a1307` `#3a0c05` `#2c0904` `#511509` · nuvem `#3a0e06` | vermelho fechado, sempre mais escuro que o chão (o pó é o próprio saibro solto); só decoração, atrás dos cards |
 
 - **Material:** textura de saibro gerada em canvas (sem foto), luz radial quente no canto superior direito, linhas de giz a 8–22% de opacidade.
 - Saibro deixa de ser a cor de ação: vira o chão e o "agora". A ação é o amarelo bola.
