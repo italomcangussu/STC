@@ -1938,7 +1938,7 @@ input[type="datetime-local"] {
 
 [data-tema="escuro"] {
     color-scheme: dark;
-    --color-chao: #140c07;            /* saibro à noite; o <canvas> do ChaoSaibro desenha por cima */
+    --color-chao: #572312;            /* saibro à noite; o <canvas> do ChaoSaibro desenha por cima */
     --color-superficie: #1c1917;      /* stone-900 */
     --color-superficie-2: #292524;    /* stone-800 */
     --color-linha: #3a3532;

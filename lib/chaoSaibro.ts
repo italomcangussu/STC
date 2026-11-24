@@ -8,10 +8,12 @@
 
 export const EVENTO_RAJADA = 'stc:rajada';
 
-const CHAO = '#140c07';
-const TEXTURA = ['#2a140a', '#3a1c0e', '#1c100a', '#4a2412', '#0e0805'];
-const GRAOS = ['#d97a45', '#9c4221', '#f2c4a2', '#c2683c', '#6a2710'];
-const PO = '#d98b5f';
+// Barro à noite. O pó (grãos e nuvens) é o mesmo saibro solto: vermelho mais
+// fechado e sempre mais escuro que a quadra, nunca um brilho claro por cima.
+const CHAO = '#572312';
+const TEXTURA = ['#6a2c17', '#7a3520', '#451a0c', '#5e2614', '#3c160a'];
+const GRAOS = ['#4a0f06', '#5a1307', '#3a0c05', '#2c0904', '#511509'];
+const PO = '#3a0e06';
 const GIZ = '#f2c4a2';
 const VENTO = 0.22;
 const SOBRA = 400; // altura a mais da textura, para a paralaxe da rolagem
@@ -113,13 +115,13 @@ export function criarChaoSaibro(canvas: HTMLCanvasElement): ChaoSaibro | null {
         rastro.setTransform(d, 0, 0, d, 0, 0);
 
         luz = x!.createRadialGradient(LX, LY, 20, LX, LY, LR);
-        luz.addColorStop(0, 'rgba(217,122,69,0.34)'); luz.addColorStop(0.45, 'rgba(156,66,33,0.12)'); luz.addColorStop(1, 'rgba(20,12,7,0)');
+        luz.addColorStop(0, 'rgba(196,92,52,0.22)'); luz.addColorStop(0.45, 'rgba(140,56,28,0.08)'); luz.addColorStop(1, 'rgba(87,35,18,0)');
 
         graos = [];
         const n = contarGraos(W, H);
         for (let i = 0; i < n; i++) {
             const z = profundidade(), a0 = Math.random() * 6.283, v0 = reduzido ? 0 : Math.random() * 2.4 * z;
-            graos.push({ x: Math.random() * W, y: Math.random() * H, vx: Math.cos(a0) * v0, vy: Math.sin(a0) * v0, s: 0.5 + z * 1.5 * (0.6 + Math.random() * 0.6), z, c: GRAOS[(Math.random() * 5) | 0], a: 0.2 + z * 0.5, brilha: Math.random() < 0.12, fase: Math.random() * 6.283 });
+            graos.push({ x: Math.random() * W, y: Math.random() * H, vx: Math.cos(a0) * v0, vy: Math.sin(a0) * v0, s: 0.5 + z * 1.5 * (0.6 + Math.random() * 0.6), z, c: GRAOS[(Math.random() * 5) | 0], a: 0.4 + z * 0.5, brilha: Math.random() < 0.12, fase: Math.random() * 6.283 });
         }
         pos = [];
         sulcos = [];
@@ -201,7 +203,8 @@ export function criarChaoSaibro(canvas: HTMLCanvasElement): ChaoSaibro | null {
                 if (p.y < -6) p.y = H + 6; else if (p.y > H + 6) p.y = -6;
             }
             const lx = p.x - LX, lyy = p.y - LY, aceso = Math.max(0, 1 - Math.sqrt(lx * lx + lyy * lyy) / LR);
-            let al = p.a * (0.35 + aceso * 1.5 * L);
+            // O pó é escuro: o refletor só o deixa um pouco mais nítido, nunca mais claro.
+            let al = p.a * (0.75 + aceso * 0.5 * L);
             if (p.brilha) al *= 0.55 + 0.9 * Math.max(0, Math.sin(T * 0.003 + p.fase)) * (0.3 + aceso);
             x!.globalAlpha = Math.min(1, al);
             if (p.vx * p.vx + p.vy * p.vy > 1.1) { x!.strokeStyle = p.c; x!.lineWidth = p.s; x!.beginPath(); x!.moveTo(p.x, p.y); x!.lineTo(p.x - p.vx * 2.6, p.y - p.vy * 2.6); x!.stroke(); }
@@ -214,7 +217,7 @@ export function criarChaoSaibro(canvas: HTMLCanvasElement): ChaoSaibro | null {
             q.idade += 16.67 * f; if (q.idade >= q.vida) continue;
             vivos.push(q);
             const arrasto = Math.pow(0.94, f); q.vx *= arrasto; q.vy = q.vy * arrasto - 0.006 * f; q.x += q.vx * f; q.y += q.vy * f; q.r += 0.035 * f;
-            const k = 1 - q.idade / q.vida; x!.globalAlpha = k * k * 0.42 * (0.5 + 0.5 * L);
+            const k = 1 - q.idade / q.vida; x!.globalAlpha = k * k * 0.6 * (0.5 + 0.5 * L);
             x!.beginPath(); x!.arc(q.x, q.y, q.r, 0, 6.283); x!.fill();
         }
         pos = vivos;
