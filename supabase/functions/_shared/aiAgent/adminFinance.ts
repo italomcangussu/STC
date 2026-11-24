@@ -68,6 +68,17 @@ export function pendencyFor(refs: AdminPendencyRef[], slots: Slots): { ref?: Adm
   return {};
 }
 
+/** Pergunta uma vez por descrição; o "receita mesmo" repete a receita e segue para a proposta. */
+async function askIfCardRenewal({ deps, slots }: DecideInput, memory: Memory): Promise<Decision | null> {
+  const checked = norm(String(slots.description));
+  if (memory.revenue_card_checked === checked) return null;
+  const alunos = await cardStudentsNamed(deps.db, String(slots.description));
+  if (alunos.length === 0) return null;
+  const comAlunos = { ...slots, student_names: alunos };
+  const next = { ...memory, slots: comAlunos, revenue_card_checked: checked };
+  return { bubbles: [cardInsteadOfRevenueQuestion(alunos)], awaiting: true, close: false, action: 'ask', slots: comAlunos, memory: next };
+}
+
 export async function adminFinanceiro(i: DecideInput, memory: Memory): Promise<Decision> {
   const { deps, ctx, slots, session } = i;
   const ask = (text: string): Decision => ({ bubbles: [text], awaiting: true, close: false, action: 'ask', memory });
@@ -140,14 +151,8 @@ export async function adminFinanceiro(i: DecideInput, memory: Memory): Promise<D
     if (!slots.description) return ask(`Qual a descrição da ${slots.fin_action}?`);
     const cents = toCents(slots.amount);
     if (!cents) return ask('Qual o valor?');
-    const checked = norm(slots.description);
-    if (slots.fin_action === 'receita' && memory.revenue_card_checked !== checked) {
-      const alunos = await cardStudentsNamed(deps.db, slots.description);
-      if (alunos.length > 0) {
-        const comAlunos = { ...slots, student_names: alunos };
-        return { ...ask(cardInsteadOfRevenueQuestion(alunos)), slots: comAlunos, memory: { ...memory, slots: comAlunos, revenue_card_checked: checked } };
-      }
-    }
+    const renewal = slots.fin_action === 'receita' ? await askIfCardRenewal(i, memory) : null;
+    if (renewal) return renewal;
     p = { action: 'fin_entry_create', entry_kind: slots.fin_action === 'despesa' ? 'expense' : 'revenue', description: slots.description, amount_cents: cents,
       entry_status: slots.entry_status ?? null, due_date: slots.due_date ?? null, paid_on: slots.paid_on ?? null,
       category_name: slots.category_name ?? null, category_new: slots.category_new === true || null, account_name: slots.account_name ?? null };
