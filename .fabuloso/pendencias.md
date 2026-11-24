@@ -1,9 +1,10 @@
 # Pendências
 
 ## João — auditoria de 16/11 (o que não coube em 17/11)
-- **Renovação de Card lançada como receita solta** (Iago Ribeiro, Matheus, José): aguardando o Henrique confirmar
-  que eram renovações. Não renovar sem a confirmação. Depois: quando o admin lança "aula/mensalidade de aluno" como
-  receita, sugerir a renovação do Card do aluno em vez da categoria.
+- **Receita de aluno que pode ser renovação de Card** (Iago Ribeiro; José em 19/10): aguardando o Henrique confirmar.
+  Não renovar sem a confirmação. Painel e João já avisam nos casos novos (commits 9f50182 e f7085ea).
+- **Data dos Cards do Matheus e do José**: estão com pagamento em 09/11, mas o Pix (OCR e E2E do comprovante) é de
+  16/11. Só mudar com o Henrique.
 - **Humor em grupo e nome inventado ("Daniel Rodrigues")**: correção de prompt, que exige caso de eval novo
   (falha antes, passa depois). O eval não rodou por falta de OPENAI_API_KEY nesta máquina.
 - **Comprovante de convidado sem cadastro numa conversa de inscrição**: continua guardado até a pré-inscrição nascer
