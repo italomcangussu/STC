@@ -21,7 +21,7 @@ Leia antes de mexer em `components/students/RevenueOverlapNotice.tsx`, `lib/fina
 - Eval: `henrique-16-11-receita-de-aluno` em `evals/joao-admin.eval.jsonl`.
 
 ## Correção da produção
-- Roteiro `docs/auditorias/2026-11-24-cards-matheus-jose.sql` (ensaiado: −R$ 300 no caixa e na DRE de novembro, Cards intactos). Aplicar só depois do "sim" do Ítalo.
+- Roteiro `docs/auditorias/2026-11-24-cards-matheus-jose.sql` (ensaiado: −R$ 300 no caixa e na DRE de novembro, Cards intactos). Aplicado em 24/11 com o "sim" do Ítalo: receita bad73f44 cancelada, Cards ligados ao comprovante 2a512c8b.
 - Escrita SQL no remoto: pela Management API com `com-env`, porque os conectores MCP do Supabase deste projeto respondem sem permissão.
 - Deploy de edge function pela CLI exige `--yes` (agent mode).
 - Pendentes: Iago Ribeiro e José 19/10 aguardam o Henrique.
