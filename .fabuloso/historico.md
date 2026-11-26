@@ -330,3 +330,8 @@ Finalidade exclusiva; titularidade sem coincidência de primeiro nome; contexto 
 - Contexto: `.fabuloso/conhecimento/caixa.md` (novo) e módulo/fluxo em `arquitetura.md`. Não há CLAUDE.md.
 - Entrega: sem migration; `whatsapp-webhook` deployada. Roteiro de correção da produção (`docs/auditorias/2026-11-24-cards-matheus-jose.sql`) espera o "sim" do Ítalo.
 - Observação: deriva no remoto em `whatsapp_receipt_intents`, `conv_ai_decisions`, `conv_ai_topics`, `conv_booking_proposals`, `fin_attachments`, `fin_charge_payments`, `fin_entries`, `reservations`.
+
+- 2026-11-26 (Opus 5.5, fabuloso): admin edita placar já publicado no campeonato e a chave acompanha a troca de vencedor. Commits d555ab0..7337f35.
+- Contexto: `.fabuloso/conhecimento/campeonato.md` (seção Editar placar publicado) e fluxo em `arquitetura.md`. Não há CLAUDE.md.
+- Entrega: migration 20261126120000 aplicada e registrada; nenhuma edge function deployada.
+- Observação: deriva no remoto em `conv_private.joao_spontaneous_window`; alertas de RLS antigos seguem em `.fabuloso/db/alertas.md`.

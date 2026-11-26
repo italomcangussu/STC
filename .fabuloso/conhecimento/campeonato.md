@@ -31,3 +31,10 @@ Leia antes de mexer em `components/TournamentBracketView.tsx`, `components/Resen
 - Tema por classe: `lib/bracketTheme.ts` (`temaDaClasse(classe)` devolve 'saibro' para '4ª Classe', senão 'noite'; teste em `__tests__/bracketTheme.test.ts`). O banco não guarda a superfície da classe, então a lista de classes de saibro mora nessa função.
 - Cores: `index.css` define `.chave-noite` e `.chave-saibro` com as variáveis `--chave-*` (fundo, superfície, borda, texto, apoio, ativo, foco, conector, card-topo). O quadro lê as cores só por elas, sem hex solto; trocar de tema é só de cor.
 - Card em `ResenhaOpenTournamentBoard.tsx`: 280x120 (topo 32 px + duas linhas de 44 px), check verde no vencedor (no lugar do trilho laranja), texto mínimo 12 px. `CARD_HEIGHT` em `lib/resenhaOpenBracketLayout.ts` passou de 88 para 120; se mudar o card, mude lá também.
+
+## Editar placar publicado (migration 20261126120000_bracket_winner_follows_score_edit)
+- Só o admin edita partida finalizada: a RLS "Admins manage matches" permite; "Players update own matches" exige `status <> 'finished'`.
+- Na chave, `components/ChampionshipMatchActionModal.tsx` mostra "Editar placar" ao admin em jogo finalizado; o botão abre o `ResultModal` de `Championships.tsx` (`handleSaveResult` faz o update em `matches`).
+- O gatilho `propagate_bracket_winner` agora dispara também na troca de `winner_registration_id`, `walkover_winner_registration_id` ou `winner_id`. Vencedor trocado: a vaga do jogo seguinte (`player_*_source_match_id`) que estava com o vencedor antigo passa ao novo. Partida reaberta: essa vaga esvazia.
+- Trava: se o jogo seguinte já não está `pending` com o vencedor antigo, a edição é recusada ("O jogo seguinte da chave já tem resultado..."). O admin reabre o jogo seguinte primeiro e depois edita este.
+- Testes: `supabase/tests/pglite/chave_edicao_de_placar.sql` e `__tests__/championshipMatchActionModal.test.tsx`.
