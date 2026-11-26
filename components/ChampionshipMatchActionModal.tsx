@@ -93,6 +93,7 @@ export const ChampionshipMatchActionModal: React.FC<ChampionshipMatchActionModal
     registrations,
     roundName,
     className,
+    isAdmin,
     scheduleMode,
     onClose,
     onLaunch,
@@ -102,7 +103,9 @@ export const ChampionshipMatchActionModal: React.FC<ChampionshipMatchActionModal
     const regB = registrations.find(registration => registration.id === match.registration_b_id);
     const winnerSide = getWinnerSide(match);
     const matchNumber = match.match_number ? `J${match.match_number}` : 'Jogo';
-    const canShowLaunch = !isFinished(match) && Boolean(onLaunch);
+    // Placar publicado só o admin corrige; o atleta lança apenas o que está pendente.
+    const isScoreEdit = isFinished(match);
+    const canShowLaunch = Boolean(onLaunch) && (!isScoreEdit || isAdmin);
     const canShowSchedule = !isFinished(match) && Boolean(onSchedule);
 
     return (
@@ -160,7 +163,7 @@ export const ChampionshipMatchActionModal: React.FC<ChampionshipMatchActionModal
                                     className="flex items-center justify-center gap-2 rounded-2xl bg-saibro-600 px-4 py-3 text-xs font-extrabold uppercase tracking-widest text-white shadow-lg transition-all hover:bg-saibro-700"
                                 >
                                     <Trophy size={15} />
-                                    Lançar
+                                    {isScoreEdit ? 'Editar placar' : 'Lançar'}
                                 </button>
                             )}
                             {canShowSchedule && (
