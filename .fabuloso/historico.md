@@ -335,3 +335,8 @@ Finalidade exclusiva; titularidade sem coincidência de primeiro nome; contexto 
 - Contexto: `.fabuloso/conhecimento/campeonato.md` (seção Editar placar publicado) e fluxo em `arquitetura.md`. Não há CLAUDE.md.
 - Entrega: migration 20261126120000 aplicada e registrada; nenhuma edge function deployada.
 - Observação: deriva no remoto em `conv_private.joao_spontaneous_window`; alertas de RLS antigos seguem em `.fabuloso/db/alertas.md`.
+
+- 2026-11-26 (Opus 5.5, fabuloso): link público /campeonato/<slug> com botão de compartilhar, e Mardes no lugar do Ealber na 5ª Classe do Serra e Sertão. Commit 78db82d.
+- Contexto: `.fabuloso/conhecimento/campeonato.md` (link público e troca de participante), rota e fluxo em `arquitetura.md`, pendência em `pendencias.md`. Não há CLAUDE.md.
+- Entrega: migration 20261126130000 aplicada e marcada; nenhuma edge function deployada.
+- Observação: deriva do banco nenhuma nesta rodada; alertas de RLS antigos seguem em `.fabuloso/db/alertas.md`.

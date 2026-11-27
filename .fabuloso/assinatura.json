@@ -1,7 +1,7 @@
 {
   "versao": 3,
-  "geradoEm": "2026-11-24T15:53:39.712Z",
-  "commit": "12331c5d",
+  "geradoEm": "2026-11-27T00:40:55.705Z",
+  "commit": "78db82df",
   "pastas": [
     "__tests__",
     "__tests__/admin",
@@ -49,8 +49,8 @@
     "tasks"
   ],
   "agentmap": {
-    "arquivos": 708,
-    "sha": "12331c5",
+    "arquivos": 710,
+    "sha": "78db82d",
     "hubs": [
       "lib/supabase.ts",
       "supabase/functions/_shared/aiAgent/promptAdmin.ts",

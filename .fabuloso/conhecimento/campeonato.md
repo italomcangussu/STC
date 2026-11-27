@@ -38,3 +38,13 @@ Leia antes de mexer em `components/TournamentBracketView.tsx`, `components/Resen
 - O gatilho `propagate_bracket_winner` agora dispara também na troca de `winner_registration_id`, `walkover_winner_registration_id` ou `winner_id`. Vencedor trocado: a vaga do jogo seguinte (`player_*_source_match_id`) que estava com o vencedor antigo passa ao novo. Partida reaberta: essa vaga esvazia.
 - Trava: se o jogo seguinte já não está `pending` com o vencedor antigo, a edição é recusada ("O jogo seguinte da chave já tem resultado..."). O admin reabre o jogo seguinte primeiro e depois edita este.
 - Testes: `supabase/tests/pglite/chave_edicao_de_placar.sql` e `__tests__/championshipMatchActionModal.test.tsx`.
+
+## Link público do campeonato (commit 78db82d)
+- `lib/publicRoutes.ts` reconhece `/campeonato/<slug>` (type `slug`, slug em minúsculas) e `/campeonato` sozinho (type `list`, abre o campeonato em andamento via `selectPublicChampionship`). Slug solto na raiz e o host `camp.stcplay.com.br` seguem `none`. Formulário e votação (`?form`, `?votacao`, `/votacao/:slug`) não mudaram. Helper `publicChampionshipPath(slug)`.
+- O banco já permite leitura anônima (SELECT true em championships, rounds, groups, group_members, registrations, profiles, matches); `App.tsx` renderiza `PublicChampionshipEntry`/`PublicChampionshipPage` para rota diferente de `none`.
+- `components/PublicChampionshipLinkButton.tsx` (cabeçalho do campeonato em `Championships.tsx`): `navigator.share` no celular, senão copia `window.location.origin + /campeonato/<slug>`. Só aparece se o campeonato tem slug, e nem todo campeonato no remoto tem. Serra e Sertão: `https://stcplay.com.br/campeonato/serra-e-sertao-2026`.
+
+## Trocar participante na chave (migration 20261126130000_serra_sertao_mardes_no_lugar_de_ealber)
+- Caso: 5ª Classe, Ealber Luna (sócio, cabeça de chave 2) desistiu; o convidado "Mardes" ganhou inscrição e a vaga A do J5 (contra Ismael Pedrosa Machado), sem herdar a cabeça de chave.
+- Procedimento: migration de dados guardada por existência (só age se a inscrição antiga e o jogo existem, para rodar em qualquer banco); cria a inscrição do novo e põe na vaga do jogo; apaga a inscrição de quem saiu; o signup de quem saiu fica `canceled` com `registration_id` NULL.
+- O pagamento (`fin_entry`) de quem saiu não é tocado: devolver ou não é decisão da organização (R$ 130 do Ealber, ver `.fabuloso/pendencias.md`).

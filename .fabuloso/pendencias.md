@@ -11,3 +11,6 @@
   (caso Bruno). Se a pessoa já estiver inscrita pelo app sem perfil vinculado, o modelo ainda conduz: medir.
 - **Recusa de comprovante de quem não tem perfil de sócio**: segue sem achar (a recusa exige profile_id).
 - **Suítes que já falhavam**: automations e topics (dependem da data); adminAutomations estoura 5 s com a fila cheia.
+
+## Campeonato Serra e Sertão
+- **Reembolso do Ealber Luna** (desistiu da 5ª Classe; Mardes entrou no lugar, migration 20261126130000): o pagamento de R$ 130 (`fin_entry`) segue intacto. Devolver ou não é decisão da organização; nada foi feito no financeiro.
