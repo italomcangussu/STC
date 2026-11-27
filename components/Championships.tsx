@@ -30,6 +30,7 @@ import { useConfirm } from '../hooks/useConfirm';
 import { canScheduleMatch } from '../lib/championship/scheduling';
 import { loadExportTools } from '../lib/exportTools';
 import { StandardModal } from './StandardModal';
+import { PublicChampionshipLinkButton } from './PublicChampionshipLinkButton';
 
 // Interface for championship with participants
 interface ChampionshipWithParticipants extends Omit<Championship, 'participantIds'> {
@@ -1145,6 +1146,9 @@ export const Championships: React.FC<{ currentUser: User }> = ({ currentUser }) 
                         <Calendar size={16} className="drop-shadow" />
                         {selectedChamp.endDate ? `Finais em ${formatDateBr(selectedChamp.endDate)}` : 'Finais em breve'}
                     </p>
+                    {selectedChamp.slug && (
+                        <PublicChampionshipLinkButton slug={selectedChamp.slug} championshipName={selectedChamp.name} />
+                    )}
                 </div>
             </div>
 

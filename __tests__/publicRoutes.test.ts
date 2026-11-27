@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getPublicChampionshipRoute, selectPublicChampionship } from '../lib/publicRoutes';
+import { getPublicChampionshipRoute, publicChampionshipPath, selectPublicChampionship } from '../lib/publicRoutes';
 
 describe('public championship routing', () => {
   it('does not route the retired public championship list path inside the main app', () => {
@@ -15,6 +15,15 @@ describe('public championship routing', () => {
     expect(getPublicChampionshipRoute('/resenha-open-2026')).toEqual({ type: 'none' });
     expect(getPublicChampionshipRoute('/')).toEqual({ type: 'none' });
     expect(getPublicChampionshipRoute('/assets/index.js')).toEqual({ type: 'none' });
+  });
+
+  it('abre o link público pelo prefixo /campeonato', () => {
+    expect(getPublicChampionshipRoute('/campeonato/serra-e-sertao-2026')).toEqual({ type: 'slug', slug: 'serra-e-sertao-2026' });
+    expect(getPublicChampionshipRoute('/campeonato/Serra-E-Sertao-2026/')).toEqual({ type: 'slug', slug: 'serra-e-sertao-2026' });
+    expect(getPublicChampionshipRoute('/campeonato')).toEqual({ type: 'list' });
+    expect(getPublicChampionshipRoute('/campeonatos')).toEqual({ type: 'none' });
+    expect(getPublicChampionshipRoute('/campeonato/a/b')).toEqual({ type: 'none' });
+    expect(publicChampionshipPath('serra-e-sertao-2026')).toBe('/campeonato/serra-e-sertao-2026');
   });
 
   it('prioritizes the current active championship and keeps the id when slug is missing', () => {

@@ -13,67 +13,44 @@ export interface PublicChampionshipSummary {
   registration_open: boolean | null;
 }
 
-const APP_PATHS = new Set([
-  'agenda',
-  'dashboard',
-  'klanches',
-  'desafios',
-  'superset',
-  'tenisproplayer',
-  'campeonatos',
-  'campeonatos-publico',
-  'competicao',
-  'atletas',
-  'perfil',
-  'ranking',
-  'professor',
-  'admin-students',
-  'admin-professors',
-  'admin-panel',
-  'financeiro-admin',
-  'championship-admin',
-  'championship-creator',
-]);
+const CHAMPIONSHIPS_HOST = 'camp.stcplay.com.br';
+
+function normalizePath(pathname: string): string {
+  const [pathWithoutQuery] = pathname.split(/[?#]/);
+  return pathWithoutQuery.replace(/^\/+|\/+$/g, '');
+}
+
+/** Formulário/votação: ?form=slug, ?votacao=slug, /votacao/:slug ou /form/:slug. */
+function formSlugFrom(path: string, search: string): string | null {
+  const params = new URLSearchParams(search);
+  const fromQuery = params.get('form') || params.get('votacao');
+  if (fromQuery) return fromQuery.trim();
+  const fromPath = path.match(/^(?:votacao|form|forms|formulario)\/([a-zA-Z0-9_-]+)$/i);
+  return fromPath ? fromPath[1] : null;
+}
+
+/**
+ * Link público do campeonato: /campeonato/<slug> abre a página de quem não é sócio;
+ * /campeonato sozinho abre o campeonato em andamento. O prefixo próprio evita
+ * disputar caminho com as telas do app (o slug solto na raiz foi aposentado).
+ */
+function championshipRouteFrom(path: string): PublicAppRoute {
+  const match = path.match(/^campeonato(?:\/([a-z0-9_-]+))?$/i);
+  if (!match) return { type: 'none' };
+  return match[1] ? { type: 'slug', slug: match[1].toLowerCase() } : { type: 'list' };
+}
 
 export function getPublicAppRoute(pathname: string, search = '', hostname = ''): PublicAppRoute {
-  // 1. Verificar query parameters (ex: ?form=slug ou ?votacao=slug)
-  if (search) {
-    const params = new URLSearchParams(search);
-    const formSlug = params.get('form') || params.get('votacao');
-    if (formSlug) {
-      return { type: 'form-slug', slug: formSlug.trim() };
-    }
-  }
+  const path = normalizePath(pathname);
+  const formSlug = formSlugFrom(path, search);
+  if (formSlug) return { type: 'form-slug', slug: formSlug };
+  if (hostname.toLowerCase() === CHAMPIONSHIPS_HOST) return { type: 'none' };
+  return championshipRouteFrom(path);
+}
 
-  const [pathWithoutQuery] = pathname.split(/[?#]/);
-  const normalized = pathWithoutQuery.replace(/^\/+|\/+$/g, '');
-  const normalizedHost = hostname.toLowerCase();
-
-  // 2. Verificar rotas diretas de formulário/votação (ex: /votacao/:slug ou /form/:slug)
-  const formMatch = normalized.match(/^(?:votacao|form|forms|formulario)\/([a-zA-Z0-9_-]+)$/i);
-  if (formMatch && formMatch[1]) {
-    return { type: 'form-slug', slug: formMatch[1] };
-  }
-
-  // Se for subdomínio específico de campeonatos
-  if (normalizedHost === 'camp.stcplay.com.br') {
-    return { type: 'none' };
-  }
-
-  if (!normalized || normalized.includes('.')) {
-    return { type: 'none' };
-  }
-
-  if (APP_PATHS.has(normalized)) {
-    return { type: 'none' };
-  }
-
-  // Rotas de campeonatos públicos sem barra interna
-  if (!normalized.includes('/')) {
-    return { type: 'none' };
-  }
-
-  return { type: 'none' };
+/** Caminho do link público de um campeonato (o que o admin compartilha). */
+export function publicChampionshipPath(slug: string): string {
+  return `/campeonato/${slug}`;
 }
 
 // Retrocompatibilidade
